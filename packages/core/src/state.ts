@@ -38,7 +38,26 @@ export interface ModelState {
 export interface AgentModel {
   id: string;
   name?: string;
+  defaultEffort?: ReasoningEffort;
+  supportedEfforts?: ReasoningEffort[];
   raw?: unknown;
+}
+
+export type ReasoningEffort =
+  | "none"
+  | "minimal"
+  | "low"
+  | "medium"
+  | "high"
+  | "xhigh"
+  | string;
+
+export type ExecutionModeId = "review" | "auto" | "read-only" | "full-access" | string;
+
+export interface RunSettingsState {
+  executionMode: ExecutionModeId;
+  modelId?: string;
+  effort?: ReasoningEffort;
 }
 
 export interface AgentThread {
@@ -134,6 +153,7 @@ export interface AgentSessionState {
   activeThreadId?: ThreadId;
   pendingServerRequests: Record<string, PendingServerRequest>;
   models: ModelState;
+  runSettings: RunSettingsState;
   configWarnings: WarningState[];
   errors: AgentError[];
 }
@@ -146,6 +166,7 @@ export function createInitialAgentState(): AgentSessionState {
     errors: [],
     models: { models: [] },
     pendingServerRequests: {},
+    runSettings: { executionMode: "review" },
     threads: {},
   };
 }

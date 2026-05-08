@@ -31,11 +31,17 @@ The React package exposes drop-in components backed by headless hooks. Component
 
 - `ThreadSidebar`
 - `AgentStatusBar`
+- `AgentUsage`
 - `AgentMessageList`
 - `AgentWorkLog`
 - `AgentDiffPanel`
 - `AgentApprovalPrompt`
+- `AgentRunControls`
 - `AgentComposer`
+
+## Thread Sidebar
+
+`ThreadSidebar` includes a lightweight persisted-session browser. `Load` calls `thread/list` with optional search text and upserts returned threads without changing the active thread. Selecting a stored thread calls `thread/read` with `includeTurns: true` and activates the hydrated snapshot. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
 
 ## Approval Components
 
@@ -55,3 +61,18 @@ The default card shows request id, command or file path context, and the raw nor
 
 `AgentWorkLog` renders command output grouped by thread turn. For richer terminal behavior, build a host component with `useAgentThread()` rather than exposing `thread/shellCommand` as a generic browser component.
 
+## Run Controls
+
+`AgentRunControls` renders the controls expected in the chat window before sending a turn:
+
+- execution mode: Review, Auto, Read-only, or Full access
+- model: values from `model/list`
+- effort: supported reasoning efforts from the selected model, with a model-default option
+
+The selected values are stored in normalized run settings and are merged into `turn/start` as `approvalPolicy`, `sandboxPolicy`, `model`, and `effort`.
+
+## Usage
+
+`AgentUsage` renders account rate-limit windows from `account/rateLimits/updated` notifications or `account/rateLimits/read` responses. It supports the current App Server `usedPercent`/`windowDurationMins` shape and legacy fixture-style `used`/`limit` windows.
+
+`normalizeUsageWindows()` is exported for hosts that want to render the same 5-hour and weekly windows in custom chrome.

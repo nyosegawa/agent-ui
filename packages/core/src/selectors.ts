@@ -24,3 +24,7 @@ export function selectPendingApprovals(state: AgentSessionState, threadId?: Thre
     return approval && (threadId == null || request.threadId === threadId);
   });
 }
+
+export function selectRunSettings(state: AgentSessionState) {
+  return state.runSettings;
+}

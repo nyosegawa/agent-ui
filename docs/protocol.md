@@ -156,9 +156,20 @@ The MVP smoke path verified locally:
 initialize
 account/read
 model/list
+account/rateLimits/read
+thread/list
+thread/read includeTurns
 thread/start
 turn/start
 stream item/agentMessage/delta
 turn/completed
 thread/resume after a completed turn is persisted
 ```
+
+Latest real Codex verification against `codex app-server --listen stdio://` confirmed:
+
+- `model/list` currently returns models under `data`, including `gpt-5.5` as the first/default entry in this environment.
+- `account/rateLimits/read` returns 5-hour and weekly windows through `primary` and `secondary`.
+- `thread/list` returns stored sessions.
+- `thread/read` with `includeTurns: true` returns persisted turn history without resuming.
+- `thread/resume` succeeds from a stored history id with `excludeTurns: true`.

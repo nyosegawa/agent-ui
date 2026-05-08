@@ -185,11 +185,23 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
 }
 
 export function normalizeModelListResponse(response: any): AgentModel[] {
-  const models = Array.isArray(response?.models) ? response.models : Array.isArray(response) ? response : [];
+  const models = Array.isArray(response?.data)
+    ? response.data
+    : Array.isArray(response?.models)
+      ? response.models
+      : Array.isArray(response)
+        ? response
+        : [];
   return models.map((model: any) => ({
     id: String(model.id ?? model.slug ?? model.name),
-    name: model.name ?? model.displayName,
+    defaultEffort: model.defaultReasoningEffort ?? model.default_effort,
+    name: model.name ?? model.displayName ?? model.model,
     raw: model,
+    supportedEfforts: Array.isArray(model.supportedReasoningEfforts)
+      ? model.supportedReasoningEfforts
+          .map((effort: any) => effort.reasoningEffort ?? effort)
+          .filter(Boolean)
+      : undefined,
   }));
 }
 

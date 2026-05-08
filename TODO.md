@@ -100,6 +100,8 @@ This checklist is the execution source of truth for Agent UI.
 
 - [x] Implement `AgentProvider`.
 - [x] Implement `useAgentThread`.
+- [x] Implement `useAgentThreadHistory` for `thread/list` pagination and search.
+- [x] Implement `useAgentThreadReader` for `thread/read` preview/history hydration.
 - [x] Implement `useAgentTurn`.
 - [x] Implement `useAgentApprovals`.
 - [x] Implement `useAgentComposer`.
@@ -107,15 +109,20 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Implement `AgentChat`.
 - [x] Implement `AgentComposer`.
 - [x] Implement `AgentMessageList`.
+- [x] Implement persisted session browser UI.
+- [x] Implement thread preview/read UI without resuming.
 - [x] Implement `AgentWorkLog`.
 - [x] Implement `AgentApprovalPrompt`.
 - [x] Implement `AgentDiffViewer`.
 - [x] Implement `AgentStatusBar`.
+- [x] Implement `AgentRunControls` for execution mode, model, and reasoning effort.
+- [x] Implement `AgentUsage` for account rate-limit windows.
 - [x] Implement `ThreadList`.
 - [x] Implement `ThreadSidebar`.
 - [x] Add CSS variables.
 - [x] Add slot/render prop customization.
 - [x] Add accessibility tests for interactive components.
+- [x] Add accessibility tests for run controls, usage, and history UI.
 
 ## Server Package
 
@@ -171,6 +178,23 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Pass reducer fixture tests.
 - [x] Pass package export validation.
 - [x] Pass browser smoke test.
+
+## Product Polish
+
+- [x] Add chat-window execution mode control.
+- [x] Add chat-window model selection.
+- [x] Add chat-window reasoning effort selection.
+- [x] Add usage component for 5-hour and weekly limits.
+- [x] Verify real Codex `model/list` and `account/rateLimits/read`.
+- [x] Verify real Codex `thread/list` with stored sessions.
+- [x] Verify real Codex `thread/read` for an individual stored session.
+- [x] Verify real Codex `thread/resume` from history UI.
+- [x] Add browser smoke coverage for run controls and usage.
+- [x] Add browser smoke coverage for persisted session browsing.
+- [x] Add no-horizontal-overflow visual assertions for desktop and mobile.
+- [x] Refactor usage parsing into a focused utility with tests.
+- [x] Refactor Codex thread response normalization for read/resume/list.
+- [x] Refresh docs for run controls, usage, history, and real Codex verification.
 
 ## Post-MVP
 

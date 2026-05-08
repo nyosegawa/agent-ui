@@ -77,9 +77,28 @@ export function agentReducer(
         ...state,
         models: {
           models: event.models,
-          selectedModelId: event.selectedModelId,
+          selectedModelId: event.selectedModelId ?? state.models.selectedModelId,
+        },
+        runSettings: {
+          ...state.runSettings,
+          ...(event.selectedModelId ? { modelId: event.selectedModelId } : {}),
         },
       };
+    case "runSettings/updated":
+      return {
+        ...state,
+        models: {
+          ...state.models,
+          selectedModelId: event.modelId ?? state.models.selectedModelId,
+        },
+        runSettings: {
+          ...state.runSettings,
+          ...(event.executionMode ? { executionMode: event.executionMode } : {}),
+          ...(event.modelId !== undefined ? { modelId: event.modelId || undefined } : {}),
+          ...(event.effort !== undefined ? { effort: event.effort || undefined } : {}),
+        },
+      };
+    case "thread/upserted":
     case "thread/started": {
       const threadState = upsertThread(state, event.thread);
       const turns = { ...threadState.turns };
@@ -90,7 +109,7 @@ export function agentReducer(
       }
       return {
         ...state,
-        activeThreadId: event.thread.id,
+        activeThreadId: event.type === "thread/started" ? event.thread.id : state.activeThreadId,
         threads: {
           ...state.threads,
           [event.thread.id]: {

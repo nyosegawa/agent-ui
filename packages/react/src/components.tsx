@@ -9,9 +9,16 @@ import {
   useAgentApprovals,
   useAgentAuth,
   useAgentComposer,
+  useAgentModels,
+  useAgentThreadHistory,
+  useAgentThreadReader,
+  useAgentRunSettings,
   useAgentThread,
   useAgentThreads,
+  useAgentUsage,
 } from "./hooks";
+import { normalizeUsageWindows } from "./usage";
+import { useEffect, useMemo, useState } from "react";
 
 export interface AgentChatSlots {
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
@@ -35,6 +42,7 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
       />
       <div className="aui-chat">
         <AgentStatusBar />
+        <AgentUsage />
         {thread ? (
           <>
             <div className="aui-thread-header">
@@ -50,6 +58,7 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
             <AgentWorkLog thread={thread} />
             <AgentDiffPanel thread={thread} />
             <AgentApprovalPrompt renderApproval={slots?.renderApproval} threadId={threadId} />
+            <AgentRunControls />
             <AgentComposer threadId={threadId} />
           </>
         ) : (
@@ -60,6 +69,74 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
           </div>
         )}
       </div>
+    </section>
+  );
+}
+
+export function AgentRunControls() {
+  const { models, refreshModels } = useAgentModels();
+  const {
+    executionModes,
+    runSettings,
+    setEffort,
+    setExecutionMode,
+    setModelId,
+    supportedEfforts,
+  } = useAgentRunSettings();
+
+  useEffect(() => {
+    if (models.length === 0) void refreshModels().catch(() => undefined);
+  }, [models.length, refreshModels]);
+
+  return (
+    <section className="aui-run-controls" aria-label="Run settings">
+      <fieldset className="aui-mode-group">
+        <legend>Execution mode</legend>
+        <div className="aui-segmented">
+          {executionModes.map((mode) => (
+            <button
+              aria-pressed={runSettings.executionMode === mode.id}
+              className="aui-segment"
+              key={mode.id}
+              onClick={() => setExecutionMode(mode.id)}
+              title={mode.description}
+              type="button"
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      </fieldset>
+      <label className="aui-field">
+        <span>Model</span>
+        <select
+          aria-label="Model"
+          onChange={(event) => setModelId(event.currentTarget.value)}
+          value={runSettings.modelId ?? ""}
+        >
+          <option value="">Server default</option>
+          {models.map((model) => (
+            <option key={model.id} value={model.id}>
+              {model.name ?? model.id}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="aui-field">
+        <span>Effort</span>
+        <select
+          aria-label="Effort"
+          onChange={(event) => setEffort(event.currentTarget.value)}
+          value={runSettings.effort ?? ""}
+        >
+          <option value="">Model default</option>
+          {supportedEfforts.map((effort) => (
+            <option key={effort} value={effort}>
+              {effort}
+            </option>
+          ))}
+        </select>
+      </label>
     </section>
   );
 }
@@ -262,6 +339,55 @@ export function AgentStatusBar() {
   );
 }
 
+export function AgentUsage() {
+  const { rateLimits, refreshUsage } = useAgentUsage();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const windows = useMemo(() => normalizeUsageWindows(rateLimits), [rateLimits]);
+  return (
+    <section className="aui-usage" aria-label="Usage limits">
+      <div className="aui-usage-header">
+        <strong>Usage</strong>
+        <button
+          className="aui-link-button"
+          disabled={isRefreshing}
+          onClick={() => {
+            setIsRefreshing(true);
+            void refreshUsage().finally(() => setIsRefreshing(false));
+          }}
+          type="button"
+        >
+          {isRefreshing ? "Refreshing" : "Refresh"}
+        </button>
+      </div>
+      {windows.length > 0 ? (
+        <div className="aui-usage-grid">
+          {windows.map((window) => (
+            <div className="aui-usage-window" key={window.id}>
+              <div className="aui-usage-row">
+                <span>{window.label}</span>
+                <strong>{window.valueLabel}</strong>
+              </div>
+              <div
+                aria-label={`${window.label} usage`}
+                aria-valuemax={100}
+                aria-valuemin={0}
+                aria-valuenow={Math.round(window.percent)}
+                className="aui-meter"
+                role="progressbar"
+              >
+                <span style={{ width: `${Math.min(100, Math.max(0, window.percent))}%` }} />
+              </div>
+              {window.resetLabel ? <small>{window.resetLabel}</small> : null}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="aui-usage-empty">Usage limits are available after account sync.</p>
+      )}
+    </section>
+  );
+}
+
 export function ThreadList({
   activeThreadId,
   onSelectThread,
@@ -298,12 +424,38 @@ export function ThreadSidebar({
   onSelectThread?: (threadId: string) => void;
   threads: ThreadState[];
 }) {
+  const history = useAgentThreadHistory();
+  const { readThread } = useAgentThreadReader();
+  const [searchTerm, setSearchTerm] = useState("");
   return (
     <aside className="aui-sidebar">
       <div className="aui-sidebar-title">Threads</div>
+      <form
+        className="aui-history-controls"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void history.listThreads({ searchTerm });
+        }}
+      >
+        <input
+          aria-label="Search history"
+          onChange={(event) => setSearchTerm(event.currentTarget.value)}
+          placeholder="Search history"
+          type="search"
+          value={searchTerm}
+        />
+        <button className="aui-button aui-button-secondary" disabled={history.isLoading} type="submit">
+          {history.isLoading ? "Loading" : "Load"}
+        </button>
+      </form>
+      {history.error ? <p className="aui-sidebar-error">{history.error.message}</p> : null}
       <ThreadList
         activeThreadId={activeThreadId}
-        onSelectThread={onSelectThread}
+        onSelectThread={(threadId) => {
+          void readThread(threadId, { activate: true, includeTurns: true }).catch(() => {
+            onSelectThread?.(threadId);
+          });
+        }}
         threads={threads}
       />
     </aside>

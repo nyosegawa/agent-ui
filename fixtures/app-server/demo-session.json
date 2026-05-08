@@ -8,6 +8,49 @@
     }
   },
   {
+    "name": "usage limits",
+    "event": {
+      "type": "account/rateLimits/updated",
+      "rateLimits": {
+        "rateLimits": {
+          "limitName": "gpt-5.2",
+          "planType": "plus",
+          "primary": {
+            "usedPercent": 18,
+            "windowDurationMins": 300,
+            "resetsAt": 1778310000
+          },
+          "secondary": {
+            "usedPercent": 42,
+            "windowDurationMins": 10080,
+            "resetsAt": 1778713200
+          }
+        }
+      }
+    }
+  },
+  {
+    "name": "models",
+    "event": {
+      "type": "models/updated",
+      "selectedModelId": "gpt-5.2",
+      "models": [
+        {
+          "id": "gpt-5.2",
+          "name": "GPT-5.2",
+          "defaultEffort": "medium",
+          "supportedEfforts": ["minimal", "low", "medium", "high", "xhigh"]
+        },
+        {
+          "id": "gpt-5.2-codex",
+          "name": "GPT-5.2 Codex",
+          "defaultEffort": "high",
+          "supportedEfforts": ["low", "medium", "high", "xhigh"]
+        }
+      ]
+    }
+  },
+  {
     "name": "thread",
     "event": {
       "type": "thread/started",

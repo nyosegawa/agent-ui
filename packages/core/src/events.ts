@@ -4,9 +4,11 @@ import type {
   AgentModel,
   AgentThread,
   AgentTurn,
+  ExecutionModeId,
   ItemId,
   PendingServerRequest,
   RequestId,
+  ReasoningEffort,
   ThreadId,
   ThreadStatus,
   ThreadTokenUsage,
@@ -30,6 +32,13 @@ export type AgentEvent =
     }
   | { type: "account/login/completed"; account?: unknown }
   | { type: "models/updated"; models: AgentModel[]; selectedModelId?: string }
+  | {
+      type: "runSettings/updated";
+      executionMode?: ExecutionModeId;
+      modelId?: string;
+      effort?: ReasoningEffort;
+    }
+  | { type: "thread/upserted"; thread: AgentThread; status?: ThreadStatus; turns?: AgentTurn[] }
   | { type: "thread/started"; thread: AgentThread; status?: ThreadStatus; turns?: AgentTurn[] }
   | { type: "thread/status/changed"; threadId: ThreadId; status: ThreadStatus }
   | { type: "thread/name/updated"; threadId: ThreadId; name: string }

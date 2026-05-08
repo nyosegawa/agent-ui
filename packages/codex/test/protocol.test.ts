@@ -8,7 +8,7 @@ import {
   stableServerRequestMethods,
 } from "../src/protocol";
 import { encodeJsonRpcLine, parseJsonRpcLine } from "../src/json-rpc";
-import { normalizeCodexServerMessage } from "../src/normalizer";
+import { normalizeCodexServerMessage, normalizeModelListResponse } from "../src/normalizer";
 
 describe("Codex protocol metadata", () => {
   it("records upstream commit and stable MVP method surface", () => {
@@ -91,6 +91,40 @@ describe("Codex protocol metadata", () => {
         params: { rateLimits: { planType: "plus" } },
       }),
     ).toEqual([{ rateLimits: { planType: "plus" }, type: "account/rateLimits/updated" }]);
+  });
+
+  it("normalizes current model/list data responses", () => {
+    expect(
+      normalizeModelListResponse({
+        data: [
+          {
+            defaultReasoningEffort: "medium",
+            displayName: "GPT-5.5",
+            id: "gpt-5.5",
+            supportedReasoningEfforts: [
+              { description: "Fast", reasoningEffort: "low" },
+              { description: "Deep", reasoningEffort: "high" },
+            ],
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        defaultEffort: "medium",
+        id: "gpt-5.5",
+        name: "GPT-5.5",
+        raw: {
+          defaultReasoningEffort: "medium",
+          displayName: "GPT-5.5",
+          id: "gpt-5.5",
+          supportedReasoningEfforts: [
+            { description: "Fast", reasoningEffort: "low" },
+            { description: "Deep", reasoningEffort: "high" },
+          ],
+        },
+        supportedEfforts: ["low", "high"],
+      },
+    ]);
   });
 
   it("snapshots generated stable protocol method lists", () => {

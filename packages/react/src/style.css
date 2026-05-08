@@ -27,12 +27,17 @@
   overflow: visible;
 }
 
+.aui-shell,
+.aui-shell * {
+  box-sizing: border-box;
+}
+
 .aui-sidebar {
   background: #fbfcfd;
   border-right: 1px solid var(--aui-border);
   display: grid;
   gap: 10px;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto auto auto 1fr;
   padding: 12px;
 }
 
@@ -43,11 +48,40 @@
   text-transform: uppercase;
 }
 
+.aui-history-controls {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.aui-history-controls input {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 6px;
+  color: var(--aui-fg);
+  font: inherit;
+  font-size: 13px;
+  min-height: 34px;
+  min-width: 0;
+  padding: 6px 8px;
+}
+
+.aui-sidebar-error {
+  color: var(--aui-danger);
+  font-size: 12px;
+  margin: 0;
+}
+
 .aui-chat {
   background: var(--aui-panel);
   display: grid;
-  grid-template-rows: auto auto minmax(0, auto) auto auto auto auto;
+  grid-template-rows: auto auto auto minmax(0, auto) auto auto auto auto auto;
   min-width: 0;
+}
+
+.aui-chat > * {
+  min-width: 0;
+  width: 100%;
 }
 
 .aui-status,
@@ -64,6 +98,80 @@
   justify-content: space-between;
   min-height: 54px;
   padding: 10px 14px;
+}
+
+.aui-usage {
+  border-bottom: 1px solid var(--aui-border);
+  display: grid;
+  gap: 8px;
+  padding: 10px 14px;
+}
+
+.aui-usage-header,
+.aui-usage-row {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.aui-usage-header strong {
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.aui-usage-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.aui-usage-window {
+  border: 1px solid var(--aui-border);
+  border-radius: 6px;
+  display: grid;
+  gap: 6px;
+  padding: 8px;
+}
+
+.aui-usage-row span,
+.aui-usage-window small,
+.aui-usage-empty {
+  color: var(--aui-muted);
+  font-size: 12px;
+}
+
+.aui-usage-row strong {
+  font-size: 12px;
+}
+
+.aui-meter {
+  background: var(--aui-panel-alt);
+  border-radius: 999px;
+  height: 7px;
+  overflow: hidden;
+}
+
+.aui-meter span {
+  background: var(--aui-primary);
+  display: block;
+  height: 100%;
+}
+
+.aui-link-button {
+  background: transparent;
+  border: 0;
+  color: var(--aui-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  padding: 0;
+}
+
+.aui-link-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 .aui-brand {
@@ -302,6 +410,76 @@
   padding: 12px 14px;
 }
 
+.aui-run-controls {
+  align-items: end;
+  border-top: 1px solid var(--aui-border);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(260px, 1.4fr) minmax(150px, 1fr) minmax(120px, 0.7fr);
+  padding: 10px 14px;
+}
+
+.aui-mode-group {
+  border: 0;
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  min-inline-size: 0;
+  padding: 0;
+}
+
+.aui-mode-group legend,
+.aui-field span {
+  color: var(--aui-muted);
+  font-size: 12px;
+  font-weight: 650;
+  padding: 0;
+}
+
+.aui-segmented {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 6px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 2px;
+}
+
+.aui-segment {
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: var(--aui-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  min-height: 30px;
+  padding: 5px 8px;
+}
+
+.aui-segment[aria-pressed="true"] {
+  background: var(--aui-panel);
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.12);
+  color: var(--aui-fg);
+}
+
+.aui-field {
+  display: grid;
+  gap: 6px;
+}
+
+.aui-field select {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 6px;
+  color: var(--aui-fg);
+  font: inherit;
+  min-height: 36px;
+  padding: 6px 8px;
+  width: 100%;
+}
+
 .aui-composer-input {
   border: 1px solid var(--aui-border);
   border-radius: 6px;
@@ -361,6 +539,14 @@
     border-bottom: 1px solid var(--aui-border);
     border-right: 0;
     grid-template-rows: auto auto;
+  }
+
+  .aui-run-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .aui-usage-grid {
+    grid-template-columns: 1fr;
   }
 
   .aui-thread-list {

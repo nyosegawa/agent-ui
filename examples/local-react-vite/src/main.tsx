@@ -20,6 +20,47 @@ function DemoApp() {
               },
             };
           }
+          if (request.method === "thread/list") {
+            return {
+              data: [
+                {
+                  id: "thread-history-demo",
+                  name: "Stored session",
+                  preview: "Review a stored session",
+                  status: { type: "notLoaded" },
+                  turns: [],
+                },
+              ],
+            };
+          }
+          if (request.method === "thread/read") {
+            return {
+              thread: {
+                id: "thread-history-demo",
+                name: "Stored session",
+                path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+                status: { type: "notLoaded" },
+                turns: [
+                  {
+                    id: "turn-history-demo",
+                    items: [
+                      {
+                        content: [{ text: "Show me a stored session.", type: "text" }],
+                        id: "item-history-user",
+                        type: "userMessage",
+                      },
+                      {
+                        id: "item-history-agent",
+                        text: "Stored session history can be read before resuming.",
+                        type: "agentMessage",
+                      },
+                    ],
+                    status: "completed",
+                  },
+                ],
+              },
+            };
+          }
           return {};
         },
       }),

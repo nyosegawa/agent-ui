@@ -42,6 +42,9 @@ describe("AgentChat", () => {
     expect(screen.getByText("Protocol docs update")).toBeInTheDocument();
     expect(screen.getByLabelText("Command output")).toHaveTextContent("7 tests passed");
     expect(screen.getByLabelText("Diff preview")).toHaveTextContent("AgentDiffPanel");
+    expect(screen.getByLabelText("Run settings")).toHaveTextContent("Execution mode");
+    expect(screen.getByLabelText("Usage limits")).toHaveTextContent("gpt-5.2 5h");
+    expect(screen.getByLabelText("Usage limits")).toHaveTextContent("gpt-5.2 weekly");
     expect(screen.getByText("Review file changes")).toBeInTheDocument();
 
     const approveButtons = screen.getAllByRole("button", { name: "Approve" });
@@ -70,10 +73,78 @@ describe("AgentChat", () => {
       id: 0,
       method: "turn/start",
       params: {
+        approvalPolicy: "on-request",
         input: [{ text: "hello codex", text_elements: [], type: "text" }],
+        model: "gpt-5.2",
+        sandboxPolicy: {
+          excludeSlashTmp: false,
+          excludeTmpdirEnvVar: false,
+          networkAccess: false,
+          type: "workspaceWrite",
+          writableRoots: [],
+        },
         threadId: "thread-demo",
       },
     });
+  });
+
+  it("applies run controls to turn/start params", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider
+        initialState={runEventFixture(demoFixture as FixtureStep[])}
+        transport={transport}
+      >
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Read-only" }));
+    await user.selectOptions(screen.getByLabelText("Model"), "gpt-5.2-codex");
+    await user.selectOptions(screen.getByLabelText("Effort"), "xhigh");
+    await user.type(screen.getByLabelText("Message"), "inspect only");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(transport.requests.at(-1)?.params).toMatchObject({
+      approvalPolicy: "untrusted",
+      effort: "xhigh",
+      model: "gpt-5.2-codex",
+      sandboxPolicy: { networkAccess: false, type: "readOnly" },
+      threadId: "thread-demo",
+    });
+  });
+
+  it("refreshes usage limits", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/rateLimits/read") {
+          return {
+            rateLimitsByLimitId: {
+              weekly: {
+                limitName: "gpt-5.2",
+                secondary: {
+                  resetsAt: 1778713200,
+                  usedPercent: 55,
+                  windowDurationMins: 10080,
+                },
+              },
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Refresh" }));
+
+    expect(await screen.findByText("55%")).toBeInTheDocument();
   });
 
   it("shows device-code login details from account/login/start", async () => {
@@ -102,5 +173,79 @@ describe("AgentChat", () => {
       "https://chatgpt.com/device",
     );
     expect(screen.getByText("ABCD-EFGH")).toBeInTheDocument();
+  });
+
+  it("loads persisted session history and reads an individual thread", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-history",
+                name: "Historical fix",
+                preview: "Fix a stored bug",
+                status: { type: "notLoaded" },
+                turns: [],
+                updatedAt: 1778000000,
+              },
+            ],
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-history",
+              name: "Historical fix",
+              preview: "Fix a stored bug",
+              status: { type: "notLoaded" },
+              turns: [
+                {
+                  id: "turn-history",
+                  items: [
+                    {
+                      content: [{ text: "What changed?", type: "text" }],
+                      id: "item-history-user",
+                      type: "userMessage",
+                    },
+                    {
+                      id: "item-history-agent",
+                      text: "The stored thread was loaded.",
+                      type: "agentMessage",
+                    },
+                    {
+                      aggregatedOutput: "bun test\nok\n",
+                      command: "bun test",
+                      id: "item-history-command",
+                      status: "completed",
+                      type: "commandExecution",
+                    },
+                  ],
+                  status: "completed",
+                },
+              ],
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Load" }));
+    await user.click(await screen.findByRole("button", { name: /Historical fix/ }));
+
+    expect(await screen.findByRole("heading", { name: "Historical fix" })).toBeInTheDocument();
+    expect(screen.getByText("The stored thread was loaded.")).toBeInTheDocument();
+    expect(screen.getByLabelText("Command output")).toHaveTextContent("ok");
+    expect(transport.requests.map((request) => request.method)).toEqual(
+      expect.arrayContaining(["thread/list", "thread/read"]),
+    );
   });
 });

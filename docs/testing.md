@@ -166,4 +166,14 @@ bun run attw
 bun run test:e2e:playwright
 ```
 
-Real Codex smoke has been verified locally through the server bridge for initialize, account/model reads, thread start, turn start, streaming text, token usage, turn completion, and `thread/resume` after a completed turn is persisted. Full approval-path real smoke still needs deterministic fixtures or a controlled Codex prompt that requests command/file approvals.
+Real Codex smoke has been verified locally through the server bridge for initialize, account/model reads, thread start, turn start, streaming text, token usage, turn completion, and `thread/resume` after a completed turn is persisted.
+
+The history and usage smoke path has also been verified against `codex app-server --listen stdio://`:
+
+- `model/list`: 6 visible models in this environment, first entry `gpt-5.5`
+- `account/rateLimits/read`: 5-hour and weekly windows
+- `thread/list`: stored sessions returned
+- `thread/read(includeTurns: true)`: individual stored session history returned
+- `thread/resume(excludeTurns: true)`: resume succeeds for the same stored id
+
+Full approval-path real smoke still needs deterministic fixtures or a controlled Codex prompt that requests command/file approvals.
