@@ -18,6 +18,7 @@ codex app-server
 - Transport and rendering are separate.
 - Experimental protocol support is isolated behind explicit opt-in.
 - The local bridge is Node-side only.
+- Optional SDK adapters adapt host-owned clients/runners into `AgentTransport`; they do not replace the App Server protocol as the primary path.
 
 ## Core State
 

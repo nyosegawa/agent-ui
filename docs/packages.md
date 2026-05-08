@@ -43,6 +43,7 @@ Responsibilities:
 - transport interface
 - fake transport
 - fixture utilities
+- optional OpenAI Agents SDK runner adapter for simple text streaming demos
 
 Must not include:
 
@@ -65,8 +66,11 @@ Responsibilities:
 - server request response handling
 - App Server notifications to normalized events
 - device-code login request helpers
+- optional Codex SDK-like client adapter for hosts that already own a compatible client
 
 Default support is stable App Server API only. Experimental API requires explicit opt-in.
+
+The SDK adapter is not the primary integration path and does not add an `@openai/codex` runtime dependency.
 
 ## `@nyosegawa/agent-ui-react`
 
