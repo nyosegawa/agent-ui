@@ -34,6 +34,5 @@ jobs:
         with:
           node-version: 22.x
       - run: npm install -g pnpm@10.15.0
-      - run: pnpm config set package-manager-strict false
       - run: pnpm install --lockfile=false
       - run: pnpm --filter @nyosegawa/agent-ui-core build
