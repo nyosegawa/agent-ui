@@ -65,6 +65,12 @@ export function threadSnapshotEvents(
     }
   }
 
+  events.push({
+    status: normalizeThreadStatus(rawThread.status),
+    threadId: thread.id,
+    type: "thread/status/changed",
+  });
+
   return events;
 }
 

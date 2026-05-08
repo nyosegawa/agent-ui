@@ -98,19 +98,9 @@ export function useAgentThread(threadId?: ThreadId) {
         ...params,
         threadId: id,
       });
-      const rawThread = result?.thread;
-      if (rawThread) {
-        dispatch({
-          status: rawThread.status ?? result.status ?? "loaded",
-          thread: {
-            ephemeral: rawThread.ephemeral,
-            id: String(rawThread.id ?? rawThread.threadId ?? id),
-            name: rawThread.name,
-            path: rawThread.path,
-            raw: rawThread,
-          },
-          type: "thread/started",
-        });
+      const rawThread = result?.thread ?? result;
+      if (rawThread?.id) {
+        for (const event of threadSnapshotEvents(rawThread, true)) dispatch(event);
       }
       dispatch({ threadId: id, type: "thread/active/set" });
       return result;

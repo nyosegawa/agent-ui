@@ -57,6 +57,7 @@ describe("thread history normalization", () => {
       "turn/completed",
       "item/commandOutput/delta",
       "item/filePatch/updated",
+      "thread/status/changed",
     ]);
   });
 });

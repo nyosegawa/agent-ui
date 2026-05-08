@@ -220,6 +220,13 @@
   padding: 12px 14px;
 }
 
+.aui-thread-actions {
+  align-items: center;
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
 .aui-thread-header p {
   color: var(--aui-muted);
   font-size: 12px;

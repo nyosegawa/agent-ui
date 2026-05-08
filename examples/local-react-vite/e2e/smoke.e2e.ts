@@ -14,6 +14,8 @@ test("renders Agent UI chat", async ({ page }) => {
   await page.getByRole("button", { name: /Stored session/ }).click();
   await expect(page.getByRole("heading", { name: "Stored session" })).toBeVisible();
   await expect(page.getByText("Stored session history can be read before resuming.")).toBeVisible();
+  await page.getByRole("button", { name: "Resume" }).click();
+  await expect(page.locator(".aui-status-pill")).toHaveText("loaded");
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue("gpt-5.2");
   await expect(page.getByLabel("Effort", { exact: true })).toHaveValue("");
   await expect(page.getByRole("button", { name: "Review" })).toHaveAttribute("aria-pressed", "true");

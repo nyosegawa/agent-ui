@@ -9,7 +9,7 @@ const { thread, turns, startThread, resumeThread } = useAgentThread();
 const { threads, activeThreadId, setActiveThread } = useAgentThreads();
 ```
 
-Use `startThread()` for a new Codex thread and `resumeThread(threadId)` for an existing one. `useAgentThreads()` returns ordered normalized thread state for navigation.
+Use `startThread()` for a new Codex thread and `resumeThread(threadId)` for an existing one. `resumeThread()` hydrates returned thread snapshots through the same history normalizer used by `thread/read`. `useAgentThreads()` returns ordered normalized thread state for navigation.
 
 ## History Hooks
 

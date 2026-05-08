@@ -61,6 +61,17 @@ function DemoApp() {
               },
             };
           }
+          if (request.method === "thread/resume") {
+            return {
+              thread: {
+                id: "thread-history-demo",
+                name: "Stored session",
+                path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+                status: { type: "idle" },
+                turns: [],
+              },
+            };
+          }
           return {};
         },
       }),

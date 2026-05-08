@@ -228,6 +228,16 @@ describe("AgentChat", () => {
             },
           };
         }
+        if (request.method === "thread/resume") {
+          return {
+            thread: {
+              id: "thread-history",
+              name: "Historical fix",
+              status: { type: "idle" },
+              turns: [],
+            },
+          };
+        }
         return {};
       },
     });
@@ -244,8 +254,13 @@ describe("AgentChat", () => {
     expect(await screen.findByRole("heading", { name: "Historical fix" })).toBeInTheDocument();
     expect(screen.getByText("The stored thread was loaded.")).toBeInTheDocument();
     expect(screen.getByLabelText("Command output")).toHaveTextContent("ok");
+    await user.click(screen.getByRole("button", { name: "Resume" }));
     expect(transport.requests.map((request) => request.method)).toEqual(
-      expect.arrayContaining(["thread/list", "thread/read"]),
+      expect.arrayContaining(["thread/list", "thread/read", "thread/resume"]),
     );
+    expect(transport.requests.find((request) => request.method === "thread/resume")?.params).toEqual({
+      excludeTurns: true,
+      threadId: "thread-history",
+    });
   });
 });

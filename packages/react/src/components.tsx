@@ -50,9 +50,7 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
                 <h1>{thread.thread.name ?? "Untitled thread"}</h1>
                 <p>{thread.thread.path ?? thread.thread.id}</p>
               </div>
-              <span className="aui-status-pill" data-status={thread.status}>
-                {thread.status}
-              </span>
+              <AgentThreadActions status={thread.status} threadId={threadId} />
             </div>
             <AgentMessageList renderItem={slots?.renderItem} thread={thread} />
             <AgentWorkLog thread={thread} />
@@ -70,6 +68,27 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
         )}
       </div>
     </section>
+  );
+}
+
+function AgentThreadActions({ status, threadId }: { status: string; threadId?: string }) {
+  const { resumeThread } = useAgentThread(threadId);
+  const canResume = threadId && (status === "notLoaded" || status === "loaded");
+  return (
+    <div className="aui-thread-actions">
+      <span className="aui-status-pill" data-status={status}>
+        {status}
+      </span>
+      {canResume ? (
+        <button
+          className="aui-button aui-button-secondary"
+          onClick={() => void resumeThread(threadId, { excludeTurns: true })}
+          type="button"
+        >
+          Resume
+        </button>
+      ) : null}
+    </div>
   );
 }
 
