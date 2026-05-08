@@ -59,7 +59,7 @@ The default card shows request id, command or file path context, and the raw nor
 
 ## Diff And Work Log
 
-`AgentDiffViewer` renders a lightweight textual diff preview.
+`AgentDiffViewer` renders a read-only CodeMirror diff preview with line-level highlighting for file headers, hunks, additions, and removals. A textual fallback remains in the DOM before hydration and for non-browser rendering.
 
 `AgentWorkLog` renders command output grouped by thread turn. For richer terminal behavior, build a host component with `useAgentThread()` rather than exposing `thread/shellCommand` as a generic browser component.
 

@@ -32,6 +32,7 @@ The default components use `--aui-*` tokens for surfaces, borders, text, accents
 
 - sidebar thread list
 - main thread header, messages, work log, diff panel, approvals, composer
+- CodeMirror diff surfaces inherit `--aui-code-bg`, `--aui-code-fg`, and the package monospace stack
 
 Hosts can set `className` on `AgentChat` and constrain height with normal CSS.
 
@@ -42,4 +43,3 @@ Hosts can set `className` on `AgentChat` and constrain height with normal CSS.
 ## Custom Rendering
 
 Use slots for approval cards and thread items when the default UI is not enough. Keep approval decisions explicit and do not hide command or file-change context.
-

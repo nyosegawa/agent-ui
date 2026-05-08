@@ -363,6 +363,34 @@
   white-space: pre-wrap;
 }
 
+.aui-diff {
+  padding: 0;
+}
+
+.aui-codemirror-diff {
+  min-height: 84px;
+}
+
+.aui-diff-source {
+  color: var(--aui-code-fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 10px;
+  white-space: pre-wrap;
+}
+
+.aui-visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .aui-terminal-label {
   color: #98a2b3;
   display: block;

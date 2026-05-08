@@ -4,6 +4,8 @@ import type {
   ThreadState,
   TurnState,
 } from "@nyosegawa/agent-ui-core";
+import { EditorState, RangeSetBuilder } from "@codemirror/state";
+import { Decoration, EditorView, type DecorationSet } from "@codemirror/view";
 import type React from "react";
 import {
   useAgentApprovals,
@@ -18,7 +20,7 @@ import {
   useAgentUsage,
 } from "./hooks";
 import { normalizeUsageWindows } from "./usage";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export interface AgentChatSlots {
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
@@ -309,11 +311,122 @@ function ApprovalCard({
 }
 
 export function AgentDiffViewer({ patch }: { patch: unknown }) {
+  const text = stringifyPatch(patch);
   return (
-    <pre className="aui-diff">
-      {typeof patch === "string" ? patch : JSON.stringify(patch, null, 2)}
-    </pre>
+    <div className="aui-diff">
+      <CodeMirrorDiff text={text} />
+    </div>
   );
+}
+
+function CodeMirrorDiff({ text }: { text: string }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [isEnhanced, setIsEnhanced] = useState(false);
+
+  useEffect(() => {
+    if (!ref.current) return;
+    const view = new EditorView({
+      doc: text,
+      extensions: [
+        EditorState.readOnly.of(true),
+        EditorView.editable.of(false),
+        EditorView.lineWrapping,
+        EditorView.decorations.compute(["doc"], diffLineDecorations),
+        diffTheme,
+      ],
+      parent: ref.current,
+    });
+    setIsEnhanced(true);
+    return () => {
+      view.destroy();
+      setIsEnhanced(false);
+    };
+  }, [text]);
+
+  return (
+    <>
+      <div aria-label="CodeMirror diff preview" className="aui-codemirror-diff" ref={ref} />
+      <pre
+        aria-hidden={isEnhanced ? "true" : undefined}
+        className={isEnhanced ? "aui-diff-source aui-visually-hidden" : "aui-diff-source"}
+      >
+        {text}
+      </pre>
+    </>
+  );
+}
+
+function diffLineDecorations(state: EditorState): DecorationSet {
+  const builder = new RangeSetBuilder<Decoration>();
+  for (let lineNumber = 1; lineNumber <= state.doc.lines; lineNumber += 1) {
+    const line = state.doc.line(lineNumber);
+    const marker = line.text[0];
+    const className =
+      marker === "+"
+        ? "aui-cm-line-add"
+        : marker === "-"
+          ? "aui-cm-line-remove"
+          : marker === "@"
+            ? "aui-cm-line-hunk"
+            : marker === "d" && line.text.startsWith("diff ")
+              ? "aui-cm-line-file"
+              : undefined;
+    if (className) builder.add(line.from, line.from, Decoration.line({ class: className }));
+  }
+  return builder.finish();
+}
+
+const diffTheme = EditorView.theme(
+  {
+    "&": {
+      backgroundColor: "transparent",
+      color: "var(--aui-code-fg)",
+      fontSize: "12px",
+    },
+    ".cm-content": {
+      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+      minHeight: "100%",
+      padding: "10px 0",
+    },
+    ".cm-gutters": {
+      backgroundColor: "transparent",
+      borderRight: "1px solid #344054",
+      color: "#98a2b3",
+    },
+    ".cm-line": {
+      padding: "0 10px",
+    },
+    ".cm-scroller": {
+      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+      lineHeight: "1.5",
+    },
+    ".aui-cm-line-add": {
+      backgroundColor: "rgba(18, 135, 91, 0.22)",
+    },
+    ".aui-cm-line-file": {
+      color: "#d0d5dd",
+      fontWeight: "700",
+    },
+    ".aui-cm-line-hunk": {
+      backgroundColor: "rgba(84, 121, 255, 0.22)",
+      color: "#b8c7ff",
+    },
+    ".aui-cm-line-remove": {
+      backgroundColor: "rgba(180, 35, 24, 0.24)",
+    },
+    ".cm-activeLine": {
+      backgroundColor: "transparent",
+    },
+    "&.cm-focused": {
+      outline: "2px solid #a8ddd2",
+      outlineOffset: "-2px",
+    },
+  },
+  { dark: true },
+);
+
+function stringifyPatch(patch: unknown) {
+  return typeof patch === "string" ? patch : JSON.stringify(patch, null, 2);
 }
 
 export function AgentDiffPanel({ thread }: { thread: ThreadState }) {

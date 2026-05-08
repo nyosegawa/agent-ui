@@ -204,7 +204,7 @@ This checklist is the execution source of truth for Agent UI.
 - [ ] Add OpenAI Agents SDK adapter.
 - [ ] Add Web Components wrapper.
 - [x] Add richer thread navigation.
-- [ ] Add Monaco or CodeMirror diff integration.
+- [x] Add Monaco or CodeMirror diff integration.
 - [ ] Add multi-user deployment recipe.
 - [ ] Add API-key remote deployment recipe.
 - [ ] Add hosted demo app.

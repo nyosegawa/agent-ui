@@ -99,8 +99,8 @@ Customization:
 
 - Approval UX defaults to inline cards in the chat stream.
 - Modal and side-panel approvals are supported through slots.
-- Diff viewer starts as a lightweight renderer.
-- Monaco/CodeMirror integration is deferred.
+- Diff viewer uses a read-only CodeMirror surface with a textual fallback.
+- Monaco is deferred because it requires heavier worker and asset configuration from hosts.
 - `ThreadList` / `ThreadSidebar` ship as minimal components.
 - Full navigation layouts live in examples.
 - `thread/shellCommand` is host-only in MVP.

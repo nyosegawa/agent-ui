@@ -42,6 +42,7 @@ describe("AgentChat", () => {
     expect(screen.getByText("Protocol docs update")).toBeInTheDocument();
     expect(screen.getByLabelText("Command output")).toHaveTextContent("7 tests passed");
     expect(screen.getByLabelText("Diff preview")).toHaveTextContent("AgentDiffPanel");
+    expect(screen.getByLabelText("CodeMirror diff preview")).toBeInTheDocument();
     expect(screen.getByLabelText("Run settings")).toHaveTextContent("Execution mode");
     expect(screen.getByLabelText("Usage limits")).toHaveTextContent("gpt-5.2 5h");
     expect(screen.getByLabelText("Usage limits")).toHaveTextContent("gpt-5.2 weekly");

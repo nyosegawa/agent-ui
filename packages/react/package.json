@@ -34,6 +34,8 @@
     "test": "vitest run --config ../../vitest.config.ts --environment jsdom packages/react/test"
   },
   "dependencies": {
+    "@codemirror/state": "^6.6.0",
+    "@codemirror/view": "^6.42.1",
     "@nyosegawa/agent-ui-core": "workspace:*"
   },
   "peerDependencies": {
