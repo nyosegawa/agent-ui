@@ -64,3 +64,5 @@ bun run --cwd examples/local-react-vite dev
 ```
 
 The example uses a fixture-backed `FakeAgentTransport` for browser-only smoke testing of thread navigation, streaming text, command output, diff preview, and approval cards. Node hosts should start Codex through `@nyosegawa/agent-ui-server`.
+
+Additional typed recipes live in `examples/recipes` for custom component slots, headless hooks, theming, and optional WebSocket wiring.

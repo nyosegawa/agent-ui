@@ -150,10 +150,10 @@ This checklist is the execution source of truth for Agent UI.
 
 - [x] Add local React + Vite example.
 - [x] Add Next.js local bridge example.
-- [ ] Add websocket remote demo.
-- [ ] Add custom component example.
-- [ ] Add headless hooks example.
-- [ ] Add themed example.
+- [x] Add websocket remote demo.
+- [x] Add custom component example.
+- [x] Add headless hooks example.
+- [x] Add themed example.
 
 ## MVP Validation
 
