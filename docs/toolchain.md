@@ -145,6 +145,7 @@ monorepo orchestration: bun workspaces first, turbo optional
 versioning/release: changesets
 lint/format: eslint + prettier
 package validation: publint + arethetypeswrong
+npm provenance: enabled in release workflow when publishing with NPM_TOKEN
 ```
 
 Version snapshot:
@@ -160,6 +161,17 @@ attw: 1.0.0
 ```
 
 Use Bun workspace scripts first. Add `turbo` when task graph caching is useful.
+
+## Release Automation
+
+Changesets is configured under `.changeset/config.json`. The `Release` workflow runs on pushes to `main` and manual dispatch:
+
+1. install with Bun
+2. run typecheck, lint, unit tests, build, protocol tests, fixture tests, `publint`, and `attw`
+3. create or update a Changesets version PR when unpublished changesets exist
+4. publish packages with `bunx changeset publish --provenance` when a version commit lands on `main`
+
+Publishing requires `NPM_TOKEN`. The workflow grants `id-token: write` and sets `NPM_CONFIG_PROVENANCE=true` so npm package provenance is attached when the registry and token support it.
 
 ## Codex-Related Packages
 

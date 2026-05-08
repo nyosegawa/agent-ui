@@ -210,6 +210,6 @@ This checklist is the execution source of truth for Agent UI.
 - [ ] Add hosted demo app.
 - [ ] Add documentation site.
 - [x] Add visual regression tests.
-- [ ] Add release automation.
-- [ ] Add changelog automation.
-- [ ] Add package provenance/signing if useful.
+- [x] Add release automation.
+- [x] Add changelog automation.
+- [x] Add package provenance/signing if useful.
