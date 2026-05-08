@@ -1,0 +1,13 @@
+node_modules/
+dist/
+coverage/
+.turbo/
+.next/
+.vite/
+playwright-report/
+test-results/
+*.log
+.DS_Store
+.env
+.env.*
+!.env.example

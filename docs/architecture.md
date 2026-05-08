@@ -1,0 +1,103 @@
+# Architecture
+
+## Layers
+
+```text
+codex app-server
+  -> @nyosegawa/agent-ui-codex
+  -> @nyosegawa/agent-ui-core
+  -> @nyosegawa/agent-ui-react
+  -> host web app
+```
+
+## Principles
+
+- UI components must not depend directly on Codex generated protocol types.
+- Codex protocol messages are normalized in the adapter layer.
+- UI state is owned by `@nyosegawa/agent-ui-core`.
+- Transport and rendering are separate.
+- Experimental protocol support is isolated behind explicit opt-in.
+- The local bridge is Node-side only.
+
+## Core State
+
+```ts
+type AgentSessionState = {
+  connection: ConnectionState;
+  account: AccountState;
+  threads: Record<ThreadId, ThreadState>;
+  activeThreadId?: ThreadId;
+  pendingServerRequests: Record<RequestId, PendingServerRequest>;
+  models: ModelState;
+  configWarnings: WarningState[];
+};
+
+type ThreadState = {
+  thread: AgentThread;
+  turns: Record<TurnId, TurnState>;
+  orderedTurnIds: TurnId[];
+  tokenUsage?: ThreadTokenUsage;
+  status: ThreadStatus;
+};
+
+type TurnState = {
+  turn: AgentTurn;
+  itemOrder: string[];
+  items: Record<string, AgentItemState>;
+  streamingTextByItemId: Record<string, string>;
+  commandOutputByItemId: Record<string, string>;
+  filePatchByItemId: Record<string, unknown>;
+};
+```
+
+## Reducer Rules
+
+- `thread/started`: upsert thread
+- `thread/status/changed`: update thread status
+- `thread/name/updated`: update thread name
+- `thread/tokenUsage/updated`: update token usage
+- `turn/started`: create or update in-progress turn
+- `item/started`: create in-progress item
+- delta notifications: append or update transient state
+- `item/completed`: replace item with authoritative item
+- `turn/completed`: replace terminal turn state
+- server request: create pending interaction
+- server request resolved/rejected: clear pending interaction
+- JSON-RPC error: attach request/global error state
+
+`item/completed` and `turn/completed` are authoritative.
+
+## UI Model
+
+The drop-in UI is a convenience layer over the headless API.
+
+Default components:
+
+- `AgentProvider`
+- `AgentChat`
+- `AgentComposer`
+- `AgentMessageList`
+- `AgentWorkLog`
+- `AgentApprovalPrompt`
+- `AgentDiffViewer`
+- `AgentStatusBar`
+- `ThreadList`
+- `ThreadSidebar`
+
+Customization:
+
+- CSS variables
+- `className`
+- slots
+- render props
+- headless hooks
+
+## Fixed UI Decisions
+
+- Approval UX defaults to inline cards in the chat stream.
+- Modal and side-panel approvals are supported through slots.
+- Diff viewer starts as a lightweight renderer.
+- Monaco/CodeMirror integration is deferred.
+- `ThreadList` / `ThreadSidebar` ship as minimal components.
+- Full navigation layouts live in examples.
+- `thread/shellCommand` is host-only in MVP.

@@ -1,0 +1,132 @@
+# Packages
+
+## Package Set
+
+```text
+@nyosegawa/agent-ui-core
+@nyosegawa/agent-ui-codex
+@nyosegawa/agent-ui-react
+@nyosegawa/agent-ui-server
+```
+
+Packages are split by responsibility, but the local bridge is included in the official package set.
+
+## Monorepo Layout
+
+```text
+agent-ui/
+  packages/
+    core/
+    codex/
+    react/
+    server/
+  examples/
+    local-react-vite/
+    next-local-bridge/
+    websocket-remote-demo/
+  fixtures/
+    app-server/
+  docs/
+```
+
+## `@nyosegawa/agent-ui-core`
+
+Core state and protocol-neutral primitives.
+
+Responsibilities:
+
+- normalized event model
+- request/response abstraction
+- reducer and state machine
+- selectors
+- transport interface
+- fake transport
+- fixture utilities
+
+Must not include:
+
+- React
+- Node child process management
+- direct public exposure of Codex generated types
+
+## `@nyosegawa/agent-ui-codex`
+
+Codex App Server adapter.
+
+Responsibilities:
+
+- vendored generated schema
+- stable protocol type mapping
+- JSON-RPC-lite request correlation
+- stdio transport
+- optional websocket transport
+- initialize handshake
+- server request response handling
+- App Server notifications to normalized events
+- device-code login request helpers
+
+Default support is stable App Server API only. Experimental API requires explicit opt-in.
+
+## `@nyosegawa/agent-ui-react`
+
+React UI and hooks.
+
+Responsibilities:
+
+- `AgentProvider`
+- thread hooks
+- turn hooks
+- approval hooks
+- composer hooks
+- drop-in components
+- headless customization API
+- CSS variables and plain CSS theme
+
+React must be a peer dependency.
+
+## `@nyosegawa/agent-ui-server`
+
+Node and framework integration.
+
+Responsibilities:
+
+- local bridge
+- Codex App Server process lifecycle
+- Next.js Route Handler helpers
+- Express middleware
+- auth/token forwarding recipes
+
+Browser packages must not spawn child processes directly.
+
+## Initial Public API
+
+```tsx
+import { AgentProvider, AgentChat } from "@nyosegawa/agent-ui-react";
+import { createCodexStdioTransport } from "@nyosegawa/agent-ui-codex";
+
+const transport = createCodexStdioTransport({
+  command: "codex",
+  args: ["app-server", "--listen", "stdio://"],
+  clientInfo: {
+    name: "agent_ui_example",
+    title: "Agent UI Example",
+    version: "0.1.0",
+  },
+});
+
+export function App() {
+  return (
+    <AgentProvider transport={transport}>
+      <AgentChat />
+    </AgentProvider>
+  );
+}
+```
+
+Headless usage:
+
+```tsx
+const thread = useAgentThread(threadId);
+const approvals = useAgentApprovals(threadId);
+const composer = useAgentComposer(threadId);
+```
