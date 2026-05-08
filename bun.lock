@@ -123,6 +123,22 @@
         "execa": "9.6.1",
       },
     },
+    "packages/web-components": {
+      "name": "@nyosegawa/agent-ui-web-components",
+      "version": "0.0.0",
+      "dependencies": {
+        "@nyosegawa/agent-ui-core": "workspace:*",
+        "@nyosegawa/agent-ui-react": "workspace:*",
+      },
+      "devDependencies": {
+        "react": "19.2.6",
+        "react-dom": "19.2.6",
+      },
+      "peerDependencies": {
+        "react": ">=18.3.0 || >=19.0.0",
+        "react-dom": ">=18.3.0 || >=19.0.0",
+      },
+    },
   },
   "packages": {
     "@adobe/css-tools": ["@adobe/css-tools@4.4.4", "", {}, "sha512-Elp+iwUx5rN5+Y8xLt5/GRoG20WGoDCQ/1Fb+1LiGtvwbDavuSk0jhD/eZdckHAuzcDzccnkv+rEjyWfRx18gg=="],
@@ -430,6 +446,8 @@
     "@nyosegawa/agent-ui-react": ["@nyosegawa/agent-ui-react@workspace:packages/react"],
 
     "@nyosegawa/agent-ui-server": ["@nyosegawa/agent-ui-server@workspace:packages/server"],
+
+    "@nyosegawa/agent-ui-web-components": ["@nyosegawa/agent-ui-web-components@workspace:packages/web-components"],
 
     "@oxc-project/types": ["@oxc-project/types@0.128.0", "", {}, "sha512-huv1Y/LzBJkBVHt3OlC7u0zHBW9qXf1FdD7sGmc1rXc2P1mTwHssYv7jyGx5KAACSCH+9B3Bhn6Z9luHRvf7pQ=="],
 

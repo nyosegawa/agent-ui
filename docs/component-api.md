@@ -78,3 +78,15 @@ The selected values are stored in normalized run settings and are merged into `t
 `AgentUsage` renders account rate-limit windows from `account/rateLimits/updated` notifications or `account/rateLimits/read` responses. It supports the current App Server `usedPercent`/`windowDurationMins` shape and legacy fixture-style `used`/`limit` windows.
 
 `normalizeUsageWindows()` is exported for hosts that want to render the same 5-hour and weekly windows in custom chrome.
+
+## Web Components
+
+`@nyosegawa/agent-ui-web-components` exports `defineAgentChatElement()`. The custom element accepts `transport`, `initialState`, and `slots` as JavaScript properties and renders the standard React chat surface.
+
+```ts
+import "@nyosegawa/agent-ui-react/style.css";
+import { defineAgentChatElement } from "@nyosegawa/agent-ui-web-components";
+
+defineAgentChatElement();
+document.querySelector("agent-chat").transport = transport;
+```

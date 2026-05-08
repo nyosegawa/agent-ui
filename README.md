@@ -27,6 +27,7 @@ stable App Server API only
 @nyosegawa/agent-ui-codex
 @nyosegawa/agent-ui-react
 @nyosegawa/agent-ui-server
+@nyosegawa/agent-ui-web-components
 ```
 
 ## Docs

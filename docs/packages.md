@@ -7,6 +7,7 @@
 @nyosegawa/agent-ui-codex
 @nyosegawa/agent-ui-react
 @nyosegawa/agent-ui-server
+@nyosegawa/agent-ui-web-components
 ```
 
 Packages are split by responsibility, but the local bridge is included in the official package set.
@@ -20,6 +21,7 @@ agent-ui/
     codex/
     react/
     server/
+    web-components/
   examples/
     docs-site/
     local-react-vite/
@@ -102,6 +104,18 @@ Responsibilities:
 - auth/token forwarding recipes
 
 Browser packages must not spawn child processes directly.
+
+## `@nyosegawa/agent-ui-web-components`
+
+Custom element wrapper for host applications that do not want to mount React directly.
+
+Responsibilities:
+
+- define `<agent-chat>` or a caller-supplied tag name
+- accept `transport`, `initialState`, and `slots` as JavaScript properties
+- render the standard React `AgentChat` inside `AgentProvider`
+
+The wrapper does not create transports, spawn Codex, or include CSS automatically. Hosts should import `@nyosegawa/agent-ui-react/style.css`.
 
 ## Examples
 

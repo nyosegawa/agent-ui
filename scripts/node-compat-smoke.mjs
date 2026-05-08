@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 
-const packages = ["core", "codex", "react", "server"];
+const packages = ["core", "codex", "react", "server", "web-components"];
 
 for (const name of packages) {
   const root = new globalThis.URL(`../packages/${name}/`, import.meta.url);
@@ -22,6 +22,9 @@ for (const name of packages) {
 const core = await import(new globalThis.URL("../packages/core/dist/index.js", import.meta.url));
 const codex = await import(new globalThis.URL("../packages/codex/dist/index.js", import.meta.url));
 const server = await import(new globalThis.URL("../packages/server/dist/index.js", import.meta.url));
+const webComponents = await import(
+  new globalThis.URL("../packages/web-components/dist/index.js", import.meta.url)
+);
 
 if (typeof core.createInitialAgentState !== "function") {
   throw new Error("core ESM export missing createInitialAgentState");
@@ -31,6 +34,9 @@ if (typeof codex.createCodexStdioTransport !== "function") {
 }
 if (typeof server.createCodexAppServerBridge !== "function") {
   throw new Error("server ESM export missing createCodexAppServerBridge");
+}
+if (typeof webComponents.defineAgentChatElement !== "function") {
+  throw new Error("web-components ESM export missing defineAgentChatElement");
 }
 
 log(`Node compatibility smoke passed on ${process.version}`);

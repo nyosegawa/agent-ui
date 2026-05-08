@@ -202,7 +202,7 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Harden websocket reconnection policy.
 - [x] Add Codex SDK adapter.
 - [x] Add OpenAI Agents SDK adapter.
-- [ ] Add Web Components wrapper.
+- [x] Add Web Components wrapper.
 - [x] Add richer thread navigation.
 - [x] Add Monaco or CodeMirror diff integration.
 - [x] Add multi-user deployment recipe.
