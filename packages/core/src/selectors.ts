@@ -13,6 +13,10 @@ export function selectOrderedTurns(state: AgentSessionState, threadId: ThreadId)
   return thread?.orderedTurnIds.map((turnId) => thread.turns[turnId]).filter(Boolean) ?? [];
 }
 
+export function selectOrderedThreads(state: AgentSessionState) {
+  return Object.values(state.threads);
+}
+
 export function selectPendingApprovals(state: AgentSessionState, threadId?: ThreadId) {
   return Object.values(state.pendingServerRequests).filter((request) => {
     const approval =

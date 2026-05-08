@@ -57,9 +57,16 @@ Rules:
 
 - remote production deployment is not part of MVP
 - non-loopback exposure requires explicit auth
-- bearer tokens must not be logged
+- bearer tokens must not be logged or placed in query strings
 - reconnect is opt-in
 - multi-user use requires per-user process/credential/workspace separation
+
+Implementation status:
+
+- `createCodexWebSocketTransport()` speaks the same JSON-RPC-lite message shape over `WebSocket`.
+- The transport accepts `url`, optional `protocols`, and optional initialize metadata.
+- Authentication belongs to the host endpoint, for example same-origin cookies or a reverse proxy session.
+- Reconnect/backoff is deferred; hosts should create a new transport after close.
 
 ## Stable and Experimental API
 

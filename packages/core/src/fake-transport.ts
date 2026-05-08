@@ -8,6 +8,10 @@ export interface FakeTransportRequest {
   params?: unknown;
 }
 
+export interface FakeAgentTransportOptions {
+  onRequest?: (request: FakeTransportRequest, transport: FakeAgentTransport) => unknown;
+}
+
 export class FakeAgentTransport implements AgentTransport {
   readonly requests: FakeTransportRequest[] = [];
   readonly notifications: Array<{ method: string; params?: unknown }> = [];
@@ -18,6 +22,11 @@ export class FakeAgentTransport implements AgentTransport {
   #events: AgentTransportEvent[] = [];
   #waiters: Array<(value: IteratorResult<AgentTransportEvent>) => void> = [];
   #nextId = 0;
+  #options: FakeAgentTransportOptions;
+
+  constructor(options: FakeAgentTransportOptions = {}) {
+    this.#options = options;
+  }
 
   get events(): AsyncIterable<AgentTransportEvent> {
     return {
@@ -28,6 +37,7 @@ export class FakeAgentTransport implements AgentTransport {
   }
 
   async connect(): Promise<void> {
+    this.#events = [];
     this.#connected = true;
     this.push({ event: { type: "connection/connected" }, type: "event" });
   }
@@ -45,8 +55,9 @@ export class FakeAgentTransport implements AgentTransport {
       throw new Error("FakeAgentTransport is not connected");
     }
     const id = this.#nextId++;
-    this.requests.push({ id, method, params });
-    return {} as TResult;
+    const request = { id, method, params };
+    this.requests.push(request);
+    return (this.#options.onRequest?.(request, this) ?? {}) as TResult;
   }
 
   notify(method: string, params?: unknown): void {

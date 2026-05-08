@@ -15,6 +15,11 @@ The docs are organized as implementation-facing specifications. They intentional
 - [Testing](./testing.md): protocol, reducer, transport, component, and e2e strategy.
 - [Security](./security.md): filesystem, shell, auth, remote, and multi-user constraints.
 - [Roadmap](./roadmap.md): implementation order and post-MVP expansion.
+- [Remote Deployment](./remote-deployment.md): advanced remote/WebSocket constraints.
+- [Protocol Drift](./protocol-drift.md): schema update and snapshot review workflow.
+- [Theming](./theming.md): CSS variable customization.
+- [Component API](./component-api.md): drop-in component reference.
+- [Headless Hooks](./headless-hooks.md): hook reference for custom layouts.
 
 ## Current MVP
 
@@ -58,4 +63,4 @@ Run the local Vite example:
 bun run --cwd examples/local-react-vite dev
 ```
 
-The example currently uses `FakeAgentTransport` for browser-only smoke testing. Node hosts should start Codex through `@nyosegawa/agent-ui-server`.
+The example uses a fixture-backed `FakeAgentTransport` for browser-only smoke testing of thread navigation, streaming text, command output, diff preview, and approval cards. Node hosts should start Codex through `@nyosegawa/agent-ui-server`.

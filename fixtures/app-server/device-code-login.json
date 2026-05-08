@@ -1,0 +1,22 @@
+[
+  {
+    "name": "device code started",
+    "event": {
+      "type": "account/login/deviceCodeStarted",
+      "requestId": 1,
+      "userCode": "ABCD-EFGH",
+      "verificationUrl": "https://chatgpt.com/device",
+      "expiresAt": "2026-05-09T03:00:00.000Z"
+    }
+  },
+  {
+    "name": "login completed",
+    "event": {
+      "type": "account/login/completed",
+      "account": {
+        "email": "user@example.com",
+        "authMethod": "chatgpt"
+      }
+    }
+  }
+]

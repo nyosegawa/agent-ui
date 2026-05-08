@@ -1,26 +1,53 @@
 :root {
-  --aui-bg: #ffffff;
-  --aui-border: #d8dee8;
-  --aui-fg: #111827;
+  --aui-bg: #f6f7f9;
+  --aui-border: #d7dde6;
+  --aui-border-strong: #b8c2d0;
+  --aui-fg: #14171f;
   --aui-muted: #667085;
-  --aui-panel: #f7f8fa;
+  --aui-panel: #ffffff;
+  --aui-panel-alt: #eef2f6;
   --aui-primary: #0f766e;
   --aui-primary-fg: #ffffff;
   --aui-danger: #b42318;
+  --aui-code-bg: #101828;
+  --aui-code-fg: #e6edf3;
   --aui-radius: 8px;
   --aui-font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--aui-fg);
   font-family: var(--aui-font);
 }
 
-.aui-chat {
+.aui-shell {
   background: var(--aui-bg);
   border: 1px solid var(--aui-border);
   border-radius: var(--aui-radius);
   display: grid;
-  gap: 12px;
-  min-height: 480px;
+  grid-template-columns: minmax(180px, 240px) minmax(0, 1fr);
+  min-height: 680px;
+  overflow: visible;
+}
+
+.aui-sidebar {
+  background: #fbfcfd;
+  border-right: 1px solid var(--aui-border);
+  display: grid;
+  gap: 10px;
+  grid-template-rows: auto 1fr;
   padding: 12px;
+}
+
+.aui-sidebar-title {
+  color: var(--aui-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.aui-chat {
+  background: var(--aui-panel);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, auto) auto auto auto auto;
+  min-width: 0;
 }
 
 .aui-status,
@@ -35,7 +62,56 @@
   border-bottom: 1px solid var(--aui-border);
   color: var(--aui-muted);
   justify-content: space-between;
-  padding-bottom: 8px;
+  min-height: 54px;
+  padding: 10px 14px;
+}
+
+.aui-brand {
+  align-items: baseline;
+  display: flex;
+  gap: 10px;
+}
+
+.aui-brand strong,
+.aui-thread-header h1 {
+  color: var(--aui-fg);
+  font-size: 15px;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.aui-thread-header {
+  align-items: center;
+  border-bottom: 1px solid var(--aui-border);
+  display: flex;
+  justify-content: space-between;
+  min-height: 72px;
+  padding: 12px 14px;
+}
+
+.aui-thread-header p {
+  color: var(--aui-muted);
+  font-size: 12px;
+  margin: 6px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 560px;
+}
+
+.aui-status-pill {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 999px;
+  color: var(--aui-muted);
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+.aui-status-pill[data-status="running"] {
+  background: #e7f7f3;
+  border-color: #a8ddd2;
+  color: #0f766e;
 }
 
 .aui-button {
@@ -45,22 +121,38 @@
   color: var(--aui-primary-fg);
   cursor: pointer;
   font: inherit;
+  font-weight: 650;
   min-height: 34px;
   padding: 6px 12px;
 }
 
+.aui-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .aui-button-secondary {
   background: transparent;
-  border: 1px solid var(--aui-border);
+  border: 1px solid var(--aui-border-strong);
   color: var(--aui-fg);
 }
 
+.aui-empty {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 360px;
+}
+
 .aui-message-list {
+  align-content: start;
   display: grid;
-  gap: 10px;
+  gap: 12px;
   list-style: none;
   margin: 0;
-  padding: 0;
+  max-height: 360px;
+  overflow: auto;
+  padding: 14px;
 }
 
 .aui-turn {
@@ -70,14 +162,121 @@
 
 .aui-message,
 .aui-approval,
-.aui-command-output,
 .aui-diff {
   background: var(--aui-panel);
   border: 1px solid var(--aui-border);
   border-radius: var(--aui-radius);
   margin: 0;
   padding: 10px;
+}
+
+.aui-message[data-kind="userMessage"] {
+  background: #eef7ff;
+  border-color: #c8def8;
+}
+
+.aui-message[data-kind="reasoning"] {
+  background: #f5f0ff;
+  border-color: #ddd0fb;
+}
+
+.aui-message-meta {
+  color: var(--aui-muted);
+  display: flex;
+  font-size: 12px;
+  gap: 8px;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.aui-message-body {
+  font-size: 14px;
+  line-height: 1.55;
   white-space: pre-wrap;
+}
+
+.aui-worklog,
+.aui-diff-panel,
+.aui-approvals {
+  border-top: 1px solid var(--aui-border);
+  display: grid;
+  gap: 10px;
+  overflow: auto;
+  padding: 12px 14px;
+}
+
+.aui-worklog,
+.aui-diff-panel {
+  max-height: 220px;
+}
+
+.aui-command-output,
+.aui-diff {
+  background: var(--aui-code-bg);
+  border: 1px solid #344054;
+  border-radius: var(--aui-radius);
+  color: var(--aui-code-fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  overflow: auto;
+  padding: 10px;
+  white-space: pre-wrap;
+}
+
+.aui-terminal-label {
+  color: #98a2b3;
+  display: block;
+  font-family: var(--aui-font);
+  font-size: 11px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.aui-approval {
+  background: #fff8eb;
+  border-color: #f4c16d;
+  display: grid;
+  gap: 8px;
+}
+
+.aui-approval-header {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.aui-approval-header span,
+.aui-file-path {
+  color: var(--aui-muted);
+  font-size: 12px;
+}
+
+.aui-command-line {
+  background: #111827;
+  border-radius: 6px;
+  color: #f9fafb;
+  display: block;
+  overflow: auto;
+  padding: 8px;
+}
+
+.aui-approval pre {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--aui-border);
+  border-radius: 6px;
+  font-size: 12px;
+  margin: 0;
+  max-height: 120px;
+  overflow: auto;
+  padding: 8px;
+}
+
+.aui-composer {
+  border-top: 1px solid var(--aui-border);
+  padding: 12px 14px;
 }
 
 .aui-composer-input {
@@ -86,22 +285,64 @@
   color: var(--aui-fg);
   flex: 1;
   font: inherit;
+  min-height: 42px;
   padding: 8px;
   resize: vertical;
 }
 
 .aui-thread-list {
+  align-content: start;
   display: grid;
-  gap: 4px;
+  gap: 6px;
+  overflow: auto;
 }
 
 .aui-thread-list-item {
   background: transparent;
-  border: 0;
+  border: 1px solid transparent;
   border-radius: 6px;
   color: var(--aui-fg);
   cursor: pointer;
+  display: grid;
   font: inherit;
+  gap: 4px;
+  min-height: 54px;
   padding: 8px;
   text-align: left;
+}
+
+.aui-thread-list-item[aria-current="page"] {
+  background: #e7f7f3;
+  border-color: #a8ddd2;
+}
+
+.aui-thread-list-item span {
+  font-size: 13px;
+  font-weight: 650;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-thread-list-item small {
+  color: var(--aui-muted);
+  font-size: 11px;
+}
+
+@media (max-width: 720px) {
+  .aui-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .aui-sidebar {
+    border-bottom: 1px solid var(--aui-border);
+    border-right: 0;
+    grid-template-rows: auto auto;
+  }
+
+  .aui-thread-list {
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(160px, 1fr);
+    overflow-x: auto;
+  }
 }

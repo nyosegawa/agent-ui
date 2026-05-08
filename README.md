@@ -6,7 +6,7 @@ Agent UI provides React components, headless hooks, state management, and transp
 
 ## Status
 
-Pre-implementation planning and scaffold.
+MVP implementation in progress. Core state, Codex App Server transports, React components, server bridge helpers, examples, fixtures, and package validation are in place.
 
 ## MVP
 

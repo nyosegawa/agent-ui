@@ -1,5 +1,6 @@
 import {
   selectActiveThread,
+  selectOrderedThreads,
   selectOrderedTurns,
   selectPendingApprovals,
   selectThread,
@@ -48,6 +49,16 @@ export function useAgentThread(threadId?: ThreadId) {
   );
 
   return { resumeThread, startThread, thread, threadId: resolvedThreadId, turns };
+}
+
+export function useAgentThreads() {
+  const { dispatch, state } = useAgentContext();
+  const threads = useMemo(() => selectOrderedThreads(state), [state]);
+  const setActiveThread = useCallback(
+    (threadId: ThreadId) => dispatch({ threadId, type: "thread/active/set" }),
+    [dispatch],
+  );
+  return { activeThreadId: state.activeThreadId, setActiveThread, threads };
 }
 
 export function useAgentTurn(threadId?: ThreadId) {

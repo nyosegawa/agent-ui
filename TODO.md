@@ -33,11 +33,11 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Add local quickstart.
 - [x] Add Codex App Server transport guide.
 - [x] Add device-code login guide.
-- [ ] Add remote deployment guide.
-- [ ] Add protocol drift guide.
-- [ ] Add theming guide.
-- [ ] Add component API reference.
-- [ ] Add headless hooks reference.
+- [x] Add remote deployment guide.
+- [x] Add protocol drift guide.
+- [x] Add theming guide.
+- [x] Add component API reference.
+- [x] Add headless hooks reference.
 
 ## Toolchain
 
@@ -93,8 +93,8 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Implement server request response handling.
 - [x] Implement App Server notification normalization.
 - [x] Implement device-code login helpers.
-- [ ] Implement optional websocket transport.
-- [ ] Add protocol method snapshot tests.
+- [x] Implement optional websocket transport.
+- [x] Add protocol method snapshot tests.
 
 ## React Package
 
@@ -114,8 +114,8 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Implement `ThreadList`.
 - [x] Implement `ThreadSidebar`.
 - [x] Add CSS variables.
-- [ ] Add slot/render prop customization.
-- [ ] Add accessibility tests for interactive components.
+- [x] Add slot/render prop customization.
+- [x] Add accessibility tests for interactive components.
 
 ## Server Package
 
@@ -127,21 +127,21 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Add Next.js Route Handler helpers.
 - [x] Add Express middleware.
 - [x] Add token redaction utilities.
-- [ ] Add server package tests with fake child process.
+- [x] Add server package tests with fake child process.
 
 ## Fixtures
 
 - [x] Add handshake fixture.
-- [ ] Add account device-code login fixture.
-- [ ] Add thread start fixture.
+- [x] Add account device-code login fixture.
+- [x] Add thread start fixture.
 - [x] Add text turn fixture.
 - [x] Add streaming agent message fixture.
-- [ ] Add reasoning summary fixture.
+- [x] Add reasoning summary fixture.
 - [ ] Add plan update fixture.
 - [x] Add command execution fixture.
 - [x] Add command approval fixture.
-- [ ] Add file change fixture.
-- [ ] Add file change approval fixture.
+- [x] Add file change fixture.
+- [x] Add file change approval fixture.
 - [ ] Add interrupted turn fixture.
 - [ ] Add failed turn fixture.
 - [ ] Add rate-limit update fixture.
@@ -164,7 +164,7 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Render streaming assistant text.
 - [x] Render command output.
 - [x] Resolve command approval.
-- [ ] Resolve file-change approval.
+- [x] Resolve file-change approval.
 - [x] Render diff preview.
 - [ ] Resume a thread.
 - [x] Pass protocol conformance tests.
@@ -174,7 +174,7 @@ This checklist is the execution source of truth for Agent UI.
 
 ## Post-MVP
 
-- [ ] Add remote WebSocket deployment guide.
+- [x] Add remote WebSocket deployment guide.
 - [ ] Harden websocket reconnection policy.
 - [ ] Add Codex SDK adapter.
 - [ ] Add OpenAI Agents SDK adapter.

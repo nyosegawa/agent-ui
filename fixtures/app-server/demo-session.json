@@ -1,0 +1,170 @@
+[
+  {
+    "name": "authenticated account",
+    "event": {
+      "type": "account/updated",
+      "status": "authenticated",
+      "account": { "email": "user@example.com", "planType": "plus" }
+    }
+  },
+  {
+    "name": "thread",
+    "event": {
+      "type": "thread/started",
+      "thread": {
+        "id": "thread-demo",
+        "name": "Implement approval UI",
+        "path": "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui"
+      },
+      "status": "running"
+    }
+  },
+  {
+    "name": "user turn",
+    "event": {
+      "type": "turn/started",
+      "threadId": "thread-demo",
+      "turn": { "id": "turn-demo", "threadId": "thread-demo", "status": "running" }
+    }
+  },
+  {
+    "name": "user message",
+    "event": {
+      "type": "item/completed",
+      "threadId": "thread-demo",
+      "turnId": "turn-demo",
+      "item": {
+        "id": "item-user",
+        "threadId": "thread-demo",
+        "turnId": "turn-demo",
+        "kind": "userMessage",
+        "status": "completed",
+        "text": "Make the approval cards and diff preview feel production-ready."
+      }
+    }
+  },
+  {
+    "name": "reasoning",
+    "event": {
+      "type": "item/completed",
+      "threadId": "thread-demo",
+      "turnId": "turn-demo",
+      "item": {
+        "id": "item-reasoning",
+        "threadId": "thread-demo",
+        "turnId": "turn-demo",
+        "kind": "reasoning",
+        "status": "completed",
+        "text": "I will keep shell execution explicit, show pending approval context inline, and avoid exposing generic host-only commands as a public component."
+      }
+    }
+  },
+  {
+    "name": "reasoning summary delta",
+    "event": {
+      "type": "item/reasoning/summaryTextDelta",
+      "threadId": "thread-demo",
+      "turnId": "turn-demo",
+      "itemId": "item-reasoning",
+      "delta": " Approval handling stays explicit and reviewable."
+    }
+  },
+  {
+    "name": "assistant",
+    "event": {
+      "type": "item/started",
+      "threadId": "thread-demo",
+      "turnId": "turn-demo",
+      "item": {
+        "id": "item-agent",
+        "threadId": "thread-demo",
+        "turnId": "turn-demo",
+        "kind": "agentMessage",
+        "status": "inProgress"
+      }
+    }
+  },
+  {
+    "name": "assistant delta",
+    "event": {
+      "type": "item/agentMessage/delta",
+      "threadId": "thread-demo",
+      "turnId": "turn-demo",
+      "itemId": "item-agent",
+      "delta": "Approval UI now presents command context, file paths, and patch previews before the user decides."
+    }
+  },
+  {
+    "name": "command output",
+    "event": {
+      "type": "item/commandOutput/delta",
+      "threadId": "thread-demo",
+      "turnId": "turn-demo",
+      "itemId": "item-command",
+      "delta": "$ bun test packages/react/test\n7 tests passed\n"
+    }
+  },
+  {
+    "name": "diff",
+    "event": {
+      "type": "item/filePatch/updated",
+      "threadId": "thread-demo",
+      "turnId": "turn-demo",
+      "itemId": "item-file",
+      "patch": "diff --git a/packages/react/src/components.tsx b/packages/react/src/components.tsx\n+ <AgentApprovalPrompt />\n+ <AgentDiffPanel />"
+    }
+  },
+  {
+    "name": "command approval",
+    "event": {
+      "type": "serverRequest/created",
+      "request": {
+        "id": "approval-command",
+        "kind": "commandApproval",
+        "threadId": "thread-demo",
+        "turnId": "turn-demo",
+        "itemId": "item-command",
+        "payload": {
+          "command": "bun run build",
+          "cwd": "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+          "approvalPolicy": "on-request",
+          "sandbox": "workspace-write"
+        }
+      }
+    }
+  },
+  {
+    "name": "file approval",
+    "event": {
+      "type": "serverRequest/created",
+      "request": {
+        "id": "approval-file",
+        "kind": "fileChangeApproval",
+        "threadId": "thread-demo",
+        "turnId": "turn-demo",
+        "itemId": "item-file",
+        "payload": {
+          "path": "packages/react/src/components.tsx",
+          "summary": "Render approval and diff panels in the main chat surface.",
+          "patch": "+ <AgentDiffPanel thread={thread} />"
+        }
+      }
+    }
+  },
+  {
+    "name": "second thread",
+    "event": {
+      "type": "thread/started",
+      "thread": {
+        "id": "thread-docs",
+        "name": "Protocol docs update",
+        "path": "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui/docs"
+      },
+      "status": "complete"
+    }
+  },
+  {
+    "name": "active thread",
+    "event": { "type": "thread/active/set", "threadId": "thread-demo" }
+  }
+]

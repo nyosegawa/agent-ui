@@ -17,7 +17,9 @@
 12. approval UI
 13. diff viewer
 14. work log
-15. real app-server smoke test
+15. component accessibility and fixture coverage
+16. real app-server smoke test
+17. docs/TODO sync and package validation
 ```
 
 ## MVP Exit Criteria
@@ -36,12 +38,17 @@ MVP is complete when:
 - protocol conformance tests exist
 - reducer fixture tests cover core event paths
 - package exports pass validation
+- browser smoke test passes
 
 ## Post-MVP
 
 Add after MVP:
 
 - remote WebSocket deployment guide
+- websocket reconnection hardening
+- custom component examples
+- headless hooks examples
+- themed examples
 - SDK adapter
 - OpenAI Agents SDK adapter
 - Web Components wrapper
