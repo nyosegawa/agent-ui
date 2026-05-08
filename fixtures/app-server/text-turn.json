@@ -1,0 +1,87 @@
+[
+  {
+    "name": "thread",
+    "event": {
+      "type": "thread/started",
+      "thread": { "id": "thread-1", "name": "Fixture thread" },
+      "status": "loaded"
+    }
+  },
+  {
+    "name": "turn",
+    "event": {
+      "type": "turn/started",
+      "threadId": "thread-1",
+      "turn": { "id": "turn-1", "threadId": "thread-1", "status": "running" }
+    }
+  },
+  {
+    "name": "item",
+    "event": {
+      "type": "item/started",
+      "threadId": "thread-1",
+      "turnId": "turn-1",
+      "item": {
+        "id": "item-1",
+        "threadId": "thread-1",
+        "turnId": "turn-1",
+        "kind": "agentMessage",
+        "status": "inProgress"
+      }
+    }
+  },
+  {
+    "name": "delta",
+    "event": {
+      "type": "item/agentMessage/delta",
+      "threadId": "thread-1",
+      "turnId": "turn-1",
+      "itemId": "item-1",
+      "delta": "Hello"
+    }
+  },
+  {
+    "name": "command",
+    "event": {
+      "type": "item/commandOutput/delta",
+      "threadId": "thread-1",
+      "turnId": "turn-1",
+      "itemId": "cmd-1",
+      "delta": "ok\n"
+    }
+  },
+  {
+    "name": "approval",
+    "event": {
+      "type": "serverRequest/created",
+      "request": {
+        "id": 7,
+        "kind": "commandApproval",
+        "threadId": "thread-1",
+        "turnId": "turn-1",
+        "itemId": "cmd-1",
+        "payload": { "command": "echo ok" }
+      }
+    }
+  },
+  {
+    "name": "resolved",
+    "event": { "type": "serverRequest/resolved", "requestId": 7 }
+  },
+  {
+    "name": "complete",
+    "event": {
+      "type": "item/completed",
+      "threadId": "thread-1",
+      "turnId": "turn-1",
+      "item": {
+        "id": "item-1",
+        "threadId": "thread-1",
+        "turnId": "turn-1",
+        "kind": "agentMessage",
+        "status": "completed",
+        "text": "Hello"
+      }
+    }
+  }
+]

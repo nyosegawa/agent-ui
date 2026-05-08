@@ -40,3 +40,22 @@ stable App Server API only
 ## Primary Design Rule
 
 Agent UI is not a hosted Codex service and does not provide Codex access, credentials, or billing. The host application starts or connects to Codex App Server using the user's own authentication.
+
+## Local Quickstart
+
+```sh
+bun install
+bun run typecheck
+bun run lint
+bun test
+bun run build
+bun run test:e2e:playwright
+```
+
+Run the local Vite example:
+
+```sh
+bun run --cwd examples/local-react-vite dev
+```
+
+The example currently uses `FakeAgentTransport` for browser-only smoke testing. Node hosts should start Codex through `@nyosegawa/agent-ui-server`.

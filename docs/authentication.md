@@ -29,6 +29,13 @@ Agent UI may provide:
 - account display
 - logout action
 
+Implemented surface:
+
+- `useAgentAuth()` exposes `readAccount`, `login`, and `logout`.
+- `login()` calls `account/login/start` with `chatgptDeviceCode`.
+- `AgentStatusBar` exposes a minimal login action when account state is not authenticated.
+- The helper does not store or log raw tokens.
+
 Agent UI must not:
 
 - issue OpenAI OAuth tokens

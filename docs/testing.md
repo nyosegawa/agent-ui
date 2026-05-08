@@ -148,3 +148,22 @@ bun run test:e2e:playwright
 bun run test:node-compat
 bun run test:pnpm-compat
 ```
+
+## Current Validation
+
+Current MVP validation commands:
+
+```text
+bun run typecheck
+bun run lint
+bun test
+bun run test
+bun run build
+bun run test:protocol
+bun run test:fixtures
+bun run publint
+bun run attw
+bun run test:e2e:playwright
+```
+
+Real Codex smoke has been verified locally through the server bridge for initialize, account/model reads, thread start, turn start, streaming text, token usage, and turn completion. Full approval-path real smoke still needs deterministic fixtures or a controlled Codex prompt that requests command/file approvals.

@@ -41,6 +41,14 @@ The default transport:
 - fails fast on process exit
 - supports server requests that require client responses
 
+Implementation status:
+
+- `@nyosegawa/agent-ui-codex` owns JSON-RPC-lite framing over existing stdio streams.
+- `@nyosegawa/agent-ui-server` owns local process spawning for `codex app-server --listen stdio://`.
+- `createCodexAppServerBridge()` returns an `AgentTransport` and redacts stderr before forwarding logs.
+- The generated stable and experimental TypeScript schemas are vendored under `packages/codex/src/generated`.
+- Protocol metadata records upstream commit `607b0dd1f06ce8b09db43f2ec3e0582daf21158e`.
+
 ## WebSocket Transport
 
 WebSocket support is optional and advanced.
@@ -132,3 +140,17 @@ Deferred:
 - realtime/audio
 - dynamic tools
 - external ChatGPT auth token mode
+
+## Local Smoke
+
+The MVP smoke path verified locally:
+
+```text
+initialize
+account/read
+model/list
+thread/start
+turn/start
+stream item/agentMessage/delta
+turn/completed
+```

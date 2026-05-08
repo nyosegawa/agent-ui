@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "ignoreDeprecations": "6.0",
+    "declaration": true,
+    "declarationMap": true,
+    "exactOptionalPropertyTypes": false,
+    "isolatedModules": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022",
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "@nyosegawa/agent-ui-core": ["packages/core/src/index.ts"],
+      "@nyosegawa/agent-ui-codex": ["packages/codex/src/index.ts"],
+      "@nyosegawa/agent-ui-react": ["packages/react/src/index.ts"],
+      "@nyosegawa/agent-ui-server": ["packages/server/src/index.ts"]
+    }
+  }
+}

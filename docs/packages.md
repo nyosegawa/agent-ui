@@ -123,6 +123,24 @@ export function App() {
 }
 ```
 
+Current local-process usage keeps spawning in the server package:
+
+```ts
+import { createCodexAppServerBridge } from "@nyosegawa/agent-ui-server";
+
+const bridge = createCodexAppServerBridge({
+  initialize: {
+    clientInfo: {
+      name: "agent_ui_host",
+      title: "Agent UI Host",
+      version: "0.1.0",
+    },
+  },
+});
+
+await bridge.transport.connect();
+```
+
 Headless usage:
 
 ```tsx

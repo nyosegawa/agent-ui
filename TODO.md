@@ -12,12 +12,12 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Add MIT license.
 - [x] Add initial docs.
 - [x] Set Bun as the primary package manager.
-- [ ] Add `.editorconfig`.
-- [ ] Add TypeScript base config.
-- [ ] Add shared package build config.
-- [ ] Add CI workflow.
-- [ ] Add package validation workflow.
-- [ ] Add release workflow skeleton.
+- [x] Add `.editorconfig`.
+- [x] Add TypeScript base config.
+- [x] Add shared package build config.
+- [x] Add CI workflow.
+- [x] Add package validation workflow.
+- [x] Add release workflow skeleton.
 
 ## Documentation
 
@@ -30,9 +30,9 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Write testing strategy.
 - [x] Write security model.
 - [x] Write roadmap.
-- [ ] Add local quickstart.
-- [ ] Add Codex App Server transport guide.
-- [ ] Add device-code login guide.
+- [x] Add local quickstart.
+- [x] Add Codex App Server transport guide.
+- [x] Add device-code login guide.
 - [ ] Add remote deployment guide.
 - [ ] Add protocol drift guide.
 - [ ] Add theming guide.
@@ -42,104 +42,104 @@ This checklist is the execution source of truth for Agent UI.
 ## Toolchain
 
 - [x] Verify Bun latest before dependency lock-in.
-- [ ] Add `bun.lock`.
-- [ ] Add TypeScript.
-- [ ] Add Vitest.
-- [ ] Add React test tooling.
-- [ ] Add Playwright.
-- [ ] Add ESLint.
-- [ ] Add Prettier.
-- [ ] Add Changesets.
-- [ ] Add package validation with `publint`.
-- [ ] Add package validation with `arethetypeswrong`.
+- [x] Add `bun.lock`.
+- [x] Add TypeScript.
+- [x] Add Vitest.
+- [x] Add React test tooling.
+- [x] Add Playwright.
+- [x] Add ESLint.
+- [x] Add Prettier.
+- [x] Add Changesets.
+- [x] Add package validation with `publint`.
+- [x] Add package validation with `arethetypeswrong`.
 - [ ] Add optional Node.js LTS compatibility CI.
 - [ ] Add optional pnpm compatibility smoke test.
 
 ## Packages
 
-- [ ] Create `packages/core`.
-- [ ] Create `packages/codex`.
-- [ ] Create `packages/react`.
-- [ ] Create `packages/server`.
-- [ ] Create shared package export conventions.
-- [ ] Create shared tsconfig conventions.
-- [ ] Create shared test conventions.
+- [x] Create `packages/core`.
+- [x] Create `packages/codex`.
+- [x] Create `packages/react`.
+- [x] Create `packages/server`.
+- [x] Create shared package export conventions.
+- [x] Create shared tsconfig conventions.
+- [x] Create shared test conventions.
 
 ## Core Package
 
-- [ ] Define normalized event model.
-- [ ] Define request/response abstraction.
-- [ ] Define transport interface.
-- [ ] Define session state types.
-- [ ] Define thread state types.
-- [ ] Define turn state types.
-- [ ] Implement reducer.
-- [ ] Implement selectors.
-- [ ] Implement pending server request state.
-- [ ] Implement fake transport.
-- [ ] Implement fixture runner.
-- [ ] Add reducer invariant tests.
+- [x] Define normalized event model.
+- [x] Define request/response abstraction.
+- [x] Define transport interface.
+- [x] Define session state types.
+- [x] Define thread state types.
+- [x] Define turn state types.
+- [x] Implement reducer.
+- [x] Implement selectors.
+- [x] Implement pending server request state.
+- [x] Implement fake transport.
+- [x] Implement fixture runner.
+- [x] Add reducer invariant tests.
 
 ## Codex Package
 
-- [ ] Add Codex App Server schema import script.
-- [ ] Vendor stable generated schema.
-- [ ] Vendor experimental generated schema behind opt-in.
-- [ ] Record Codex upstream commit metadata.
-- [ ] Implement JSON-RPC-lite message framing.
-- [ ] Implement request id correlation.
-- [ ] Implement stdio transport.
-- [ ] Implement initialize handshake.
-- [ ] Implement server request response handling.
-- [ ] Implement App Server notification normalization.
-- [ ] Implement device-code login helpers.
+- [x] Add Codex App Server schema import script.
+- [x] Vendor stable generated schema.
+- [x] Vendor experimental generated schema behind opt-in.
+- [x] Record Codex upstream commit metadata.
+- [x] Implement JSON-RPC-lite message framing.
+- [x] Implement request id correlation.
+- [x] Implement stdio transport.
+- [x] Implement initialize handshake.
+- [x] Implement server request response handling.
+- [x] Implement App Server notification normalization.
+- [x] Implement device-code login helpers.
 - [ ] Implement optional websocket transport.
 - [ ] Add protocol method snapshot tests.
 
 ## React Package
 
-- [ ] Implement `AgentProvider`.
-- [ ] Implement `useAgentThread`.
-- [ ] Implement `useAgentTurn`.
-- [ ] Implement `useAgentApprovals`.
-- [ ] Implement `useAgentComposer`.
-- [ ] Implement `useAgentAuth`.
-- [ ] Implement `AgentChat`.
-- [ ] Implement `AgentComposer`.
-- [ ] Implement `AgentMessageList`.
-- [ ] Implement `AgentWorkLog`.
-- [ ] Implement `AgentApprovalPrompt`.
-- [ ] Implement `AgentDiffViewer`.
-- [ ] Implement `AgentStatusBar`.
-- [ ] Implement `ThreadList`.
-- [ ] Implement `ThreadSidebar`.
-- [ ] Add CSS variables.
+- [x] Implement `AgentProvider`.
+- [x] Implement `useAgentThread`.
+- [x] Implement `useAgentTurn`.
+- [x] Implement `useAgentApprovals`.
+- [x] Implement `useAgentComposer`.
+- [x] Implement `useAgentAuth`.
+- [x] Implement `AgentChat`.
+- [x] Implement `AgentComposer`.
+- [x] Implement `AgentMessageList`.
+- [x] Implement `AgentWorkLog`.
+- [x] Implement `AgentApprovalPrompt`.
+- [x] Implement `AgentDiffViewer`.
+- [x] Implement `AgentStatusBar`.
+- [x] Implement `ThreadList`.
+- [x] Implement `ThreadSidebar`.
+- [x] Add CSS variables.
 - [ ] Add slot/render prop customization.
 - [ ] Add accessibility tests for interactive components.
 
 ## Server Package
 
-- [ ] Implement Codex App Server process spawning.
-- [ ] Implement local bridge lifecycle.
-- [ ] Implement bridge error handling.
-- [ ] Implement stderr log forwarding.
-- [ ] Implement safe process shutdown.
-- [ ] Add Next.js Route Handler helpers.
-- [ ] Add Express middleware.
-- [ ] Add token redaction utilities.
+- [x] Implement Codex App Server process spawning.
+- [x] Implement local bridge lifecycle.
+- [x] Implement bridge error handling.
+- [x] Implement stderr log forwarding.
+- [x] Implement safe process shutdown.
+- [x] Add Next.js Route Handler helpers.
+- [x] Add Express middleware.
+- [x] Add token redaction utilities.
 - [ ] Add server package tests with fake child process.
 
 ## Fixtures
 
-- [ ] Add handshake fixture.
+- [x] Add handshake fixture.
 - [ ] Add account device-code login fixture.
 - [ ] Add thread start fixture.
-- [ ] Add text turn fixture.
-- [ ] Add streaming agent message fixture.
+- [x] Add text turn fixture.
+- [x] Add streaming agent message fixture.
 - [ ] Add reasoning summary fixture.
 - [ ] Add plan update fixture.
-- [ ] Add command execution fixture.
-- [ ] Add command approval fixture.
+- [x] Add command execution fixture.
+- [x] Add command approval fixture.
 - [ ] Add file change fixture.
 - [ ] Add file change approval fixture.
 - [ ] Add interrupted turn fixture.
@@ -148,8 +148,8 @@ This checklist is the execution source of truth for Agent UI.
 
 ## Examples
 
-- [ ] Add local React + Vite example.
-- [ ] Add Next.js local bridge example.
+- [x] Add local React + Vite example.
+- [x] Add Next.js local bridge example.
 - [ ] Add websocket remote demo.
 - [ ] Add custom component example.
 - [ ] Add headless hooks example.
@@ -157,20 +157,20 @@ This checklist is the execution source of truth for Agent UI.
 
 ## MVP Validation
 
-- [ ] Start local Codex App Server from bridge.
+- [x] Start local Codex App Server from bridge.
 - [ ] Complete device-code login.
-- [ ] Start a thread.
-- [ ] Send a turn.
-- [ ] Render streaming assistant text.
-- [ ] Render command output.
-- [ ] Resolve command approval.
+- [x] Start a thread.
+- [x] Send a turn.
+- [x] Render streaming assistant text.
+- [x] Render command output.
+- [x] Resolve command approval.
 - [ ] Resolve file-change approval.
-- [ ] Render diff preview.
+- [x] Render diff preview.
 - [ ] Resume a thread.
-- [ ] Pass protocol conformance tests.
-- [ ] Pass reducer fixture tests.
-- [ ] Pass package export validation.
-- [ ] Pass browser smoke test.
+- [x] Pass protocol conformance tests.
+- [x] Pass reducer fixture tests.
+- [x] Pass package export validation.
+- [x] Pass browser smoke test.
 
 ## Post-MVP
 

@@ -1,0 +1,107 @@
+:root {
+  --aui-bg: #ffffff;
+  --aui-border: #d8dee8;
+  --aui-fg: #111827;
+  --aui-muted: #667085;
+  --aui-panel: #f7f8fa;
+  --aui-primary: #0f766e;
+  --aui-primary-fg: #ffffff;
+  --aui-danger: #b42318;
+  --aui-radius: 8px;
+  --aui-font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--aui-fg);
+  font-family: var(--aui-font);
+}
+
+.aui-chat {
+  background: var(--aui-bg);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  display: grid;
+  gap: 12px;
+  min-height: 480px;
+  padding: 12px;
+}
+
+.aui-status,
+.aui-actions,
+.aui-composer {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.aui-status {
+  border-bottom: 1px solid var(--aui-border);
+  color: var(--aui-muted);
+  justify-content: space-between;
+  padding-bottom: 8px;
+}
+
+.aui-button {
+  background: var(--aui-primary);
+  border: 0;
+  border-radius: 6px;
+  color: var(--aui-primary-fg);
+  cursor: pointer;
+  font: inherit;
+  min-height: 34px;
+  padding: 6px 12px;
+}
+
+.aui-button-secondary {
+  background: transparent;
+  border: 1px solid var(--aui-border);
+  color: var(--aui-fg);
+}
+
+.aui-message-list {
+  display: grid;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aui-turn {
+  display: grid;
+  gap: 8px;
+}
+
+.aui-message,
+.aui-approval,
+.aui-command-output,
+.aui-diff {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  margin: 0;
+  padding: 10px;
+  white-space: pre-wrap;
+}
+
+.aui-composer-input {
+  border: 1px solid var(--aui-border);
+  border-radius: 6px;
+  color: var(--aui-fg);
+  flex: 1;
+  font: inherit;
+  padding: 8px;
+  resize: vertical;
+}
+
+.aui-thread-list {
+  display: grid;
+  gap: 4px;
+}
+
+.aui-thread-list-item {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--aui-fg);
+  cursor: pointer;
+  font: inherit;
+  padding: 8px;
+  text-align: left;
+}
