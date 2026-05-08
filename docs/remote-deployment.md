@@ -43,6 +43,22 @@ For any remote recipe:
 - do not share a personal OAuth session across users
 - keep workspace filesystem access explicit
 
+See `examples/recipes/multi-user-deployment.md` for the concrete multi-user bridge checklist.
+
+## API-Key Remote Pattern
+
+API-key remote operation is allowed only as a host-owned server-side deployment pattern. Agent UI does not move API keys through browser packages.
+
+Rules:
+
+- keep API keys in the server environment only
+- never put API keys in WebSocket URLs, query strings, local storage, or browser-visible logs
+- verify that the target Codex App Server build supports the intended API-key auth mode
+- fall back to device-code login when API-key auth is not supported by the target App Server
+- keep the same process/workspace isolation required for multi-user use
+
+See `examples/recipes/api-key-remote-deployment.md` for the concrete API-key bridge checklist.
+
 ## Non-Goals
 
 The package does not provide:

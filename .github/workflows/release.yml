@@ -18,6 +18,9 @@ jobs:
   release:
     if: github.repository == 'nyosegawa/agent-ui'
     runs-on: ubuntu-latest
+    env:
+      CHANGESETS_GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -35,10 +38,15 @@ jobs:
       - run: bun run publint
       - run: bun run attw
       - uses: changesets/action@v1
+        if: env.CHANGESETS_GITHUB_TOKEN != ''
         with:
           publish: bunx changeset publish --provenance
           version: bunx changeset version
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ env.CHANGESETS_GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ${{ env.NPM_TOKEN }}
+      - if: env.CHANGESETS_GITHUB_TOKEN == ''
+        run: |
+          echo "Skipping Changesets PR/publish because CHANGESETS_GITHUB_TOKEN is not configured."
+          echo "Validation completed; configure a PAT with pull request write access to enable release automation."

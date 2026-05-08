@@ -205,8 +205,8 @@ This checklist is the execution source of truth for Agent UI.
 - [ ] Add Web Components wrapper.
 - [x] Add richer thread navigation.
 - [x] Add Monaco or CodeMirror diff integration.
-- [ ] Add multi-user deployment recipe.
-- [ ] Add API-key remote deployment recipe.
+- [x] Add multi-user deployment recipe.
+- [x] Add API-key remote deployment recipe.
 - [ ] Add hosted demo app.
 - [ ] Add documentation site.
 - [x] Add visual regression tests.

@@ -171,7 +171,9 @@ Changesets is configured under `.changeset/config.json`. The `Release` workflow 
 3. create or update a Changesets version PR when unpublished changesets exist
 4. publish packages with `bunx changeset publish --provenance` when a version commit lands on `main`
 
-Publishing requires `NPM_TOKEN`. The workflow grants `id-token: write` and sets `NPM_CONFIG_PROVENANCE=true` so npm package provenance is attached when the registry and token support it.
+Publishing requires `NPM_TOKEN`. Creating the Changesets version PR requires `CHANGESETS_GITHUB_TOKEN`, a repository secret containing a GitHub token with pull request write access. This avoids failing repositories where the default `GITHUB_TOKEN` is not allowed to create pull requests. If `CHANGESETS_GITHUB_TOKEN` is not configured, the workflow still runs validation and then skips the PR/publish step.
+
+The workflow grants `id-token: write` and sets `NPM_CONFIG_PROVENANCE=true` so npm package provenance is attached when the registry and token support it.
 
 ## Codex-Related Packages
 

@@ -74,3 +74,16 @@ Future multi-user support requires:
 - host application authorization
 - audit logging
 - resource limits
+
+The deployment recipe in `examples/recipes/multi-user-deployment.md` is the minimum acceptable shape for moving beyond single-user local use.
+
+## API Keys
+
+API keys are server-side only.
+
+Rules:
+
+- do not expose API keys to React, browser transports, local storage, or URL parameters
+- inject API keys only into a host-owned server process when the target App Server supports that auth mode
+- redact API-key-shaped strings from stderr and structured logs
+- document billing/project ownership in the host application
