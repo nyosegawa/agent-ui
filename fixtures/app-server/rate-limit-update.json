@@ -1,0 +1,17 @@
+[
+  {
+    "name": "rate limits",
+    "event": {
+      "type": "account/rateLimits/updated",
+      "rateLimits": {
+        "limitName": "gpt-5.2",
+        "planType": "plus",
+        "primary": {
+          "used": 12,
+          "limit": 100,
+          "resetAt": "2026-05-09T12:00:00.000Z"
+        }
+      }
+    }
+  }
+]

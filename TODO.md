@@ -137,14 +137,14 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Add text turn fixture.
 - [x] Add streaming agent message fixture.
 - [x] Add reasoning summary fixture.
-- [ ] Add plan update fixture.
+- [x] Add plan update fixture.
 - [x] Add command execution fixture.
 - [x] Add command approval fixture.
 - [x] Add file change fixture.
 - [x] Add file change approval fixture.
-- [ ] Add interrupted turn fixture.
-- [ ] Add failed turn fixture.
-- [ ] Add rate-limit update fixture.
+- [x] Add interrupted turn fixture.
+- [x] Add failed turn fixture.
+- [x] Add rate-limit update fixture.
 
 ## Examples
 
@@ -158,7 +158,7 @@ This checklist is the execution source of truth for Agent UI.
 ## MVP Validation
 
 - [x] Start local Codex App Server from bridge.
-- [ ] Complete device-code login.
+- [x] Complete device-code login.
 - [x] Start a thread.
 - [x] Send a turn.
 - [x] Render streaming assistant text.
@@ -166,7 +166,7 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Resolve command approval.
 - [x] Resolve file-change approval.
 - [x] Render diff preview.
-- [ ] Resume a thread.
+- [x] Resume a thread.
 - [x] Pass protocol conformance tests.
 - [x] Pass reducer fixture tests.
 - [x] Pass package export validation.

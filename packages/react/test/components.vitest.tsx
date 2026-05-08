@@ -50,4 +50,57 @@ describe("AgentChat", () => {
     expect(transport.responses.get("approval-file")).toEqual({ decision: "approved" });
     expect(await axe(container)).toHaveNoViolations();
   });
+
+  it("sends composer input as stable Codex user input items", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider
+        initialState={runEventFixture(demoFixture as FixtureStep[])}
+        transport={transport}
+      >
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.type(await screen.findByLabelText("Message"), "hello codex");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(transport.requests.at(-1)).toEqual({
+      id: 0,
+      method: "turn/start",
+      params: {
+        input: [{ text: "hello codex", text_elements: [], type: "text" }],
+        threadId: "thread-demo",
+      },
+    });
+  });
+
+  it("shows device-code login details from account/login/start", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/login/start") {
+          return {
+            userCode: "ABCD-EFGH",
+            verificationUrl: "https://chatgpt.com/device",
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Login" }));
+
+    expect(screen.getByRole("link", { name: "Open device login" })).toHaveAttribute(
+      "href",
+      "https://chatgpt.com/device",
+    );
+    expect(screen.getByText("ABCD-EFGH")).toBeInTheDocument();
+  });
 });

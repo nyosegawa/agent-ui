@@ -166,4 +166,4 @@ bun run attw
 bun run test:e2e:playwright
 ```
 
-Real Codex smoke has been verified locally through the server bridge for initialize, account/model reads, thread start, turn start, streaming text, token usage, and turn completion. Full approval-path real smoke still needs deterministic fixtures or a controlled Codex prompt that requests command/file approvals.
+Real Codex smoke has been verified locally through the server bridge for initialize, account/model reads, thread start, turn start, streaming text, token usage, turn completion, and `thread/resume` after a completed turn is persisted. Full approval-path real smoke still needs deterministic fixtures or a controlled Codex prompt that requests command/file approvals.

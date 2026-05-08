@@ -41,7 +41,24 @@ export function useAgentThread(threadId?: ThreadId) {
 
   const resumeThread = useCallback(
     async (id: ThreadId, params?: Record<string, unknown>) => {
-      const result = await transport.request("thread/resume", { ...params, threadId: id });
+      const result = await transport.request<Record<string, unknown>, any>("thread/resume", {
+        ...params,
+        threadId: id,
+      });
+      const rawThread = result?.thread;
+      if (rawThread) {
+        dispatch({
+          status: rawThread.status ?? result.status ?? "loaded",
+          thread: {
+            ephemeral: rawThread.ephemeral,
+            id: String(rawThread.id ?? rawThread.threadId ?? id),
+            name: rawThread.name,
+            path: rawThread.path,
+            raw: rawThread,
+          },
+          type: "thread/started",
+        });
+      }
       dispatch({ threadId: id, type: "thread/active/set" });
       return result;
     },
@@ -70,7 +87,7 @@ export function useAgentTurn(threadId?: ThreadId) {
       if (!resolvedThreadId) throw new Error("No active thread");
       return transport.request("turn/start", {
         ...params,
-        input,
+        input: [{ text: input, text_elements: [], type: "text" }],
         threadId: resolvedThreadId,
       });
     },

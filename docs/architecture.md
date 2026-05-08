@@ -47,6 +47,7 @@ type TurnState = {
   streamingTextByItemId: Record<string, string>;
   commandOutputByItemId: Record<string, string>;
   filePatchByItemId: Record<string, unknown>;
+  plan?: TurnPlanState;
 };
 ```
 
@@ -57,6 +58,8 @@ type TurnState = {
 - `thread/name/updated`: update thread name
 - `thread/tokenUsage/updated`: update token usage
 - `turn/started`: create or update in-progress turn
+- `turn/plan/updated`: attach latest plan to the turn
+- `account/rateLimits/updated`: attach latest account rate-limit snapshot
 - `item/started`: create in-progress item
 - delta notifications: append or update transient state
 - `item/completed`: replace item with authoritative item

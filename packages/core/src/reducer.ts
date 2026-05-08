@@ -64,6 +64,14 @@ export function agentReducer(
           status: "authenticated",
         },
       };
+    case "account/rateLimits/updated":
+      return {
+        ...state,
+        account: {
+          ...state.account,
+          rateLimits: event.rateLimits,
+        },
+      };
     case "models/updated":
       return {
         ...state,
@@ -117,7 +125,7 @@ export function agentReducer(
       );
     case "turn/completed":
       return updateThread(state, event.threadId, (thread) => {
-        const next = upsertTurn(thread, event.turn, "complete");
+        const next = upsertTurn(thread, event.turn, event.turn.status ?? "complete");
         const turn = next.turns[event.turn.id] ?? createTurnState(event.turn, event.threadId);
         const items = { ...turn.items };
         const itemOrder = [...turn.itemOrder];
@@ -138,6 +146,15 @@ export function agentReducer(
           },
         };
       });
+    case "turn/plan/updated":
+      return updateTurn(state, event.threadId, event.turnId, (turn) => ({
+        ...turn,
+        plan: {
+          explanation: event.explanation,
+          plan: event.plan,
+          raw: event.raw,
+        },
+      }));
     case "item/started":
       return updateTurn(state, event.threadId, event.turnId, (turn) =>
         upsertItem(turn, event.item),

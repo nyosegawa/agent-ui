@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import loginFixture from "../../../fixtures/app-server/device-code-login.json" with { type: "json" };
 import demoFixture from "../../../fixtures/app-server/demo-session.json" with { type: "json" };
+import failedFixture from "../../../fixtures/app-server/failed-turn.json" with { type: "json" };
+import interruptedFixture from "../../../fixtures/app-server/interrupted-turn.json" with { type: "json" };
+import planFixture from "../../../fixtures/app-server/plan-update.json" with { type: "json" };
+import rateLimitFixture from "../../../fixtures/app-server/rate-limit-update.json" with { type: "json" };
 import fixture from "../../../fixtures/app-server/text-turn.json" with { type: "json" };
 import { runEventFixture } from "../src/fixtures";
 import { selectOrderedThreads, selectOrderedTurns, selectPendingApprovals } from "../src/selectors";
@@ -56,5 +60,35 @@ describe("agentReducer", () => {
     expect(state.account.status).toBe("authenticated");
     expect(state.account.account?.email).toBe("user@example.com");
     expect(state.account.login).toBeUndefined();
+  });
+
+  it("loads plan, interrupted, failed, and rate-limit fixtures", () => {
+    const planned = runEventFixture(planFixture as FixtureStep[]);
+    expect(planned.threads["thread-plan"]?.turns["turn-plan"]?.plan?.explanation).toContain(
+      "Prepare UI",
+    );
+
+    const interrupted = runEventFixture(interruptedFixture as FixtureStep[]);
+    expect(interrupted.threads["thread-interrupted"]?.status).toBe("interrupted");
+    expect(
+      interrupted.threads["thread-interrupted"]?.turns["turn-interrupted"]?.turn.status,
+    ).toBe("interrupted");
+
+    const failed = runEventFixture(failedFixture as FixtureStep[]);
+    expect(failed.threads["thread-failed"]?.status).toBe("failed");
+    expect(failed.threads["thread-failed"]?.turns["turn-failed"]?.turn.raw).toEqual({
+      error: { message: "Model request failed" },
+    });
+
+    const rateLimited = runEventFixture(rateLimitFixture as FixtureStep[]);
+    expect(rateLimited.account.rateLimits).toEqual({
+      limitName: "gpt-5.2",
+      planType: "plus",
+      primary: {
+        limit: 100,
+        resetAt: "2026-05-09T12:00:00.000Z",
+        used: 12,
+      },
+    });
   });
 });

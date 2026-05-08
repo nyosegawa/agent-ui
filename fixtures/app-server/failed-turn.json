@@ -1,0 +1,35 @@
+[
+  {
+    "name": "thread",
+    "event": {
+      "type": "thread/started",
+      "thread": { "id": "thread-failed", "name": "Failed fixture" },
+      "status": "running"
+    }
+  },
+  {
+    "name": "turn",
+    "event": {
+      "type": "turn/started",
+      "threadId": "thread-failed",
+      "turn": { "id": "turn-failed", "threadId": "thread-failed", "status": "inProgress" }
+    }
+  },
+  {
+    "name": "failed",
+    "event": {
+      "type": "turn/completed",
+      "threadId": "thread-failed",
+      "turn": {
+        "id": "turn-failed",
+        "threadId": "thread-failed",
+        "status": "failed",
+        "raw": {
+          "error": {
+            "message": "Model request failed"
+          }
+        }
+      }
+    }
+  }
+]

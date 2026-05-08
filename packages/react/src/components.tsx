@@ -243,6 +243,16 @@ export function AgentStatusBar() {
         <strong>Agent UI</strong>
         <span>{account.status}</span>
       </div>
+      {account.login ? (
+        <div className="aui-login-code" role="status">
+          {account.login.verificationUrl ? (
+            <a href={account.login.verificationUrl} rel="noreferrer" target="_blank">
+              Open device login
+            </a>
+          ) : null}
+          {account.login.userCode ? <code>{account.login.userCode}</code> : null}
+        </div>
+      ) : null}
       {account.status !== "authenticated" ? (
         <button className="aui-button" onClick={() => void login()} type="button">
           Login

@@ -72,6 +72,29 @@
   gap: 10px;
 }
 
+.aui-login-code {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.aui-login-code a {
+  color: var(--aui-primary);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.aui-login-code code {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 6px;
+  color: var(--aui-fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  padding: 4px 6px;
+}
+
 .aui-brand strong,
 .aui-thread-header h1 {
   color: var(--aui-fg);

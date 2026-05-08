@@ -20,6 +20,7 @@ export interface AccountState {
   status: "unknown" | "unauthenticated" | "authenticating" | "authenticated";
   account?: Record<string, unknown>;
   login?: DeviceCodeLoginState;
+  rateLimits?: unknown;
 }
 
 export interface DeviceCodeLoginState {
@@ -86,6 +87,13 @@ export interface TurnState {
   streamingTextByItemId: Record<ItemId, string>;
   commandOutputByItemId: Record<ItemId, string>;
   filePatchByItemId: Record<ItemId, unknown>;
+  plan?: TurnPlanState;
+}
+
+export interface TurnPlanState {
+  explanation?: string | null;
+  plan: unknown;
+  raw?: unknown;
 }
 
 export interface AgentItemState {

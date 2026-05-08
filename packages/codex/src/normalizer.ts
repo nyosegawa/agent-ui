@@ -30,6 +30,8 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
       ];
     case "account/login/completed":
       return [{ type: "account/login/completed", account: params.account ?? params }];
+    case "account/rateLimits/updated":
+      return [{ type: "account/rateLimits/updated", rateLimits: params.rateLimits ?? params }];
     case "configWarning":
     case "warning":
       return [
@@ -112,6 +114,17 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
             : undefined,
           threadId: String(params.threadId ?? params.thread_id),
           turn: normalizeTurn(params.turn ?? params, String(params.threadId ?? params.thread_id)),
+        },
+      ];
+    case "turn/plan/updated":
+      return [
+        {
+          explanation: params.explanation,
+          plan: params.plan ?? [],
+          raw: params,
+          threadId: String(params.threadId ?? params.thread_id),
+          turnId: String(params.turnId ?? params.turn_id),
+          type: "turn/plan/updated",
         },
       ];
     case "item/started":

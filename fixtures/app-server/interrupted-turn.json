@@ -1,0 +1,34 @@
+[
+  {
+    "name": "thread",
+    "event": {
+      "type": "thread/started",
+      "thread": { "id": "thread-interrupted", "name": "Interrupted fixture" },
+      "status": "running"
+    }
+  },
+  {
+    "name": "turn",
+    "event": {
+      "type": "turn/started",
+      "threadId": "thread-interrupted",
+      "turn": {
+        "id": "turn-interrupted",
+        "threadId": "thread-interrupted",
+        "status": "inProgress"
+      }
+    }
+  },
+  {
+    "name": "interrupted",
+    "event": {
+      "type": "turn/completed",
+      "threadId": "thread-interrupted",
+      "turn": {
+        "id": "turn-interrupted",
+        "threadId": "thread-interrupted",
+        "status": "interrupted"
+      }
+    }
+  }
+]

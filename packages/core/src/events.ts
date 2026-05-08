@@ -20,6 +20,7 @@ export type AgentEvent =
   | { type: "connection/closed"; reason?: string }
   | { type: "connection/error"; error: AgentError }
   | { type: "account/updated"; status?: "unauthenticated" | "authenticated"; account?: unknown }
+  | { type: "account/rateLimits/updated"; rateLimits: unknown }
   | {
       type: "account/login/deviceCodeStarted";
       requestId?: RequestId;
@@ -36,6 +37,7 @@ export type AgentEvent =
   | { type: "thread/active/set"; threadId?: ThreadId }
   | { type: "turn/started"; threadId: ThreadId; turn: AgentTurn }
   | { type: "turn/completed"; threadId: ThreadId; turn: AgentTurn; items?: AgentItemState[] }
+  | { type: "turn/plan/updated"; threadId: ThreadId; turnId: TurnId; explanation?: string | null; plan: unknown; raw?: unknown }
   | { type: "item/started"; threadId: ThreadId; turnId: TurnId; item: AgentItemState }
   | {
       type: "item/agentMessage/delta";

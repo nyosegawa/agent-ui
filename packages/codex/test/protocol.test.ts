@@ -58,6 +58,41 @@ describe("Codex protocol metadata", () => {
     ]);
   });
 
+  it("normalizes plan and rate-limit notifications", () => {
+    expect(
+      normalizeCodexServerMessage({
+        method: "turn/plan/updated",
+        params: {
+          explanation: "Do the work in order.",
+          plan: [{ status: "inProgress", step: "Implement" }],
+          threadId: "t1",
+          turnId: "u1",
+        },
+      }),
+    ).toEqual([
+      {
+        explanation: "Do the work in order.",
+        plan: [{ status: "inProgress", step: "Implement" }],
+        raw: {
+          explanation: "Do the work in order.",
+          plan: [{ status: "inProgress", step: "Implement" }],
+          threadId: "t1",
+          turnId: "u1",
+        },
+        threadId: "t1",
+        turnId: "u1",
+        type: "turn/plan/updated",
+      },
+    ]);
+
+    expect(
+      normalizeCodexServerMessage({
+        method: "account/rateLimits/updated",
+        params: { rateLimits: { planType: "plus" } },
+      }),
+    ).toEqual([{ rateLimits: { planType: "plus" }, type: "account/rateLimits/updated" }]);
+  });
+
   it("snapshots generated stable protocol method lists", () => {
     expect(extractMethods("../src/generated/stable/ClientRequest.ts")).toMatchInlineSnapshot(`
       [

@@ -160,4 +160,5 @@ thread/start
 turn/start
 stream item/agentMessage/delta
 turn/completed
+thread/resume after a completed turn is persisted
 ```

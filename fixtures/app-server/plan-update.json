@@ -1,0 +1,31 @@
+[
+  {
+    "name": "thread",
+    "event": {
+      "type": "thread/started",
+      "thread": { "id": "thread-plan", "name": "Plan fixture" },
+      "status": "running"
+    }
+  },
+  {
+    "name": "turn",
+    "event": {
+      "type": "turn/started",
+      "threadId": "thread-plan",
+      "turn": { "id": "turn-plan", "threadId": "thread-plan", "status": "running" }
+    }
+  },
+  {
+    "name": "plan update",
+    "event": {
+      "type": "turn/plan/updated",
+      "threadId": "thread-plan",
+      "turnId": "turn-plan",
+      "explanation": "Prepare UI, verify, then document.",
+      "plan": [
+        { "step": "Render plan state", "status": "completed" },
+        { "step": "Run fixture tests", "status": "inProgress" }
+      ]
+    }
+  }
+]
