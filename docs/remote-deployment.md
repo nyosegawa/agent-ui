@@ -20,11 +20,18 @@ Do not expose a personal Codex App Server directly to the open network.
 import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex";
 
 const transport = createCodexWebSocketTransport({
+  reconnect: {
+    initialDelayMs: 500,
+    maxAttempts: 5,
+    maxDelayMs: 10_000,
+  },
   url: new URL("/agent-ui/ws", window.location.origin.replace(/^http/, "ws")),
 });
 ```
 
 Authentication is a host responsibility. The transport intentionally does not put bearer tokens in query strings. Prefer same-origin cookies, a reverse proxy session, or a server-side token exchange.
+
+Reconnect is disabled unless `reconnect` is provided. When enabled, the transport rejects in-flight requests on close, emits `connection/connecting`, and reopens the socket with bounded backoff. Hosts should keep server requests idempotent enough that users can retry after reconnect.
 
 ## Process Isolation
 
@@ -44,4 +51,3 @@ The package does not provide:
 - multi-user authorization
 - credential storage
 - public production websocket hosting
-

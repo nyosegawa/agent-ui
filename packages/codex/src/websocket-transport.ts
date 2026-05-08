@@ -12,7 +12,16 @@ import type { CodexInitializeOptions } from "./protocol";
 export interface CodexWebSocketTransportOptions {
   initialize?: CodexInitializeOptions;
   protocols?: string | string[];
+  reconnect?: false | CodexWebSocketReconnectOptions;
   url: string | URL;
+  webSocketImpl?: typeof WebSocket;
+}
+
+export interface CodexWebSocketReconnectOptions {
+  initialDelayMs?: number;
+  maxAttempts?: number;
+  maxDelayMs?: number;
+  multiplier?: number;
 }
 
 export function createCodexWebSocketTransport(
@@ -26,7 +35,10 @@ class CodexWebSocketTransport implements AgentTransport {
   readonly #pending = new Map<string, { reject: (error: Error) => void; resolve: (value: unknown) => void }>();
   #events: AgentTransportEvent[] = [];
   #waiters: Array<(value: IteratorResult<AgentTransportEvent>) => void> = [];
+  #manualClose = false;
   #nextId = 0;
+  #reconnectAttempts = 0;
+  #reconnectTimer?: ReturnType<typeof setTimeout>;
   #socket?: WebSocket;
 
   constructor(options: CodexWebSocketTransportOptions) {
@@ -42,42 +54,15 @@ class CodexWebSocketTransport implements AgentTransport {
   }
 
   async connect(): Promise<void> {
-    const url = new URL(this.#options.url);
-    const socket = new WebSocket(url, this.#options.protocols);
-    this.#socket = socket;
-    await new Promise<void>((resolve, reject) => {
-      socket.addEventListener("open", () => resolve(), { once: true });
-      socket.addEventListener("error", () => reject(new Error("Codex websocket failed to open")), {
-        once: true,
-      });
-    });
-    socket.addEventListener("message", (event) => {
-      try {
-        this.#handleMessage(parseJsonRpcLine(String(event.data)));
-      } catch (error) {
-        this.#push({
-          error: { message: error instanceof Error ? error.message : String(error) },
-          type: "error",
-        });
-      }
-    });
-    socket.addEventListener("close", (event) => {
-      this.#push({ event: { reason: event.reason, type: "connection/closed" }, type: "event" });
-    });
-    this.#push({ event: { type: "connection/connected" }, type: "event" });
-    if (this.#options.initialize) {
-      await this.request("initialize", {
-        capabilities: {
-          experimentalApi: this.#options.initialize.experimentalApi,
-          optOutNotificationMethods: this.#options.initialize.optOutNotificationMethods,
-        },
-        clientInfo: this.#options.initialize.clientInfo,
-      });
-      this.notify("initialized");
-    }
+    this.#manualClose = false;
+    this.#push({ event: { type: "connection/connecting" }, type: "event" });
+    await this.#openSocket();
   }
 
   async close(): Promise<void> {
+    this.#manualClose = true;
+    if (this.#reconnectTimer) clearTimeout(this.#reconnectTimer);
+    this.#rejectPending(new Error("Codex websocket transport closed"));
     this.#socket?.close();
   }
 
@@ -110,8 +95,78 @@ class CodexWebSocketTransport implements AgentTransport {
     this.#send({ error, id: requestId });
   }
 
+  async #openSocket(): Promise<void> {
+    const url = new URL(this.#options.url);
+    const WebSocketImpl = this.#options.webSocketImpl ?? WebSocket;
+    const socket = new WebSocketImpl(url, this.#options.protocols);
+    this.#socket = socket;
+    await new Promise<void>((resolve, reject) => {
+      socket.addEventListener("open", () => resolve(), { once: true });
+      socket.addEventListener("error", () => reject(new Error("Codex websocket failed to open")), {
+        once: true,
+      });
+    });
+    socket.addEventListener("message", (event) => {
+      try {
+        this.#handleMessage(parseJsonRpcLine(String(event.data)));
+      } catch (error) {
+        this.#push({
+          error: { message: error instanceof Error ? error.message : String(error) },
+          type: "error",
+        });
+      }
+    });
+    socket.addEventListener("close", (event) => {
+      this.#rejectPending(new Error("Codex websocket transport disconnected"));
+      this.#push({ event: { reason: event.reason, type: "connection/closed" }, type: "event" });
+      this.#scheduleReconnect();
+    });
+    this.#reconnectAttempts = 0;
+    this.#push({ event: { type: "connection/connected" }, type: "event" });
+    if (this.#options.initialize) {
+      await this.request("initialize", {
+        capabilities: {
+          experimentalApi: this.#options.initialize.experimentalApi,
+          optOutNotificationMethods: this.#options.initialize.optOutNotificationMethods,
+        },
+        clientInfo: this.#options.initialize.clientInfo,
+      });
+      this.notify("initialized");
+    }
+  }
+
+  #scheduleReconnect(): void {
+    if (this.#manualClose || this.#options.reconnect === false || !this.#options.reconnect) return;
+    const options = this.#options.reconnect;
+    const maxAttempts = options.maxAttempts ?? 5;
+    if (this.#reconnectAttempts >= maxAttempts) return;
+    const initialDelayMs = options.initialDelayMs ?? 500;
+    const maxDelayMs = options.maxDelayMs ?? 10_000;
+    const multiplier = options.multiplier ?? 2;
+    const delay = Math.min(
+      maxDelayMs,
+      Math.round(initialDelayMs * multiplier ** this.#reconnectAttempts),
+    );
+    this.#reconnectAttempts += 1;
+    this.#reconnectTimer = setTimeout(() => {
+      this.#push({ event: { type: "connection/connecting" }, type: "event" });
+      void this.#openSocket().catch((error: unknown) => {
+        this.#push({
+          error: { message: error instanceof Error ? error.message : String(error) },
+          type: "error",
+        });
+        this.#scheduleReconnect();
+      });
+    }, delay);
+  }
+
+  #rejectPending(error: Error): void {
+    for (const pending of this.#pending.values()) pending.reject(error);
+    this.#pending.clear();
+  }
+
   #send(message: JsonRpcMessage): void {
-    if (!this.#socket || this.#socket.readyState !== WebSocket.OPEN) {
+    if (!this.#socket || this.#socket.readyState !== 1) {
       throw new Error("Codex websocket transport is not connected");
     }
     this.#socket.send(JSON.stringify(message));

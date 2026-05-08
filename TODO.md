@@ -199,7 +199,7 @@ This checklist is the execution source of truth for Agent UI.
 ## Post-MVP
 
 - [x] Add remote WebSocket deployment guide.
-- [ ] Harden websocket reconnection policy.
+- [x] Harden websocket reconnection policy.
 - [ ] Add Codex SDK adapter.
 - [ ] Add OpenAI Agents SDK adapter.
 - [ ] Add Web Components wrapper.

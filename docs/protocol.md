@@ -64,9 +64,9 @@ Rules:
 Implementation status:
 
 - `createCodexWebSocketTransport()` speaks the same JSON-RPC-lite message shape over `WebSocket`.
-- The transport accepts `url`, optional `protocols`, and optional initialize metadata.
+- The transport accepts `url`, optional `protocols`, optional initialize metadata, and optional reconnect settings.
 - Authentication belongs to the host endpoint, for example same-origin cookies or a reverse proxy session.
-- Reconnect/backoff is deferred; hosts should create a new transport after close.
+- Reconnect is opt-in with bounded exponential backoff. On close, pending requests are rejected so callers do not hang across a broken socket.
 
 ## Stable and Experimental API
 

@@ -79,7 +79,7 @@ Cases:
 - timeout
 - overload error `-32001`
 - websocket auth header
-- websocket close/reconnect policy
+- websocket close/reconnect policy and pending request rejection
 
 Most transport tests use fake child process and fake websocket implementations.
 
