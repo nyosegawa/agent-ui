@@ -29,7 +29,7 @@ Local environment snapshot:
 ```text
 local Node.js: v22.19.0
 local pnpm: 10.15.0
-local Bun: 1.3.9
+local Bun: 1.3.13
 local npm: 11.11.0
 ```
 

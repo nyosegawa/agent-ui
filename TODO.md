@@ -41,7 +41,7 @@ This checklist is the execution source of truth for Agent UI.
 
 ## Toolchain
 
-- [ ] Verify Bun latest before dependency lock-in.
+- [x] Verify Bun latest before dependency lock-in.
 - [ ] Add `bun.lock`.
 - [ ] Add TypeScript.
 - [ ] Add Vitest.
