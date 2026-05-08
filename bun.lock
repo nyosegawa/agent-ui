@@ -55,6 +55,22 @@
         "react-dom": "19.2.6",
       },
     },
+    "examples/recipes": {
+      "name": "@nyosegawa/agent-ui-example-recipes",
+      "version": "0.0.0",
+      "dependencies": {
+        "@nyosegawa/agent-ui-codex": "workspace:*",
+        "@nyosegawa/agent-ui-core": "workspace:*",
+        "@nyosegawa/agent-ui-react": "workspace:*",
+        "react": "19.2.6",
+        "react-dom": "19.2.6",
+      },
+      "devDependencies": {
+        "@types/react": "19.2.14",
+        "@types/react-dom": "19.2.3",
+        "typescript": "6.0.3",
+      },
+    },
     "packages/codex": {
       "name": "@nyosegawa/agent-ui-codex",
       "version": "0.0.0",
@@ -383,6 +399,8 @@
     "@nyosegawa/agent-ui-example-local-react-vite": ["@nyosegawa/agent-ui-example-local-react-vite@workspace:examples/local-react-vite"],
 
     "@nyosegawa/agent-ui-example-next-local-bridge": ["@nyosegawa/agent-ui-example-next-local-bridge@workspace:examples/next-local-bridge"],
+
+    "@nyosegawa/agent-ui-example-recipes": ["@nyosegawa/agent-ui-example-recipes@workspace:examples/recipes"],
 
     "@nyosegawa/agent-ui-react": ["@nyosegawa/agent-ui-react@workspace:packages/react"],
 
