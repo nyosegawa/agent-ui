@@ -207,8 +207,8 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Add Monaco or CodeMirror diff integration.
 - [x] Add multi-user deployment recipe.
 - [x] Add API-key remote deployment recipe.
-- [ ] Add hosted demo app.
-- [ ] Add documentation site.
+- [x] Add hosted demo app.
+- [x] Add documentation site.
 - [x] Add visual regression tests.
 - [x] Add release automation.
 - [x] Add changelog automation.

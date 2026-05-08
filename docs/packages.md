@@ -21,9 +21,10 @@ agent-ui/
     react/
     server/
   examples/
+    docs-site/
     local-react-vite/
     next-local-bridge/
-    websocket-remote-demo/
+    recipes/
   fixtures/
     app-server/
   docs/
@@ -97,6 +98,13 @@ Responsibilities:
 - auth/token forwarding recipes
 
 Browser packages must not spawn child processes directly.
+
+## Examples
+
+- `examples/local-react-vite`: fixture-backed local component smoke target.
+- `examples/next-local-bridge`: Next.js Route Handler bridge target.
+- `examples/recipes`: typed host integration recipes and remote deployment notes.
+- `examples/docs-site`: static documentation and hosted-demo build target.
 
 ## Initial Public API
 

@@ -215,9 +215,14 @@
   align-items: center;
   border-bottom: 1px solid var(--aui-border);
   display: flex;
+  gap: 10px;
   justify-content: space-between;
   min-height: 72px;
   padding: 12px 14px;
+}
+
+.aui-thread-header > div {
+  min-width: 0;
 }
 
 .aui-thread-actions {
@@ -582,6 +587,14 @@
 
   .aui-usage-grid {
     grid-template-columns: 1fr;
+  }
+
+  .aui-thread-header {
+    align-items: flex-start;
+  }
+
+  .aui-thread-header p {
+    max-width: none;
   }
 
   .aui-thread-list {

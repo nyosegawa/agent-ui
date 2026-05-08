@@ -6,6 +6,7 @@
   "commit": false,
   "fixed": [],
   "ignore": [
+    "@nyosegawa/agent-ui-docs-site",
     "@nyosegawa/agent-ui-example-local-react-vite",
     "@nyosegawa/agent-ui-example-next-local-bridge",
     "@nyosegawa/agent-ui-example-recipes"

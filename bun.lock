@@ -30,6 +30,21 @@
         "vitest": "4.1.5",
       },
     },
+    "examples/docs-site": {
+      "name": "@nyosegawa/agent-ui-docs-site",
+      "version": "0.0.0",
+      "dependencies": {
+        "@nyosegawa/agent-ui-core": "workspace:*",
+        "@nyosegawa/agent-ui-react": "workspace:*",
+        "@vitejs/plugin-react": "6.0.1",
+        "react": "19.2.6",
+        "react-dom": "19.2.6",
+        "vite": "8.0.11",
+      },
+      "devDependencies": {
+        "typescript": "6.0.3",
+      },
+    },
     "examples/local-react-vite": {
       "name": "@nyosegawa/agent-ui-example-local-react-vite",
       "version": "0.0.0",
@@ -403,6 +418,8 @@
     "@nyosegawa/agent-ui-codex": ["@nyosegawa/agent-ui-codex@workspace:packages/codex"],
 
     "@nyosegawa/agent-ui-core": ["@nyosegawa/agent-ui-core@workspace:packages/core"],
+
+    "@nyosegawa/agent-ui-docs-site": ["@nyosegawa/agent-ui-docs-site@workspace:examples/docs-site"],
 
     "@nyosegawa/agent-ui-example-local-react-vite": ["@nyosegawa/agent-ui-example-local-react-vite@workspace:examples/local-react-vite"],
 

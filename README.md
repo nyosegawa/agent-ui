@@ -6,7 +6,7 @@ Agent UI provides React components, headless hooks, state management, and transp
 
 ## Status
 
-MVP implementation in progress. Core state, Codex App Server transports, React components, server bridge helpers, examples, fixtures, and package validation are in place.
+MVP implementation is in place. Core state, Codex App Server transports, React components, server bridge helpers, examples, fixtures, browser smoke tests, and package validation are available.
 
 ## MVP
 
@@ -32,3 +32,11 @@ stable App Server API only
 ## Docs
 
 Start with [docs/README.md](./docs/README.md).
+
+## Demo
+
+Run the fixture-backed docs and hosted-demo site:
+
+```sh
+bun run --cwd examples/docs-site dev
+```

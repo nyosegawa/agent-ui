@@ -345,7 +345,7 @@ function CodeMirrorDiff({ text }: { text: string }) {
 
   return (
     <>
-      <div aria-label="CodeMirror diff preview" className="aui-codemirror-diff" ref={ref} />
+      <div aria-label="CodeMirror patch viewer" className="aui-codemirror-diff" ref={ref} />
       <pre
         aria-hidden={isEnhanced ? "true" : undefined}
         className={isEnhanced ? "aui-diff-source aui-visually-hidden" : "aui-diff-source"}

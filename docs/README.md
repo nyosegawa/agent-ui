@@ -16,6 +16,14 @@ The docs are organized as implementation-facing specifications. They intentional
 - [Security](./security.md): filesystem, shell, auth, remote, and multi-user constraints.
 - [Roadmap](./roadmap.md): implementation order and post-MVP expansion.
 - [Remote Deployment](./remote-deployment.md): advanced remote/WebSocket constraints.
+
+## Demo And Docs Site
+
+`examples/docs-site` is the static documentation and hosted-demo target. It renders implementation notes next to a fixture-backed `AgentChat`, so UI, usage, approval, command output, and diff surfaces can be checked in one browser page.
+
+```sh
+bun run --cwd examples/docs-site dev
+```
 - [Protocol Drift](./protocol-drift.md): schema update and snapshot review workflow.
 - [Theming](./theming.md): CSS variable customization.
 - [Component API](./component-api.md): drop-in component reference.
