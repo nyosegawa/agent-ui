@@ -49,6 +49,12 @@ Rules:
 - keep pnpm compatibility as optional smoke only
 - use `bun.lock` as the primary lockfile
 
+Implemented CI:
+
+- `CI`: Bun install, typecheck, lint, tests, build, protocol/fixture tests, package validation
+- `Package Validation`: build, `publint`, `arethetypeswrong`
+- `Compatibility`: Node.js 20/22/24 import/require smoke against built packages, plus optional pnpm workspace install/build smoke
+
 ## Core Dependencies
 
 Decision:

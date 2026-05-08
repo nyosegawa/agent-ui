@@ -52,8 +52,8 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Add Changesets.
 - [x] Add package validation with `publint`.
 - [x] Add package validation with `arethetypeswrong`.
-- [ ] Add optional Node.js LTS compatibility CI.
-- [ ] Add optional pnpm compatibility smoke test.
+- [x] Add optional Node.js LTS compatibility CI.
+- [x] Add optional pnpm compatibility smoke test.
 
 ## Packages
 
