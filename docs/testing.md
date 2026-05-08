@@ -117,6 +117,7 @@ Required for release confidence:
 - `model/list`
 - `thread/start`
 - React example Playwright smoke
+- React example visual layout contract snapshots
 
 Optional/nightly:
 
@@ -177,3 +178,9 @@ The history and usage smoke path has also been verified against `codex app-serve
 - `thread/resume(excludeTurns: true)`: resume succeeds for the same stored id
 
 Full approval-path real smoke still needs deterministic fixtures or a controlled Codex prompt that requests command/file approvals.
+
+## Visual Regression
+
+`bun run test:e2e:playwright` includes browser-level layout contract snapshots for the local Vite example at desktop and mobile widths. These snapshots capture rendered dimensions, overflow behavior, display mode, grid columns, border radius, and key colors for the shell, sidebar, chat, run controls, usage, message list, worklog, diff, approvals, and composer.
+
+Image snapshots are intentionally not the default CI gate because OS font rendering can create noisy diffs across macOS and Linux. If pixel-level screenshots are added later, keep them in a separate opt-in job or generate Linux baselines in CI.

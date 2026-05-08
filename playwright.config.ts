@@ -3,7 +3,9 @@ import { defineConfig, devices } from "@playwright/test";
 export default defineConfig({
   testDir: "examples/local-react-vite/e2e",
   testMatch: "*.e2e.ts",
+  snapshotPathTemplate: "{testDir}/{testFilePath}-snapshots/{arg}{ext}",
   timeout: 30_000,
+  workers: 1,
   use: {
     baseURL: "http://127.0.0.1:4173",
     trace: "on-first-retry",

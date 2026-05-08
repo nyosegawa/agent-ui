@@ -209,7 +209,7 @@ This checklist is the execution source of truth for Agent UI.
 - [ ] Add API-key remote deployment recipe.
 - [ ] Add hosted demo app.
 - [ ] Add documentation site.
-- [ ] Add visual regression tests.
+- [x] Add visual regression tests.
 - [ ] Add release automation.
 - [ ] Add changelog automation.
 - [ ] Add package provenance/signing if useful.
