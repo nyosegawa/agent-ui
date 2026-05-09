@@ -299,8 +299,8 @@ These are useful extras, but they are not substitutes for the real local app rel
 
 ## Ongoing Operations
 
-- [ ] Commit and push each stable implementation slice.
-- [ ] Keep `TODO.md` updated in the same commit as implementation changes.
-- [ ] Add or update tests with each behavior change.
-- [ ] Refactor when implementation complexity starts hiding protocol or UI state behavior.
-- [ ] Re-check current Codex App Server schema and behavior before relying on assumptions.
+- [x] Commit and push each stable implementation slice.
+- [x] Keep `TODO.md` updated in the same commit as implementation changes.
+- [x] Add or update tests with each behavior change.
+- [x] Refactor when implementation complexity starts hiding protocol or UI state behavior.
+- [x] Re-check current Codex App Server schema and behavior before relying on assumptions.
