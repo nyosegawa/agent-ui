@@ -288,6 +288,7 @@ This section is the publish/release gate after the real local app works.
 - [x] Run real local app smoke for model list, usage, thread list, thread read, thread resume, start thread, send turn, and streaming text.
 - [x] Run fake stdio browser smoke for command output, diff preview, and approval handling through the real WebSocket transport.
 - [x] Run real Codex approval smoke for command and file-change approval requests.
+- [x] Re-run real Codex stdio and approval smoke after real history rendering hardening.
 - [x] Record exact real smoke commands, date, Codex version, and any auth/environment dependencies in docs.
 - [x] Confirm GitHub Actions pass after push.
 
