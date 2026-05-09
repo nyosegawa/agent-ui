@@ -1,6 +1,6 @@
 # API-Key Remote Deployment Recipe
 
-API-key remote operation is an advanced host-owned deployment pattern. It is not the MVP default. The default remains ChatGPT managed auth through local `codex app-server --listen stdio://`.
+API-key remote operation is an advanced host-owned deployment pattern. It is not the local release default. The default remains ChatGPT managed auth through local `codex app-server --listen stdio://`.
 
 Use this recipe only when the host application owns the API key, billing boundary, authorization model, and deployment environment.
 

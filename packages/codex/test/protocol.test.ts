@@ -8,10 +8,13 @@ import {
   stableServerRequestMethods,
 } from "../src/protocol";
 import { encodeJsonRpcLine, parseJsonRpcLine } from "../src/json-rpc";
-import { normalizeCodexServerMessage, normalizeModelListResponse } from "../src/normalizer";
+import {
+  normalizeCodexServerMessage,
+  normalizeModelListResponse,
+} from "../src/normalizer";
 
 describe("Codex protocol metadata", () => {
-  it("records upstream commit and stable MVP method surface", () => {
+  it("records upstream commit and stable release method surface", () => {
     expect(CODEX_PROTOCOL_COMMIT).toMatch(/^[0-9a-f]{40}$/);
     expect(stableClientMethods).toMatchInlineSnapshot(`
       [
@@ -186,7 +189,8 @@ describe("Codex protocol metadata", () => {
   });
 
   it("snapshots generated stable protocol method lists", () => {
-    expect(extractMethods("../src/generated/stable/ClientRequest.ts")).toMatchInlineSnapshot(`
+    expect(extractMethods("../src/generated/stable/ClientRequest.ts"))
+      .toMatchInlineSnapshot(`
       [
         "account/login/cancel",
         "account/login/start",
@@ -266,7 +270,8 @@ describe("Codex protocol metadata", () => {
         "windowsSandbox/setupStart",
       ]
     `);
-    expect(extractMethods("../src/generated/stable/ServerNotification.ts")).toMatchInlineSnapshot(`
+    expect(extractMethods("../src/generated/stable/ServerNotification.ts"))
+      .toMatchInlineSnapshot(`
       [
         "account/login/completed",
         "account/rateLimits/updated",
@@ -332,7 +337,8 @@ describe("Codex protocol metadata", () => {
         "windowsSandbox/setupCompleted",
       ]
     `);
-    expect(extractMethods("../src/generated/stable/ServerRequest.ts")).toMatchInlineSnapshot(`
+    expect(extractMethods("../src/generated/stable/ServerRequest.ts"))
+      .toMatchInlineSnapshot(`
       [
         "account/chatgptAuthTokens/refresh",
         "applyPatchApproval",

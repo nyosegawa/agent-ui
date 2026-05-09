@@ -1,6 +1,6 @@
 # Multi-User Deployment Recipe
 
-Multi-user deployment is outside the default MVP. Use this only for a host application that already owns authentication, authorization, workspace assignment, and audit logging.
+Multi-user deployment is outside the default local release. Use this only for a host application that already owns authentication, authorization, workspace assignment, and audit logging.
 
 ## Shape
 
@@ -60,4 +60,4 @@ Use aggressive cleanup:
 - child process kill on WebSocket close
 - bounded reconnect attempts from the browser
 
-This keeps remote use closer to the MVP local bridge semantics.
+This keeps remote use closer to the local release bridge semantics.
