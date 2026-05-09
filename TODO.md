@@ -297,6 +297,41 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Replace the fixture Vite state gallery with a dedicated visual QA route.
 - [x] Update component and testing docs with the final conversation/work-trace information architecture.
 
+## Active Product Completion Audit
+
+This section is the active gate for making the real local Codex web experience
+feel finished rather than merely functional. Do not mark these items complete
+until the implementation, browser screen check, docs, and relevant tests are all
+updated together.
+
+### Information Architecture
+
+- [ ] Re-audit the conversation/work-trace/approval hierarchy against real persisted sessions and live turns.
+- [ ] Ensure command output, diffs, and approvals are visible in context without turning history into a terminal log wall.
+- [ ] Ensure the thread sidebar remains useful with very long real thread titles and dense histories.
+- [ ] Ensure empty, loading, authenticated, unauthenticated, bridge-error, approval, running, preview, and completed states have consistent hierarchy and copy.
+
+### Visual QA
+
+- [ ] Browser-check the real local app at narrow, desktop, and tall-history viewports after each UI refactor.
+- [ ] Browser-check the fixture QA route for empty, unauthenticated, bridge-error, approval, diff, and work-trace states.
+- [ ] Add or update visual/e2e assertions for every UI regression found during browser checks.
+- [ ] Keep screenshots and snapshot expectations aligned with intentional layout changes.
+
+### Code Quality
+
+- [ ] Remove remaining avoidable type assertions and replace weak protocol parsing with local type guards.
+- [ ] Split oversized React component sections when behavior is hard to audit.
+- [ ] Keep reducer state transitions explicit for running, waiting-for-input, preview, completed, failed, and interrupted flows.
+- [ ] Keep browser transport, bridge lifecycle, and diagnostics redaction tests at production quality.
+
+### Documentation Freshness
+
+- [ ] Re-read docs after UI and protocol changes and remove stale product claims.
+- [ ] Keep `docs/component-api.md` aligned with the actual component hierarchy.
+- [ ] Keep `docs/testing.md` aligned with the latest validation commands, dates, and real-vs-fake coverage.
+- [ ] Keep `docs/authentication.md`, `docs/security.md`, and `docs/protocol.md` aligned with the real App Server behavior currently used.
+
 ## Release Readiness
 
 This section is the publish/release gate after the real local app works.
@@ -317,6 +352,8 @@ This section is the publish/release gate after the real local app works.
 - [x] Re-run real Codex stdio and approval smoke after real history rendering hardening.
 - [x] Record exact real smoke commands, date, Codex version, and any auth/environment dependencies in docs.
 - [x] Confirm GitHub Actions pass after push.
+- [ ] Re-run full release validation after the Active Product Completion Audit is complete.
+- [ ] Confirm GitHub Actions pass after the final product-completion push.
 
 ## Current Correctness Audit
 
