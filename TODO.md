@@ -327,10 +327,10 @@ updated together.
 
 ### Documentation Freshness
 
-- [ ] Re-read docs after UI and protocol changes and remove stale product claims.
-- [ ] Keep `docs/component-api.md` aligned with the actual component hierarchy.
+- [x] Re-read docs after UI and protocol changes and remove stale product claims.
+- [x] Keep `docs/component-api.md` aligned with the actual component hierarchy.
 - [x] Keep `docs/testing.md` aligned with the latest validation commands, dates, and real-vs-fake coverage.
-- [ ] Keep `docs/authentication.md`, `docs/security.md`, and `docs/protocol.md` aligned with the real App Server behavior currently used.
+- [x] Keep `docs/authentication.md`, `docs/security.md`, and `docs/protocol.md` aligned with the real App Server behavior currently used.
 
 ## Release Readiness
 
@@ -352,7 +352,7 @@ This section is the publish/release gate after the real local app works.
 - [x] Re-run real Codex stdio and approval smoke after real history rendering hardening.
 - [x] Record exact real smoke commands, date, Codex version, and any auth/environment dependencies in docs.
 - [x] Confirm GitHub Actions pass after push.
-- [ ] Re-run full release validation after the Active Product Completion Audit is complete.
+- [x] Re-run full release validation after the Active Product Completion Audit is complete.
 - [ ] Confirm GitHub Actions pass after the final product-completion push.
 
 ## Current Correctness Audit

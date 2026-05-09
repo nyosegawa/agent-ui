@@ -60,6 +60,10 @@ trace summary with older steps collapsed inside the relevant turn. If a
 UI treats the hydrated view as `loaded`; stale item-level `inProgress` labels in
 loaded history are rendered as completed.
 
+Long thread titles are clamped in both the sidebar and the thread header. Header
+actions wrap below the title on narrow screens so `Resume`, `Stop`, and `New
+thread` remain reachable instead of being pushed out of the viewport.
+
 ## Approval Components
 
 `AgentApprovalPrompt` reads pending server requests through `useAgentApprovals()`.
