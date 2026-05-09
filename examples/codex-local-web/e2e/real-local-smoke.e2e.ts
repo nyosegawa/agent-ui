@@ -88,6 +88,7 @@ test("real local app shell has stable desktop and mobile layout contracts", asyn
   await expect(chatAppearsBeforeSidebar(page)).resolves.toBe(true);
   await expect(page.locator(".aui-composer")).toBeInViewport();
   await expect(usableMessageTimeline(page)).resolves.toBe(true);
+  await expect(headerDoesNotOverlapTimeline(page)).resolves.toBe(true);
 });
 
 async function noHorizontalOverflow(page: Page) {
@@ -125,6 +126,16 @@ async function usableMessageTimeline(page: Page) {
     const composer = document.querySelector(".aui-composer")?.getBoundingClientRect();
     if (!messages || !composer) return false;
     return messages.height >= 180 && composer.bottom <= window.innerHeight;
+  });
+}
+
+async function headerDoesNotOverlapTimeline(page: Page) {
+  return page.evaluate(() => {
+    const header = document.querySelector(".aui-thread-header")?.getBoundingClientRect();
+    const actions = document.querySelector(".aui-thread-actions")?.getBoundingClientRect();
+    const messages = document.querySelector(".aui-message-list")?.getBoundingClientRect();
+    if (!header || !actions || !messages) return false;
+    return actions.bottom <= header.bottom && header.bottom <= messages.top;
   });
 }
 

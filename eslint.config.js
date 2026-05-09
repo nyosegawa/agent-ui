@@ -11,6 +11,7 @@ export default tseslint.config(
       "**/node_modules/**",
       "packages/codex/src/generated/**",
       "coverage/**",
+      "test-results/**",
     ],
   },
   js.configs.recommended,

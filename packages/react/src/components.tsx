@@ -62,7 +62,7 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
         {thread ? (
           <>
             <div className="aui-thread-header">
-              <div>
+              <div className="aui-thread-title">
                 <h1>{thread.thread.name ?? "Untitled thread"}</h1>
                 <p>{threadSubtitle(thread.thread)}</p>
               </div>

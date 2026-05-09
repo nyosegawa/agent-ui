@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 test("renders Agent UI chat", async ({ page }) => {
   await page.goto("/");
@@ -35,6 +35,7 @@ test("renders Agent UI chat", async ({ page }) => {
     scrollWidth: document.documentElement.scrollWidth,
   }));
   expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
+  await expect(headerDoesNotOverlapTimeline(page)).resolves.toBe(true);
 });
 
 test("does not overflow on mobile", async ({ page }) => {
@@ -49,7 +50,18 @@ test("does not overflow on mobile", async ({ page }) => {
     scrollWidth: document.documentElement.scrollWidth,
   }));
   expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
+  await expect(headerDoesNotOverlapTimeline(page)).resolves.toBe(true);
 });
+
+async function headerDoesNotOverlapTimeline(page: Page) {
+  return page.evaluate(() => {
+    const header = document.querySelector(".aui-thread-header")?.getBoundingClientRect();
+    const actions = document.querySelector(".aui-thread-actions")?.getBoundingClientRect();
+    const messages = document.querySelector(".aui-message-list")?.getBoundingClientRect();
+    if (!header || !actions || !messages) return false;
+    return actions.bottom <= header.bottom && header.bottom <= messages.top;
+  });
+}
 
 test("renders deterministic empty, login, and bridge-error states", async ({ page }) => {
   await page.goto("/qa");

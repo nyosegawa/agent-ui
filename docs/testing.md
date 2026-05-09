@@ -261,3 +261,5 @@ Fake stdio remains the deterministic CI gate for the browser approval UX, comman
 `bun run test:e2e:playwright` includes browser-level layout contract snapshots for the local Vite example at desktop and mobile widths. These snapshots capture rendered dimensions, overflow behavior, display mode, grid columns, border radius, and key colors for the shell, sidebar, chat, run controls, usage, message list, inline activity, approvals, and composer.
 
 Image snapshots are intentionally not the default CI gate because OS font rendering can create noisy diffs across macOS and Linux. If pixel-level screenshots are added later, keep them in a separate opt-in job or generate Linux baselines in CI.
+
+The browser smoke also asserts the real-local narrow layout contract that visual inspection caught on 2026-05-10: thread header actions must stay inside the thread header, the header bottom must be above the message-list top, the message timeline must remain usable, and the composer must stay in the viewport. `test-results/**` is ignored by ESLint so local lint runs do not race with Playwright while it recreates transient artifacts.

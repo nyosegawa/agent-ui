@@ -2,6 +2,26 @@
 
 This checklist is the execution source of truth for Agent UI.
 
+## Active Completion Gate: Header And Composer Layout Hardening
+
+The 2026-05-10 in-app browser audit found that the real-session thread header
+could let `Resume` and `New thread` actions crowd into the message timeline at
+narrow widths. This gate is complete only after the header, message list, and
+composer have explicit non-overlap contracts in CSS, tests, docs, and browser
+inspection.
+
+### Header Action Layout
+
+- [x] Make the thread title and thread actions use explicit layout regions so action buttons never overlap the message timeline.
+- [x] Add browser-level assertions for thread-header/action/message-list non-overlap at narrow widths.
+- [x] Re-check the real local browser screen after the patch, including console diagnostics.
+
+### Completion Hygiene
+
+- [x] Update docs for the non-overlap layout contract.
+- [x] Keep lint independent from Playwright's transient `test-results` directory.
+- [x] Run targeted validation, commit, push, and watch Actions.
+
 ## Completed Gate: Real Session UX Repair
 
 This section was a release gate. The product-grade gate below proved
