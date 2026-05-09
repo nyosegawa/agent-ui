@@ -128,6 +128,7 @@ export function AgentRunControls({ autoRefresh = true }: AgentRunControlsProps =
     executionModes,
     runSettings,
     selectedModel,
+    setCwd,
     setEffort,
     setExecutionMode,
     setModelId,
@@ -192,6 +193,16 @@ export function AgentRunControls({ autoRefresh = true }: AgentRunControlsProps =
             </option>
           ))}
         </select>
+      </label>
+      <label className="aui-field aui-field-wide">
+        <span>Working directory</span>
+        <input
+          aria-label="Working directory"
+          onChange={(event) => setCwd(event.currentTarget.value)}
+          placeholder="Server default cwd"
+          type="text"
+          value={runSettings.cwd ?? ""}
+        />
       </label>
     </section>
   );

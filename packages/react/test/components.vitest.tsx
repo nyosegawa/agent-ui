@@ -237,15 +237,58 @@ describe("AgentChat", () => {
     await user.click(await screen.findByRole("button", { name: "Read-only" }));
     await user.selectOptions(screen.getByLabelText("Model"), "fixture-demo-coding-model");
     await user.selectOptions(screen.getByLabelText("Effort"), "high");
+    await user.type(screen.getByLabelText("Working directory"), "/tmp/agent-ui");
     await user.type(screen.getByLabelText("Message"), "inspect only");
     await user.click(screen.getByRole("button", { name: "Send" }));
 
     expect(transport.requests.at(-1)?.params).toMatchObject({
       approvalPolicy: "untrusted",
+      cwd: "/tmp/agent-ui",
       effort: "high",
       model: "fixture-demo-coding-model",
       sandboxPolicy: { networkAccess: false, type: "readOnly" },
       threadId: "thread-demo",
+    });
+  });
+
+  it("starts new threads with selected model and working directory", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        if (request.method === "model/list") {
+          return {
+            data: [
+              {
+                displayName: "Real Model",
+                id: "real-model",
+                supportedReasoningEfforts: [],
+              },
+            ],
+          };
+        }
+        if (request.method === "thread/start") {
+          return { thread: { id: "thread-new", name: "New real thread", status: { type: "idle" } } };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await screen.findByRole("option", { name: "Real Model (real-model)" });
+    await user.selectOptions(screen.getByLabelText("Model"), "real-model");
+    await user.type(screen.getByLabelText("Working directory"), "/tmp/agent-ui");
+    await user.click(screen.getByRole("button", { name: "Start thread" }));
+
+    expect(transport.requests.find((request) => request.method === "thread/start")?.params).toEqual({
+      cwd: "/tmp/agent-ui",
+      model: "real-model",
     });
   });
 

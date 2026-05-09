@@ -9,7 +9,7 @@ const { thread, turns, startThread, resumeThread } = useAgentThread();
 const { threads, activeThreadId, setActiveThread } = useAgentThreads();
 ```
 
-Use `startThread()` for a new Codex thread and `resumeThread(threadId)` for an existing one. `resumeThread()` hydrates returned thread snapshots through the same history normalizer used by `thread/read`. `useAgentThreads()` returns ordered normalized thread state for navigation.
+Use `startThread()` for a new Codex thread and `resumeThread(threadId)` for an existing one. `startThread()` carries the selected model and working directory from run settings into stable `thread/start` params. `resumeThread()` hydrates returned thread snapshots through the same history normalizer used by `thread/read`. `useAgentThreads()` returns ordered normalized thread state for navigation.
 
 ## History Hooks
 
@@ -28,7 +28,7 @@ const reader = useAgentThreadReader();
 const { startTurn, interruptTurn } = useAgentTurn(threadId);
 ```
 
-`startTurn(input)` sends a `turn/start` request for the active or supplied thread. It merges normalized run settings into the request so the selected execution mode, model, and reasoning effort are carried to Codex.
+`startTurn(input)` sends a `turn/start` request for the active or supplied thread. It merges normalized run settings into the request so the selected execution mode, model, reasoning effort, and working directory are carried to Codex.
 
 ## Composer Hook
 
@@ -44,7 +44,7 @@ const composer = useAgentComposer(threadId);
 const run = useAgentRunSettings();
 ```
 
-`useAgentRunSettings()` exposes execution modes, available models, supported efforts, current selections, and setters. Execution modes map to stable App Server `approvalPolicy` and `sandboxPolicy` turn overrides.
+`useAgentRunSettings()` exposes execution modes, available models, supported efforts, working directory, current selections, and setters. Execution modes map to stable App Server `approvalPolicy` and `sandboxPolicy` turn overrides.
 
 ## Approval Hook
 

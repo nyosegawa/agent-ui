@@ -58,6 +58,7 @@ export interface RunSettingsState {
   executionMode: ExecutionModeId;
   modelId?: string;
   effort?: ReasoningEffort;
+  cwd?: string;
 }
 
 export interface AgentThread {

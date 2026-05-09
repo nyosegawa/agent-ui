@@ -66,12 +66,17 @@ export function useAgentThread(threadId?: ThreadId) {
   const resolvedThreadId = threadId ?? state.activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : selectActiveThread(state);
   const turns = resolvedThreadId ? selectOrderedTurns(state, resolvedThreadId) : [];
+  const runSettings = selectRunSettings(state);
 
   const startThread = useCallback(
     async (params?: Record<string, unknown>) => {
       const result = await transport.request<Record<string, unknown> | undefined, any>(
         "thread/start",
-        params ?? {},
+        {
+          ...(runSettings.modelId ? { model: runSettings.modelId } : {}),
+          ...(runSettings.cwd ? { cwd: runSettings.cwd } : {}),
+          ...(params ?? {}),
+        },
       );
       const rawThread = result.thread ?? result;
       dispatch({
@@ -87,7 +92,7 @@ export function useAgentThread(threadId?: ThreadId) {
       });
       return result;
     },
-    [dispatch, transport],
+    [dispatch, runSettings.cwd, runSettings.modelId, transport],
   );
 
   const resumeThread = useCallback(
@@ -208,6 +213,7 @@ export function useAgentTurn(threadId?: ThreadId) {
       );
       return transport.request("turn/start", {
         ...(executionMode?.turnParams ?? {}),
+        ...(runSettings.cwd ? { cwd: runSettings.cwd } : {}),
         ...(runSettings.modelId ? { model: runSettings.modelId } : {}),
         ...(runSettings.effort ? { effort: runSettings.effort } : {}),
         ...params,
@@ -215,7 +221,14 @@ export function useAgentTurn(threadId?: ThreadId) {
         threadId: resolvedThreadId,
       });
     },
-    [resolvedThreadId, runSettings.effort, runSettings.executionMode, runSettings.modelId, transport],
+    [
+      resolvedThreadId,
+      runSettings.cwd,
+      runSettings.effort,
+      runSettings.executionMode,
+      runSettings.modelId,
+      transport,
+    ],
   );
 
   const interruptTurn = useCallback(
@@ -300,12 +313,17 @@ export function useAgentRunSettings() {
       dispatch({ effort: effort || undefined, type: "runSettings/updated" }),
     [dispatch],
   );
+  const setCwd = useCallback(
+    (cwd: string) => dispatch({ cwd: cwd.trim() || undefined, type: "runSettings/updated" }),
+    [dispatch],
+  );
 
   return {
     executionModes: AGENT_EXECUTION_MODES,
     models: state.models.models,
     runSettings,
     selectedModel,
+    setCwd,
     setEffort,
     setExecutionMode,
     setModelId,

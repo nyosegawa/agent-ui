@@ -71,8 +71,9 @@ The default card shows request id, command or file path context, and the raw nor
 - execution mode: Review, Auto, Read-only, or Full access
 - model: values from `model/list`
 - effort: supported reasoning efforts from the selected model, with a model-default option
+- working directory: optional `cwd` override for real local thread and turn requests
 
-The selected values are stored in normalized run settings and are merged into `turn/start` as `approvalPolicy`, `sandboxPolicy`, `model`, and `effort`.
+The selected values are stored in normalized run settings. `thread/start` receives `model` and `cwd`. `turn/start` receives `approvalPolicy`, `sandboxPolicy`, `model`, `effort`, and `cwd`.
 
 ## Usage
 

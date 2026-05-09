@@ -37,6 +37,7 @@ export type AgentEvent =
       executionMode?: ExecutionModeId;
       modelId?: string;
       effort?: ReasoningEffort;
+      cwd?: string;
     }
   | { type: "thread/upserted"; thread: AgentThread; status?: ThreadStatus; turns?: AgentTurn[] }
   | { type: "thread/started"; thread: AgentThread; status?: ThreadStatus; turns?: AgentTurn[] }

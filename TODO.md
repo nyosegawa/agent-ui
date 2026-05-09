@@ -219,12 +219,12 @@ This is the current source of truth for making Agent UI a finished local Codex w
 
 ### Real Thread Workflow
 
-- [ ] Load stored Codex threads from `thread/list`.
+- [x] Load stored Codex threads from `thread/list`.
 - [ ] Match thread search/filter UI to real `thread/list` behavior.
-- [ ] Hydrate stored sessions with `thread/read`.
-- [ ] Resume stored sessions with `thread/resume`.
-- [ ] Start new threads with a selected working directory.
-- [ ] Send turns with stable `turn/start` params.
+- [x] Hydrate stored sessions with `thread/read`.
+- [x] Resume stored sessions with `thread/resume`.
+- [x] Start new threads with a selected working directory.
+- [x] Send turns with stable `turn/start` params.
 - [ ] Render live streaming assistant text from App Server events.
 - [ ] Render live command output from App Server events.
 - [ ] Render live diffs from App Server patch payloads.
@@ -254,7 +254,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Add bridge-error state.
 - [ ] Add thread search/filter loading and empty states.
 - [ ] Make run settings readable on desktop and mobile.
-- [ ] Add usage limit cards for 5-hour and weekly windows using real rate-limit data.
+- [x] Add usage limit cards for 5-hour and weekly windows using real rate-limit data.
 - [ ] Add accessible approval controls for command and file-change requests.
 - [ ] Make diff preview polished for real App Server patch payloads.
 - [ ] Add visual regression coverage for the real local app shell.
