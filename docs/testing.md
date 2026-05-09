@@ -112,6 +112,7 @@ Component tests:
 - keep very large persisted command-output histories capped in the UI
 - keep long persisted messages behind a preview/expand affordance
 - keep App Server plugin manifest warnings in diagnostics instead of the primary chat flow
+- suppress known low-value Codex plugin `interface.defaultPrompt` warnings from visible diagnostics
 - render file diff
 - switch thread
 - show auth/device-code state

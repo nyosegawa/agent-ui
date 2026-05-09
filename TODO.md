@@ -259,6 +259,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Make diff preview polished for real App Server patch payloads.
 - [x] Add visual regression coverage for the real local app shell.
 - [x] Keep App Server plugin manifest warnings out of the primary chat flow.
+- [x] Suppress known low-value Codex plugin `interface.defaultPrompt` warnings from visible diagnostics.
 - [x] Make long persisted-session messages preview-first with explicit expansion.
 - [x] Cap very large persisted-session command-output lists so history remains readable.
 - [x] Auto-scroll hydrated persisted sessions to the latest messages.

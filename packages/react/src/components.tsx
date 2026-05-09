@@ -798,7 +798,7 @@ function AgentDiagnostics({ bootstrap }: { bootstrap: ReturnType<typeof useAgent
     ...bootstrap.errors.map((error) => error.message),
     ...state.errors.map((error) => error.message),
     ...state.configWarnings.map((warning) => warning.message),
-  ].filter(Boolean);
+  ].filter((message) => message && !isSuppressedDiagnostic(message));
   if (bootstrap.isBootstrapping && messages.length === 0) {
     return (
       <section className="aui-diagnostics" aria-label="Diagnostics">
@@ -1060,4 +1060,11 @@ function diagnosticsTitle(messages: string[]): string {
   if (pluginWarnings === messages.length) return "Plugin manifest warnings";
   if (pluginWarnings > 0) return "Diagnostics and plugin warnings";
   return "Diagnostics";
+}
+
+function isSuppressedDiagnostic(message: string): boolean {
+  return (
+    message.includes("codex_core_plugins::manifest") &&
+    message.includes("ignoring interface.defaultPrompt")
+  );
 }

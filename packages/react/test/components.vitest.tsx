@@ -137,17 +137,49 @@ describe("AgentChat", () => {
 
     transport.push({
       message: JSON.stringify({
-        fields: { message: "ignoring invalid plugin config", path: "/tmp/plugin.json" },
+        fields: { message: "bridge recovered after stderr warning", path: "/tmp/bridge.log" },
+        level: "WARN",
+        target: "codex_app_server",
+      }),
+      type: "stderr",
+    });
+
+    expect(
+      await screen.findByText(/WARN codex_app_server bridge recovered after stderr warning/),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Diagnostics")).toBeInTheDocument();
+  });
+
+  it("keeps known Codex plugin manifest warnings out of the visible UI", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    transport.push({
+      message: JSON.stringify({
+        fields: {
+          message: "ignoring interface.defaultPrompt: maximum of 3 prompts is supported",
+          path: "/Users/example/.codex/.tmp/plugins/plugin.json",
+        },
         level: "WARN",
         target: "codex_core_plugins::manifest",
       }),
       type: "stderr",
     });
 
-    expect(
-      await screen.findByText(/WARN codex_core_plugins::manifest ignoring invalid plugin config/),
-    ).toBeInTheDocument();
-    expect(screen.getByText("Plugin manifest warnings")).toBeInTheDocument();
+    expect(await screen.findByText(/real@example.com/)).toBeInTheDocument();
+    expect(screen.queryByText(/Plugin manifest warnings/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/maximum of 3 prompts/)).not.toBeInTheDocument();
   });
 
   it("keeps long history messages readable behind a preview", () => {
