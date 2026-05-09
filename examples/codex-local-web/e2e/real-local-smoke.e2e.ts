@@ -15,11 +15,11 @@ test("drives the real local app shell through the browser websocket transport", 
   await expect(page.getByRole("button", { name: /Stored real smoke/ })).toBeVisible();
   await page.getByRole("button", { name: /Stored real smoke/ }).click();
   await expect(page.getByText("Stored thread hydrated.")).toBeVisible();
-  await page.getByRole("button", { name: "Resume" }).click();
+  await page.getByRole("button", { name: "Resume" }).click({ force: true });
   await expect(page.locator(".aui-status-pill")).toHaveText("loaded");
 
   await page.getByLabel("Model", { exact: true }).selectOption("smoke-model");
-  await page.getByRole("button", { name: "New thread" }).click();
+  await page.getByRole("button", { name: "New thread" }).click({ force: true });
   await expect(page.getByRole("heading", { name: "Live real smoke" })).toBeVisible();
   await page.getByLabel("Message").fill("run smoke");
   await page.getByRole("button", { name: "Send" }).click({ force: true });

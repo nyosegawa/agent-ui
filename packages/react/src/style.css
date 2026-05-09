@@ -23,9 +23,8 @@
   border-radius: var(--aui-radius);
   display: grid;
   grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
-  height: min(960px, calc(100dvh - 48px));
   min-height: 680px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .aui-shell,
@@ -83,10 +82,9 @@
 .aui-chat {
   background: var(--aui-panel);
   display: grid;
-  grid-template-rows: auto auto auto auto minmax(240px, 1fr) auto auto auto auto;
-  min-height: 0;
+  grid-template-rows: auto auto auto auto minmax(240px, auto) auto auto auto auto;
   min-width: 0;
-  overflow: auto;
+  overflow: visible;
 }
 
 .aui-chat > * {
@@ -366,6 +364,7 @@
   gap: 12px;
   list-style: none;
   margin: 0;
+  max-height: 460px;
   min-height: 240px;
   overflow: auto;
   padding: 14px;
@@ -661,6 +660,7 @@
 }
 
 .aui-composer {
+  background: var(--aui-panel);
   border-top: 1px solid var(--aui-border);
   padding: 12px 14px;
 }
