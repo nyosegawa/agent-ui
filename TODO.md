@@ -2,6 +2,31 @@
 
 This checklist is the execution source of truth for Agent UI.
 
+## Active Completion Gate: Post E2E Full Validation
+
+The deterministic browser smoke now covers same-thread multi-turn continuation.
+This gate re-runs the full project validation surface after that e2e change.
+
+### Required Validation
+
+- [x] Run `bun run typecheck`.
+- [x] Run `bun run lint`.
+- [x] Run `bun test`.
+- [x] Run `bun run build`.
+- [x] Run `bun run test:protocol`.
+- [x] Run `bun run test:fixtures`.
+- [x] Run `bun run publint`.
+- [x] Run `bun run attw`.
+- [x] Run `bun run check:exports`.
+- [x] Run `bun run test:e2e:playwright`.
+- [x] Run `bun run test:node-compat`.
+
+### Completion Hygiene
+
+- [x] Fix any failures from the post-e2e full sweep.
+- [x] Update docs if validation scope or known limits changed.
+- [ ] Commit, push, and watch Actions.
+
 ## Active Completion Gate: Deterministic Multi-Turn E2E
 
 Real Codex browser continuation was verified manually on 2026-05-10. The same
