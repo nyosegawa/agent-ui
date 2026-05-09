@@ -20,6 +20,12 @@ codex app-server
 - The local bridge is Node-side only.
 - Optional SDK adapters adapt host-owned clients/runners into `AgentTransport`; they do not replace the App Server protocol as the primary path.
 
+## Host Bridges
+
+The chat-capable local bridge is `attachAgentUiWebSocketBridge()`. It keeps one App Server process alive for the browser session, streams App Server notifications, forwards server approval requests, and carries browser approval responses back to stdio.
+
+`createAgentUiNextRpcRoute()` is intentionally narrower: it starts an App Server process for one HTTP `POST`, sends one JSON-RPC-lite request, returns one response, and closes the process. It is useful for host-owned one-shot calls, but it cannot represent streaming turns, server approval requests, or browser approval responses. Next.js apps that need the full chat experience should host a WebSocket bridge in a Node server or use a separate same-origin bridge process.
+
 ## Core State
 
 ```ts

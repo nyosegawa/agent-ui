@@ -50,3 +50,5 @@ Run the fixture-backed package smoke demo separately:
 ```sh
 bun run --cwd examples/docs-site dev
 ```
+
+The Next.js example is a one-shot RPC Route Handler only. Use the local web app's WebSocket bridge for streaming chat, approvals, and live diagnostics.

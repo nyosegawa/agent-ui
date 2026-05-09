@@ -33,6 +33,12 @@ Authentication is a host responsibility. The transport intentionally does not pu
 
 Reconnect is disabled unless `reconnect` is provided. When enabled, the transport rejects in-flight requests on close, emits `connection/connecting`, and reopens the socket with bounded backoff. Hosts should keep server requests idempotent enough that users can retry after reconnect.
 
+## Next.js Route Handlers
+
+`createAgentUiNextRpcRoute()` is a one-shot HTTP RPC helper. Each request starts a local bridge, sends one App Server method, returns the response, and shuts the process down. It does not support streaming notifications, App Server approval requests, or browser approval responses.
+
+For a Next.js product that needs the full Agent UI chat experience, keep the browser on `createCodexWebSocketTransport()` and host a same-origin WebSocket bridge in a Node server, custom Next server, reverse proxy sidecar, or another process owned by the application. Do not describe the one-shot Route Handler as a chat bridge.
+
 ## Process Isolation
 
 For any remote recipe:

@@ -1,8 +1,8 @@
 import { createCodexAppServerBridge, type CodexAppServerBridgeOptions } from "./bridge";
 
-export type AgentUiNextRouteOptions = CodexAppServerBridgeOptions;
+export type AgentUiNextRpcRouteOptions = CodexAppServerBridgeOptions;
 
-export function createAgentUiNextRoute(options: AgentUiNextRouteOptions = {}) {
+export function createAgentUiNextRpcRoute(options: AgentUiNextRpcRouteOptions = {}) {
   return async function POST(request: Request): Promise<Response> {
     const bridge = createCodexAppServerBridge(options);
     try {
@@ -20,3 +20,11 @@ export function createAgentUiNextRoute(options: AgentUiNextRouteOptions = {}) {
     }
   };
 }
+
+/**
+ * @deprecated This helper is a one-shot RPC route, not a streaming chat bridge.
+ * Use `createAgentUiNextRpcRoute()` for one-shot server calls or
+ * `attachAgentUiWebSocketBridge()` for chat, streaming, and approvals.
+ */
+export const createAgentUiNextRoute = createAgentUiNextRpcRoute;
+export type AgentUiNextRouteOptions = AgentUiNextRpcRouteOptions;

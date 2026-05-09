@@ -100,7 +100,7 @@ Responsibilities:
 
 - local bridge
 - Codex App Server process lifecycle
-- Next.js Route Handler helpers
+- Next.js one-shot RPC Route Handler helper
 - Express middleware
 - auth/token forwarding recipes
 
@@ -122,7 +122,7 @@ The wrapper does not create transports, spawn Codex, or include CSS automaticall
 
 - `examples/local-react-vite`: fixture-backed local component smoke target.
 - `examples/codex-local-web`: real local Codex web app target using a same-origin WebSocket bridge to `codex app-server --listen stdio://`.
-- `examples/next-local-bridge`: Next.js Route Handler bridge target.
+- `examples/next-local-bridge`: Next.js one-shot RPC Route Handler example. It is not the chat-capable bridge.
 - `examples/recipes`: typed host integration recipes and remote deployment notes.
 - `examples/docs-site`: static documentation and hosted-demo build target.
 

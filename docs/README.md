@@ -88,3 +88,7 @@ bun run --cwd examples/local-react-vite dev
 The fixture example uses a `FakeAgentTransport` for browser-only smoke testing of thread navigation, streaming text, command output, diff preview, and approval cards. It is not the real local app release gate.
 
 Additional typed recipes live in `examples/recipes` for custom component slots, headless hooks, theming, and optional WebSocket wiring.
+
+## Next.js Note
+
+`examples/next-local-bridge` demonstrates `createAgentUiNextRpcRoute()`, a one-shot RPC Route Handler. It is not the real local chat bridge because plain Route Handlers do not keep a browser session connected for streaming notifications and approval round-trips. Use `examples/codex-local-web` or another Node WebSocket host for the full local Codex web experience.
