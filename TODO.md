@@ -253,11 +253,11 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Add no-session empty state.
 - [x] Add bridge-error state.
 - [x] Add thread search/filter loading and empty states.
-- [ ] Make run settings readable on desktop and mobile.
+- [x] Make run settings readable on desktop and mobile.
 - [x] Add usage limit cards for 5-hour and weekly windows using real rate-limit data.
 - [x] Add accessible approval controls for command and file-change requests.
 - [ ] Make diff preview polished for real App Server patch payloads.
-- [ ] Add visual regression coverage for the real local app shell.
+- [x] Add visual regression coverage for the real local app shell.
 
 ## Release Readiness
 
@@ -272,8 +272,8 @@ This section is the publish/release gate after the real local app works.
 - [ ] Run `bun run test:fixtures`.
 - [ ] Run `bun run publint`.
 - [ ] Run `bun run attw`.
-- [ ] Run `bun run test:e2e:playwright`.
-- [ ] Run real local app smoke for model list, usage, thread list, thread read, thread resume, start thread, send turn, streaming text, and approval handling.
+- [x] Run `bun run test:e2e:playwright`.
+- [x] Run real local app smoke for model list, usage, thread list, thread read, thread resume, start thread, send turn, streaming text, and approval handling.
 - [ ] Record exact real smoke commands, date, Codex version, and any auth/environment dependencies in docs.
 - [ ] Confirm GitHub Actions pass after push.
 

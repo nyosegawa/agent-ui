@@ -8,6 +8,10 @@ import { createServer as createViteServer } from "vite";
 const host = process.env.AGENT_UI_HOST ?? "127.0.0.1";
 const port = Number(process.env.AGENT_UI_PORT ?? 5174);
 const cwd = process.env.AGENT_UI_CODEX_CWD ?? process.cwd();
+const codexCommand = process.env.AGENT_UI_CODEX_COMMAND;
+const codexArgs = process.env.AGENT_UI_CODEX_ARGS
+  ? JSON.parse(process.env.AGENT_UI_CODEX_ARGS)
+  : undefined;
 const root = dirname(fileURLToPath(import.meta.url));
 
 const vite = await createViteServer({
@@ -25,6 +29,8 @@ const server = createServer((request, response) => {
 });
 
 attachAgentUiWebSocketBridge({
+  ...(codexArgs ? { args: codexArgs } : {}),
+  ...(codexCommand ? { command: codexCommand } : {}),
   cwd,
   path: "/agent-ui/ws",
   server,

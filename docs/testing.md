@@ -178,6 +178,7 @@ The history and usage smoke path has also been verified against `codex app-serve
 - `thread/resume(excludeTurns: true)`: resume succeeds for the same stored id
 - `examples/codex-local-web`: browser -> WebSocket bridge -> stdio App Server path loads model metadata, usage windows, stored thread list, `thread/read`, and `thread/resume` in this environment.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
+- `bun run test:e2e:playwright` also starts `examples/codex-local-web` against a fake stdio App Server and drives the real browser WebSocket transport through model list, usage, thread list/read/resume, thread start, turn start, streaming text, command output, diff preview, and command approval.
 
 Full approval-path real smoke still needs deterministic fixtures or a controlled Codex prompt that requests command/file approvals.
 

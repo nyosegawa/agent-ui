@@ -52,6 +52,9 @@ export function createCodexAppServerBridge(
     throw new Error("Codex app-server stdio streams were not created");
   }
 
+  const childPromise = child as unknown as { catch?: (handler: (error: unknown) => void) => void };
+  childPromise.catch?.(() => undefined);
+
   if (child.stderr && options.stderr) {
     child.stderr.setEncoding("utf8");
     child.stderr.on("data", (chunk) => options.stderr?.(redactSecrets(String(chunk))));

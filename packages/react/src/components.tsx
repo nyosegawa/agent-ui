@@ -97,7 +97,7 @@ function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
 }
 
 function AgentThreadActions({ status, threadId }: { status: string; threadId?: string }) {
-  const { resumeThread } = useAgentThread(threadId);
+  const { resumeThread, startThread } = useAgentThread(threadId);
   const canResume = threadId && (status === "notLoaded" || status === "loaded");
   return (
     <div className="aui-thread-actions">
@@ -113,6 +113,13 @@ function AgentThreadActions({ status, threadId }: { status: string; threadId?: s
           Resume
         </button>
       ) : null}
+      <button
+        className="aui-button aui-button-secondary"
+        onClick={() => void startThread()}
+        type="button"
+      >
+        New thread
+      </button>
     </div>
   );
 }
