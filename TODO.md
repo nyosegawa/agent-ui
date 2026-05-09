@@ -254,6 +254,8 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Add bridge-error state.
 - [x] Add thread search/filter loading and empty states.
 - [x] Add thread history load-more pagination for real `thread/list` cursors.
+- [x] Auto-preview the latest stored session after startup `thread/list` so the main pane is not empty.
+- [x] Keep run settings and message input together as one composer surface.
 - [x] Make run settings readable on desktop and mobile.
 - [x] Add usage limit cards for 5-hour and weekly windows using real rate-limit data.
 - [x] Add accessible approval controls for command and file-change requests.

@@ -46,7 +46,7 @@ the chat.
 
 ## Thread Sidebar
 
-`ThreadSidebar` includes a lightweight persisted-session browser. `Load` calls `thread/list` with optional search text, `limit: 25`, `sortKey: "updated_at"`, and descending order, then shows that returned page with loading and empty states. When the App Server returns `nextCursor` / `next_cursor`, the sidebar shows `Load more` and appends the next page without losing the current page. Stored-session rows show the user-facing title plus status and update time; internal Codex JSONL session paths are not shown in the default list. Selecting a stored thread calls `thread/read` with `includeTurns: true` and activates the hydrated snapshot.
+`ThreadSidebar` includes a lightweight persisted-session browser. Startup auto-loads the latest page with `thread/list`; when a stored session is returned and no thread is active, the default UI previews the newest session in the main pane with `thread/read`. Manual `Load` calls `thread/list` with optional search text, `limit: 25`, `sortKey: "updated_at"`, and descending order, then shows that returned page with loading and empty states. When the App Server returns `nextCursor` / `next_cursor`, the sidebar shows `Load more` and appends the next page without losing the current page. Stored-session rows show the user-facing title plus status and update time; internal Codex JSONL session paths are not shown in the default list. Selecting a stored thread calls `thread/read` with `includeTurns: true` and activates the hydrated snapshot.
 
 When a stored thread is loaded as `notLoaded` or `loaded`, the thread header shows `Resume`. That action calls `thread/resume` with `excludeTurns: true` because the preview history is already hydrated. The default UI maps internal protocol statuses to product-facing labels such as `Stored`, `Preview`, `Running`, and `Needs approval`; raw status strings are not shown unless the status is unknown to Agent UI. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
 
@@ -91,7 +91,7 @@ browser component.
 - effort: supported reasoning efforts from the selected model, with a model-default option
 - working directory: optional `cwd` override for real local thread and turn requests
 
-The selected values are stored in normalized run settings. `thread/start` receives `model` and `cwd`. `turn/start` receives `approvalPolicy`, `sandboxPolicy`, `model`, `effort`, and `cwd`.
+The selected values are stored in normalized run settings. In the full `AgentChat` layout, run settings are part of the same composer surface as the message input so the model, effort, execution mode, working directory, and prompt are reviewed together before sending. `thread/start` receives `model` and `cwd`. `turn/start` receives `approvalPolicy`, `sandboxPolicy`, `model`, `effort`, and `cwd`.
 
 Agent UI does not expose Codex collaboration/execution preset APIs in the local release. The built-in execution mode segmented control is a stable App Server convenience layer over documented `turn/start` fields only.
 

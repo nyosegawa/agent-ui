@@ -22,7 +22,7 @@ test("starts a live turn and resolves approval through the browser websocket tra
   await openRealLocalApp(page);
   await page.getByLabel("Model", { exact: true }).selectOption("smoke-model");
   await page
-    .getByRole("button", { name: "Start thread" })
+    .getByRole("button", { name: "New thread" })
     .evaluate((button) => button.click());
   await expect(page.getByRole("heading", { name: "Live real smoke" })).toBeVisible();
   await page.getByRole("textbox", { name: "Message" }).fill("run smoke");
@@ -54,12 +54,22 @@ test("real local app shell has stable desktop and mobile layout contracts", asyn
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   await expect(page.getByLabel("Run settings")).toBeVisible();
   await expect(noHorizontalOverflow(page)).resolves.toBe(true);
+  await expect(chatAppearsBeforeSidebar(page)).resolves.toBe(true);
 });
 
 async function noHorizontalOverflow(page: Page) {
   return page.evaluate(
     () => document.documentElement.scrollWidth <= document.documentElement.clientWidth,
   );
+}
+
+async function chatAppearsBeforeSidebar(page: Page) {
+  return page.evaluate(() => {
+    const chat = document.querySelector(".aui-chat")?.getBoundingClientRect();
+    const sidebar = document.querySelector(".aui-sidebar")?.getBoundingClientRect();
+    if (!chat || !sidebar) return false;
+    return chat.top <= sidebar.top;
+  });
 }
 
 async function openRealLocalApp(page: Page) {

@@ -225,6 +225,9 @@ export function useAgentThreadReader() {
         requestParams,
       );
       const rawThread = response?.thread ?? response;
+      if (!hasThreadId(rawThread)) {
+        throw new Error(`thread/read returned no thread for ${threadId}`);
+      }
       for (const event of threadSnapshotEvents(rawThread, options.activate ?? true)) {
         dispatch(event);
       }
@@ -233,6 +236,16 @@ export function useAgentThreadReader() {
     [dispatch, transport],
   );
   return { readThread };
+}
+
+function hasThreadId(value: unknown): value is Record<string, unknown> {
+  if (typeof value !== "object" || value === null) return false;
+  const record = value as Record<string, unknown>;
+  return (
+    typeof record.id === "string" ||
+    typeof record.threadId === "string" ||
+    typeof record.thread_id === "string"
+  );
 }
 
 export function useAgentTurn(threadId?: ThreadId) {

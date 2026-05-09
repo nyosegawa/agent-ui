@@ -67,8 +67,7 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
               renderApproval={slots?.renderApproval}
               threadId={threadId}
             />
-            <AgentRunControls autoRefresh={false} />
-            <AgentComposer threadId={threadId} />
+            <AgentComposerPanel threadId={threadId} />
           </>
         ) : (
           <div className="aui-empty">
@@ -289,6 +288,15 @@ export function AgentComposer({ threadId }: { threadId?: string }) {
         Send
       </button>
     </form>
+  );
+}
+
+function AgentComposerPanel({ threadId }: { threadId?: string }) {
+  return (
+    <section className="aui-compose-panel" aria-label="Message composer">
+      <AgentRunControls autoRefresh={false} />
+      <AgentComposer threadId={threadId} />
+    </section>
   );
 }
 
@@ -1290,7 +1298,12 @@ export function ThreadSidebar({
   }, [threads, visibleThreadIds]);
   const loadThreadPage = useCallback(
     async (
-      params: { append?: boolean; cursor?: string | null; searchTerm?: string } = {},
+      params: {
+        activateFirst?: boolean;
+        append?: boolean;
+        cursor?: string | null;
+        searchTerm?: string;
+      } = {},
     ) => {
       const response = await listThreads({
         cursor: params.cursor,
@@ -1311,9 +1324,15 @@ export function ThreadSidebar({
       });
       setNextCursor(response?.nextCursor ?? response?.next_cursor ?? null);
       setHasLoaded(true);
+      const firstThreadId = threadIds[0];
+      if (params.activateFirst && firstThreadId && !state.activeThreadId) {
+        readThread(firstThreadId, { activate: true, includeTurns: true }).catch(() => {
+          onSelectThread?.(firstThreadId);
+        });
+      }
       return response;
     },
-    [listThreads],
+    [listThreads, onSelectThread, readThread, state.activeThreadId],
   );
   useEffect(() => {
     if (
@@ -1323,7 +1342,7 @@ export function ThreadSidebar({
       !didAutoLoad.current
     ) {
       didAutoLoad.current = true;
-      void loadThreadPage().catch(() => {
+      void loadThreadPage({ activateFirst: true }).catch(() => {
         setHasLoaded(true);
       });
     }

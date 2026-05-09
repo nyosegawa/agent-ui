@@ -934,6 +934,65 @@ describe("AgentChat", () => {
     });
   });
 
+  it("previews the latest stored thread after startup history load", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-auto-preview",
+                name: "Latest stored session",
+                status: { type: "notLoaded" },
+                updatedAt: 1778000000,
+              },
+            ],
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-auto-preview",
+              name: "Latest stored session",
+              status: { type: "notLoaded" },
+              turns: [
+                {
+                  id: "turn-auto-preview",
+                  items: [
+                    {
+                      id: "item-auto-preview",
+                      text: "This stored session opens in the main pane.",
+                      type: "agentMessage",
+                    },
+                  ],
+                },
+              ],
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Latest stored session" }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText("This stored session opens in the main pane."),
+    ).toBeInTheDocument();
+    expect(
+      transport.requests.find((request) => request.method === "thread/read")?.params,
+    ).toEqual({
+      includeTurns: true,
+      threadId: "thread-auto-preview",
+    });
+  });
+
   it("loads additional stored thread pages when thread/list returns a cursor", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
@@ -974,7 +1033,7 @@ describe("AgentChat", () => {
     );
 
     await user.click(await screen.findByRole("button", { name: "Load" }));
-    expect(await screen.findByText("First page thread")).toBeInTheDocument();
+    expect(await screen.findAllByText("First page thread")).not.toHaveLength(0);
     await user.click(screen.getByRole("button", { name: "Load more" }));
 
     expect(await screen.findByText("Second page thread")).toBeInTheDocument();
