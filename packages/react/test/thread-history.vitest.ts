@@ -16,6 +16,15 @@ describe("thread history normalization", () => {
     });
   });
 
+  it("rejects thread payloads without ids", () => {
+    expect(() => threadUpsertEvent({ name: "Broken thread" })).toThrow(
+      "thread payload is missing an id",
+    );
+    expect(() => threadSnapshotEvents({ name: "Broken thread" }, true)).toThrow(
+      "thread payload is missing an id",
+    );
+  });
+
   it("hydrates thread/read turns, command output, and file changes", () => {
     const events = threadSnapshotEvents(
       {

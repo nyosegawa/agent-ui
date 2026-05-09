@@ -223,6 +223,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 
 - [x] Load stored Codex threads from `thread/list`.
 - [x] Match thread search/filter UI to real `thread/list` behavior.
+- [x] Ignore malformed stored thread rows without stable ids.
 - [x] Hydrate stored sessions with `thread/read`.
 - [x] Resume stored sessions with `thread/resume`.
 - [x] Start new threads with a selected working directory.

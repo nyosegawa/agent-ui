@@ -8,6 +8,7 @@ import type {
 } from "@nyosegawa/agent-ui-core";
 
 export function threadUpsertEvent(rawThread: Record<string, unknown>): AgentEvent {
+  if (!rawThreadId(rawThread)) throw new Error("thread payload is missing an id");
   return {
     status: normalizeThreadStatus(rawThread.status),
     thread: normalizeRawThread(rawThread),
@@ -19,6 +20,7 @@ export function threadSnapshotEvents(
   rawThread: Record<string, unknown>,
   activate: boolean,
 ): AgentEvent[] {
+  if (!rawThreadId(rawThread)) throw new Error("thread payload is missing an id");
   const thread = normalizeRawThread(rawThread);
   const rawTurns = Array.isArray(rawThread.turns) ? rawThread.turns : [];
   const turns = rawTurns.map((turn) => normalizeRawTurn(turn, thread.id));
@@ -46,7 +48,10 @@ export function threadSnapshotEvents(
     for (const item of items) {
       const record = asRecord(item);
       if (!record) continue;
-      if (record.type === "commandExecution" && typeof record.aggregatedOutput === "string") {
+      if (
+        record.type === "commandExecution" &&
+        typeof record.aggregatedOutput === "string"
+      ) {
         events.push({
           delta: record.aggregatedOutput,
           itemId: String(record.id),
@@ -79,11 +84,18 @@ export function threadSnapshotEvents(
 function normalizeRawThread(rawThread: Record<string, unknown>): AgentThread {
   return {
     ephemeral: Boolean(rawThread.ephemeral),
-    id: String(rawThread.id ?? rawThread.threadId ?? rawThread.thread_id),
+    id: rawThreadId(rawThread) ?? "",
     name: stringValue(rawThread.name) ?? stringValue(rawThread.preview),
     path: stringValue(rawThread.path) ?? stringValue(rawThread.cwd),
     raw: rawThread,
   };
+}
+
+export function rawThreadId(rawThread: Record<string, unknown>): string | undefined {
+  const value = rawThread.id ?? rawThread.threadId ?? rawThread.thread_id;
+  if (typeof value === "string" && value.trim()) return value;
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return undefined;
 }
 
 function normalizeRawTurn(rawTurn: unknown, threadId: ThreadId): AgentTurn {
@@ -157,7 +169,9 @@ function normalizeItemStatus(
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : undefined;
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
 }
 
 function stringValue(value: unknown) {

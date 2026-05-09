@@ -1022,6 +1022,37 @@ describe("AgentChat", () => {
     });
   });
 
+  it("ignores stored thread rows without stable ids", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              { name: "Broken row" },
+              {
+                id: "thread-valid-row",
+                name: "Valid row",
+                status: { type: "notLoaded" },
+              },
+            ],
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Load" }));
+
+    expect(await screen.findAllByText("Valid row")).not.toHaveLength(0);
+    expect(screen.queryByText("Broken row")).not.toBeInTheDocument();
+  });
+
   it("previews the latest stored thread after startup history load", async () => {
     const transport = new FakeAgentTransport({
       onRequest(request) {

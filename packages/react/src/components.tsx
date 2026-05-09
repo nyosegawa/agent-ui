@@ -22,6 +22,7 @@ import {
   useAgentUsage,
 } from "./hooks";
 import { useAgentContext } from "./provider";
+import { rawThreadId } from "./thread-history";
 import { normalizeUsageWindows } from "./usage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -1315,9 +1316,10 @@ export function ThreadSidebar({
         : Array.isArray(response?.threads)
           ? response.threads
           : [];
-      const threadIds = rawThreads.map((rawThread: Record<string, unknown>) =>
-        String(rawThread.id ?? rawThread.threadId ?? rawThread.thread_id),
-      );
+      const threadIds = rawThreads.flatMap((rawThread: Record<string, unknown>) => {
+        const threadId = rawThreadId(rawThread);
+        return threadId ? [threadId] : [];
+      });
       setVisibleThreadIds((current) => {
         if (!params.append) return threadIds;
         return Array.from(new Set([...(current ?? []), ...threadIds]));

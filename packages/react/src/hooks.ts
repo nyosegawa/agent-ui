@@ -33,7 +33,7 @@ import {
   type TurnStartParams,
 } from "./codex-request-params";
 import { useAgentContext } from "./provider";
-import { threadSnapshotEvents, threadUpsertEvent } from "./thread-history";
+import { rawThreadId, threadSnapshotEvents, threadUpsertEvent } from "./thread-history";
 
 export interface AgentExecutionMode {
   id: ExecutionModeId;
@@ -114,11 +114,13 @@ export function useAgentThread(threadId?: ThreadId) {
         requestParams,
       );
       const rawThread = result.thread ?? result;
+      const threadId = rawThreadId(rawThread);
+      if (!threadId) throw new Error("thread/start returned no thread id");
       dispatch({
         status: normalizeThreadStatus(rawThread.status ?? result.status),
         thread: {
           ephemeral: rawThread.ephemeral,
-          id: String(rawThread.id ?? rawThread.threadId),
+          id: threadId,
           name: rawThread.name,
           path: rawThread.path,
           raw: rawThread,
@@ -187,7 +189,7 @@ export function useAgentThreadHistory() {
           : Array.isArray(response?.threads)
             ? response.threads
             : [];
-        for (const rawThread of rawThreads) {
+        for (const rawThread of rawThreads.filter(isRecordWithThreadId)) {
           dispatch(threadUpsertEvent(rawThread));
         }
         setCursor(response?.nextCursor ?? response?.next_cursor ?? null);
@@ -240,12 +242,11 @@ export function useAgentThreadReader() {
 
 function hasThreadId(value: unknown): value is Record<string, unknown> {
   if (typeof value !== "object" || value === null) return false;
-  const record = value as Record<string, unknown>;
-  return (
-    typeof record.id === "string" ||
-    typeof record.threadId === "string" ||
-    typeof record.thread_id === "string"
-  );
+  return rawThreadId(value as Record<string, unknown>) != null;
+}
+
+function isRecordWithThreadId(value: unknown): value is Record<string, unknown> {
+  return hasThreadId(value);
 }
 
 export function useAgentTurn(threadId?: ThreadId) {
