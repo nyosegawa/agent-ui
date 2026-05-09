@@ -268,6 +268,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Show completed message status after real App Server thread completion and hydrated `thread/read`.
 - [x] Make local Vite examples resilient to hot reloads during package rebuilds.
 - [x] Remove local Playwright color-environment warning noise from release validation.
+- [x] Keep Vite examples independent of package `dist/` cleanup during local development.
 
 ## Release Readiness
 
