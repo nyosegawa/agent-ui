@@ -26,7 +26,7 @@ pagination changes.
 
 - [x] Fix any failures from the full sweep.
 - [x] Update docs if validation scope or known limits changed.
-- [ ] Commit, push, and watch Actions.
+- [x] Commit, push, and watch Actions.
 
 ## Active Completion Gate: Real History Exhaustion
 
