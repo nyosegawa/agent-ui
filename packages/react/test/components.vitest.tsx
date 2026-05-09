@@ -465,4 +465,34 @@ describe("AgentChat", () => {
       threadId: "thread-history",
     });
   });
+
+  it("passes real thread/list search params and shows empty history state", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") return { data: [], nextCursor: null };
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.clear(await screen.findByLabelText("Search history"));
+    await user.type(screen.getByLabelText("Search history"), "missing session");
+    await user.click(screen.getByRole("button", { name: "Load" }));
+
+    expect(await screen.findByText("No threads found.")).toBeInTheDocument();
+    const lastThreadListRequest = transport.requests
+      .filter((request) => request.method === "thread/list")
+      .at(-1);
+    expect(lastThreadListRequest?.params).toMatchObject({
+      limit: 25,
+      searchTerm: "missing session",
+      sortDirection: "desc",
+      sortKey: "updated_at",
+    });
+  });
 });

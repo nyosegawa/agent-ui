@@ -220,7 +220,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 ### Real Thread Workflow
 
 - [x] Load stored Codex threads from `thread/list`.
-- [ ] Match thread search/filter UI to real `thread/list` behavior.
+- [x] Match thread search/filter UI to real `thread/list` behavior.
 - [x] Hydrate stored sessions with `thread/read`.
 - [x] Resume stored sessions with `thread/resume`.
 - [x] Start new threads with a selected working directory.
@@ -252,7 +252,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Add unauthenticated first-run state.
 - [x] Add no-session empty state.
 - [x] Add bridge-error state.
-- [ ] Add thread search/filter loading and empty states.
+- [x] Add thread search/filter loading and empty states.
 - [ ] Make run settings readable on desktop and mobile.
 - [x] Add usage limit cards for 5-hour and weekly windows using real rate-limit data.
 - [ ] Add accessible approval controls for command and file-change requests.

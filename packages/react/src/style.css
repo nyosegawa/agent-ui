@@ -37,7 +37,7 @@
   border-right: 1px solid var(--aui-border);
   display: grid;
   gap: 10px;
-  grid-template-rows: auto auto auto 1fr;
+  grid-template-rows: auto auto auto auto 1fr;
   padding: 12px;
 }
 
@@ -68,6 +68,12 @@
 
 .aui-sidebar-error {
   color: var(--aui-danger);
+  font-size: 12px;
+  margin: 0;
+}
+
+.aui-sidebar-status {
+  color: var(--aui-muted);
   font-size: 12px;
   margin: 0;
 }

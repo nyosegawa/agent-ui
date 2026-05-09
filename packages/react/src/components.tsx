@@ -22,7 +22,7 @@ import {
 } from "./hooks";
 import { useAgentContext } from "./provider";
 import { normalizeUsageWindows } from "./usage";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export interface AgentChatSlots {
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
@@ -662,7 +662,35 @@ export function ThreadSidebar({
   const { state } = useAgentContext();
   const { readThread } = useAgentThreadReader();
   const [searchTerm, setSearchTerm] = useState("");
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [visibleThreadIds, setVisibleThreadIds] = useState<string[] | undefined>();
   const didAutoLoad = useRef(false);
+  const visibleThreads = useMemo(() => {
+    if (!visibleThreadIds) return threads;
+    const byId = new Map(threads.map((thread) => [thread.thread.id, thread]));
+    return visibleThreadIds.flatMap((threadId) => {
+      const thread = byId.get(threadId);
+      return thread ? [thread] : [];
+    });
+  }, [threads, visibleThreadIds]);
+  const loadThreadPage = useCallback(
+    async (params: { searchTerm?: string } = {}) => {
+      const response = await listThreads({ limit: 25, searchTerm: params.searchTerm });
+      const rawThreads = Array.isArray(response?.data)
+        ? response.data
+        : Array.isArray(response?.threads)
+          ? response.threads
+          : [];
+      setVisibleThreadIds(
+        rawThreads.map((rawThread: Record<string, unknown>) =>
+          String(rawThread.id ?? rawThread.threadId ?? rawThread.thread_id),
+        ),
+      );
+      setHasLoaded(true);
+      return response;
+    },
+    [listThreads],
+  );
   useEffect(() => {
     if (
       state.connection.status === "connected" &&
@@ -671,9 +699,11 @@ export function ThreadSidebar({
       !didAutoLoad.current
     ) {
       didAutoLoad.current = true;
-      void listThreads({ limit: 25 }).catch(() => undefined);
+      void loadThreadPage().catch(() => {
+        setHasLoaded(true);
+      });
     }
-  }, [isLoading, listThreads, state.connection.status, threads.length]);
+  }, [isLoading, loadThreadPage, state.connection.status, threads.length]);
   return (
     <aside className="aui-sidebar">
       <div className="aui-sidebar-title">Threads</div>
@@ -681,7 +711,7 @@ export function ThreadSidebar({
         className="aui-history-controls"
         onSubmit={(event) => {
           event.preventDefault();
-          void listThreads({ searchTerm });
+          void loadThreadPage({ searchTerm }).catch(() => undefined);
         }}
       >
         <input
@@ -696,6 +726,10 @@ export function ThreadSidebar({
         </button>
       </form>
       {error ? <p className="aui-sidebar-error">{error.message}</p> : null}
+      {isLoading ? <p className="aui-sidebar-status">Loading threads...</p> : null}
+      {!isLoading && hasLoaded && visibleThreads.length === 0 ? (
+        <p className="aui-sidebar-status">No threads found.</p>
+      ) : null}
       <ThreadList
         activeThreadId={activeThreadId}
         onSelectThread={(threadId) => {
@@ -703,7 +737,7 @@ export function ThreadSidebar({
             onSelectThread?.(threadId);
           });
         }}
-        threads={threads}
+        threads={visibleThreads}
       />
     </aside>
   );

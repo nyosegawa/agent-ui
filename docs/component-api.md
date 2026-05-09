@@ -41,7 +41,7 @@ The React package exposes drop-in components backed by headless hooks. Component
 
 ## Thread Sidebar
 
-`ThreadSidebar` includes a lightweight persisted-session browser. `Load` calls `thread/list` with optional search text and upserts returned threads without changing the active thread. Selecting a stored thread calls `thread/read` with `includeTurns: true` and activates the hydrated snapshot.
+`ThreadSidebar` includes a lightweight persisted-session browser. `Load` calls `thread/list` with optional search text, `limit: 25`, `sortKey: "updated_at"`, and descending order, then shows that returned page with loading and empty states. Selecting a stored thread calls `thread/read` with `includeTurns: true` and activates the hydrated snapshot.
 
 When a stored thread is loaded as `notLoaded` or `loaded`, the thread header shows `Resume`. That action calls `thread/resume` with `excludeTurns: true` because the preview history is already hydrated. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
 
