@@ -101,7 +101,12 @@ Agent UI does not expose Codex collaboration/execution preset APIs in the local 
 
 `normalizeUsageWindows()` is exported for hosts that want to render the same 5-hour and weekly windows in custom chrome.
 
-`AgentChat` calls `useAgentBootstrap()` on startup so the real local app reads account, model, and usage state as soon as the bridge connects. Authenticated accounts suppress the login button; unauthenticated accounts show a first-run device-code login call to action. `AgentRunControls` and `AgentUsage` still auto-refresh when rendered standalone; `AgentChat` disables their standalone refresh path to avoid duplicate startup requests.
+`AgentChat` calls `useAgentBootstrap()` on startup so the real local app reads account and model state as soon as the bridge connects. Usage is read only after `account/read` confirms an authenticated account, so first-run unauthenticated screens do not show stale or misleading usage cards. Authenticated accounts suppress the login button; unauthenticated accounts show a first-run device-code login call to action. If the bridge is closed or errors before connection, the empty state shows a bridge-unavailable message instead of a misleading Start thread action. `AgentRunControls` and `AgentUsage` still auto-refresh when rendered standalone; `AgentChat` disables their standalone refresh path to avoid duplicate startup requests.
+
+The local fixture example has query-state routes for visual QA:
+`/?state=empty`, `/?state=unauth`, and `/?state=bridge-error`. Use them to
+inspect empty history, first-run login, and diagnostics states without needing
+to mutate real Codex auth or bridge state.
 
 ## Web Components
 

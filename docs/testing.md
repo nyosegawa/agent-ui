@@ -132,6 +132,18 @@ Accessibility tests required for release:
 
 Streaming log and diff viewer start with snapshot and keyboard smoke tests.
 
+The fixture Vite example also exposes deterministic visual states for manual
+and automated QA:
+
+- `/?state=empty`: authenticated account, usage/model data, no stored threads
+- `/?state=unauth`: first-run device-code login state
+- `/?state=bridge-error`: connection diagnostics without a running bridge
+- `/`: approval, command output, diff, usage, run controls, and stored history
+
+These states are fixture-backed and are not release proof for real Codex
+behavior, but they make UI regressions reproducible before checking the real
+local bridge.
+
 ## Integration and E2E
 
 Required for release confidence:

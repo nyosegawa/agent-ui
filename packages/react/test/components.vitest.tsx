@@ -110,17 +110,14 @@ describe("AgentChat", () => {
   });
 
   it("shows first-run login state when account/read is unauthenticated", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") return { account: null };
+        return {};
+      },
+    });
     render(
-      <AgentProvider
-        transport={
-          new FakeAgentTransport({
-            onRequest(request) {
-              if (request.method === "account/read") return { account: null };
-              return {};
-            },
-          })
-        }
-      >
+      <AgentProvider transport={transport}>
         <AgentChat />
       </AgentProvider>,
     );
@@ -129,6 +126,9 @@ describe("AgentChat", () => {
     expect(
       screen.getByRole("button", { name: "Start device-code login" }),
     ).toBeInTheDocument();
+    expect(
+      transport.requests.some((request) => request.method === "account/rateLimits/read"),
+    ).toBe(false);
   });
 
   it("formats App Server stderr diagnostics into readable messages", async () => {

@@ -49,7 +49,13 @@ export const AGENT_EXECUTION_MODES: AgentExecutionMode[] = [
     label: "Review",
     turnParams: {
       approvalPolicy: "on-request",
-      sandboxPolicy: { excludeSlashTmp: false, excludeTmpdirEnvVar: false, networkAccess: false, type: "workspaceWrite", writableRoots: [] },
+      sandboxPolicy: {
+        excludeSlashTmp: false,
+        excludeTmpdirEnvVar: false,
+        networkAccess: false,
+        type: "workspaceWrite",
+        writableRoots: [],
+      },
     },
   },
   {
@@ -58,7 +64,13 @@ export const AGENT_EXECUTION_MODES: AgentExecutionMode[] = [
     label: "Auto",
     turnParams: {
       approvalPolicy: "on-failure",
-      sandboxPolicy: { excludeSlashTmp: false, excludeTmpdirEnvVar: false, networkAccess: false, type: "workspaceWrite", writableRoots: [] },
+      sandboxPolicy: {
+        excludeSlashTmp: false,
+        excludeTmpdirEnvVar: false,
+        networkAccess: false,
+        type: "workspaceWrite",
+        writableRoots: [],
+      },
     },
   },
   {
@@ -84,7 +96,9 @@ export const AGENT_EXECUTION_MODES: AgentExecutionMode[] = [
 export function useAgentThread(threadId?: ThreadId) {
   const { dispatch, state, transport } = useAgentContext();
   const resolvedThreadId = threadId ?? state.activeThreadId;
-  const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : selectActiveThread(state);
+  const thread = resolvedThreadId
+    ? selectThread(state, resolvedThreadId)
+    : selectActiveThread(state);
   const turns = resolvedThreadId ? selectOrderedTurns(state, resolvedThreadId) : [];
   const runSettings = selectRunSettings(state);
 
@@ -95,7 +109,10 @@ export function useAgentThread(threadId?: ThreadId) {
         modelId: runSettings.modelId,
         params,
       });
-      const result = await transport.request<ThreadStartParams, any>("thread/start", requestParams);
+      const result = await transport.request<ThreadStartParams, any>(
+        "thread/start",
+        requestParams,
+      );
       const rawThread = result.thread ?? result;
       dispatch({
         status: normalizeThreadStatus(rawThread.status ?? result.status),
@@ -116,7 +133,10 @@ export function useAgentThread(threadId?: ThreadId) {
   const resumeThread = useCallback(
     async (id: ThreadId, params?: Record<string, unknown>) => {
       const requestParams = threadResumeParams(id, params);
-      const result = await transport.request<ThreadResumeParams, any>("thread/resume", requestParams);
+      const result = await transport.request<ThreadResumeParams, any>(
+        "thread/resume",
+        requestParams,
+      );
       const rawThread = result?.thread ?? result;
       if (rawThread?.id) {
         for (const event of threadSnapshotEvents(rawThread, true)) dispatch(event);
@@ -158,7 +178,10 @@ export function useAgentThreadHistory() {
       setError(undefined);
       try {
         const requestParams = threadListParams(params);
-        const response = await transport.request<ThreadListParams, any>("thread/list", requestParams);
+        const response = await transport.request<ThreadListParams, any>(
+          "thread/list",
+          requestParams,
+        );
         const rawThreads = Array.isArray(response?.data)
           ? response.data
           : Array.isArray(response?.threads)
@@ -197,7 +220,10 @@ export function useAgentThreadReader() {
       options: { activate?: boolean; includeTurns?: boolean } = {},
     ) => {
       const requestParams = threadReadParams(threadId, options.includeTurns ?? true);
-      const response = await transport.request<ThreadReadParams, any>("thread/read", requestParams);
+      const response = await transport.request<ThreadReadParams, any>(
+        "thread/read",
+        requestParams,
+      );
       const rawThread = response?.thread ?? response;
       for (const event of threadSnapshotEvents(rawThread, options.activate ?? true)) {
         dispatch(event);
@@ -324,7 +350,8 @@ export function useAgentRunSettings() {
     [dispatch],
   );
   const setCwd = useCallback(
-    (cwd: string) => dispatch({ cwd: cwd.trim() || undefined, type: "runSettings/updated" }),
+    (cwd: string) =>
+      dispatch({ cwd: cwd.trim() || undefined, type: "runSettings/updated" }),
     [dispatch],
   );
 
@@ -345,7 +372,10 @@ export function useAgentAuth() {
   const { dispatch, state, transport } = useAgentContext();
   const readAccount = useCallback(async () => {
     const params = accountReadParams(false);
-    const response = await transport.request<GetAccountParams, any>("account/read", params);
+    const response = await transport.request<GetAccountParams, any>(
+      "account/read",
+      params,
+    );
     const account =
       response && Object.prototype.hasOwnProperty.call(response, "account")
         ? response.account
@@ -361,7 +391,10 @@ export function useAgentAuth() {
   }, [dispatch, transport]);
   const login = useCallback(async () => {
     const params = deviceCodeLoginParams();
-    const raw = await transport.request<LoginAccountParams, any>("account/login/start", params);
+    const raw = await transport.request<LoginAccountParams, any>(
+      "account/login/start",
+      params,
+    );
     const loginState = {
       loginId: raw?.loginId ?? raw?.login_id,
       userCode: raw?.userCode ?? raw?.user_code,
@@ -382,7 +415,10 @@ export function useAgentAuth() {
     await transport.request<CancelLoginAccountParams>("account/login/cancel", params);
     dispatch({ account: null, status: "unauthenticated", type: "account/updated" });
   }, [dispatch, state.account.login?.loginId, transport]);
-  const logout = useCallback(async () => transport.request("account/logout"), [transport]);
+  const logout = useCallback(
+    async () => transport.request("account/logout"),
+    [transport],
+  );
   return { account: state.account, cancelLogin, login, logout, readAccount };
 }
 
@@ -408,23 +444,43 @@ export function useAgentBootstrap(): AgentBootstrapState {
     if (state.connection.status !== "connected" || didBootstrap.current) return;
     didBootstrap.current = true;
     setBootstrap({ errors: [], isBootstrapping: true, status: "loading" });
-    const tasks = [
-      state.account.status === "unknown" ? readAccount() : Promise.resolve(),
-      state.models.models.length === 0 ? refreshModels() : Promise.resolve(),
-      state.account.rateLimits == null ? refreshUsage() : Promise.resolve(),
-    ];
-    void Promise.allSettled(tasks).then((results) => {
-      const errors = results
-        .filter((result): result is PromiseRejectedResult => result.status === "rejected")
-        .map((result) =>
-          result.reason instanceof Error ? result.reason : new Error(String(result.reason)),
-        );
+    void (async () => {
+      const errors: Error[] = [];
+      let accountResponse: unknown;
+      if (state.account.status === "unknown") {
+        try {
+          accountResponse = await readAccount();
+        } catch (caught) {
+          errors.push(caught instanceof Error ? caught : new Error(String(caught)));
+        }
+      }
+      const isAuthenticated =
+        state.account.status === "authenticated" ||
+        accountResponseHasAccount(accountResponse);
+      const tasks = [
+        state.models.models.length === 0 ? refreshModels() : Promise.resolve(),
+        isAuthenticated && state.account.rateLimits == null
+          ? refreshUsage()
+          : Promise.resolve(),
+      ];
+      const results = await Promise.allSettled(tasks);
+      errors.push(
+        ...results
+          .filter(
+            (result): result is PromiseRejectedResult => result.status === "rejected",
+          )
+          .map((result) =>
+            result.reason instanceof Error
+              ? result.reason
+              : new Error(String(result.reason)),
+          ),
+      );
       setBootstrap({
         errors,
         isBootstrapping: false,
         status: errors.length > 0 ? "error" : "ready",
       });
-    });
+    })();
   }, [
     readAccount,
     refreshModels,
@@ -436,6 +492,15 @@ export function useAgentBootstrap(): AgentBootstrapState {
   ]);
 
   return bootstrap;
+}
+
+function accountResponseHasAccount(response: unknown): boolean {
+  if (!response || typeof response !== "object") return false;
+  const record = response as Record<string, unknown>;
+  if (Object.prototype.hasOwnProperty.call(record, "account")) {
+    return record.account != null;
+  }
+  return Object.keys(record).length > 0;
 }
 
 export function useAgentUsage() {
@@ -474,7 +539,9 @@ function normalizeModelList(response: unknown): AgentModel[] {
     .map((model: Record<string, unknown>) => ({
       id: String(model.id ?? model.slug ?? model.model ?? model.name),
       defaultEffort: normalizeReasoningEffort(
-        model.defaultReasoningEffort ?? model.default_reasoning_effort ?? model.default_effort,
+        model.defaultReasoningEffort ??
+          model.default_reasoning_effort ??
+          model.default_effort,
       ),
       name: normalizeModelName(model),
       raw: model,
@@ -489,7 +556,9 @@ function normalizeModelName(model: Record<string, unknown>): string | undefined 
   return typeof modelId === "string" && modelId.trim() ? modelId : undefined;
 }
 
-function normalizeSupportedEfforts(model: Record<string, unknown>): AgentModel["supportedEfforts"] {
+function normalizeSupportedEfforts(
+  model: Record<string, unknown>,
+): AgentModel["supportedEfforts"] {
   const efforts = model.supportedReasoningEfforts ?? model.supported_reasoning_efforts;
   if (!Array.isArray(efforts)) return undefined;
   const normalized = efforts
@@ -499,7 +568,10 @@ function normalizeSupportedEfforts(model: Record<string, unknown>): AgentModel["
       const record = effort as Record<string, unknown>;
       return normalizeReasoningEffort(record.reasoningEffort ?? record.reasoning_effort);
     })
-    .filter((effort): effort is ReasoningEffort => typeof effort === "string" && effort.length > 0);
+    .filter(
+      (effort): effort is ReasoningEffort =>
+        typeof effort === "string" && effort.length > 0,
+    );
   return normalized.length > 0 ? normalized : undefined;
 }
 

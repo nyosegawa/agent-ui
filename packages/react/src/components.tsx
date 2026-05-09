@@ -82,6 +82,18 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
 
 function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
   const { account, cancelLogin, login } = useAgentAuth();
+  const { state } = useAgentContext();
+  if (state.connection.status === "error" || state.connection.status === "closed") {
+    return (
+      <div className="aui-first-run">
+        <strong>Codex bridge unavailable</strong>
+        <p>
+          Check diagnostics, restart the local bridge, then reconnect before starting a
+          thread.
+        </p>
+      </div>
+    );
+  }
   if (account.status === "unauthenticated") {
     return (
       <div className="aui-first-run">

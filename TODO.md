@@ -278,7 +278,8 @@ This is the current source of truth for making Agent UI a finished local Codex w
 
 - [x] Group per-turn command and file-change activity into a readable Work trace so terminal history does not dominate past sessions.
 - [x] Screen-check the real local app after the Work trace refactor on the authenticated history view.
-- [ ] Audit empty, unauthenticated login, approval, diff, mobile, and error states with browser screenshots.
+- [x] Audit empty, unauthenticated login, approval, diff, mobile, and error states with browser screenshots.
+- [ ] Replace the fixture Vite state gallery with a dedicated visual QA route if the state matrix grows.
 - [x] Update component and testing docs with the final conversation/work-trace information architecture.
 
 ## Release Readiness

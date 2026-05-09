@@ -63,7 +63,7 @@ const models = useAgentModels();
 const usage = useAgentUsage();
 ```
 
-`useAgentBootstrap()` runs the real local app startup reads after the transport connects: `account/read { refreshToken: false }`, `model/list {}`, and `account/rateLimits/read` without params. It skips data already provided by `initialState`, so fixture smoke tests do not overwrite their seeded model or usage state.
+`useAgentBootstrap()` runs the real local app startup reads after the transport connects: `account/read { refreshToken: false }`, `model/list {}`, and, only for authenticated accounts, `account/rateLimits/read` without params. It skips data already provided by `initialState`, so fixture smoke tests do not overwrite their seeded model or usage state.
 
 `useAgentAuth().login()` starts ChatGPT device-code login with `{ type: "chatgptDeviceCode" }`. The hook stores only normalized account/login state (`loginId`, `verificationUrl`, and `userCode`) and never stores raw tokens. `useAgentAuth().cancelLogin()` sends `{ loginId }` to `account/login/cancel` when a login is in progress.
 
