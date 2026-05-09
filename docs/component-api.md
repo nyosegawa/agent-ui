@@ -76,6 +76,8 @@ The default card shows request id, command or file path context, and the raw nor
 
 The selected values are stored in normalized run settings. `thread/start` receives `model` and `cwd`. `turn/start` receives `approvalPolicy`, `sandboxPolicy`, `model`, `effort`, and `cwd`.
 
+Agent UI does not expose Codex collaboration/execution preset APIs in the MVP. The built-in execution mode segmented control is a stable App Server convenience layer over documented `turn/start` fields only.
+
 ## Usage
 
 `AgentUsage` renders account rate-limit windows from `account/rateLimits/updated` notifications or `account/rateLimits/read` responses. It supports the current App Server `usedPercent`/`windowDurationMins` shape and legacy fixture-style `used`/`limit` windows.

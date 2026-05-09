@@ -236,9 +236,9 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Remove fixture-only model and reasoning-effort names from user-facing demos.
 - [x] Stop inventing reasoning-effort options when Codex App Server does not provide them.
 - [x] Verify current real Codex `model/list` response shape and update normalizers/tests from that shape.
-- [ ] Verify current real Codex collaboration/execution preset response shape before exposing preset UI beyond documented `turn/start` fields.
-- [ ] Make execution mode controls map only to documented stable App Server turn params.
-- [ ] Verify live `turn/start` behavior for each built-in execution mode.
+- [x] Do not expose collaboration/execution preset UI beyond documented `turn/start` fields for MVP.
+- [x] Make execution mode controls map only to documented stable App Server turn params.
+- [x] Verify live `turn/start` behavior for each built-in execution mode.
 - [x] Fix approval response payloads to use generated stable decisions such as `accept`, `acceptForSession`, `decline`, and `cancel`.
 - [x] Add tests that fail if fixture model ids look like real production model ids.
 - [x] Add tests that fail if effort options are fabricated without model metadata.
