@@ -42,7 +42,7 @@ Agent UI does not handle:
 - arbitrary filesystem browsing
 - generic chatbot UI unrelated to Codex App Server protocol
 
-## MVP
+## Local Release Scope
 
 ```text
 local-only

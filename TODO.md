@@ -163,9 +163,9 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Add headless hooks example.
 - [x] Add themed example.
 
-## Package MVP Validation
+## Package Baseline Validation
 
-This section tracks the package/fixture MVP. It is useful, but it is not the finished product gate.
+This section tracks the package/fixture baseline. It is useful, but it is not the finished product gate.
 
 - [x] Render fixture-backed streaming assistant text.
 - [x] Render fixture-backed command output.
@@ -187,7 +187,7 @@ This section tracks the package/fixture MVP. It is useful, but it is not the fin
 - [x] Refactor Codex thread response normalization for read/resume/list.
 - [x] Refresh docs for run controls, usage, history, and real Codex verification.
 
-## Active Release Gate: Real Local App MVP
+## Active Release Gate: Real Local App Release
 
 This is the current source of truth for making Agent UI a finished local Codex web experience. The release is not complete until this section is complete.
 
@@ -236,7 +236,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Remove fixture-only model and reasoning-effort names from user-facing demos.
 - [x] Stop inventing reasoning-effort options when Codex App Server does not provide them.
 - [x] Verify current real Codex `model/list` response shape and update normalizers/tests from that shape.
-- [x] Do not expose collaboration/execution preset UI beyond documented `turn/start` fields for MVP.
+- [x] Do not expose collaboration/execution preset UI beyond documented `turn/start` fields for the local release.
 - [x] Make execution mode controls map only to documented stable App Server turn params.
 - [x] Verify live `turn/start` behavior for each built-in execution mode.
 - [x] Fix approval response payloads to use generated stable decisions such as `accept`, `acceptForSession`, `decline`, and `cancel`.

@@ -16,7 +16,7 @@ This keeps the initial integration local, process-bound, and single-user.
 
 ## Shell Commands
 
-`thread/shellCommand` is host-only in MVP.
+`thread/shellCommand` is host-only in the local release.
 
 Agent UI must not ship a default component that lets arbitrary browser users run shell commands through a generic chat input.
 
@@ -84,7 +84,7 @@ Requirements:
 
 ## Multi-User
 
-Multi-user support is outside MVP.
+Multi-user support is outside the local release.
 
 Future multi-user support requires:
 

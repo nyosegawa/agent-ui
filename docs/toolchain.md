@@ -187,4 +187,4 @@ codex: 0.2.3
 
 `@openai/codex` is a CLI/App Server reference. The primary integration is `codex app-server --listen stdio://`, not an npm package API.
 
-`@ai-sdk/react` is not a direct dependency for MVP. Agent UI needs Codex-specific approval, diff, shell output, and thread item semantics.
+`@ai-sdk/react` is not a direct dependency for the local release. Agent UI needs Codex-specific approval, diff, shell output, and thread item semantics.

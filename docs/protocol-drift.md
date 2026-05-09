@@ -9,7 +9,7 @@ Codex App Server schema can change. Agent UI treats drift as expected maintenanc
 - upstream Codex commit
 - generated timestamp
 - stable and experimental generated schema files
-- stable MVP method allowlists
+- stable release method allowlists
 
 The generated schema lives under `packages/codex/src/generated`.
 
@@ -20,7 +20,7 @@ The generated schema lives under `packages/codex/src/generated`.
 3. Review generated stable and experimental diffs.
 4. Update normalizer mappings when notification or request payloads changed.
 5. Run protocol tests and accept method snapshots only after reviewing the App Server change.
-6. Update docs when the public MVP surface changes.
+6. Update docs when the public release surface changes.
 
 ## Tests
 
@@ -39,5 +39,4 @@ bun run typecheck
 bun run build
 ```
 
-If the upstream schema adds methods outside the MVP surface, keep them generated but do not expose them through high-level React APIs unless the roadmap says so.
-
+If the upstream schema adds methods outside the release surface, keep them generated but do not expose them through high-level React APIs unless the roadmap says so.

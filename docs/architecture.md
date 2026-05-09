@@ -115,4 +115,4 @@ context and makes stored Codex sessions unreadable.
 - Monaco is deferred because it requires heavier worker and asset configuration from hosts.
 - `ThreadList` / `ThreadSidebar` ship as minimal components.
 - Full navigation layouts live in examples.
-- `thread/shellCommand` is host-only in MVP.
+- `thread/shellCommand` is host-only in the local release.

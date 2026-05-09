@@ -122,7 +122,7 @@ Component tests:
 - switch thread
 - show auth/device-code state
 
-Accessibility tests required from MVP:
+Accessibility tests required for release:
 
 - `AgentComposer`
 - `AgentApprovalPrompt`
@@ -177,7 +177,7 @@ bun run test:pnpm-compat
 
 ## Current Validation
 
-Current MVP validation commands:
+Current release validation commands:
 
 ```text
 bun run typecheck

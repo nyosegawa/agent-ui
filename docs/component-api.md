@@ -88,7 +88,7 @@ browser component.
 
 The selected values are stored in normalized run settings. `thread/start` receives `model` and `cwd`. `turn/start` receives `approvalPolicy`, `sandboxPolicy`, `model`, `effort`, and `cwd`.
 
-Agent UI does not expose Codex collaboration/execution preset APIs in the MVP. The built-in execution mode segmented control is a stable App Server convenience layer over documented `turn/start` fields only.
+Agent UI does not expose Codex collaboration/execution preset APIs in the local release. The built-in execution mode segmented control is a stable App Server convenience layer over documented `turn/start` fields only.
 
 ## Usage
 

@@ -22,9 +22,9 @@
 17. docs/TODO sync and package validation
 ```
 
-## MVP Exit Criteria
+## Release Criteria
 
-MVP is complete when:
+The real local app release is complete when:
 
 - Vite example can start a local Codex App Server through the bridge
 - device-code login UI works
@@ -40,9 +40,9 @@ MVP is complete when:
 - package exports pass validation
 - browser smoke test passes
 
-## Post-MVP
+## Future Work
 
-Add after MVP:
+Add after the real local release:
 
 - remote WebSocket deployment guide
 - websocket reconnection hardening

@@ -8,7 +8,7 @@ Agent UI provides React components, headless hooks, state management, and transp
 
 The real local app path is the primary release target: browser UI -> same-origin host bridge -> `codex app-server --listen stdio://` -> real Codex account, usage, model, thread, turn, approval, and diff events.
 
-## MVP
+## Local Release Scope
 
 ```text
 local-only

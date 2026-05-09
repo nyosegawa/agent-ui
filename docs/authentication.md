@@ -60,7 +60,7 @@ Preferred constraints:
 
 ## API Key
 
-API-key based remote operation may be useful for controlled deployments, but it is not the MVP default.
+API-key based remote operation may be useful for controlled deployments, but it is not the local release default.
 
 If supported later:
 
@@ -71,7 +71,7 @@ If supported later:
 
 ## Multi-User
 
-Multi-user use is outside MVP.
+Multi-user use is outside the local release.
 
 Required constraints for future support:
 

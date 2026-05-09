@@ -55,7 +55,7 @@ WebSocket support is optional and advanced.
 
 Rules:
 
-- remote production deployment is not part of MVP
+- remote production deployment is not part of the local release
 - non-loopback exposure requires explicit auth
 - bearer tokens must not be logged or placed in query strings
 - reconnect is opt-in
@@ -107,7 +107,7 @@ Package metadata should include:
 }
 ```
 
-## MVP Protocol Surface
+## Release Protocol Surface
 
 Client requests:
 
@@ -155,7 +155,7 @@ Deferred:
 
 ## Local Smoke
 
-The MVP smoke path verified locally:
+The release smoke path verified locally:
 
 ```text
 initialize

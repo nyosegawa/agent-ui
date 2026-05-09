@@ -6,7 +6,7 @@ The docs are organized as implementation-facing specifications. They intentional
 
 ## Documents
 
-- [Product](./product.md): product name, scope, non-goals, and MVP definition.
+- [Product](./product.md): product name, scope, non-goals, and release definition.
 - [Packages](./packages.md): monorepo layout and package responsibilities.
 - [Architecture](./architecture.md): state, transport, adapter, and component boundaries.
 - [Protocol](./protocol.md): Codex App Server integration contract.
@@ -14,8 +14,12 @@ The docs are organized as implementation-facing specifications. They intentional
 - [Toolchain](./toolchain.md): runtime, package manager, build, test, and dependency baseline.
 - [Testing](./testing.md): protocol, reducer, transport, component, and e2e strategy.
 - [Security](./security.md): filesystem, shell, auth, remote, and multi-user constraints.
-- [Roadmap](./roadmap.md): implementation order and post-MVP expansion.
+- [Roadmap](./roadmap.md): implementation order and future expansion.
 - [Remote Deployment](./remote-deployment.md): advanced remote/WebSocket constraints.
+- [Protocol Drift](./protocol-drift.md): schema update and snapshot review workflow.
+- [Theming](./theming.md): CSS variable customization.
+- [Component API](./component-api.md): drop-in component reference.
+- [Headless Hooks](./headless-hooks.md): hook reference for custom layouts.
 
 ## Real Local App
 
@@ -32,12 +36,8 @@ bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 ```sh
 bun run --cwd examples/docs-site dev
 ```
-- [Protocol Drift](./protocol-drift.md): schema update and snapshot review workflow.
-- [Theming](./theming.md): CSS variable customization.
-- [Component API](./component-api.md): drop-in component reference.
-- [Headless Hooks](./headless-hooks.md): hook reference for custom layouts.
 
-## Current MVP
+## Current Release Scope
 
 ```text
 local-only
