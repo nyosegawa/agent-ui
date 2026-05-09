@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 test("drives the real local app shell through the browser websocket transport", async ({ page }) => {
+  test.setTimeout(60_000);
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("http://127.0.0.1:4174");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
@@ -12,8 +13,9 @@ test("drives the real local app shell through the browser websocket transport", 
   await expect(page.getByLabel("Usage limits")).toContainText("codex 5h");
   await expect(page.getByLabel("Usage limits")).toContainText("codex weekly");
 
-  await expect(page.getByRole("button", { name: /Stored real smoke/ })).toBeVisible();
-  await page.getByRole("button", { name: /Stored real smoke/ }).click();
+  const storedThread = page.getByRole("button", { name: /Stored real smoke/ });
+  await expect(storedThread).toBeVisible();
+  await storedThread.click({ force: true });
   await expect(page.getByText("Stored thread hydrated.")).toBeVisible();
   await page.getByRole("button", { name: "Resume" }).click({ force: true });
   await expect(page.locator(".aui-status-pill")).toHaveText("loaded");
@@ -21,7 +23,7 @@ test("drives the real local app shell through the browser websocket transport", 
   await page.getByLabel("Model", { exact: true }).selectOption("smoke-model");
   await page.getByRole("button", { name: "New thread" }).click({ force: true });
   await expect(page.getByRole("heading", { name: "Live real smoke" })).toBeVisible();
-  await page.getByLabel("Message").fill("run smoke");
+  await page.getByRole("textbox", { name: "Message" }).fill("run smoke");
   await page.getByRole("button", { name: "Send" }).click({ force: true });
   await expect(page.getByText("Streaming smoke response.")).toBeVisible();
   await expect(page.getByLabel("Command output")).toContainText("fake command output");

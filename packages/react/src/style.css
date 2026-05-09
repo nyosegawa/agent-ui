@@ -403,6 +403,55 @@
   padding: 0;
 }
 
+.aui-work-trace {
+  background: #f8fafc;
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  overflow: hidden;
+}
+
+.aui-work-trace > summary {
+  align-items: center;
+  cursor: pointer;
+  display: grid;
+  gap: 6px 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 42px;
+  padding: 9px 10px;
+}
+
+.aui-work-trace > summary span {
+  color: var(--aui-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.aui-work-trace > summary strong {
+  color: var(--aui-fg);
+  font-size: 12px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-work-trace > summary small {
+  color: var(--aui-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.aui-work-trace[open] > summary {
+  border-bottom: 1px solid var(--aui-border);
+}
+
+.aui-work-trace-list {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+}
+
 .aui-activity-card summary {
   align-items: center;
   cursor: pointer;

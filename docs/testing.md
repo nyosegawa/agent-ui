@@ -109,11 +109,12 @@ Component tests:
 - show pending approval
 - approve/reject server requests
 - render command output
-- keep command output and file-change diffs in the turn timeline rather than detached panels
-- keep very large persisted command-output histories collapsed to recent inline activity
+- keep command output and file-change diffs in per-turn Work traces rather than detached panels
+- keep very large persisted command-output histories collapsed to recent Work trace activity
 - keep long persisted messages behind a preview/expand affordance
 - render structured App Server message content arrays as readable text
 - show completed message status after real thread completion and hydrated history reads
+- normalize stale `inProgress` item labels to completed in loaded hydrated history
 - keep narrow-width persisted history vertical and scroll-contained
 - keep App Server plugin manifest warnings in diagnostics instead of the primary chat flow
 - suppress known low-value Codex plugin `interface.defaultPrompt` warnings from visible diagnostics
@@ -207,6 +208,7 @@ Latest manual real smoke:
 - Post-hardening re-run on 2026-05-09: `bun run test:e2e:real-codex` returned authenticated account, 6 models, usage, 5 stored threads, assistant text `Agent UI real smoke ok.`, and 1 completed turn. `bun run test:e2e:real-codex:approval` observed a command approval request and declined it. `AGENT_UI_REAL_CODEX_TIMEOUT_MS=180000 node scripts/real-codex-smoke.mjs --approval --file-only` observed a file-change approval request and declined it.
 - Browser smoke command: `bun run test:e2e:playwright`.
 - Browser smoke result: 6 Playwright tests passed. The real local app target used a fake stdio App Server while exercising the actual browser WebSocket transport and same-origin bridge path.
+- Real local UI screen check after Work trace hardening: in the in-app browser at `http://127.0.0.1:5174/`, an authenticated real session loaded account, usage, and stored threads; a stored session rendered conversation messages first and grouped command/file-change activity into per-turn Work traces instead of a detached terminal shelf.
 
 The history and usage smoke path has also been verified against `codex app-server --listen stdio://`:
 

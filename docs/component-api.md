@@ -38,9 +38,11 @@ The React package exposes drop-in components backed by headless hooks. Component
 - `AgentComposer`
 
 `AgentMessageList` is the primary product surface. It renders user messages,
-assistant messages, reasoning, command execution summaries, and file-change
-diff summaries in turn order. Command output and diffs are contextual activity
-inside the conversation timeline, not separate panels below the chat.
+assistant messages, and reasoning as the readable conversation. Command output
+and file-change diffs are grouped into a per-turn Work trace below the same
+turn, so real Codex history is inspectable without terminal logs dominating the
+chat. Work traces are contextual timeline content, not separate panels below
+the chat.
 
 ## Thread Sidebar
 
@@ -48,7 +50,7 @@ inside the conversation timeline, not separate panels below the chat.
 
 When a stored thread is loaded as `notLoaded` or `loaded`, the thread header shows `Resume`. That action calls `thread/resume` with `excludeTurns: true` because the preview history is already hydrated. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
 
-Hydrated history opens at the latest messages. Long persisted messages are preview-first with an explicit expand control, structured App Server content arrays are converted to readable text, and very large command-output histories collapse older work steps inside the relevant turn so old sessions stay usable in the browser. If a `thread/read` response includes turns but still reports `notLoaded`, the default UI treats the hydrated view as `loaded`.
+Hydrated history opens at the latest messages. Long persisted messages are preview-first with an explicit expand control, structured App Server content arrays are converted to readable text, and command-heavy histories show a compact Work trace summary with older steps collapsed inside the relevant turn. If a `thread/read` response includes turns but still reports `notLoaded`, the default UI treats the hydrated view as `loaded`; stale item-level `inProgress` labels in loaded history are rendered as completed.
 
 ## Approval Components
 
@@ -68,13 +70,16 @@ The default card shows request id plus structured command or file-change context
 
 `AgentDiffViewer` renders a read-only CodeMirror diff preview with line-level highlighting for file headers, hunks, additions, and removals. It accepts raw unified diff strings, turn-level `{ diff }` payloads, App Server thread item `changes: [{ path, kind, diff }]`, and apply-patch approval `fileChanges` maps. Structured payloads are summarized with changed file names and addition/removal counts before the read-only patch body. A textual fallback remains in the DOM before hydration and for non-browser rendering.
 
-Command output renders as compact terminal activity rows in `AgentMessageList`.
-Rows show command, status, line count, and a short output preview; the full
-terminal output is collapsed until the user expands it. File changes render as
-diff activity rows in the same turn. The default UI keeps only the latest inline
-activity rows for command-heavy historical turns and displays a collapsed-count
-notice for older steps. For richer terminal behavior, build a host component
-with `useAgentThread()` rather than exposing `thread/shellCommand` as a generic
+Command output and file changes render inside a per-turn Work trace in
+`AgentMessageList`. The Work trace summary shows command and file-change counts.
+For completed turns that already have readable conversation text, the trace is
+collapsed by default; command-only or actively running turns keep it open so
+new work remains visible. Individual command rows show command, status, line
+count, and a short output preview; the full terminal output is collapsed until
+the user expands it. The default UI keeps only the latest activity rows for
+command-heavy historical turns and displays a collapsed-count notice for older
+steps. For richer terminal behavior, build a host component with
+`useAgentThread()` rather than exposing `thread/shellCommand` as a generic
 browser component.
 
 ## Run Controls

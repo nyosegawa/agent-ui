@@ -9,7 +9,7 @@
     "borderRadius": "8px",
     "display": "grid",
     "gridTemplateColumns": "300px 878px",
-    "height": 1348,
+    "height": 1408,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
@@ -22,7 +22,7 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "275px",
-    "height": 1346,
+    "height": 1406,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
@@ -35,7 +35,7 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "878px",
-    "height": 1346,
+    "height": 1406,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
@@ -100,7 +100,7 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "850px",
-    "height": 379,
+    "height": 439,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
@@ -118,7 +118,7 @@
     "overflowY": "hidden",
     "present": true,
     "visible": true,
-    "width": 850
+    "width": 832
   },
   "diffActivity": {
     "backgroundColor": "rgb(251, 252, 254)",
@@ -131,7 +131,7 @@
     "overflowY": "hidden",
     "present": true,
     "visible": true,
-    "width": 850
+    "width": 832
   },
   "approvals": {
     "backgroundColor": "rgba(0, 0, 0, 0)",

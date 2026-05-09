@@ -352,7 +352,46 @@ describe("AgentChat", () => {
     expect(screen.queryByText("inProgress")).not.toBeInTheDocument();
   });
 
-  it("keeps large historical command output in the turn timeline without a separate log panel", () => {
+  it("does not leave hydrated history messages marked in progress", () => {
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-history";
+    initialState.threads["thread-history"] = {
+      orderedTurnIds: ["turn-history"],
+      status: "loaded",
+      thread: { id: "thread-history", name: "Hydrated thread" },
+      turns: {
+        "turn-history": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-agent"],
+          items: {
+            "item-agent": {
+              id: "item-agent",
+              kind: "agentMessage",
+              status: "inProgress",
+              text: "hydrated response",
+              threadId: "thread-history",
+              turnId: "turn-history",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-history", threadId: "thread-history" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("hydrated response")).toBeInTheDocument();
+    expect(screen.getAllByText("completed").length).toBeGreaterThan(0);
+    expect(screen.queryByText("inProgress")).not.toBeInTheDocument();
+  });
+
+  it("keeps large historical command output inside a per-turn work trace", () => {
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-history";
     const itemOrder = Array.from({ length: 80 }, (_, index) => `command-${index}`);
@@ -396,6 +435,7 @@ describe("AgentChat", () => {
     expect(
       screen.getByText("72 older work steps collapsed in this turn"),
     ).toBeInTheDocument();
+    expect(screen.getByLabelText("Work trace")).toHaveTextContent("80 commands");
     expect(screen.getByText("echo 79")).toBeInTheDocument();
     expect(screen.getAllByText("output 79")).toHaveLength(2);
     expect(document.querySelector(".aui-worklog")).not.toBeInTheDocument();
@@ -419,6 +459,9 @@ describe("AgentChat", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Threads" })).toBeInTheDocument();
     expect(screen.getByText("Protocol docs update")).toBeInTheDocument();
+    expect(screen.getByLabelText("Work trace")).toHaveTextContent(
+      "1 command, 1 file change",
+    );
     expect(screen.getByLabelText("Command output")).toHaveTextContent("7 tests passed");
     expect(screen.getByLabelText("Diff preview")).toHaveTextContent("AgentDiffPanel");
     expect(screen.getAllByLabelText("CodeMirror patch viewer").length).toBeGreaterThan(0);

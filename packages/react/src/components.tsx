@@ -22,7 +22,7 @@ import {
 } from "./hooks";
 import { useAgentContext } from "./provider";
 import { normalizeUsageWindows } from "./usage";
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export interface AgentChatSlots {
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
@@ -311,30 +311,20 @@ function AgentTurnView({
     0,
     activityItemIds.length - MAX_INLINE_ACTIVITY_ITEMS,
   );
+  const visibleActivityItemIds = activityItemIds.slice(hiddenActivityCount);
+  const hasConversationText = timelineItemIds.some((id) => {
+    if (activityKindForId(turn, id)) return false;
+    const item = turn.items[id];
+    const text = displayText(item?.text ?? turn.streamingTextByItemId[id]);
+    return Boolean(text?.trim());
+  });
   return (
     <li className="aui-turn">
       {timelineItemIds.map((id) => {
         const item = turn.items[id];
         const text = displayText(item?.text ?? turn.streamingTextByItemId[id]);
         const activityKind = activityKindForId(turn, id);
-        if (activityKind) {
-          const activityIndex = activityItemIds.indexOf(id);
-          if (activityIndex < hiddenActivityCount) return null;
-          return (
-            <Fragment key={id}>
-              {activityIndex === hiddenActivityCount && hiddenActivityCount > 0 ? (
-                <ActivityCollapseNotice count={hiddenActivityCount} />
-              ) : null}
-              <AgentActivityItem
-                item={item}
-                itemId={id}
-                kind={activityKind}
-                output={turn.commandOutputByItemId[id]}
-                patch={turn.filePatchByItemId[id]}
-              />
-            </Fragment>
-          );
-        }
+        if (activityKind) return null;
         if (!text?.trim()) return null;
         if (item && renderItem) return <div key={id}>{renderItem(item, turn)}</div>;
         const messageItem = turn.items[id] as AgentItemState | undefined;
@@ -353,11 +343,83 @@ function AgentTurnView({
           </article>
         );
       })}
+      {activityItemIds.length > 0 ? (
+        <AgentWorkTrace
+          activityItemIds={activityItemIds}
+          defaultOpen={!hasConversationText || threadStatus === "running"}
+          hiddenActivityCount={hiddenActivityCount}
+          itemIds={visibleActivityItemIds}
+          turn={turn}
+        />
+      ) : null}
     </li>
   );
 }
 
 const MAX_INLINE_ACTIVITY_ITEMS = 8;
+
+function AgentWorkTrace({
+  activityItemIds,
+  defaultOpen,
+  hiddenActivityCount,
+  itemIds,
+  turn,
+}: {
+  activityItemIds: string[];
+  defaultOpen: boolean;
+  hiddenActivityCount: number;
+  itemIds: string[];
+  turn: TurnState;
+}) {
+  const commandCount = activityItemIds.filter(
+    (itemId) => activityKindForId(turn, itemId) === "commandExecution",
+  ).length;
+  const fileChangeCount = activityItemIds.filter(
+    (itemId) => activityKindForId(turn, itemId) === "fileChange",
+  ).length;
+  return (
+    <details
+      aria-label="Work trace"
+      className="aui-work-trace"
+      open={defaultOpen ? true : undefined}
+    >
+      <summary>
+        <span>Work trace</span>
+        <strong>{activitySummary(commandCount, fileChangeCount)}</strong>
+        {hiddenActivityCount > 0 ? (
+          <small>{hiddenActivityCount} older steps collapsed</small>
+        ) : null}
+      </summary>
+      <div className="aui-work-trace-list">
+        {hiddenActivityCount > 0 ? (
+          <ActivityCollapseNotice count={hiddenActivityCount} />
+        ) : null}
+        {itemIds.map((id) => {
+          const item = turn.items[id];
+          const activityKind = activityKindForId(turn, id);
+          if (!activityKind) return null;
+          return (
+            <AgentActivityItem
+              item={item}
+              itemId={id}
+              key={id}
+              kind={activityKind}
+              output={turn.commandOutputByItemId[id]}
+              patch={turn.filePatchByItemId[id]}
+            />
+          );
+        })}
+      </div>
+    </details>
+  );
+}
+
+function activitySummary(commandCount: number, fileChangeCount: number): string {
+  const parts = [];
+  if (commandCount > 0) parts.push(formatCount(commandCount, "command"));
+  if (fileChangeCount > 0) parts.push(formatCount(fileChangeCount, "file change"));
+  return parts.length > 0 ? parts.join(", ") : "No captured work";
+}
 
 function ActivityCollapseNotice({ count }: { count: number }) {
   return (
@@ -477,13 +539,14 @@ function displayText(value: unknown): string | undefined {
 }
 
 function displayItemStatus(status: string, threadStatus: ThreadState["status"]): string {
-  if (
-    status === "inProgress" &&
-    (threadStatus === "complete" || threadStatus === "completed")
-  ) {
+  if (status === "inProgress" && isHydratedThreadStatus(threadStatus)) {
     return "completed";
   }
   return status;
+}
+
+function isHydratedThreadStatus(status: ThreadState["status"]): boolean {
+  return status === "loaded" || status === "complete" || status === "completed";
 }
 
 export function AgentApprovalPrompt({
