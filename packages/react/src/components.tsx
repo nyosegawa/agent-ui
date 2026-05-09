@@ -1093,15 +1093,6 @@ export function ThreadSidebar({
           {(nextCursor ?? cursor) ? " · more available" : " · all loaded"}
         </p>
       ) : null}
-      <ThreadList
-        activeThreadId={activeThreadId}
-        onSelectThread={(threadId) => {
-          void readThread(threadId, { activate: true, includeTurns: true }).catch(() => {
-            onSelectThread?.(threadId);
-          });
-        }}
-        threads={visibleThreads}
-      />
       {(nextCursor ?? cursor) ? (
         <div className="aui-history-pagination">
           <button
@@ -1130,6 +1121,15 @@ export function ThreadSidebar({
           </button>
         </div>
       ) : null}
+      <ThreadList
+        activeThreadId={activeThreadId}
+        onSelectThread={(threadId) => {
+          void readThread(threadId, { activate: true, includeTurns: true }).catch(() => {
+            onSelectThread?.(threadId);
+          });
+        }}
+        threads={visibleThreads}
+      />
     </aside>
   );
 }

@@ -1291,7 +1291,7 @@
 @media (max-width: 640px) {
   .aui-shell {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(0, 1fr) minmax(0, 200px);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 232px);
     height: calc(100vh - 16px);
     min-height: 0;
   }
@@ -1328,9 +1328,11 @@
   .aui-sidebar {
     border-bottom: 1px solid var(--aui-border);
     border-right: 0;
+    gap: 8px;
     grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
     max-height: none;
     order: 2;
+    padding: 10px 12px;
   }
 
   .aui-sidebar-collapsed {

@@ -38,6 +38,7 @@ larger real Codex histories.
 - [x] Show user-facing working directory context in thread list rows when available.
 - [x] Add a bounded `Load all` flow that follows real `thread/list` cursors until history is exhausted.
 - [x] Show visible history count and remaining-pagination state without relying on raw protocol cursors.
+- [x] Browser-check mobile history pagination controls are fully reachable without relying on document scroll.
 
 ### Tests And Docs
 
