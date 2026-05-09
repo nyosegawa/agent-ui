@@ -258,6 +258,10 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Add accessible approval controls for command and file-change requests.
 - [x] Make diff preview polished for real App Server patch payloads.
 - [x] Add visual regression coverage for the real local app shell.
+- [x] Keep App Server plugin manifest warnings out of the primary chat flow.
+- [x] Make long persisted-session messages preview-first with explicit expansion.
+- [x] Cap very large persisted-session command-output lists so history remains readable.
+- [x] Auto-scroll hydrated persisted sessions to the latest messages.
 
 ## Release Readiness
 

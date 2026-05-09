@@ -1,9 +1,9 @@
-import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
 import type { AgentTransportEvent } from "@nyosegawa/agent-ui-core";
 import { createServer } from "node:http";
 import { PassThrough } from "node:stream";
 import WebSocket from "ws";
 import { afterEach, describe, expect, it } from "vitest";
+import { createCodexWebSocketTransport } from "../../codex/src/websocket";
 import { attachAgentUiWebSocketBridge, type CodexChildProcess } from "../src";
 
 const servers: Array<{ close: () => void }> = [];

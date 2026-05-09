@@ -27,7 +27,7 @@ function App() {
 
   return (
     <AgentProvider transport={transport}>
-      <main style={{ margin: "24px auto", maxWidth: 1240 }}>
+      <main className="agent-ui-local-app">
         <AgentChat />
       </main>
     </AgentProvider>

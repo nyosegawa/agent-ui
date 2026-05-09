@@ -8,10 +8,10 @@
     "borderColor": "rgb(215, 221, 230)",
     "borderRadius": "8px",
     "display": "grid",
-    "gridTemplateColumns": "240px 938px",
-    "height": 1450,
-    "overflowX": "visible",
-    "overflowY": "visible",
+    "gridTemplateColumns": "300px 878px",
+    "height": 852,
+    "overflowX": "hidden",
+    "overflowY": "hidden",
     "present": true,
     "visible": true,
     "width": 1180
@@ -21,26 +21,26 @@
     "borderColor": "rgb(20, 23, 31) rgb(215, 221, 230) rgb(20, 23, 31) rgb(20, 23, 31)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "215px",
-    "height": 1448,
+    "gridTemplateColumns": "275px",
+    "height": 850,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 240
+    "width": 300
   },
   "chat": {
     "backgroundColor": "rgb(255, 255, 255)",
     "borderColor": "rgb(20, 23, 31)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "938px",
-    "height": 1448,
-    "overflowX": "visible",
-    "overflowY": "visible",
+    "gridTemplateColumns": "878px",
+    "height": 850,
+    "overflowX": "auto",
+    "overflowY": "auto",
     "present": true,
     "visible": true,
-    "width": 938
+    "width": 878
   },
   "status": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
@@ -53,33 +53,33 @@
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 938
+    "width": 878
   },
   "usage": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
     "borderColor": "rgb(20, 23, 31) rgb(20, 23, 31) rgb(215, 221, 230)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "910px",
+    "gridTemplateColumns": "850px",
     "height": 111,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 938
+    "width": 878
   },
   "runControls": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
     "borderColor": "rgb(215, 221, 230) rgb(20, 23, 31) rgb(20, 23, 31)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "300.484px 214.625px 150.25px 214.625px",
+    "gridTemplateColumns": "279.984px 200px 140px 200px",
     "height": 82,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 938
+    "width": 878
   },
   "threadHeader": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
@@ -92,59 +92,59 @@
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 938
+    "width": 878
   },
   "messageList": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
     "borderColor": "rgb(20, 23, 31)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "910px",
-    "height": 260,
+    "gridTemplateColumns": "850px",
+    "height": 240,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
     "visible": true,
-    "width": 938
+    "width": 878
   },
   "worklog": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
     "borderColor": "rgb(215, 221, 230) rgb(20, 23, 31) rgb(20, 23, 31)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "910px",
-    "height": 106,
+    "gridTemplateColumns": "850px",
+    "height": 240,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
     "visible": true,
-    "width": 938
+    "width": 878
   },
   "diffPanel": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
     "borderColor": "rgb(215, 221, 230) rgb(20, 23, 31) rgb(20, 23, 31)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "910px",
-    "height": 184,
+    "gridTemplateColumns": "850px",
+    "height": 25,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
     "visible": true,
-    "width": 938
+    "width": 878
   },
   "approvals": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
     "borderColor": "rgb(215, 221, 230) rgb(20, 23, 31) rgb(20, 23, 31)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "910px",
-    "height": 467,
+    "gridTemplateColumns": "850px",
+    "height": 25,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
     "visible": true,
-    "width": 938
+    "width": 878
   },
   "composer": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
@@ -157,6 +157,6 @@
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 938
+    "width": 878
   }
 }

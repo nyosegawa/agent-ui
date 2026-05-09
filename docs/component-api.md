@@ -45,6 +45,8 @@ The React package exposes drop-in components backed by headless hooks. Component
 
 When a stored thread is loaded as `notLoaded` or `loaded`, the thread header shows `Resume`. That action calls `thread/resume` with `excludeTurns: true` because the preview history is already hydrated. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
 
+Hydrated history opens at the latest messages. Long persisted messages are preview-first with an explicit expand control, and very large command-output histories render the latest entries with a count summary so old sessions stay usable in the browser.
+
 ## Approval Components
 
 `AgentApprovalPrompt` reads pending server requests through `useAgentApprovals()`.
@@ -63,7 +65,7 @@ The default card shows request id, command or file path context, and the raw nor
 
 `AgentDiffViewer` renders a read-only CodeMirror diff preview with line-level highlighting for file headers, hunks, additions, and removals. It accepts raw unified diff strings, turn-level `{ diff }` payloads, App Server thread item `changes: [{ path, kind, diff }]`, and apply-patch approval `fileChanges` maps. Structured payloads are summarized with changed file names and addition/removal counts before the read-only patch body. A textual fallback remains in the DOM before hydration and for non-browser rendering.
 
-`AgentWorkLog` renders command output grouped by thread turn. For richer terminal behavior, build a host component with `useAgentThread()` rather than exposing `thread/shellCommand` as a generic browser component.
+`AgentWorkLog` renders command output grouped by thread turn. Large stored histories are capped in the default UI and each terminal entry can be expanded independently. For richer terminal behavior, build a host component with `useAgentThread()` rather than exposing `thread/shellCommand` as a generic browser component.
 
 ## Run Controls
 

@@ -109,6 +109,9 @@ Component tests:
 - show pending approval
 - approve/reject server requests
 - render command output
+- keep very large persisted command-output histories capped in the UI
+- keep long persisted messages behind a preview/expand affordance
+- keep App Server plugin manifest warnings in diagnostics instead of the primary chat flow
 - render file diff
 - switch thread
 - show auth/device-code state

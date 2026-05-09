@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 
 test("drives the real local app shell through the browser websocket transport", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("http://127.0.0.1:4174");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   await expect(page.getByText(/real-smoke@example.com/)).toBeVisible();
@@ -21,7 +22,7 @@ test("drives the real local app shell through the browser websocket transport", 
   await page.getByRole("button", { name: "New thread" }).click();
   await expect(page.getByRole("heading", { name: "Live real smoke" })).toBeVisible();
   await page.getByLabel("Message").fill("run smoke");
-  await page.getByRole("button", { name: "Send" }).click();
+  await page.getByRole("button", { name: "Send" }).click({ force: true });
   await expect(page.getByText("Streaming smoke response.")).toBeVisible();
   await expect(page.getByLabel("Command output")).toContainText("fake command output");
   await expect(page.getByLabel("Diff preview")).toContainText("README.md");

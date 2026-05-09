@@ -267,8 +267,14 @@ export function AgentMessageList({
   renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
   thread: ThreadState;
 }) {
+  const listRef = useRef<HTMLOListElement | null>(null);
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    list.scrollTop = list.scrollHeight;
+  }, [thread.thread.id, thread.orderedTurnIds.length]);
   return (
-    <ol className="aui-message-list">
+    <ol className="aui-message-list" ref={listRef}>
       {thread.orderedTurnIds.map((turnId) => {
         const turn = thread.turns[turnId];
         return turn ? <AgentTurnView key={turnId} renderItem={renderItem} turn={turn} /> : null;
@@ -284,20 +290,34 @@ function AgentTurnView({
   renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
   turn: TurnState;
 }) {
+  const visibleItems = turn.itemOrder
+    .map((itemId) => {
+      const item = turn.items[itemId];
+      return {
+        id: itemId,
+        item,
+        text: item?.text ?? turn.streamingTextByItemId[itemId],
+      };
+    })
+    .filter((entry) => {
+      if (!entry.text) return false;
+      if (entry.item && isWorklogOnlyItem(entry.item)) return false;
+      return true;
+    });
   return (
     <li className="aui-turn">
-      {turn.itemOrder.map((itemId) => {
-        const item = turn.items[itemId];
-        const text = item?.text ?? turn.streamingTextByItemId[itemId];
-        if (!item && !text) return null;
-        if (item && renderItem) return <div key={itemId}>{renderItem(item, turn)}</div>;
+      {visibleItems.map(({ id, item, text }) => {
+        if (!text) return null;
+        if (item && renderItem) return <div key={id}>{renderItem(item, turn)}</div>;
+        const kind = item?.kind ?? "stream";
+        const status = item?.status ?? "streaming";
         return (
-          <article className="aui-message" data-kind={item?.kind ?? "stream"} key={itemId}>
+          <article className="aui-message" data-kind={kind} key={id}>
             <div className="aui-message-meta">
-              <span>{item?.kind ?? "stream"}</span>
-              <span>{item?.status ?? "streaming"}</span>
+              <span>{itemLabel(kind)}</span>
+              <span>{status}</span>
             </div>
-            <div className="aui-message-body">{text}</div>
+            <MessageBody text={text} />
           </article>
         );
       })}
@@ -305,19 +325,62 @@ function AgentTurnView({
   );
 }
 
+function MessageBody({ text }: { text: string }) {
+  const trimmed = text.trim();
+  const isLong = trimmed.length > 1800 || trimmed.split(/\r?\n/).length > 18;
+  if (!isLong) return <div className="aui-message-body">{trimmed}</div>;
+  return (
+    <details className="aui-message-body aui-message-body-collapsible">
+      <summary>{messagePreview(trimmed)}</summary>
+      <div>{trimmed}</div>
+    </details>
+  );
+}
+
 export function AgentWorkLog({ thread }: { thread: ThreadState }) {
   const outputs = thread.orderedTurnIds.flatMap((turnId) => {
     const turn = thread.turns[turnId];
-    return turn ? Object.entries(turn.commandOutputByItemId) : [];
+    return turn
+      ? Object.entries(turn.commandOutputByItemId)
+          .map(([itemId, output]) => ({
+            command: commandTextForItem(turn.items[itemId]),
+            itemId,
+            output: output.trimEnd(),
+            status: turn.items[itemId]?.status,
+          }))
+          .filter((entry) => entry.output.trim().length > 0)
+      : [];
   });
   if (outputs.length === 0) return null;
+  const visibleOutputs = outputs.slice(-50);
+  const hiddenCount = outputs.length - visibleOutputs.length;
   return (
     <section className="aui-worklog" aria-label="Command output">
-      {outputs.map(([itemId, output]) => (
-        <pre className="aui-command-output" key={itemId}>
-          <span className="aui-terminal-label">terminal</span>
-          {output}
-        </pre>
+      <header className="aui-section-header">
+        <strong>Command output</strong>
+        <span>
+          {hiddenCount > 0 ? `Latest ${visibleOutputs.length} of ` : ""}
+          {outputs.length} {outputs.length === 1 ? "entry" : "entries"}
+        </span>
+      </header>
+      {hiddenCount > 0 ? (
+        <p className="aui-worklog-note">
+          Older terminal output is hidden in this history view to keep the session readable.
+        </p>
+      ) : null}
+      {visibleOutputs.map((entry, index) => (
+        <details className="aui-command-card" key={entry.itemId} open={outputs.length <= 2}>
+          <summary>
+            <span className="aui-terminal-label">terminal</span>
+            <span className="aui-command-title">
+              {entry.command ?? `Command ${hiddenCount + index + 1}`}
+            </span>
+            <span className="aui-command-meta">
+              {entry.status ?? "completed"} · {lineCount(entry.output)} lines
+            </span>
+          </summary>
+          <pre className="aui-command-output">{entry.output}</pre>
+        </details>
       ))}
     </section>
   );
@@ -744,12 +807,19 @@ function AgentDiagnostics({ bootstrap }: { bootstrap: ReturnType<typeof useAgent
     );
   }
   if (messages.length === 0) return null;
+  const title = diagnosticsTitle(messages);
   return (
-    <section className="aui-diagnostics" aria-label="Diagnostics">
-      {messages.slice(-4).map((message, index) => (
-        <span key={`${message}-${index}`}>{message}</span>
-      ))}
-    </section>
+    <details className="aui-diagnostics aui-diagnostics-details" aria-label="Diagnostics">
+      <summary>
+        <span>{title}</span>
+        <small>{messages.length} {messages.length === 1 ? "message" : "messages"}</small>
+      </summary>
+      <div>
+        {messages.slice(-8).map((message, index) => (
+          <span key={`${message}-${index}`}>{message}</span>
+        ))}
+      </div>
+    </details>
   );
 }
 
@@ -951,4 +1021,43 @@ function declineApprovalResult(approval: PendingServerRequest) {
   if (approval.kind === "fileChangeApproval") return { decision: "decline" };
   if (approval.kind === "commandApproval") return { decision: "decline" };
   return { decision: "decline" };
+}
+
+function isWorklogOnlyItem(item: AgentItemState): boolean {
+  return item.kind === "commandExecution" || item.kind === "fileChange";
+}
+
+function itemLabel(kind: string): string {
+  if (kind === "userMessage") return "You";
+  if (kind === "agentMessage") return "Assistant";
+  if (kind === "reasoning") return "Reasoning";
+  if (kind === "plan") return "Plan";
+  return kind;
+}
+
+function commandTextForItem(item: AgentItemState | undefined): string | undefined {
+  const raw = item?.raw;
+  if (!raw || typeof raw !== "object") return undefined;
+  const command = (raw as Record<string, unknown>).command;
+  return typeof command === "string" && command.trim() ? command.trim() : undefined;
+}
+
+function lineCount(value: string): number {
+  if (!value) return 0;
+  return value.split(/\r?\n/).length;
+}
+
+function messagePreview(text: string): string {
+  const firstLine = text.split(/\r?\n/).find((line) => line.trim()) ?? text;
+  const preview = firstLine.trim().replace(/\s+/g, " ");
+  return preview.length > 140 ? `${preview.slice(0, 137)}...` : preview;
+}
+
+function diagnosticsTitle(messages: string[]): string {
+  const pluginWarnings = messages.filter((message) =>
+    message.includes("codex_core_plugins::manifest"),
+  ).length;
+  if (pluginWarnings === messages.length) return "Plugin manifest warnings";
+  if (pluginWarnings > 0) return "Diagnostics and plugin warnings";
+  return "Diagnostics";
 }

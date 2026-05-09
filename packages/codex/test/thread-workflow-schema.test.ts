@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it } from "vitest";
 import type { ThreadStartParams } from "../src/generated/stable/v2/ThreadStartParams";
 import type { TurnStartParams } from "../src/generated/stable/v2/TurnStartParams";
 

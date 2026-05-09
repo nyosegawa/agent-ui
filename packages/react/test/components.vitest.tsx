@@ -6,6 +6,7 @@ import { axe, toHaveNoViolations } from "jest-axe";
 import { describe, expect, it } from "vitest";
 import demoFixture from "../../../fixtures/app-server/demo-session.json" with { type: "json" };
 import {
+  createInitialAgentState,
   FakeAgentTransport,
   runEventFixture,
   type FixtureStep,
@@ -146,6 +147,93 @@ describe("AgentChat", () => {
     expect(
       await screen.findByText(/WARN codex_core_plugins::manifest ignoring invalid plugin config/),
     ).toBeInTheDocument();
+    expect(screen.getByText("Plugin manifest warnings")).toBeInTheDocument();
+  });
+
+  it("keeps long history messages readable behind a preview", () => {
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-history";
+    initialState.threads["thread-history"] = {
+      orderedTurnIds: ["turn-history"],
+      status: "loaded",
+      thread: { id: "thread-history", name: "Long history" },
+      turns: {
+        "turn-history": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-long"],
+          items: {
+            "item-long": {
+              id: "item-long",
+              kind: "userMessage",
+              status: "completed",
+              text: `${"Review this session. ".repeat(120)}\nKeep it readable.`,
+              threadId: "thread-history",
+              turnId: "turn-history",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-history", threadId: "thread-history" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(
+      screen.getAllByText(/Review this session/).some((element) => element.closest("summary")),
+    ).toBe(true);
+  });
+
+  it("caps large historical command output lists", () => {
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-history";
+    const itemOrder = Array.from({ length: 80 }, (_, index) => `command-${index}`);
+    initialState.threads["thread-history"] = {
+      orderedTurnIds: ["turn-history"],
+      status: "loaded",
+      thread: { id: "thread-history", name: "Command-heavy history" },
+      turns: {
+        "turn-history": {
+          commandOutputByItemId: Object.fromEntries(
+            itemOrder.map((id, index) => [id, `output ${index}\n`]),
+          ),
+          filePatchByItemId: {},
+          itemOrder,
+          items: Object.fromEntries(
+            itemOrder.map((id, index) => [
+              id,
+              {
+                id,
+                kind: "commandExecution",
+                raw: { command: `echo ${index}` },
+                status: "completed",
+                text: `echo ${index}`,
+                threadId: "thread-history",
+                turnId: "turn-history",
+              },
+            ]),
+          ),
+          streamingTextByItemId: {},
+          turn: { id: "turn-history", threadId: "thread-history" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("Latest 50 of 80 entries")).toBeInTheDocument();
+    expect(screen.getByText(/Older terminal output is hidden/)).toBeInTheDocument();
+    expect(screen.getByText("echo 79")).toBeInTheDocument();
+    expect(screen.queryByText("echo 0")).not.toBeInTheDocument();
   });
 
   it("renders the fixture UI and resolves file-change approvals", async () => {
