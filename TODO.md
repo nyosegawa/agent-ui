@@ -267,6 +267,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Keep narrow-width persisted session history vertical and readable instead of horizontal card overflow.
 - [x] Show completed message status after real App Server thread completion and hydrated `thread/read`.
 - [x] Make local Vite examples resilient to hot reloads during package rebuilds.
+- [x] Remove local Playwright color-environment warning noise from release validation.
 
 ## Release Readiness
 

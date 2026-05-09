@@ -12,13 +12,13 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "bun run --cwd examples/local-react-vite preview --host 127.0.0.1",
+      command: "env -u NO_COLOR -u FORCE_COLOR bun run --cwd examples/local-react-vite preview --host 127.0.0.1",
       port: 4173,
       reuseExistingServer: !process.env.CI,
     },
     {
       command:
-        "AGENT_UI_PORT=4174 AGENT_UI_CODEX_COMMAND=bun AGENT_UI_CODEX_ARGS='[\"e2e/fake-codex-app-server.ts\"]' bun --filter @nyosegawa/agent-ui-example-codex-local-web dev",
+        "env -u NO_COLOR -u FORCE_COLOR AGENT_UI_PORT=4174 AGENT_UI_CODEX_COMMAND=bun AGENT_UI_CODEX_ARGS='[\"e2e/fake-codex-app-server.ts\"]' bun --filter @nyosegawa/agent-ui-example-codex-local-web dev",
       port: 4174,
       reuseExistingServer: !process.env.CI,
     },
