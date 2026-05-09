@@ -2,8 +2,14 @@ import { FakeAgentTransport, runEventFixture, type FixtureStep } from "@nyosegaw
 import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/style.css";
 import { useMemo } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
 import demoFixture from "../../../fixtures/app-server/demo-session.json";
+
+declare global {
+  interface Window {
+    __agentUiLocalReactViteRoot?: Root;
+  }
+}
 
 function DemoApp() {
   const initialState = useMemo(() => runEventFixture(demoFixture as FixtureStep[]), []);
@@ -100,6 +106,16 @@ function DemoApp() {
   );
 }
 
-createRoot(document.getElementById("root")!).render(
-  <DemoApp />,
-);
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Missing #root element");
+
+const root = window.__agentUiLocalReactViteRoot ?? createRoot(rootElement);
+window.__agentUiLocalReactViteRoot = root;
+root.render(<DemoApp />);
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    root.unmount();
+    window.__agentUiLocalReactViteRoot = undefined;
+  });
+}

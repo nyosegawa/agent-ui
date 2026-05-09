@@ -2,7 +2,13 @@ import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websock
 import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/style.css";
 import { useMemo } from "react";
-import { createRoot } from "react-dom/client";
+import { createRoot, type Root } from "react-dom/client";
+
+declare global {
+  interface Window {
+    __agentUiCodexLocalWebRoot?: Root;
+  }
+}
 
 function App() {
   const transport = useMemo(
@@ -34,4 +40,16 @@ function App() {
   );
 }
 
-createRoot(document.getElementById("root")!).render(<App />);
+const rootElement = document.getElementById("root");
+if (!rootElement) throw new Error("Missing #root element");
+
+const root = window.__agentUiCodexLocalWebRoot ?? createRoot(rootElement);
+window.__agentUiCodexLocalWebRoot = root;
+root.render(<App />);
+
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    root.unmount();
+    window.__agentUiCodexLocalWebRoot = undefined;
+  });
+}
