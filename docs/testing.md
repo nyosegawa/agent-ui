@@ -176,6 +176,7 @@ The history and usage smoke path has also been verified against `codex app-serve
 - `thread/list`: stored sessions returned
 - `thread/read(includeTurns: true)`: individual stored session history returned
 - `thread/resume(excludeTurns: true)`: resume succeeds for the same stored id
+- `examples/codex-local-web`: browser -> WebSocket bridge -> stdio App Server path loads model metadata, usage windows, stored thread list, `thread/read`, and `thread/resume` in this environment.
 
 Full approval-path real smoke still needs deterministic fixtures or a controlled Codex prompt that requests command/file approvals.
 

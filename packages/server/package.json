@@ -32,6 +32,10 @@
   "dependencies": {
     "@nyosegawa/agent-ui-codex": "workspace:*",
     "@nyosegawa/agent-ui-core": "workspace:*",
-    "execa": "9.6.1"
+    "execa": "9.6.1",
+    "ws": "8.18.3"
+  },
+  "devDependencies": {
+    "@types/ws": "8.18.1"
   }
 }

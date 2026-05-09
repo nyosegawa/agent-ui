@@ -19,6 +19,7 @@ import {
   useAgentThreads,
   useAgentUsage,
 } from "./hooks";
+import { useAgentContext } from "./provider";
 import { normalizeUsageWindows } from "./usage";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -63,6 +64,7 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
           </>
         ) : (
           <div className="aui-empty">
+            <AgentRunControls />
             <button className="aui-button" onClick={() => void startThread()}>
               Start thread
             </button>
@@ -95,19 +97,24 @@ function AgentThreadActions({ status, threadId }: { status: string; threadId?: s
 }
 
 export function AgentRunControls() {
+  const { state } = useAgentContext();
   const { models, refreshModels } = useAgentModels();
   const {
     executionModes,
     runSettings,
+    selectedModel,
     setEffort,
     setExecutionMode,
     setModelId,
     supportedEfforts,
   } = useAgentRunSettings();
+  const hasEffortOptions = supportedEfforts.length > 0;
 
   useEffect(() => {
-    if (models.length === 0) void refreshModels().catch(() => undefined);
-  }, [models.length, refreshModels]);
+    if (state.connection.status === "connected" && models.length === 0) {
+      void refreshModels().catch(() => undefined);
+    }
+  }, [models.length, refreshModels, state.connection.status]);
 
   return (
     <section className="aui-run-controls" aria-label="Run settings">
@@ -138,7 +145,7 @@ export function AgentRunControls() {
           <option value="">Server default</option>
           {models.map((model) => (
             <option key={model.id} value={model.id}>
-              {model.name ?? model.id}
+              {formatModelOption(model)}
             </option>
           ))}
         </select>
@@ -147,10 +154,13 @@ export function AgentRunControls() {
         <span>Effort</span>
         <select
           aria-label="Effort"
+          disabled={!hasEffortOptions}
           onChange={(event) => setEffort(event.currentTarget.value)}
           value={runSettings.effort ?? ""}
         >
-          <option value="">Model default</option>
+          <option value="">
+            {selectedModel && hasEffortOptions ? "Model default" : "Server default"}
+          </option>
           {supportedEfforts.map((effort) => (
             <option key={effort} value={effort}>
               {effort}
@@ -160,6 +170,11 @@ export function AgentRunControls() {
       </label>
     </section>
   );
+}
+
+function formatModelOption(model: { id: string; name?: string }): string {
+  if (!model.name || model.name === model.id) return model.id;
+  return `${model.name} (${model.id})`;
 }
 
 export function AgentComposer({ threadId }: { threadId?: string }) {
@@ -332,6 +347,7 @@ function CodeMirrorDiff({ text }: { text: string }) {
         EditorView.editable.of(false),
         EditorView.lineWrapping,
         EditorView.decorations.compute(["doc"], diffLineDecorations),
+        EditorView.contentAttributes.of({ "aria-label": "Patch content" }),
         diffTheme,
       ],
       parent: ref.current,
@@ -472,9 +488,17 @@ export function AgentStatusBar() {
 }
 
 export function AgentUsage() {
+  const { state } = useAgentContext();
   const { rateLimits, refreshUsage } = useAgentUsage();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const didAutoRefresh = useRef(false);
   const windows = useMemo(() => normalizeUsageWindows(rateLimits), [rateLimits]);
+  useEffect(() => {
+    if (state.connection.status === "connected" && !didAutoRefresh.current) {
+      didAutoRefresh.current = true;
+      void refreshUsage().catch(() => undefined);
+    }
+  }, [refreshUsage, state.connection.status]);
   return (
     <section className="aui-usage" aria-label="Usage limits">
       <div className="aui-usage-header">
@@ -556,9 +580,22 @@ export function ThreadSidebar({
   onSelectThread?: (threadId: string) => void;
   threads: ThreadState[];
 }) {
-  const history = useAgentThreadHistory();
+  const { error, isLoading, listThreads } = useAgentThreadHistory();
+  const { state } = useAgentContext();
   const { readThread } = useAgentThreadReader();
   const [searchTerm, setSearchTerm] = useState("");
+  const didAutoLoad = useRef(false);
+  useEffect(() => {
+    if (
+      state.connection.status === "connected" &&
+      threads.length === 0 &&
+      !isLoading &&
+      !didAutoLoad.current
+    ) {
+      didAutoLoad.current = true;
+      void listThreads({ limit: 25 }).catch(() => undefined);
+    }
+  }, [isLoading, listThreads, state.connection.status, threads.length]);
   return (
     <aside className="aui-sidebar">
       <div className="aui-sidebar-title">Threads</div>
@@ -566,7 +603,7 @@ export function ThreadSidebar({
         className="aui-history-controls"
         onSubmit={(event) => {
           event.preventDefault();
-          void history.listThreads({ searchTerm });
+          void listThreads({ searchTerm });
         }}
       >
         <input
@@ -576,11 +613,11 @@ export function ThreadSidebar({
           type="search"
           value={searchTerm}
         />
-        <button className="aui-button aui-button-secondary" disabled={history.isLoading} type="submit">
-          {history.isLoading ? "Loading" : "Load"}
+        <button className="aui-button aui-button-secondary" disabled={isLoading} type="submit">
+          {isLoading ? "Loading" : "Load"}
         </button>
       </form>
-      {history.error ? <p className="aui-sidebar-error">{history.error.message}</p> : null}
+      {error ? <p className="aui-sidebar-error">{error.message}</p> : null}
       <ThreadList
         activeThreadId={activeThreadId}
         onSelectThread={(threadId) => {

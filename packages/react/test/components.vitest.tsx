@@ -15,6 +15,17 @@ import { AgentChat, AgentProvider } from "../src";
 expect.extend(toHaveNoViolations);
 
 describe("AgentChat", () => {
+  it("keeps fixture model ids visibly non-production", () => {
+    const modelEvents = (demoFixture as FixtureStep[])
+      .map((step) => step.event)
+      .filter((event) => event.type === "models/updated");
+    const ids = modelEvents.flatMap((event: any) =>
+      Array.isArray(event.models) ? event.models.map((model: any) => String(model.id)) : [],
+    );
+    expect(ids.length).toBeGreaterThan(0);
+    expect(ids.every((id) => id.startsWith("fixture-"))).toBe(true);
+  });
+
   it("renders start thread action", async () => {
     render(
       <AgentProvider transport={new FakeAgentTransport()}>
@@ -44,8 +55,10 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("Diff preview")).toHaveTextContent("AgentDiffPanel");
     expect(screen.getByLabelText("CodeMirror patch viewer")).toBeInTheDocument();
     expect(screen.getByLabelText("Run settings")).toHaveTextContent("Execution mode");
-    expect(screen.getByLabelText("Usage limits")).toHaveTextContent("gpt-5.2 5h");
-    expect(screen.getByLabelText("Usage limits")).toHaveTextContent("gpt-5.2 weekly");
+    expect(screen.getByLabelText("Usage limits")).toHaveTextContent("fixture-demo-model 5h");
+    expect(screen.getByLabelText("Usage limits")).toHaveTextContent(
+      "fixture-demo-model weekly",
+    );
     expect(screen.getByText("Review file changes")).toBeInTheDocument();
 
     const approveButtons = screen.getAllByRole("button", { name: "Approve" });
@@ -70,13 +83,12 @@ describe("AgentChat", () => {
     await user.type(await screen.findByLabelText("Message"), "hello codex");
     await user.click(screen.getByRole("button", { name: "Send" }));
 
-    expect(transport.requests.at(-1)).toEqual({
-      id: 0,
+    expect(transport.requests.at(-1)).toMatchObject({
       method: "turn/start",
       params: {
         approvalPolicy: "on-request",
         input: [{ text: "hello codex", text_elements: [], type: "text" }],
-        model: "gpt-5.2",
+        model: "fixture-demo-model",
         sandboxPolicy: {
           excludeSlashTmp: false,
           excludeTmpdirEnvVar: false,
@@ -102,15 +114,15 @@ describe("AgentChat", () => {
     );
 
     await user.click(await screen.findByRole("button", { name: "Read-only" }));
-    await user.selectOptions(screen.getByLabelText("Model"), "gpt-5.2-codex");
-    await user.selectOptions(screen.getByLabelText("Effort"), "xhigh");
+    await user.selectOptions(screen.getByLabelText("Model"), "fixture-demo-coding-model");
+    await user.selectOptions(screen.getByLabelText("Effort"), "high");
     await user.type(screen.getByLabelText("Message"), "inspect only");
     await user.click(screen.getByRole("button", { name: "Send" }));
 
     expect(transport.requests.at(-1)?.params).toMatchObject({
       approvalPolicy: "untrusted",
-      effort: "xhigh",
-      model: "gpt-5.2-codex",
+      effort: "high",
+      model: "fixture-demo-coding-model",
       sandboxPolicy: { networkAccess: false, type: "readOnly" },
       threadId: "thread-demo",
     });
@@ -124,7 +136,7 @@ describe("AgentChat", () => {
           return {
             rateLimitsByLimitId: {
               weekly: {
-                limitName: "gpt-5.2",
+                limitName: "fixture-demo-model",
                 secondary: {
                   resetsAt: 1778713200,
                   usedPercent: 55,
@@ -146,6 +158,31 @@ describe("AgentChat", () => {
     await user.click(await screen.findByRole("button", { name: "Refresh" }));
 
     expect(await screen.findByText("55%")).toBeInTheDocument();
+  });
+
+  it("does not fabricate effort options when model metadata has none", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/start") {
+          return { thread: { id: "thread-empty-model", name: "Model metadata test" } };
+        }
+        if (request.method === "model/list") {
+          return { data: [{ displayName: "Metadata-light model", id: "metadata-light-model" }] };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Start thread" }));
+    await screen.findByRole("option", { name: "Metadata-light model (metadata-light-model)" });
+    expect(screen.getByLabelText("Effort")).toBeDisabled();
+    expect(screen.queryByRole("option", { name: "xhigh" })).not.toBeInTheDocument();
   });
 
   it("shows device-code login details from account/login/start", async () => {

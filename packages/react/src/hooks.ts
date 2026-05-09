@@ -61,8 +61,6 @@ export const AGENT_EXECUTION_MODES: AgentExecutionMode[] = [
   },
 ];
 
-const DEFAULT_EFFORTS: ReasoningEffort[] = ["minimal", "low", "medium", "high", "xhigh"];
-
 export function useAgentThread(threadId?: ThreadId) {
   const { dispatch, state, transport } = useAgentContext();
   const resolvedThreadId = threadId ?? state.activeThreadId;
@@ -73,11 +71,11 @@ export function useAgentThread(threadId?: ThreadId) {
     async (params?: Record<string, unknown>) => {
       const result = await transport.request<Record<string, unknown> | undefined, any>(
         "thread/start",
-        params,
+        params ?? {},
       );
       const rawThread = result.thread ?? result;
       dispatch({
-        status: rawThread.status ?? result.status,
+        status: normalizeThreadStatus(rawThread.status ?? result.status),
         thread: {
           ephemeral: rawThread.ephemeral,
           id: String(rawThread.id ?? rawThread.threadId),
@@ -273,13 +271,13 @@ export function useAgentComposer(threadId?: ThreadId) {
 export function useAgentRunSettings() {
   const { dispatch, state } = useAgentContext();
   const runSettings = selectRunSettings(state);
-  const selectedModel = state.models.models.find(
-    (model) => model.id === runSettings.modelId,
-  );
+  const selectedModel =
+    state.models.models.find((model) => model.id === runSettings.modelId) ??
+    state.models.models.find((model) => isDefaultModel(model));
   const supportedEfforts =
     selectedModel?.supportedEfforts && selectedModel.supportedEfforts.length > 0
       ? selectedModel.supportedEfforts
-      : DEFAULT_EFFORTS;
+      : [];
 
   const setExecutionMode = useCallback(
     (executionMode: ExecutionModeId) =>
@@ -291,14 +289,15 @@ export function useAgentRunSettings() {
       const model = state.models.models.find((candidate) => candidate.id === modelId);
       dispatch({
         effort: model?.defaultEffort,
-        modelId,
+        modelId: modelId || undefined,
         type: "runSettings/updated",
       });
     },
     [dispatch, state.models.models],
   );
   const setEffort = useCallback(
-    (effort: ReasoningEffort) => dispatch({ effort, type: "runSettings/updated" }),
+    (effort: ReasoningEffort) =>
+      dispatch({ effort: effort || undefined, type: "runSettings/updated" }),
     [dispatch],
   );
 
@@ -354,36 +353,74 @@ export function useAgentModels() {
   const { dispatch, state, transport } = useAgentContext();
   const refreshModels = useCallback(async () => {
     const response = await transport.request("model/list", {});
-    const rawModels = Array.isArray((response as any)?.data)
-      ? (response as any).data
-      : Array.isArray((response as any)?.models)
-      ? (response as any).models
-      : Array.isArray(response)
-        ? response
-        : [];
-    const models = rawModels.map((model: any) => ({
-      id: String(model.id ?? model.slug ?? model.name),
-      defaultEffort: model.defaultReasoningEffort ?? model.default_effort,
-      name: model.name ?? model.displayName ?? model.model,
-      raw: model,
-      supportedEfforts: normalizeSupportedEfforts(model),
-    }));
+    const models = normalizeModelList(response);
     dispatch({ models, type: "models/updated" });
     return models;
   }, [dispatch, transport]);
   return { models: state.models.models, refreshModels };
 }
 
+function normalizeModelList(response: unknown): AgentModel[] {
+  const value = response as any;
+  const rawModels = Array.isArray(value?.data)
+    ? value.data
+    : Array.isArray(value?.models)
+      ? value.models
+      : Array.isArray(value)
+        ? value
+        : [];
+  return rawModels
+    .filter((model: unknown) => typeof model === "object" && model !== null)
+    .map((model: Record<string, unknown>) => ({
+      id: String(model.id ?? model.slug ?? model.model ?? model.name),
+      defaultEffort: normalizeReasoningEffort(
+        model.defaultReasoningEffort ?? model.default_reasoning_effort ?? model.default_effort,
+      ),
+      name: normalizeModelName(model),
+      raw: model,
+      supportedEfforts: normalizeSupportedEfforts(model),
+    }));
+}
+
+function normalizeModelName(model: Record<string, unknown>): string | undefined {
+  const display = model.displayName ?? model.display_name ?? model.name;
+  if (typeof display === "string" && display.trim()) return display;
+  const modelId = model.model ?? model.id;
+  return typeof modelId === "string" && modelId.trim() ? modelId : undefined;
+}
+
 function normalizeSupportedEfforts(model: Record<string, unknown>): AgentModel["supportedEfforts"] {
   const efforts = model.supportedReasoningEfforts ?? model.supported_reasoning_efforts;
   if (!Array.isArray(efforts)) return undefined;
-  return efforts
-    .map((effort) =>
-      typeof effort === "string"
-        ? effort
-        : typeof effort === "object" && effort !== null
-          ? String((effort as Record<string, unknown>).reasoningEffort ?? "")
-          : "",
-    )
-    .filter(Boolean);
+  const normalized = efforts
+    .map((effort) => {
+      if (typeof effort === "string") return effort;
+      if (typeof effort !== "object" || effort === null) return undefined;
+      const record = effort as Record<string, unknown>;
+      return normalizeReasoningEffort(record.reasoningEffort ?? record.reasoning_effort);
+    })
+    .filter((effort): effort is ReasoningEffort => typeof effort === "string" && effort.length > 0);
+  return normalized.length > 0 ? normalized : undefined;
+}
+
+function normalizeReasoningEffort(value: unknown): ReasoningEffort | undefined {
+  return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function isDefaultModel(model: AgentModel): boolean {
+  return (
+    typeof model.raw === "object" &&
+    model.raw !== null &&
+    (model.raw as Record<string, unknown>).isDefault === true
+  );
+}
+
+function normalizeThreadStatus(value: unknown): string | undefined {
+  if (value == null) return undefined;
+  if (typeof value === "string") return value;
+  if (typeof value !== "object") return String(value);
+  const type = (value as Record<string, unknown>).type;
+  if (type === "active") return "running";
+  if (type === "idle") return "loaded";
+  return typeof type === "string" ? type : undefined;
 }

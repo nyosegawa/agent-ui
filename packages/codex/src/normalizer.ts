@@ -60,7 +60,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
       return [
         {
           type: "thread/started",
-          status: params.status ?? params.thread?.status,
+          status: normalizeThreadStatus(params.status ?? params.thread?.status),
           thread,
           turns: Array.isArray(params.turns)
             ? params.turns.map((turn: any) => normalizeTurn(turn, thread.id))
@@ -72,7 +72,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
       return [
         {
           type: "thread/status/changed",
-          status: params.status,
+          status: normalizeThreadStatus(params.status),
           threadId: String(params.threadId ?? params.thread_id),
         },
       ];
@@ -192,17 +192,41 @@ export function normalizeModelListResponse(response: any): AgentModel[] {
       : Array.isArray(response)
         ? response
         : [];
-  return models.map((model: any) => ({
-    id: String(model.id ?? model.slug ?? model.name),
-    defaultEffort: model.defaultReasoningEffort ?? model.default_effort,
-    name: model.name ?? model.displayName ?? model.model,
-    raw: model,
-    supportedEfforts: Array.isArray(model.supportedReasoningEfforts)
-      ? model.supportedReasoningEfforts
-          .map((effort: any) => effort.reasoningEffort ?? effort)
-          .filter(Boolean)
-      : undefined,
-  }));
+  return models
+    .filter((model: unknown) => typeof model === "object" && model !== null)
+    .map((model: any) => ({
+      id: String(model.id ?? model.slug ?? model.model ?? model.name),
+      defaultEffort: normalizeReasoningEffort(
+        model.defaultReasoningEffort ?? model.default_reasoning_effort ?? model.default_effort,
+      ),
+      name: normalizeModelName(model),
+      raw: model,
+      supportedEfforts: normalizeSupportedEfforts(model),
+    }));
+}
+
+function normalizeModelName(model: any): string | undefined {
+  const display = model.displayName ?? model.display_name ?? model.name;
+  if (typeof display === "string" && display.trim()) return display;
+  const id = model.model ?? model.id;
+  return typeof id === "string" && id.trim() ? id : undefined;
+}
+
+function normalizeSupportedEfforts(model: any): AgentModel["supportedEfforts"] {
+  const efforts = model.supportedReasoningEfforts ?? model.supported_reasoning_efforts;
+  if (!Array.isArray(efforts)) return undefined;
+  const normalized = efforts
+    .map((effort: any) => {
+      if (typeof effort === "string") return effort;
+      if (typeof effort !== "object" || effort === null) return undefined;
+      return normalizeReasoningEffort(effort.reasoningEffort ?? effort.reasoning_effort);
+    })
+    .filter((effort: unknown): effort is string => typeof effort === "string" && effort.length > 0);
+  return normalized.length > 0 ? normalized : undefined;
+}
+
+function normalizeReasoningEffort(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value : undefined;
 }
 
 function normalizeThread(raw: any): AgentThread {
@@ -213,6 +237,15 @@ function normalizeThread(raw: any): AgentThread {
     path: raw.path,
     raw,
   };
+}
+
+function normalizeThreadStatus(value: unknown): string {
+  if (typeof value === "string") return value;
+  if (typeof value !== "object" || value === null) return "notLoaded";
+  const type = (value as Record<string, unknown>).type;
+  if (type === "active") return "running";
+  if (type === "idle") return "loaded";
+  return typeof type === "string" ? type : "notLoaded";
 }
 
 function normalizeTurn(raw: any, threadId: string): AgentTurn {

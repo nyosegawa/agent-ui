@@ -173,6 +173,12 @@ class CodexWebSocketTransport implements AgentTransport {
   }
 
   #handleMessage(message: JsonRpcMessage): void {
+    const envelope = message as any;
+    if (envelope?.type === "agent-ui/transport-event" && envelope.event) {
+      this.#push(envelope.event);
+      return;
+    }
+
     if (isJsonRpcResponse(message)) {
       const pending = this.#pending.get(String(message.id));
       if (!pending) return;

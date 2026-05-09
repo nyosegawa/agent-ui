@@ -1,0 +1,23 @@
+{
+  "name": "@nyosegawa/agent-ui-example-codex-local-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "bun run server.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@nyosegawa/agent-ui-codex": "workspace:*",
+    "@nyosegawa/agent-ui-react": "workspace:*",
+    "@nyosegawa/agent-ui-server": "workspace:*",
+    "@vitejs/plugin-react": "6.0.1",
+    "vite": "8.0.11",
+    "react": "19.2.6",
+    "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
+  }
+}

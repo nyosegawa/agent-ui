@@ -101,6 +101,8 @@ describe("Codex protocol metadata", () => {
             defaultReasoningEffort: "medium",
             displayName: "GPT-5.5",
             id: "gpt-5.5",
+            isDefault: true,
+            model: "gpt-5.5",
             supportedReasoningEfforts: [
               { description: "Fast", reasoningEffort: "low" },
               { description: "Deep", reasoningEffort: "high" },
@@ -117,12 +119,39 @@ describe("Codex protocol metadata", () => {
           defaultReasoningEffort: "medium",
           displayName: "GPT-5.5",
           id: "gpt-5.5",
+          isDefault: true,
+          model: "gpt-5.5",
           supportedReasoningEfforts: [
             { description: "Fast", reasoningEffort: "low" },
             { description: "Deep", reasoningEffort: "high" },
           ],
         },
         supportedEfforts: ["low", "high"],
+      },
+    ]);
+  });
+
+  it("normalizes snake_case model/list data from App Server internals", () => {
+    expect(
+      normalizeModelListResponse({
+        data: [
+          {
+            default_reasoning_effort: "medium",
+            display_name: "Snake Case Model",
+            id: "snake-case-model",
+            supported_reasoning_efforts: [
+              { description: "Balanced", reasoning_effort: "medium" },
+              { description: "Deep", reasoning_effort: "high" },
+            ],
+          },
+        ],
+      }),
+    ).toMatchObject([
+      {
+        defaultEffort: "medium",
+        id: "snake-case-model",
+        name: "Snake Case Model",
+        supportedEfforts: ["medium", "high"],
       },
     ]);
   });

@@ -156,39 +156,30 @@ This checklist is the execution source of truth for Agent UI.
 ## Examples
 
 - [x] Add local React + Vite example.
+- [x] Add real Codex local web app example.
 - [x] Add Next.js local bridge example.
 - [x] Add websocket remote demo.
 - [x] Add custom component example.
 - [x] Add headless hooks example.
 - [x] Add themed example.
 
-## MVP Validation
+## Package MVP Validation
 
-- [x] Start local Codex App Server from bridge.
-- [x] Complete device-code login.
-- [x] Start a thread.
-- [x] Send a turn.
-- [x] Render streaming assistant text.
-- [x] Render command output.
-- [x] Resolve command approval.
-- [x] Resolve file-change approval.
-- [x] Render diff preview.
-- [x] Resume a thread.
+This section tracks the package/fixture MVP. It is useful, but it is not the finished product gate.
+
+- [x] Render fixture-backed streaming assistant text.
+- [x] Render fixture-backed command output.
+- [x] Resolve fixture-backed command approval.
+- [x] Resolve fixture-backed file-change approval.
+- [x] Render fixture-backed diff preview.
+- [x] Resume fixture-backed or fake persisted thread history.
 - [x] Pass protocol conformance tests.
 - [x] Pass reducer fixture tests.
-- [x] Pass package export validation.
-- [x] Pass browser smoke test.
-
-## Product Polish
-
+- [x] Pass fixture-backed browser smoke test.
 - [x] Add chat-window execution mode control.
 - [x] Add chat-window model selection.
 - [x] Add chat-window reasoning effort selection.
 - [x] Add usage component for 5-hour and weekly limits.
-- [x] Verify real Codex `model/list` and `account/rateLimits/read`.
-- [x] Verify real Codex `thread/list` with stored sessions.
-- [x] Verify real Codex `thread/read` for an individual stored session.
-- [x] Verify real Codex `thread/resume` from history UI.
 - [x] Add browser smoke coverage for run controls and usage.
 - [x] Add browser smoke coverage for persisted session browsing.
 - [x] Add no-horizontal-overflow visual assertions for desktop and mobile.
@@ -196,10 +187,101 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Refactor Codex thread response normalization for read/resume/list.
 - [x] Refresh docs for run controls, usage, history, and real Codex verification.
 
-## Post-MVP
+## Active Release Gate: Real Local App MVP
+
+This is the current source of truth for making Agent UI a finished local Codex web experience. The release is not complete until this section is complete.
+
+### Real App Bridge
+
+- [x] Keep a real local web app under `examples/codex-local-web`.
+- [x] Use a persistent host bridge instead of `FakeAgentTransport`.
+- [x] Keep one Codex App Server process alive for a browser session.
+- [x] Forward App Server notifications to browser state.
+- [ ] Forward App Server server requests to browser state.
+- [ ] Forward browser approval responses back to App Server.
+- [ ] Forward browser rejection responses back to App Server.
+- [ ] Add an integration test where `createCodexWebSocketTransport()` consumes the server bridge end-to-end.
+- [ ] Add an integration test proving approval response/rejection reaches the stdio App Server side.
+- [ ] Surface bridge connection errors in the UI.
+- [ ] Surface redacted App Server stderr in the UI or a visible diagnostics panel.
+- [ ] Shut down the App Server process when the browser session closes or idles out.
+
+### Real App Bootstrap
+
+- [ ] Read account state on app startup with `account/read`.
+- [ ] If unauthenticated, show a first-run device-code login state.
+- [ ] If authenticated, do not show a misleading Login button.
+- [ ] Read model data on startup with `model/list`.
+- [ ] Read usage data on startup with `account/rateLimits/read`.
+- [ ] Show loading, empty, and error states for account/model/usage bootstrap.
+- [ ] Handle device-code login without logging raw tokens.
+
+### Real Thread Workflow
+
+- [ ] Load stored Codex threads from `thread/list`.
+- [ ] Match thread search/filter UI to real `thread/list` behavior.
+- [ ] Hydrate stored sessions with `thread/read`.
+- [ ] Resume stored sessions with `thread/resume`.
+- [ ] Start new threads with a selected working directory.
+- [ ] Send turns with stable `turn/start` params.
+- [ ] Render live streaming assistant text from App Server events.
+- [ ] Render live command output from App Server events.
+- [ ] Render live diffs from App Server patch payloads.
+- [ ] Render live command approval prompts.
+- [ ] Render live file-change approval prompts.
+
+### Correctness Gaps
+
+- [x] Remove fixture-only model and reasoning-effort names from user-facing demos.
+- [x] Stop inventing reasoning-effort options when Codex App Server does not provide them.
+- [x] Verify current real Codex `model/list` response shape and update normalizers/tests from that shape.
+- [ ] Verify current real Codex collaboration/execution preset response shape before exposing preset UI beyond documented `turn/start` fields.
+- [ ] Make execution mode controls map only to documented stable App Server turn params.
+- [ ] Verify live `turn/start` behavior for each built-in execution mode.
+- [ ] Fix approval response payloads to use generated stable decisions such as `accept`, `acceptForSession`, `decline`, and `cancel`.
+- [x] Add tests that fail if fixture model ids look like real production model ids.
+- [x] Add tests that fail if effort options are fabricated without model metadata.
+- [ ] Add schema-backed tests for command approval response payloads.
+- [ ] Add schema-backed tests for file-change approval response payloads.
+
+### UI/UX Finish
+
+- [ ] Clearly label fixture smoke demos separately from real Codex demos.
+- [ ] Make quickstart launch the real local web app first.
+- [ ] Add unauthenticated first-run state.
+- [ ] Add no-session empty state.
+- [ ] Add bridge-error state.
+- [ ] Add thread search/filter loading and empty states.
+- [ ] Make run settings readable on desktop and mobile.
+- [ ] Add usage limit cards for 5-hour and weekly windows using real rate-limit data.
+- [ ] Add accessible approval controls for command and file-change requests.
+- [ ] Make diff preview polished for real App Server patch payloads.
+- [ ] Add visual regression coverage for the real local app shell.
+
+## Release Readiness
+
+This section is the publish/release gate after the real local app works.
+
+- [x] Fix package export/type resolution so `bun run attw` passes.
+- [ ] Run `bun run typecheck`.
+- [ ] Run `bun run lint`.
+- [ ] Run `bun test`.
+- [ ] Run `bun run build`.
+- [ ] Run `bun run test:protocol`.
+- [ ] Run `bun run test:fixtures`.
+- [ ] Run `bun run publint`.
+- [ ] Run `bun run attw`.
+- [ ] Run `bun run test:e2e:playwright`.
+- [ ] Run real local app smoke for model list, usage, thread list, thread read, thread resume, start thread, send turn, streaming text, and approval handling.
+- [ ] Record exact real smoke commands, date, Codex version, and any auth/environment dependencies in docs.
+- [ ] Confirm GitHub Actions pass after push.
+
+## Implemented Extras
+
+These are useful extras, but they are not substitutes for the real local app release gate.
 
 - [x] Add remote WebSocket deployment guide.
-- [x] Harden websocket reconnection policy.
+- [x] Harden websocket reconnect handling.
 - [x] Add Codex SDK adapter.
 - [x] Add OpenAI Agents SDK adapter.
 - [x] Add Web Components wrapper.
@@ -213,3 +295,11 @@ This checklist is the execution source of truth for Agent UI.
 - [x] Add release automation.
 - [x] Add changelog automation.
 - [x] Add package provenance/signing if useful.
+
+## Ongoing Operations
+
+- [ ] Commit and push each stable implementation slice.
+- [ ] Keep `TODO.md` updated in the same commit as implementation changes.
+- [ ] Add or update tests with each behavior change.
+- [ ] Refactor when implementation complexity starts hiding protocol or UI state behavior.
+- [ ] Re-check current Codex App Server schema and behavior before relying on assumptions.

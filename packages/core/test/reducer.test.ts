@@ -82,7 +82,7 @@ describe("agentReducer", () => {
 
     const rateLimited = runEventFixture(rateLimitFixture as FixtureStep[]);
     expect(rateLimited.account.rateLimits).toEqual({
-      limitName: "gpt-5.2",
+      limitName: "fixture-demo-model",
       planType: "plus",
       primary: {
         limit: 100,

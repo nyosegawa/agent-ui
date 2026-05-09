@@ -18,6 +18,16 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./websocket": {
+      "import": {
+        "types": "./dist/websocket.d.ts",
+        "default": "./dist/websocket.js"
+      },
+      "require": {
+        "types": "./dist/websocket.d.cts",
+        "default": "./dist/websocket.cjs"
+      }
     }
   },
   "engines": {

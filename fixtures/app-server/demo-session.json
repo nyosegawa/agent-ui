@@ -13,7 +13,7 @@
       "type": "account/rateLimits/updated",
       "rateLimits": {
         "rateLimits": {
-          "limitName": "gpt-5.2",
+          "limitName": "fixture-demo-model",
           "planType": "plus",
           "primary": {
             "usedPercent": 18,
@@ -33,19 +33,19 @@
     "name": "models",
     "event": {
       "type": "models/updated",
-      "selectedModelId": "gpt-5.2",
+      "selectedModelId": "fixture-demo-model",
       "models": [
         {
-          "id": "gpt-5.2",
-          "name": "GPT-5.2",
+          "id": "fixture-demo-model",
+          "name": "Fixture demo model",
           "defaultEffort": "medium",
-          "supportedEfforts": ["minimal", "low", "medium", "high", "xhigh"]
+          "supportedEfforts": ["low", "medium", "high"]
         },
         {
-          "id": "gpt-5.2-codex",
-          "name": "GPT-5.2 Codex",
+          "id": "fixture-demo-coding-model",
+          "name": "Fixture demo coding model",
           "defaultEffort": "high",
-          "supportedEfforts": ["low", "medium", "high", "xhigh"]
+          "supportedEfforts": ["medium", "high"]
         }
       ]
     }

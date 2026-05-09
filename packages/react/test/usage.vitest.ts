@@ -22,10 +22,10 @@ describe("normalizeUsageWindows", () => {
     expect(
       normalizeUsageWindows({
         rateLimits: {
-          limitName: "gpt-5.2",
+          limitName: "fixture-demo-model",
           primary: { limit: 100, resetAt: "2026-05-09T12:00:00.000Z", used: 12 },
         },
       }).map(({ label, percent, valueLabel }) => ({ label, percent, valueLabel })),
-    ).toEqual([{ label: "gpt-5.2 primary", percent: 12, valueLabel: "12/100" }]);
+    ).toEqual([{ label: "fixture-demo-model primary", percent: 12, valueLabel: "12/100" }]);
   });
 });
