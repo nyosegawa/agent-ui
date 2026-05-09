@@ -215,6 +215,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Read model data on startup with `model/list`.
 - [x] Read usage data on startup with `account/rateLimits/read`.
 - [x] Refresh account and usage after device-code login completes.
+- [x] Clear local account state after `account/logout` succeeds.
 - [x] Show loading, empty, and error states for account/model/usage bootstrap.
 - [x] Handle device-code login without logging raw tokens.
 

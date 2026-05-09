@@ -428,10 +428,11 @@ export function useAgentAuth() {
     await transport.request<CancelLoginAccountParams>("account/login/cancel", params);
     dispatch({ account: null, status: "unauthenticated", type: "account/updated" });
   }, [dispatch, state.account.login?.loginId, transport]);
-  const logout = useCallback(
-    async () => transport.request("account/logout"),
-    [transport],
-  );
+  const logout = useCallback(async () => {
+    const response = await transport.request("account/logout");
+    dispatch({ account: null, status: "unauthenticated", type: "account/updated" });
+    return response;
+  }, [dispatch, transport]);
   return { account: state.account, cancelLogin, login, logout, readAccount };
 }
 

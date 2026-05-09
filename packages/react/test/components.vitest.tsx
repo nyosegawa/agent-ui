@@ -11,7 +11,7 @@ import {
   runEventFixture,
   type FixtureStep,
 } from "@nyosegawa/agent-ui-core";
-import { AgentChat, AgentDiffViewer, AgentProvider } from "../src";
+import { AgentChat, AgentDiffViewer, AgentProvider, useAgentAuth } from "../src";
 
 expect.extend(toHaveNoViolations);
 
@@ -203,6 +203,44 @@ describe("AgentChat", () => {
     expect(
       transport.requests.some((request) => request.method === "account/rateLimits/read"),
     ).toBe(true);
+  });
+
+  it("clears local account state after logout request succeeds", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.account = {
+      account: { email: "logout@example.com", planType: "pro" },
+      status: "authenticated",
+    };
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/logout") return {};
+        return {};
+      },
+    });
+    function LogoutProbe() {
+      const { account, logout } = useAgentAuth();
+      return (
+        <div>
+          <span>{account.status}</span>
+          <button onClick={() => void logout()} type="button">
+            Logout
+          </button>
+        </div>
+      );
+    }
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <LogoutProbe />
+      </AgentProvider>,
+    );
+
+    expect(await screen.findByText("authenticated")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Logout" }));
+    expect(await screen.findByText("unauthenticated")).toBeInTheDocument();
+    expect(
+      transport.requests.find((request) => request.method === "account/logout")?.params,
+    ).toBeUndefined();
   });
 
   it("formats App Server stderr diagnostics into readable messages", async () => {

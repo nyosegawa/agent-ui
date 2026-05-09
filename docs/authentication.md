@@ -39,6 +39,7 @@ Implemented surface:
 - `AgentStatusBar` exposes a login action only when account state is confirmed unauthenticated.
 - `AgentChat` shows a first-run device-code login state for unauthenticated local users.
 - After `account/login/completed`, `AgentChat` re-reads `account/read` and `account/rateLimits/read` so the account label and usage windows update without a page refresh.
+- `logout()` calls `account/logout` without params and clears local account state after the request succeeds.
 - The helper does not store or log raw tokens.
 
 Agent UI must not:
