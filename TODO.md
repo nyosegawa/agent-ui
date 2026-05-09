@@ -313,10 +313,10 @@ updated together.
 
 ### Visual QA
 
-- [ ] Browser-check the real local app at narrow, desktop, and tall-history viewports after each UI refactor.
-- [ ] Browser-check the fixture QA route for empty, unauthenticated, bridge-error, approval, diff, and work-trace states.
-- [ ] Add or update visual/e2e assertions for every UI regression found during browser checks.
-- [ ] Keep screenshots and snapshot expectations aligned with intentional layout changes.
+- [x] Browser-check the real local app at narrow, desktop, and tall-history viewports after each UI refactor.
+- [x] Browser-check the fixture QA route for empty, unauthenticated, bridge-error, approval, diff, and work-trace states.
+- [x] Add or update visual/e2e assertions for every UI regression found during browser checks.
+- [x] Keep screenshots and snapshot expectations aligned with intentional layout changes.
 
 ### Code Quality
 

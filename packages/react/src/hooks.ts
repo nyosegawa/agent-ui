@@ -251,8 +251,8 @@ export function useAgentThreadReader() {
 }
 
 function hasThreadId(value: unknown): value is Record<string, unknown> {
-  if (typeof value !== "object" || value === null) return false;
-  return rawThreadId(value as Record<string, unknown>) != null;
+  const record = asRecord(value);
+  return record ? rawThreadId(record) != null : false;
 }
 
 function isRecordWithThreadId(value: unknown): value is Record<string, unknown> {
@@ -574,8 +574,8 @@ export function useAgentBootstrap(): AgentBootstrapState {
 }
 
 function accountResponseHasAccount(response: unknown): boolean {
-  if (!response || typeof response !== "object") return false;
-  const record = response as Record<string, unknown>;
+  const record = asRecord(response);
+  if (!record) return false;
   if (Object.prototype.hasOwnProperty.call(record, "account")) {
     return record.account != null;
   }

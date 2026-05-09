@@ -276,8 +276,8 @@ function displayText(value: unknown): string | undefined {
     const text = value.map(displayText).filter(Boolean).join("\n");
     return text || undefined;
   }
-  if (typeof value === "object") {
-    const record = value as Record<string, unknown>;
+  if (isRecord(value)) {
+    const record = value;
     if (typeof record.text === "string") return record.text;
     if (typeof record.message === "string") return record.message;
     const json = JSON.stringify(value, null, 2);
@@ -307,8 +307,8 @@ function itemLabel(kind: string): string {
 
 function commandTextForItem(item: AgentItemState | undefined): string | undefined {
   const raw = item?.raw;
-  if (!raw || typeof raw !== "object") return undefined;
-  const command = (raw as Record<string, unknown>).command;
+  if (!isRecord(raw)) return undefined;
+  const command = raw.command;
   return typeof command === "string" && command.trim() ? command.trim() : undefined;
 }
 
@@ -352,4 +352,8 @@ function commandPreview(text: string): string {
 
 function formatCount(count: number, singular: string) {
   return `${count} ${count === 1 ? singular : `${singular}s`}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

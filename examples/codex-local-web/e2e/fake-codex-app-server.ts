@@ -114,40 +114,50 @@ function handleRequest(message: { id?: string | number; method?: string; params?
 }
 
 function streamTurn() {
-  notify("turn/started", {
-    threadId: "thread-live",
-    turn: { completedAt: null, durationMs: null, error: null, id: "turn-live", items: [], startedAt: 1778000002, status: "running" },
-  });
-  notify("item/agentMessage/delta", {
-    delta: "Streaming smoke response.",
-    itemId: "item-live",
-    threadId: "thread-live",
-    turnId: "turn-live",
-  });
-  notify("item/commandExecution/outputDelta", {
-    delta: "fake command output\n",
-    itemId: "cmd-live",
-    threadId: "thread-live",
-    turnId: "turn-live",
-  });
-  notify("item/fileChange/patchUpdated", {
-    itemId: "diff-live",
-    patch: "diff --git a/README.md b/README.md\n+smoke\n",
-    threadId: "thread-live",
-    turnId: "turn-live",
-  });
-  const approvalId = `approval-${nextRequestId++}`;
-  approvalIds.add(approvalId);
-  write({
-    id: approvalId,
-    method: "item/commandExecution/requestApproval",
-    params: {
-      command: "echo smoke",
-      cwd: "/tmp/agent-ui",
+  schedule(0, () =>
+    notify("turn/started", {
+      threadId: "thread-live",
+      turn: { completedAt: null, durationMs: null, error: null, id: "turn-live", items: [], startedAt: 1778000002, status: "running" },
+    }),
+  );
+  schedule(10, () =>
+    notify("item/agentMessage/delta", {
+      delta: "Streaming smoke response.",
+      itemId: "item-live",
+      threadId: "thread-live",
+      turnId: "turn-live",
+    }),
+  );
+  schedule(20, () =>
+    notify("item/commandExecution/outputDelta", {
+      delta: "fake command output\n",
       itemId: "cmd-live",
       threadId: "thread-live",
       turnId: "turn-live",
-    },
+    }),
+  );
+  schedule(30, () =>
+    notify("item/fileChange/patchUpdated", {
+      itemId: "diff-live",
+      patch: "diff --git a/README.md b/README.md\n+smoke\n",
+      threadId: "thread-live",
+      turnId: "turn-live",
+    }),
+  );
+  schedule(40, () => {
+    const approvalId = `approval-${nextRequestId++}`;
+    approvalIds.add(approvalId);
+    write({
+      id: approvalId,
+      method: "item/commandExecution/requestApproval",
+      params: {
+        command: "echo smoke",
+        cwd: "/tmp/agent-ui",
+        itemId: "cmd-live",
+        threadId: "thread-live",
+        turnId: "turn-live",
+      },
+    });
   });
 }
 
@@ -185,4 +195,8 @@ function respond(id: string | number | undefined, result: unknown) {
 
 function write(message: unknown) {
   process.stdout.write(`${JSON.stringify(message)}\n`);
+}
+
+function schedule(delayMs: number, callback: () => void) {
+  setTimeout(callback, delayMs);
 }

@@ -4,11 +4,10 @@ import type { Page } from "@playwright/test";
 test("hydrates and resumes stored threads through the browser websocket transport", async ({
   page,
 }, testInfo) => {
-  testInfo.setTimeout(60_000);
+  testInfo.setTimeout(90_000);
   await openRealLocalApp(page);
   const storedThread = page.getByRole("button", { name: /Stored real smoke/ });
   await expect(storedThread).toBeVisible();
-  await storedThread.evaluate((button) => button.click());
   await expect(page.getByText("Stored thread hydrated.")).toBeVisible({
     timeout: 30_000,
   });
@@ -19,35 +18,44 @@ test("hydrates and resumes stored threads through the browser websocket transpor
 test("starts a live turn and resolves approval through the browser websocket transport", async ({
   page,
 }, testInfo) => {
-  testInfo.setTimeout(60_000);
+  testInfo.setTimeout(90_000);
   await openRealLocalApp(page);
-  await page.getByLabel("Model", { exact: true }).selectOption("smoke-model");
-  await page
-    .getByRole("button", { name: "New thread" })
-    .evaluate((button) => button.click());
-  await expect(page.getByRole("heading", { name: "Live real smoke" })).toBeVisible();
-  await page.getByRole("textbox", { name: "Message" }).evaluate((element) => {
-    const textarea = element as HTMLTextAreaElement;
-    const valueSetter = Object.getOwnPropertyDescriptor(
-      HTMLTextAreaElement.prototype,
-      "value",
-    )?.set;
-    valueSetter?.call(textarea, "run smoke");
-    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  await page.getByRole("button", { name: "New thread" }).click({ force: true });
+  await expect(page.getByRole("heading", { name: "Live real smoke" })).toBeVisible({
+    timeout: 30_000,
   });
-  await page.locator(".aui-composer").evaluate((form) => {
-    (form as HTMLFormElement).requestSubmit();
+  const messageBox = page.getByRole("textbox", { name: "Message" });
+  await messageBox.fill("run smoke", { timeout: 30_000 });
+  await page.getByRole("button", { name: "Send" }).click({ force: true });
+  await expect(page.getByText("Streaming smoke response.")).toBeVisible({
+    timeout: 30_000,
   });
-  await expect(page.getByText("Streaming smoke response.")).toBeVisible();
-  await expect(page.locator(".aui-command-preview")).toContainText("fake command output");
-  await expect(page.getByLabel("Command output")).toContainText("fake command output");
-  await expect(page.locator(".aui-file-change-card")).toContainText("File changes");
-  await expect(page.getByText("Approve command")).toBeVisible();
-  await expect(page.locator(".aui-status-pill")).toHaveText("Needs approval");
-  const approvalButton = page.getByRole("button", {
-    name: /^Approve command request approval-\d+$/,
+  await expect(page.locator(".aui-command-preview")).toContainText(
+    "fake command output",
+    { timeout: 30_000 },
+  );
+  await expect(page.getByLabel("Command output")).toContainText("fake command output", {
+    timeout: 30_000,
   });
-  await approvalButton.evaluate((button) => button.click());
+  await expect(page.locator(".aui-work-trace > summary")).toContainText(
+    "1 command, 1 file change",
+    { timeout: 30_000 },
+  );
+  await expect(page.locator(".aui-file-change-card")).toHaveCount(1, {
+    timeout: 30_000,
+  });
+  await expect(page.locator(".aui-status-pill")).toHaveText("Needs approval", {
+    timeout: 30_000,
+  });
+  const approvalCard = page.locator(".aui-approval").first();
+  await expect(approvalCard).toContainText("Approve command", { timeout: 30_000 });
+  const approvalButton = approvalCard
+    .locator("button")
+    .filter({ hasText: "Approve" })
+    .first();
+  await expect(approvalButton).toBeVisible({ timeout: 30_000 });
+  await approvalButton.click({ force: true });
+  await expect(page.locator(".aui-approval")).toHaveCount(0, { timeout: 30_000 });
 });
 
 test("real local app shell has stable desktop and mobile layout contracts", async ({

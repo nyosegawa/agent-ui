@@ -19,7 +19,7 @@ const vite = await createViteServer({
   appType: "spa",
   plugins: [react()],
   root,
-  server: { middlewareMode: true },
+  server: { hmr: false, middlewareMode: true },
 });
 
 const server = createServer((request, response) => {

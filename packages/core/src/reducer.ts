@@ -36,7 +36,7 @@ export function agentReducer(
         ...state,
         account: {
           ...state.account,
-          account: event.account as Record<string, unknown> | undefined,
+          account: recordOrUndefined(event.account),
           status:
             event.status ?? (event.account == null ? "unauthenticated" : "authenticated"),
         },
@@ -60,9 +60,7 @@ export function agentReducer(
       return {
         ...state,
         account: {
-          account:
-            (event.account as Record<string, unknown> | undefined) ??
-            state.account.account,
+          account: recordOrUndefined(event.account) ?? state.account.account,
           status: event.success === false ? "unauthenticated" : "authenticated",
         },
       };
@@ -307,6 +305,12 @@ function hasPendingThreadRequest(
   threadId: ThreadId,
 ): boolean {
   return Object.values(requests).some((request) => request.threadId === threadId);
+}
+
+function recordOrUndefined(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
 }
 
 function createTurnState(turn: AgentTurn, threadId: ThreadId): TurnState {

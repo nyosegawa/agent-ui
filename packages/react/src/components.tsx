@@ -112,7 +112,7 @@ function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
       <div className="aui-first-run">
         <strong>Connect Codex</strong>
         <p>Sign in with ChatGPT device code before starting a real local thread.</p>
-        <button className="aui-button" onClick={() => void login()} type="button">
+        <button className="aui-button" onClick={() => deferAction(login)} type="button">
           Start device-code login
         </button>
       </div>
@@ -126,7 +126,7 @@ function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
         <button
           className="aui-button aui-button-secondary"
           disabled={!account.login?.loginId}
-          onClick={() => void cancelLogin()}
+          onClick={() => deferAction(cancelLogin)}
           type="button"
         >
           Cancel login
@@ -138,7 +138,7 @@ function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
     <div className="aui-first-run">
       <strong>Start a Codex thread</strong>
       <p>Choose a model, effort, execution mode, and working directory, then start.</p>
-      <button className="aui-button" onClick={onStartThread} type="button">
+      <button className="aui-button" onClick={() => deferAction(onStartThread)} type="button">
         Start thread
       </button>
     </div>
@@ -165,7 +165,9 @@ function AgentThreadActions({
       {canResume ? (
         <button
           className="aui-button aui-button-secondary"
-          onClick={() => void resumeThread(threadId, { excludeTurns: true })}
+          onClick={() =>
+            deferAction(() => void resumeThread(threadId, { excludeTurns: true }))
+          }
           type="button"
         >
           Resume
@@ -174,7 +176,7 @@ function AgentThreadActions({
       {status === "running" && latestTurnId ? (
         <button
           className="aui-button aui-button-secondary"
-          onClick={() => void interruptTurn(latestTurnId)}
+          onClick={() => deferAction(() => void interruptTurn(latestTurnId))}
           type="button"
         >
           Stop
@@ -182,7 +184,7 @@ function AgentThreadActions({
       ) : null}
       <button
         className="aui-button aui-button-secondary"
-        onClick={() => void startThread()}
+        onClick={() => deferAction(startThread)}
         type="button"
       >
         New thread
@@ -302,7 +304,7 @@ export function AgentComposer({
       className="aui-composer"
       onSubmit={(event) => {
         event.preventDefault();
-        void composer.submit();
+        deferAction(composer.submit);
       }}
     >
       <textarea
@@ -380,11 +382,19 @@ export function AgentApprovalPrompt({
           ) : (
             <ApprovalCard
               approval={approval}
-              onApprove={() => void approve(approval.id, approvalResult(approval))}
-              onApproveForSession={() =>
-                void approve(approval.id, approvalSessionResult(approval))
+              onApprove={() =>
+                deferAction(() => void approve(approval.id, approvalResult(approval)))
               }
-              onReject={() => void approve(approval.id, declineApprovalResult(approval))}
+              onApproveForSession={() =>
+                deferAction(() =>
+                  void approve(approval.id, approvalSessionResult(approval)),
+                )
+              }
+              onReject={() =>
+                deferAction(() =>
+                  void approve(approval.id, declineApprovalResult(approval)),
+                )
+              }
             />
           )}
         </div>
@@ -404,7 +414,7 @@ function ApprovalCard({
   onApproveForSession: () => void;
   onReject: () => void;
 }) {
-  const payload = approval.payload as Record<string, unknown>;
+  const payload = isRecord(approval.payload) ? approval.payload : {};
   const requestLabel =
     approval.kind === "fileChangeApproval" ? "file-change request" : "command request";
   return (
@@ -939,6 +949,12 @@ function declineApprovalResult(approval: PendingServerRequest) {
   if (approval.kind === "fileChangeApproval") return { decision: "decline" };
   if (approval.kind === "commandApproval") return { decision: "decline" };
   return { decision: "decline" };
+}
+
+function deferAction(action: () => void | Promise<unknown>) {
+  setTimeout(() => {
+    void action();
+  }, 0);
 }
 
 function diagnosticsTitle(messages: string[]): string {
