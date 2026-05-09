@@ -2,6 +2,18 @@
 
 This checklist is the execution source of truth for Agent UI.
 
+## Completed Gate: Multi-Turn Browser Continuation Smoke
+
+The composer must recover after a completed real Codex turn so users can keep
+working in the same thread instead of being forced to create a new session.
+
+### Browser Continuation
+
+- [x] Start a new real local browser thread through `http://127.0.0.1:5174/`.
+- [x] Send a first real Codex turn and wait for assistant text plus non-running completion.
+- [x] Send a second real Codex turn in the same thread after completion.
+- [x] Verify the composer is enabled after the second turn and the page has no horizontal overflow.
+
 ## Active Completion Gate: Sidebar Structure Hardening
 
 The real history sidebar now exhausts stored Codex sessions, which means the
