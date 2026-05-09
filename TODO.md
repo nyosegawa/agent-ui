@@ -17,7 +17,7 @@ Playwright gate so ordinary CI catches regressions.
 ### Completion Hygiene
 
 - [x] Update testing docs for deterministic multi-turn browser coverage.
-- [ ] Run targeted validation, commit, push, and watch Actions.
+- [x] Run targeted validation, commit, push, and watch Actions.
 
 ## Completed Gate: Multi-Turn Browser Continuation Smoke
 
