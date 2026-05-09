@@ -271,7 +271,7 @@ export function AgentApprovalPrompt({
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
   threadId?: string;
 }) {
-  const { approvals, approve, reject } = useAgentApprovals(threadId);
+  const { approvals, approve } = useAgentApprovals(threadId);
   if (approvals.length === 0) return null;
   return (
     <section className="aui-approvals" aria-label="Pending approvals">
@@ -283,7 +283,7 @@ export function AgentApprovalPrompt({
             <ApprovalCard
               approval={approval}
               onApprove={() => void approve(approval.id, approvalResult(approval))}
-              onReject={() => void reject(approval.id)}
+              onReject={() => void approve(approval.id, declineApprovalResult(approval))}
             />
           )}
         </div>
@@ -318,7 +318,7 @@ function ApprovalCard({
           Approve
         </button>
         <button className="aui-button aui-button-secondary" onClick={onReject} type="button">
-          Reject
+          Decline
         </button>
       </div>
     </article>
@@ -632,6 +632,13 @@ export function ThreadSidebar({
 }
 
 function approvalResult(approval: PendingServerRequest) {
-  if (approval.kind === "fileChangeApproval") return { decision: "approved" };
-  return { decision: "approved" };
+  if (approval.kind === "fileChangeApproval") return { decision: "accept" };
+  if (approval.kind === "commandApproval") return { decision: "accept" };
+  return { decision: "accept" };
+}
+
+function declineApprovalResult(approval: PendingServerRequest) {
+  if (approval.kind === "fileChangeApproval") return { decision: "decline" };
+  if (approval.kind === "commandApproval") return { decision: "decline" };
+  return { decision: "decline" };
 }

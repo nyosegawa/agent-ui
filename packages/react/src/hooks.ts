@@ -237,7 +237,7 @@ export function useAgentApprovals(threadId?: ThreadId) {
   );
 
   const approve = useCallback(
-    async (requestId: RequestId, result: unknown = { decision: "approved" }) => {
+    async (requestId: RequestId, result: unknown = { decision: "accept" }) => {
       await transport.respond(requestId, result);
       dispatch({ requestId, type: "serverRequest/resolved" });
     },

@@ -198,10 +198,10 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Keep one Codex App Server process alive for a browser session.
 - [x] Forward App Server notifications to browser state.
 - [ ] Forward App Server server requests to browser state.
-- [ ] Forward browser approval responses back to App Server.
-- [ ] Forward browser rejection responses back to App Server.
-- [ ] Add an integration test where `createCodexWebSocketTransport()` consumes the server bridge end-to-end.
-- [ ] Add an integration test proving approval response/rejection reaches the stdio App Server side.
+- [x] Forward browser approval responses back to App Server.
+- [x] Forward browser rejection responses back to App Server.
+- [x] Add an integration test where `createCodexWebSocketTransport()` consumes the server bridge end-to-end.
+- [x] Add an integration test proving approval response/rejection reaches the stdio App Server side.
 - [ ] Surface bridge connection errors in the UI.
 - [ ] Surface redacted App Server stderr in the UI or a visible diagnostics panel.
 - [ ] Shut down the App Server process when the browser session closes or idles out.
@@ -238,11 +238,11 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [ ] Verify current real Codex collaboration/execution preset response shape before exposing preset UI beyond documented `turn/start` fields.
 - [ ] Make execution mode controls map only to documented stable App Server turn params.
 - [ ] Verify live `turn/start` behavior for each built-in execution mode.
-- [ ] Fix approval response payloads to use generated stable decisions such as `accept`, `acceptForSession`, `decline`, and `cancel`.
+- [x] Fix approval response payloads to use generated stable decisions such as `accept`, `acceptForSession`, `decline`, and `cancel`.
 - [x] Add tests that fail if fixture model ids look like real production model ids.
 - [x] Add tests that fail if effort options are fabricated without model metadata.
-- [ ] Add schema-backed tests for command approval response payloads.
-- [ ] Add schema-backed tests for file-change approval response payloads.
+- [x] Add schema-backed tests for command approval response payloads.
+- [x] Add schema-backed tests for file-change approval response payloads.
 
 ### UI/UX Finish
 

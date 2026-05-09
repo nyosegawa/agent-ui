@@ -1,3 +1,5 @@
+import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
+import type { AgentTransportEvent } from "@nyosegawa/agent-ui-core";
 import { createServer } from "node:http";
 import { PassThrough } from "node:stream";
 import WebSocket from "ws";
@@ -68,7 +70,125 @@ describe("attachAgentUiWebSocketBridge", () => {
       type: "agent-ui/transport-event",
     });
   });
+
+  it("is consumable by createCodexWebSocketTransport and forwards approval responses", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport();
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    expect(init.method).toBe("initialize");
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    const requestPromise = transport.request("model/list", {});
+    await waitFor(() => writes.some((line) => JSON.parse(line).method === "model/list"));
+    const modelList = writes.map((line) => JSON.parse(line) as { id: number; method?: string })
+      .find((message) => message.method === "model/list");
+    if (!modelList) throw new Error("missing model/list request");
+    expect(modelList.method).toBe("model/list");
+    stdout.write(`${JSON.stringify({ id: modelList.id, result: { data: [] } })}\n`);
+    await expect(requestPromise).resolves.toEqual({ data: [] });
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "approval-1",
+        method: "item/commandExecution/requestApproval",
+        params: {
+          command: "bun test",
+          cwd: "/tmp/project",
+          itemId: "item-1",
+          threadId: "thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    const event = await nextTransportEvent(transport, (candidate) => {
+      return candidate.event?.type === "serverRequest/created";
+    });
+    expect(event.event).toMatchObject({
+      request: {
+        id: "approval-1",
+        kind: "commandApproval",
+        itemId: "item-1",
+        threadId: "thread-1",
+        turnId: "turn-1",
+      },
+      type: "serverRequest/created",
+    });
+
+    await transport.respond("approval-1", { decision: "accept" });
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "approval-1"));
+    const approvalResponse = writes.map((line) => JSON.parse(line)).find((message) => message.id === "approval-1");
+    expect(approvalResponse).toEqual({
+      id: "approval-1",
+      result: { decision: "accept" },
+    });
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "approval-2",
+        method: "item/fileChange/requestApproval",
+        params: {
+          itemId: "item-2",
+          threadId: "thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+    await nextTransportEvent(transport, (candidate) => {
+      return candidate.event?.type === "serverRequest/created";
+    });
+    await transport.respond("approval-2", { decision: "decline" });
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "approval-2"));
+    const declineResponse = writes.map((line) => JSON.parse(line)).find((message) => message.id === "approval-2");
+    expect(declineResponse).toEqual({
+      id: "approval-2",
+      result: { decision: "decline" },
+    });
+    await transport.close();
+  });
 });
+
+async function createBridgeBackedTransport() {
+  const stdin = new PassThrough();
+  const stdout = new PassThrough();
+  const stderr = new PassThrough();
+  const writes: string[] = [];
+  stdin.on("data", (chunk) => writes.push(String(chunk)));
+
+  const process: CodexChildProcess = {
+    kill: () => true,
+    stderr,
+    stdin,
+    stdout,
+  };
+
+  const httpServer = createServer();
+  servers.push(httpServer);
+  const webSocketServer = attachAgentUiWebSocketBridge({
+    server: httpServer,
+    spawn: () => process,
+  });
+  servers.push(webSocketServer);
+
+  await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+  const address = httpServer.address();
+  if (!address || typeof address === "string") throw new Error("missing server address");
+  const transport = createCodexWebSocketTransport({
+    initialize: {
+      clientInfo: {
+        name: "agent_ui_websocket_test",
+        title: "Agent UI WebSocket Test",
+        version: "0.0.0",
+      },
+    },
+    url: `ws://127.0.0.1:${address.port}/agent-ui/ws`,
+    webSocketImpl: WebSocket as unknown as typeof globalThis.WebSocket,
+  });
+  return { stdout, transport, writes };
+}
 
 function onceOpen(socket: WebSocket): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -89,4 +209,19 @@ async function waitFor(predicate: () => boolean): Promise<void> {
     if (Date.now() - started > 1000) throw new Error("timed out");
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
+}
+
+async function nextTransportEvent(transport: {
+  events: AsyncIterable<AgentTransportEvent>;
+}, predicate: (event: AgentTransportEvent) => boolean): Promise<AgentTransportEvent> {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error("timed out waiting for transport event")), 1000),
+  );
+  const next = (async () => {
+    for await (const event of transport.events) {
+      if (predicate(event)) return event;
+    }
+    throw new Error("transport closed");
+  })();
+  return Promise.race([next, timeout]);
 }

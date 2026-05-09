@@ -64,8 +64,26 @@ describe("AgentChat", () => {
     const approveButtons = screen.getAllByRole("button", { name: "Approve" });
     await user.click(approveButtons[1]!);
 
-    expect(transport.responses.get("approval-file")).toEqual({ decision: "approved" });
+    expect(transport.responses.get("approval-file")).toEqual({ decision: "accept" });
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("declines approvals with schema-backed decisions", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider
+        initialState={runEventFixture(demoFixture as FixtureStep[])}
+        transport={transport}
+      >
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const declineButtons = await screen.findAllByRole("button", { name: "Decline" });
+    await user.click(declineButtons[0]!);
+
+    expect(transport.responses.get("approval-command")).toEqual({ decision: "decline" });
   });
 
   it("sends composer input as stable Codex user input items", async () => {

@@ -51,8 +51,9 @@ When a stored thread is loaded as `notLoaded` or `loaded`, the thread header sho
 
 Default behavior:
 
-- command approval currently needs schema-backed response payload verification before the real local app release gate can be closed
-- file-change approval currently needs schema-backed response payload verification before the real local app release gate can be closed
+- command approval responds with stable `{ decision: "accept" }`
+- file-change approval responds with stable `{ decision: "accept" }`
+- default decline responds with stable `{ decision: "decline" }`
 - rejection sends a JSON-RPC error and clears local pending state
 
 The default card shows request id, command or file path context, and the raw normalized payload.
