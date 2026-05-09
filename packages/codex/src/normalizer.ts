@@ -10,7 +10,7 @@ import type {
 interface MethodMessage {
   id?: string | number;
   method: string;
-  params?: any;
+  params?: unknown;
 }
 
 export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[] {
@@ -18,7 +18,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
     return [{ type: "serverRequest/created", request: normalizeServerRequest(message) }];
   }
 
-  const params = message.params ?? {};
+  const params = asRecord(message.params) ?? {};
   switch (message.method) {
     case "account/updated":
       return [
@@ -33,20 +33,22 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         {
           type: "account/login/completed",
           account: params.account,
-          error: params.error,
-          loginId: params.loginId ?? params.login_id,
-          success: params.success,
+          error: stringValue(params.error) ?? null,
+          loginId: stringValue(params.loginId) ?? stringValue(params.login_id),
+          success: booleanValue(params.success),
         },
       ];
     case "account/rateLimits/updated":
-      return [{ type: "account/rateLimits/updated", rateLimits: params.rateLimits ?? params }];
+      return [
+        { type: "account/rateLimits/updated", rateLimits: params.rateLimits ?? params },
+      ];
     case "configWarning":
     case "warning":
       return [
         {
           type: "warning/added",
           warning: {
-            id: String(params.id ?? params.code ?? Date.now()),
+            id: String(params.id ?? params.code ?? params.message ?? "codex-warning"),
             message: String(params.message ?? params.warning ?? "Codex warning"),
             raw: params,
           },
@@ -57,7 +59,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         {
           type: "error/added",
           error: {
-            code: params.code,
+            code: numberValue(params.code),
             data: params.data,
             message: String(params.message ?? "Codex error"),
           },
@@ -65,13 +67,14 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
       ];
     case "thread/started": {
       const thread = normalizeThread(params.thread ?? params);
+      const threadRecord = asRecord(params.thread);
       return [
         {
           type: "thread/started",
-          status: normalizeThreadStatus(params.status ?? params.thread?.status),
+          status: normalizeThreadStatus(params.status ?? threadRecord?.status),
           thread,
           turns: Array.isArray(params.turns)
-            ? params.turns.map((turn: any) => normalizeTurn(turn, thread.id))
+            ? params.turns.map((turn) => normalizeTurn(turn, thread.id))
             : undefined,
         },
       ];
@@ -98,9 +101,15 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
           type: "thread/tokenUsage/updated",
           threadId: String(params.threadId ?? params.thread_id),
           tokenUsage: {
-            inputTokens: params.tokenUsage?.inputTokens ?? params.inputTokens,
-            outputTokens: params.tokenUsage?.outputTokens ?? params.outputTokens,
-            totalTokens: params.tokenUsage?.totalTokens ?? params.totalTokens,
+            inputTokens:
+              numberValue(asRecord(params.tokenUsage)?.inputTokens) ??
+              numberValue(params.inputTokens),
+            outputTokens:
+              numberValue(asRecord(params.tokenUsage)?.outputTokens) ??
+              numberValue(params.outputTokens),
+            totalTokens:
+              numberValue(asRecord(params.tokenUsage)?.totalTokens) ??
+              numberValue(params.totalTokens),
             raw: params,
           },
         },
@@ -110,7 +119,10 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         {
           type: "turn/started",
           threadId: String(params.threadId ?? params.thread_id),
-          turn: normalizeTurn(params.turn ?? params, String(params.threadId ?? params.thread_id)),
+          turn: normalizeTurn(
+            params.turn ?? params,
+            String(params.threadId ?? params.thread_id),
+          ),
         },
       ];
     case "turn/completed":
@@ -118,16 +130,19 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         {
           type: "turn/completed",
           items: Array.isArray(params.items)
-            ? params.items.map((item: any) => normalizeItem(item, params, "completed"))
+            ? params.items.map((item) => normalizeItem(item, params, "completed"))
             : undefined,
           threadId: String(params.threadId ?? params.thread_id),
-          turn: normalizeTurn(params.turn ?? params, String(params.threadId ?? params.thread_id)),
+          turn: normalizeTurn(
+            params.turn ?? params,
+            String(params.threadId ?? params.thread_id),
+          ),
         },
       ];
     case "turn/plan/updated":
       return [
         {
-          explanation: params.explanation,
+          explanation: stringValue(params.explanation) ?? null,
           plan: params.plan ?? [],
           raw: params,
           threadId: String(params.threadId ?? params.thread_id),
@@ -164,7 +179,9 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         {
           type: "item/commandOutput/delta",
           delta: decodeDelta(params.delta ?? params.data ?? params.chunk ?? ""),
-          itemId: String(params.itemId ?? params.item_id ?? params.processId ?? "command"),
+          itemId: String(
+            params.itemId ?? params.item_id ?? params.processId ?? "command",
+          ),
           threadId: String(params.threadId ?? params.thread_id ?? ""),
           turnId: String(params.turnId ?? params.turn_id ?? ""),
         },
@@ -184,7 +201,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
       return [
         {
           type: "serverRequest/resolved",
-          requestId: params.requestId ?? params.request_id ?? params.id,
+          requestId: requestIdValue(params.requestId ?? params.request_id ?? params.id),
         },
       ];
     default:
@@ -192,20 +209,26 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
   }
 }
 
-export function normalizeModelListResponse(response: any): AgentModel[] {
-  const models = Array.isArray(response?.data)
-    ? response.data
-    : Array.isArray(response?.models)
-      ? response.models
+export function normalizeModelListResponse(response: unknown): AgentModel[] {
+  const record = asRecord(response);
+  const models = Array.isArray(record?.data)
+    ? record.data
+    : Array.isArray(record?.models)
+      ? record.models
       : Array.isArray(response)
         ? response
         : [];
   return models
-    .filter((model: unknown) => typeof model === "object" && model !== null)
-    .map((model: any) => ({
+    .flatMap((model) => {
+      const record = asRecord(model);
+      return record ? [record] : [];
+    })
+    .map((model) => ({
       id: String(model.id ?? model.slug ?? model.model ?? model.name),
       defaultEffort: normalizeReasoningEffort(
-        model.defaultReasoningEffort ?? model.default_reasoning_effort ?? model.default_effort,
+        model.defaultReasoningEffort ??
+          model.default_reasoning_effort ??
+          model.default_effort,
       ),
       name: normalizeModelName(model),
       raw: model,
@@ -213,23 +236,29 @@ export function normalizeModelListResponse(response: any): AgentModel[] {
     }));
 }
 
-function normalizeModelName(model: any): string | undefined {
+function normalizeModelName(model: Record<string, unknown>): string | undefined {
   const display = model.displayName ?? model.display_name ?? model.name;
   if (typeof display === "string" && display.trim()) return display;
   const id = model.model ?? model.id;
   return typeof id === "string" && id.trim() ? id : undefined;
 }
 
-function normalizeSupportedEfforts(model: any): AgentModel["supportedEfforts"] {
+function normalizeSupportedEfforts(
+  model: Record<string, unknown>,
+): AgentModel["supportedEfforts"] {
   const efforts = model.supportedReasoningEfforts ?? model.supported_reasoning_efforts;
   if (!Array.isArray(efforts)) return undefined;
   const normalized = efforts
-    .map((effort: any) => {
+    .map((effort) => {
       if (typeof effort === "string") return effort;
-      if (typeof effort !== "object" || effort === null) return undefined;
-      return normalizeReasoningEffort(effort.reasoningEffort ?? effort.reasoning_effort);
+      const record = asRecord(effort);
+      if (!record) return undefined;
+      return normalizeReasoningEffort(record.reasoningEffort ?? record.reasoning_effort);
     })
-    .filter((effort: unknown): effort is string => typeof effort === "string" && effort.length > 0);
+    .filter(
+      (effort: unknown): effort is string =>
+        typeof effort === "string" && effort.length > 0,
+    );
   return normalized.length > 0 ? normalized : undefined;
 }
 
@@ -237,12 +266,13 @@ function normalizeReasoningEffort(value: unknown): string | undefined {
   return typeof value === "string" && value.trim() ? value : undefined;
 }
 
-function normalizeThread(raw: any): AgentThread {
+function normalizeThread(raw: unknown): AgentThread {
+  const record = asRecord(raw) ?? {};
   return {
-    ephemeral: raw.ephemeral,
-    id: String(raw.id ?? raw.threadId ?? raw.thread_id),
-    name: raw.name ?? raw.title,
-    path: raw.path,
+    ephemeral: Boolean(record.ephemeral),
+    id: String(record.id ?? record.threadId ?? record.thread_id),
+    name: stringValue(record.name) ?? stringValue(record.title),
+    path: stringValue(record.path),
     raw,
   };
 }
@@ -256,34 +286,49 @@ function normalizeThreadStatus(value: unknown): string {
   return typeof type === "string" ? type : "notLoaded";
 }
 
-function normalizeTurn(raw: any, threadId: string): AgentTurn {
+function normalizeTurn(raw: unknown, threadId: string): AgentTurn {
+  const record = asRecord(raw) ?? {};
   return {
-    id: String(raw.id ?? raw.turnId ?? raw.turn_id),
+    id: String(record.id ?? record.turnId ?? record.turn_id),
     raw,
-    status: raw.status,
+    status: stringValue(record.status),
     threadId,
   };
 }
 
 function normalizeItem(
-  raw: any,
-  context: any,
+  raw: unknown,
+  context: unknown,
   defaultStatus: AgentItemState["status"] = "inProgress",
 ): AgentItemState {
-  const kind = raw.kind ?? raw.type ?? raw.itemType ?? raw.item_type ?? "unknown";
+  const record = asRecord(raw) ?? {};
+  const contextRecord = asRecord(context) ?? {};
+  const kind =
+    record.kind ?? record.type ?? record.itemType ?? record.item_type ?? "unknown";
   return {
-    id: String(raw.id ?? raw.itemId ?? raw.item_id),
+    id: String(record.id ?? record.itemId ?? record.item_id),
     kind: String(kind),
     raw,
     status:
-      raw.status === "failed" ? "failed" : raw.status === "completed" ? "completed" : defaultStatus,
-    text: itemText(raw),
-    threadId: String(raw.threadId ?? raw.thread_id ?? context.threadId ?? context.thread_id),
-    turnId: String(raw.turnId ?? raw.turn_id ?? context.turnId ?? context.turn_id),
+      record.status === "failed"
+        ? "failed"
+        : record.status === "completed"
+          ? "completed"
+          : defaultStatus,
+    text: itemText(record),
+    threadId: String(
+      record.threadId ??
+        record.thread_id ??
+        contextRecord.threadId ??
+        contextRecord.thread_id,
+    ),
+    turnId: String(
+      record.turnId ?? record.turn_id ?? contextRecord.turnId ?? contextRecord.turn_id,
+    ),
   };
 }
 
-function itemText(raw: any): string | undefined {
+function itemText(raw: Record<string, unknown>): string | undefined {
   if (typeof raw.text === "string") return raw.text;
   if (typeof raw.message === "string") return raw.message;
   if (Array.isArray(raw.summary)) return raw.summary.filter(isNonEmptyString).join("\n");
@@ -308,7 +353,7 @@ function isNonEmptyString(value: unknown): value is string {
 
 function deltaEvent(
   type: "item/agentMessage/delta" | "item/reasoning/summaryTextDelta",
-  params: any,
+  params: Record<string, unknown>,
 ): AgentEvent {
   return {
     type,
@@ -320,31 +365,38 @@ function deltaEvent(
 }
 
 function normalizeServerRequest(message: MethodMessage): PendingServerRequest {
-  const params = message.params ?? {};
+  const params = asRecord(message.params) ?? {};
   return {
     id: message.id ?? "",
-    itemId: params.itemId ?? params.item_id,
+    itemId: optionalStringValue(params.itemId ?? params.item_id),
     kind: requestKind(message.method),
     payload: params,
-    threadId: params.threadId ?? params.thread_id,
-    turnId: params.turnId ?? params.turn_id,
+    threadId: optionalStringValue(params.threadId ?? params.thread_id),
+    turnId: optionalStringValue(params.turnId ?? params.turn_id),
   };
 }
 
 function isServerRequestMethod(method: string): boolean {
-  return method.includes("requestApproval") || method.includes("Approval") || method.includes("requestUserInput");
+  return (
+    method.includes("requestApproval") ||
+    method.includes("Approval") ||
+    method.includes("requestUserInput")
+  );
 }
 
 function requestKind(method: string): PendingServerRequest["kind"] {
-  if (method.includes("command") || method === "execCommandApproval") return "commandApproval";
-  if (method.includes("fileChange") || method === "applyPatchApproval") return "fileChangeApproval";
+  if (method.includes("command") || method === "execCommandApproval")
+    return "commandApproval";
+  if (method.includes("fileChange") || method === "applyPatchApproval")
+    return "fileChangeApproval";
   if (method.includes("requestUserInput")) return "userInput";
   return "unknown";
 }
 
 function accountStatus(account: unknown): "unauthenticated" | "authenticated" {
   if (account == null) return "unauthenticated";
-  if (typeof account === "object" && "authMethod" in account && (account as any).authMethod == null) {
+  const record = asRecord(account);
+  if (record && "authMethod" in record && record.authMethod == null) {
     return "unauthenticated";
   }
   return "authenticated";
@@ -353,4 +405,32 @@ function accountStatus(account: unknown): "unauthenticated" | "authenticated" {
 function decodeDelta(delta: unknown): string {
   if (typeof delta !== "string") return "";
   return delta;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function numberValue(value: unknown): number | undefined {
+  return typeof value === "number" ? value : undefined;
+}
+
+function booleanValue(value: unknown): boolean | undefined {
+  return typeof value === "boolean" ? value : undefined;
+}
+
+function requestIdValue(value: unknown): string | number {
+  return typeof value === "string" || typeof value === "number" ? value : "";
+}
+
+function optionalStringValue(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+  return undefined;
 }
