@@ -12,7 +12,8 @@
   --aui-code-bg: #101828;
   --aui-code-fg: #e6edf3;
   --aui-radius: 8px;
-  --aui-font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --aui-font:
+    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--aui-fg);
   font-family: var(--aui-font);
 }
@@ -376,6 +377,7 @@
 }
 
 .aui-message,
+.aui-activity-card,
 .aui-approval,
 .aui-diff {
   background: var(--aui-panel);
@@ -393,6 +395,41 @@
 .aui-message[data-kind="reasoning"] {
   background: #f5f0ff;
   border-color: #ddd0fb;
+}
+
+.aui-activity-card {
+  background: #fbfcfe;
+  overflow: hidden;
+  padding: 0;
+}
+
+.aui-activity-card summary {
+  align-items: center;
+  cursor: pointer;
+  display: grid;
+  gap: 6px 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 48px;
+  padding: 9px 10px;
+}
+
+.aui-activity-card[open] summary {
+  border-bottom: 1px solid var(--aui-border);
+}
+
+.aui-activity-collapsed {
+  background: #f6f8fb;
+  border: 1px dashed var(--aui-border-strong);
+  border-radius: var(--aui-radius);
+  color: var(--aui-muted);
+  font-size: 12px;
+  padding: 8px 10px;
+}
+
+.aui-activity-empty {
+  color: var(--aui-muted);
+  font-size: 12px;
+  padding: 10px;
 }
 
 .aui-message-meta {
@@ -434,19 +471,12 @@
   padding-top: 10px;
 }
 
-.aui-worklog,
-.aui-diff-panel,
 .aui-approvals {
   border-top: 1px solid var(--aui-border);
   display: grid;
   gap: 10px;
   overflow: auto;
   padding: 12px 14px;
-}
-
-.aui-worklog,
-.aui-diff-panel {
-  max-height: 320px;
 }
 
 .aui-section-header {
@@ -459,31 +489,6 @@
   text-transform: uppercase;
 }
 
-.aui-worklog-note {
-  color: var(--aui-muted);
-  font-size: 12px;
-  line-height: 1.45;
-  margin: 0;
-}
-
-.aui-command-card {
-  background: var(--aui-code-bg);
-  border: 1px solid #344054;
-  border-radius: var(--aui-radius);
-  color: var(--aui-code-fg);
-  overflow: hidden;
-}
-
-.aui-command-card summary {
-  align-items: center;
-  cursor: pointer;
-  display: grid;
-  gap: 8px;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  min-height: 42px;
-  padding: 8px 10px;
-}
-
 .aui-command-title {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12px;
@@ -494,9 +499,20 @@
 }
 
 .aui-command-meta {
-  color: #98a2b3;
+  color: var(--aui-muted);
   font-family: var(--aui-font);
   font-size: 11px;
+  white-space: nowrap;
+}
+
+.aui-command-preview {
+  color: var(--aui-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  grid-column: 2 / 4;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -516,6 +532,16 @@
 
 .aui-command-output {
   border-top: 1px solid #344054;
+}
+
+.aui-activity-card .aui-command-output {
+  border-top: 0;
+  max-height: 260px;
+}
+
+.aui-file-change-card .aui-diff {
+  border: 0;
+  border-radius: 0;
 }
 
 .aui-diff {
@@ -670,7 +696,10 @@
   border-top: 1px solid var(--aui-border);
   display: grid;
   gap: 10px;
-  grid-template-columns: minmax(260px, 1.4fr) minmax(150px, 1fr) minmax(120px, 0.7fr) minmax(180px, 1fr);
+  grid-template-columns: minmax(260px, 1.4fr) minmax(150px, 1fr) minmax(
+      120px,
+      0.7fr
+    ) minmax(180px, 1fr);
   padding: 10px 14px;
 }
 

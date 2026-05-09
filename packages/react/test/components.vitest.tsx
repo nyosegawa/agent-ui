@@ -21,7 +21,9 @@ describe("AgentChat", () => {
       .map((step) => step.event)
       .filter((event) => event.type === "models/updated");
     const ids = modelEvents.flatMap((event: any) =>
-      Array.isArray(event.models) ? event.models.map((model: any) => String(model.id)) : [],
+      Array.isArray(event.models)
+        ? event.models.map((model: any) => String(model.id))
+        : [],
     );
     expect(ids.length).toBeGreaterThan(0);
     expect(ids.every((id) => id.startsWith("fixture-"))).toBe(true);
@@ -31,7 +33,9 @@ describe("AgentChat", () => {
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method === "account/read") {
-          return { account: { email: "user@example.com", planType: "pro", type: "chatgpt" } };
+          return {
+            account: { email: "user@example.com", planType: "pro", type: "chatgpt" },
+          };
         }
         return {};
       },
@@ -50,7 +54,9 @@ describe("AgentChat", () => {
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method === "account/read") {
-          return { account: { email: "real@example.com", planType: "pro", type: "chatgpt" } };
+          return {
+            account: { email: "real@example.com", planType: "pro", type: "chatgpt" },
+          };
         }
         if (request.method === "model/list") {
           return {
@@ -84,20 +90,23 @@ describe("AgentChat", () => {
 
     expect(await screen.findByText(/real@example.com/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
-    expect(await screen.findByRole("option", { name: "Real Model (real-model)" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("option", { name: "Real Model (real-model)" }),
+    ).toBeInTheDocument();
     expect(await screen.findByText("10%")).toBeInTheDocument();
     expect(transport.requests.map((request) => request.method)).toEqual(
       expect.arrayContaining(["account/read", "model/list", "account/rateLimits/read"]),
     );
-    expect(transport.requests.find((request) => request.method === "account/read")?.params).toEqual(
-      { refreshToken: false },
-    );
     expect(
-      transport.requests.find((request) => request.method === "account/rateLimits/read")?.params,
+      transport.requests.find((request) => request.method === "account/read")?.params,
+    ).toEqual({ refreshToken: false });
+    expect(
+      transport.requests.find((request) => request.method === "account/rateLimits/read")
+        ?.params,
     ).toBeUndefined();
-    expect(transport.requests.find((request) => request.method === "model/list")?.params).toEqual(
-      {},
-    );
+    expect(
+      transport.requests.find((request) => request.method === "model/list")?.params,
+    ).toEqual({});
   });
 
   it("shows first-run login state when account/read is unauthenticated", async () => {
@@ -117,7 +126,9 @@ describe("AgentChat", () => {
     );
 
     expect(await screen.findByText("Connect Codex")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Start device-code login" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Start device-code login" }),
+    ).toBeInTheDocument();
   });
 
   it("formats App Server stderr diagnostics into readable messages", async () => {
@@ -137,7 +148,10 @@ describe("AgentChat", () => {
 
     transport.push({
       message: JSON.stringify({
-        fields: { message: "bridge recovered after stderr warning", path: "/tmp/bridge.log" },
+        fields: {
+          message: "bridge recovered after stderr warning",
+          path: "/tmp/bridge.log",
+        },
         level: "WARN",
         target: "codex_app_server",
       }),
@@ -145,7 +159,9 @@ describe("AgentChat", () => {
     });
 
     expect(
-      await screen.findByText(/WARN codex_app_server bridge recovered after stderr warning/),
+      await screen.findByText(
+        /WARN codex_app_server bridge recovered after stderr warning/,
+      ),
     ).toBeInTheDocument();
     expect(screen.getByText("Diagnostics")).toBeInTheDocument();
   });
@@ -212,7 +228,6 @@ describe("AgentChat", () => {
     expect(screen.queryByText(/icon path must not contain/)).not.toBeInTheDocument();
   });
 
-
   it("keeps long history messages readable behind a preview", () => {
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-history";
@@ -248,7 +263,9 @@ describe("AgentChat", () => {
     );
 
     expect(
-      screen.getAllByText(/Review this session/).some((element) => element.closest("summary")),
+      screen
+        .getAllByText(/Review this session/)
+        .some((element) => element.closest("summary")),
     ).toBe(true);
   });
 
@@ -269,10 +286,14 @@ describe("AgentChat", () => {
               id: "item-user",
               kind: "userMessage",
               raw: {
-                content: [{ text: "Reply with exactly: agent-ui-ui-check", type: "text" }],
+                content: [
+                  { text: "Reply with exactly: agent-ui-ui-check", type: "text" },
+                ],
               },
               status: "completed",
-              text: [{ text: "Reply with exactly: agent-ui-ui-check", type: "text" }] as any,
+              text: [
+                { text: "Reply with exactly: agent-ui-ui-check", type: "text" },
+              ] as any,
               threadId: "thread-real",
               turnId: "turn-real",
             },
@@ -331,7 +352,7 @@ describe("AgentChat", () => {
     expect(screen.queryByText("inProgress")).not.toBeInTheDocument();
   });
 
-  it("caps large historical command output lists", () => {
+  it("keeps large historical command output in the turn timeline without a separate log panel", () => {
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-history";
     const itemOrder = Array.from({ length: 80 }, (_, index) => `command-${index}`);
@@ -372,9 +393,12 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(screen.getByText("Latest 50 of 80 entries")).toBeInTheDocument();
-    expect(screen.getByText(/Older terminal output is hidden/)).toBeInTheDocument();
+    expect(
+      screen.getByText("72 older work steps collapsed in this turn"),
+    ).toBeInTheDocument();
     expect(screen.getByText("echo 79")).toBeInTheDocument();
+    expect(screen.getAllByText("output 79")).toHaveLength(2);
+    expect(document.querySelector(".aui-worklog")).not.toBeInTheDocument();
     expect(screen.queryByText("echo 0")).not.toBeInTheDocument();
   });
 
@@ -390,14 +414,18 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(await screen.findByRole("heading", { name: "Implement approval UI" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Implement approval UI" }),
+    ).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Threads" })).toBeInTheDocument();
     expect(screen.getByText("Protocol docs update")).toBeInTheDocument();
     expect(screen.getByLabelText("Command output")).toHaveTextContent("7 tests passed");
     expect(screen.getByLabelText("Diff preview")).toHaveTextContent("AgentDiffPanel");
     expect(screen.getByLabelText("CodeMirror patch viewer")).toBeInTheDocument();
     expect(screen.getByLabelText("Run settings")).toHaveTextContent("Execution mode");
-    expect(screen.getByLabelText("Usage limits")).toHaveTextContent("fixture-demo-model 5h");
+    expect(screen.getByLabelText("Usage limits")).toHaveTextContent(
+      "fixture-demo-model 5h",
+    );
     expect(screen.getByLabelText("Usage limits")).toHaveTextContent(
       "fixture-demo-model weekly",
     );
@@ -453,7 +481,9 @@ describe("AgentChat", () => {
     );
 
     await user.click(
-      await screen.findByRole("button", { name: "Decline command request approval-command" }),
+      await screen.findByRole("button", {
+        name: "Decline command request approval-command",
+      }),
     );
 
     expect(transport.responses.get("approval-command")).toEqual({ decision: "decline" });
@@ -571,7 +601,13 @@ describe("AgentChat", () => {
           };
         }
         if (request.method === "thread/start") {
-          return { thread: { id: "thread-new", name: "New real thread", status: { type: "idle" } } };
+          return {
+            thread: {
+              id: "thread-new",
+              name: "New real thread",
+              status: { type: "idle" },
+            },
+          };
         }
         return {};
       },
@@ -587,7 +623,9 @@ describe("AgentChat", () => {
     await user.type(screen.getByLabelText("Working directory"), "/tmp/agent-ui");
     await user.click(screen.getByRole("button", { name: "Start thread" }));
 
-    expect(transport.requests.find((request) => request.method === "thread/start")?.params).toEqual({
+    expect(
+      transport.requests.find((request) => request.method === "thread/start")?.params,
+    ).toEqual({
       cwd: "/tmp/agent-ui",
       model: "real-model",
     });
@@ -633,7 +671,9 @@ describe("AgentChat", () => {
           return { thread: { id: "thread-empty-model", name: "Model metadata test" } };
         }
         if (request.method === "model/list") {
-          return { data: [{ displayName: "Metadata-light model", id: "metadata-light-model" }] };
+          return {
+            data: [{ displayName: "Metadata-light model", id: "metadata-light-model" }],
+          };
         }
         return {};
       },
@@ -645,7 +685,9 @@ describe("AgentChat", () => {
     );
 
     await user.click(await screen.findByRole("button", { name: "Start thread" }));
-    await screen.findByRole("option", { name: "Metadata-light model (metadata-light-model)" });
+    await screen.findByRole("option", {
+      name: "Metadata-light model (metadata-light-model)",
+    });
     expect(screen.getByLabelText("Effort")).toBeDisabled();
     expect(screen.queryByRole("option", { name: "xhigh" })).not.toBeInTheDocument();
   });
@@ -678,14 +720,16 @@ describe("AgentChat", () => {
       "https://chatgpt.com/device",
     );
     expect(screen.getByText("ABCD-EFGH")).toBeInTheDocument();
-    expect(transport.requests.find((request) => request.method === "account/login/start")?.params).toEqual(
-      { type: "chatgptDeviceCode" },
-    );
+    expect(
+      transport.requests.find((request) => request.method === "account/login/start")
+        ?.params,
+    ).toEqual({ type: "chatgptDeviceCode" });
 
     await user.click(screen.getAllByRole("button", { name: "Cancel login" })[0]!);
-    expect(transport.requests.find((request) => request.method === "account/login/cancel")?.params).toEqual(
-      { loginId: "login-123" },
-    );
+    expect(
+      transport.requests.find((request) => request.method === "account/login/cancel")
+        ?.params,
+    ).toEqual({ loginId: "login-123" });
   });
 
   it("loads persisted session history and reads an individual thread", async () => {
@@ -764,14 +808,18 @@ describe("AgentChat", () => {
     await user.click(await screen.findByRole("button", { name: "Load" }));
     await user.click(await screen.findByRole("button", { name: /Historical fix/ }));
 
-    expect(await screen.findByRole("heading", { name: "Historical fix" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Historical fix" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("The stored thread was loaded.")).toBeInTheDocument();
     expect(screen.getByLabelText("Command output")).toHaveTextContent("ok");
     await user.click(screen.getByRole("button", { name: "Resume" }));
     expect(transport.requests.map((request) => request.method)).toEqual(
       expect.arrayContaining(["thread/list", "thread/read", "thread/resume"]),
     );
-    expect(transport.requests.find((request) => request.method === "thread/resume")?.params).toEqual({
+    expect(
+      transport.requests.find((request) => request.method === "thread/resume")?.params,
+    ).toEqual({
       excludeTurns: true,
       threadId: "thread-history",
     });

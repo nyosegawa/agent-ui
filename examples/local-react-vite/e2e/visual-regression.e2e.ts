@@ -9,8 +9,8 @@ const selectors = [
   ["runControls", ".aui-run-controls"],
   ["threadHeader", ".aui-thread-header"],
   ["messageList", ".aui-message-list"],
-  ["worklog", ".aui-worklog"],
-  ["diffPanel", ".aui-diff-panel"],
+  ["activity", ".aui-activity-card"],
+  ["diffActivity", ".aui-file-change-card"],
   ["approvals", ".aui-approvals"],
   ["composer", ".aui-composer"],
 ] as const;

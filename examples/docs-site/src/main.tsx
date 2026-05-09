@@ -1,4 +1,8 @@
-import { FakeAgentTransport, runEventFixture, type FixtureStep } from "@nyosegawa/agent-ui-core";
+import {
+  FakeAgentTransport,
+  runEventFixture,
+  type FixtureStep,
+} from "@nyosegawa/agent-ui-core";
 import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/style.css";
 import { useMemo } from "react";
@@ -16,7 +20,7 @@ const sections = [
     title: "@nyosegawa/agent-ui-codex",
   },
   {
-    body: "AgentProvider, headless hooks, run controls, usage, history, approvals, work log, and CodeMirror diff preview.",
+    body: "AgentProvider, headless hooks, run controls, usage, history, approvals, inline activity, and CodeMirror diff preview.",
     title: "@nyosegawa/agent-ui-react",
   },
   {
@@ -45,8 +49,8 @@ function DocsSite() {
               <h1>Embeddable agent interface for web hosts</h1>
             </div>
             <p>
-              Agent UI packages provide a stable React surface over Codex App Server without moving
-              process management or credentials into the browser.
+              Agent UI packages provide a stable React surface over Codex App Server
+              without moving process management or credentials into the browser.
             </p>
           </section>
 
@@ -62,7 +66,9 @@ function DocsSite() {
           <section className="docs-band" id="integration">
             <h2>Integration Path</h2>
             <ol>
-              <li>Start `codex app-server --listen stdio://` from the server package bridge.</li>
+              <li>
+                Start `codex app-server --listen stdio://` from the server package bridge.
+              </li>
               <li>Connect React with `AgentProvider` and a host-owned transport.</li>
               <li>Render `AgentChat` or compose headless hooks into a custom layout.</li>
               <li>Keep command and file approvals explicit in the chat surface.</li>
@@ -74,15 +80,24 @@ function DocsSite() {
             <ul>
               <li>Browser packages never spawn child processes.</li>
               <li>Raw ChatGPT tokens and API keys never enter React state.</li>
-              <li>Remote WebSocket endpoints are host-authenticated and same-origin by default.</li>
-              <li>Multi-user deployments require per-user process, credential, and workspace isolation.</li>
+              <li>
+                Remote WebSocket endpoints are host-authenticated and same-origin by
+                default.
+              </li>
+              <li>
+                Multi-user deployments require per-user process, credential, and workspace
+                isolation.
+              </li>
             </ul>
           </section>
 
           <section className="docs-demo" id="demo">
             <div className="docs-demo-header">
               <h2>Fixture-backed Demo</h2>
-              <p>Run controls, usage windows, persisted history, approvals, command output, and diff preview are rendered from the same package exports hosts use.</p>
+              <p>
+                Run controls, usage windows, persisted history, approvals, command output,
+                and diff preview are rendered from the same package exports hosts use.
+              </p>
             </div>
             <AgentChat />
           </section>

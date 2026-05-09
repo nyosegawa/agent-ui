@@ -16,7 +16,7 @@
 11. server local bridge helpers
 12. approval UI
 13. diff viewer
-14. work log
+14. contextual command and file-change activity in the turn timeline
 15. component accessibility and fixture coverage
 16. real app-server smoke test
 17. docs/TODO sync and package validation

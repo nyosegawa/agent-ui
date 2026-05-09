@@ -270,6 +270,8 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Remove local Playwright color-environment warning noise from release validation.
 - [x] Keep Vite examples independent of package `dist/` cleanup during local development.
 - [x] Suppress known low-value Codex plugin and skill manifest warnings from visible diagnostics and the local web dev terminal.
+- [x] Replace detached command-output and diff panels with contextual turn-timeline activity.
+- [x] Collapse command-heavy persisted-session work steps so conversation context remains readable.
 
 ## Release Readiness
 

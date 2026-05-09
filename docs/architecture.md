@@ -87,7 +87,6 @@ Default components:
 - `AgentChat`
 - `AgentComposer`
 - `AgentMessageList`
-- `AgentWorkLog`
 - `AgentApprovalPrompt`
 - `AgentDiffViewer`
 - `AgentStatusBar`
@@ -101,6 +100,12 @@ Customization:
 - slots
 - render props
 - headless hooks
+
+`AgentMessageList` owns the real Codex session timeline. User messages,
+assistant messages, reasoning, command execution summaries, and file-change
+diff summaries render in turn order. Command output and diffs are not rendered
+as detached bottom panels because that separates the work from the assistant
+context and makes stored Codex sessions unreadable.
 
 ## Fixed UI Decisions
 

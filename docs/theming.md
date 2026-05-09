@@ -31,7 +31,7 @@ The default components use `--aui-*` tokens for surfaces, borders, text, accents
 `AgentChat` renders a two-column shell:
 
 - sidebar thread list
-- main thread header, messages, work log, diff panel, approvals, composer
+- main thread header, timeline messages, inline command/diff activity, approvals, composer
 - CodeMirror diff surfaces inherit `--aui-code-bg`, `--aui-code-fg`, and the package monospace stack
 
 Hosts can set `className` on `AgentChat` and constrain height with normal CSS.

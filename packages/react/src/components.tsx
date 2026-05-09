@@ -22,7 +22,7 @@ import {
 } from "./hooks";
 import { useAgentContext } from "./provider";
 import { normalizeUsageWindows } from "./usage";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 export interface AgentChatSlots {
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
@@ -39,7 +39,10 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
   const { thread, threadId, startThread } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
   return (
-    <section className={["aui-shell", className].filter(Boolean).join(" ")} data-testid="agent-chat">
+    <section
+      className={["aui-shell", className].filter(Boolean).join(" ")}
+      data-testid="agent-chat"
+    >
       <ThreadSidebar
         activeThreadId={activeThreadId}
         onSelectThread={setActiveThread}
@@ -59,9 +62,10 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
               <AgentThreadActions status={thread.status} threadId={threadId} />
             </div>
             <AgentMessageList renderItem={slots?.renderItem} thread={thread} />
-            <AgentWorkLog thread={thread} />
-            <AgentDiffPanel thread={thread} />
-            <AgentApprovalPrompt renderApproval={slots?.renderApproval} threadId={threadId} />
+            <AgentApprovalPrompt
+              renderApproval={slots?.renderApproval}
+              threadId={threadId}
+            />
             <AgentRunControls autoRefresh={false} />
             <AgentComposer threadId={threadId} />
           </>
@@ -299,28 +303,46 @@ function AgentTurnView({
   threadStatus: ThreadState["status"];
   turn: TurnState;
 }) {
-  const visibleItems = turn.itemOrder
-    .map((itemId) => {
-      const item = turn.items[itemId];
-      return {
-        id: itemId,
-        item,
-        text: item?.text ?? turn.streamingTextByItemId[itemId],
-      };
-    })
-    .map((entry) => ({ ...entry, text: displayText(entry.text) }))
-    .filter((entry) => {
-      if (!entry.text?.trim()) return false;
-      if (entry.item && isWorklogOnlyItem(entry.item)) return false;
-      return true;
-    });
+  const timelineItemIds = turnTimelineItemIds(turn);
+  const activityItemIds = timelineItemIds.filter((itemId) =>
+    activityKindForId(turn, itemId),
+  );
+  const hiddenActivityCount = Math.max(
+    0,
+    activityItemIds.length - MAX_INLINE_ACTIVITY_ITEMS,
+  );
   return (
     <li className="aui-turn">
-      {visibleItems.map(({ id, item, text }) => {
-        if (!text) return null;
+      {timelineItemIds.map((id) => {
+        const item = turn.items[id];
+        const text = displayText(item?.text ?? turn.streamingTextByItemId[id]);
+        const activityKind = activityKindForId(turn, id);
+        if (activityKind) {
+          const activityIndex = activityItemIds.indexOf(id);
+          if (activityIndex < hiddenActivityCount) return null;
+          return (
+            <Fragment key={id}>
+              {activityIndex === hiddenActivityCount && hiddenActivityCount > 0 ? (
+                <ActivityCollapseNotice count={hiddenActivityCount} />
+              ) : null}
+              <AgentActivityItem
+                item={item}
+                itemId={id}
+                kind={activityKind}
+                output={turn.commandOutputByItemId[id]}
+                patch={turn.filePatchByItemId[id]}
+              />
+            </Fragment>
+          );
+        }
+        if (!text?.trim()) return null;
         if (item && renderItem) return <div key={id}>{renderItem(item, turn)}</div>;
-        const kind = item?.kind ?? "stream";
-        const status = displayItemStatus(item?.status ?? "streaming", threadStatus);
+        const messageItem = turn.items[id] as AgentItemState | undefined;
+        const kind = messageItem?.kind ?? "stream";
+        const status = displayItemStatus(
+          messageItem?.status ?? "streaming",
+          threadStatus,
+        );
         return (
           <article className="aui-message" data-kind={kind} key={id}>
             <div className="aui-message-meta">
@@ -332,6 +354,96 @@ function AgentTurnView({
         );
       })}
     </li>
+  );
+}
+
+const MAX_INLINE_ACTIVITY_ITEMS = 8;
+
+function ActivityCollapseNotice({ count }: { count: number }) {
+  return (
+    <div className="aui-activity-collapsed">
+      {count} older work {count === 1 ? "step" : "steps"} collapsed in this turn
+    </div>
+  );
+}
+
+function AgentActivityItem({
+  item,
+  itemId,
+  kind,
+  output,
+  patch,
+}: {
+  item?: AgentItemState;
+  itemId: string;
+  kind: "commandExecution" | "fileChange";
+  output?: string;
+  patch?: unknown;
+}) {
+  if (kind === "commandExecution") {
+    return <AgentCommandActivity item={item} itemId={itemId} output={output} />;
+  }
+  if (kind === "fileChange") {
+    return <AgentFileChangeActivity item={item} patch={patch} />;
+  }
+  return null;
+}
+
+function AgentCommandActivity({
+  item,
+  itemId,
+  output,
+}: {
+  item?: AgentItemState;
+  itemId: string;
+  output?: string;
+}) {
+  const normalizedOutput = output?.trimEnd() ?? "";
+  const title = commandTextForItem(item) ?? displayText(item?.text) ?? itemId;
+  const status = item?.status ?? "completed";
+  return (
+    <details aria-label="Command output" className="aui-activity-card aui-command-card">
+      <summary>
+        <span className="aui-terminal-label">terminal</span>
+        <span className="aui-command-title">{title}</span>
+        <span className="aui-command-meta">
+          {status} · {lineCount(normalizedOutput)} lines
+        </span>
+        {normalizedOutput ? (
+          <span className="aui-command-preview">{commandPreview(normalizedOutput)}</span>
+        ) : null}
+      </summary>
+      {normalizedOutput ? (
+        <pre className="aui-command-output">{normalizedOutput}</pre>
+      ) : (
+        <div className="aui-activity-empty">No terminal output captured.</div>
+      )}
+    </details>
+  );
+}
+
+function AgentFileChangeActivity({
+  item,
+  patch,
+}: {
+  item?: AgentItemState;
+  patch?: unknown;
+}) {
+  return (
+    <details aria-label="Diff preview" className="aui-activity-card aui-file-change-card">
+      <summary>
+        <span className="aui-terminal-label">diff</span>
+        <span className="aui-command-title">
+          {displayText(item?.text) ?? "File changes"}
+        </span>
+        <span className="aui-command-meta">{item?.status ?? "completed"}</span>
+      </summary>
+      {patch ? (
+        <AgentDiffViewer patch={patch} />
+      ) : (
+        <div className="aui-activity-empty">No patch payload captured.</div>
+      )}
+    </details>
   );
 }
 
@@ -365,59 +477,13 @@ function displayText(value: unknown): string | undefined {
 }
 
 function displayItemStatus(status: string, threadStatus: ThreadState["status"]): string {
-  if (status === "inProgress" && (threadStatus === "complete" || threadStatus === "completed")) {
+  if (
+    status === "inProgress" &&
+    (threadStatus === "complete" || threadStatus === "completed")
+  ) {
     return "completed";
   }
   return status;
-}
-
-export function AgentWorkLog({ thread }: { thread: ThreadState }) {
-  const outputs = thread.orderedTurnIds.flatMap((turnId) => {
-    const turn = thread.turns[turnId];
-    return turn
-      ? Object.entries(turn.commandOutputByItemId)
-          .map(([itemId, output]) => ({
-            command: commandTextForItem(turn.items[itemId]),
-            itemId,
-            output: output.trimEnd(),
-            status: turn.items[itemId]?.status,
-          }))
-          .filter((entry) => entry.output.trim().length > 0)
-      : [];
-  });
-  if (outputs.length === 0) return null;
-  const visibleOutputs = outputs.slice(-50);
-  const hiddenCount = outputs.length - visibleOutputs.length;
-  return (
-    <section className="aui-worklog" aria-label="Command output">
-      <header className="aui-section-header">
-        <strong>Command output</strong>
-        <span>
-          {hiddenCount > 0 ? `Latest ${visibleOutputs.length} of ` : ""}
-          {outputs.length} {outputs.length === 1 ? "entry" : "entries"}
-        </span>
-      </header>
-      {hiddenCount > 0 ? (
-        <p className="aui-worklog-note">
-          Older terminal output is hidden in this history view to keep the session readable.
-        </p>
-      ) : null}
-      {visibleOutputs.map((entry, index) => (
-        <details className="aui-command-card" key={entry.itemId} open={outputs.length <= 2}>
-          <summary>
-            <span className="aui-terminal-label">terminal</span>
-            <span className="aui-command-title">
-              {entry.command ?? `Command ${hiddenCount + index + 1}`}
-            </span>
-            <span className="aui-command-meta">
-              {entry.status ?? "completed"} · {lineCount(entry.output)} lines
-            </span>
-          </summary>
-          <pre className="aui-command-output">{entry.output}</pre>
-        </details>
-      ))}
-    </section>
-  );
 }
 
 export function AgentApprovalPrompt({
@@ -468,13 +534,19 @@ function ApprovalCard({
   return (
     <article className="aui-approval">
       <div className="aui-approval-header">
-        <strong>{approval.kind === "fileChangeApproval" ? "Review file changes" : "Approve command"}</strong>
+        <strong>
+          {approval.kind === "fileChangeApproval"
+            ? "Review file changes"
+            : "Approve command"}
+        </strong>
         <span>request {String(approval.id)}</span>
       </div>
       {"command" in payload ? (
         <code className="aui-command-line">{String(payload.command)}</code>
       ) : null}
-      {"path" in payload ? <div className="aui-file-path">{String(payload.path)}</div> : null}
+      {"path" in payload ? (
+        <div className="aui-file-path">{String(payload.path)}</div>
+      ) : null}
       <pre>{JSON.stringify(approval.payload, null, 2)}</pre>
       <div className="aui-actions">
         <button
@@ -512,8 +584,12 @@ export function AgentDiffViewer({ patch }: { patch: unknown }) {
     <div className="aui-diff">
       <div className="aui-diff-header">
         <strong>{formatCount(normalized.files.length, "file")}</strong>
-        <span className="aui-diff-stat aui-diff-stat-add">+{normalized.stats.additions}</span>
-        <span className="aui-diff-stat aui-diff-stat-remove">-{normalized.stats.removals}</span>
+        <span className="aui-diff-stat aui-diff-stat-add">
+          +{normalized.stats.additions}
+        </span>
+        <span className="aui-diff-stat aui-diff-stat-remove">
+          -{normalized.stats.removals}
+        </span>
       </div>
       {normalized.files.length > 0 ? (
         <ul className="aui-diff-files" aria-label="Changed files">
@@ -557,7 +633,11 @@ function CodeMirrorDiff({ text }: { text: string }) {
 
   return (
     <>
-      <div aria-label="CodeMirror patch viewer" className="aui-codemirror-diff" ref={ref} />
+      <div
+        aria-label="CodeMirror patch viewer"
+        className="aui-codemirror-diff"
+        ref={ref}
+      />
       <pre
         aria-hidden={isEnhanced ? "true" : undefined}
         className={isEnhanced ? "aui-diff-source aui-visually-hidden" : "aui-diff-source"}
@@ -583,7 +663,8 @@ function diffLineDecorations(state: EditorState): DecorationSet {
             : marker === "d" && line.text.startsWith("diff ")
               ? "aui-cm-line-file"
               : undefined;
-    if (className) builder.add(line.from, line.from, Decoration.line({ class: className }));
+    if (className)
+      builder.add(line.from, line.from, Decoration.line({ class: className }));
   }
   return builder.finish();
 }
@@ -644,7 +725,8 @@ type NormalizedPatch = {
 };
 
 function normalizePatch(patch: unknown): NormalizedPatch {
-  if (typeof patch === "string") return buildNormalizedPatch(patch, parseUnifiedDiffFiles(patch));
+  if (typeof patch === "string")
+    return buildNormalizedPatch(patch, parseUnifiedDiffFiles(patch));
   if (Array.isArray(patch)) {
     const changes = normalizeChangeArray(patch);
     if (changes.length > 0) return buildNormalizedPatch(changesToText(changes), changes);
@@ -653,7 +735,8 @@ function normalizePatch(patch: unknown): NormalizedPatch {
     const changes = normalizeChangeArray(patch.changes);
     if (changes.length > 0) return buildNormalizedPatch(changesToText(changes), changes);
     const fileChanges = normalizeFileChanges(patch.fileChanges);
-    if (fileChanges.length > 0) return buildNormalizedPatch(changesToText(fileChanges), fileChanges);
+    if (fileChanges.length > 0)
+      return buildNormalizedPatch(changesToText(fileChanges), fileChanges);
     if (typeof patch.diff === "string") {
       return buildNormalizedPatch(patch.diff, parseUnifiedDiffFiles(patch.diff));
     }
@@ -676,7 +759,9 @@ function buildNormalizedPatch(
   };
 }
 
-function normalizeChangeArray(value: unknown): Array<{ diff: string; kind: string; path: string }> {
+function normalizeChangeArray(
+  value: unknown,
+): Array<{ diff: string; kind: string; path: string }> {
   if (!Array.isArray(value)) return [];
   return value.flatMap((change) => {
     if (!isRecord(change) || typeof change.path !== "string") return [];
@@ -686,12 +771,15 @@ function normalizeChangeArray(value: unknown): Array<{ diff: string; kind: strin
   });
 }
 
-function normalizeFileChanges(value: unknown): Array<{ diff: string; kind: string; path: string }> {
+function normalizeFileChanges(
+  value: unknown,
+): Array<{ diff: string; kind: string; path: string }> {
   if (!isRecord(value)) return [];
   return Object.entries(value).flatMap(([path, change]) => {
     if (!isRecord(change) || typeof change.type !== "string") return [];
     if (change.type === "update") {
-      const movePath = typeof change.move_path === "string" ? ` -> ${change.move_path}` : "";
+      const movePath =
+        typeof change.move_path === "string" ? ` -> ${change.move_path}` : "";
       return [
         {
           diff: typeof change.unified_diff === "string" ? change.unified_diff : "",
@@ -723,13 +811,11 @@ function contentToDiff(content: string, prefix: "+" | "-") {
 }
 
 function parseUnifiedDiffFiles(text: string): Array<{ kind: string; path: string }> {
-  return text
-    .split("\n")
-    .flatMap((line) => {
-      const match = /^diff --git a\/(.+) b\/(.+)$/.exec(line);
-      if (!match) return [];
-      return [{ kind: "update", path: match[2] ?? match[1] ?? "unknown" }];
-    });
+  return text.split("\n").flatMap((line) => {
+    const match = /^diff --git a\/(.+) b\/(.+)$/.exec(line);
+    if (!match) return [];
+    return [{ kind: "update", path: match[2] ?? match[1] ?? "unknown" }];
+  });
 }
 
 function dedupeFiles(files: Array<{ kind: string; path: string }>) {
@@ -761,21 +847,6 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
 
-export function AgentDiffPanel({ thread }: { thread: ThreadState }) {
-  const patches = thread.orderedTurnIds.flatMap((turnId) => {
-    const turn = thread.turns[turnId];
-    return turn ? Object.entries(turn.filePatchByItemId) : [];
-  });
-  if (patches.length === 0) return null;
-  return (
-    <section className="aui-diff-panel" aria-label="Diff preview">
-      {patches.map(([itemId, patch]) => (
-        <AgentDiffViewer key={itemId} patch={patch} />
-      ))}
-    </section>
-  );
-}
-
 export function AgentStatusBar() {
   const { account, cancelLogin, login } = useAgentAuth();
   const accountLabel = accountLabelText(account.account);
@@ -783,7 +854,9 @@ export function AgentStatusBar() {
     <header className="aui-status">
       <div className="aui-brand">
         <strong>Agent UI</strong>
-        <span>{accountLabel ? `${account.status} · ${accountLabel}` : account.status}</span>
+        <span>
+          {accountLabel ? `${account.status} · ${accountLabel}` : account.status}
+        </span>
       </div>
       {account.login ? (
         <div className="aui-login-code" role="status">
@@ -818,7 +891,9 @@ export function AgentStatusBar() {
   );
 }
 
-function accountLabelText(account: Record<string, unknown> | undefined): string | undefined {
+function accountLabelText(
+  account: Record<string, unknown> | undefined,
+): string | undefined {
   if (!account) return undefined;
   const email = typeof account.email === "string" ? account.email : undefined;
   const planType = typeof account.planType === "string" ? account.planType : undefined;
@@ -826,7 +901,11 @@ function accountLabelText(account: Record<string, unknown> | undefined): string 
   return email ?? planType;
 }
 
-function AgentDiagnostics({ bootstrap }: { bootstrap: ReturnType<typeof useAgentBootstrap> }) {
+function AgentDiagnostics({
+  bootstrap,
+}: {
+  bootstrap: ReturnType<typeof useAgentBootstrap>;
+}) {
   const { state } = useAgentContext();
   const messages = [
     ...bootstrap.errors.map((error) => error.message),
@@ -846,7 +925,9 @@ function AgentDiagnostics({ bootstrap }: { bootstrap: ReturnType<typeof useAgent
     <details className="aui-diagnostics aui-diagnostics-details" aria-label="Diagnostics">
       <summary>
         <span>{title}</span>
-        <small>{messages.length} {messages.length === 1 ? "message" : "messages"}</small>
+        <small>
+          {messages.length} {messages.length === 1 ? "message" : "messages"}
+        </small>
       </summary>
       <div>
         {messages.slice(-8).map((message, index) => (
@@ -868,7 +949,11 @@ export function AgentUsage({ autoRefresh = true }: AgentUsageProps = {}) {
   const didAutoRefresh = useRef(false);
   const windows = useMemo(() => normalizeUsageWindows(rateLimits), [rateLimits]);
   useEffect(() => {
-    if (autoRefresh && state.connection.status === "connected" && !didAutoRefresh.current) {
+    if (
+      autoRefresh &&
+      state.connection.status === "connected" &&
+      !didAutoRefresh.current
+    ) {
       didAutoRefresh.current = true;
       void refreshUsage().catch(() => undefined);
     }
@@ -905,7 +990,9 @@ export function AgentUsage({ autoRefresh = true }: AgentUsageProps = {}) {
                 className="aui-meter"
                 role="progressbar"
               >
-                <span style={{ width: `${Math.min(100, Math.max(0, window.percent))}%` }} />
+                <span
+                  style={{ width: `${Math.min(100, Math.max(0, window.percent))}%` }}
+                />
               </div>
               {window.resetLabel ? <small>{window.resetLabel}</small> : null}
             </div>
@@ -1017,7 +1104,11 @@ export function ThreadSidebar({
           type="search"
           value={searchTerm}
         />
-        <button className="aui-button aui-button-secondary" disabled={isLoading} type="submit">
+        <button
+          className="aui-button aui-button-secondary"
+          disabled={isLoading}
+          type="submit"
+        >
           {isLoading ? "Loading" : "Load"}
         </button>
       </form>
@@ -1057,10 +1148,6 @@ function declineApprovalResult(approval: PendingServerRequest) {
   return { decision: "decline" };
 }
 
-function isWorklogOnlyItem(item: AgentItemState): boolean {
-  return item.kind === "commandExecution" || item.kind === "fileChange";
-}
-
 function itemLabel(kind: string): string {
   if (kind === "userMessage") return "You";
   if (kind === "agentMessage") return "Assistant";
@@ -1076,6 +1163,24 @@ function commandTextForItem(item: AgentItemState | undefined): string | undefine
   return typeof command === "string" && command.trim() ? command.trim() : undefined;
 }
 
+function turnTimelineItemIds(turn: TurnState): string[] {
+  const ids = new Set(turn.itemOrder);
+  for (const itemId of Object.keys(turn.commandOutputByItemId)) ids.add(itemId);
+  for (const itemId of Object.keys(turn.filePatchByItemId)) ids.add(itemId);
+  return [...ids];
+}
+
+function activityKindForId(
+  turn: TurnState,
+  itemId: string,
+): "commandExecution" | "fileChange" | undefined {
+  const kind = turn.items[itemId]?.kind;
+  if (kind === "commandExecution" || kind === "fileChange") return kind;
+  if (itemId in turn.commandOutputByItemId) return "commandExecution";
+  if (itemId in turn.filePatchByItemId) return "fileChange";
+  return undefined;
+}
+
 function lineCount(value: string): number {
   if (!value) return 0;
   return value.split(/\r?\n/).length;
@@ -1085,6 +1190,15 @@ function messagePreview(text: string): string {
   const firstLine = text.split(/\r?\n/).find((line) => line.trim()) ?? text;
   const preview = firstLine.trim().replace(/\s+/g, " ");
   return preview.length > 140 ? `${preview.slice(0, 137)}...` : preview;
+}
+
+function commandPreview(text: string): string {
+  const preview = text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .find(Boolean);
+  if (!preview) return "";
+  return preview.length > 180 ? `${preview.slice(0, 177)}...` : preview;
 }
 
 function diagnosticsTitle(messages: string[]): string {

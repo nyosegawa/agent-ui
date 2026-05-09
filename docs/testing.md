@@ -109,7 +109,8 @@ Component tests:
 - show pending approval
 - approve/reject server requests
 - render command output
-- keep very large persisted command-output histories capped in the UI
+- keep command output and file-change diffs in the turn timeline rather than detached panels
+- keep very large persisted command-output histories collapsed to recent inline activity
 - keep long persisted messages behind a preview/expand affordance
 - render structured App Server message content arrays as readable text
 - show completed message status after real thread completion and hydrated history reads
@@ -223,6 +224,6 @@ Fake stdio remains the deterministic CI gate for the browser approval UX, comman
 
 ## Visual Regression
 
-`bun run test:e2e:playwright` includes browser-level layout contract snapshots for the local Vite example at desktop and mobile widths. These snapshots capture rendered dimensions, overflow behavior, display mode, grid columns, border radius, and key colors for the shell, sidebar, chat, run controls, usage, message list, worklog, diff, approvals, and composer.
+`bun run test:e2e:playwright` includes browser-level layout contract snapshots for the local Vite example at desktop and mobile widths. These snapshots capture rendered dimensions, overflow behavior, display mode, grid columns, border radius, and key colors for the shell, sidebar, chat, run controls, usage, message list, inline activity, approvals, and composer.
 
 Image snapshots are intentionally not the default CI gate because OS font rendering can create noisy diffs across macOS and Linux. If pixel-level screenshots are added later, keep them in a separate opt-in job or generate Linux baselines in CI.

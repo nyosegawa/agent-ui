@@ -33,11 +33,14 @@ The React package exposes drop-in components backed by headless hooks. Component
 - `AgentStatusBar`
 - `AgentUsage`
 - `AgentMessageList`
-- `AgentWorkLog`
-- `AgentDiffPanel`
 - `AgentApprovalPrompt`
 - `AgentRunControls`
 - `AgentComposer`
+
+`AgentMessageList` is the primary product surface. It renders user messages,
+assistant messages, reasoning, command execution summaries, and file-change
+diff summaries in turn order. Command output and diffs are contextual activity
+inside the conversation timeline, not separate panels below the chat.
 
 ## Thread Sidebar
 
@@ -45,7 +48,7 @@ The React package exposes drop-in components backed by headless hooks. Component
 
 When a stored thread is loaded as `notLoaded` or `loaded`, the thread header shows `Resume`. That action calls `thread/resume` with `excludeTurns: true` because the preview history is already hydrated. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
 
-Hydrated history opens at the latest messages. Long persisted messages are preview-first with an explicit expand control, structured App Server content arrays are converted to readable text, and very large command-output histories render the latest entries with a count summary so old sessions stay usable in the browser. If a `thread/read` response includes turns but still reports `notLoaded`, the default UI treats the hydrated view as `loaded`.
+Hydrated history opens at the latest messages. Long persisted messages are preview-first with an explicit expand control, structured App Server content arrays are converted to readable text, and very large command-output histories collapse older work steps inside the relevant turn so old sessions stay usable in the browser. If a `thread/read` response includes turns but still reports `notLoaded`, the default UI treats the hydrated view as `loaded`.
 
 ## Approval Components
 
@@ -61,11 +64,18 @@ Default behavior:
 
 The default card shows request id, command or file path context, and the raw normalized payload. Approval buttons include request kind and request id in their accessible names.
 
-## Diff And Work Log
+## Timeline Activity
 
 `AgentDiffViewer` renders a read-only CodeMirror diff preview with line-level highlighting for file headers, hunks, additions, and removals. It accepts raw unified diff strings, turn-level `{ diff }` payloads, App Server thread item `changes: [{ path, kind, diff }]`, and apply-patch approval `fileChanges` maps. Structured payloads are summarized with changed file names and addition/removal counts before the read-only patch body. A textual fallback remains in the DOM before hydration and for non-browser rendering.
 
-`AgentWorkLog` renders command output grouped by thread turn. Large stored histories are capped in the default UI and each terminal entry can be expanded independently. For richer terminal behavior, build a host component with `useAgentThread()` rather than exposing `thread/shellCommand` as a generic browser component.
+Command output renders as compact terminal activity rows in `AgentMessageList`.
+Rows show command, status, line count, and a short output preview; the full
+terminal output is collapsed until the user expands it. File changes render as
+diff activity rows in the same turn. The default UI keeps only the latest inline
+activity rows for command-heavy historical turns and displays a collapsed-count
+notice for older steps. For richer terminal behavior, build a host component
+with `useAgentThread()` rather than exposing `thread/shellCommand` as a generic
+browser component.
 
 ## Run Controls
 
