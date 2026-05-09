@@ -205,7 +205,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Surface bridge connection errors in the UI.
 - [x] Surface redacted App Server stderr in the UI or a visible diagnostics panel.
 - [x] Shut down the App Server process when the browser session closes.
-- [ ] Add idle timeout shutdown for abandoned App Server browser sessions.
+- [x] Add idle timeout shutdown for abandoned App Server browser sessions.
 
 ### Real App Bootstrap
 

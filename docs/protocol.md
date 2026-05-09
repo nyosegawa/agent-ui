@@ -66,6 +66,7 @@ Implementation status:
 - `createCodexWebSocketTransport()` speaks the same JSON-RPC-lite request/response shape over `WebSocket`.
 - Browser-facing imports should use `@nyosegawa/agent-ui-codex/websocket`; the package root also contains Node stdio code.
 - `@nyosegawa/agent-ui-server` exports `attachAgentUiWebSocketBridge()` for same-origin local web apps. It keeps a Codex App Server process alive for the browser session and forwards transport events through an Agent UI envelope.
+- The same-origin bridge closes the App Server process when the browser socket closes and also has an idle timeout for abandoned browser sessions.
 - `examples/codex-local-web` is the primary real local web app path.
 - The transport accepts `url`, optional `protocols`, optional initialize metadata, and optional reconnect settings.
 - Authentication belongs to the host endpoint, for example same-origin cookies or a reverse proxy session.

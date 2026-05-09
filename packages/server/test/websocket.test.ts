@@ -214,6 +214,45 @@ describe("attachAgentUiWebSocketBridge", () => {
     });
     await transport.close();
   });
+
+  it("shuts down abandoned browser sessions after the idle timeout", async () => {
+    const stdin = new PassThrough();
+    const stdout = new PassThrough();
+    const stderr = new PassThrough();
+    let killed = false;
+
+    const process: CodexChildProcess = {
+      get killed() {
+        return killed;
+      },
+      kill: () => {
+        killed = true;
+        return true;
+      },
+      stderr,
+      stdin,
+      stdout,
+    };
+
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      idleTimeoutMs: 20,
+      server: httpServer,
+      spawn: () => process,
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
+    await onceOpen(client);
+    await waitFor(() => killed, 500);
+    expect(killed).toBe(true);
+    client.close();
+  });
 });
 
 async function createBridgeBackedTransport() {
@@ -268,10 +307,10 @@ function nextMessage(socket: WebSocket): Promise<unknown> {
   });
 }
 
-async function waitFor(predicate: () => boolean): Promise<void> {
+async function waitFor(predicate: () => boolean, timeoutMs = 1000): Promise<void> {
   const started = Date.now();
   while (!predicate()) {
-    if (Date.now() - started > 1000) throw new Error("timed out");
+    if (Date.now() - started > timeoutMs) throw new Error("timed out");
     await new Promise((resolve) => setTimeout(resolve, 10));
   }
 }

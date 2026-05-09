@@ -10,6 +10,7 @@ import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { createCodexAppServerBridge, type CodexAppServerBridgeOptions } from "./bridge";
 
 export interface AgentUiWebSocketBridgeOptions extends CodexAppServerBridgeOptions {
+  idleTimeoutMs?: number | false;
   path?: string;
 }
 
@@ -18,6 +19,7 @@ export interface AgentUiWebSocketServerOptions extends AgentUiWebSocketBridgeOpt
 }
 
 const DEFAULT_PATH = "/agent-ui/ws";
+const DEFAULT_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 
 export function attachAgentUiWebSocketBridge(
   options: AgentUiWebSocketServerOptions,
@@ -32,25 +34,39 @@ export function attachAgentUiWebSocketBridge(
 
 export function handleAgentUiWebSocketConnection(
   socket: WebSocket,
-  options: CodexAppServerBridgeOptions = {},
+  options: AgentUiWebSocketBridgeOptions = {},
 ): void {
-  const bridge = createCodexAppServerBridge(options);
+  const { idleTimeoutMs = DEFAULT_IDLE_TIMEOUT_MS, ...bridgeOptions } = options;
+  const bridge = createCodexAppServerBridge(bridgeOptions);
   let closed = false;
+  let idleTimer: ReturnType<typeof setTimeout> | undefined;
 
   const closeBridge = () => {
     if (closed) return;
     closed = true;
+    if (idleTimer) clearTimeout(idleTimer);
     void bridge.close().catch(() => undefined);
+  };
+  const resetIdleTimer = () => {
+    if (idleTimeoutMs === false) return;
+    if (idleTimer) clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      socket.close(1000, "Agent UI bridge idle timeout");
+      closeBridge();
+    }, idleTimeoutMs);
+    idleTimer.unref?.();
   };
 
   socket.on("close", closeBridge);
   socket.on("error", closeBridge);
+  resetIdleTimer();
 
   void bridge.transport
     .connect()
     .then(async () => {
       for await (const event of bridge.transport.events) {
         if (event.type === "response") continue;
+        resetIdleTimer();
         sendEnvelope(socket, event);
       }
     })
@@ -63,6 +79,7 @@ export function handleAgentUiWebSocketConnection(
     });
 
   socket.on("message", (data) => {
+    resetIdleTimer();
     void handleClientMessage(socket, bridge.transport, data).catch((error: unknown) => {
       sendEnvelope(socket, {
         error: { message: error instanceof Error ? error.message : String(error) },
