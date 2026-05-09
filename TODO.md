@@ -306,10 +306,10 @@ updated together.
 
 ### Information Architecture
 
-- [ ] Re-audit the conversation/work-trace/approval hierarchy against real persisted sessions and live turns.
-- [ ] Ensure command output, diffs, and approvals are visible in context without turning history into a terminal log wall.
-- [ ] Ensure the thread sidebar remains useful with very long real thread titles and dense histories.
-- [ ] Ensure empty, loading, authenticated, unauthenticated, bridge-error, approval, running, preview, and completed states have consistent hierarchy and copy.
+- [x] Re-audit the conversation/work-trace/approval hierarchy against real persisted sessions and live turns.
+- [x] Ensure command output, diffs, and approvals are visible in context without turning history into a terminal log wall.
+- [x] Ensure the thread sidebar remains useful with very long real thread titles and dense histories.
+- [x] Ensure empty, loading, authenticated, unauthenticated, bridge-error, approval, running, preview, and completed states have consistent hierarchy and copy.
 
 ### Visual QA
 
@@ -320,16 +320,16 @@ updated together.
 
 ### Code Quality
 
-- [ ] Remove remaining avoidable type assertions and replace weak protocol parsing with local type guards.
+- [x] Remove remaining avoidable type assertions and replace weak protocol parsing with local type guards.
 - [x] Split oversized React component sections when behavior is hard to audit.
-- [ ] Keep reducer state transitions explicit for running, waiting-for-input, preview, completed, failed, and interrupted flows.
-- [ ] Keep browser transport, bridge lifecycle, and diagnostics redaction tests at production quality.
+- [x] Keep reducer state transitions explicit for running, waiting-for-input, preview, completed, failed, and interrupted flows.
+- [x] Keep browser transport, bridge lifecycle, and diagnostics redaction tests at production quality.
 
 ### Documentation Freshness
 
 - [ ] Re-read docs after UI and protocol changes and remove stale product claims.
 - [ ] Keep `docs/component-api.md` aligned with the actual component hierarchy.
-- [ ] Keep `docs/testing.md` aligned with the latest validation commands, dates, and real-vs-fake coverage.
+- [x] Keep `docs/testing.md` aligned with the latest validation commands, dates, and real-vs-fake coverage.
 - [ ] Keep `docs/authentication.md`, `docs/security.md`, and `docs/protocol.md` aligned with the real App Server behavior currently used.
 
 ## Release Readiness

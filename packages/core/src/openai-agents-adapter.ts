@@ -108,8 +108,12 @@ class OpenAIAgentsSdkTransportAdapter implements AgentTransport {
   }
 
   async #startTurn(params?: unknown) {
-    const record = params && typeof params === "object" ? (params as Record<string, unknown>) : {};
-    const threadId = String(record.threadId ?? this.options.createThreadId?.() ?? `agents-thread-${this.#nextThread++}`);
+    const record = asRecord(params) ?? {};
+    const threadId = String(
+      record.threadId ??
+        this.options.createThreadId?.() ??
+        `agents-thread-${this.#nextThread++}`,
+    );
     const turnId = this.options.createTurnId?.(threadId) ?? `agents-turn-${this.#nextTurn++}`;
     const context: OpenAIAgentsRunContext = {
       input: record.input,
@@ -207,16 +211,22 @@ function normalizeAgentsChunk(chunk: AgentEvent | AgentTransportEvent): AgentTra
 }
 
 function isTransportEvent(chunk: unknown): chunk is AgentTransportEvent {
+  const record = asRecord(chunk);
   return (
-    typeof chunk === "object" &&
-    chunk != null &&
-    "type" in chunk &&
-    ["event", "request", "response", "error", "stderr", "raw"].includes(String((chunk as { type?: unknown }).type))
+    record != null &&
+    ["event", "request", "response", "error", "stderr", "raw"].includes(
+      String(record.type),
+    )
   );
 }
 
 function readString(value: unknown, key: string) {
-  if (!value || typeof value !== "object") return undefined;
-  const field = (value as Record<string, unknown>)[key];
+  const field = asRecord(value)?.[key];
   return typeof field === "string" ? field : undefined;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
 }

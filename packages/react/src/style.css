@@ -285,15 +285,21 @@
 .aui-brand strong,
 .aui-thread-header h1 {
   color: var(--aui-fg);
+  display: -webkit-box;
   font-size: 15px;
   line-height: 1.2;
   margin: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .aui-thread-header {
   align-items: center;
   border-bottom: 1px solid var(--aui-border);
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   justify-content: space-between;
   min-height: 72px;
@@ -301,6 +307,7 @@
 }
 
 .aui-thread-header > div {
+  flex: 1 1 240px;
   min-width: 0;
 }
 
@@ -308,7 +315,9 @@
   align-items: center;
   display: flex;
   flex-shrink: 0;
+  flex-wrap: wrap;
   gap: 8px;
+  justify-content: flex-end;
 }
 
 .aui-thread-header p {
@@ -968,6 +977,11 @@
 
   .aui-thread-header {
     align-items: flex-start;
+  }
+
+  .aui-thread-actions {
+    justify-content: flex-start;
+    width: 100%;
   }
 
   .aui-thread-header p {

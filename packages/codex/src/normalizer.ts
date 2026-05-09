@@ -279,8 +279,7 @@ function normalizeThread(raw: unknown): AgentThread {
 
 function normalizeThreadStatus(value: unknown): string {
   if (typeof value === "string") return value;
-  if (typeof value !== "object" || value === null) return "notLoaded";
-  const type = (value as Record<string, unknown>).type;
+  const type = asRecord(value)?.type;
   if (type === "active") return "running";
   if (type === "idle") return "loaded";
   return typeof type === "string" ? type : "notLoaded";
@@ -336,9 +335,8 @@ function itemText(raw: Record<string, unknown>): string | undefined {
     return raw.content
       .map((part: unknown) => {
         if (typeof part === "string") return part;
-        if (typeof part !== "object" || part === null) return undefined;
-        const record = part as Record<string, unknown>;
-        return typeof record.text === "string" ? record.text : undefined;
+        const record = asRecord(part);
+        return typeof record?.text === "string" ? record.text : undefined;
       })
       .filter(isNonEmptyString)
       .join("\n");
