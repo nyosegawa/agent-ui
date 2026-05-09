@@ -225,11 +225,11 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Resume stored sessions with `thread/resume`.
 - [x] Start new threads with a selected working directory.
 - [x] Send turns with stable `turn/start` params.
-- [ ] Render live streaming assistant text from App Server events.
-- [ ] Render live command output from App Server events.
-- [ ] Render live diffs from App Server patch payloads.
-- [ ] Render live command approval prompts.
-- [ ] Render live file-change approval prompts.
+- [x] Render live streaming assistant text from App Server events.
+- [x] Render live command output from App Server events.
+- [x] Render live diffs from App Server patch payloads.
+- [x] Render live command approval prompts.
+- [x] Render live file-change approval prompts.
 
 ### Correctness Gaps
 

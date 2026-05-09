@@ -183,6 +183,7 @@ export function agentReducer(
     case "item/reasoning/summaryTextDelta":
       return updateTurn(state, event.threadId, event.turnId, (turn) => ({
         ...turn,
+        itemOrder: ensureItemOrder(turn.itemOrder, event.itemId),
         streamingTextByItemId: appendById(
           turn.streamingTextByItemId,
           event.itemId,
@@ -192,6 +193,7 @@ export function agentReducer(
     case "item/commandOutput/delta":
       return updateTurn(state, event.threadId, event.turnId, (turn) => ({
         ...turn,
+        itemOrder: ensureItemOrder(turn.itemOrder, event.itemId),
         commandOutputByItemId: appendById(
           turn.commandOutputByItemId,
           event.itemId,
@@ -201,6 +203,7 @@ export function agentReducer(
     case "item/filePatch/updated":
       return updateTurn(state, event.threadId, event.turnId, (turn) => ({
         ...turn,
+        itemOrder: ensureItemOrder(turn.itemOrder, event.itemId),
         filePatchByItemId: { ...turn.filePatchByItemId, [event.itemId]: event.patch },
       }));
     case "item/completed":
@@ -342,4 +345,8 @@ function appendById(
   delta: string,
 ): Record<string, string> {
   return { ...values, [id]: `${values[id] ?? ""}${delta}` };
+}
+
+function ensureItemOrder(itemOrder: string[], itemId: string): string[] {
+  return itemOrder.includes(itemId) ? itemOrder : [...itemOrder, itemId];
 }

@@ -34,6 +34,56 @@ describe("agentReducer", () => {
     expect(state.pendingServerRequests).toEqual({});
   });
 
+  it("orders live deltas even when item start arrives late or is omitted", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          thread: { id: "thread-live" },
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          threadId: "thread-live",
+          turn: { id: "turn-live", threadId: "thread-live", status: "running" },
+          type: "turn/started",
+        },
+      },
+      {
+        event: {
+          delta: "hello",
+          itemId: "item-live",
+          threadId: "thread-live",
+          turnId: "turn-live",
+          type: "item/agentMessage/delta",
+        },
+      },
+      {
+        event: {
+          delta: "ok\n",
+          itemId: "cmd-live",
+          threadId: "thread-live",
+          turnId: "turn-live",
+          type: "item/commandOutput/delta",
+        },
+      },
+      {
+        event: {
+          itemId: "diff-live",
+          patch: "diff --git a/a b/a",
+          threadId: "thread-live",
+          turnId: "turn-live",
+          type: "item/filePatch/updated",
+        },
+      },
+    ]);
+    expect(state.threads["thread-live"]?.turns["turn-live"]?.itemOrder).toEqual([
+      "item-live",
+      "cmd-live",
+      "diff-live",
+    ]);
+  });
+
   it("loads the demo session fixture with threads, diff preview, and file approval", () => {
     const state = runEventFixture(demoFixture as FixtureStep[]);
     const threads = selectOrderedThreads(state);

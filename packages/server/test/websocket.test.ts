@@ -92,6 +92,71 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     stdout.write(
       `${JSON.stringify({
+        method: "item/agentMessage/delta",
+        params: { delta: "hello", itemId: "item-1", threadId: "thread-1", turnId: "turn-1" },
+      })}\n`,
+    );
+    await expect(
+      nextTransportEvent(transport, (candidate) => {
+        return candidate.event?.type === "item/agentMessage/delta";
+      }),
+    ).resolves.toMatchObject({
+      event: {
+        delta: "hello",
+        itemId: "item-1",
+        threadId: "thread-1",
+        turnId: "turn-1",
+        type: "item/agentMessage/delta",
+      },
+    });
+
+    stdout.write(
+      `${JSON.stringify({
+        method: "item/commandExecution/outputDelta",
+        params: { delta: "ok\n", itemId: "cmd-1", threadId: "thread-1", turnId: "turn-1" },
+      })}\n`,
+    );
+    await expect(
+      nextTransportEvent(transport, (candidate) => {
+        return candidate.event?.type === "item/commandOutput/delta";
+      }),
+    ).resolves.toMatchObject({
+      event: {
+        delta: "ok\n",
+        itemId: "cmd-1",
+        threadId: "thread-1",
+        turnId: "turn-1",
+        type: "item/commandOutput/delta",
+      },
+    });
+
+    stdout.write(
+      `${JSON.stringify({
+        method: "item/fileChange/patchUpdated",
+        params: {
+          itemId: "diff-1",
+          patch: "diff --git a/a b/a",
+          threadId: "thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+    await expect(
+      nextTransportEvent(transport, (candidate) => {
+        return candidate.event?.type === "item/filePatch/updated";
+      }),
+    ).resolves.toMatchObject({
+      event: {
+        itemId: "diff-1",
+        patch: "diff --git a/a b/a",
+        threadId: "thread-1",
+        turnId: "turn-1",
+        type: "item/filePatch/updated",
+      },
+    });
+
+    stdout.write(
+      `${JSON.stringify({
         id: "approval-1",
         method: "item/commandExecution/requestApproval",
         params: {
