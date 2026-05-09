@@ -160,6 +160,7 @@ Optional/nightly:
 
 ```text
 bun run test:e2e:real-codex
+bun run test:e2e:real-codex:approval
 bun run test:e2e:playwright
 bun run test:node-compat
 bun run test:pnpm-compat
@@ -192,6 +193,8 @@ Latest manual real smoke:
 - Environment dependency: local ChatGPT/Codex auth was already present; no raw token or device-code secret was logged.
 - Direct stdio smoke command: a Node script spawned `codex app-server --listen stdio://`, connected through `createCodexStdioTransport()`, sent `initialize`, then requested `account/read`, `model/list`, `account/rateLimits/read`, `thread/list`, `thread/read`, `thread/resume`, `thread/start`, and `turn/start`.
 - Direct stdio result: authenticated account with redacted email, 6 models, first model `gpt-5.5`, usage present, 5 stored threads returned, `thread/read` and `thread/resume` succeeded, an ephemeral thread started, `item/agentMessage/delta` streamed `Agent UI real smoke ok.`, and `turn/completed` was observed.
+- Real approval smoke command: `AGENT_UI_REAL_CODEX_TIMEOUT_MS=180000 node scripts/real-codex-smoke.mjs --approval`, with variants `--accept`, `--file-only`, and `--accept-for-session`.
+- Real approval smoke result: using `approvalPolicy: "untrusted"`, `sandbox: "read-only"`, `sandboxPolicy: { type: "readOnly", networkAccess: false }`, and `approvalsReviewer: "user"` in a temporary cwd, the App Server emitted command approval and file-change approval requests. Command approval accepted and declined successfully. File-change approval accepted, declined, and accepted-for-session successfully. The temporary workspace was removed after each run.
 - Browser smoke command: `bun run test:e2e:playwright`.
 - Browser smoke result: 6 Playwright tests passed. The real local app target used a fake stdio App Server while exercising the actual browser WebSocket transport and same-origin bridge path.
 
@@ -206,7 +209,7 @@ The history and usage smoke path has also been verified against `codex app-serve
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
 - `bun run test:e2e:playwright` also starts `examples/codex-local-web` against a fake stdio App Server and drives the real browser WebSocket transport through model list, usage, thread list/read/resume, thread start, turn start, streaming text, command output, structured diff preview, and command approval.
 
-Full approval-path real smoke still needs deterministic fixtures or a controlled Codex prompt that requests command/file approvals.
+Fake stdio remains the deterministic CI gate for the browser approval UX, command output, and diff preview. Real Codex approval smoke is opt-in because it consumes a live model turn and depends on local auth, but it is now scripted and has been run successfully in this environment.
 
 ## Visual Regression
 

@@ -20,6 +20,8 @@
     "test:protocol": "bun test packages/codex/test",
     "test:fixtures": "bun test packages/core/test",
     "test:node-compat": "node scripts/node-compat-smoke.mjs",
+    "test:e2e:real-codex": "node scripts/real-codex-smoke.mjs",
+    "test:e2e:real-codex:approval": "node scripts/real-codex-smoke.mjs --approval",
     "test:e2e:playwright": "playwright test",
     "publint": "for p in packages/*; do publint \"$p\" || exit 1; done",
     "attw": "for p in packages/*; do attw --pack \"$p\" --ignore-rules cjs-resolves-to-esm no-resolution || exit 1; done"
