@@ -111,20 +111,23 @@ export function useAgentThread(threadId?: ThreadId) {
         modelId: runSettings.modelId,
         params,
       });
-      const result = await transport.request<ThreadStartParams, any>(
+      const result = await transport.request<ThreadStartParams, unknown>(
         "thread/start",
         requestParams,
       );
-      const rawThread = result.thread ?? result;
+      const resultRecord = asRecord(result) ?? {};
+      const rawThread = resultRecord.thread ?? result;
+      const rawThreadRecord = asRecord(rawThread) ?? {};
+      if (!hasThreadId(rawThread)) throw new Error("thread/start returned no thread id");
       const threadId = rawThreadId(rawThread);
       if (!threadId) throw new Error("thread/start returned no thread id");
       dispatch({
-        status: normalizeThreadStatus(rawThread.status ?? result.status),
+        status: normalizeThreadStatus(rawThreadRecord.status ?? resultRecord.status),
         thread: {
-          ephemeral: rawThread.ephemeral,
+          ephemeral: Boolean(rawThreadRecord.ephemeral),
           id: threadId,
-          name: rawThread.name,
-          path: rawThread.path,
+          name: stringValue(rawThreadRecord.name),
+          path: stringValue(rawThreadRecord.path),
           raw: rawThread,
         },
         type: "thread/started",
@@ -137,12 +140,12 @@ export function useAgentThread(threadId?: ThreadId) {
   const resumeThread = useCallback(
     async (id: ThreadId, params?: Record<string, unknown>) => {
       const requestParams = threadResumeParams(id, params);
-      const result = await transport.request<ThreadResumeParams, any>(
+      const result = await transport.request<ThreadResumeParams, unknown>(
         "thread/resume",
         requestParams,
       );
-      const rawThread = result?.thread ?? result;
-      if (rawThread?.id) {
+      const rawThread = asRecord(result)?.thread ?? result;
+      if (hasThreadId(rawThread)) {
         for (const event of threadSnapshotEvents(rawThread, true)) dispatch(event);
       }
       dispatch({ threadId: id, type: "thread/active/set" });
@@ -182,20 +185,25 @@ export function useAgentThreadHistory() {
       setError(undefined);
       try {
         const requestParams = threadListParams(params);
-        const response = await transport.request<ThreadListParams, any>(
+        const response = await transport.request<ThreadListParams, unknown>(
           "thread/list",
           requestParams,
         );
-        const rawThreads = Array.isArray(response?.data)
-          ? response.data
-          : Array.isArray(response?.threads)
-            ? response.threads
+        const responseRecord = asRecord(response);
+        const rawThreads = Array.isArray(responseRecord?.data)
+          ? responseRecord.data
+          : Array.isArray(responseRecord?.threads)
+            ? responseRecord.threads
             : [];
         for (const rawThread of rawThreads.filter(isRecordWithThreadId)) {
           dispatch(threadUpsertEvent(rawThread));
         }
-        setCursor(response?.nextCursor ?? response?.next_cursor ?? null);
-        return response;
+        setCursor(
+          stringValue(responseRecord?.nextCursor) ??
+            stringValue(responseRecord?.next_cursor) ??
+            null,
+        );
+        return responseRecord ?? {};
       } catch (caught) {
         const nextError = caught instanceof Error ? caught : new Error(String(caught));
         setError(nextError);
@@ -224,11 +232,11 @@ export function useAgentThreadReader() {
       options: { activate?: boolean; includeTurns?: boolean } = {},
     ) => {
       const requestParams = threadReadParams(threadId, options.includeTurns ?? true);
-      const response = await transport.request<ThreadReadParams, any>(
+      const response = await transport.request<ThreadReadParams, unknown>(
         "thread/read",
         requestParams,
       );
-      const rawThread = response?.thread ?? response;
+      const rawThread = asRecord(response)?.thread ?? response;
       if (!hasThreadId(rawThread)) {
         throw new Error(`thread/read returned no thread for ${threadId}`);
       }
@@ -391,14 +399,15 @@ export function useAgentAuth() {
   const { dispatch, state, transport } = useAgentContext();
   const readAccount = useCallback(async () => {
     const params = accountReadParams(false);
-    const response = await transport.request<GetAccountParams, any>(
+    const response = await transport.request<GetAccountParams, unknown>(
       "account/read",
       params,
     );
+    const responseRecord = asRecord(response);
     const account =
-      response && Object.prototype.hasOwnProperty.call(response, "account")
-        ? response.account
-        : response && Object.keys(response).length > 0
+      responseRecord && Object.prototype.hasOwnProperty.call(responseRecord, "account")
+        ? responseRecord.account
+        : responseRecord && Object.keys(responseRecord).length > 0
           ? response
           : null;
     dispatch({
@@ -410,14 +419,16 @@ export function useAgentAuth() {
   }, [dispatch, transport]);
   const login = useCallback(async () => {
     const params = deviceCodeLoginParams();
-    const raw = await transport.request<LoginAccountParams, any>(
+    const raw = await transport.request<LoginAccountParams, unknown>(
       "account/login/start",
       params,
     );
+    const record = asRecord(raw) ?? {};
     const loginState = {
-      loginId: raw?.loginId ?? raw?.login_id,
-      userCode: raw?.userCode ?? raw?.user_code,
-      verificationUrl: raw?.verificationUrl ?? raw?.verification_url,
+      loginId: stringValue(record.loginId) ?? stringValue(record.login_id),
+      userCode: stringValue(record.userCode) ?? stringValue(record.user_code),
+      verificationUrl:
+        stringValue(record.verificationUrl) ?? stringValue(record.verification_url),
     };
     dispatch({
       loginId: loginState.loginId,
@@ -585,7 +596,10 @@ export function useAgentModels() {
   const { dispatch, state, transport } = useAgentContext();
   const refreshModels = useCallback(async () => {
     const params = modelListParams();
-    const response = await transport.request<ModelListParams, any>("model/list", params);
+    const response = await transport.request<ModelListParams, unknown>(
+      "model/list",
+      params,
+    );
     const models = normalizeModelList(response);
     dispatch({ models, type: "models/updated" });
     return models;
@@ -594,7 +608,7 @@ export function useAgentModels() {
 }
 
 function normalizeModelList(response: unknown): AgentModel[] {
-  const value = response as any;
+  const value = asRecord(response);
   const rawModels = Array.isArray(value?.data)
     ? value.data
     : Array.isArray(value?.models)
@@ -603,8 +617,11 @@ function normalizeModelList(response: unknown): AgentModel[] {
         ? value
         : [];
   return rawModels
-    .filter((model: unknown) => typeof model === "object" && model !== null)
-    .map((model: Record<string, unknown>) => ({
+    .flatMap((model) => {
+      const record = asRecord(model);
+      return record ? [record] : [];
+    })
+    .map((model) => ({
       id: String(model.id ?? model.slug ?? model.model ?? model.name),
       defaultEffort: normalizeReasoningEffort(
         model.defaultReasoningEffort ??
@@ -632,8 +649,8 @@ function normalizeSupportedEfforts(
   const normalized = efforts
     .map((effort) => {
       if (typeof effort === "string") return effort;
-      if (typeof effort !== "object" || effort === null) return undefined;
-      const record = effort as Record<string, unknown>;
+      const record = asRecord(effort);
+      if (!record) return undefined;
       return normalizeReasoningEffort(record.reasoningEffort ?? record.reasoning_effort);
     })
     .filter(
@@ -648,19 +665,25 @@ function normalizeReasoningEffort(value: unknown): ReasoningEffort | undefined {
 }
 
 function isDefaultModel(model: AgentModel): boolean {
-  return (
-    typeof model.raw === "object" &&
-    model.raw !== null &&
-    (model.raw as Record<string, unknown>).isDefault === true
-  );
+  return asRecord(model.raw)?.isDefault === true;
 }
 
 function normalizeThreadStatus(value: unknown): string | undefined {
   if (value == null) return undefined;
   if (typeof value === "string") return value;
   if (typeof value !== "object") return String(value);
-  const type = (value as Record<string, unknown>).type;
+  const type = asRecord(value)?.type;
   if (type === "active") return "running";
   if (type === "idle") return "loaded";
   return typeof type === "string" ? type : undefined;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
 }

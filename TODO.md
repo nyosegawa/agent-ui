@@ -235,6 +235,8 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Render live diffs from App Server patch payloads.
 - [x] Render live command approval prompts.
 - [x] Render live file-change approval prompts.
+- [x] Mark threads as waiting for approval while server requests are pending.
+- [x] Keep command/diff work trace visible while approval decisions are pending.
 
 ### Correctness Gaps
 
@@ -322,6 +324,8 @@ This section is the publish/release gate after the real local app works.
 - [x] Preserve device-code `loginId` and support stable-schema login cancel.
 - [x] Type the Codex device-code auth helper against generated `LoginAccountResponse`.
 - [x] Remove loose `any` and nondeterministic warning ids from the Codex protocol normalizer.
+- [x] Remove loose `any` from React App Server response hooks.
+- [x] Remove loose `any` from the browser WebSocket transport envelope handling.
 - [x] Add schema-backed request param tests for real App Server methods.
 - [x] Redact App Server stderr before callback, transport, WebSocket, and UI forwarding.
 - [x] Avoid retaining raw transport stderr events in React diagnostics state.

@@ -21,19 +21,23 @@ test("starts a live turn and resolves approval through the browser websocket tra
 }) => {
   await openRealLocalApp(page);
   await page.getByLabel("Model", { exact: true }).selectOption("smoke-model");
-  await page
-    .getByRole("button", { name: "New thread" })
-    .evaluate((button) => button.click());
+  await page.getByRole("button", { name: "New thread" }).click({ force: true });
   await expect(page.getByRole("heading", { name: "Live real smoke" })).toBeVisible();
   await page.getByRole("textbox", { name: "Message" }).fill("run smoke");
-  await page.getByRole("button", { name: "Send" }).evaluate((button) => button.click());
+  await page.getByRole("button", { name: "Send" }).click({ force: true });
   await expect(page.getByText("Streaming smoke response.")).toBeVisible();
+  await expect(page.locator(".aui-command-preview")).toContainText("fake command output");
   await expect(page.getByLabel("Command output")).toContainText("fake command output");
-  await expect(page.getByLabel("Diff preview")).toContainText("README.md");
+  await page.locator(".aui-message-list").evaluate((element) => {
+    element.scrollTop = element.scrollHeight;
+  });
+  await expect(page.locator(".aui-file-change-card")).toContainText("File changes");
   await expect(page.getByText("Approve command")).toBeVisible();
-  await page
-    .getByRole("button", { name: /^Approve command request approval-\d+$/ })
-    .evaluate((button) => button.click());
+  await expect(page.locator(".aui-status-pill")).toHaveText("Needs approval");
+  const approvalButton = page.getByRole("button", {
+    name: /^Approve command request approval-\d+$/,
+  });
+  await approvalButton.evaluate((button) => button.click());
 });
 
 test("real local app shell has stable desktop and mobile layout contracts", async ({

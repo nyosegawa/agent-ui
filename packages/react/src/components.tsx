@@ -444,7 +444,11 @@ function AgentTurnView({
       {activityItemIds.length > 0 ? (
         <AgentWorkTrace
           activityItemIds={activityItemIds}
-          defaultOpen={!hasConversationText || threadStatus === "running"}
+          defaultOpen={
+            !hasConversationText ||
+            threadStatus === "running" ||
+            threadStatus === "waitingForInput"
+          }
           hiddenActivityCount={hiddenActivityCount}
           itemIds={visibleActivityItemIds}
           turn={turn}
@@ -561,8 +565,13 @@ function AgentCommandActivity({
   const normalizedOutput = output?.trimEnd() ?? "";
   const title = commandTextForItem(item) ?? displayText(item?.text) ?? itemId;
   const status = item?.status ?? "completed";
+  const defaultOpen = normalizedOutput.length > 0 && normalizedOutput.length <= 1200;
   return (
-    <details aria-label="Command output" className="aui-activity-card aui-command-card">
+    <details
+      aria-label="Command output"
+      className="aui-activity-card aui-command-card"
+      open={defaultOpen ? true : undefined}
+    >
       <summary>
         <span className="aui-terminal-label">terminal</span>
         <span className="aui-command-title">{title}</span>
@@ -1385,7 +1394,11 @@ export function ThreadSidebar({
         if (!params.append) return threadIds;
         return Array.from(new Set([...(current ?? []), ...threadIds]));
       });
-      setNextCursor(response?.nextCursor ?? response?.next_cursor ?? null);
+      setNextCursor(
+        stringField(response, "nextCursor") ??
+          stringField(response, "next_cursor") ??
+          null,
+      );
       setHasLoaded(true);
       const firstThreadId = threadIds[0];
       if (params.activateFirst && firstThreadId && !state.activeThreadId) {

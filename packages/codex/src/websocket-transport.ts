@@ -1,4 +1,8 @@
-import type { AgentTransport, AgentTransportEvent, RequestId } from "@nyosegawa/agent-ui-core";
+import type {
+  AgentTransport,
+  AgentTransportEvent,
+  RequestId,
+} from "@nyosegawa/agent-ui-core";
 import {
   isJsonRpcNotification,
   isJsonRpcRequest,
@@ -32,7 +36,10 @@ export function createCodexWebSocketTransport(
 
 class CodexWebSocketTransport implements AgentTransport {
   readonly #options: CodexWebSocketTransportOptions;
-  readonly #pending = new Map<string, { reject: (error: Error) => void; resolve: (value: unknown) => void }>();
+  readonly #pending = new Map<
+    string,
+    { reject: (error: Error) => void; resolve: (value: unknown) => void }
+  >();
   #events: AgentTransportEvent[] = [];
   #waiters: Array<(value: IteratorResult<AgentTransportEvent>) => void> = [];
   #manualClose = false;
@@ -102,9 +109,13 @@ class CodexWebSocketTransport implements AgentTransport {
     this.#socket = socket;
     await new Promise<void>((resolve, reject) => {
       socket.addEventListener("open", () => resolve(), { once: true });
-      socket.addEventListener("error", () => reject(new Error("Codex websocket failed to open")), {
-        once: true,
-      });
+      socket.addEventListener(
+        "error",
+        () => reject(new Error("Codex websocket failed to open")),
+        {
+          once: true,
+        },
+      );
     });
     socket.addEventListener("message", (event) => {
       try {
@@ -118,7 +129,10 @@ class CodexWebSocketTransport implements AgentTransport {
     });
     socket.addEventListener("close", (event) => {
       this.#rejectPending(new Error("Codex websocket transport disconnected"));
-      this.#push({ event: { reason: event.reason, type: "connection/closed" }, type: "event" });
+      this.#push({
+        event: { reason: event.reason, type: "connection/closed" },
+        type: "event",
+      });
       this.#scheduleReconnect();
     });
     this.#reconnectAttempts = 0;
@@ -136,7 +150,12 @@ class CodexWebSocketTransport implements AgentTransport {
   }
 
   #scheduleReconnect(): void {
-    if (this.#manualClose || this.#options.reconnect === false || !this.#options.reconnect) return;
+    if (
+      this.#manualClose ||
+      this.#options.reconnect === false ||
+      !this.#options.reconnect
+    )
+      return;
     const options = this.#options.reconnect;
     const maxAttempts = options.maxAttempts ?? 5;
     if (this.#reconnectAttempts >= maxAttempts) return;
@@ -173,9 +192,8 @@ class CodexWebSocketTransport implements AgentTransport {
   }
 
   #handleMessage(message: JsonRpcMessage): void {
-    const envelope = message as any;
-    if (envelope?.type === "agent-ui/transport-event" && envelope.event) {
-      this.#push(envelope.event);
+    if (isTransportEventEnvelope(message)) {
+      this.#push(envelopeEvent(message));
       return;
     }
 
@@ -210,4 +228,22 @@ class CodexWebSocketTransport implements AgentTransport {
     if (event) return Promise.resolve({ done: false, value: event });
     return new Promise((resolve) => this.#waiters.push(resolve));
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isTransportEventEnvelope(
+  value: unknown,
+): value is { event: AgentTransportEvent; type: "agent-ui/transport-event" } {
+  if (!isRecord(value) || value.type !== "agent-ui/transport-event") return false;
+  return isRecord(value.event) && typeof value.event.type === "string";
+}
+
+function envelopeEvent(value: {
+  event: AgentTransportEvent;
+  type: "agent-ui/transport-event";
+}): AgentTransportEvent {
+  return value.event;
 }

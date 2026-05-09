@@ -7,7 +7,11 @@ import planFixture from "../../../fixtures/app-server/plan-update.json" with { t
 import rateLimitFixture from "../../../fixtures/app-server/rate-limit-update.json" with { type: "json" };
 import fixture from "../../../fixtures/app-server/text-turn.json" with { type: "json" };
 import { runEventFixture } from "../src/fixtures";
-import { selectOrderedThreads, selectOrderedTurns, selectPendingApprovals } from "../src/selectors";
+import {
+  selectOrderedThreads,
+  selectOrderedTurns,
+  selectPendingApprovals,
+} from "../src/selectors";
 import type { FixtureStep } from "../src/fixtures";
 
 describe("agentReducer", () => {
@@ -32,6 +36,41 @@ describe("agentReducer", () => {
       { event: { type: "connection/closed" } },
     ]);
     expect(state.pendingServerRequests).toEqual({});
+  });
+
+  it("marks a thread as waiting while approval is pending", () => {
+    const state = runEventFixture([
+      { event: { thread: { id: "thread-approval" }, type: "thread/started" } },
+      {
+        event: {
+          request: {
+            id: "approval-1",
+            kind: "commandApproval",
+            payload: {},
+            threadId: "thread-approval",
+          },
+          type: "serverRequest/created",
+        },
+      },
+    ]);
+    expect(state.threads["thread-approval"]?.status).toBe("waitingForInput");
+
+    const resolved = runEventFixture([
+      { event: { thread: { id: "thread-approval" }, type: "thread/started" } },
+      {
+        event: {
+          request: {
+            id: "approval-1",
+            kind: "commandApproval",
+            payload: {},
+            threadId: "thread-approval",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
+    ]);
+    expect(resolved.threads["thread-approval"]?.status).toBe("running");
   });
 
   it("orders live deltas even when item start arrives late or is omitted", () => {
@@ -99,10 +138,9 @@ describe("agentReducer", () => {
     expect(turns[0]?.streamingTextByItemId["item-reasoning"]).toContain("reviewable");
     expect(turns[0]?.commandOutputByItemId["item-command"]).toContain("7 tests passed");
     expect(turns[0]?.filePatchByItemId["item-file"]).toContain("AgentDiffPanel");
-    expect(selectPendingApprovals(state, "thread-demo").map((request) => request.kind)).toEqual([
-      "commandApproval",
-      "fileChangeApproval",
-    ]);
+    expect(
+      selectPendingApprovals(state, "thread-demo").map((request) => request.kind),
+    ).toEqual(["commandApproval", "fileChangeApproval"]);
   });
 
   it("loads the device-code login fixture", () => {
@@ -114,9 +152,9 @@ describe("agentReducer", () => {
 
   it("loads plan, interrupted, failed, and rate-limit fixtures", () => {
     const planned = runEventFixture(planFixture as FixtureStep[]);
-    expect(planned.threads["thread-plan"]?.turns["turn-plan"]?.plan?.explanation).toContain(
-      "Prepare UI",
-    );
+    expect(
+      planned.threads["thread-plan"]?.turns["turn-plan"]?.plan?.explanation,
+    ).toContain("Prepare UI");
 
     const interrupted = runEventFixture(interruptedFixture as FixtureStep[]);
     expect(interrupted.threads["thread-interrupted"]?.status).toBe("interrupted");
