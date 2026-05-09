@@ -322,6 +322,7 @@ This section is the publish/release gate after the real local app works.
 - [x] Preserve device-code `loginId` and support stable-schema login cancel.
 - [x] Add schema-backed request param tests for real App Server methods.
 - [x] Redact App Server stderr before callback, transport, WebSocket, and UI forwarding.
+- [x] Avoid retaining raw transport stderr events in React diagnostics state.
 - [x] Clarify Next one-shot RPC helper scope and keep chat-capable bridge on WebSocket.
 - [x] Document real vs fake approval coverage without overstating completion.
 - [x] Re-run full validation after corrective audit changes.

@@ -11,7 +11,13 @@ import {
   runEventFixture,
   type FixtureStep,
 } from "@nyosegawa/agent-ui-core";
-import { AgentChat, AgentDiffViewer, AgentProvider, useAgentAuth } from "../src";
+import {
+  AgentChat,
+  AgentDiffViewer,
+  AgentProvider,
+  useAgentAuth,
+  useAgentContext,
+} from "../src";
 
 expect.extend(toHaveNoViolations);
 
@@ -276,6 +282,31 @@ describe("AgentChat", () => {
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("Diagnostics")).toBeInTheDocument();
+  });
+
+  it("does not retain raw transport events for diagnostics", async () => {
+    const transport = new FakeAgentTransport();
+    function WarningProbe() {
+      const { state } = useAgentContext();
+      return (
+        <output>
+          {state.configWarnings.map((warning) => JSON.stringify(warning)).join("\n")}
+        </output>
+      );
+    }
+    render(
+      <AgentProvider transport={transport}>
+        <WarningProbe />
+      </AgentProvider>,
+    );
+
+    transport.push({
+      message: "WARN bridge warning",
+      type: "stderr",
+    });
+
+    expect(await screen.findByText(/WARN bridge warning/)).toBeInTheDocument();
+    expect(screen.getByText(/WARN bridge warning/)).not.toHaveTextContent('"raw"');
   });
 
   it("keeps known Codex plugin manifest warnings out of the visible UI", async () => {

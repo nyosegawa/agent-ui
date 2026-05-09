@@ -12,6 +12,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
+  useRef,
   type PropsWithChildren,
 } from "react";
 
@@ -33,6 +34,7 @@ export function AgentProvider({ children, initialState, transport }: AgentProvid
     agentReducer,
     initialState ?? createInitialAgentState(),
   );
+  const warningSequence = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -48,13 +50,14 @@ export function AgentProvider({ children, initialState, transport }: AgentProvid
         if (event.event) dispatch(event.event);
         if (event.error) dispatch({ error: event.error, type: "error/added" });
         if (event.message) {
-          for (const [index, message] of normalizeTransportMessages(event.message).entries()) {
+          for (const [index, message] of normalizeTransportMessages(
+            event.message,
+          ).entries()) {
             dispatch({
               type: "warning/added",
               warning: {
-                id: `stderr-${Date.now()}-${index}`,
+                id: `stderr-${warningSequence.current++}-${index}`,
                 message,
-                raw: event,
               },
             });
           }
@@ -86,11 +89,14 @@ function formatTransportMessage(message: string): string {
       level?: unknown;
       target?: unknown;
     };
-    const text = typeof parsed.fields?.message === "string" ? parsed.fields.message : message;
+    const text =
+      typeof parsed.fields?.message === "string" ? parsed.fields.message : message;
     const level = typeof parsed.level === "string" ? parsed.level : undefined;
     const target = typeof parsed.target === "string" ? parsed.target : undefined;
     const path = typeof parsed.fields?.path === "string" ? parsed.fields.path : undefined;
-    return [level, target, text, path ? `(${path})` : undefined].filter(Boolean).join(" ");
+    return [level, target, text, path ? `(${path})` : undefined]
+      .filter(Boolean)
+      .join(" ");
   } catch {
     return message;
   }

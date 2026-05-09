@@ -59,6 +59,8 @@ Device-code login displays only the App Server `verificationUrl` and `userCode` 
 
 The default React diagnostics surface keeps App Server warnings out of the primary chat transcript. Known low-value Codex plugin manifest warnings about `interface.defaultPrompt` and skill icon path warnings about `interface.icon_small` / `interface.icon_large` are suppressed from visible diagnostics because they are not actionable from Agent UI. Fatal bridge errors, request errors, and other redacted stderr warnings still surface as visible diagnostics.
 
+React diagnostics store formatted diagnostic strings only. They do not retain the raw transport stderr event in React state, so browser devtools and custom renderers do not receive a second copy of host diagnostic payloads.
+
 Current redaction covers:
 
 - `Authorization: Bearer ...`
