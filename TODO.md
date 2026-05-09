@@ -2,6 +2,23 @@
 
 This checklist is the execution source of truth for Agent UI.
 
+## Active Completion Gate: Deterministic Multi-Turn E2E
+
+Real Codex browser continuation was verified manually on 2026-05-10. The same
+core behavior should be protected by the deterministic fake stdio App Server
+Playwright gate so ordinary CI catches regressions.
+
+### Fake Stdio Continuation
+
+- [x] Make the fake stdio App Server emit unique turn/item ids for repeated `turn/start` calls.
+- [x] Add a browser WebSocket Playwright test that sends two turns in the same thread.
+- [x] Assert the composer re-enables and the app has no horizontal overflow after the second turn.
+
+### Completion Hygiene
+
+- [x] Update testing docs for deterministic multi-turn browser coverage.
+- [ ] Run targeted validation, commit, push, and watch Actions.
+
 ## Completed Gate: Multi-Turn Browser Continuation Smoke
 
 The composer must recover after a completed real Codex turn so users can keep

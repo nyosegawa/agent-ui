@@ -58,6 +58,39 @@ test("starts a live turn and resolves approval through the browser websocket tra
   await expect(page.locator(".aui-approval")).toHaveCount(0, { timeout: 30_000 });
 });
 
+test("continues a completed thread through the browser websocket transport", async ({
+  page,
+}, testInfo) => {
+  testInfo.setTimeout(90_000);
+  await openRealLocalApp(page);
+  await page.getByRole("button", { name: "New thread" }).click({ force: true });
+  await expect(page.locator(".aui-status-pill")).toHaveText("Ready", {
+    timeout: 30_000,
+  });
+
+  const messageBox = page.getByRole("textbox", { name: "Message" });
+  await messageBox.fill("turn one", { timeout: 30_000 });
+  await page.getByRole("button", { name: "Send" }).click({ force: true });
+  await expect(page.locator(".aui-message", { hasText: "Echo: turn one" })).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.locator(".aui-status-pill")).toHaveText("Complete", {
+    timeout: 30_000,
+  });
+
+  await expect(messageBox).toBeEnabled({ timeout: 30_000 });
+  await messageBox.fill("turn two");
+  await page.getByRole("button", { name: "Send" }).click({ force: true });
+  await expect(page.locator(".aui-message", { hasText: "Echo: turn two" })).toBeVisible({
+    timeout: 30_000,
+  });
+  await expect(page.locator(".aui-status-pill")).toHaveText("Complete", {
+    timeout: 30_000,
+  });
+  await expect(messageBox).toBeEnabled({ timeout: 30_000 });
+  await expect(noHorizontalOverflow(page)).resolves.toBe(true);
+});
+
 test("real local app shell has stable desktop and mobile layout contracts", async ({
   page,
 }) => {
@@ -132,7 +165,9 @@ async function usableMessageTimeline(page: Page) {
 async function headerDoesNotOverlapTimeline(page: Page) {
   return page.evaluate(() => {
     const header = document.querySelector(".aui-thread-header")?.getBoundingClientRect();
-    const actions = document.querySelector(".aui-thread-actions")?.getBoundingClientRect();
+    const actions = document
+      .querySelector(".aui-thread-actions")
+      ?.getBoundingClientRect();
     const messages = document.querySelector(".aui-message-list")?.getBoundingClientRect();
     if (!header || !actions || !messages) return false;
     return actions.bottom <= header.bottom && header.bottom <= messages.top;
