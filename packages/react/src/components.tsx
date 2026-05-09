@@ -394,10 +394,25 @@ function ApprovalCard({
 }
 
 export function AgentDiffViewer({ patch }: { patch: unknown }) {
-  const text = stringifyPatch(patch);
+  const normalized = normalizePatch(patch);
   return (
     <div className="aui-diff">
-      <CodeMirrorDiff text={text} />
+      <div className="aui-diff-header">
+        <strong>{formatCount(normalized.files.length, "file")}</strong>
+        <span className="aui-diff-stat aui-diff-stat-add">+{normalized.stats.additions}</span>
+        <span className="aui-diff-stat aui-diff-stat-remove">-{normalized.stats.removals}</span>
+      </div>
+      {normalized.files.length > 0 ? (
+        <ul className="aui-diff-files" aria-label="Changed files">
+          {normalized.files.map((file) => (
+            <li key={`${file.path}:${file.kind}`}>
+              <span>{file.path}</span>
+              <em>{file.kind}</em>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      <CodeMirrorDiff text={normalized.text} />
     </div>
   );
 }
@@ -509,8 +524,128 @@ const diffTheme = EditorView.theme(
   { dark: true },
 );
 
-function stringifyPatch(patch: unknown) {
-  return typeof patch === "string" ? patch : JSON.stringify(patch, null, 2);
+type NormalizedPatch = {
+  files: Array<{ kind: string; path: string }>;
+  stats: { additions: number; removals: number };
+  text: string;
+};
+
+function normalizePatch(patch: unknown): NormalizedPatch {
+  if (typeof patch === "string") return buildNormalizedPatch(patch, parseUnifiedDiffFiles(patch));
+  if (Array.isArray(patch)) {
+    const changes = normalizeChangeArray(patch);
+    if (changes.length > 0) return buildNormalizedPatch(changesToText(changes), changes);
+  }
+  if (isRecord(patch)) {
+    const changes = normalizeChangeArray(patch.changes);
+    if (changes.length > 0) return buildNormalizedPatch(changesToText(changes), changes);
+    const fileChanges = normalizeFileChanges(patch.fileChanges);
+    if (fileChanges.length > 0) return buildNormalizedPatch(changesToText(fileChanges), fileChanges);
+    if (typeof patch.diff === "string") {
+      return buildNormalizedPatch(patch.diff, parseUnifiedDiffFiles(patch.diff));
+    }
+    if (typeof patch.patch === "string") {
+      return buildNormalizedPatch(patch.patch, parseUnifiedDiffFiles(patch.patch));
+    }
+  }
+  const text = JSON.stringify(patch, null, 2);
+  return buildNormalizedPatch(text, []);
+}
+
+function buildNormalizedPatch(
+  text: string,
+  files: Array<{ kind: string; path: string }>,
+): NormalizedPatch {
+  return {
+    files: dedupeFiles(files),
+    stats: diffStats(text),
+    text,
+  };
+}
+
+function normalizeChangeArray(value: unknown): Array<{ diff: string; kind: string; path: string }> {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((change) => {
+    if (!isRecord(change) || typeof change.path !== "string") return [];
+    const diff = typeof change.diff === "string" ? change.diff : "";
+    const kind = typeof change.kind === "string" ? change.kind : "update";
+    return [{ diff, kind, path: change.path }];
+  });
+}
+
+function normalizeFileChanges(value: unknown): Array<{ diff: string; kind: string; path: string }> {
+  if (!isRecord(value)) return [];
+  return Object.entries(value).flatMap(([path, change]) => {
+    if (!isRecord(change) || typeof change.type !== "string") return [];
+    if (change.type === "update") {
+      const movePath = typeof change.move_path === "string" ? ` -> ${change.move_path}` : "";
+      return [
+        {
+          diff: typeof change.unified_diff === "string" ? change.unified_diff : "",
+          kind: movePath ? `move${movePath}` : "update",
+          path,
+        },
+      ];
+    }
+    const content = typeof change.content === "string" ? change.content : "";
+    const prefix = change.type === "delete" ? "-" : "+";
+    return [{ diff: contentToDiff(content, prefix), kind: change.type, path }];
+  });
+}
+
+function changesToText(changes: Array<{ diff: string; kind: string; path: string }>) {
+  return changes
+    .map((change) => {
+      const header = `diff --git a/${change.path} b/${change.path}\n# ${change.kind}`;
+      return `${header}\n${change.diff}`.trimEnd();
+    })
+    .join("\n\n");
+}
+
+function contentToDiff(content: string, prefix: "+" | "-") {
+  return content
+    .split("\n")
+    .map((line) => (line.length > 0 ? `${prefix}${line}` : prefix))
+    .join("\n");
+}
+
+function parseUnifiedDiffFiles(text: string): Array<{ kind: string; path: string }> {
+  return text
+    .split("\n")
+    .flatMap((line) => {
+      const match = /^diff --git a\/(.+) b\/(.+)$/.exec(line);
+      if (!match) return [];
+      return [{ kind: "update", path: match[2] ?? match[1] ?? "unknown" }];
+    });
+}
+
+function dedupeFiles(files: Array<{ kind: string; path: string }>) {
+  const seen = new Set<string>();
+  return files.filter((file) => {
+    const key = `${file.path}:${file.kind}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function diffStats(text: string) {
+  return text.split("\n").reduce(
+    (stats, line) => {
+      if (line.startsWith("+") && !line.startsWith("+++")) stats.additions += 1;
+      if (line.startsWith("-") && !line.startsWith("---")) stats.removals += 1;
+      return stats;
+    },
+    { additions: 0, removals: 0 },
+  );
+}
+
+function formatCount(count: number, singular: string) {
+  return `${count} ${count === 1 ? singular : `${singular}s`}`;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
 
 export function AgentDiffPanel({ thread }: { thread: ThreadState }) {

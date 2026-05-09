@@ -10,7 +10,7 @@ import {
   runEventFixture,
   type FixtureStep,
 } from "@nyosegawa/agent-ui-core";
-import { AgentChat, AgentProvider } from "../src";
+import { AgentChat, AgentDiffViewer, AgentProvider } from "../src";
 
 expect.extend(toHaveNoViolations);
 
@@ -170,6 +170,35 @@ describe("AgentChat", () => {
 
     expect(transport.responses.get("approval-file")).toEqual({ decision: "accept" });
     expect(await axe(container)).toHaveNoViolations();
+  });
+
+  it("summarizes structured App Server patch payloads", async () => {
+    render(
+      <AgentDiffViewer
+        patch={{
+          changes: [
+            {
+              diff: "@@ -1 +1,2 @@\n-old\n+new\n+next\n",
+              kind: "update",
+              path: "packages/react/src/components.tsx",
+            },
+            {
+              diff: "+added\n",
+              kind: "add",
+              path: "docs/testing.md",
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(screen.getByText("2 files")).toBeInTheDocument();
+    expect(screen.getByText("+3")).toBeInTheDocument();
+    expect(screen.getByText("-1")).toBeInTheDocument();
+    expect(screen.getByLabelText("Changed files")).toHaveTextContent(
+      "packages/react/src/components.tsx",
+    );
+    expect(screen.getByLabelText("Changed files")).toHaveTextContent("docs/testing.md");
   });
 
   it("declines approvals with schema-backed decisions", async () => {
