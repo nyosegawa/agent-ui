@@ -205,7 +205,15 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         },
       ];
     default:
-      return [];
+      return [
+        {
+          type: "warning/added",
+          warning: {
+            id: `unsupported-codex-notification:${message.method}`,
+            message: `Unsupported Codex notification: ${message.method}`,
+          },
+        },
+      ];
   }
 }
 

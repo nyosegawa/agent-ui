@@ -125,6 +125,26 @@ describe("Codex protocol metadata", () => {
     ).toEqual([{ rateLimits: { planType: "plus" }, type: "account/rateLimits/updated" }]);
   });
 
+  it("turns unsupported notifications into neutral warnings without raw payloads", () => {
+    expect(
+      normalizeCodexServerMessage({
+        method: "plugin/surprising/update",
+        params: {
+          nested: { token: "must-not-enter-state" },
+          text: "raw JSON should not become a chat wall",
+        },
+      }),
+    ).toEqual([
+      {
+        type: "warning/added",
+        warning: {
+          id: "unsupported-codex-notification:plugin/surprising/update",
+          message: "Unsupported Codex notification: plugin/surprising/update",
+        },
+      },
+    ]);
+  });
+
   it("normalizes current model/list data responses", () => {
     expect(
       normalizeModelListResponse({

@@ -13,7 +13,7 @@ docs, commits, pushes, and GitHub Actions checks.
 
 - [x] Re-audit `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server` stable capabilities against Agent UI.
 - [x] Classify supported, intentionally host-only, deferred, and unsupported App Server methods in `docs/protocol.md`.
-- [ ] Ensure unsupported App Server notifications degrade into readable diagnostics or neutral timeline entries instead of raw JSON walls.
+- [x] Ensure unsupported App Server notifications degrade into readable diagnostics or neutral timeline entries instead of raw JSON walls.
 
 ### Conversation Experience
 
@@ -39,7 +39,7 @@ docs, commits, pushes, and GitHub Actions checks.
 - [x] Browser-check all primary screens after each UI refactor using the in-app browser.
 - [x] Add or update React/unit/e2e tests for Markdown rendering, scroll containment, sidebar collapse, and cwd preservation.
 - [x] Update docs for the final information architecture, App Server coverage, Markdown security, and UX constraints.
-- [ ] Re-run full validation and GitHub Actions after this gate is complete.
+- [x] Re-run full validation and GitHub Actions after this gate is complete.
 
 ## Repository Setup
 

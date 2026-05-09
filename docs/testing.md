@@ -61,6 +61,7 @@ Cases:
 - command output delta
 - file patch update
 - approval request/resolved
+- unsupported App Server notifications become neutral warnings without storing raw payloads
 - failed turn
 - interrupted turn
 - out-of-order safe handling
