@@ -2,6 +2,32 @@
 
 This checklist is the execution source of truth for Agent UI.
 
+## Active Completion Gate: Full Validation Sweep
+
+The real local app now passes targeted UI, history, and browser checks. This
+gate verifies the complete package and app surface after the latest state and
+pagination changes.
+
+### Required Validation
+
+- [x] Run `bun run typecheck`.
+- [x] Run `bun run lint`.
+- [x] Run `bun test`.
+- [x] Run `bun run build`.
+- [x] Run `bun run test:protocol`.
+- [x] Run `bun run test:fixtures`.
+- [x] Run `bun run publint`.
+- [x] Run `bun run attw`.
+- [x] Run `bun run check:exports`.
+- [x] Run `bun run test:e2e:playwright`.
+- [x] Run `bun run test:node-compat`.
+
+### Completion Hygiene
+
+- [x] Fix any failures from the full sweep.
+- [x] Update docs if validation scope or known limits changed.
+- [ ] Commit, push, and watch Actions.
+
 ## Active Completion Gate: Real History Exhaustion
 
 Real App Server verification on 2026-05-10 showed `Load all` loaded 525 threads
