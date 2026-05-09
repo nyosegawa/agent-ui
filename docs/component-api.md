@@ -50,7 +50,15 @@ the chat.
 
 When a stored thread is loaded as `notLoaded` or `loaded`, the thread header shows `Resume`. That action calls `thread/resume` with `excludeTurns: true` because the preview history is already hydrated. The default UI maps internal protocol statuses to product-facing labels such as `Stored`, `Preview`, `Running`, and `Needs approval`; raw status strings are not shown unless the status is unknown to Agent UI. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
 
-Hydrated history opens at the latest messages. Long persisted messages are preview-first with an explicit expand control, structured App Server content arrays are converted to readable text, and command-heavy histories show a compact Work trace summary with older steps collapsed inside the relevant turn. If a `thread/read` response includes turns but still reports `notLoaded`, the default UI treats the hydrated view as `loaded`; stale item-level `inProgress` labels in loaded history are rendered as completed.
+Hydrated history opens at the latest messages. On desktop, the shell keeps the
+thread list and chat timeline inside the app viewport so long stored-session
+lists do not stretch the entire page. Long persisted messages are preview-first
+with an explicit expand control, structured App Server content arrays are
+converted to readable text, and command-heavy histories show a compact Work
+trace summary with older steps collapsed inside the relevant turn. If a
+`thread/read` response includes turns but still reports `notLoaded`, the default
+UI treats the hydrated view as `loaded`; stale item-level `inProgress` labels in
+loaded history are rendered as completed.
 
 ## Approval Components
 

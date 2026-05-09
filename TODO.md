@@ -285,6 +285,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Hide internal Codex JSONL session paths from default thread history UI.
 - [x] Keep the start-thread action hidden until account bootstrap confirms it is usable.
 - [x] Keep the running-turn Stop action in the thread header so it stays visible above approvals and work traces.
+- [x] Keep desktop history and chat inside an app-like viewport so stored sessions do not stretch the whole page.
 
 ### Experience Hardening Audit
 

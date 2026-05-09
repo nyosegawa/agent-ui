@@ -28,6 +28,31 @@
   overflow: visible;
 }
 
+@media (min-width: 721px) {
+  .aui-shell {
+    height: min(900px, calc(100vh - 32px));
+    overflow: hidden;
+  }
+
+  .aui-sidebar,
+  .aui-chat {
+    min-height: 0;
+  }
+
+  .aui-chat {
+    overflow: hidden;
+  }
+
+  .aui-message-list {
+    max-height: none;
+    min-height: 0;
+  }
+
+  .aui-approvals {
+    max-height: min(260px, 30vh);
+  }
+}
+
 .aui-shell,
 .aui-shell * {
   box-sizing: border-box;
