@@ -62,7 +62,7 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
                 <h1>{thread.thread.name ?? "Untitled thread"}</h1>
                 <p>{threadSubtitle(thread.thread)}</p>
               </div>
-              <AgentThreadActions status={thread.status} threadId={threadId} />
+              <AgentThreadActions thread={thread} threadId={threadId} />
             </div>
             <AgentMessageList renderItem={slots?.renderItem} thread={thread} />
             <AgentApprovalPrompt
@@ -145,8 +145,17 @@ function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
   );
 }
 
-function AgentThreadActions({ status, threadId }: { status: string; threadId?: string }) {
+function AgentThreadActions({
+  thread,
+  threadId,
+}: {
+  thread: ThreadState;
+  threadId?: string;
+}) {
   const { resumeThread, startThread } = useAgentThread(threadId);
+  const { interruptTurn } = useAgentTurn(threadId);
+  const status = thread.status;
+  const latestTurnId = thread.orderedTurnIds.at(-1);
   const canResume = threadId && (status === "notLoaded" || status === "loaded");
   return (
     <div className="aui-thread-actions">
@@ -160,6 +169,15 @@ function AgentThreadActions({ status, threadId }: { status: string; threadId?: s
           type="button"
         >
           Resume
+        </button>
+      ) : null}
+      {status === "running" && latestTurnId ? (
+        <button
+          className="aui-button aui-button-secondary"
+          onClick={() => void interruptTurn(latestTurnId)}
+          type="button"
+        >
+          Stop
         </button>
       ) : null}
       <button
@@ -315,7 +333,7 @@ function AgentComposerPanel({
   return (
     <section className="aui-compose-panel" aria-label="Message composer">
       <AgentRunControls autoRefresh={false} />
-      {isRunning ? <AgentTurnStopControl thread={thread} threadId={threadId} /> : null}
+      {isBlocked ? <AgentTurnStopControl thread={thread} /> : null}
       <AgentComposer
         disabled={isBlocked}
         placeholder={composerPlaceholder(thread.status)}
@@ -325,26 +343,15 @@ function AgentComposerPanel({
   );
 }
 
-function AgentTurnStopControl({
-  thread,
-  threadId,
-}: {
-  thread: ThreadState;
-  threadId?: string;
-}) {
-  const { interruptTurn } = useAgentTurn(threadId);
-  const turnId = thread.orderedTurnIds.at(-1);
-  if (!turnId) return null;
+function AgentTurnStopControl({ thread }: { thread: ThreadState }) {
+  if (thread.status !== "running" && thread.status !== "waitingForInput") return null;
   return (
     <div className="aui-turn-control">
-      <span>Codex is working</span>
-      <button
-        className="aui-button aui-button-secondary"
-        onClick={() => void interruptTurn(turnId)}
-        type="button"
-      >
-        Stop
-      </button>
+      <span>
+        {thread.status === "running"
+          ? "Codex is working. Stop is available in the thread header."
+          : "Resolve the pending approval before sending another message."}
+      </span>
     </div>
   );
 }
