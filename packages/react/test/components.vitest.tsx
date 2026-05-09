@@ -421,7 +421,7 @@ describe("AgentChat", () => {
     expect(screen.getByText("Protocol docs update")).toBeInTheDocument();
     expect(screen.getByLabelText("Command output")).toHaveTextContent("7 tests passed");
     expect(screen.getByLabelText("Diff preview")).toHaveTextContent("AgentDiffPanel");
-    expect(screen.getByLabelText("CodeMirror patch viewer")).toBeInTheDocument();
+    expect(screen.getAllByLabelText("CodeMirror patch viewer").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Run settings")).toHaveTextContent("Execution mode");
     expect(screen.getByLabelText("Usage limits")).toHaveTextContent(
       "fixture-demo-model 5h",
@@ -430,6 +430,9 @@ describe("AgentChat", () => {
       "fixture-demo-model weekly",
     );
     expect(screen.getByText("Review file changes")).toBeInTheDocument();
+    expect(screen.getByText("Approval policy")).toBeInTheDocument();
+    expect(screen.getByText("workspace-write")).toBeInTheDocument();
+    expect(screen.queryByText(/"approvalPolicy"/)).not.toBeInTheDocument();
 
     await user.click(
       screen.getByRole("button", { name: "Approve file-change request approval-file" }),

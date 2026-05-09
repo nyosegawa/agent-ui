@@ -541,13 +541,7 @@ function ApprovalCard({
         </strong>
         <span>request {String(approval.id)}</span>
       </div>
-      {"command" in payload ? (
-        <code className="aui-command-line">{String(payload.command)}</code>
-      ) : null}
-      {"path" in payload ? (
-        <div className="aui-file-path">{String(payload.path)}</div>
-      ) : null}
-      <pre>{JSON.stringify(approval.payload, null, 2)}</pre>
+      <ApprovalSummary approval={approval} payload={payload} />
       <div className="aui-actions">
         <button
           aria-label={`Approve ${requestLabel} ${String(approval.id)}`}
@@ -575,6 +569,73 @@ function ApprovalCard({
         </button>
       </div>
     </article>
+  );
+}
+
+function ApprovalSummary({
+  approval,
+  payload,
+}: {
+  approval: PendingServerRequest;
+  payload: Record<string, unknown>;
+}) {
+  if (approval.kind === "fileChangeApproval") {
+    return <FileChangeApprovalSummary payload={payload} />;
+  }
+  return <CommandApprovalSummary payload={payload} />;
+}
+
+function CommandApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
+  const command =
+    stringField(payload, "command") ?? stringField(payload, "cmd") ?? "Command";
+  const cwd = stringField(payload, "cwd") ?? stringField(payload, "workingDirectory");
+  const policy = stringField(payload, "approvalPolicy");
+  const sandbox =
+    stringField(payload, "sandbox") ?? stringField(payload, "sandboxPolicy");
+  return (
+    <div className="aui-approval-summary">
+      <code className="aui-command-line">{command}</code>
+      <MetadataGrid
+        rows={[
+          ["Working directory", cwd],
+          ["Approval policy", policy],
+          ["Sandbox", sandbox],
+        ]}
+      />
+    </div>
+  );
+}
+
+function FileChangeApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
+  const path = stringField(payload, "path");
+  const summary = stringField(payload, "summary") ?? stringField(payload, "description");
+  const patch = payload.patch ?? payload.diff ?? payload.fileChanges;
+  return (
+    <div className="aui-approval-summary">
+      {path ? <div className="aui-file-path">{path}</div> : null}
+      {summary ? <p className="aui-approval-copy">{summary}</p> : null}
+      {patch ? <AgentDiffViewer patch={patch} /> : null}
+      {!path && !summary && !patch ? (
+        <p className="aui-approval-copy">
+          Review the file-change request before deciding.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function MetadataGrid({ rows }: { rows: Array<[string, string | undefined]> }) {
+  const visibleRows = rows.filter(([, value]) => value);
+  if (visibleRows.length === 0) return null;
+  return (
+    <dl className="aui-metadata-grid">
+      {visibleRows.map(([label, value]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 
@@ -845,6 +906,11 @@ function formatCount(count: number, singular: string) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+function stringField(record: Record<string, unknown>, key: string): string | undefined {
+  const value = record[key];
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
 export function AgentStatusBar() {

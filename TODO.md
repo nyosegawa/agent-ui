@@ -272,6 +272,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Suppress known low-value Codex plugin and skill manifest warnings from visible diagnostics and the local web dev terminal.
 - [x] Replace detached command-output and diff panels with contextual turn-timeline activity.
 - [x] Collapse command-heavy persisted-session work steps so conversation context remains readable.
+- [x] Replace raw approval JSON with structured command and file-change review cards.
 
 ## Release Readiness
 

@@ -62,7 +62,7 @@ Default behavior:
 - default decline responds with stable `{ decision: "decline" }`
 - rejection sends a JSON-RPC error and clears local pending state
 
-The default card shows request id, command or file path context, and the raw normalized payload. Approval buttons include request kind and request id in their accessible names.
+The default card shows request id plus structured command or file-change context. Command approvals show command, working directory, approval policy, and sandbox when present. File-change approvals show path, summary, and a diff preview when the request includes patch data. The default UI does not dump the raw normalized payload into the browser surface; use `renderApproval` for host-specific diagnostic rendering. Approval buttons include request kind and request id in their accessible names.
 
 ## Timeline Activity
 

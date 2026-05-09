@@ -649,7 +649,7 @@
   background: #fff8eb;
   border-color: #f4c16d;
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
 .aui-approval-header {
@@ -665,22 +665,52 @@
   font-size: 12px;
 }
 
+.aui-approval-summary {
+  display: grid;
+  gap: 8px;
+}
+
+.aui-approval-copy {
+  color: var(--aui-fg);
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.aui-metadata-grid {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  margin: 0;
+}
+
+.aui-metadata-grid div {
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(215, 221, 230, 0.86);
+  border-radius: 6px;
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+  padding: 7px 8px;
+}
+
+.aui-metadata-grid dt {
+  color: var(--aui-muted);
+  font-size: 11px;
+}
+
+.aui-metadata-grid dd {
+  color: var(--aui-fg);
+  font-size: 12px;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .aui-command-line {
   background: #111827;
   border-radius: 6px;
   color: #f9fafb;
   display: block;
-  overflow: auto;
-  padding: 8px;
-}
-
-.aui-approval pre {
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid var(--aui-border);
-  border-radius: 6px;
-  font-size: 12px;
-  margin: 0;
-  max-height: 120px;
   overflow: auto;
   padding: 8px;
 }
@@ -696,10 +726,9 @@
   border-top: 1px solid var(--aui-border);
   display: grid;
   gap: 10px;
-  grid-template-columns: minmax(260px, 1.4fr) minmax(150px, 1fr) minmax(
-      120px,
-      0.7fr
-    ) minmax(180px, 1fr);
+  grid-template-columns:
+    minmax(260px, 1.4fr) minmax(150px, 1fr) minmax(120px, 0.7fr)
+    minmax(180px, 1fr);
   padding: 10px 14px;
 }
 
