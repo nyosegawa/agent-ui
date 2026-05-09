@@ -116,6 +116,7 @@ Component tests:
 - keep narrow-width persisted history vertical and scroll-contained
 - keep App Server plugin manifest warnings in diagnostics instead of the primary chat flow
 - suppress known low-value Codex plugin `interface.defaultPrompt` warnings from visible diagnostics
+- suppress known low-value Codex skill icon path warnings from visible diagnostics and the real local web dev terminal
 - render file diff
 - switch thread
 - show auth/device-code state

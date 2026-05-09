@@ -1098,7 +1098,10 @@ function diagnosticsTitle(messages: string[]): string {
 
 function isSuppressedDiagnostic(message: string): boolean {
   return (
-    message.includes("codex_core_plugins::manifest") &&
-    message.includes("ignoring interface.defaultPrompt")
+    (message.includes("codex_core_plugins::manifest") &&
+      message.includes("ignoring interface.defaultPrompt")) ||
+    (message.includes("codex_core_skills::loader") &&
+      (message.includes("ignoring interface.icon_small") ||
+        message.includes("ignoring interface.icon_large")))
   );
 }

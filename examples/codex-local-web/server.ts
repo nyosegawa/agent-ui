@@ -4,6 +4,7 @@ import { createServer } from "node:http";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer as createViteServer } from "vite";
+import { isSuppressedCodexDiagnostic } from "./src/diagnostics";
 
 const host = process.env.AGENT_UI_HOST ?? "127.0.0.1";
 const port = Number(process.env.AGENT_UI_PORT ?? 5174);
@@ -35,7 +36,7 @@ attachAgentUiWebSocketBridge({
   path: "/agent-ui/ws",
   server,
   stderr(line) {
-    process.stderr.write(line);
+    if (!isSuppressedCodexDiagnostic(line)) process.stderr.write(line);
   },
 });
 

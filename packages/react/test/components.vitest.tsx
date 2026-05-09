@@ -182,6 +182,37 @@ describe("AgentChat", () => {
     expect(screen.queryByText(/maximum of 3 prompts/)).not.toBeInTheDocument();
   });
 
+  it("keeps known Codex skill icon manifest warnings out of the visible UI", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    transport.push({
+      message: JSON.stringify({
+        fields: {
+          message: "ignoring interface.icon_small: icon path must not contain '..'",
+        },
+        level: "WARN",
+        target: "codex_core_skills::loader",
+      }),
+      type: "stderr",
+    });
+
+    expect(await screen.findByText(/real@example.com/)).toBeInTheDocument();
+    expect(screen.queryByText(/icon path must not contain/)).not.toBeInTheDocument();
+  });
+
+
   it("keeps long history messages readable behind a preview", () => {
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-history";
