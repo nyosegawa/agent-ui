@@ -247,8 +247,8 @@ This is the current source of truth for making Agent UI a finished local Codex w
 
 ### UI/UX Finish
 
-- [ ] Clearly label fixture smoke demos separately from real Codex demos.
-- [ ] Make quickstart launch the real local web app first.
+- [x] Clearly label fixture smoke demos separately from real Codex demos.
+- [x] Make quickstart launch the real local web app first.
 - [x] Add unauthenticated first-run state.
 - [x] Add no-session empty state.
 - [x] Add bridge-error state.

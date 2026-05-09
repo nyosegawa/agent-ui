@@ -17,9 +17,17 @@ The docs are organized as implementation-facing specifications. They intentional
 - [Roadmap](./roadmap.md): implementation order and post-MVP expansion.
 - [Remote Deployment](./remote-deployment.md): advanced remote/WebSocket constraints.
 
-## Demo And Docs Site
+## Real Local App
 
-`examples/docs-site` is the static documentation and hosted-demo target. It renders implementation notes next to a fixture-backed `AgentChat`, so UI, usage, approval, command output, and diff surfaces can be checked in one browser page.
+`examples/codex-local-web` is the primary local Codex web experience. It starts a same-origin host bridge, which starts `codex app-server --listen stdio://`, then renders the React package against real account, usage, model, thread, turn, approval, and diff events.
+
+```sh
+bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
+```
+
+## Fixture Package Smoke
+
+`examples/docs-site` is the static documentation and fixture-backed hosted-demo target. It renders implementation notes next to a fixture-backed `AgentChat`, so UI, usage, approval, command output, and diff surfaces can be checked without starting Codex.
 
 ```sh
 bun run --cwd examples/docs-site dev
@@ -65,12 +73,18 @@ bun run build
 bun run test:e2e:playwright
 ```
 
-Run the local Vite example:
+Run the real local Codex web app:
+
+```sh
+bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
+```
+
+Run the fixture-backed Vite smoke example:
 
 ```sh
 bun run --cwd examples/local-react-vite dev
 ```
 
-The example uses a fixture-backed `FakeAgentTransport` for browser-only smoke testing of thread navigation, streaming text, command output, diff preview, and approval cards. Node hosts should start Codex through `@nyosegawa/agent-ui-server`.
+The fixture example uses a `FakeAgentTransport` for browser-only smoke testing of thread navigation, streaming text, command output, diff preview, and approval cards. It is not the real local app release gate.
 
 Additional typed recipes live in `examples/recipes` for custom component slots, headless hooks, theming, and optional WebSocket wiring.

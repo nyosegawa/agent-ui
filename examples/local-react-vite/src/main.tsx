@@ -81,6 +81,19 @@ function DemoApp() {
   return (
     <AgentProvider initialState={initialState} transport={transport}>
       <main style={{ margin: "28px auto", maxWidth: 1180 }}>
+        <div
+          style={{
+            background: "#fff8eb",
+            border: "1px solid #f4c16d",
+            borderRadius: 6,
+            color: "#7a4b00",
+            font: "13px/1.5 system-ui, sans-serif",
+            marginBottom: 12,
+            padding: "10px 12px",
+          }}
+        >
+          Fixture-backed package smoke. Run examples/codex-local-web for the real local Codex app.
+        </div>
         <AgentChat />
       </main>
     </AgentProvider>

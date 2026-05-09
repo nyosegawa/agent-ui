@@ -6,7 +6,7 @@ Agent UI provides React components, headless hooks, state management, and transp
 
 ## Status
 
-MVP implementation is in place. Core state, Codex App Server transports, React components, server bridge helpers, examples, fixtures, browser smoke tests, and package validation are available.
+The real local app path is the primary release target: browser UI -> same-origin host bridge -> `codex app-server --listen stdio://` -> real Codex account, usage, model, thread, turn, approval, and diff events.
 
 ## MVP
 
@@ -34,9 +34,18 @@ stable App Server API only
 
 Start with [docs/README.md](./docs/README.md).
 
-## Demo
+## Quickstart
 
-Run the fixture-backed docs and hosted-demo site:
+Run the real local Codex web app:
+
+```sh
+bun install
+bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
+```
+
+Then open the printed `http://127.0.0.1:5174` URL. The app starts a local Codex App Server through `@nyosegawa/agent-ui-server`.
+
+Run the fixture-backed package smoke demo separately:
 
 ```sh
 bun run --cwd examples/docs-site dev
