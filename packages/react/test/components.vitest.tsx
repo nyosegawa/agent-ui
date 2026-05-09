@@ -27,13 +27,116 @@ describe("AgentChat", () => {
   });
 
   it("renders start thread action", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "user@example.com", planType: "pro", type: "chatgpt" } };
+        }
+        return {};
+      },
+    });
     render(
-      <AgentProvider transport={new FakeAgentTransport()}>
+      <AgentProvider transport={transport}>
         <AgentChat />
       </AgentProvider>,
     );
     expect(await screen.findByTestId("agent-chat")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Start thread" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
+  });
+
+  it("bootstraps account, models, and usage on startup", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro", type: "chatgpt" } };
+        }
+        if (request.method === "model/list") {
+          return {
+            data: [
+              {
+                defaultReasoningEffort: "medium",
+                displayName: "Real Model",
+                id: "real-model",
+                isDefault: true,
+                supportedReasoningEfforts: [{ reasoningEffort: "medium" }],
+              },
+            ],
+          };
+        }
+        if (request.method === "account/rateLimits/read") {
+          return {
+            rateLimits: {
+              limitId: "codex",
+              primary: { usedPercent: 10, windowDurationMins: 300 },
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(await screen.findByText(/real@example.com/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
+    expect(await screen.findByRole("option", { name: "Real Model (real-model)" })).toBeInTheDocument();
+    expect(await screen.findByText("10%")).toBeInTheDocument();
+    expect(transport.requests.map((request) => request.method)).toEqual(
+      expect.arrayContaining(["account/read", "model/list", "account/rateLimits/read"]),
+    );
+  });
+
+  it("shows first-run login state when account/read is unauthenticated", async () => {
+    render(
+      <AgentProvider
+        transport={
+          new FakeAgentTransport({
+            onRequest(request) {
+              if (request.method === "account/read") return { account: null };
+              return {};
+            },
+          })
+        }
+      >
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(await screen.findByText("Connect Codex")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Start device-code login" })).toBeInTheDocument();
+  });
+
+  it("formats App Server stderr diagnostics into readable messages", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    transport.push({
+      message: JSON.stringify({
+        fields: { message: "ignoring invalid plugin config", path: "/tmp/plugin.json" },
+        level: "WARN",
+        target: "codex_core_plugins::manifest",
+      }),
+      type: "stderr",
+    });
+
+    expect(
+      await screen.findByText(/WARN codex_core_plugins::manifest ignoring invalid plugin config/),
+    ).toBeInTheDocument();
   });
 
   it("renders the fixture UI and resolves file-change approvals", async () => {

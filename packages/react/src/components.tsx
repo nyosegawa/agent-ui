@@ -10,6 +10,7 @@ import type React from "react";
 import {
   useAgentApprovals,
   useAgentAuth,
+  useAgentBootstrap,
   useAgentComposer,
   useAgentModels,
   useAgentThreadHistory,
@@ -34,6 +35,7 @@ export interface AgentChatProps {
 }
 
 export function AgentChat({ className, slots }: AgentChatProps = {}) {
+  const bootstrap = useAgentBootstrap();
   const { thread, threadId, startThread } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
   return (
@@ -45,7 +47,8 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
       />
       <div className="aui-chat">
         <AgentStatusBar />
-        <AgentUsage />
+        <AgentDiagnostics bootstrap={bootstrap} />
+        <AgentUsage autoRefresh={false} />
         {thread ? (
           <>
             <div className="aui-thread-header">
@@ -59,19 +62,37 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
             <AgentWorkLog thread={thread} />
             <AgentDiffPanel thread={thread} />
             <AgentApprovalPrompt renderApproval={slots?.renderApproval} threadId={threadId} />
-            <AgentRunControls />
+            <AgentRunControls autoRefresh={false} />
             <AgentComposer threadId={threadId} />
           </>
         ) : (
           <div className="aui-empty">
-            <AgentRunControls />
-            <button className="aui-button" onClick={() => void startThread()}>
-              Start thread
-            </button>
+            <AgentRunControls autoRefresh={false} />
+            <AgentFirstRun onStartThread={() => void startThread()} />
           </div>
         )}
       </div>
     </section>
+  );
+}
+
+function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
+  const { account, login } = useAgentAuth();
+  if (account.status === "unauthenticated") {
+    return (
+      <div className="aui-first-run">
+        <strong>Connect Codex</strong>
+        <p>Sign in with ChatGPT device code before starting a real local thread.</p>
+        <button className="aui-button" onClick={() => void login()} type="button">
+          Start device-code login
+        </button>
+      </div>
+    );
+  }
+  return (
+    <button className="aui-button" onClick={onStartThread} type="button">
+      Start thread
+    </button>
   );
 }
 
@@ -96,7 +117,11 @@ function AgentThreadActions({ status, threadId }: { status: string; threadId?: s
   );
 }
 
-export function AgentRunControls() {
+export interface AgentRunControlsProps {
+  autoRefresh?: boolean;
+}
+
+export function AgentRunControls({ autoRefresh = true }: AgentRunControlsProps = {}) {
   const { state } = useAgentContext();
   const { models, refreshModels } = useAgentModels();
   const {
@@ -111,10 +136,10 @@ export function AgentRunControls() {
   const hasEffortOptions = supportedEfforts.length > 0;
 
   useEffect(() => {
-    if (state.connection.status === "connected" && models.length === 0) {
+    if (autoRefresh && state.connection.status === "connected" && models.length === 0) {
       void refreshModels().catch(() => undefined);
     }
-  }, [models.length, refreshModels, state.connection.status]);
+  }, [autoRefresh, models.length, refreshModels, state.connection.status]);
 
   return (
     <section className="aui-run-controls" aria-label="Run settings">
@@ -462,11 +487,12 @@ export function AgentDiffPanel({ thread }: { thread: ThreadState }) {
 
 export function AgentStatusBar() {
   const { account, login } = useAgentAuth();
+  const accountLabel = accountLabelText(account.account);
   return (
     <header className="aui-status">
       <div className="aui-brand">
         <strong>Agent UI</strong>
-        <span>{account.status}</span>
+        <span>{accountLabel ? `${account.status} · ${accountLabel}` : account.status}</span>
       </div>
       {account.login ? (
         <div className="aui-login-code" role="status">
@@ -478,7 +504,12 @@ export function AgentStatusBar() {
           {account.login.userCode ? <code>{account.login.userCode}</code> : null}
         </div>
       ) : null}
-      {account.status !== "authenticated" ? (
+      {account.status === "unknown" ? (
+        <button className="aui-button aui-button-secondary" disabled type="button">
+          Checking
+        </button>
+      ) : null}
+      {account.status === "unauthenticated" ? (
         <button className="aui-button" onClick={() => void login()} type="button">
           Login
         </button>
@@ -487,18 +518,54 @@ export function AgentStatusBar() {
   );
 }
 
-export function AgentUsage() {
+function accountLabelText(account: Record<string, unknown> | undefined): string | undefined {
+  if (!account) return undefined;
+  const email = typeof account.email === "string" ? account.email : undefined;
+  const planType = typeof account.planType === "string" ? account.planType : undefined;
+  if (email && planType) return `${email} (${planType})`;
+  return email ?? planType;
+}
+
+function AgentDiagnostics({ bootstrap }: { bootstrap: ReturnType<typeof useAgentBootstrap> }) {
+  const { state } = useAgentContext();
+  const messages = [
+    ...bootstrap.errors.map((error) => error.message),
+    ...state.errors.map((error) => error.message),
+    ...state.configWarnings.map((warning) => warning.message),
+  ].filter(Boolean);
+  if (bootstrap.isBootstrapping && messages.length === 0) {
+    return (
+      <section className="aui-diagnostics" aria-label="Diagnostics">
+        <span>Syncing account, models, and usage.</span>
+      </section>
+    );
+  }
+  if (messages.length === 0) return null;
+  return (
+    <section className="aui-diagnostics" aria-label="Diagnostics">
+      {messages.slice(-4).map((message, index) => (
+        <span key={`${message}-${index}`}>{message}</span>
+      ))}
+    </section>
+  );
+}
+
+export interface AgentUsageProps {
+  autoRefresh?: boolean;
+}
+
+export function AgentUsage({ autoRefresh = true }: AgentUsageProps = {}) {
   const { state } = useAgentContext();
   const { rateLimits, refreshUsage } = useAgentUsage();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const didAutoRefresh = useRef(false);
   const windows = useMemo(() => normalizeUsageWindows(rateLimits), [rateLimits]);
   useEffect(() => {
-    if (state.connection.status === "connected" && !didAutoRefresh.current) {
+    if (autoRefresh && state.connection.status === "connected" && !didAutoRefresh.current) {
       didAutoRefresh.current = true;
       void refreshUsage().catch(() => undefined);
     }
-  }, [refreshUsage, state.connection.status]);
+  }, [autoRefresh, refreshUsage, state.connection.status]);
   return (
     <section className="aui-usage" aria-label="Usage limits">
       <div className="aui-usage-header">

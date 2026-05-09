@@ -80,6 +80,8 @@ The selected values are stored in normalized run settings and are merged into `t
 
 `normalizeUsageWindows()` is exported for hosts that want to render the same 5-hour and weekly windows in custom chrome.
 
+`AgentChat` calls `useAgentBootstrap()` on startup so the real local app reads account, model, and usage state as soon as the bridge connects. Authenticated accounts suppress the login button; unauthenticated accounts show a first-run device-code login call to action. `AgentRunControls` and `AgentUsage` still auto-refresh when rendered standalone; `AgentChat` disables their standalone refresh path to avoid duplicate startup requests.
+
 ## Web Components
 
 `@nyosegawa/agent-ui-web-components` exports `defineAgentChatElement()`. The custom element accepts `transport`, `initialState`, and `slots` as JavaScript properties and renders the standard React chat surface.

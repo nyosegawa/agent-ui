@@ -57,10 +57,13 @@ Approvals are normalized server requests. Hosts should show command, cwd, file p
 ## Auth And Models
 
 ```tsx
+const bootstrap = useAgentBootstrap();
 const auth = useAgentAuth();
 const models = useAgentModels();
 const usage = useAgentUsage();
 ```
+
+`useAgentBootstrap()` runs the real local app startup reads after the transport connects: `account/read`, `model/list`, and `account/rateLimits/read`. It skips data already provided by `initialState`, so fixture smoke tests do not overwrite their seeded model or usage state.
 
 `useAgentAuth().login()` starts ChatGPT device-code login. The hook stores only normalized account/login state and never stores raw tokens.
 

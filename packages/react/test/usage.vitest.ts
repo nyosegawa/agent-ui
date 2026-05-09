@@ -18,6 +18,21 @@ describe("normalizeUsageWindows", () => {
     ]);
   });
 
+  it("deduplicates the same current snapshot surfaced in both response fields", () => {
+    const snapshot = {
+      limitId: "codex",
+      limitName: null,
+      primary: { resetsAt: 1778275493, usedPercent: 26, windowDurationMins: 300 },
+      secondary: { resetsAt: 1778563862, usedPercent: 56, windowDurationMins: 10080 },
+    };
+    expect(
+      normalizeUsageWindows({
+        rateLimits: snapshot,
+        rateLimitsByLimitId: { codex: snapshot },
+      }).map(({ label }) => label),
+    ).toEqual(["codex 5h", "codex weekly"]);
+  });
+
   it("handles legacy used/limit fixture windows", () => {
     expect(
       normalizeUsageWindows({

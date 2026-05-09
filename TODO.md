@@ -197,24 +197,25 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Use a persistent host bridge instead of `FakeAgentTransport`.
 - [x] Keep one Codex App Server process alive for a browser session.
 - [x] Forward App Server notifications to browser state.
-- [ ] Forward App Server server requests to browser state.
+- [x] Forward App Server server requests to browser state.
 - [x] Forward browser approval responses back to App Server.
 - [x] Forward browser rejection responses back to App Server.
 - [x] Add an integration test where `createCodexWebSocketTransport()` consumes the server bridge end-to-end.
 - [x] Add an integration test proving approval response/rejection reaches the stdio App Server side.
-- [ ] Surface bridge connection errors in the UI.
-- [ ] Surface redacted App Server stderr in the UI or a visible diagnostics panel.
-- [ ] Shut down the App Server process when the browser session closes or idles out.
+- [x] Surface bridge connection errors in the UI.
+- [x] Surface redacted App Server stderr in the UI or a visible diagnostics panel.
+- [x] Shut down the App Server process when the browser session closes.
+- [ ] Add idle timeout shutdown for abandoned App Server browser sessions.
 
 ### Real App Bootstrap
 
-- [ ] Read account state on app startup with `account/read`.
-- [ ] If unauthenticated, show a first-run device-code login state.
-- [ ] If authenticated, do not show a misleading Login button.
-- [ ] Read model data on startup with `model/list`.
-- [ ] Read usage data on startup with `account/rateLimits/read`.
-- [ ] Show loading, empty, and error states for account/model/usage bootstrap.
-- [ ] Handle device-code login without logging raw tokens.
+- [x] Read account state on app startup with `account/read`.
+- [x] If unauthenticated, show a first-run device-code login state.
+- [x] If authenticated, do not show a misleading Login button.
+- [x] Read model data on startup with `model/list`.
+- [x] Read usage data on startup with `account/rateLimits/read`.
+- [x] Show loading, empty, and error states for account/model/usage bootstrap.
+- [x] Handle device-code login without logging raw tokens.
 
 ### Real Thread Workflow
 
@@ -248,9 +249,9 @@ This is the current source of truth for making Agent UI a finished local Codex w
 
 - [ ] Clearly label fixture smoke demos separately from real Codex demos.
 - [ ] Make quickstart launch the real local web app first.
-- [ ] Add unauthenticated first-run state.
-- [ ] Add no-session empty state.
-- [ ] Add bridge-error state.
+- [x] Add unauthenticated first-run state.
+- [x] Add no-session empty state.
+- [x] Add bridge-error state.
 - [ ] Add thread search/filter loading and empty states.
 - [ ] Make run settings readable on desktop and mobile.
 - [ ] Add usage limit cards for 5-hour and weekly windows using real rate-limit data.

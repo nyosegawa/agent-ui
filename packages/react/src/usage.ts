@@ -8,7 +8,7 @@ export interface UsageWindow {
 
 export function normalizeUsageWindows(rateLimits: unknown): UsageWindow[] {
   const snapshots = collectRateLimitSnapshots(rateLimits);
-  return snapshots.flatMap((snapshot, snapshotIndex) => {
+  const windows = snapshots.flatMap((snapshot, snapshotIndex) => {
     const record = asRecord(snapshot);
     if (!record) return [];
     const limitName =
@@ -31,6 +31,17 @@ export function normalizeUsageWindows(rateLimits: unknown): UsageWindow[] {
         },
       ];
     });
+  });
+  return dedupeUsageWindows(windows);
+}
+
+function dedupeUsageWindows(windows: UsageWindow[]): UsageWindow[] {
+  const seen = new Set<string>();
+  return windows.filter((window) => {
+    const key = `${window.label}:${window.resetLabel ?? ""}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
   });
 }
 

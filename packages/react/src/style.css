@@ -100,6 +100,20 @@
   padding: 10px 14px;
 }
 
+.aui-diagnostics {
+  background: #fff8eb;
+  border-bottom: 1px solid #f4c16d;
+  color: #7a4b00;
+  display: grid;
+  gap: 4px;
+  padding: 8px 14px;
+}
+
+.aui-diagnostics span {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
 .aui-usage {
   border-bottom: 1px solid var(--aui-border);
   display: grid;
@@ -282,9 +296,27 @@
 
 .aui-empty {
   align-items: center;
-  display: flex;
+  display: grid;
+  gap: 14px;
   justify-content: center;
   min-height: 360px;
+  padding: 18px;
+}
+
+.aui-first-run {
+  border: 1px solid var(--aui-border);
+  border-radius: 6px;
+  display: grid;
+  gap: 8px;
+  max-width: 360px;
+  padding: 14px;
+}
+
+.aui-first-run p {
+  color: var(--aui-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
 }
 
 .aui-message-list {

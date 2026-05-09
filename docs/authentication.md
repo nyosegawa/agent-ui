@@ -31,9 +31,11 @@ Agent UI may provide:
 
 Implemented surface:
 
+- `useAgentBootstrap()` calls `account/read` after the transport connects and stores the normalized account state.
 - `useAgentAuth()` exposes `readAccount`, `login`, and `logout`.
 - `login()` calls `account/login/start` with `chatgptDeviceCode`.
-- `AgentStatusBar` exposes a minimal login action when account state is not authenticated.
+- `AgentStatusBar` exposes a login action only when account state is confirmed unauthenticated.
+- `AgentChat` shows a first-run device-code login state for unauthenticated local users.
 - The helper does not store or log raw tokens.
 
 Agent UI must not:

@@ -11,7 +11,7 @@ import {
   type RequestId,
   type ThreadId,
 } from "@nyosegawa/agent-ui-core";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAgentContext } from "./provider";
 import { threadSnapshotEvents, threadUpsertEvent } from "./thread-history";
 
@@ -316,9 +316,19 @@ export function useAgentRunSettings() {
 export function useAgentAuth() {
   const { dispatch, state, transport } = useAgentContext();
   const readAccount = useCallback(async () => {
-    const account = await transport.request("account/read");
-    dispatch({ account, type: "account/updated" });
-    return account;
+    const response = await transport.request<Record<string, unknown>, any>("account/read", {});
+    const account =
+      response && Object.prototype.hasOwnProperty.call(response, "account")
+        ? response.account
+        : response && Object.keys(response).length > 0
+          ? response
+          : null;
+    dispatch({
+      account,
+      status: account == null ? "unauthenticated" : "authenticated",
+      type: "account/updated",
+    });
+    return response;
   }, [dispatch, transport]);
   const login = useCallback(async () => {
     const raw = await transport.request<Record<string, unknown>, any>("account/login/start", {
@@ -337,6 +347,58 @@ export function useAgentAuth() {
   }, [dispatch, transport]);
   const logout = useCallback(async () => transport.request("account/logout"), [transport]);
   return { account: state.account, login, logout, readAccount };
+}
+
+export interface AgentBootstrapState {
+  errors: Error[];
+  isBootstrapping: boolean;
+  status: "idle" | "loading" | "ready" | "error";
+}
+
+export function useAgentBootstrap(): AgentBootstrapState {
+  const { state } = useAgentContext();
+  const { readAccount } = useAgentAuth();
+  const { refreshUsage } = useAgentUsage();
+  const { refreshModels } = useAgentModels();
+  const didBootstrap = useRef(false);
+  const [bootstrap, setBootstrap] = useState<AgentBootstrapState>({
+    errors: [],
+    isBootstrapping: false,
+    status: "idle",
+  });
+
+  useEffect(() => {
+    if (state.connection.status !== "connected" || didBootstrap.current) return;
+    didBootstrap.current = true;
+    setBootstrap({ errors: [], isBootstrapping: true, status: "loading" });
+    const tasks = [
+      state.account.status === "unknown" ? readAccount() : Promise.resolve(),
+      state.models.models.length === 0 ? refreshModels() : Promise.resolve(),
+      state.account.rateLimits == null ? refreshUsage() : Promise.resolve(),
+    ];
+    void Promise.allSettled(tasks).then((results) => {
+      const errors = results
+        .filter((result): result is PromiseRejectedResult => result.status === "rejected")
+        .map((result) =>
+          result.reason instanceof Error ? result.reason : new Error(String(result.reason)),
+        );
+      setBootstrap({
+        errors,
+        isBootstrapping: false,
+        status: errors.length > 0 ? "error" : "ready",
+      });
+    });
+  }, [
+    readAccount,
+    refreshModels,
+    refreshUsage,
+    state.account.rateLimits,
+    state.account.status,
+    state.connection.status,
+    state.models.models.length,
+  ]);
+
+  return bootstrap;
 }
 
 export function useAgentUsage() {
