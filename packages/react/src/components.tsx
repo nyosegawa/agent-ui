@@ -1018,8 +1018,9 @@ export function ThreadSidebar({
     if (!pageCursor) return;
     setIsLoadingAll(true);
     try {
-      let loadedPages = 0;
-      while (pageCursor && loadedPages < 20) {
+      const seenCursors = new Set<string>();
+      while (pageCursor && !seenCursors.has(pageCursor)) {
+        seenCursors.add(pageCursor);
         const response = await listThreads({
           cursor: pageCursor,
           limit: 25,
@@ -1040,7 +1041,6 @@ export function ThreadSidebar({
         pageCursor = responseCursor(response);
         setNextCursor(pageCursor);
         setHasLoaded(true);
-        loadedPages += 1;
       }
     } finally {
       setIsLoadingAll(false);

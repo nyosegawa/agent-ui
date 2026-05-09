@@ -2,6 +2,24 @@
 
 This checklist is the execution source of truth for Agent UI.
 
+## Active Completion Gate: Real History Exhaustion
+
+Real App Server verification on 2026-05-10 showed `Load all` loaded 525 threads
+but still reported `more available` because the UI capped the action at 20
+pages. A button labeled `Load all` must either actually exhaust the cursor or
+clearly say that it only loads a batch.
+
+### History Exhaustion
+
+- [x] Make `Load all` follow real `thread/list` cursors until exhaustion, with a repeated-cursor guard instead of a fixed page cap.
+- [x] Re-run real `Load all` against the local Codex App Server and verify the sidebar reaches `all loaded`.
+- [x] Keep deterministic tests for multi-page cursor exhaustion.
+
+### Completion Hygiene
+
+- [x] Update docs for cursor exhaustion behavior.
+- [x] Run targeted validation, commit, push, and watch Actions.
+
 ## Active Completion Gate: Preview Versus Ready Thread UX
 
 Real browser verification on 2026-05-10 showed that a stored `thread/read`

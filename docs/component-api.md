@@ -57,8 +57,9 @@ order, then shows that returned page with loading and empty states. Malformed
 rows without a stable `id`, `threadId`, or `thread_id` are ignored instead of
 creating an `"undefined"` session. When the App Server returns `nextCursor` /
 `next_cursor`, the sidebar shows `Load more` and `Load all`; `Load all` follows
-up to 20 additional pages in one action so large local histories can be browsed
-without repeatedly clicking. Stored-session rows show the user-facing title,
+returned cursors until the App Server reports that history is exhausted. A
+repeated cursor is treated as a protocol guardrail and stops the loop to avoid
+requesting the same page forever. Stored-session rows show the user-facing title,
 status, update time, and compact working-directory context when `cwd` is
 available; internal Codex JSONL session paths are not shown in the default list.
 Selecting a stored thread calls `thread/read` with `includeTurns: true` and
