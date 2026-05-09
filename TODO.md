@@ -27,6 +27,24 @@ that must be fixed before the local web app can be called finished.
 - [x] Run targeted validation for this repair slice, then commit and push.
 - [x] Re-run the real local browser screen check after the patch.
 
+## Active Completion Gate: Thread History Completion
+
+This section is the current release gate. Real local sessions now render
+correctly, but the history browser still needs product-grade controls for
+larger real Codex histories.
+
+### History Browsing
+
+- [x] Show user-facing working directory context in thread list rows when available.
+- [x] Add a bounded `Load all` flow that follows real `thread/list` cursors until history is exhausted.
+- [x] Show visible history count and remaining-pagination state without relying on raw protocol cursors.
+
+### Tests And Docs
+
+- [x] Add React tests for cwd metadata in history rows and multi-page `Load all`.
+- [x] Update component/testing docs for the completed history browser behavior.
+- [x] Run targeted validation, browser/e2e checks, commit, push, and watch Actions.
+
 ## Completed Gate: Product-Grade Local Codex UX
 
 This section was the previous release gate. The previous release gates proved the

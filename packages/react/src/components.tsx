@@ -850,6 +850,9 @@ function threadListMeta(thread: ThreadState): string {
     "created_at",
   ]);
   if (updated) parts.push(updated);
+  if (thread.thread.path && isUserFacingPath(thread.thread.path)) {
+    parts.push(compactPath(thread.thread.path));
+  }
   return parts.join(" · ");
 }
 
@@ -926,6 +929,7 @@ export function ThreadSidebar({
   const { readThread } = useAgentThreadReader();
   const [searchTerm, setSearchTerm] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [isLoadingAll, setIsLoadingAll] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>();
   const [visibleThreadIds, setVisibleThreadIds] = useState<string[] | undefined>();
   const didAutoLoad = useRef(false);
@@ -964,11 +968,7 @@ export function ThreadSidebar({
         if (!params.append) return threadIds;
         return Array.from(new Set([...(current ?? []), ...threadIds]));
       });
-      setNextCursor(
-        stringField(response, "nextCursor") ??
-          stringField(response, "next_cursor") ??
-          null,
-      );
+      setNextCursor(responseCursor(response));
       setHasLoaded(true);
       const firstThreadId = threadIds[0];
       if (params.activateFirst && firstThreadId && !state.activeThreadId) {
@@ -980,6 +980,39 @@ export function ThreadSidebar({
     },
     [listThreads, onSelectThread, readThread, state.activeThreadId],
   );
+  const loadAllThreadPages = useCallback(async () => {
+    let pageCursor = nextCursor ?? cursor ?? null;
+    if (!pageCursor) return;
+    setIsLoadingAll(true);
+    try {
+      let loadedPages = 0;
+      while (pageCursor && loadedPages < 20) {
+        const response = await listThreads({
+          cursor: pageCursor,
+          limit: 25,
+          searchTerm,
+        });
+        const rawThreads = Array.isArray(response?.data)
+          ? response.data
+          : Array.isArray(response?.threads)
+            ? response.threads
+            : [];
+        const threadIds = rawThreads.flatMap((rawThread: Record<string, unknown>) => {
+          const threadId = rawThreadId(rawThread);
+          return threadId ? [threadId] : [];
+        });
+        setVisibleThreadIds((current) =>
+          Array.from(new Set([...(current ?? []), ...threadIds])),
+        );
+        pageCursor = responseCursor(response);
+        setNextCursor(pageCursor);
+        setHasLoaded(true);
+        loadedPages += 1;
+      }
+    } finally {
+      setIsLoadingAll(false);
+    }
+  }, [cursor, listThreads, nextCursor, searchTerm]);
   useEffect(() => {
     if (
       state.connection.status === "connected" &&
@@ -1045,9 +1078,20 @@ export function ThreadSidebar({
         </button>
       </form>
       {error ? <p className="aui-sidebar-error">{error.message}</p> : null}
-      {isLoading ? <p className="aui-sidebar-status">Loading threads...</p> : null}
-      {!isLoading && hasLoaded && visibleThreads.length === 0 ? (
+      {isLoading || isLoadingAll ? (
+        <p className="aui-sidebar-status">
+          {isLoadingAll ? "Loading all threads..." : "Loading threads..."}
+        </p>
+      ) : null}
+      {!isLoading && !isLoadingAll && hasLoaded && visibleThreads.length === 0 ? (
         <p className="aui-sidebar-status">No threads found.</p>
+      ) : null}
+      {hasLoaded && visibleThreads.length > 0 ? (
+        <p className="aui-sidebar-status">
+          {visibleThreads.length} {visibleThreads.length === 1 ? "thread" : "threads"}{" "}
+          loaded
+          {(nextCursor ?? cursor) ? " · more available" : " · all loaded"}
+        </p>
       ) : null}
       <ThreadList
         activeThreadId={activeThreadId}
@@ -1059,23 +1103,40 @@ export function ThreadSidebar({
         threads={visibleThreads}
       />
       {(nextCursor ?? cursor) ? (
-        <button
-          className="aui-button aui-button-secondary aui-history-load-more"
-          disabled={isLoading}
-          onClick={() => {
-            void loadThreadPage({
-              append: true,
-              cursor: nextCursor ?? cursor ?? null,
-              searchTerm,
-            }).catch(() => undefined);
-          }}
-          type="button"
-        >
-          {isLoading ? "Loading" : "Load more"}
-        </button>
+        <div className="aui-history-pagination">
+          <button
+            className="aui-button aui-button-secondary aui-history-load-more"
+            disabled={isLoading || isLoadingAll}
+            onClick={() => {
+              void loadThreadPage({
+                append: true,
+                cursor: nextCursor ?? cursor ?? null,
+                searchTerm,
+              }).catch(() => undefined);
+            }}
+            type="button"
+          >
+            {isLoading ? "Loading" : "Load more"}
+          </button>
+          <button
+            className="aui-button aui-button-secondary aui-history-load-more"
+            disabled={isLoading || isLoadingAll}
+            onClick={() => {
+              void loadAllThreadPages().catch(() => undefined);
+            }}
+            type="button"
+          >
+            {isLoadingAll ? "Loading" : "Load all"}
+          </button>
+        </div>
       ) : null}
     </aside>
   );
+}
+
+function responseCursor(response: Record<string, unknown> | undefined): string | null {
+  if (!response) return null;
+  return stringField(response, "nextCursor") ?? stringField(response, "next_cursor") ?? null;
 }
 
 function approvalResult(approval: PendingServerRequest) {

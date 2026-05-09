@@ -48,7 +48,21 @@ contextual timeline content, not separate panels below the chat.
 
 ## Thread Sidebar
 
-`ThreadSidebar` includes a lightweight persisted-session browser. Startup auto-loads the latest page with `thread/list`; when a stored session is returned and no thread is active, the default UI previews the newest session in the main pane with `thread/read`. Manual `Load` calls `thread/list` with optional search text, `limit: 25`, `sortKey: "updated_at"`, and descending order, then shows that returned page with loading and empty states. Malformed rows without a stable `id`, `threadId`, or `thread_id` are ignored instead of creating an `"undefined"` session. When the App Server returns `nextCursor` / `next_cursor`, the sidebar shows `Load more` and appends the next page without losing the current page. Stored-session rows show the user-facing title plus status and update time; internal Codex JSONL session paths are not shown in the default list. Selecting a stored thread calls `thread/read` with `includeTurns: true` and activates the hydrated snapshot.
+`ThreadSidebar` includes a persisted-session browser for real local Codex
+history. Startup auto-loads the latest page with `thread/list`; when a stored
+session is returned and no thread is active, the default UI previews the newest
+session in the main pane with `thread/read`. Manual `Load` calls `thread/list`
+with optional search text, `limit: 25`, `sortKey: "updated_at"`, and descending
+order, then shows that returned page with loading and empty states. Malformed
+rows without a stable `id`, `threadId`, or `thread_id` are ignored instead of
+creating an `"undefined"` session. When the App Server returns `nextCursor` /
+`next_cursor`, the sidebar shows `Load more` and `Load all`; `Load all` follows
+up to 20 additional pages in one action so large local histories can be browsed
+without repeatedly clicking. Stored-session rows show the user-facing title,
+status, update time, and compact working-directory context when `cwd` is
+available; internal Codex JSONL session paths are not shown in the default list.
+Selecting a stored thread calls `thread/read` with `includeTurns: true` and
+activates the hydrated snapshot.
 
 When a stored thread is loaded as `notLoaded` or `loaded`, the thread header shows `Resume`. That action calls `thread/resume` with `excludeTurns: true` because the preview history is already hydrated. The default UI maps internal protocol statuses to product-facing labels such as `Stored`, `Preview`, `Running`, and `Needs approval`; raw status strings are not shown unless the status is unknown to Agent UI. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
 

@@ -1333,6 +1333,7 @@ describe("AgentChat", () => {
           return {
             data: [
               {
+                cwd: "/Users/example/second-project",
                 id: "thread-page-2",
                 name: "Second page thread",
                 status: { type: "notLoaded" },
@@ -1347,6 +1348,7 @@ describe("AgentChat", () => {
             {
               id: "thread-page-1",
               name: "First page thread",
+              cwd: "/Users/example/first-project",
               status: { type: "notLoaded" },
               updatedAt: 1778000000,
             },
@@ -1363,9 +1365,13 @@ describe("AgentChat", () => {
 
     await user.click(await screen.findByRole("button", { name: "Load" }));
     expect(await screen.findAllByText("First page thread")).not.toHaveLength(0);
+    expect((await screen.findAllByText(/first-project/)).length).toBeGreaterThan(0);
+    expect(await screen.findByText(/1 thread loaded · more available/)).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Load more" }));
 
     expect(await screen.findByText("Second page thread")).toBeInTheDocument();
+    expect((await screen.findAllByText(/second-project/)).length).toBeGreaterThan(0);
+    expect(await screen.findByText(/2 threads loaded · all loaded/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Load more" })).not.toBeInTheDocument();
     expect(
       transport.requests.find(
@@ -1374,5 +1380,67 @@ describe("AgentChat", () => {
           (request.params as { cursor?: string | null }).cursor === "page-2",
       ),
     ).toBeTruthy();
+  });
+
+  it("loads all stored thread pages until the cursor is exhausted", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method !== "thread/list") return {};
+        const cursor = (request.params as { cursor?: string | null } | undefined)?.cursor;
+        if (cursor === "page-2") {
+          return {
+            data: [
+              {
+                cwd: "/Users/example/page-two",
+                id: "thread-load-all-2",
+                name: "Load all page two",
+                status: { type: "notLoaded" },
+              },
+            ],
+            nextCursor: "page-3",
+          };
+        }
+        if (cursor === "page-3") {
+          return {
+            data: [
+              {
+                cwd: "/Users/example/page-three",
+                id: "thread-load-all-3",
+                name: "Load all page three",
+                status: { type: "notLoaded" },
+              },
+            ],
+            nextCursor: null,
+          };
+        }
+        return {
+          data: [
+            {
+              cwd: "/Users/example/page-one",
+              id: "thread-load-all-1",
+              name: "Load all page one",
+              status: { type: "notLoaded" },
+            },
+          ],
+          nextCursor: "page-2",
+        };
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Load" }));
+    await user.click(await screen.findByRole("button", { name: "Load all" }));
+
+    expect(await screen.findByText("Load all page three")).toBeInTheDocument();
+    expect(screen.getByText(/3 threads loaded · all loaded/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load all" })).not.toBeInTheDocument();
+    expect(
+      transport.requests.filter((request) => request.method === "thread/list").length,
+    ).toBeGreaterThanOrEqual(3);
   });
 });
