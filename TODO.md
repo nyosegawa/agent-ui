@@ -2,6 +2,45 @@
 
 This checklist is the execution source of truth for Agent UI.
 
+## Active Completion Gate: Product-Grade Local Codex UX
+
+This section is the current release gate. The previous release gates proved the
+protocol path and package quality, but the finished product is not complete
+until this section is complete with implementation, browser inspection, tests,
+docs, commits, pushes, and GitHub Actions checks.
+
+### App Server Coverage Audit
+
+- [ ] Re-audit `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server` stable capabilities against Agent UI.
+- [ ] Classify supported, intentionally host-only, deferred, and unsupported App Server methods in `docs/protocol.md`.
+- [ ] Ensure unsupported App Server notifications degrade into readable diagnostics or neutral timeline entries instead of raw JSON walls.
+
+### Conversation Experience
+
+- [ ] Render user and assistant messages as safe Markdown with lists, code blocks, links, headings, quotes, and tables where applicable.
+- [ ] Keep command output, diffs, approvals, reasoning, and plan updates in contextual turn activity without overwhelming conversation reading.
+- [ ] Verify real persisted sessions with long Markdown and command-heavy turns remain readable at narrow and desktop widths.
+
+### App Shell Layout
+
+- [ ] Give the history sidebar and active thread independent scroll containers; do not depend on whole-page scroll for normal use.
+- [ ] Keep the composer visible at the bottom of the chat surface while history scrolls.
+- [ ] Add a collapsible history sidebar that remains usable and accessible.
+- [ ] Ensure mobile/narrow layouts keep chat, history, approvals, and composer reachable without horizontal overflow.
+
+### Working Directory UX
+
+- [ ] Preserve and display working directory for persisted `thread/list`, hydrated `thread/read`, resumed, and newly started threads.
+- [ ] Improve working-directory selection using recent real thread paths instead of an empty bare input.
+- [ ] Keep internal JSONL/session paths hidden from default history labels while real project paths remain visible.
+
+### Product Polish, Tests, And Docs
+
+- [ ] Browser-check all primary screens after each UI refactor using the in-app browser.
+- [ ] Add or update React/unit/e2e tests for Markdown rendering, scroll containment, sidebar collapse, and cwd preservation.
+- [ ] Update docs for the final information architecture, App Server coverage, Markdown security, and UX constraints.
+- [ ] Re-run full validation and GitHub Actions after this gate is complete.
+
 ## Repository Setup
 
 - [x] Create `nyosegawa/agent-ui`.
