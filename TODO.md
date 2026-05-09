@@ -17,7 +17,7 @@ and large-list states appear or disappear.
 ### Completion Hygiene
 
 - [x] Update component/testing docs for the hardened sidebar structure.
-- [ ] Run targeted validation, commit, push, and watch Actions.
+- [x] Run targeted validation, commit, push, and watch Actions.
 
 ## Active Completion Gate: Full Validation Sweep
 
