@@ -4,13 +4,23 @@ import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 
 export function CustomApprovalCard({ approval }: { approval: PendingServerRequest }) {
   const payload = approval.payload as Record<string, unknown>;
+  const primary =
+    stringField(payload, "command") ??
+    stringField(payload, "path") ??
+    stringField(payload, "summary") ??
+    stringField(payload, "reason") ??
+    "Review required";
   return (
     <section className="custom-approval">
       <h2>{approval.kind === "fileChangeApproval" ? "File change" : "Command"}</h2>
-      <p>{String(payload.reason ?? payload.summary ?? "Review required")}</p>
-      <pre>{JSON.stringify(payload, null, 2)}</pre>
+      <p>{primary}</p>
     </section>
   );
+}
+
+function stringField(record: Record<string, unknown>, key: string): string | undefined {
+  const value = record[key];
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
 export function CustomComponentsExample({ transport }: { transport: AgentTransport }) {
