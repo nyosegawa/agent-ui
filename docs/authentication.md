@@ -38,6 +38,7 @@ Implemented surface:
 - `cancelLogin()` calls `account/login/cancel` with stable params `{ loginId }`.
 - `AgentStatusBar` exposes a login action only when account state is confirmed unauthenticated.
 - `AgentChat` shows a first-run device-code login state for unauthenticated local users.
+- After `account/login/completed`, `AgentChat` re-reads `account/read` and `account/rateLimits/read` so the account label and usage windows update without a page refresh.
 - The helper does not store or log raw tokens.
 
 Agent UI must not:

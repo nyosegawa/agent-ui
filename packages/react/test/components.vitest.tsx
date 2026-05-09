@@ -155,6 +155,56 @@ describe("AgentChat", () => {
     ).toBe(false);
   });
 
+  it("refreshes account and usage after device-code login completes", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          const reads = transport.requests.filter(
+            (previous) => previous.method === "account/read",
+          ).length;
+          return reads === 1
+            ? { account: null }
+            : {
+                account: {
+                  email: "login-complete@example.com",
+                  planType: "pro",
+                  type: "chatgpt",
+                },
+              };
+        }
+        if (request.method === "account/rateLimits/read") {
+          return {
+            rateLimits: {
+              limitId: "codex",
+              primary: { usedPercent: 42, windowDurationMins: 300 },
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(await screen.findByText("Connect Codex")).toBeInTheDocument();
+    transport.push({
+      event: { success: true, type: "account/login/completed" },
+      type: "event",
+    });
+
+    expect(await screen.findByText(/login-complete@example.com/)).toBeInTheDocument();
+    expect(await screen.findByText("42%")).toBeInTheDocument();
+    expect(
+      transport.requests.filter((request) => request.method === "account/read"),
+    ).toHaveLength(2);
+    expect(
+      transport.requests.some((request) => request.method === "account/rateLimits/read"),
+    ).toBe(true);
+  });
+
   it("formats App Server stderr diagnostics into readable messages", async () => {
     const transport = new FakeAgentTransport({
       onRequest(request) {

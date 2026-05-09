@@ -447,6 +447,7 @@ export function useAgentBootstrap(): AgentBootstrapState {
   const { refreshUsage } = useAgentUsage();
   const { refreshModels } = useAgentModels();
   const didBootstrap = useRef(false);
+  const didAuthenticatedSync = useRef(false);
   const [bootstrap, setBootstrap] = useState<AgentBootstrapState>({
     errors: [],
     isBootstrapping: false,
@@ -493,11 +494,58 @@ export function useAgentBootstrap(): AgentBootstrapState {
         isBootstrapping: false,
         status: errors.length > 0 ? "error" : "ready",
       });
+      if (isAuthenticated && errors.length === 0) didAuthenticatedSync.current = true;
     })();
   }, [
     readAccount,
     refreshModels,
     refreshUsage,
+    state.account.rateLimits,
+    state.account.status,
+    state.connection.status,
+    state.models.models.length,
+  ]);
+
+  useEffect(() => {
+    if (
+      state.connection.status !== "connected" ||
+      state.account.status !== "authenticated" ||
+      didAuthenticatedSync.current
+    ) {
+      return;
+    }
+    didAuthenticatedSync.current = true;
+    setBootstrap({ errors: [], isBootstrapping: true, status: "loading" });
+    void (async () => {
+      const errors: Error[] = [];
+      const tasks = [
+        state.account.account == null ? readAccount() : Promise.resolve(),
+        state.models.models.length === 0 ? refreshModels() : Promise.resolve(),
+        state.account.rateLimits == null ? refreshUsage() : Promise.resolve(),
+      ];
+      const results = await Promise.allSettled(tasks);
+      errors.push(
+        ...results
+          .filter(
+            (result): result is PromiseRejectedResult => result.status === "rejected",
+          )
+          .map((result) =>
+            result.reason instanceof Error
+              ? result.reason
+              : new Error(String(result.reason)),
+          ),
+      );
+      setBootstrap({
+        errors,
+        isBootstrapping: false,
+        status: errors.length > 0 ? "error" : "ready",
+      });
+    })();
+  }, [
+    readAccount,
+    refreshModels,
+    refreshUsage,
+    state.account.account,
     state.account.rateLimits,
     state.account.status,
     state.connection.status,
