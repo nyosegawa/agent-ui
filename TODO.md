@@ -320,6 +320,7 @@ This section is the publish/release gate after the real local app works.
 
 - [x] Fix stable `account/read`, `account/login/start`, `account/login/cancel`, `account/logout`, `account/rateLimits/read`, and `model/list` params.
 - [x] Preserve device-code `loginId` and support stable-schema login cancel.
+- [x] Type the Codex device-code auth helper against generated `LoginAccountResponse`.
 - [x] Add schema-backed request param tests for real App Server methods.
 - [x] Redact App Server stderr before callback, transport, WebSocket, and UI forwarding.
 - [x] Avoid retaining raw transport stderr events in React diagnostics state.
