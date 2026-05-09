@@ -1272,11 +1272,12 @@ export function ThreadSidebar({
   onSelectThread?: (threadId: string) => void;
   threads: ThreadState[];
 }) {
-  const { error, isLoading, listThreads } = useAgentThreadHistory();
+  const { cursor, error, isLoading, listThreads } = useAgentThreadHistory();
   const { state } = useAgentContext();
   const { readThread } = useAgentThreadReader();
   const [searchTerm, setSearchTerm] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>();
   const [visibleThreadIds, setVisibleThreadIds] = useState<string[] | undefined>();
   const didAutoLoad = useRef(false);
   const visibleThreads = useMemo(() => {
@@ -1288,18 +1289,27 @@ export function ThreadSidebar({
     });
   }, [threads, visibleThreadIds]);
   const loadThreadPage = useCallback(
-    async (params: { searchTerm?: string } = {}) => {
-      const response = await listThreads({ limit: 25, searchTerm: params.searchTerm });
+    async (
+      params: { append?: boolean; cursor?: string | null; searchTerm?: string } = {},
+    ) => {
+      const response = await listThreads({
+        cursor: params.cursor,
+        limit: 25,
+        searchTerm: params.searchTerm,
+      });
       const rawThreads = Array.isArray(response?.data)
         ? response.data
         : Array.isArray(response?.threads)
           ? response.threads
           : [];
-      setVisibleThreadIds(
-        rawThreads.map((rawThread: Record<string, unknown>) =>
-          String(rawThread.id ?? rawThread.threadId ?? rawThread.thread_id),
-        ),
+      const threadIds = rawThreads.map((rawThread: Record<string, unknown>) =>
+        String(rawThread.id ?? rawThread.threadId ?? rawThread.thread_id),
       );
+      setVisibleThreadIds((current) => {
+        if (!params.append) return threadIds;
+        return Array.from(new Set([...(current ?? []), ...threadIds]));
+      });
+      setNextCursor(response?.nextCursor ?? response?.next_cursor ?? null);
       setHasLoaded(true);
       return response;
     },
@@ -1357,6 +1367,22 @@ export function ThreadSidebar({
         }}
         threads={visibleThreads}
       />
+      {(nextCursor ?? cursor) ? (
+        <button
+          className="aui-button aui-button-secondary aui-history-load-more"
+          disabled={isLoading}
+          onClick={() => {
+            void loadThreadPage({
+              append: true,
+              cursor: nextCursor ?? cursor ?? null,
+              searchTerm,
+            }).catch(() => undefined);
+          }}
+          type="button"
+        >
+          {isLoading ? "Loading" : "Load more"}
+        </button>
+      ) : null}
     </aside>
   );
 }

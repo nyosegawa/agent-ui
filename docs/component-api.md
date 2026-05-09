@@ -46,7 +46,7 @@ the chat.
 
 ## Thread Sidebar
 
-`ThreadSidebar` includes a lightweight persisted-session browser. `Load` calls `thread/list` with optional search text, `limit: 25`, `sortKey: "updated_at"`, and descending order, then shows that returned page with loading and empty states. Stored-session rows show the user-facing title plus status and update time; internal Codex JSONL session paths are not shown in the default list. Selecting a stored thread calls `thread/read` with `includeTurns: true` and activates the hydrated snapshot.
+`ThreadSidebar` includes a lightweight persisted-session browser. `Load` calls `thread/list` with optional search text, `limit: 25`, `sortKey: "updated_at"`, and descending order, then shows that returned page with loading and empty states. When the App Server returns `nextCursor` / `next_cursor`, the sidebar shows `Load more` and appends the next page without losing the current page. Stored-session rows show the user-facing title plus status and update time; internal Codex JSONL session paths are not shown in the default list. Selecting a stored thread calls `thread/read` with `includeTurns: true` and activates the hydrated snapshot.
 
 When a stored thread is loaded as `notLoaded` or `loaded`, the thread header shows `Resume`. That action calls `thread/resume` with `excludeTurns: true` because the preview history is already hydrated. The default UI maps internal protocol statuses to product-facing labels such as `Stored`, `Preview`, `Running`, and `Needs approval`; raw status strings are not shown unless the status is unknown to Agent UI. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
 

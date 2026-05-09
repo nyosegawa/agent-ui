@@ -900,6 +900,10 @@
   white-space: nowrap;
 }
 
+.aui-history-load-more {
+  justify-self: stretch;
+}
+
 @media (max-width: 720px) {
   .aui-shell {
     grid-template-columns: 1fr;

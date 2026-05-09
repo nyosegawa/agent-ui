@@ -933,4 +933,58 @@ describe("AgentChat", () => {
       sortKey: "updated_at",
     });
   });
+
+  it("loads additional stored thread pages when thread/list returns a cursor", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method !== "thread/list") return {};
+        if (
+          (request.params as { cursor?: string | null } | undefined)?.cursor === "page-2"
+        ) {
+          return {
+            data: [
+              {
+                id: "thread-page-2",
+                name: "Second page thread",
+                status: { type: "notLoaded" },
+                updatedAt: 1778000600,
+              },
+            ],
+            nextCursor: null,
+          };
+        }
+        return {
+          data: [
+            {
+              id: "thread-page-1",
+              name: "First page thread",
+              status: { type: "notLoaded" },
+              updatedAt: 1778000000,
+            },
+          ],
+          nextCursor: "page-2",
+        };
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Load" }));
+    expect(await screen.findByText("First page thread")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Load more" }));
+
+    expect(await screen.findByText("Second page thread")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more" })).not.toBeInTheDocument();
+    expect(
+      transport.requests.find(
+        (request) =>
+          request.method === "thread/list" &&
+          (request.params as { cursor?: string | null }).cursor === "page-2",
+      ),
+    ).toBeTruthy();
+  });
 });

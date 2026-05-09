@@ -18,7 +18,7 @@ const history = useAgentThreadHistory();
 const reader = useAgentThreadReader();
 ```
 
-`useAgentThreadHistory().listThreads()` calls `thread/list`, supports search and pagination cursor inputs, and upserts returned thread metadata without activating it.
+`useAgentThreadHistory().listThreads()` calls `thread/list`, supports search and pagination cursor inputs, tracks the latest returned cursor, and upserts returned thread metadata without activating it. The default `ThreadSidebar` uses the same hook for `Load more` pagination.
 
 `useAgentThreadReader().readThread(threadId, { includeTurns: true })` calls `thread/read` and hydrates persisted turns/items before activation. This is the preferred preview path when a user clicks an older session but has not explicitly resumed it yet.
 
