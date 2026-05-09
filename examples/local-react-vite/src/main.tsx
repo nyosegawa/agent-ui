@@ -21,6 +21,11 @@ declare global {
 }
 
 function DemoApp() {
+  if (window.location.pathname === "/qa") return <VisualQaIndex />;
+  return <AgentDemo />;
+}
+
+function AgentDemo() {
   const demoState = useMemo(() => demoStateFromUrl(), []);
   const initialState = useMemo(() => createDemoInitialState(demoState), [demoState]);
   const transport = useMemo(() => createDemoTransport(demoState), [demoState]);
@@ -49,6 +54,78 @@ function DemoApp() {
 }
 
 type DemoState = "default" | "empty" | "unauth" | "bridge-error";
+
+const visualQaStates: Array<{
+  description: string;
+  href: string;
+  title: string;
+}> = [
+  {
+    description:
+      "Fixture-backed streaming, approvals, diff, usage, and stored thread preview.",
+    href: "/",
+    title: "Default fixture conversation",
+  },
+  {
+    description: "Authenticated account with no stored Codex threads.",
+    href: "/?state=empty",
+    title: "Empty authenticated workspace",
+  },
+  {
+    description: "First-run device-code login without stale usage data.",
+    href: "/?state=unauth",
+    title: "Unauthenticated first run",
+  },
+  {
+    description: "Connection failure with diagnostics and no misleading start action.",
+    href: "/?state=bridge-error",
+    title: "Bridge error",
+  },
+];
+
+function VisualQaIndex() {
+  return (
+    <main
+      style={{
+        background: "#f6f7f9",
+        color: "#14171f",
+        font: "14px/1.5 system-ui, sans-serif",
+        minHeight: "100vh",
+        padding: "32px 18px",
+      }}
+    >
+      <div style={{ margin: "0 auto", maxWidth: 860 }}>
+        <h1 style={{ fontSize: 24, margin: "0 0 8px" }}>Agent UI visual QA states</h1>
+        <p style={{ color: "#667085", margin: "0 0 20px" }}>
+          Deterministic fixture states for browser review. The real product path remains
+          examples/codex-local-web.
+        </p>
+        <div style={{ display: "grid", gap: 10 }}>
+          {visualQaStates.map((state) => (
+            <a
+              href={state.href}
+              key={state.href}
+              style={{
+                background: "#ffffff",
+                border: "1px solid #d7dde6",
+                borderRadius: 8,
+                color: "inherit",
+                display: "grid",
+                gap: 4,
+                padding: 14,
+                textDecoration: "none",
+              }}
+            >
+              <strong>{state.title}</strong>
+              <span style={{ color: "#667085" }}>{state.description}</span>
+              <code style={{ color: "#0f766e" }}>{state.href}</code>
+            </a>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
 
 function demoStateFromUrl(): DemoState {
   const state = new URLSearchParams(window.location.search).get("state");

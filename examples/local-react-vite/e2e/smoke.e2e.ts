@@ -21,12 +21,12 @@ test("renders Agent UI chat", async ({ page }) => {
     page.getByText("Stored session history can be read before resuming."),
   ).toBeVisible();
   await page.getByRole("button", { name: "Resume" }).click();
-  await expect(page.locator(".aui-status-pill")).toHaveText("loaded");
+  await expect(page.locator(".aui-status-pill")).toHaveText("Preview");
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue(
     "fixture-demo-model",
   );
   await expect(page.getByLabel("Effort", { exact: true })).toHaveValue("");
-  await expect(page.getByRole("button", { name: "Review" })).toHaveAttribute(
+  await expect(page.getByRole("button", { exact: true, name: "Review" })).toHaveAttribute(
     "aria-pressed",
     "true",
   );
@@ -49,6 +49,12 @@ test("does not overflow on mobile", async ({ page }) => {
 });
 
 test("renders deterministic empty, login, and bridge-error states", async ({ page }) => {
+  await page.goto("/qa");
+  await expect(
+    page.getByRole("heading", { name: "Agent UI visual QA states" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: /Bridge error/ })).toBeVisible();
+
   await page.goto("/?state=empty");
   await expect(page.getByText("fixture@example.com")).toBeVisible();
   await expect(page.getByText("No threads found.")).toBeVisible();

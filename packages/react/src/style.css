@@ -885,6 +885,7 @@
   display: -webkit-box;
   font-size: 13px;
   font-weight: 650;
+  line-height: 1.35;
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -893,6 +894,10 @@
 .aui-thread-list-item small {
   color: var(--aui-muted);
   font-size: 11px;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 720px) {

@@ -1,5 +1,6 @@
 import type {
   AgentItemState,
+  AgentThread,
   PendingServerRequest,
   ThreadState,
   TurnState,
@@ -57,7 +58,7 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
             <div className="aui-thread-header">
               <div>
                 <h1>{thread.thread.name ?? "Untitled thread"}</h1>
-                <p>{thread.thread.path ?? thread.thread.id}</p>
+                <p>{threadSubtitle(thread.thread)}</p>
               </div>
               <AgentThreadActions status={thread.status} threadId={threadId} />
             </div>
@@ -94,6 +95,17 @@ function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
       </div>
     );
   }
+  if (state.connection.status === "connecting" || account.status === "unknown") {
+    return (
+      <div className="aui-first-run">
+        <strong>Preparing Codex</strong>
+        <p>Connecting to the local bridge and checking account state.</p>
+        <button className="aui-button aui-button-secondary" disabled type="button">
+          Syncing
+        </button>
+      </div>
+    );
+  }
   if (account.status === "unauthenticated") {
     return (
       <div className="aui-first-run">
@@ -122,9 +134,13 @@ function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
     );
   }
   return (
-    <button className="aui-button" onClick={onStartThread} type="button">
-      Start thread
-    </button>
+    <div className="aui-first-run">
+      <strong>Start a Codex thread</strong>
+      <p>Choose a model, effort, execution mode, and working directory, then start.</p>
+      <button className="aui-button" onClick={onStartThread} type="button">
+        Start thread
+      </button>
+    </div>
   );
 }
 
@@ -134,7 +150,7 @@ function AgentThreadActions({ status, threadId }: { status: string; threadId?: s
   return (
     <div className="aui-thread-actions">
       <span className="aui-status-pill" data-status={status}>
-        {status}
+        {formatThreadStatus(status)}
       </span>
       {canResume ? (
         <button
@@ -989,15 +1005,20 @@ function stringField(record: Record<string, unknown>, key: string): string | und
 }
 
 export function AgentStatusBar() {
+  const { state } = useAgentContext();
   const { account, cancelLogin, login } = useAgentAuth();
   const accountLabel = accountLabelText(account.account);
+  const statusText =
+    account.status === "unknown"
+      ? state.connection.status === "connected"
+        ? "checking account"
+        : "connecting"
+      : account.status;
   return (
     <header className="aui-status">
       <div className="aui-brand">
         <strong>Agent UI</strong>
-        <span>
-          {accountLabel ? `${account.status} · ${accountLabel}` : account.status}
-        </span>
+        <span>{accountLabel ? `${statusText} · ${accountLabel}` : statusText}</span>
       </div>
       {account.login ? (
         <div className="aui-login-code" role="status">
@@ -1020,7 +1041,7 @@ export function AgentStatusBar() {
       ) : null}
       {account.status === "unknown" ? (
         <button className="aui-button aui-button-secondary" disabled type="button">
-          Checking
+          {state.connection.status === "connected" ? "Checking" : "Connecting"}
         </button>
       ) : null}
       {account.status === "unauthenticated" ? (
@@ -1166,11 +1187,80 @@ export function ThreadList({
           type="button"
         >
           <span>{thread.thread.name ?? thread.thread.id}</span>
-          <small>{thread.status}</small>
+          <small>{threadListMeta(thread)}</small>
         </button>
       ))}
     </nav>
   );
+}
+
+function threadListMeta(thread: ThreadState): string {
+  const parts = [formatThreadStatus(thread.status)];
+  const updated = rawThreadDate(thread.thread.raw, [
+    "updatedAt",
+    "updated_at",
+    "modifiedAt",
+    "modified_at",
+    "createdAt",
+    "created_at",
+  ]);
+  if (updated) parts.push(updated);
+  return parts.join(" · ");
+}
+
+function rawThreadDate(raw: unknown, keys: string[]): string | undefined {
+  if (!isRecord(raw)) return undefined;
+  for (const key of keys) {
+    const value = raw[key];
+    const date =
+      typeof value === "number"
+        ? new Date(value > 10_000_000_000 ? value : value * 1000)
+        : typeof value === "string"
+          ? new Date(value)
+          : undefined;
+    if (date && Number.isFinite(date.getTime())) {
+      return new Intl.DateTimeFormat(undefined, {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(date);
+    }
+  }
+  return undefined;
+}
+
+function formatThreadStatus(status: string): string {
+  switch (status) {
+    case "notLoaded":
+      return "Stored";
+    case "loaded":
+      return "Preview";
+    case "running":
+      return "Running";
+    case "waitingForInput":
+      return "Needs approval";
+    case "complete":
+    case "completed":
+      return "Complete";
+    case "error":
+      return "Failed";
+    default:
+      return status
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/^\w/, (letter) => letter.toUpperCase());
+  }
+}
+
+function threadSubtitle(thread: AgentThread): string {
+  if (thread.path && isUserFacingPath(thread.path)) return thread.path;
+  if (thread.ephemeral) return "Ephemeral Codex session";
+  return "Codex session";
+}
+
+function isUserFacingPath(path: string): boolean {
+  const normalized = path.replace(/\\/g, "/");
+  if (normalized.endsWith(".jsonl")) return false;
+  if (normalized.includes("/rollout-")) return false;
+  return true;
 }
 
 export function ThreadSidebar({

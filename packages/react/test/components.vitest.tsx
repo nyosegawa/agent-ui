@@ -46,8 +46,32 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
     expect(await screen.findByTestId("agent-chat")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Start thread" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: "Start thread" }),
+    ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
+  });
+
+  it("does not offer to start a thread before account bootstrap finishes", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return new Promise(() => undefined);
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(await screen.findByText("Preparing Codex")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Syncing" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "Start thread" }),
+    ).not.toBeInTheDocument();
   });
 
   it("bootstraps account, models, and usage on startup", async () => {
@@ -713,6 +737,9 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
       onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
         if (request.method === "thread/start") {
           return { thread: { id: "thread-empty-model", name: "Model metadata test" } };
         }
@@ -788,6 +815,7 @@ describe("AgentChat", () => {
               {
                 id: "thread-history",
                 name: "Historical fix",
+                path: "/Users/example/.codex/sessions/2026/05/09/rollout-demo.jsonl",
                 preview: "Fix a stored bug",
                 status: { type: "notLoaded" },
                 turns: [],
@@ -801,6 +829,7 @@ describe("AgentChat", () => {
             thread: {
               id: "thread-history",
               name: "Historical fix",
+              path: "/Users/example/.codex/sessions/2026/05/09/rollout-demo.jsonl",
               preview: "Fix a stored bug",
               status: { type: "notLoaded" },
               turns: [
@@ -857,9 +886,13 @@ describe("AgentChat", () => {
     expect(
       await screen.findByRole("heading", { name: "Historical fix" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Codex session")).toBeInTheDocument();
+    expect(screen.queryByText(/rollout-demo\.jsonl/)).not.toBeInTheDocument();
     expect(screen.getByText("The stored thread was loaded.")).toBeInTheDocument();
     expect(screen.getByLabelText("Command output")).toHaveTextContent("ok");
     await user.click(screen.getByRole("button", { name: "Resume" }));
+    expect(screen.getByText("Preview")).toBeInTheDocument();
+    expect(screen.queryByText("notLoaded")).not.toBeInTheDocument();
     expect(transport.requests.map((request) => request.method)).toEqual(
       expect.arrayContaining(["thread/list", "thread/read", "thread/resume"]),
     );

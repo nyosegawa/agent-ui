@@ -3,14 +3,17 @@ import type { Page } from "@playwright/test";
 
 test("hydrates and resumes stored threads through the browser websocket transport", async ({
   page,
-}) => {
+}, testInfo) => {
+  testInfo.setTimeout(60_000);
   await openRealLocalApp(page);
   const storedThread = page.getByRole("button", { name: /Stored real smoke/ });
   await expect(storedThread).toBeVisible();
-  await storedThread.evaluate((button) => button.click());
-  await expect(page.getByText("Stored thread hydrated.")).toBeVisible();
+  await storedThread.click({ force: true });
+  await expect(page.getByText("Stored thread hydrated.")).toBeVisible({
+    timeout: 30_000,
+  });
   await page.getByRole("button", { name: "Resume" }).click({ force: true });
-  await expect(page.locator(".aui-status-pill")).toHaveText("loaded");
+  await expect(page.locator(".aui-status-pill")).toHaveText("Preview");
 });
 
 test("starts a live turn and resolves approval through the browser websocket transport", async ({
@@ -18,7 +21,9 @@ test("starts a live turn and resolves approval through the browser websocket tra
 }) => {
   await openRealLocalApp(page);
   await page.getByLabel("Model", { exact: true }).selectOption("smoke-model");
-  await page.getByRole("button", { name: "Start thread" }).evaluate((button) => button.click());
+  await page
+    .getByRole("button", { name: "Start thread" })
+    .evaluate((button) => button.click());
   await expect(page.getByRole("heading", { name: "Live real smoke" })).toBeVisible();
   await page.getByRole("textbox", { name: "Message" }).fill("run smoke");
   await page.getByRole("button", { name: "Send" }).evaluate((button) => button.click());

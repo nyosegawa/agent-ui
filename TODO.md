@@ -273,13 +273,16 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Replace detached command-output and diff panels with contextual turn-timeline activity.
 - [x] Collapse command-heavy persisted-session work steps so conversation context remains readable.
 - [x] Replace raw approval JSON with structured command and file-change review cards.
+- [x] Replace raw thread status labels such as `notLoaded` with product-facing labels.
+- [x] Hide internal Codex JSONL session paths from default thread history UI.
+- [x] Keep the start-thread action hidden until account bootstrap confirms it is usable.
 
 ### Experience Hardening Audit
 
 - [x] Group per-turn command and file-change activity into a readable Work trace so terminal history does not dominate past sessions.
 - [x] Screen-check the real local app after the Work trace refactor on the authenticated history view.
 - [x] Audit empty, unauthenticated login, approval, diff, mobile, and error states with browser screenshots.
-- [ ] Replace the fixture Vite state gallery with a dedicated visual QA route if the state matrix grows.
+- [x] Replace the fixture Vite state gallery with a dedicated visual QA route.
 - [x] Update component and testing docs with the final conversation/work-trace information architecture.
 
 ## Release Readiness
