@@ -30,6 +30,20 @@ Tests:
 
 These tests are allowed to fail when upstream Codex changes. Failure means the adapter must be updated.
 
+Schema-backed request tests cover the critical App Server params used by the real app path:
+
+- `account/read { refreshToken: false }`
+- `account/login/start { type: "chatgptDeviceCode" }`
+- `account/login/cancel { loginId }`
+- `account/logout` without params
+- `account/rateLimits/read` without params
+- `model/list`
+- `thread/list`
+- `thread/read`
+- `thread/resume`
+- `thread/start`
+- `turn/start`
+
 ## Normalizer and Reducer
 
 Most important test layer.
@@ -76,6 +90,7 @@ Cases:
 - malformed JSON
 - child process exit
 - stderr logging
+- stderr redaction before browser/UI forwarding
 - timeout
 - overload error `-32001`
 - websocket auth header

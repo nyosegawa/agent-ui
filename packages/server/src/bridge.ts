@@ -1,7 +1,7 @@
 import { createCodexStdioTransport, type CodexInitializeOptions } from "@nyosegawa/agent-ui-codex";
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 import { execa } from "execa";
-import type { Readable, Writable } from "node:stream";
+import { PassThrough, type Readable, type Writable } from "node:stream";
 import { redactSecrets } from "./redaction";
 
 export interface CodexAppServerBridgeOptions {
@@ -55,14 +55,11 @@ export function createCodexAppServerBridge(
   const childPromise = child as unknown as { catch?: (handler: (error: unknown) => void) => void };
   childPromise.catch?.(() => undefined);
 
-  if (child.stderr && options.stderr) {
-    child.stderr.setEncoding("utf8");
-    child.stderr.on("data", (chunk) => options.stderr?.(redactSecrets(String(chunk))));
-  }
+  const stderr = child.stderr ? createRedactedStderr(child.stderr, options.stderr) : undefined;
 
   const transport = createCodexStdioTransport({
     initialize: options.initialize,
-    stderr: child.stderr ?? undefined,
+    stderr,
     stdin: child.stdin,
     stdout: child.stdout,
   });
@@ -75,4 +72,20 @@ export function createCodexAppServerBridge(
     process: child,
     transport,
   };
+}
+
+function createRedactedStderr(
+  raw: Readable,
+  onStderr?: (line: string) => void,
+): Readable {
+  const redacted = new PassThrough();
+  raw.setEncoding("utf8");
+  raw.on("data", (chunk) => {
+    const text = redactSecrets(String(chunk));
+    onStderr?.(text);
+    redacted.write(text);
+  });
+  raw.on("end", () => redacted.end());
+  raw.on("error", (error) => redacted.destroy(error));
+  return redacted;
 }

@@ -112,11 +112,12 @@ Package metadata should include:
 Client requests:
 
 - `initialize`
-- `account/read`
-- `account/login/start`
-- `account/login/cancel`
-- `account/logout`
-- `model/list`
+- `account/read` with `{ refreshToken: false }` for startup bootstrap
+- `account/login/start` with `{ type: "chatgptDeviceCode" }`
+- `account/login/cancel` with `{ loginId }`
+- `account/logout` without params
+- `account/rateLimits/read` without params
+- `model/list` with `{}` or stable pagination params
 - `thread/start`
 - `thread/resume`
 - `thread/list`

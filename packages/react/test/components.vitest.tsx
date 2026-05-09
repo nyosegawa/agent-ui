@@ -88,6 +88,15 @@ describe("AgentChat", () => {
     expect(transport.requests.map((request) => request.method)).toEqual(
       expect.arrayContaining(["account/read", "model/list", "account/rateLimits/read"]),
     );
+    expect(transport.requests.find((request) => request.method === "account/read")?.params).toEqual(
+      { refreshToken: false },
+    );
+    expect(
+      transport.requests.find((request) => request.method === "account/rateLimits/read")?.params,
+    ).toBeUndefined();
+    expect(transport.requests.find((request) => request.method === "model/list")?.params).toEqual(
+      {},
+    );
   });
 
   it("shows first-run login state when account/read is unauthenticated", async () => {
@@ -417,10 +426,12 @@ describe("AgentChat", () => {
       onRequest(request) {
         if (request.method === "account/login/start") {
           return {
+            loginId: "login-123",
             userCode: "ABCD-EFGH",
             verificationUrl: "https://chatgpt.com/device",
           };
         }
+        if (request.method === "account/login/cancel") return {};
         return {};
       },
     });
@@ -437,6 +448,14 @@ describe("AgentChat", () => {
       "https://chatgpt.com/device",
     );
     expect(screen.getByText("ABCD-EFGH")).toBeInTheDocument();
+    expect(transport.requests.find((request) => request.method === "account/login/start")?.params).toEqual(
+      { type: "chatgptDeviceCode" },
+    );
+
+    await user.click(screen.getAllByRole("button", { name: "Cancel login" })[0]!);
+    expect(transport.requests.find((request) => request.method === "account/login/cancel")?.params).toEqual(
+      { loginId: "login-123" },
+    );
   });
 
   it("loads persisted session history and reads an individual thread", async () => {

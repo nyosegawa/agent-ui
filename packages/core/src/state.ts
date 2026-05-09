@@ -24,6 +24,7 @@ export interface AccountState {
 }
 
 export interface DeviceCodeLoginState {
+  loginId?: string;
   requestId?: RequestId;
   userCode?: string;
   verificationUrl?: string;

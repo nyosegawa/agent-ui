@@ -14,11 +14,11 @@ Browser UI
 Login sequence:
 
 ```text
-1. account/read
-2. If unauthenticated, call account/login/start with chatgptDeviceCode
-3. Display verificationUrl and userCode
-4. Wait for account/login/completed
-5. Apply account/updated
+1. account/read { refreshToken: false }
+2. If unauthenticated, call account/login/start { type: "chatgptDeviceCode" }
+3. Store loginId, display verificationUrl and userCode
+4. Optionally cancel with account/login/cancel { loginId }
+5. Wait for account/login/completed and account/updated
 6. Start or resume a thread
 ```
 
@@ -33,7 +33,9 @@ Implemented surface:
 
 - `useAgentBootstrap()` calls `account/read` after the transport connects and stores the normalized account state.
 - `useAgentAuth()` exposes `readAccount`, `login`, and `logout`.
-- `login()` calls `account/login/start` with `chatgptDeviceCode`.
+- `login()` calls `account/login/start` with stable params `{ type: "chatgptDeviceCode" }`.
+- Device-code login state stores `loginId`, `verificationUrl`, and `userCode`; `loginId` is used only for `account/login/cancel`.
+- `cancelLogin()` calls `account/login/cancel` with stable params `{ loginId }`.
 - `AgentStatusBar` exposes a login action only when account state is confirmed unauthenticated.
 - `AgentChat` shows a first-run device-code login state for unauthenticated local users.
 - The helper does not store or log raw tokens.

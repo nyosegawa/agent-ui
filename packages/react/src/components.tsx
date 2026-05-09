@@ -77,7 +77,7 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
 }
 
 function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
-  const { account, login } = useAgentAuth();
+  const { account, cancelLogin, login } = useAgentAuth();
   if (account.status === "unauthenticated") {
     return (
       <div className="aui-first-run">
@@ -85,6 +85,22 @@ function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
         <p>Sign in with ChatGPT device code before starting a real local thread.</p>
         <button className="aui-button" onClick={() => void login()} type="button">
           Start device-code login
+        </button>
+      </div>
+    );
+  }
+  if (account.status === "authenticating") {
+    return (
+      <div className="aui-first-run">
+        <strong>Complete Codex login</strong>
+        <p>Open the device login link and enter the code shown in the status bar.</p>
+        <button
+          className="aui-button aui-button-secondary"
+          disabled={!account.login?.loginId}
+          onClick={() => void cancelLogin()}
+          type="button"
+        >
+          Cancel login
         </button>
       </div>
     );
@@ -664,7 +680,7 @@ export function AgentDiffPanel({ thread }: { thread: ThreadState }) {
 }
 
 export function AgentStatusBar() {
-  const { account, login } = useAgentAuth();
+  const { account, cancelLogin, login } = useAgentAuth();
   const accountLabel = accountLabelText(account.account);
   return (
     <header className="aui-status">
@@ -680,6 +696,15 @@ export function AgentStatusBar() {
             </a>
           ) : null}
           {account.login.userCode ? <code>{account.login.userCode}</code> : null}
+          {account.login.loginId ? (
+            <button
+              className="aui-button aui-button-secondary"
+              onClick={() => void cancelLogin()}
+              type="button"
+            >
+              Cancel login
+            </button>
+          ) : null}
         </div>
       ) : null}
       {account.status === "unknown" ? (

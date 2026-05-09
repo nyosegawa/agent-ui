@@ -25,12 +25,19 @@ export type AgentEvent =
   | { type: "account/rateLimits/updated"; rateLimits: unknown }
   | {
       type: "account/login/deviceCodeStarted";
+      loginId?: string;
       requestId?: RequestId;
       userCode?: string;
       verificationUrl?: string;
       expiresAt?: string;
     }
-  | { type: "account/login/completed"; account?: unknown }
+  | {
+      type: "account/login/completed";
+      account?: unknown;
+      error?: string | null;
+      loginId?: string | null;
+      success?: boolean;
+    }
   | { type: "models/updated"; models: AgentModel[]; selectedModelId?: string }
   | {
       type: "runSettings/updated";

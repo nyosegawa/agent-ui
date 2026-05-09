@@ -47,8 +47,26 @@ Rules:
 - no raw ChatGPT token storage in Agent UI
 - no browser exposure of server-side tokens
 - no token logging
+- no stderr or diagnostic forwarding before redaction
 - no shared personal OAuth session for multi-user use
 - account state must be visible to the host application
+
+Device-code login displays only the App Server `verificationUrl` and `userCode` returned for the user to complete login. It stores `loginId` only long enough to send `account/login/cancel` and never logs the code, raw tokens, API keys, bearer tokens, passwords, or secrets.
+
+## Diagnostics
+
+`createCodexAppServerBridge()` is the single stderr redaction point for the local App Server process. It consumes raw `child.stderr`, redacts it once, forwards the redacted text to the optional host callback, and passes a redacted stderr stream to the transport. Browser WebSocket events and React diagnostics must therefore only receive redacted stderr.
+
+Current redaction covers:
+
+- `Authorization: Bearer ...`
+- bare `Bearer ...`
+- `token=...`
+- `api_key=...` and `OPENAI_API_KEY=...`
+- `password=...`
+- `secret=...`
+- labeled `device_code=...`, `user_code=...`, and `userCode=...`
+- JSON string fields with token, secret, password, API key, or labeled device-code names
 
 ## Remote Use
 

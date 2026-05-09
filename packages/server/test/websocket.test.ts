@@ -215,6 +215,27 @@ describe("attachAgentUiWebSocketBridge", () => {
     await transport.close();
   });
 
+  it("forwards only redacted stderr through the browser transport", async () => {
+    const { stderr, stdout, transport, writes } = await createBridgeBackedTransport();
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stderr.write("Authorization: Bearer raw.secret token=raw-token password=raw-pass\n");
+    const event = await nextTransportEvent(transport, (candidate) => candidate.type === "stderr");
+
+    expect(event.message).toContain("Authorization: Bearer [REDACTED]");
+    expect(event.message).toContain("token=[REDACTED]");
+    expect(event.message).toContain("password=[REDACTED]");
+    expect(event.message).not.toContain("raw.secret");
+    expect(event.message).not.toContain("raw-token");
+    expect(event.message).not.toContain("raw-pass");
+    await transport.close();
+  });
+
   it("shuts down abandoned browser sessions after the idle timeout", async () => {
     const stdin = new PassThrough();
     const stdout = new PassThrough();
@@ -291,7 +312,7 @@ async function createBridgeBackedTransport() {
     url: `ws://127.0.0.1:${address.port}/agent-ui/ws`,
     webSocketImpl: WebSocket as unknown as typeof globalThis.WebSocket,
   });
-  return { stdout, transport, writes };
+  return { stderr, stdout, transport, writes };
 }
 
 function onceOpen(socket: WebSocket): Promise<void> {

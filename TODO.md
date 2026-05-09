@@ -273,9 +273,22 @@ This section is the publish/release gate after the real local app works.
 - [x] Run `bun run publint`.
 - [x] Run `bun run attw`.
 - [x] Run `bun run test:e2e:playwright`.
-- [x] Run real local app smoke for model list, usage, thread list, thread read, thread resume, start thread, send turn, streaming text, and approval handling.
+- [x] Run real local app smoke for model list, usage, thread list, thread read, thread resume, start thread, send turn, and streaming text.
+- [x] Run fake stdio browser smoke for command output, diff preview, and approval handling through the real WebSocket transport.
+- [ ] Run real Codex approval smoke for command and file-change approval requests.
 - [x] Record exact real smoke commands, date, Codex version, and any auth/environment dependencies in docs.
 - [x] Confirm GitHub Actions pass after push.
+
+## Current Correctness Audit
+
+- [x] Fix stable `account/read`, `account/login/start`, `account/login/cancel`, `account/logout`, `account/rateLimits/read`, and `model/list` params.
+- [x] Preserve device-code `loginId` and support stable-schema login cancel.
+- [x] Add schema-backed request param tests for real App Server methods.
+- [x] Redact App Server stderr before callback, transport, WebSocket, and UI forwarding.
+- [ ] Clarify Next one-shot RPC helper scope and keep chat-capable bridge on WebSocket.
+- [ ] Document real vs fake approval coverage without overstating completion.
+- [ ] Re-run full validation after corrective audit changes.
+- [ ] Confirm GitHub Actions pass after corrective audit changes.
 
 ## Implemented Extras
 

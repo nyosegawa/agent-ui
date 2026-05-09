@@ -49,6 +49,7 @@ export function agentReducer(
           ...state.account,
           login: {
             expiresAt: event.expiresAt,
+            loginId: event.loginId,
             requestId: event.requestId,
             userCode: event.userCode,
             verificationUrl: event.verificationUrl,
@@ -60,8 +61,8 @@ export function agentReducer(
       return {
         ...state,
         account: {
-          account: event.account as Record<string, unknown> | undefined,
-          status: "authenticated",
+          account: (event.account as Record<string, unknown> | undefined) ?? state.account.account,
+          status: event.success === false ? "unauthenticated" : "authenticated",
         },
       };
     case "account/rateLimits/updated":

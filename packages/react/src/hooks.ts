@@ -12,6 +12,26 @@ import {
   type ThreadId,
 } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  accountReadParams,
+  cancelLoginParams,
+  deviceCodeLoginParams,
+  modelListParams,
+  threadListParams,
+  threadReadParams,
+  threadResumeParams,
+  threadStartParams,
+  turnStartParams,
+  type CancelLoginAccountParams,
+  type GetAccountParams,
+  type LoginAccountParams,
+  type ModelListParams,
+  type ThreadListParams,
+  type ThreadReadParams,
+  type ThreadResumeParams,
+  type ThreadStartParams,
+  type TurnStartParams,
+} from "./codex-request-params";
 import { useAgentContext } from "./provider";
 import { threadSnapshotEvents, threadUpsertEvent } from "./thread-history";
 
@@ -70,14 +90,12 @@ export function useAgentThread(threadId?: ThreadId) {
 
   const startThread = useCallback(
     async (params?: Record<string, unknown>) => {
-      const result = await transport.request<Record<string, unknown> | undefined, any>(
-        "thread/start",
-        {
-          ...(runSettings.modelId ? { model: runSettings.modelId } : {}),
-          ...(runSettings.cwd ? { cwd: runSettings.cwd } : {}),
-          ...(params ?? {}),
-        },
-      );
+      const requestParams = threadStartParams({
+        cwd: runSettings.cwd,
+        modelId: runSettings.modelId,
+        params,
+      });
+      const result = await transport.request<ThreadStartParams, any>("thread/start", requestParams);
       const rawThread = result.thread ?? result;
       dispatch({
         status: normalizeThreadStatus(rawThread.status ?? result.status),
@@ -97,10 +115,8 @@ export function useAgentThread(threadId?: ThreadId) {
 
   const resumeThread = useCallback(
     async (id: ThreadId, params?: Record<string, unknown>) => {
-      const result = await transport.request<Record<string, unknown>, any>("thread/resume", {
-        ...params,
-        threadId: id,
-      });
+      const requestParams = threadResumeParams(id, params);
+      const result = await transport.request<ThreadResumeParams, any>("thread/resume", requestParams);
       const rawThread = result?.thread ?? result;
       if (rawThread?.id) {
         for (const event of threadSnapshotEvents(rawThread, true)) dispatch(event);
@@ -141,13 +157,8 @@ export function useAgentThreadHistory() {
       setIsLoading(true);
       setError(undefined);
       try {
-        const response = await transport.request<Record<string, unknown>, any>("thread/list", {
-          cursor: params.cursor ?? null,
-          limit: params.limit ?? 25,
-          searchTerm: params.searchTerm || null,
-          sortDirection: "desc",
-          sortKey: "updated_at",
-        });
+        const requestParams = threadListParams(params);
+        const response = await transport.request<ThreadListParams, any>("thread/list", requestParams);
         const rawThreads = Array.isArray(response?.data)
           ? response.data
           : Array.isArray(response?.threads)
@@ -185,10 +196,8 @@ export function useAgentThreadReader() {
       threadId: ThreadId,
       options: { activate?: boolean; includeTurns?: boolean } = {},
     ) => {
-      const response = await transport.request<Record<string, unknown>, any>("thread/read", {
-        includeTurns: options.includeTurns ?? true,
-        threadId,
-      });
+      const requestParams = threadReadParams(threadId, options.includeTurns ?? true);
+      const response = await transport.request<ThreadReadParams, any>("thread/read", requestParams);
       const rawThread = response?.thread ?? response;
       for (const event of threadSnapshotEvents(rawThread, options.activate ?? true)) {
         dispatch(event);
@@ -211,15 +220,16 @@ export function useAgentTurn(threadId?: ThreadId) {
       const executionMode = AGENT_EXECUTION_MODES.find(
         (mode) => mode.id === runSettings.executionMode,
       );
-      return transport.request("turn/start", {
-        ...(executionMode?.turnParams ?? {}),
-        ...(runSettings.cwd ? { cwd: runSettings.cwd } : {}),
-        ...(runSettings.modelId ? { model: runSettings.modelId } : {}),
-        ...(runSettings.effort ? { effort: runSettings.effort } : {}),
-        ...params,
-        input: [{ text: input, text_elements: [], type: "text" }],
+      const requestParams = turnStartParams({
+        cwd: runSettings.cwd,
+        effort: runSettings.effort,
+        executionParams: executionMode?.turnParams,
+        input,
+        modelId: runSettings.modelId,
+        params,
         threadId: resolvedThreadId,
       });
+      return transport.request<TurnStartParams>("turn/start", requestParams);
     },
     [
       resolvedThreadId,
@@ -334,7 +344,8 @@ export function useAgentRunSettings() {
 export function useAgentAuth() {
   const { dispatch, state, transport } = useAgentContext();
   const readAccount = useCallback(async () => {
-    const response = await transport.request<Record<string, unknown>, any>("account/read", {});
+    const params = accountReadParams(false);
+    const response = await transport.request<GetAccountParams, any>("account/read", params);
     const account =
       response && Object.prototype.hasOwnProperty.call(response, "account")
         ? response.account
@@ -349,22 +360,30 @@ export function useAgentAuth() {
     return response;
   }, [dispatch, transport]);
   const login = useCallback(async () => {
-    const raw = await transport.request<Record<string, unknown>, any>("account/login/start", {
-      method: "chatgptDeviceCode",
-    });
+    const params = deviceCodeLoginParams();
+    const raw = await transport.request<LoginAccountParams, any>("account/login/start", params);
     const loginState = {
+      loginId: raw?.loginId ?? raw?.login_id,
       userCode: raw?.userCode ?? raw?.user_code,
       verificationUrl: raw?.verificationUrl ?? raw?.verification_url,
     };
     dispatch({
+      loginId: loginState.loginId,
       type: "account/login/deviceCodeStarted",
       userCode: loginState.userCode,
       verificationUrl: loginState.verificationUrl,
     });
     return loginState;
   }, [dispatch, transport]);
+  const cancelLogin = useCallback(async () => {
+    const loginId = state.account.login?.loginId;
+    if (!loginId) return;
+    const params = cancelLoginParams(loginId);
+    await transport.request<CancelLoginAccountParams>("account/login/cancel", params);
+    dispatch({ account: null, status: "unauthenticated", type: "account/updated" });
+  }, [dispatch, state.account.login?.loginId, transport]);
   const logout = useCallback(async () => transport.request("account/logout"), [transport]);
-  return { account: state.account, login, logout, readAccount };
+  return { account: state.account, cancelLogin, login, logout, readAccount };
 }
 
 export interface AgentBootstrapState {
@@ -422,7 +441,7 @@ export function useAgentBootstrap(): AgentBootstrapState {
 export function useAgentUsage() {
   const { dispatch, state, transport } = useAgentContext();
   const refreshUsage = useCallback(async () => {
-    const response = await transport.request("account/rateLimits/read", {});
+    const response = await transport.request("account/rateLimits/read");
     dispatch({ rateLimits: response, type: "account/rateLimits/updated" });
     return response;
   }, [dispatch, transport]);
@@ -432,7 +451,8 @@ export function useAgentUsage() {
 export function useAgentModels() {
   const { dispatch, state, transport } = useAgentContext();
   const refreshModels = useCallback(async () => {
-    const response = await transport.request("model/list", {});
+    const params = modelListParams();
+    const response = await transport.request<ModelListParams, any>("model/list", params);
     const models = normalizeModelList(response);
     dispatch({ models, type: "models/updated" });
     return models;

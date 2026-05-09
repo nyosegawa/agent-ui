@@ -29,7 +29,15 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         },
       ];
     case "account/login/completed":
-      return [{ type: "account/login/completed", account: params.account ?? params }];
+      return [
+        {
+          type: "account/login/completed",
+          account: params.account,
+          error: params.error,
+          loginId: params.loginId ?? params.login_id,
+          success: params.success,
+        },
+      ];
     case "account/rateLimits/updated":
       return [{ type: "account/rateLimits/updated", rateLimits: params.rateLimits ?? params }];
     case "configWarning":
