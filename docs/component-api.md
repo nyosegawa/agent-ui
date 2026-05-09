@@ -45,7 +45,7 @@ The React package exposes drop-in components backed by headless hooks. Component
 
 When a stored thread is loaded as `notLoaded` or `loaded`, the thread header shows `Resume`. That action calls `thread/resume` with `excludeTurns: true` because the preview history is already hydrated. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
 
-Hydrated history opens at the latest messages. Long persisted messages are preview-first with an explicit expand control, and very large command-output histories render the latest entries with a count summary so old sessions stay usable in the browser.
+Hydrated history opens at the latest messages. Long persisted messages are preview-first with an explicit expand control, structured App Server content arrays are converted to readable text, and very large command-output histories render the latest entries with a count summary so old sessions stay usable in the browser. If a `thread/read` response includes turns but still reports `notLoaded`, the default UI treats the hydrated view as `loaded`.
 
 ## Approval Components
 

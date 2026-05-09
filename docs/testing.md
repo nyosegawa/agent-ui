@@ -111,6 +111,9 @@ Component tests:
 - render command output
 - keep very large persisted command-output histories capped in the UI
 - keep long persisted messages behind a preview/expand affordance
+- render structured App Server message content arrays as readable text
+- show completed message status after real thread completion and hydrated history reads
+- keep narrow-width persisted history vertical and scroll-contained
 - keep App Server plugin manifest warnings in diagnostics instead of the primary chat flow
 - suppress known low-value Codex plugin `interface.defaultPrompt` warnings from visible diagnostics
 - render file diff
@@ -210,6 +213,7 @@ The history and usage smoke path has also been verified against `codex app-serve
 - `thread/read(includeTurns: true)`: individual stored session history returned
 - `thread/resume(excludeTurns: true)`: resume succeeds for the same stored id
 - `examples/codex-local-web`: browser -> WebSocket bridge -> stdio App Server path loads model metadata, usage windows, stored thread list, `thread/read`, and `thread/resume` in this environment.
+- `examples/codex-local-web` manual browser check on 2026-05-09: in the in-app browser at `http://127.0.0.1:5174/`, a real authenticated session loaded account, model, usage, and stored thread history; a new thread sent `Reply with exactly: agent-ui-ui-check-3`; the real App Server streamed the assistant response; reloading and reading that persisted thread showed user and assistant messages as completed with a loaded hydrated status.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
 - `bun run test:e2e:playwright` also starts `examples/codex-local-web` against a fake stdio App Server and drives the real browser WebSocket transport through model list, usage, thread list/read/resume, thread start, turn start, streaming text, command output, structured diff preview, and command approval.
 

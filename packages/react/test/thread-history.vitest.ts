@@ -17,47 +17,55 @@ describe("thread history normalization", () => {
   });
 
   it("hydrates thread/read turns, command output, and file changes", () => {
-    expect(
-      threadSnapshotEvents(
-        {
-          id: "thread-1",
-          name: "Fix stored bug",
-          status: { type: "idle" },
-          turns: [
-            {
-              id: "turn-1",
-              items: [
-                {
-                  content: [{ text: "Please inspect this", type: "text" }],
-                  id: "item-user",
-                  type: "userMessage",
-                },
-                {
-                  aggregatedOutput: "bun test\nok\n",
-                  command: "bun test",
-                  id: "item-command",
-                  status: "completed",
-                  type: "commandExecution",
-                },
-                {
-                  changes: [{ path: "src/app.ts", type: "update" }],
-                  id: "item-file",
-                  status: "completed",
-                  type: "fileChange",
-                },
-              ],
-              status: "completed",
-            },
-          ],
-        },
-        true,
-      ).map((event) => event.type),
-    ).toEqual([
+    const events = threadSnapshotEvents(
+      {
+        id: "thread-1",
+        name: "Fix stored bug",
+        status: { type: "idle" },
+        turns: [
+          {
+            id: "turn-1",
+            items: [
+              {
+                content: [{ text: "Please inspect this", type: "text" }],
+                id: "item-user",
+                type: "userMessage",
+              },
+              {
+                aggregatedOutput: "bun test\nok\n",
+                command: "bun test",
+                id: "item-command",
+                status: "completed",
+                type: "commandExecution",
+              },
+              {
+                changes: [{ path: "src/app.ts", type: "update" }],
+                id: "item-file",
+                status: "completed",
+                type: "fileChange",
+              },
+            ],
+            status: "completed",
+          },
+        ],
+      },
+      true,
+    );
+
+    expect(events.map((event) => event.type)).toEqual([
       "thread/started",
       "turn/completed",
       "item/commandOutput/delta",
       "item/filePatch/updated",
       "thread/status/changed",
     ]);
+    expect(events[1]).toMatchObject({
+      items: [
+        { id: "item-user", status: "completed", text: "Please inspect this" },
+        { id: "item-command", status: "completed", text: "bun test" },
+        { id: "item-file", status: "completed" },
+      ],
+    });
+    expect(events[4]).toMatchObject({ status: "loaded" });
   });
 });

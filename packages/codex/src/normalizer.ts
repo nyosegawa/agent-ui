@@ -118,7 +118,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         {
           type: "turn/completed",
           items: Array.isArray(params.items)
-            ? params.items.map((item: any) => normalizeItem(item, params))
+            ? params.items.map((item: any) => normalizeItem(item, params, "completed"))
             : undefined,
           threadId: String(params.threadId ?? params.thread_id),
           turn: normalizeTurn(params.turn ?? params, String(params.threadId ?? params.thread_id)),
@@ -139,7 +139,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
       return [
         {
           type: "item/started",
-          item: normalizeItem(params.item ?? params, params),
+          item: normalizeItem(params.item ?? params, params, "inProgress"),
           threadId: String(params.threadId ?? params.thread_id),
           turnId: String(params.turnId ?? params.turn_id),
         },
@@ -148,7 +148,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
       return [
         {
           type: "item/completed",
-          item: normalizeItem(params.item ?? params, params),
+          item: normalizeItem(params.item ?? params, params, "completed"),
           threadId: String(params.threadId ?? params.thread_id),
           turnId: String(params.turnId ?? params.turn_id),
         },
@@ -265,17 +265,45 @@ function normalizeTurn(raw: any, threadId: string): AgentTurn {
   };
 }
 
-function normalizeItem(raw: any, context: any): AgentItemState {
+function normalizeItem(
+  raw: any,
+  context: any,
+  defaultStatus: AgentItemState["status"] = "inProgress",
+): AgentItemState {
   const kind = raw.kind ?? raw.type ?? raw.itemType ?? raw.item_type ?? "unknown";
   return {
     id: String(raw.id ?? raw.itemId ?? raw.item_id),
     kind: String(kind),
     raw,
-    status: raw.status === "failed" ? "failed" : raw.status === "completed" ? "completed" : "inProgress",
-    text: raw.text ?? raw.message ?? raw.content,
+    status:
+      raw.status === "failed" ? "failed" : raw.status === "completed" ? "completed" : defaultStatus,
+    text: itemText(raw),
     threadId: String(raw.threadId ?? raw.thread_id ?? context.threadId ?? context.thread_id),
     turnId: String(raw.turnId ?? raw.turn_id ?? context.turnId ?? context.turn_id),
   };
+}
+
+function itemText(raw: any): string | undefined {
+  if (typeof raw.text === "string") return raw.text;
+  if (typeof raw.message === "string") return raw.message;
+  if (Array.isArray(raw.summary)) return raw.summary.filter(isNonEmptyString).join("\n");
+  if (Array.isArray(raw.content)) {
+    return raw.content
+      .map((part: unknown) => {
+        if (typeof part === "string") return part;
+        if (typeof part !== "object" || part === null) return undefined;
+        const record = part as Record<string, unknown>;
+        return typeof record.text === "string" ? record.text : undefined;
+      })
+      .filter(isNonEmptyString)
+      .join("\n");
+  }
+  if (typeof raw.command === "string") return raw.command;
+  return undefined;
+}
+
+function isNonEmptyString(value: unknown): value is string {
+  return typeof value === "string" && value.length > 0;
 }
 
 function deltaEvent(

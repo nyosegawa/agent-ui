@@ -58,6 +58,35 @@ describe("Codex protocol metadata", () => {
     ]);
   });
 
+  it("normalizes structured App Server user content into display text", () => {
+    expect(
+      normalizeCodexServerMessage({
+        method: "item/completed",
+        params: {
+          item: {
+            content: [{ text: "Reply with exactly: agent-ui-ui-check", type: "text" }],
+            id: "item-user",
+            type: "userMessage",
+          },
+          threadId: "thread-real",
+          turnId: "turn-real",
+        },
+      }),
+    ).toMatchObject([
+      {
+        item: {
+          id: "item-user",
+          kind: "userMessage",
+          status: "completed",
+          text: "Reply with exactly: agent-ui-ui-check",
+        },
+        threadId: "thread-real",
+        turnId: "turn-real",
+        type: "item/completed",
+      },
+    ]);
+  });
+
   it("normalizes plan and rate-limit notifications", () => {
     expect(
       normalizeCodexServerMessage({

@@ -277,7 +277,14 @@ export function AgentMessageList({
     <ol className="aui-message-list" ref={listRef}>
       {thread.orderedTurnIds.map((turnId) => {
         const turn = thread.turns[turnId];
-        return turn ? <AgentTurnView key={turnId} renderItem={renderItem} turn={turn} /> : null;
+        return turn ? (
+          <AgentTurnView
+            key={turnId}
+            renderItem={renderItem}
+            threadStatus={thread.status}
+            turn={turn}
+          />
+        ) : null;
       })}
     </ol>
   );
@@ -285,9 +292,11 @@ export function AgentMessageList({
 
 function AgentTurnView({
   renderItem,
+  threadStatus,
   turn,
 }: {
   renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
+  threadStatus: ThreadState["status"];
   turn: TurnState;
 }) {
   const visibleItems = turn.itemOrder
@@ -299,8 +308,9 @@ function AgentTurnView({
         text: item?.text ?? turn.streamingTextByItemId[itemId],
       };
     })
+    .map((entry) => ({ ...entry, text: displayText(entry.text) }))
     .filter((entry) => {
-      if (!entry.text) return false;
+      if (!entry.text?.trim()) return false;
       if (entry.item && isWorklogOnlyItem(entry.item)) return false;
       return true;
     });
@@ -310,7 +320,7 @@ function AgentTurnView({
         if (!text) return null;
         if (item && renderItem) return <div key={id}>{renderItem(item, turn)}</div>;
         const kind = item?.kind ?? "stream";
-        const status = item?.status ?? "streaming";
+        const status = displayItemStatus(item?.status ?? "streaming", threadStatus);
         return (
           <article className="aui-message" data-kind={kind} key={id}>
             <div className="aui-message-meta">
@@ -335,6 +345,30 @@ function MessageBody({ text }: { text: string }) {
       <div>{trimmed}</div>
     </details>
   );
+}
+
+function displayText(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  if (value == null) return undefined;
+  if (Array.isArray(value)) {
+    const text = value.map(displayText).filter(Boolean).join("\n");
+    return text || undefined;
+  }
+  if (typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if (typeof record.text === "string") return record.text;
+    if (typeof record.message === "string") return record.message;
+    const json = JSON.stringify(value, null, 2);
+    return json === undefined ? undefined : json;
+  }
+  return String(value);
+}
+
+function displayItemStatus(status: string, threadStatus: ThreadState["status"]): string {
+  if (status === "inProgress" && (threadStatus === "complete" || threadStatus === "completed")) {
+    return "completed";
+  }
+  return status;
 }
 
 export function AgentWorkLog({ thread }: { thread: ThreadState }) {

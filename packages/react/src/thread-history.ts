@@ -22,9 +22,10 @@ export function threadSnapshotEvents(
   const thread = normalizeRawThread(rawThread);
   const rawTurns = Array.isArray(rawThread.turns) ? rawThread.turns : [];
   const turns = rawTurns.map((turn) => normalizeRawTurn(turn, thread.id));
+  const status = snapshotStatus(rawThread.status, rawTurns.length);
   const events: AgentEvent[] = [
     {
-      status: normalizeThreadStatus(rawThread.status),
+      status,
       thread,
       turns,
       type: activate ? "thread/started" : "thread/upserted",
@@ -35,8 +36,9 @@ export function threadSnapshotEvents(
     const turn = normalizeRawTurn(rawTurn, thread.id);
     const rawTurnRecord = asRecord(rawTurn);
     const items = Array.isArray(rawTurnRecord?.items) ? rawTurnRecord.items : [];
+    const itemStatus = turn.status === "completed" ? "completed" : undefined;
     events.push({
-      items: items.map((item) => normalizeRawItem(item, thread.id, turn.id)),
+      items: items.map((item) => normalizeRawItem(item, thread.id, turn.id, itemStatus)),
       threadId: thread.id,
       turn,
       type: "turn/completed",
@@ -66,7 +68,7 @@ export function threadSnapshotEvents(
   }
 
   events.push({
-    status: normalizeThreadStatus(rawThread.status),
+    status,
     threadId: thread.id,
     type: "thread/status/changed",
   });
@@ -94,14 +96,19 @@ function normalizeRawTurn(rawTurn: unknown, threadId: ThreadId): AgentTurn {
   };
 }
 
-function normalizeRawItem(rawItem: unknown, threadId: ThreadId, turnId: string): AgentItemState {
+function normalizeRawItem(
+  rawItem: unknown,
+  threadId: ThreadId,
+  turnId: string,
+  defaultStatus: AgentItemState["status"] = "inProgress",
+): AgentItemState {
   const record = asRecord(rawItem) ?? {};
   const kind = String(record.type ?? record.kind ?? "unknown");
   return {
     id: String(record.id ?? record.itemId ?? record.item_id),
     kind,
     raw: rawItem,
-    status: normalizeItemStatus(record.status),
+    status: normalizeItemStatus(record.status, defaultStatus),
     text: itemText(record),
     threadId,
     turnId,
@@ -135,10 +142,18 @@ function normalizeThreadStatus(value: unknown): ThreadStatus {
   return type ?? "notLoaded";
 }
 
-function normalizeItemStatus(value: unknown): AgentItemState["status"] {
+function snapshotStatus(value: unknown, turnCount: number): ThreadStatus {
+  const status = normalizeThreadStatus(value);
+  return status === "notLoaded" && turnCount > 0 ? "loaded" : status;
+}
+
+function normalizeItemStatus(
+  value: unknown,
+  defaultStatus: AgentItemState["status"] = "inProgress",
+): AgentItemState["status"] {
   if (value === "completed" || value === "success") return "completed";
   if (value === "failed" || value === "error") return "failed";
-  return "inProgress";
+  return defaultStatus;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {

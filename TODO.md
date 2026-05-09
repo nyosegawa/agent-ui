@@ -263,6 +263,9 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Make long persisted-session messages preview-first with explicit expansion.
 - [x] Cap very large persisted-session command-output lists so history remains readable.
 - [x] Auto-scroll hydrated persisted sessions to the latest messages.
+- [x] Normalize structured real App Server message content before rendering persisted and live turns.
+- [x] Keep narrow-width persisted session history vertical and readable instead of horizontal card overflow.
+- [x] Show completed message status after real App Server thread completion and hydrated `thread/read`.
 
 ## Release Readiness
 

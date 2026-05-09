@@ -221,6 +221,85 @@ describe("AgentChat", () => {
     ).toBe(true);
   });
 
+  it("renders structured App Server message content without crashing", () => {
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-real";
+    initialState.threads["thread-real"] = {
+      orderedTurnIds: ["turn-real"],
+      status: "running",
+      thread: { id: "thread-real", name: "Real thread" },
+      turns: {
+        "turn-real": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-user"],
+          items: {
+            "item-user": {
+              id: "item-user",
+              kind: "userMessage",
+              raw: {
+                content: [{ text: "Reply with exactly: agent-ui-ui-check", type: "text" }],
+              },
+              status: "completed",
+              text: [{ text: "Reply with exactly: agent-ui-ui-check", type: "text" }] as any,
+              threadId: "thread-real",
+              turnId: "turn-real",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-real", threadId: "thread-real" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("Reply with exactly: agent-ui-ui-check")).toBeInTheDocument();
+  });
+
+  it("does not leave messages marked in progress after the thread completes", () => {
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-real";
+    initialState.threads["thread-real"] = {
+      orderedTurnIds: ["turn-real"],
+      status: "completed",
+      thread: { id: "thread-real", name: "Completed thread" },
+      turns: {
+        "turn-real": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-agent"],
+          items: {
+            "item-agent": {
+              id: "item-agent",
+              kind: "agentMessage",
+              status: "inProgress",
+              text: "agent-ui-ui-check-3",
+              threadId: "thread-real",
+              turnId: "turn-real",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-real", threadId: "thread-real" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("agent-ui-ui-check-3")).toBeInTheDocument();
+    expect(screen.getAllByText("completed").length).toBeGreaterThan(0);
+    expect(screen.queryByText("inProgress")).not.toBeInTheDocument();
+  });
+
   it("caps large historical command output lists", () => {
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-history";
