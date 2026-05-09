@@ -38,11 +38,13 @@ The React package exposes drop-in components backed by headless hooks. Component
 - `AgentComposer`
 
 `AgentMessageList` is the primary product surface. It renders user messages,
-assistant messages, and reasoning as the readable conversation. Command output
-and file-change diffs are grouped into a per-turn Work trace below the same
-turn, so real Codex history is inspectable without terminal logs dominating the
-chat. Work traces are contextual timeline content, not separate panels below
-the chat.
+assistant messages, and reasoning as the readable conversation. User and
+assistant text is rendered as safe Markdown, including common headings, lists,
+links, inline code, fenced code blocks, quotes, task lists, and simple tables.
+HTML is treated as text, not executed. Command output and file-change diffs are
+grouped into a per-turn Work trace below the same turn, so real Codex history is
+inspectable without terminal logs dominating the chat. Work traces are
+contextual timeline content, not separate panels below the chat.
 
 ## Thread Sidebar
 
@@ -63,6 +65,12 @@ loaded history are rendered as completed.
 Long thread titles are clamped in both the sidebar and the thread header. Header
 actions wrap below the title on narrow screens so `Resume`, `Stop`, and `New
 thread` remain reachable instead of being pushed out of the viewport.
+
+The sidebar is collapsible. Collapsing history keeps the conversation and
+composer in the viewport while leaving an accessible `History` restore control.
+The default local web app disables document-level scrolling; the sidebar, usage
+carousel on narrow screens, message timeline, approvals, and composer settings
+own their own overflow.
 
 ## Approval Components
 
@@ -107,6 +115,12 @@ browser component.
 - working directory: optional `cwd` override for real local thread and turn requests
 
 The selected values are stored in normalized run settings. In the full `AgentChat` layout, run settings are part of the same composer surface as the message input so the model, effort, execution mode, working directory, and prompt are reviewed together before sending. `thread/start` receives `model` and `cwd`. `turn/start` receives `approvalPolicy`, `sandboxPolicy`, `model`, `effort`, and `cwd`.
+
+Working-directory controls also learn from real thread history. User-facing
+`path` or `cwd` values from `thread/list`, `thread/read`, `thread/resume`, and
+`thread/start` are preserved on the normalized thread and offered as recent
+options in the composer. Internal Codex JSONL session paths remain hidden from
+default labels and are not offered as project directories.
 
 When a thread is running, the default composer is disabled and the thread header
 shows a `Stop` control wired to `turn/interrupt` for the latest turn. Keeping the

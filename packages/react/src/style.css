@@ -24,8 +24,14 @@
   border-radius: var(--aui-radius);
   display: grid;
   grid-template-columns: minmax(220px, 300px) minmax(0, 1fr);
-  min-height: 680px;
-  overflow: visible;
+  height: calc(100vh - 32px);
+  min-height: 620px;
+  overflow: hidden;
+  position: relative;
+}
+
+.aui-shell[data-sidebar-collapsed="true"] {
+  grid-template-columns: 56px minmax(0, 1fr);
 }
 
 @media (min-width: 721px) {
@@ -63,9 +69,17 @@
   border-right: 1px solid var(--aui-border);
   display: grid;
   gap: 10px;
-  grid-template-rows: auto auto auto auto 1fr;
+  grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
   min-height: 0;
+  overflow: hidden;
   padding: 12px;
+}
+
+.aui-sidebar-header {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
 }
 
 .aui-sidebar-title {
@@ -73,6 +87,39 @@
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
+}
+
+.aui-sidebar-toggle,
+.aui-icon-button {
+  background: transparent;
+  border: 1px solid var(--aui-border);
+  border-radius: 6px;
+  color: var(--aui-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 650;
+  min-height: 30px;
+  padding: 4px 8px;
+}
+
+.aui-sidebar-toggle:hover,
+.aui-icon-button:hover {
+  background: var(--aui-panel-alt);
+  color: var(--aui-fg);
+}
+
+.aui-sidebar-collapsed {
+  align-content: start;
+  justify-content: center;
+  min-height: 48px;
+  padding: 8px;
+}
+
+.aui-sidebar-collapsed .aui-sidebar-toggle {
+  height: 96px;
+  padding: 6px 4px;
+  writing-mode: vertical-rl;
 }
 
 .aui-history-controls {
@@ -109,8 +156,9 @@
   background: var(--aui-panel);
   display: grid;
   grid-template-rows: auto auto auto auto minmax(240px, 1fr) auto auto;
+  min-height: 0;
   min-width: 0;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .aui-chat > * {
@@ -399,9 +447,10 @@
   gap: 12px;
   list-style: none;
   margin: 0;
-  max-height: 460px;
-  min-height: 240px;
+  max-height: none;
+  min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: 14px;
 }
 
@@ -529,7 +578,135 @@
   line-height: 1.55;
   max-width: 100%;
   overflow-wrap: anywhere;
-  white-space: pre-wrap;
+}
+
+.aui-markdown {
+  white-space: normal;
+}
+
+.aui-markdown > :first-child {
+  margin-top: 0;
+}
+
+.aui-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.aui-markdown p,
+.aui-markdown ul,
+.aui-markdown ol,
+.aui-markdown blockquote,
+.aui-markdown pre,
+.aui-markdown table {
+  margin: 0 0 10px;
+}
+
+.aui-markdown h1,
+.aui-markdown h2,
+.aui-markdown h3,
+.aui-markdown h4,
+.aui-markdown h5,
+.aui-markdown h6 {
+  color: var(--aui-fg);
+  line-height: 1.25;
+  margin: 14px 0 8px;
+}
+
+.aui-markdown h1 {
+  font-size: 20px;
+}
+
+.aui-markdown h2 {
+  font-size: 18px;
+}
+
+.aui-markdown h3 {
+  font-size: 16px;
+}
+
+.aui-markdown h4,
+.aui-markdown h5,
+.aui-markdown h6 {
+  font-size: 14px;
+}
+
+.aui-markdown ul,
+.aui-markdown ol {
+  padding-left: 22px;
+}
+
+.aui-markdown li + li {
+  margin-top: 4px;
+}
+
+.aui-markdown blockquote {
+  border-left: 3px solid var(--aui-border-strong);
+  color: var(--aui-muted);
+  padding-left: 10px;
+}
+
+.aui-markdown code {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.93em;
+  padding: 1px 4px;
+}
+
+.aui-markdown pre {
+  background: var(--aui-code-bg);
+  border-radius: 6px;
+  color: var(--aui-code-fg);
+  overflow: auto;
+  padding: 10px;
+}
+
+.aui-markdown pre code {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  display: block;
+  padding: 0;
+  white-space: pre;
+}
+
+.aui-markdown a {
+  color: var(--aui-primary);
+  font-weight: 650;
+}
+
+.aui-markdown hr {
+  border: 0;
+  border-top: 1px solid var(--aui-border);
+  margin: 12px 0;
+}
+
+.aui-markdown-table-wrap {
+  overflow: auto;
+}
+
+.aui-markdown table {
+  border-collapse: collapse;
+  min-width: 360px;
+  width: 100%;
+}
+
+.aui-markdown th,
+.aui-markdown td {
+  border: 1px solid var(--aui-border);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.aui-markdown th {
+  background: var(--aui-panel-alt);
+  font-weight: 700;
+}
+
+.aui-markdown input[type="checkbox"] {
+  margin: 0 4px 0 0;
 }
 
 .aui-message-body-collapsible {
@@ -802,6 +979,9 @@
   background: var(--aui-panel);
   border-top: 1px solid var(--aui-border);
   display: grid;
+  max-height: min(44vh, 360px);
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .aui-composer {
@@ -893,6 +1073,24 @@
   width: 100%;
 }
 
+.aui-cwd-input {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.aui-cwd-input input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  min-width: 0;
+}
+
+.aui-cwd-input .aui-icon-button {
+  flex: 0 0 auto;
+  min-height: 36px;
+  min-width: 36px;
+  padding: 4px 8px;
+}
+
 .aui-composer-input {
   border: 1px solid var(--aui-border);
   border-radius: 6px;
@@ -908,6 +1106,7 @@
   align-content: start;
   display: grid;
   gap: 6px;
+  min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
 }
@@ -954,9 +1153,28 @@
   justify-self: stretch;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 900px) and (min-width: 641px) {
+  .aui-run-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .aui-mode-group,
+  .aui-field-wide {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
   .aui-shell {
     grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) minmax(0, 200px);
+    height: calc(100vh - 16px);
+    min-height: 0;
+  }
+
+  .aui-shell[data-sidebar-collapsed="true"] {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) 48px;
   }
 
   .aui-chat {
@@ -966,13 +1184,58 @@
   .aui-sidebar {
     border-bottom: 1px solid var(--aui-border);
     border-right: 0;
-    grid-template-rows: auto auto auto auto minmax(0, 1fr);
-    max-height: 320px;
+    grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
+    max-height: none;
     order: 2;
   }
 
+  .aui-sidebar-collapsed {
+    align-content: center;
+    background: transparent;
+    border: 0;
+    justify-content: stretch;
+    min-height: 0;
+    padding: 0;
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    z-index: 10;
+  }
+
+  .aui-sidebar-collapsed .aui-sidebar-toggle {
+    height: auto;
+    justify-self: stretch;
+    writing-mode: horizontal-tb;
+  }
+
   .aui-run-controls {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .aui-mode-group,
+  .aui-field-wide {
+    grid-column: 1 / -1;
+  }
+
+  .aui-compose-panel {
+    max-height: min(50vh, 420px);
+  }
+
+  .aui-composer {
+    border-bottom: 1px solid var(--aui-border);
+    order: -1;
+  }
+
+  .aui-composer-input {
+    min-height: 64px;
+  }
+
+  .aui-usage-grid {
+    grid-auto-columns: minmax(180px, 1fr);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    overflow: auto;
+    overscroll-behavior-x: contain;
   }
 
   .aui-thread-header {

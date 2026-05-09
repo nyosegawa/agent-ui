@@ -127,11 +127,12 @@ export function useAgentThread(threadId?: ThreadId) {
           ephemeral: Boolean(rawThreadRecord.ephemeral),
           id: threadId,
           name: stringValue(rawThreadRecord.name),
-          path: stringValue(rawThreadRecord.path),
+          path: threadPath(rawThreadRecord),
           raw: rawThread,
         },
         type: "thread/started",
       });
+      syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       return result;
     },
     [dispatch, runSettings.cwd, runSettings.modelId, transport],
@@ -145,8 +146,10 @@ export function useAgentThread(threadId?: ThreadId) {
         requestParams,
       );
       const rawThread = asRecord(result)?.thread ?? result;
-      if (hasThreadId(rawThread)) {
-        for (const event of threadSnapshotEvents(rawThread, true)) dispatch(event);
+      const rawThreadRecord = asRecord(rawThread);
+      if (rawThreadRecord && hasThreadId(rawThreadRecord)) {
+        for (const event of threadSnapshotEvents(rawThreadRecord, true)) dispatch(event);
+        syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       }
       dispatch({ threadId: id, type: "thread/active/set" });
       return result;
@@ -257,6 +260,27 @@ function hasThreadId(value: unknown): value is Record<string, unknown> {
 
 function isRecordWithThreadId(value: unknown): value is Record<string, unknown> {
   return hasThreadId(value);
+}
+
+function syncRunSettingsFromRawThread(
+  dispatch: ReturnType<typeof useAgentContext>["dispatch"],
+  rawThread: Record<string, unknown>,
+) {
+  const cwd = threadPath(rawThread);
+  const modelId = stringValue(rawThread.modelId) ?? stringValue(rawThread.model);
+  const effort = stringValue(rawThread.effort) ?? stringValue(rawThread.reasoningEffort);
+  if (cwd || modelId || effort) {
+    dispatch({
+      cwd,
+      effort,
+      modelId,
+      type: "runSettings/updated",
+    });
+  }
+}
+
+function threadPath(rawThread: Record<string, unknown>): string | undefined {
+  return stringValue(rawThread.path) ?? stringValue(rawThread.cwd);
 }
 
 export function useAgentTurn(threadId?: ThreadId) {

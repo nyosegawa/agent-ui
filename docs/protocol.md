@@ -109,7 +109,12 @@ Package metadata should include:
 
 ## Release Protocol Surface
 
-Client requests:
+The current generated stable `ClientRequest` schema contains many App Server
+methods. Agent UI intentionally productizes the real local chat path first and
+does not claim complete Codex Desktop parity for every host utility. The
+coverage status is:
+
+Productized local chat path:
 
 - `initialize`
 - `account/read` with `{ refreshToken: false }` for startup bootstrap
@@ -126,6 +131,76 @@ Client requests:
 - `turn/start`
 - `turn/steer`
 - `turn/interrupt`
+
+Supported by generated types and host/headless APIs, not primary default UI:
+
+- `thread/fork`
+- `thread/archive`
+- `thread/unarchive`
+- `thread/name/set`
+- `thread/metadata/update`
+- `thread/rollback`
+- `thread/loaded/list`
+- `thread/turns/list`
+- `thread/inject_items`
+- `review/start`
+- `getConversationSummary`
+- `gitDiffToRemote`
+- `getAuthStatus`
+- `modelProvider/capabilities/read`
+- `config/read`
+- `config/value/write`
+- `config/batchWrite`
+- `configRequirements/read`
+- `externalAgentConfig/detect`
+- `externalAgentConfig/import`
+- `account/sendAddCreditsNudgeEmail`
+- `feedback/upload`
+
+Host-only or advanced local tooling:
+
+- `thread/shellCommand`
+- `thread/approveGuardianDeniedAction`
+- `thread/compact/start`
+- `command/exec`
+- `command/exec/write`
+- `command/exec/terminate`
+- `command/exec/resize`
+- `fs/readFile`
+- `fs/writeFile`
+- `fs/createDirectory`
+- `fs/getMetadata`
+- `fs/readDirectory`
+- `fs/remove`
+- `fs/copy`
+- `fs/watch`
+- `fs/unwatch`
+- `fuzzyFileSearch`
+- `windowsSandbox/setupStart`
+
+Deferred from the finished local web release:
+
+- `skills/list`
+- `skills/config/write`
+- `hooks/list`
+- `marketplace/add`
+- `marketplace/remove`
+- `marketplace/upgrade`
+- `plugin/list`
+- `plugin/read`
+- `plugin/install`
+- `plugin/uninstall`
+- `app/list`
+- `device/key/create`
+- `device/key/public`
+- `device/key/sign`
+- `experimentalFeature/list`
+- `experimentalFeature/enablement/set`
+- `mcpServer/oauth/login`
+- `config/mcpServer/reload`
+- `mcpServerStatus/list`
+- `mcpServer/resource/read`
+- `mcpServer/tool/call`
 
 Server requests:
 
@@ -147,11 +222,17 @@ Notifications:
 
 Deferred:
 
-- `process/*`
-- plugin marketplace admin
-- realtime/audio
-- dynamic tools
+- remote/multi-user production
+- realtime/audio and voice UX
+- plugin marketplace administration
+- dynamic MCP resource/tool management as a product surface
 - external ChatGPT auth token mode
+
+Unrecognized notifications are never treated as chat text. The normalizer keeps
+known message, command, file-change, approval, plan, usage, account, warning,
+and error events structured; unknown or deferred App Server messages should
+surface as redacted diagnostics or neutral timeline activity until explicitly
+productized.
 
 ## Local Smoke
 

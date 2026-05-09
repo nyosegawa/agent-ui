@@ -14,6 +14,7 @@ import {
 import {
   AgentChat,
   AgentDiffViewer,
+  AgentMessageList,
   AgentProvider,
   useAgentAuth,
   useAgentContext,
@@ -814,6 +815,52 @@ describe("AgentChat", () => {
     });
   });
 
+  it("renders conversation messages as safe markdown", () => {
+    render(
+      <AgentMessageList
+        thread={{
+          orderedTurnIds: ["turn-markdown"],
+          status: "complete",
+          thread: { id: "thread-markdown", name: "Markdown" },
+          turns: {
+            "turn-markdown": {
+              commandOutputByItemId: {},
+              filePatchByItemId: {},
+              itemOrder: ["item-markdown"],
+              items: {
+                "item-markdown": {
+                  id: "item-markdown",
+                  kind: "agentMessage",
+                  status: "completed",
+                  text:
+                    "## Result\n\n- `bun test` passed\n- [Docs](https://example.com)\n\n```sh\nbun test\n```\n\n| File | State |\n| --- | --- |\n| README.md | updated |\n\n<script>alert('x')</script>",
+                  threadId: "thread-markdown",
+                  turnId: "turn-markdown",
+                },
+              },
+              streamingTextByItemId: {},
+              turn: {
+                id: "turn-markdown",
+                status: "completed",
+                threadId: "thread-markdown",
+              },
+            },
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByRole("heading", { name: "Result" })).toBeInTheDocument();
+    expect(screen.getAllByText("bun test")).toHaveLength(2);
+    expect(screen.getByText("passed")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Docs" })).toHaveAttribute(
+      "href",
+      "https://example.com",
+    );
+    expect(screen.getByRole("table")).toBeInTheDocument();
+    expect(screen.getByText("<script>alert('x')</script>")).toBeInTheDocument();
+  });
+
   it("starts new threads with selected model and working directory", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
@@ -861,6 +908,83 @@ describe("AgentChat", () => {
       cwd: "/tmp/agent-ui",
       model: "real-model",
     });
+  });
+
+  it("restores cwd from started and resumed thread responses", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              cwd: "/Users/example/project",
+              id: "thread-start-cwd",
+              name: "Thread with cwd",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                cwd: "/Users/example/old-project",
+                id: "thread-old-cwd",
+                name: "Old project",
+                status: { type: "notLoaded" },
+              },
+            ],
+          };
+        }
+        if (request.method === "thread/read" || request.method === "thread/resume") {
+          return {
+            thread: {
+              cwd: "/Users/example/old-project",
+              id: "thread-old-cwd",
+              name: "Old project",
+              status: { type: "idle" },
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "New thread" }));
+    expect(await screen.findByText("/Users/example/project")).toBeInTheDocument();
+    expect(screen.getByLabelText("Working directory")).toHaveValue(
+      "/Users/example/project",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Load" }));
+    await user.click(await screen.findByRole("button", { name: /Old project/ }));
+    await user.click(screen.getByRole("button", { name: "Resume" }));
+    expect(screen.getByLabelText("Working directory")).toHaveValue(
+      "/Users/example/old-project",
+    );
+  });
+
+  it("collapses and expands the history sidebar", async () => {
+    const user = userEvent.setup();
+    render(
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Collapse history" }));
+    expect(screen.queryByLabelText("Search history")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Expand history" }));
+    expect(screen.getByLabelText("Search history")).toBeInTheDocument();
   });
 
   it("refreshes usage limits", async () => {

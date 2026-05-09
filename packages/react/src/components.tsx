@@ -41,13 +41,17 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
   const bootstrap = useAgentBootstrap();
   const { thread, threadId, startThread } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
+  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   return (
     <section
       className={["aui-shell", className].filter(Boolean).join(" ")}
+      data-sidebar-collapsed={isSidebarCollapsed ? "true" : "false"}
       data-testid="agent-chat"
     >
       <ThreadSidebar
         activeThreadId={activeThreadId}
+        collapsed={isSidebarCollapsed}
+        onCollapsedChange={setSidebarCollapsed}
         onSelectThread={setActiveThread}
         threads={threads}
       />
@@ -211,6 +215,17 @@ export function AgentRunControls({ autoRefresh = true }: AgentRunControlsProps =
     supportedEfforts,
   } = useAgentRunSettings();
   const hasEffortOptions = supportedEfforts.length > 0;
+  const cwdOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          Object.values(state.threads)
+            .map((thread) => thread.thread.path)
+            .filter((path): path is string => Boolean(path && isUserFacingPath(path))),
+        ),
+      ).slice(0, 12),
+    [state.threads],
+  );
 
   useEffect(() => {
     if (autoRefresh && state.connection.status === "connected" && models.length === 0) {
@@ -272,13 +287,34 @@ export function AgentRunControls({ autoRefresh = true }: AgentRunControlsProps =
       </label>
       <label className="aui-field aui-field-wide">
         <span>Working directory</span>
-        <input
-          aria-label="Working directory"
-          onChange={(event) => setCwd(event.currentTarget.value)}
-          placeholder="Server default cwd"
-          type="text"
-          value={runSettings.cwd ?? ""}
-        />
+        <div className="aui-cwd-input">
+          <input
+            aria-label="Working directory"
+            list={cwdOptions.length > 0 ? "aui-cwd-options" : undefined}
+            onChange={(event) => setCwd(event.currentTarget.value)}
+            placeholder={cwdOptions[0] ?? "Server default cwd"}
+            type="text"
+            value={runSettings.cwd ?? ""}
+          />
+          {runSettings.cwd ? (
+            <button
+              aria-label="Clear working directory"
+              className="aui-icon-button"
+              onClick={() => setCwd("")}
+              title="Clear working directory"
+              type="button"
+            >
+              x
+            </button>
+          ) : null}
+          {cwdOptions.length > 0 ? (
+            <datalist id="aui-cwd-options">
+              {cwdOptions.map((cwd) => (
+                <option key={cwd} value={cwd} />
+              ))}
+            </datalist>
+          ) : null}
+        </div>
       </label>
     </section>
   );
@@ -795,10 +831,14 @@ function isUserFacingPath(path: string): boolean {
 
 export function ThreadSidebar({
   activeThreadId,
+  collapsed = false,
+  onCollapsedChange,
   onSelectThread,
   threads,
 }: {
   activeThreadId?: string;
+  collapsed?: boolean;
+  onCollapsedChange?: (collapsed: boolean) => void;
   onSelectThread?: (threadId: string) => void;
   threads: ThreadState[];
 }) {
@@ -874,9 +914,35 @@ export function ThreadSidebar({
       });
     }
   }, [isLoading, loadThreadPage, state.connection.status, threads.length]);
+  if (collapsed) {
+    return (
+      <aside className="aui-sidebar aui-sidebar-collapsed" data-collapsed="true">
+        <button
+          aria-label="Expand history"
+          className="aui-sidebar-toggle"
+          onClick={() => onCollapsedChange?.(false)}
+          title="Expand history"
+          type="button"
+        >
+          History
+        </button>
+      </aside>
+    );
+  }
   return (
-    <aside className="aui-sidebar">
-      <div className="aui-sidebar-title">Threads</div>
+    <aside className="aui-sidebar" data-collapsed="false">
+      <div className="aui-sidebar-header">
+        <div className="aui-sidebar-title">Threads</div>
+        <button
+          aria-label="Collapse history"
+          className="aui-sidebar-toggle"
+          onClick={() => onCollapsedChange?.(true)}
+          title="Collapse history"
+          type="button"
+        >
+          Hide
+        </button>
+      </div>
       <form
         className="aui-history-controls"
         onSubmit={(event) => {

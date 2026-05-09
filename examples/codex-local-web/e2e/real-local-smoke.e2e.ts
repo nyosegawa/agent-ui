@@ -70,6 +70,12 @@ test("real local app shell has stable desktop and mobile layout contracts", asyn
   await expect(noHorizontalOverflow(page)).resolves.toBe(true);
   const desktopRunControls = page.getByLabel("Run settings");
   await expect(desktopRunControls).toBeVisible();
+  await expect(page.locator(".aui-composer")).toBeInViewport();
+  await expect(independentScrollSurfaces(page)).resolves.toBe(true);
+  await page.getByRole("button", { name: "Collapse history" }).click();
+  await expect(page.getByRole("button", { name: "Expand history" })).toBeVisible();
+  await page.getByRole("button", { name: "Expand history" }).click();
+  await expect(page.getByLabel("Search history")).toBeVisible();
 
   await page.setViewportSize({ width: 390, height: 900 });
   await page.reload();
@@ -77,6 +83,7 @@ test("real local app shell has stable desktop and mobile layout contracts", asyn
   await expect(page.getByLabel("Run settings")).toBeVisible();
   await expect(noHorizontalOverflow(page)).resolves.toBe(true);
   await expect(chatAppearsBeforeSidebar(page)).resolves.toBe(true);
+  await expect(page.locator(".aui-composer")).toBeInViewport();
 });
 
 async function noHorizontalOverflow(page: Page) {
@@ -91,6 +98,20 @@ async function chatAppearsBeforeSidebar(page: Page) {
     const sidebar = document.querySelector(".aui-sidebar")?.getBoundingClientRect();
     if (!chat || !sidebar) return false;
     return chat.top <= sidebar.top;
+  });
+}
+
+async function independentScrollSurfaces(page: Page) {
+  return page.evaluate(() => {
+    const sidebar = document.querySelector(".aui-thread-list");
+    const messages = document.querySelector(".aui-message-list");
+    if (!sidebar || !messages) return false;
+    const sidebarOverflow = getComputedStyle(sidebar).overflowY;
+    const messageOverflow = getComputedStyle(messages).overflowY;
+    return (
+      ["auto", "scroll"].includes(sidebarOverflow) &&
+      ["auto", "scroll"].includes(messageOverflow)
+    );
   });
 }
 
@@ -110,4 +131,5 @@ async function openRealLocalApp(page: Page) {
   await expect(page.getByLabel("Usage limits")).toContainText("codex weekly", {
     timeout: 30_000,
   });
+  await expect(page.locator(".aui-composer")).toBeInViewport();
 }

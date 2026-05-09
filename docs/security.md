@@ -72,6 +72,21 @@ Current redaction covers:
 - labeled `device_code=...`, `user_code=...`, and `userCode=...`
 - JSON string fields with token, secret, password, API key, or labeled device-code names
 
+## Markdown Rendering
+
+User and assistant messages are Markdown because real Codex sessions often
+contain lists, code, tables, and links. The default renderer is intentionally
+safe-by-default:
+
+- message text becomes React text nodes unless a supported Markdown construct is recognized
+- raw HTML such as `<script>` is displayed as text, not inserted into the DOM
+- links are limited to `http:`, `https:`, and `mailto:`
+- links open with `rel="noreferrer"` and do not get access to the opener
+- command output remains in `<pre>` text content and is not parsed as Markdown
+
+Hosts replacing `AgentMessageList` or `renderItem` are responsible for keeping
+the same no-raw-HTML policy.
+
 ## Remote Use
 
 Remote deployment is advanced.

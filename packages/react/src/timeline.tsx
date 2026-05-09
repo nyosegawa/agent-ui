@@ -2,6 +2,7 @@ import type { AgentItemState, ThreadState, TurnState } from "@nyosegawa/agent-ui
 import type React from "react";
 import { useEffect, useRef } from "react";
 import { AgentDiffViewer } from "./diff-viewer";
+import { MarkdownMessage } from "./markdown";
 
 export function AgentMessageList({
   renderItem,
@@ -260,11 +261,11 @@ function AgentFileChangeActivity({
 function MessageBody({ text }: { text: string }) {
   const trimmed = text.trim();
   const isLong = trimmed.length > 1800 || trimmed.split(/\r?\n/).length > 18;
-  if (!isLong) return <div className="aui-message-body">{trimmed}</div>;
+  if (!isLong) return <MarkdownMessage className="aui-message-body" text={trimmed} />;
   return (
     <details className="aui-message-body aui-message-body-collapsible">
       <summary>{messagePreview(trimmed)}</summary>
-      <div>{trimmed}</div>
+      <MarkdownMessage text={trimmed} />
     </details>
   );
 }

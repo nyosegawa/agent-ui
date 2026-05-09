@@ -103,6 +103,7 @@ Most transport tests use fake child process and fake websocket implementations.
 Component tests:
 
 - render current thread
+- render user and assistant Markdown safely, including headings, lists, links, code blocks, tables, and escaped raw HTML
 - stream message deltas
 - submit prompt
 - disable composer while blocked
@@ -116,6 +117,9 @@ Component tests:
 - show completed message status after real thread completion and hydrated history reads
 - normalize stale `inProgress` item labels to completed in loaded hydrated history
 - keep narrow-width persisted history vertical and scroll-contained
+- keep the composer visible while the message list and sidebar own independent scroll containers
+- collapse and expand the history sidebar through accessible controls
+- preserve working directory from `thread/list`, `thread/read`, `thread/resume`, and `thread/start` responses
 - keep App Server plugin manifest warnings in diagnostics instead of the primary chat flow
 - suppress known low-value Codex plugin `interface.defaultPrompt` warnings from visible diagnostics
 - suppress known low-value Codex skill icon path warnings from visible diagnostics and the real local web dev terminal
@@ -207,6 +211,12 @@ bun run test:e2e:playwright
 ```
 
 Real Codex smoke has been verified locally through the server bridge for initialize, account/model reads, thread start, turn start, streaming text, token usage, turn completion, and `thread/resume` after a completed turn is persisted.
+
+The current UI validation also checks the product shell behavior that fixture
+tests previously missed: document-level horizontal overflow is forbidden, the
+local web app keeps document scrolling disabled, the thread list and message
+timeline are independent scroll surfaces, the composer remains in the viewport,
+and the history sidebar can collapse and expand.
 
 Latest manual real smoke:
 
