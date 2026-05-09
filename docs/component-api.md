@@ -53,10 +53,11 @@ Default behavior:
 
 - command approval responds with stable `{ decision: "accept" }`
 - file-change approval responds with stable `{ decision: "accept" }`
+- session approval responds with stable `{ decision: "acceptForSession" }`
 - default decline responds with stable `{ decision: "decline" }`
 - rejection sends a JSON-RPC error and clears local pending state
 
-The default card shows request id, command or file path context, and the raw normalized payload.
+The default card shows request id, command or file path context, and the raw normalized payload. Approval buttons include request kind and request id in their accessible names.
 
 ## Diff And Work Log
 

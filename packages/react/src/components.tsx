@@ -319,6 +319,9 @@ export function AgentApprovalPrompt({
             <ApprovalCard
               approval={approval}
               onApprove={() => void approve(approval.id, approvalResult(approval))}
+              onApproveForSession={() =>
+                void approve(approval.id, approvalSessionResult(approval))
+              }
               onReject={() => void approve(approval.id, declineApprovalResult(approval))}
             />
           )}
@@ -331,13 +334,17 @@ export function AgentApprovalPrompt({
 function ApprovalCard({
   approval,
   onApprove,
+  onApproveForSession,
   onReject,
 }: {
   approval: PendingServerRequest;
   onApprove: () => void;
+  onApproveForSession: () => void;
   onReject: () => void;
 }) {
   const payload = approval.payload as Record<string, unknown>;
+  const requestLabel =
+    approval.kind === "fileChangeApproval" ? "file-change request" : "command request";
   return (
     <article className="aui-approval">
       <div className="aui-approval-header">
@@ -350,10 +357,28 @@ function ApprovalCard({
       {"path" in payload ? <div className="aui-file-path">{String(payload.path)}</div> : null}
       <pre>{JSON.stringify(approval.payload, null, 2)}</pre>
       <div className="aui-actions">
-        <button className="aui-button" onClick={onApprove} type="button">
+        <button
+          aria-label={`Approve ${requestLabel} ${String(approval.id)}`}
+          className="aui-button"
+          onClick={onApprove}
+          type="button"
+        >
           Approve
         </button>
-        <button className="aui-button aui-button-secondary" onClick={onReject} type="button">
+        <button
+          aria-label={`Approve ${requestLabel} ${String(approval.id)} for session`}
+          className="aui-button aui-button-secondary"
+          onClick={onApproveForSession}
+          type="button"
+        >
+          Approve session
+        </button>
+        <button
+          aria-label={`Decline ${requestLabel} ${String(approval.id)}`}
+          className="aui-button aui-button-secondary"
+          onClick={onReject}
+          type="button"
+        >
           Decline
         </button>
       </div>
@@ -747,6 +772,12 @@ function approvalResult(approval: PendingServerRequest) {
   if (approval.kind === "fileChangeApproval") return { decision: "accept" };
   if (approval.kind === "commandApproval") return { decision: "accept" };
   return { decision: "accept" };
+}
+
+function approvalSessionResult(approval: PendingServerRequest) {
+  if (approval.kind === "fileChangeApproval") return { decision: "acceptForSession" };
+  if (approval.kind === "commandApproval") return { decision: "acceptForSession" };
+  return { decision: "acceptForSession" };
 }
 
 function declineApprovalResult(approval: PendingServerRequest) {

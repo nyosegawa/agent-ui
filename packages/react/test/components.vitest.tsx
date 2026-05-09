@@ -164,8 +164,9 @@ describe("AgentChat", () => {
     );
     expect(screen.getByText("Review file changes")).toBeInTheDocument();
 
-    const approveButtons = screen.getAllByRole("button", { name: "Approve" });
-    await user.click(approveButtons[1]!);
+    await user.click(
+      screen.getByRole("button", { name: "Approve file-change request approval-file" }),
+    );
 
     expect(transport.responses.get("approval-file")).toEqual({ decision: "accept" });
     expect(await axe(container)).toHaveNoViolations();
@@ -183,10 +184,42 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    const declineButtons = await screen.findAllByRole("button", { name: "Decline" });
-    await user.click(declineButtons[0]!);
+    await user.click(
+      await screen.findByRole("button", { name: "Decline command request approval-command" }),
+    );
 
     expect(transport.responses.get("approval-command")).toEqual({ decision: "decline" });
+  });
+
+  it("approves command and file-change requests for the session", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider
+        initialState={runEventFixture(demoFixture as FixtureStep[])}
+        transport={transport}
+      >
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Approve command request approval-command for session",
+      }),
+    );
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Approve file-change request approval-file for session",
+      }),
+    );
+
+    expect(transport.responses.get("approval-command")).toEqual({
+      decision: "acceptForSession",
+    });
+    expect(transport.responses.get("approval-file")).toEqual({
+      decision: "acceptForSession",
+    });
   });
 
   it("sends composer input as stable Codex user input items", async () => {

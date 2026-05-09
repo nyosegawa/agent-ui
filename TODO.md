@@ -255,7 +255,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Add thread search/filter loading and empty states.
 - [ ] Make run settings readable on desktop and mobile.
 - [x] Add usage limit cards for 5-hour and weekly windows using real rate-limit data.
-- [ ] Add accessible approval controls for command and file-change requests.
+- [x] Add accessible approval controls for command and file-change requests.
 - [ ] Make diff preview polished for real App Server patch payloads.
 - [ ] Add visual regression coverage for the real local app shell.
 
