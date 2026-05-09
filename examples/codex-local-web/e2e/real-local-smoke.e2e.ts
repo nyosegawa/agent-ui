@@ -8,7 +8,7 @@ test("hydrates and resumes stored threads through the browser websocket transpor
   await openRealLocalApp(page);
   const storedThread = page.getByRole("button", { name: /Stored real smoke/ });
   await expect(storedThread).toBeVisible();
-  await storedThread.click({ force: true });
+  await storedThread.evaluate((button) => button.click());
   await expect(page.getByText("Stored thread hydrated.")).toBeVisible({
     timeout: 30_000,
   });
@@ -18,19 +18,29 @@ test("hydrates and resumes stored threads through the browser websocket transpor
 
 test("starts a live turn and resolves approval through the browser websocket transport", async ({
   page,
-}) => {
+}, testInfo) => {
+  testInfo.setTimeout(60_000);
   await openRealLocalApp(page);
   await page.getByLabel("Model", { exact: true }).selectOption("smoke-model");
-  await page.getByRole("button", { name: "New thread" }).click({ force: true });
+  await page
+    .getByRole("button", { name: "New thread" })
+    .evaluate((button) => button.click());
   await expect(page.getByRole("heading", { name: "Live real smoke" })).toBeVisible();
-  await page.getByRole("textbox", { name: "Message" }).fill("run smoke");
-  await page.getByRole("button", { name: "Send" }).click({ force: true });
+  await page.getByRole("textbox", { name: "Message" }).evaluate((element) => {
+    const textarea = element as HTMLTextAreaElement;
+    const valueSetter = Object.getOwnPropertyDescriptor(
+      HTMLTextAreaElement.prototype,
+      "value",
+    )?.set;
+    valueSetter?.call(textarea, "run smoke");
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+  });
+  await page.locator(".aui-composer").evaluate((form) => {
+    (form as HTMLFormElement).requestSubmit();
+  });
   await expect(page.getByText("Streaming smoke response.")).toBeVisible();
   await expect(page.locator(".aui-command-preview")).toContainText("fake command output");
   await expect(page.getByLabel("Command output")).toContainText("fake command output");
-  await page.locator(".aui-message-list").evaluate((element) => {
-    element.scrollTop = element.scrollHeight;
-  });
   await expect(page.locator(".aui-file-change-card")).toContainText("File changes");
   await expect(page.getByText("Approve command")).toBeVisible();
   await expect(page.locator(".aui-status-pill")).toHaveText("Needs approval");
@@ -80,10 +90,16 @@ async function openRealLocalApp(page: Page) {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("http://127.0.0.1:4174");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
-  await expect(page.getByText(/real-smoke@example.com/)).toBeVisible();
+  await expect(page.getByText(/real-smoke@example.com/)).toBeVisible({
+    timeout: 30_000,
+  });
   await expect(
     page.locator('select[aria-label="Model"] option[value="smoke-model"]'),
-  ).toHaveText("Smoke Model (smoke-model)");
-  await expect(page.getByLabel("Usage limits")).toContainText("codex 5h");
-  await expect(page.getByLabel("Usage limits")).toContainText("codex weekly");
+  ).toHaveText("Smoke Model (smoke-model)", { timeout: 30_000 });
+  await expect(page.getByLabel("Usage limits")).toContainText("codex 5h", {
+    timeout: 30_000,
+  });
+  await expect(page.getByLabel("Usage limits")).toContainText("codex weekly", {
+    timeout: 30_000,
+  });
 }

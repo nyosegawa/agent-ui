@@ -82,11 +82,14 @@ Command output and file changes render inside a per-turn Work trace in
 `AgentMessageList`. The Work trace summary shows command and file-change counts.
 For completed turns that already have readable conversation text, the trace is
 collapsed by default; command-only or actively running turns keep it open so
-new work remains visible. Individual command rows show command, status, line
-count, and a short output preview; the full terminal output is collapsed until
-the user expands it. The default UI keeps only the latest activity rows for
-command-heavy historical turns and displays a collapsed-count notice for older
-steps. For richer terminal behavior, build a host component with
+new work remains visible. Turns waiting for approval also keep the Work trace
+open so the command or file-change context remains visible next to the approval
+decision. Individual command rows show command, status, line count, and a short
+output preview; short terminal outputs are expanded by default, while longer
+outputs remain collapsed until the user expands them. The default UI keeps only
+the latest activity rows for command-heavy historical turns and displays a
+collapsed-count notice for older steps. For richer terminal behavior, build a
+host component with
 `useAgentThread()` rather than exposing `thread/shellCommand` as a generic
 browser component.
 

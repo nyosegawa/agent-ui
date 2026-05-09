@@ -90,6 +90,12 @@ Responsibilities:
 - headless customization API
 - CSS variables and plain CSS theme
 
+The default UI keeps the high-traffic surfaces split internally:
+
+- `components.tsx`: shell, auth/status, run controls, approvals, usage, and thread history
+- `timeline.tsx`: conversation messages, per-turn Work traces, command output, and file-change activity
+- `diff-viewer.tsx`: read-only diff rendering and patch payload normalization
+
 React must be a peer dependency.
 
 ## `@nyosegawa/agent-ui-server`

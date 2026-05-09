@@ -221,6 +221,7 @@ Latest manual real smoke:
 - Post-hardening re-run on 2026-05-09: `bun run test:e2e:real-codex` returned authenticated account, 6 models, usage, 5 stored threads, assistant text `Agent UI real smoke ok.`, and 1 completed turn. `bun run test:e2e:real-codex:approval` observed a command approval request and declined it. `AGENT_UI_REAL_CODEX_TIMEOUT_MS=180000 node scripts/real-codex-smoke.mjs --approval --file-only` observed a file-change approval request and declined it.
 - Browser smoke command: `bun run test:e2e:playwright`.
 - Browser smoke result: 8 Playwright tests passed. The real local app target used a fake stdio App Server while exercising the actual browser WebSocket transport and same-origin bridge path.
+- Playwright starts fresh local preview/dev servers for the fixture and real-local browser targets instead of reusing an existing `4173` or `4174` process. This avoids stale bridge/session state from hiding real regressions or creating local-only hangs after a failed run.
 - Real local UI screen check after Work trace and history hardening: in the in-app browser at `http://127.0.0.1:5174/`, an authenticated real session loaded account, usage, and stored threads; the latest stored session auto-previewed in the main pane; narrow-width layout showed the chat pane before the thread history; command/file-change activity was grouped into per-turn Work traces instead of a detached terminal shelf.
 
 The history and usage smoke path has also been verified against `codex app-server --listen stdio://`:

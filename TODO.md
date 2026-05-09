@@ -321,7 +321,7 @@ updated together.
 ### Code Quality
 
 - [ ] Remove remaining avoidable type assertions and replace weak protocol parsing with local type guards.
-- [ ] Split oversized React component sections when behavior is hard to audit.
+- [x] Split oversized React component sections when behavior is hard to audit.
 - [ ] Keep reducer state transitions explicit for running, waiting-for-input, preview, completed, failed, and interrupted flows.
 - [ ] Keep browser transport, bridge lifecycle, and diagnostics redaction tests at production quality.
 
