@@ -127,7 +127,7 @@ export function useAgentThread(threadId?: ThreadId) {
       const threadId = rawThreadId(rawThread);
       if (!threadId) throw new Error("thread/start returned no thread id");
       dispatch({
-        status: normalizeThreadStatus(rawThreadRecord.status ?? resultRecord.status),
+        status: "ready",
         thread: {
           ephemeral: Boolean(rawThreadRecord.ephemeral),
           id: threadId,
@@ -156,6 +156,7 @@ export function useAgentThread(threadId?: ThreadId) {
         for (const event of threadSnapshotEvents(rawThreadRecord, true)) dispatch(event);
         syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       }
+      dispatch({ status: "ready", threadId: id, type: "thread/status/changed" });
       dispatch({ threadId: id, type: "thread/active/set" });
       return result;
     },
@@ -693,16 +694,6 @@ function normalizeReasoningEffort(value: unknown): ReasoningEffort | undefined {
 
 function isDefaultModel(model: AgentModel): boolean {
   return asRecord(model.raw)?.isDefault === true;
-}
-
-function normalizeThreadStatus(value: unknown): string | undefined {
-  if (value == null) return undefined;
-  if (typeof value === "string") return value;
-  if (typeof value !== "object") return String(value);
-  const type = asRecord(value)?.type;
-  if (type === "active") return "running";
-  if (type === "idle") return "loaded";
-  return typeof type === "string" ? type : undefined;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {

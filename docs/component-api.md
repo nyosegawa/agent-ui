@@ -64,7 +64,7 @@ available; internal Codex JSONL session paths are not shown in the default list.
 Selecting a stored thread calls `thread/read` with `includeTurns: true` and
 activates the hydrated snapshot.
 
-When a stored thread is loaded as `notLoaded` or `loaded`, the thread header shows `Resume`. That action calls `thread/resume` with `excludeTurns: true` because the preview history is already hydrated. The default UI maps internal protocol statuses to product-facing labels such as `Stored`, `Preview`, `Running`, and `Needs approval`; raw status strings are not shown unless the status is unknown to Agent UI. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
+When a stored thread is loaded as `notLoaded`, or as `loaded` with existing preview turns, the thread header shows `Resume`. That action calls `thread/resume` with `excludeTurns: true` because the preview history is already hydrated. Stored previews are read-only: the composer is disabled until the thread is resumed. Newly started or resumed sendable threads with no hydrated preview turns are labeled `Ready` and do not show the redundant `Resume` action. The default UI maps internal protocol statuses to product-facing labels such as `Stored`, `Preview`, `Ready`, `Running`, and `Needs approval`; raw status strings are not shown unless the status is unknown to Agent UI. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
 
 Hydrated history opens at the latest messages. On desktop, the shell keeps the
 thread list and chat timeline inside the app viewport so long stored-session
@@ -141,11 +141,13 @@ the composer. The summary shows execution mode, model, effort, and cwd, and can
 be expanded when the user needs to change them. Desktop layouts keep the full
 run controls visible next to the composer because there is enough vertical room.
 
-When a thread is running, the default composer is disabled and the thread header
-shows a `Stop` control wired to `turn/interrupt` for the latest turn. Keeping the
-control in the header keeps it visible above long approval cards, command output,
-and work traces. When a thread is waiting for approval, the composer remains
-disabled until the approval request is resolved.
+When a stored thread is only previewed, the default composer is disabled and
+asks the user to resume before sending. When a thread is running, the composer
+is disabled and the thread header shows a `Stop` control wired to
+`turn/interrupt` for the latest turn. Keeping the control in the header keeps it
+visible above long approval cards, command output, and work traces. When a
+thread is waiting for approval, the composer remains disabled until the
+approval request is resolved.
 
 Agent UI does not expose Codex collaboration/execution preset APIs in the local release. The built-in execution mode segmented control is a stable App Server convenience layer over documented `turn/start` fields only.
 

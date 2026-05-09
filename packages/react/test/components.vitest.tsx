@@ -908,6 +908,8 @@ describe("AgentChat", () => {
       cwd: "/tmp/agent-ui",
       model: "real-model",
     });
+    expect(await screen.findByText("Ready")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
   });
 
   it("restores cwd from started and resumed thread responses", async () => {
@@ -941,7 +943,19 @@ describe("AgentChat", () => {
             ],
           };
         }
-        if (request.method === "thread/read" || request.method === "thread/resume") {
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              cwd: "/Users/example/old-project",
+              id: "thread-old-cwd",
+              name: "Old project",
+              path: "/Users/example/.codex/sessions/2026/05/10/old.jsonl",
+              status: { type: "notLoaded" },
+              turns: [{ id: "turn-old-cwd", items: [], status: "completed" }],
+            },
+          };
+        }
+        if (request.method === "thread/resume") {
           return {
             thread: {
               cwd: "/Users/example/old-project",
@@ -970,7 +984,9 @@ describe("AgentChat", () => {
 
     await user.click(screen.getByRole("button", { name: "Load" }));
     await user.click(await screen.findByRole("button", { name: /Old project/ }));
+    expect(await screen.findByText("Preview")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Resume" }));
+    expect(await screen.findByText("Ready")).toBeInTheDocument();
     expect(screen.getByLabelText("Working directory")).toHaveValue(
       "/Users/example/old-project",
     );
@@ -1180,8 +1196,12 @@ describe("AgentChat", () => {
     expect(screen.queryByText(/rollout-demo\.jsonl/)).not.toBeInTheDocument();
     expect(screen.getByText("The stored thread was loaded.")).toBeInTheDocument();
     expect(screen.getByLabelText("Command output")).toHaveTextContent("ok");
-    await user.click(screen.getByRole("button", { name: "Resume" }));
     expect(screen.getByText("Preview")).toBeInTheDocument();
+    expect(screen.getByLabelText("Message")).toBeDisabled();
+    expect(screen.getByText("Resume this stored thread before sending a new message.")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Resume" }));
+    expect(await screen.findByText("Ready")).toBeInTheDocument();
+    expect(screen.getByLabelText("Message")).not.toBeDisabled();
     expect(screen.queryByText("notLoaded")).not.toBeInTheDocument();
     expect(transport.requests.map((request) => request.method)).toEqual(
       expect.arrayContaining(["thread/list", "thread/read", "thread/resume"]),

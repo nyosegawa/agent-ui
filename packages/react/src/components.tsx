@@ -160,11 +160,12 @@ function AgentThreadActions({
   const { interruptTurn } = useAgentTurn(threadId);
   const status = thread.status;
   const latestTurnId = thread.orderedTurnIds.at(-1);
+  const hasTurns = thread.orderedTurnIds.length > 0;
   const canResume = threadId && (status === "notLoaded" || status === "loaded");
   return (
     <div className="aui-thread-actions">
       <span className="aui-status-pill" data-status={status}>
-        {formatThreadStatus(status)}
+        {formatThreadStatus(status, { hasTurns })}
       </span>
       {canResume ? (
         <button
@@ -367,7 +368,8 @@ function AgentComposerPanel({
   threadId?: string;
 }) {
   const isRunning = thread.status === "running";
-  const isBlocked = isRunning || thread.status === "waitingForInput";
+  const isPreviewOnly = isPreviewOnlyThread(thread);
+  const isBlocked = isRunning || thread.status === "waitingForInput" || isPreviewOnly;
   const compactRunSettings = useCompactLayout();
   return (
     <section className="aui-compose-panel" aria-label="Message composer">
@@ -382,10 +384,12 @@ function AgentComposerPanel({
       ) : (
         <AgentRunControls autoRefresh={false} />
       )}
-      {isBlocked ? <AgentTurnStopControl thread={thread} /> : null}
+      {isBlocked ? (
+        <AgentTurnStopControl isPreviewOnly={isPreviewOnly} thread={thread} />
+      ) : null}
       <AgentComposer
         disabled={isBlocked}
-        placeholder={composerPlaceholder(thread.status)}
+        placeholder={composerPlaceholder(thread.status, isPreviewOnly)}
         threadId={threadId}
       />
     </section>
@@ -430,20 +434,42 @@ function useCompactLayout(): boolean {
   return isCompact;
 }
 
-function AgentTurnStopControl({ thread }: { thread: ThreadState }) {
-  if (thread.status !== "running" && thread.status !== "waitingForInput") return null;
+function isPreviewOnlyThread(thread: ThreadState): boolean {
+  return (
+    thread.status === "notLoaded" ||
+    (thread.status === "loaded" && thread.orderedTurnIds.length > 0)
+  );
+}
+
+function AgentTurnStopControl({
+  isPreviewOnly = false,
+  thread,
+}: {
+  isPreviewOnly?: boolean;
+  thread: ThreadState;
+}) {
+  if (
+    thread.status !== "running" &&
+    thread.status !== "waitingForInput" &&
+    !isPreviewOnly
+  ) {
+    return null;
+  }
   return (
     <div className="aui-turn-control">
       <span>
-        {thread.status === "running"
-          ? "Codex is working. Stop is available in the thread header."
-          : "Resolve the pending approval before sending another message."}
+        {isPreviewOnly
+          ? "Resume this stored thread before sending a new message."
+          : thread.status === "running"
+            ? "Codex is working. Stop is available in the thread header."
+            : "Resolve the pending approval before sending another message."}
       </span>
     </div>
   );
 }
 
-function composerPlaceholder(status: ThreadState["status"]): string {
+function composerPlaceholder(status: ThreadState["status"], isPreviewOnly = false): string {
+  if (isPreviewOnly) return "Resume this stored thread before sending.";
   if (status === "running") return "Codex is working. Stop the turn before sending.";
   if (status === "waitingForInput") return "Resolve the pending approval before sending.";
   return "Ask Codex to work in this thread";
@@ -840,7 +866,9 @@ export function ThreadList({
 }
 
 function threadListMeta(thread: ThreadState): string {
-  const parts = [formatThreadStatus(thread.status)];
+  const parts = [
+    formatThreadStatus(thread.status, { hasTurns: thread.orderedTurnIds.length > 0 }),
+  ];
   const updated = rawThreadDate(thread.thread.raw, [
     "updatedAt",
     "updated_at",
@@ -876,12 +904,17 @@ function rawThreadDate(raw: unknown, keys: string[]): string | undefined {
   return undefined;
 }
 
-function formatThreadStatus(status: string): string {
+function formatThreadStatus(
+  status: string,
+  options: { hasTurns?: boolean } = {},
+): string {
   switch (status) {
     case "notLoaded":
       return "Stored";
     case "loaded":
-      return "Preview";
+      return options.hasTurns ? "Preview" : "Ready";
+    case "ready":
+      return "Ready";
     case "running":
       return "Running";
     case "waitingForInput":

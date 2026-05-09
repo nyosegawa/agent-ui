@@ -12,7 +12,7 @@ test("hydrates and resumes stored threads through the browser websocket transpor
     timeout: 30_000,
   });
   await page.getByRole("button", { name: "Resume" }).click({ force: true });
-  await expect(page.locator(".aui-status-pill")).toHaveText("Preview");
+  await expect(page.locator(".aui-status-pill")).toHaveText("Ready");
 });
 
 test("starts a live turn and resolves approval through the browser websocket transport", async ({

@@ -38,7 +38,7 @@ const { startTurn, interruptTurn } = useAgentTurn(threadId);
 const composer = useAgentComposer(threadId);
 ```
 
-`useAgentComposer()` owns text input state and calls `startTurn()` on submit. The default component disables the composer while a thread is running or waiting for approval.
+`useAgentComposer()` owns text input state and calls `startTurn()` on submit. The default component disables the composer while a thread is running, waiting for approval, or displaying a stored read-only preview that has not been resumed.
 
 ## Run Settings Hook
 

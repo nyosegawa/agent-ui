@@ -2,6 +2,26 @@
 
 This checklist is the execution source of truth for Agent UI.
 
+## Active Completion Gate: Preview Versus Ready Thread UX
+
+Real browser verification on 2026-05-10 showed that a stored `thread/read`
+preview and a newly started empty thread were both shown as `Preview`, and the
+preview composer remained enabled even though the thread had not been resumed.
+The product must make the sendability of a thread explicit.
+
+### Thread Sendability
+
+- [x] Show newly started or resumed sendable threads as `Ready`, not `Preview`.
+- [x] Keep stored history previews read-only until the user resumes the thread.
+- [x] Hide the `Resume` action for a sendable empty thread.
+- [x] Add React tests for preview read-only state and ready new-thread state.
+- [x] Re-run real browser turn verification after the UX fix.
+
+### Completion Hygiene
+
+- [x] Update docs for preview/readiness behavior.
+- [x] Run targeted validation, commit, push, and watch Actions.
+
 ## Active Completion Gate: Header And Composer Layout Hardening
 
 The 2026-05-10 in-app browser audit found that the real-session thread header
