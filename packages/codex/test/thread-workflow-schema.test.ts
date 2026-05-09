@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { TurnInterruptParams } from "../src/generated/stable/v2/TurnInterruptParams";
 import type { ThreadStartParams } from "../src/generated/stable/v2/ThreadStartParams";
 import type { TurnStartParams } from "../src/generated/stable/v2/TurnStartParams";
 
@@ -23,8 +24,13 @@ describe("stable thread workflow schema", () => {
       },
       threadId: "thread-1",
     } satisfies TurnStartParams;
+    const turnInterrupt = {
+      threadId: "thread-1",
+      turnId: "turn-1",
+    } satisfies TurnInterruptParams;
 
     expect(threadStart.cwd).toBe("/tmp/agent-ui");
     expect(turnStart.sandboxPolicy.type).toBe("workspaceWrite");
+    expect(turnInterrupt.turnId).toBe("turn-1");
   });
 });

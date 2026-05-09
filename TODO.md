@@ -229,6 +229,7 @@ This is the current source of truth for making Agent UI a finished local Codex w
 - [x] Start new threads with a selected working directory.
 - [x] Send turns with stable `turn/start` params.
 - [x] Disable composer and expose Stop while a turn is running.
+- [x] Type Stop requests with stable `turn/interrupt` params.
 - [x] Render live streaming assistant text from App Server events.
 - [x] Render live command output from App Server events.
 - [x] Render live diffs from App Server patch payloads.

@@ -21,6 +21,7 @@ import {
   threadReadParams,
   threadResumeParams,
   threadStartParams,
+  turnInterruptParams,
   turnStartParams,
   type CancelLoginAccountParams,
   type GetAccountParams,
@@ -30,6 +31,7 @@ import {
   type ThreadReadParams,
   type ThreadResumeParams,
   type ThreadStartParams,
+  type TurnInterruptParams,
   type TurnStartParams,
 } from "./codex-request-params";
 import { useAgentContext } from "./provider";
@@ -284,7 +286,10 @@ export function useAgentTurn(threadId?: ThreadId) {
   const interruptTurn = useCallback(
     async (turnId: string) => {
       if (!resolvedThreadId) throw new Error("No active thread");
-      return transport.request("turn/interrupt", { threadId: resolvedThreadId, turnId });
+      return transport.request<TurnInterruptParams>(
+        "turn/interrupt",
+        turnInterruptParams(resolvedThreadId, turnId),
+      );
     },
     [resolvedThreadId, transport],
   );

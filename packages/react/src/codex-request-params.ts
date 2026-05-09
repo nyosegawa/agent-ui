@@ -14,7 +14,10 @@ export type ThreadListParams = {
   sortKey?: string | null;
 };
 export type ThreadReadParams = { includeTurns: boolean; threadId: string };
-export type ThreadResumeParams = { excludeTurns?: boolean; threadId: string } & Record<string, unknown>;
+export type ThreadResumeParams = { excludeTurns?: boolean; threadId: string } & Record<
+  string,
+  unknown
+>;
 export type ThreadStartParams = {
   cwd?: string | null;
   model?: string | null;
@@ -26,6 +29,7 @@ export type TurnStartParams = {
   model?: string | null;
   threadId: string;
 } & Record<string, unknown>;
+export type TurnInterruptParams = { threadId: string; turnId: string };
 
 export function accountReadParams(refreshToken = false): GetAccountParams {
   return { refreshToken };
@@ -43,11 +47,13 @@ export function modelListParams(): ModelListParams {
   return {};
 }
 
-export function threadListParams(params: {
-  cursor?: string | null;
-  limit?: number;
-  searchTerm?: string;
-} = {}): ThreadListParams {
+export function threadListParams(
+  params: {
+    cursor?: string | null;
+    limit?: number;
+    searchTerm?: string;
+  } = {},
+): ThreadListParams {
   return {
     cursor: params.cursor ?? null,
     limit: params.limit ?? 25,
@@ -57,7 +63,10 @@ export function threadListParams(params: {
   };
 }
 
-export function threadReadParams(threadId: string, includeTurns = true): ThreadReadParams {
+export function threadReadParams(
+  threadId: string,
+  includeTurns = true,
+): ThreadReadParams {
   return { includeTurns, threadId };
 }
 
@@ -98,4 +107,11 @@ export function turnStartParams(options: {
     input: [{ text: options.input, text_elements: [], type: "text" }],
     threadId: options.threadId,
   };
+}
+
+export function turnInterruptParams(
+  threadId: string,
+  turnId: string,
+): TurnInterruptParams {
+  return { threadId, turnId };
 }
