@@ -124,6 +124,7 @@ Component tests:
 - collapse and expand the history sidebar through accessible controls
 - preserve working directory from `cwd` in `thread/list`, `thread/read`, `thread/resume`, and `thread/start` responses while hiding internal `.codex/sessions/*.jsonl` paths
 - show compact cwd context in stored-history rows and follow paginated `thread/list` cursors through the `Load all` history action
+- keep history loading/count/pagination feedback outside the thread-list scroll container so real large histories do not rely on implicit grid rows
 - keep App Server plugin manifest warnings in diagnostics instead of the primary chat flow
 - suppress known low-value Codex plugin `interface.defaultPrompt` warnings from visible diagnostics
 - suppress known low-value Codex skill icon path warnings from visible diagnostics and the real local web dev terminal

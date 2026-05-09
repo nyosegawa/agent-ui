@@ -1110,50 +1110,52 @@ export function ThreadSidebar({
           {isLoading ? "Loading" : "Load"}
         </button>
       </form>
-      {error ? <p className="aui-sidebar-error">{error.message}</p> : null}
-      {isLoading || isLoadingAll ? (
-        <p className="aui-sidebar-status">
-          {isLoadingAll ? "Loading all threads..." : "Loading threads..."}
-        </p>
-      ) : null}
-      {!isLoading && !isLoadingAll && hasLoaded && visibleThreads.length === 0 ? (
-        <p className="aui-sidebar-status">No threads found.</p>
-      ) : null}
-      {hasLoaded && visibleThreads.length > 0 ? (
-        <p className="aui-sidebar-status">
-          {visibleThreads.length} {visibleThreads.length === 1 ? "thread" : "threads"}{" "}
-          loaded
-          {(nextCursor ?? cursor) ? " · more available" : " · all loaded"}
-        </p>
-      ) : null}
-      {(nextCursor ?? cursor) ? (
-        <div className="aui-history-pagination">
-          <button
-            className="aui-button aui-button-secondary aui-history-load-more"
-            disabled={isLoading || isLoadingAll}
-            onClick={() => {
-              void loadThreadPage({
-                append: true,
-                cursor: nextCursor ?? cursor ?? null,
-                searchTerm,
-              }).catch(() => undefined);
-            }}
-            type="button"
-          >
-            {isLoading ? "Loading" : "Load more"}
-          </button>
-          <button
-            className="aui-button aui-button-secondary aui-history-load-more"
-            disabled={isLoading || isLoadingAll}
-            onClick={() => {
-              void loadAllThreadPages().catch(() => undefined);
-            }}
-            type="button"
-          >
-            {isLoadingAll ? "Loading" : "Load all"}
-          </button>
-        </div>
-      ) : null}
+      <div className="aui-history-feedback" aria-live="polite">
+        {error ? <p className="aui-sidebar-error">{error.message}</p> : null}
+        {isLoading || isLoadingAll ? (
+          <p className="aui-sidebar-status">
+            {isLoadingAll ? "Loading all threads..." : "Loading threads..."}
+          </p>
+        ) : null}
+        {!isLoading && !isLoadingAll && hasLoaded && visibleThreads.length === 0 ? (
+          <p className="aui-sidebar-status">No threads found.</p>
+        ) : null}
+        {hasLoaded && visibleThreads.length > 0 ? (
+          <p className="aui-sidebar-status">
+            {visibleThreads.length} {visibleThreads.length === 1 ? "thread" : "threads"}{" "}
+            loaded
+            {(nextCursor ?? cursor) ? " · more available" : " · all loaded"}
+          </p>
+        ) : null}
+        {(nextCursor ?? cursor) ? (
+          <div className="aui-history-pagination">
+            <button
+              className="aui-button aui-button-secondary aui-history-load-more"
+              disabled={isLoading || isLoadingAll}
+              onClick={() => {
+                void loadThreadPage({
+                  append: true,
+                  cursor: nextCursor ?? cursor ?? null,
+                  searchTerm,
+                }).catch(() => undefined);
+              }}
+              type="button"
+            >
+              {isLoading ? "Loading" : "Load more"}
+            </button>
+            <button
+              className="aui-button aui-button-secondary aui-history-load-more"
+              disabled={isLoading || isLoadingAll}
+              onClick={() => {
+                void loadAllThreadPages().catch(() => undefined);
+              }}
+              type="button"
+            >
+              {isLoadingAll ? "Loading" : "Load all"}
+            </button>
+          </div>
+        ) : null}
+      </div>
       <ThreadList
         activeThreadId={activeThreadId}
         onSelectThread={(threadId) => {

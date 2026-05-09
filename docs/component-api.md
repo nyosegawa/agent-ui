@@ -65,6 +65,12 @@ available; internal Codex JSONL session paths are not shown in the default list.
 Selecting a stored thread calls `thread/read` with `includeTurns: true` and
 activates the hydrated snapshot.
 
+The sidebar layout has fixed regions for header, search, feedback, and the
+scrollable thread list. Loading, error, empty, count, and pagination controls
+stay in the feedback region above the list; they do not become implicit grid
+rows that can steal the list's scroll contract when real histories contain
+hundreds of sessions.
+
 When a stored thread is loaded as `notLoaded`, or as `loaded` with existing preview turns, the thread header shows `Resume`. That action calls `thread/resume` with `excludeTurns: true` because the preview history is already hydrated. Stored previews are read-only: the composer is disabled until the thread is resumed. Newly started or resumed sendable threads with no hydrated preview turns are labeled `Ready` and do not show the redundant `Resume` action. The default UI maps internal protocol statuses to product-facing labels such as `Stored`, `Preview`, `Ready`, `Running`, and `Needs approval`; raw status strings are not shown unless the status is unknown to Agent UI. Hosts that want a different history surface can use `useAgentThreadHistory()` and `useAgentThreadReader()` directly.
 
 Hydrated history opens at the latest messages. On desktop, the shell keeps the

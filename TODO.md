@@ -2,6 +2,23 @@
 
 This checklist is the execution source of truth for Agent UI.
 
+## Active Completion Gate: Sidebar Structure Hardening
+
+The real history sidebar now exhausts stored Codex sessions, which means the
+sidebar must remain structurally stable when loading, error, empty, pagination,
+and large-list states appear or disappear.
+
+### Sidebar Layout
+
+- [x] Replace implicit sidebar grid rows with explicit header, search, feedback, and scrollable-list regions.
+- [x] Keep status, error, and pagination controls outside the thread-list scroll container.
+- [x] Add component coverage proving history controls, counts, pagination, and list rows remain reachable together.
+
+### Completion Hygiene
+
+- [x] Update component/testing docs for the hardened sidebar structure.
+- [ ] Run targeted validation, commit, push, and watch Actions.
+
 ## Active Completion Gate: Full Validation Sweep
 
 The real local app now passes targeted UI, history, and browser checks. This

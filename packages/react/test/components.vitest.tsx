@@ -1377,7 +1377,7 @@ describe("AgentChat", () => {
         };
       },
     });
-    render(
+    const { container } = render(
       <AgentProvider transport={transport}>
         <AgentChat />
       </AgentProvider>,
@@ -1387,6 +1387,10 @@ describe("AgentChat", () => {
     expect(await screen.findAllByText("First page thread")).not.toHaveLength(0);
     expect((await screen.findAllByText(/first-project/)).length).toBeGreaterThan(0);
     expect(await screen.findByText(/1 thread loaded · more available/)).toBeInTheDocument();
+    const feedback = container.querySelector(".aui-history-feedback");
+    expect(feedback).toContainElement(screen.getByText(/1 thread loaded/));
+    expect(feedback).toContainElement(screen.getByRole("button", { name: "Load more" }));
+    expect(screen.getByRole("navigation", { name: "Threads" })).not.toBe(feedback);
     await user.click(screen.getByRole("button", { name: "Load more" }));
 
     expect(await screen.findByText("Second page thread")).toBeInTheDocument();
