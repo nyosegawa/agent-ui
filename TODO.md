@@ -25,7 +25,7 @@ This gate re-runs the full project validation surface after that e2e change.
 
 - [x] Fix any failures from the post-e2e full sweep.
 - [x] Update docs if validation scope or known limits changed.
-- [ ] Commit, push, and watch Actions.
+- [x] Commit, push, and watch Actions.
 
 ## Active Completion Gate: Deterministic Multi-Turn E2E
 
