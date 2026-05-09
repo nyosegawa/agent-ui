@@ -35,7 +35,12 @@ import {
   type TurnStartParams,
 } from "./codex-request-params";
 import { useAgentContext } from "./provider";
-import { rawThreadId, threadSnapshotEvents, threadUpsertEvent } from "./thread-history";
+import {
+  rawThreadId,
+  threadProjectPath,
+  threadSnapshotEvents,
+  threadUpsertEvent,
+} from "./thread-history";
 
 export interface AgentExecutionMode {
   id: ExecutionModeId;
@@ -127,7 +132,7 @@ export function useAgentThread(threadId?: ThreadId) {
           ephemeral: Boolean(rawThreadRecord.ephemeral),
           id: threadId,
           name: stringValue(rawThreadRecord.name),
-          path: threadPath(rawThreadRecord),
+          path: threadProjectPath(rawThreadRecord),
           raw: rawThread,
         },
         type: "thread/started",
@@ -243,9 +248,11 @@ export function useAgentThreadReader() {
       if (!hasThreadId(rawThread)) {
         throw new Error(`thread/read returned no thread for ${threadId}`);
       }
-      for (const event of threadSnapshotEvents(rawThread, options.activate ?? true)) {
+      const rawThreadRecord = rawThread as Record<string, unknown>;
+      for (const event of threadSnapshotEvents(rawThreadRecord, options.activate ?? true)) {
         dispatch(event);
       }
+      syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       return response;
     },
     [dispatch, transport],
@@ -266,7 +273,7 @@ function syncRunSettingsFromRawThread(
   dispatch: ReturnType<typeof useAgentContext>["dispatch"],
   rawThread: Record<string, unknown>,
 ) {
-  const cwd = threadPath(rawThread);
+  const cwd = threadProjectPath(rawThread);
   const modelId = stringValue(rawThread.modelId) ?? stringValue(rawThread.model);
   const effort = stringValue(rawThread.effort) ?? stringValue(rawThread.reasoningEffort);
   if (cwd || modelId || effort) {
@@ -277,10 +284,6 @@ function syncRunSettingsFromRawThread(
       type: "runSettings/updated",
     });
   }
-}
-
-function threadPath(rawThread: Record<string, unknown>): string | undefined {
-  return stringValue(rawThread.path) ?? stringValue(rawThread.cwd);
 }
 
 export function useAgentTurn(threadId?: ThreadId) {

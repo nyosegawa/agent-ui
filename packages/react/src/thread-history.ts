@@ -86,7 +86,7 @@ function normalizeRawThread(rawThread: Record<string, unknown>): AgentThread {
     ephemeral: Boolean(rawThread.ephemeral),
     id: rawThreadId(rawThread) ?? "",
     name: stringValue(rawThread.name) ?? stringValue(rawThread.preview),
-    path: stringValue(rawThread.path) ?? stringValue(rawThread.cwd),
+    path: threadProjectPath(rawThread),
     raw: rawThread,
   };
 }
@@ -96,6 +96,18 @@ export function rawThreadId(rawThread: Record<string, unknown>): string | undefi
   if (typeof value === "string" && value.trim()) return value;
   if (typeof value === "number" && Number.isFinite(value)) return String(value);
   return undefined;
+}
+
+export function threadProjectPath(
+  rawThread: Record<string, unknown>,
+): string | undefined {
+  const cwd =
+    stringValue(rawThread.cwd) ??
+    stringValue(rawThread.workingDirectory) ??
+    stringValue(rawThread.working_directory);
+  if (cwd) return cwd;
+  const path = stringValue(rawThread.path);
+  return path && !isInternalCodexSessionPath(path) ? path : undefined;
 }
 
 function normalizeRawTurn(rawTurn: unknown, threadId: ThreadId): AgentTurn {
@@ -176,4 +188,9 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 
 function stringValue(value: unknown) {
   return typeof value === "string" && value ? value : undefined;
+}
+
+function isInternalCodexSessionPath(path: string): boolean {
+  const normalized = path.replace(/\\/g, "/");
+  return normalized.includes("/.codex/sessions/") || normalized.endsWith(".jsonl");
 }

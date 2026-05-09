@@ -116,11 +116,16 @@ browser component.
 
 The selected values are stored in normalized run settings. In the full `AgentChat` layout, run settings are part of the same composer surface as the message input so the model, effort, execution mode, working directory, and prompt are reviewed together before sending. `thread/start` receives `model` and `cwd`. `turn/start` receives `approvalPolicy`, `sandboxPolicy`, `model`, `effort`, and `cwd`.
 
-Working-directory controls also learn from real thread history. User-facing
-`path` or `cwd` values from `thread/list`, `thread/read`, `thread/resume`, and
-`thread/start` are preserved on the normalized thread and offered as recent
-options in the composer. Internal Codex JSONL session paths remain hidden from
-default labels and are not offered as project directories.
+Working-directory controls also learn from real thread history. Real App Server
+thread payloads include an internal session `path` and, when available, a user
+project `cwd`; Agent UI preserves the `cwd` first and only falls back to
+non-internal `path` values. Internal Codex JSONL session paths remain hidden
+from thread subtitles and are not offered as project directories.
+
+On narrow screens, `AgentChat` keeps run settings in a compact summary above
+the composer. The summary shows execution mode, model, effort, and cwd, and can
+be expanded when the user needs to change them. Desktop layouts keep the full
+run controls visible next to the composer because there is enough vertical room.
 
 When a thread is running, the default composer is disabled and the thread header
 shows a `Stop` control wired to `turn/interrupt` for the latest turn. Keeping the
@@ -132,7 +137,7 @@ Agent UI does not expose Codex collaboration/execution preset APIs in the local 
 
 ## Usage
 
-`AgentUsage` renders account rate-limit windows from `account/rateLimits/updated` notifications or `account/rateLimits/read` responses. It supports the current App Server `usedPercent`/`windowDurationMins` shape and legacy fixture-style `used`/`limit` windows.
+`AgentUsage` renders account rate-limit windows from `account/rateLimits/updated` notifications or `account/rateLimits/read` responses. It supports the current App Server `usedPercent`/`windowDurationMins` shape and legacy fixture-style `used`/`limit` windows. In narrow `AgentChat` layouts, usage collapses to a one-line summary so account limits stay visible without stealing the message timeline; the full limit cards remain available by expanding the summary.
 
 `normalizeUsageWindows()` is exported for hosts that want to render the same 5-hour and weekly windows in custom chrome.
 

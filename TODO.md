@@ -2,9 +2,34 @@
 
 This checklist is the execution source of truth for Agent UI.
 
-## Active Completion Gate: Product-Grade Local Codex UX
+## Active Completion Gate: Real Session UX Repair
 
-This section is the current release gate. The previous release gates proved the
+This section is the current release gate. The product-grade gate below proved
+the protocol path, package quality, Markdown rendering, and scroll containment,
+but the live browser audit on 2026-05-10 found additional real-session UX issues
+that must be fixed before the local web app can be called finished.
+
+### Real Session Metadata
+
+- [x] Prefer real App Server `cwd` over internal Codex session `path` when normalizing `thread/list`, `thread/read`, `thread/resume`, and `thread/start` payloads.
+- [x] Keep internal `.codex/sessions/*.jsonl` paths out of thread subtitles and working-directory suggestions unless no user-facing cwd exists.
+- [x] Browser-check real persisted sessions to verify working directory appears in the thread header and run settings.
+
+### Narrow Layout Polish
+
+- [x] Make run settings compact on narrow screens so model/effort/mode/cwd controls do not crush the message timeline.
+- [x] Keep the message timeline, composer, and history list independently usable at narrow width with the composer anchored in the chat surface.
+- [x] Add/adjust unit and Playwright assertions for compact run settings, usable message-list height, and real cwd preservation.
+
+### Completion Hygiene
+
+- [x] Update docs with the final real-session metadata and narrow-layout behavior.
+- [x] Run targeted validation for this repair slice, then commit and push.
+- [x] Re-run the real local browser screen check after the patch.
+
+## Completed Gate: Product-Grade Local Codex UX
+
+This section was the previous release gate. The previous release gates proved the
 protocol path and package quality, but the finished product is not complete
 until this section is complete with implementation, browser inspection, tests,
 docs, commits, pushes, and GitHub Actions checks.

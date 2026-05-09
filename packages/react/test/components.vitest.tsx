@@ -923,6 +923,7 @@ describe("AgentChat", () => {
               cwd: "/Users/example/project",
               id: "thread-start-cwd",
               name: "Thread with cwd",
+              path: "/Users/example/.codex/sessions/2026/05/10/start.jsonl",
               status: { type: "idle" },
             },
           };
@@ -934,6 +935,7 @@ describe("AgentChat", () => {
                 cwd: "/Users/example/old-project",
                 id: "thread-old-cwd",
                 name: "Old project",
+                path: "/Users/example/.codex/sessions/2026/05/10/old.jsonl",
                 status: { type: "notLoaded" },
               },
             ],
@@ -945,6 +947,7 @@ describe("AgentChat", () => {
               cwd: "/Users/example/old-project",
               id: "thread-old-cwd",
               name: "Old project",
+              path: "/Users/example/.codex/sessions/2026/05/10/old.jsonl",
               status: { type: "idle" },
               turns: [],
             },
@@ -971,6 +974,7 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("Working directory")).toHaveValue(
       "/Users/example/old-project",
     );
+    expect(screen.queryByText(/\.codex\/sessions/)).not.toBeInTheDocument();
   });
 
   it("collapses and expands the history sidebar", async () => {
@@ -1258,8 +1262,10 @@ describe("AgentChat", () => {
           return {
             data: [
               {
+                cwd: "/Users/example/latest-project",
                 id: "thread-auto-preview",
                 name: "Latest stored session",
+                path: "/Users/example/.codex/sessions/2026/05/10/latest.jsonl",
                 status: { type: "notLoaded" },
                 updatedAt: 1778000000,
               },
@@ -1269,8 +1275,10 @@ describe("AgentChat", () => {
         if (request.method === "thread/read") {
           return {
             thread: {
+              cwd: "/Users/example/latest-project",
               id: "thread-auto-preview",
               name: "Latest stored session",
+              path: "/Users/example/.codex/sessions/2026/05/10/latest.jsonl",
               status: { type: "notLoaded" },
               turns: [
                 {
@@ -1302,6 +1310,10 @@ describe("AgentChat", () => {
     expect(
       await screen.findByText("This stored session opens in the main pane."),
     ).toBeInTheDocument();
+    expect(screen.getByText("/Users/example/latest-project")).toBeInTheDocument();
+    expect(screen.getByLabelText("Working directory")).toHaveValue(
+      "/Users/example/latest-project",
+    );
     expect(
       transport.requests.find((request) => request.method === "thread/read")?.params,
     ).toEqual({

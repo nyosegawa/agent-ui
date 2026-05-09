@@ -80,10 +80,14 @@ test("real local app shell has stable desktop and mobile layout contracts", asyn
   await page.setViewportSize({ width: 390, height: 900 });
   await page.reload();
   await expect(page.getByTestId("agent-chat")).toBeVisible();
-  await expect(page.getByLabel("Run settings")).toBeVisible();
+  await expect(page.locator(".aui-run-settings-details summary")).toContainText(
+    "Run settings",
+  );
+  await expect(page.getByLabel("Run settings")).not.toBeVisible();
   await expect(noHorizontalOverflow(page)).resolves.toBe(true);
   await expect(chatAppearsBeforeSidebar(page)).resolves.toBe(true);
   await expect(page.locator(".aui-composer")).toBeInViewport();
+  await expect(usableMessageTimeline(page)).resolves.toBe(true);
 });
 
 async function noHorizontalOverflow(page: Page) {
@@ -112,6 +116,15 @@ async function independentScrollSurfaces(page: Page) {
       ["auto", "scroll"].includes(sidebarOverflow) &&
       ["auto", "scroll"].includes(messageOverflow)
     );
+  });
+}
+
+async function usableMessageTimeline(page: Page) {
+  return page.evaluate(() => {
+    const messages = document.querySelector(".aui-message-list")?.getBoundingClientRect();
+    const composer = document.querySelector(".aui-composer")?.getBoundingClientRect();
+    if (!messages || !composer) return false;
+    return messages.height >= 180 && composer.bottom <= window.innerHeight;
   });
 }
 

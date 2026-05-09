@@ -368,9 +368,20 @@ function AgentComposerPanel({
 }) {
   const isRunning = thread.status === "running";
   const isBlocked = isRunning || thread.status === "waitingForInput";
+  const compactRunSettings = useCompactLayout();
   return (
     <section className="aui-compose-panel" aria-label="Message composer">
-      <AgentRunControls autoRefresh={false} />
+      {compactRunSettings ? (
+        <details className="aui-run-settings-details">
+          <summary>
+            <span>Run settings</span>
+            <RunSettingsSummary />
+          </summary>
+          <AgentRunControls autoRefresh={false} />
+        </details>
+      ) : (
+        <AgentRunControls autoRefresh={false} />
+      )}
       {isBlocked ? <AgentTurnStopControl thread={thread} /> : null}
       <AgentComposer
         disabled={isBlocked}
@@ -379,6 +390,44 @@ function AgentComposerPanel({
       />
     </section>
   );
+}
+
+function RunSettingsSummary() {
+  const { runSettings, selectedModel } = useAgentRunSettings();
+  const parts = [
+    runSettings.executionMode,
+    runSettings.modelId ?? selectedModel?.id ?? "server model",
+    runSettings.effort ? `effort ${runSettings.effort}` : "default effort",
+    runSettings.cwd ? compactPath(runSettings.cwd) : "server cwd",
+  ];
+  return <small>{parts.join(" · ")}</small>;
+}
+
+function compactPath(path: string): string {
+  const normalized = path.replace(/\\/g, "/");
+  const parts = normalized.split("/").filter(Boolean);
+  if (parts.length <= 2) return path;
+  return `.../${parts.slice(-2).join("/")}`;
+}
+
+function useCompactLayout(): boolean {
+  const [isCompact, setIsCompact] = useState(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return false;
+    }
+    return window.matchMedia("(max-width: 640px)").matches;
+  });
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+      return;
+    }
+    const query = window.matchMedia("(max-width: 640px)");
+    const update = () => setIsCompact(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
+  return isCompact;
 }
 
 function AgentTurnStopControl({ thread }: { thread: ThreadState }) {
@@ -676,6 +725,7 @@ export function AgentUsage({ autoRefresh = true }: AgentUsageProps = {}) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const didAutoRefresh = useRef(false);
   const windows = useMemo(() => normalizeUsageWindows(rateLimits), [rateLimits]);
+  const compactLayout = useCompactLayout();
   useEffect(() => {
     if (
       autoRefresh &&
@@ -686,51 +736,80 @@ export function AgentUsage({ autoRefresh = true }: AgentUsageProps = {}) {
       void refreshUsage().catch(() => undefined);
     }
   }, [autoRefresh, refreshUsage, state.connection.status]);
+  const refreshButton = (
+    <button
+      className="aui-link-button"
+      disabled={isRefreshing}
+      onClick={() => {
+        setIsRefreshing(true);
+        void refreshUsage().finally(() => setIsRefreshing(false));
+      }}
+      type="button"
+    >
+      {isRefreshing ? "Refreshing" : "Refresh"}
+    </button>
+  );
+  const usageBody =
+    windows.length > 0 ? (
+      <div className="aui-usage-grid">
+        {windows.map((window) => (
+          <div className="aui-usage-window" key={window.id}>
+            <div className="aui-usage-row">
+              <span>{window.label}</span>
+              <strong>{window.valueLabel}</strong>
+            </div>
+            <div
+              aria-label={`${window.label} usage`}
+              aria-valuemax={100}
+              aria-valuemin={0}
+              aria-valuenow={Math.round(window.percent)}
+              className="aui-meter"
+              role="progressbar"
+            >
+              <span
+                style={{ width: `${Math.min(100, Math.max(0, window.percent))}%` }}
+              />
+            </div>
+            {window.resetLabel ? <small>{window.resetLabel}</small> : null}
+          </div>
+        ))}
+      </div>
+    ) : (
+      <p className="aui-usage-empty">Usage limits are available after account sync.</p>
+    );
+  if (compactLayout) {
+    return (
+      <section className="aui-usage aui-usage-compact" aria-label="Usage limits">
+        <details>
+          <summary>
+            <strong>Usage</strong>
+            <small>{usageSummary(windows)}</small>
+          </summary>
+          <div className="aui-usage-compact-body">
+            <div className="aui-usage-header">{refreshButton}</div>
+            {usageBody}
+          </div>
+        </details>
+      </section>
+    );
+  }
   return (
     <section className="aui-usage" aria-label="Usage limits">
       <div className="aui-usage-header">
         <strong>Usage</strong>
-        <button
-          className="aui-link-button"
-          disabled={isRefreshing}
-          onClick={() => {
-            setIsRefreshing(true);
-            void refreshUsage().finally(() => setIsRefreshing(false));
-          }}
-          type="button"
-        >
-          {isRefreshing ? "Refreshing" : "Refresh"}
-        </button>
+        {refreshButton}
       </div>
-      {windows.length > 0 ? (
-        <div className="aui-usage-grid">
-          {windows.map((window) => (
-            <div className="aui-usage-window" key={window.id}>
-              <div className="aui-usage-row">
-                <span>{window.label}</span>
-                <strong>{window.valueLabel}</strong>
-              </div>
-              <div
-                aria-label={`${window.label} usage`}
-                aria-valuemax={100}
-                aria-valuemin={0}
-                aria-valuenow={Math.round(window.percent)}
-                className="aui-meter"
-                role="progressbar"
-              >
-                <span
-                  style={{ width: `${Math.min(100, Math.max(0, window.percent))}%` }}
-                />
-              </div>
-              {window.resetLabel ? <small>{window.resetLabel}</small> : null}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="aui-usage-empty">Usage limits are available after account sync.</p>
-      )}
+      {usageBody}
     </section>
   );
+}
+
+function usageSummary(windows: ReturnType<typeof normalizeUsageWindows>): string {
+  if (windows.length === 0) return "sync pending";
+  return windows
+    .slice(0, 3)
+    .map((window) => `${window.label} ${window.valueLabel}`)
+    .join(" · ");
 }
 
 export function ThreadList({

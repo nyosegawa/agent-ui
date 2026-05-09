@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { threadSnapshotEvents, threadUpsertEvent } from "../src/thread-history";
+import {
+  threadProjectPath,
+  threadSnapshotEvents,
+  threadUpsertEvent,
+} from "../src/thread-history";
 
 describe("thread history normalization", () => {
   it("upserts thread/list entries without activating them", () => {
@@ -23,6 +27,29 @@ describe("thread history normalization", () => {
     expect(() => threadSnapshotEvents({ name: "Broken thread" }, true)).toThrow(
       "thread payload is missing an id",
     );
+  });
+
+  it("prefers real cwd over internal Codex session paths", () => {
+    expect(
+      threadProjectPath({
+        cwd: "/Users/example/project",
+        path: "/Users/example/.codex/sessions/2026/05/10/rollout-demo.jsonl",
+      }),
+    ).toBe("/Users/example/project");
+    expect(
+      threadUpsertEvent({
+        cwd: "/Users/example/project",
+        id: "thread-cwd",
+        path: "/Users/example/.codex/sessions/2026/05/10/rollout-demo.jsonl",
+      }),
+    ).toMatchObject({
+      thread: { path: "/Users/example/project" },
+    });
+    expect(
+      threadProjectPath({
+        path: "/Users/example/.codex/sessions/2026/05/10/rollout-demo.jsonl",
+      }),
+    ).toBeUndefined();
   });
 
   it("hydrates thread/read turns, command output, and file changes", () => {

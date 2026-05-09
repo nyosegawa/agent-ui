@@ -119,8 +119,10 @@ Component tests:
 - normalize stale `inProgress` item labels to completed in loaded hydrated history
 - keep narrow-width persisted history vertical and scroll-contained
 - keep the composer visible while the message list and sidebar own independent scroll containers
+- keep narrow-width run settings collapsed into an expandable summary so the message timeline remains usable
+- keep narrow-width usage collapsed into an expandable summary so the chat history remains the primary scroll surface
 - collapse and expand the history sidebar through accessible controls
-- preserve working directory from `thread/list`, `thread/read`, `thread/resume`, and `thread/start` responses
+- preserve working directory from `cwd` in `thread/list`, `thread/read`, `thread/resume`, and `thread/start` responses while hiding internal `.codex/sessions/*.jsonl` paths
 - keep App Server plugin manifest warnings in diagnostics instead of the primary chat flow
 - suppress known low-value Codex plugin `interface.defaultPrompt` warnings from visible diagnostics
 - suppress known low-value Codex skill icon path warnings from visible diagnostics and the real local web dev terminal
@@ -246,6 +248,7 @@ The history and usage smoke path has also been verified against `codex app-serve
 - `thread/resume(excludeTurns: true)`: resume succeeds for the same stored id
 - `examples/codex-local-web`: browser -> WebSocket bridge -> stdio App Server path loads model metadata, usage windows, stored thread list, `thread/read`, and `thread/resume` in this environment.
 - `examples/codex-local-web` manual browser check on 2026-05-09: in the in-app browser at `http://127.0.0.1:5174/`, a real authenticated session loaded account, model, usage, and stored thread history; a new thread sent `Reply with exactly: agent-ui-ui-check-3`; the real App Server streamed the assistant response; reloading and reading that persisted thread showed user and assistant messages as completed with product-facing `Stored` and `Preview` history labels instead of raw protocol statuses.
+- `examples/codex-local-web` real payload and layout audit on 2026-05-10: `thread/list` and `thread/read` returned internal JSONL session `path` plus real project `cwd`; Agent UI now normalizes `cwd` as the user-facing working directory and keeps the internal session path out of subtitles and cwd suggestions. Narrow browser inspection found that always-expanded usage and run controls could crush the message timeline, so mobile/narrow layouts now show compact expandable summaries. The grid rows for status, diagnostics, usage, thread header, timeline, approvals, and composer are explicitly assigned so optional diagnostics or approvals cannot shift the composer into the timeline row.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
 - `bun run test:e2e:playwright` also starts `examples/codex-local-web` against a fake stdio App Server and drives the real browser WebSocket transport through model list, usage, thread list/read/resume, thread start, turn start, streaming text, command output, structured diff preview, and command approval.
 

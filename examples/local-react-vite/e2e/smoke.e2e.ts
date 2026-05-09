@@ -40,7 +40,10 @@ test("renders Agent UI chat", async ({ page }) => {
 test("does not overflow on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/");
-  await expect(page.getByLabel("Run settings")).toBeVisible();
+  await expect(page.locator(".aui-run-settings-details summary")).toContainText(
+    "Run settings",
+  );
+  await expect(page.getByLabel("Run settings")).not.toBeVisible();
   const metrics = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,
