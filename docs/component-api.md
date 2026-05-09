@@ -93,6 +93,11 @@ browser component.
 
 The selected values are stored in normalized run settings. In the full `AgentChat` layout, run settings are part of the same composer surface as the message input so the model, effort, execution mode, working directory, and prompt are reviewed together before sending. `thread/start` receives `model` and `cwd`. `turn/start` receives `approvalPolicy`, `sandboxPolicy`, `model`, `effort`, and `cwd`.
 
+When a thread is running, the default composer is disabled and shows a `Stop`
+control wired to `turn/interrupt` for the latest turn. When a thread is waiting
+for approval, the composer remains disabled until the approval request is
+resolved.
+
 Agent UI does not expose Codex collaboration/execution preset APIs in the local release. The built-in execution mode segmented control is a stable App Server convenience layer over documented `turn/start` fields only.
 
 ## Usage

@@ -30,13 +30,15 @@ const { startTurn, interruptTurn } = useAgentTurn(threadId);
 
 `startTurn(input)` sends a `turn/start` request for the active or supplied thread. It merges normalized run settings into the request so the selected execution mode, model, reasoning effort, and working directory are carried to Codex.
 
+`interruptTurn(turnId)` sends `turn/interrupt`. The default `AgentChat` uses it for the visible Stop control while a turn is running.
+
 ## Composer Hook
 
 ```tsx
 const composer = useAgentComposer(threadId);
 ```
 
-`useAgentComposer()` owns text input state and calls `startTurn()` on submit.
+`useAgentComposer()` owns text input state and calls `startTurn()` on submit. The default component disables the composer while a thread is running or waiting for approval.
 
 ## Run Settings Hook
 

@@ -425,6 +425,45 @@ describe("AgentChat", () => {
     expect(screen.getByText("Reply with exactly: agent-ui-ui-check")).toBeInTheDocument();
   });
 
+  it("disables the composer and interrupts the active turn while running", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-running";
+    initialState.threads["thread-running"] = {
+      orderedTurnIds: ["turn-running"],
+      status: "running",
+      thread: { id: "thread-running", name: "Running thread" },
+      turns: {
+        "turn-running": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: [],
+          items: {},
+          streamingTextByItemId: {},
+          turn: { id: "turn-running", status: "running", threadId: "thread-running" },
+        },
+      },
+    };
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/interrupt") return {};
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByRole("textbox", { name: "Message" })).toBeDisabled();
+    await user.click(screen.getByRole("button", { name: "Stop" }));
+
+    expect(
+      transport.requests.find((request) => request.method === "turn/interrupt")?.params,
+    ).toEqual({ threadId: "thread-running", turnId: "turn-running" });
+  });
+
   it("does not leave messages marked in progress after the thread completes", () => {
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-real";
@@ -681,11 +720,13 @@ describe("AgentChat", () => {
   it("sends composer input as stable Codex user input items", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
+    const initialState = runEventFixture(demoFixture as FixtureStep[]);
+    if (initialState.activeThreadId) {
+      initialState.threads[initialState.activeThreadId]!.status = "complete";
+    }
+    initialState.pendingServerRequests = {};
     render(
-      <AgentProvider
-        initialState={runEventFixture(demoFixture as FixtureStep[])}
-        transport={transport}
-      >
+      <AgentProvider initialState={initialState} transport={transport}>
         <AgentChat />
       </AgentProvider>,
     );
@@ -714,11 +755,13 @@ describe("AgentChat", () => {
   it("applies run controls to turn/start params", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
+    const initialState = runEventFixture(demoFixture as FixtureStep[]);
+    if (initialState.activeThreadId) {
+      initialState.threads[initialState.activeThreadId]!.status = "complete";
+    }
+    initialState.pendingServerRequests = {};
     render(
-      <AgentProvider
-        initialState={runEventFixture(demoFixture as FixtureStep[])}
-        transport={transport}
-      >
+      <AgentProvider initialState={initialState} transport={transport}>
         <AgentChat />
       </AgentProvider>,
     );
