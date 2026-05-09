@@ -170,10 +170,12 @@ turn/completed
 thread/resume after a completed turn is persisted
 ```
 
-Latest real Codex verification against `codex app-server --listen stdio://` confirmed:
+Latest real Codex verification against `codex app-server --listen stdio://` on 2026-05-09 with `codex-cli 0.128.0` confirmed:
 
 - `model/list` currently returns models under `data`, including `gpt-5.5` as the first/default entry in this environment.
 - `account/rateLimits/read` returns 5-hour and weekly windows through `primary` and `secondary`.
 - `thread/list` returns stored sessions.
 - `thread/read` with `includeTurns: true` returns persisted turn history without resuming.
 - `thread/resume` succeeds from a stored history id with `excludeTurns: true`.
+- `thread/start` can create an ephemeral thread for smoke verification.
+- `turn/start` streams `item/agentMessage/delta` and emits `turn/completed`.

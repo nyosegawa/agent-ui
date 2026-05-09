@@ -169,6 +169,17 @@ bun run test:e2e:playwright
 
 Real Codex smoke has been verified locally through the server bridge for initialize, account/model reads, thread start, turn start, streaming text, token usage, turn completion, and `thread/resume` after a completed turn is persisted.
 
+Latest manual real smoke:
+
+- Date: 2026-05-09
+- Codex CLI: `codex-cli 0.128.0`
+- Command surface: `codex app-server --listen stdio://`
+- Environment dependency: local ChatGPT/Codex auth was already present; no raw token or device-code secret was logged.
+- Direct stdio smoke command: a Node script spawned `codex app-server --listen stdio://`, connected through `createCodexStdioTransport()`, sent `initialize`, then requested `account/read`, `model/list`, `account/rateLimits/read`, `thread/list`, `thread/read`, `thread/resume`, `thread/start`, and `turn/start`.
+- Direct stdio result: authenticated account with redacted email, 6 models, first model `gpt-5.5`, usage present, 5 stored threads returned, `thread/read` and `thread/resume` succeeded, an ephemeral thread started, `item/agentMessage/delta` streamed `Agent UI real smoke ok.`, and `turn/completed` was observed.
+- Browser smoke command: `bun run test:e2e:playwright`.
+- Browser smoke result: 6 Playwright tests passed. The real local app target used a fake stdio App Server while exercising the actual browser WebSocket transport and same-origin bridge path.
+
 The history and usage smoke path has also been verified against `codex app-server --listen stdio://`:
 
 - `model/list`: 6 visible models in this environment, first entry `gpt-5.5`
@@ -178,7 +189,7 @@ The history and usage smoke path has also been verified against `codex app-serve
 - `thread/resume(excludeTurns: true)`: resume succeeds for the same stored id
 - `examples/codex-local-web`: browser -> WebSocket bridge -> stdio App Server path loads model metadata, usage windows, stored thread list, `thread/read`, and `thread/resume` in this environment.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
-- `bun run test:e2e:playwright` also starts `examples/codex-local-web` against a fake stdio App Server and drives the real browser WebSocket transport through model list, usage, thread list/read/resume, thread start, turn start, streaming text, command output, diff preview, and command approval.
+- `bun run test:e2e:playwright` also starts `examples/codex-local-web` against a fake stdio App Server and drives the real browser WebSocket transport through model list, usage, thread list/read/resume, thread start, turn start, streaming text, command output, structured diff preview, and command approval.
 
 Full approval-path real smoke still needs deterministic fixtures or a controlled Codex prompt that requests command/file approvals.
 

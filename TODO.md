@@ -264,18 +264,18 @@ This is the current source of truth for making Agent UI a finished local Codex w
 This section is the publish/release gate after the real local app works.
 
 - [x] Fix package export/type resolution so `bun run attw` passes.
-- [ ] Run `bun run typecheck`.
-- [ ] Run `bun run lint`.
-- [ ] Run `bun test`.
-- [ ] Run `bun run build`.
-- [ ] Run `bun run test:protocol`.
-- [ ] Run `bun run test:fixtures`.
-- [ ] Run `bun run publint`.
-- [ ] Run `bun run attw`.
+- [x] Run `bun run typecheck`.
+- [x] Run `bun run lint`.
+- [x] Run `bun test`.
+- [x] Run `bun run build`.
+- [x] Run `bun run test:protocol`.
+- [x] Run `bun run test:fixtures`.
+- [x] Run `bun run publint`.
+- [x] Run `bun run attw`.
 - [x] Run `bun run test:e2e:playwright`.
 - [x] Run real local app smoke for model list, usage, thread list, thread read, thread resume, start thread, send turn, streaming text, and approval handling.
-- [ ] Record exact real smoke commands, date, Codex version, and any auth/environment dependencies in docs.
-- [ ] Confirm GitHub Actions pass after push.
+- [x] Record exact real smoke commands, date, Codex version, and any auth/environment dependencies in docs.
+- [x] Confirm GitHub Actions pass after push.
 
 ## Implemented Extras
 
