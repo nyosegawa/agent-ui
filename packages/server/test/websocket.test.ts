@@ -4,7 +4,11 @@ import { PassThrough } from "node:stream";
 import WebSocket from "ws";
 import { afterEach, describe, expect, it } from "vitest";
 import { createCodexWebSocketTransport } from "../../codex/src/websocket";
-import { attachAgentUiWebSocketBridge, type CodexChildProcess } from "../src";
+import {
+  attachAgentUiWebSocketBridge,
+  type AgentUiWebSocketBridgeOptions,
+  type CodexChildProcess,
+} from "../src";
 
 const servers: Array<{ close: () => void }> = [];
 
@@ -215,6 +219,407 @@ describe("attachAgentUiWebSocketBridge", () => {
     await transport.close();
   });
 
+  it("handles dynamic MCP tool calls through the app-server bridge", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport();
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "dynamic-1",
+        method: "item/tool/call",
+        params: {
+          arguments: { app: "Google Chrome" },
+          callId: "call-1",
+          namespace: "mcp__computer_use__",
+          threadId: "thread-1",
+          tool: "get_app_state",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).method === "thread/start"));
+    const helperThreadStart = writes
+      .map((line) => JSON.parse(line))
+      .find((message) => message.method === "thread/start");
+    expect(helperThreadStart).toMatchObject({
+      method: "thread/start",
+      params: {
+        approvalPolicy: "never",
+        sandbox: "danger-full-access",
+      },
+    });
+    stdout.write(
+      `${JSON.stringify({
+        id: helperThreadStart.id,
+        result: { thread: { id: "helper-thread-1" } },
+      })}\n`,
+    );
+
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).method === "mcpServer/tool/call"),
+    );
+    const mcpCall = writes
+      .map((line) => JSON.parse(line))
+      .find((message) => message.method === "mcpServer/tool/call");
+    expect(mcpCall).toMatchObject({
+      method: "mcpServer/tool/call",
+      params: {
+        arguments: { app: "Google Chrome" },
+        server: "computer-use",
+        threadId: "helper-thread-1",
+        tool: "get_app_state",
+      },
+    });
+
+    stdout.write(
+      `${JSON.stringify({
+        id: mcpCall.id,
+        result: {
+          content: [
+            { text: "Chrome state is visible.", type: "text" },
+            { data: "iVBORw0KGgo=", mimeType: "image/png", type: "image" },
+          ],
+          isError: false,
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "dynamic-1"));
+    const dynamicResponse = writes
+      .map((line) => JSON.parse(line))
+      .find((message) => message.id === "dynamic-1");
+    expect(dynamicResponse).toEqual({
+      id: "dynamic-1",
+      result: {
+        contentItems: [
+          { text: "Chrome state is visible.", type: "inputText" },
+          { imageUrl: "data:image/png;base64,iVBORw0KGgo=", type: "inputImage" },
+        ],
+        success: true,
+      },
+    });
+    await transport.close();
+  });
+
+  it("auto-resolves MCP approvals for dynamic tool helper calls", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport();
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "dynamic-approval-1",
+        method: "item/tool/call",
+        params: {
+          arguments: { app: "Google Chrome" },
+          callId: "call-approval-1",
+          namespace: "mcp__computer_use__",
+          threadId: "thread-1",
+          tool: "get_app_state",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).method === "thread/start"));
+    const helperThreadStart = writes
+      .map((line) => JSON.parse(line))
+      .find((message) => message.method === "thread/start");
+    stdout.write(
+      `${JSON.stringify({
+        id: helperThreadStart.id,
+        result: { thread: { id: "helper-thread-approval" } },
+      })}\n`,
+    );
+
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).method === "mcpServer/tool/call"),
+    );
+    const mcpCall = writes
+      .map((line) => JSON.parse(line))
+      .find((message) => message.method === "mcpServer/tool/call");
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "mcp-approval-request-1",
+        method: "mcpServer/elicitation/request",
+        params: {
+          _meta: {
+            codex_approval_kind: "mcp_tool_call",
+          },
+          message: "Allow computer-use to read the screen?",
+          mode: "form",
+          requestedSchema: {
+            properties: {},
+            type: "object",
+          },
+          serverName: "computer-use",
+          threadId: "helper-thread-approval",
+          turnId: null,
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "mcp-approval-request-1"));
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "mcp-approval-request-1")).toEqual({
+      id: "mcp-approval-request-1",
+      result: {
+        _meta: null,
+        action: "accept",
+        content: null,
+      },
+    });
+
+    stdout.write(
+      `${JSON.stringify({
+        id: mcpCall.id,
+        result: {
+          content: [{ text: "screen visible after approval", type: "text" }],
+          isError: false,
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "dynamic-approval-1"));
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "dynamic-approval-1")).toEqual({
+      id: "dynamic-approval-1",
+      result: {
+        contentItems: [{ text: "screen visible after approval", type: "inputText" }],
+        success: true,
+      },
+    });
+    await transport.close();
+  });
+
+  it("can auto-accept MCP tool approvals for the active browser session", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: { mcpToolApproval: "accept" },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "mcp-active-approval-1",
+        method: "mcpServer/elicitation/request",
+        params: {
+          _meta: {
+            codex_approval_kind: "mcp_tool_call",
+          },
+          message: "Allow computer-use to read the screen?",
+          mode: "form",
+          requestedSchema: {
+            properties: {},
+            type: "object",
+          },
+          serverName: "computer-use",
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "mcp-active-approval-1"));
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "mcp-active-approval-1")).toEqual({
+      id: "mcp-active-approval-1",
+      result: {
+        _meta: null,
+        action: "accept",
+        content: null,
+      },
+    });
+    await transport.close();
+  });
+
+  it("can auto-accept MCP elicitations without approval metadata", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: { mcpToolApproval: "accept" },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "mcp-active-elicitation-1",
+        method: "mcpServer/elicitation/request",
+        params: {
+          message: "Allow computer-use?",
+          requestedSchema: {
+            properties: {},
+            type: "object",
+          },
+          serverName: "computer-use",
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "mcp-active-elicitation-1"));
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "mcp-active-elicitation-1")).toEqual({
+      id: "mcp-active-elicitation-1",
+      result: {
+        _meta: null,
+        action: "accept",
+        content: null,
+      },
+    });
+    await transport.close();
+  });
+
+  it("preserves numeric server request ids when auto-resolving", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: { mcpToolApproval: "accept" },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: 0,
+        method: "mcpServer/elicitation/request",
+        params: {
+          message: "Allow computer-use?",
+          requestedSchema: {
+            properties: {},
+            type: "object",
+          },
+          serverName: "computer-use",
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === 0 && "result" in JSON.parse(line)));
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === 0 && "result" in message)).toEqual({
+      id: 0,
+      result: {
+        _meta: null,
+        action: "accept",
+        content: null,
+      },
+    });
+    await transport.close();
+  });
+
+  it("can auto-grant permission approvals for the active browser session", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: { permissions: "grant" },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "permissions-active-1",
+        method: "item/permissions/requestApproval",
+        params: {
+          cwd: "/tmp/project",
+          itemId: "tool-1",
+          permissions: {
+            fileSystem: "read-only",
+            network: true,
+          },
+          reason: "Allow approved task to inspect the current screen.",
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "permissions-active-1"));
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-active-1")).toEqual({
+      id: "permissions-active-1",
+      result: {
+        permissions: {
+          fileSystem: "read-only",
+          network: true,
+        },
+        scope: "turn",
+      },
+    });
+    await transport.close();
+  });
+
+  it("can auto-accept command and file approvals for the active browser session", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: {
+        commandExecution: "acceptForSession",
+        fileChange: "acceptForSession",
+      },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "command-active-1",
+        method: "item/commandExecution/requestApproval",
+        params: {
+          command: "open -a 'Google Chrome'",
+          cwd: "/tmp/project",
+          itemId: "cmd-1",
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+    stdout.write(
+      `${JSON.stringify({
+        id: "file-active-1",
+        method: "item/fileChange/requestApproval",
+        params: {
+          itemId: "file-1",
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "command-active-1"));
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "file-active-1"));
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "command-active-1")).toEqual({
+      id: "command-active-1",
+      result: { decision: "acceptForSession" },
+    });
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "file-active-1")).toEqual({
+      id: "file-active-1",
+      result: { decision: "acceptForSession" },
+    });
+    await transport.close();
+  });
+
   it("forwards only redacted stderr through the browser transport", async () => {
     const { stderr, stdout, transport, writes } = await createBridgeBackedTransport();
 
@@ -276,7 +681,9 @@ describe("attachAgentUiWebSocketBridge", () => {
   });
 });
 
-async function createBridgeBackedTransport() {
+async function createBridgeBackedTransport(
+  options: Pick<AgentUiWebSocketBridgeOptions, "serverRequestPolicy"> = {},
+) {
   const stdin = new PassThrough();
   const stdout = new PassThrough();
   const stderr = new PassThrough();
@@ -293,6 +700,7 @@ async function createBridgeBackedTransport() {
   const httpServer = createServer();
   servers.push(httpServer);
   const webSocketServer = attachAgentUiWebSocketBridge({
+    ...options,
     server: httpServer,
     spawn: () => process,
   });

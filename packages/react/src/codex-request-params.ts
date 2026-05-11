@@ -25,10 +25,17 @@ export type ThreadStartParams = {
 export type TurnStartParams = {
   cwd?: string | null;
   effort?: string | null;
-  input: Array<{ text: string; text_elements: []; type: "text" }>;
+  input: CodexUserInput[];
   model?: string | null;
   threadId: string;
 } & Record<string, unknown>;
+
+export type CodexUserInput =
+  | { text: string; text_elements: []; type: "text" }
+  | { type: "image"; url: string }
+  | { path: string; type: "localImage" }
+  | { name: string; path: string; type: "skill" }
+  | { name: string; path: string; type: "mention" };
 export type TurnInterruptParams = { threadId: string; turnId: string };
 
 export function accountReadParams(refreshToken = false): GetAccountParams {
@@ -93,7 +100,7 @@ export function turnStartParams(options: {
   cwd?: string;
   effort?: string;
   executionParams?: Record<string, unknown>;
-  input: string;
+  input: string | CodexUserInput[];
   modelId?: string;
   params?: Record<string, unknown>;
   threadId: string;
@@ -104,7 +111,10 @@ export function turnStartParams(options: {
     ...(options.modelId ? { model: options.modelId } : {}),
     ...(options.effort ? { effort: options.effort } : {}),
     ...(options.params ?? {}),
-    input: [{ text: options.input, text_elements: [], type: "text" }],
+    input:
+      typeof options.input === "string"
+        ? [{ text: options.input, text_elements: [], type: "text" }]
+        : options.input,
     threadId: options.threadId,
   };
 }

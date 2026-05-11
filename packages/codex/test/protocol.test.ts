@@ -61,6 +61,41 @@ describe("Codex protocol metadata", () => {
     ]);
   });
 
+  it("normalizes dynamic tool call requests", () => {
+    expect(
+      normalizeCodexServerMessage({
+        id: "tool-call-1",
+        method: "item/tool/call",
+        params: {
+          arguments: { app: "Google Chrome" },
+          callId: "call-1",
+          namespace: "mcp__computer_use__",
+          threadId: "thread-1",
+          tool: "get_app_state",
+          turnId: "turn-1",
+        },
+      }),
+    ).toEqual([
+      {
+        request: {
+          id: "tool-call-1",
+          kind: "dynamicTool",
+          payload: {
+            arguments: { app: "Google Chrome" },
+            callId: "call-1",
+            namespace: "mcp__computer_use__",
+            threadId: "thread-1",
+            tool: "get_app_state",
+            turnId: "turn-1",
+          },
+          threadId: "thread-1",
+          turnId: "turn-1",
+        },
+        type: "serverRequest/created",
+      },
+    ]);
+  });
+
   it("normalizes structured App Server user content into display text", () => {
     expect(
       normalizeCodexServerMessage({

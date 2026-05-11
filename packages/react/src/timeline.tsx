@@ -66,7 +66,10 @@ function AgentTurnView({
         const activityKind = activityKindForId(turn, id);
         if (activityKind) return null;
         if (!text?.trim()) return null;
-        if (item && renderItem) return <div key={id}>{renderItem(item, turn)}</div>;
+        if (item && renderItem) {
+          const rendered = renderItem(item, turn);
+          if (rendered !== undefined) return <div key={id}>{rendered}</div>;
+        }
         const messageItem = turn.items[id] as AgentItemState | undefined;
         const kind = messageItem?.kind ?? "stream";
         const status = displayItemStatus(

@@ -24,6 +24,7 @@ import {
   turnInterruptParams,
   turnStartParams,
   type CancelLoginAccountParams,
+  type CodexUserInput,
   type GetAccountParams,
   type LoginAccountParams,
   type ModelListParams,
@@ -293,7 +294,7 @@ export function useAgentTurn(threadId?: ThreadId) {
   const runSettings = selectRunSettings(state);
 
   const startTurn = useCallback(
-    async (input: string, params?: Record<string, unknown>) => {
+    async (input: string | CodexUserInput[], params?: Record<string, unknown>) => {
       if (!resolvedThreadId) throw new Error("No active thread");
       const executionMode = AGENT_EXECUTION_MODES.find(
         (mode) => mode.id === runSettings.executionMode,

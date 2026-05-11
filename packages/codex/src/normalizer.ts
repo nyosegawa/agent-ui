@@ -384,6 +384,8 @@ function normalizeServerRequest(message: MethodMessage): PendingServerRequest {
 
 function isServerRequestMethod(method: string): boolean {
   return (
+    method === "item/tool/call" ||
+    method === "mcpServer/elicitation/request" ||
     method.includes("requestApproval") ||
     method.includes("Approval") ||
     method.includes("requestUserInput")
@@ -391,6 +393,9 @@ function isServerRequestMethod(method: string): boolean {
 }
 
 function requestKind(method: string): PendingServerRequest["kind"] {
+  if (method === "item/tool/call") return "dynamicTool";
+  if (method === "mcpServer/elicitation/request") return "mcpElicitation";
+  if (method === "item/permissions/requestApproval") return "permissionsApproval";
   if (method.includes("command") || method === "execCommandApproval")
     return "commandApproval";
   if (method.includes("fileChange") || method === "applyPatchApproval")

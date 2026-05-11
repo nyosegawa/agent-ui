@@ -40,6 +40,42 @@ describe("CodexWebSocketTransport", () => {
 
     await expect(request).rejects.toThrow("disconnected");
   });
+
+  it("emits raw JSON-RPC server requests as request events", async () => {
+    const sockets: FakeWebSocket[] = [];
+    const transport = createCodexWebSocketTransport({
+      reconnect: false,
+      url: "ws://localhost/agent-ui",
+      webSocketImpl: fakeWebSocketFactory(sockets) as any,
+    });
+    const iterator = transport.events[Symbol.asyncIterator]();
+    await transport.connect();
+
+    sockets[0]!.emitMessage({
+      id: "mcp-approval-1",
+      method: "mcpServer/elicitation/request",
+      params: {
+        _meta: { codex_approval_kind: "mcp_tool_call" },
+        mode: "form",
+        threadId: "thread-1",
+        turnId: "turn-1",
+      },
+    });
+
+    await waitForEvent(iterator, "serverRequest/created");
+    const requestEvent = await waitForTransportEvent(iterator, "request");
+    expect(requestEvent).toMatchObject({
+      request: {
+        id: "mcp-approval-1",
+        kind: "mcpElicitation",
+        payload: {
+          threadId: "thread-1",
+        },
+      },
+      requestId: "mcp-approval-1",
+      type: "request",
+    });
+  });
 });
 
 async function waitForEvent(
@@ -51,6 +87,17 @@ async function waitForEvent(
     if (next.value?.event?.type === type) return;
   }
   throw new Error(`Timed out waiting for ${type}`);
+}
+
+async function waitForTransportEvent(
+  iterator: AsyncIterator<any>,
+  type: string,
+): Promise<any> {
+  for (let index = 0; index < 10; index += 1) {
+    const next = await iterator.next();
+    if (next.value?.type === type) return next.value;
+  }
+  throw new Error(`Timed out waiting for transport event ${type}`);
 }
 
 function fakeWebSocketFactory(sockets: FakeWebSocket[]) {
@@ -89,6 +136,10 @@ class FakeWebSocket {
     if (this.readyState === 3) return;
     this.readyState = 3;
     this.#emit("close", { reason });
+  }
+
+  emitMessage(message: unknown): void {
+    this.#emit("message", { data: JSON.stringify(message) });
   }
 
   send(message: string): void {

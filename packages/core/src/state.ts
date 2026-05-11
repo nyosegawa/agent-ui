@@ -129,7 +129,10 @@ export interface AgentItemState {
 
 export type PendingServerRequestKind =
   | "commandApproval"
+  | "dynamicTool"
   | "fileChangeApproval"
+  | "mcpElicitation"
+  | "permissionsApproval"
   | "userInput"
   | "unknown";
 

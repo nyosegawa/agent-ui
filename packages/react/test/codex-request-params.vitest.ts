@@ -63,5 +63,23 @@ describe("Codex request params", () => {
       input: [{ text: "hello", text_elements: [], type: "text" }],
       threadId: "thread-1",
     } satisfies TurnStartParams);
+
+    expect(
+      turnStartParams({
+        input: [
+          { text: "inspect this", text_elements: [], type: "text" },
+          { path: "/tmp/screen.png", type: "localImage" },
+          { name: "computer-use", path: "/tmp/skills/computer-use/SKILL.md", type: "skill" },
+        ],
+        threadId: "thread-1",
+      }),
+    ).toEqual({
+      input: [
+        { text: "inspect this", text_elements: [], type: "text" },
+        { path: "/tmp/screen.png", type: "localImage" },
+        { name: "computer-use", path: "/tmp/skills/computer-use/SKILL.md", type: "skill" },
+      ],
+      threadId: "thread-1",
+    } satisfies TurnStartParams);
   });
 });

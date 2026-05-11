@@ -861,6 +861,56 @@ describe("AgentChat", () => {
     expect(screen.getByText("<script>alert('x')</script>")).toBeInTheDocument();
   });
 
+  it("lets renderItem hide selected messages and fall back for the rest", () => {
+    render(
+      <AgentMessageList
+        renderItem={(item) => {
+          if (item.id === "item-hidden") return null;
+          return undefined;
+        }}
+        thread={{
+          orderedTurnIds: ["turn-filter"],
+          status: "complete",
+          thread: { id: "thread-filter", name: "Filter" },
+          turns: {
+            "turn-filter": {
+              commandOutputByItemId: {},
+              filePatchByItemId: {},
+              itemOrder: ["item-hidden", "item-visible"],
+              items: {
+                "item-hidden": {
+                  id: "item-hidden",
+                  kind: "userMessage",
+                  status: "completed",
+                  text: "Internal prompt",
+                  threadId: "thread-filter",
+                  turnId: "turn-filter",
+                },
+                "item-visible": {
+                  id: "item-visible",
+                  kind: "agentMessage",
+                  status: "completed",
+                  text: "Visible answer",
+                  threadId: "thread-filter",
+                  turnId: "turn-filter",
+                },
+              },
+              streamingTextByItemId: {},
+              turn: {
+                id: "turn-filter",
+                status: "completed",
+                threadId: "thread-filter",
+              },
+            },
+          },
+        }}
+      />,
+    );
+
+    expect(screen.queryByText("Internal prompt")).not.toBeInTheDocument();
+    expect(screen.getByText("Visible answer")).toBeInTheDocument();
+  });
+
   it("starts new threads with selected model and working directory", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({

@@ -22,6 +22,10 @@ export const stableServerRequestMethods = [
   "item/commandExecution/requestApproval",
   "item/fileChange/requestApproval",
   "item/tool/requestUserInput",
+  "mcpServer/elicitation/request",
+  "item/permissions/requestApproval",
+  "item/tool/call",
+  "account/chatgptAuthTokens/refresh",
   "applyPatchApproval",
   "execCommandApproval",
 ] as const;

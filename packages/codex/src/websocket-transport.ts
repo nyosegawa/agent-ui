@@ -209,6 +209,20 @@ class CodexWebSocketTransport implements AgentTransport {
     if (isJsonRpcRequest(message) || isJsonRpcNotification(message)) {
       const events = normalizeCodexServerMessage(message);
       for (const event of events) this.#push({ event, type: "event" });
+      if (isJsonRpcRequest(message)) {
+        this.#push({
+          request: {
+            id: message.id,
+            kind:
+              events[0]?.type === "serverRequest/created"
+                ? events[0].request.kind
+                : "unknown",
+            payload: message.params,
+          },
+          requestId: message.id,
+          type: "request",
+        });
+      }
       return;
     }
     this.#push({ payload: message, type: "raw" });
