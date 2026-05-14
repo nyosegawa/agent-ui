@@ -82,18 +82,17 @@ Current strengths:
 - `useAgentThread(threadId?)`, `useAgentTurn(threadId?)`, `AgentUsage`, and
   low-level components already make partial scoped embedding possible.
 
-Current gaps:
+Resolved vNext gaps:
 
-- `AgentChat` is still a monolithic preset. Usage, sidebar, diagnostics, header,
-  thread body, approvals, and composer are fixed together.
-- There is no first-class `AgentThreadView` that owns only one thread and its
-  approvals/composer.
-- Usage can be displayed standalone, but the default shell hardcodes usage and
-  can cause duplicated panels.
-- Protocol drift exists: the vendored App Server schema lags the local upstream
-  App Server checkout, and productized method lists are partly hand-maintained.
-- Skill and app APIs are present in generated protocol types but not productized
-  as public hooks/components.
+- `AgentChat` is now a preset composition over `AgentShell`,
+  `AgentThreadView`, usage, diagnostics, and sidebar primitives.
+- `AgentThreadView` owns one thread, its timeline, approvals, and composer, and
+  can lock to a supplied `threadId`.
+- Usage is renderable through `AgentUsagePanel` inside or outside the shell.
+- Generated App Server protocol files and capability metadata are tested by
+  protocol drift checks.
+- Skills and Codex Apps/connectors are productized through `useAgentSkills`,
+  `AgentSkillsPanel`, `useAgentApps`, and `AgentAppsPanel`.
 
 ### agent-kitchen packages/codex
 

@@ -7,6 +7,7 @@ import type {
   AgentTurn,
   PendingServerRequest,
 } from "@nyosegawa/agent-ui-core";
+import { stableNotificationMethods } from "./protocol";
 
 interface MethodMessage {
   id?: string | number;
@@ -243,6 +244,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
           type: "apps/updated",
           apps: normalizeApps(params.data ?? params.apps ?? []),
           nextCursor: optionalStringValue(params.nextCursor ?? params.next_cursor) ?? null,
+          threadId: optionalStringValue(params.threadId ?? params.thread_id),
         },
       ];
     case "skills/changed":
@@ -329,6 +331,18 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         },
       ];
     default:
+      if (isStableNotificationMethod(message.method)) {
+        return [
+          {
+            type: "notification/received",
+            notification: {
+              id: `codex-notification:${message.method}:${stringValue(params.threadId ?? params.thread_id) ?? ""}:${stringValue(params.turnId ?? params.turn_id) ?? ""}:${stringValue(params.itemId ?? params.item_id) ?? ""}`,
+              method: message.method,
+              params: message.params,
+            },
+          },
+        ];
+      }
       return [
         {
           type: "warning/added",
@@ -339,6 +353,10 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         },
       ];
   }
+}
+
+function isStableNotificationMethod(method: string): method is (typeof stableNotificationMethods)[number] {
+  return (stableNotificationMethods as readonly string[]).includes(method);
 }
 
 export function normalizeApps(raw: unknown): AgentApp[] {

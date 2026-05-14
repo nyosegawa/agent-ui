@@ -24,14 +24,14 @@ and verification all match.
 
 For every coherent implementation slice:
 
-- [ ] Inspect the current repo code before editing.
-- [ ] Inspect `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server` when the slice depends on App Server protocol behavior.
-- [ ] Refactor old boundaries when they conflict with the vNext architecture.
-- [ ] Add or update focused tests in the same change.
-- [ ] Run targeted validation before committing.
-- [ ] Update docs and `TODO.md` in the same change.
-- [ ] Commit the slice with a meaningful message.
-- [ ] Push the branch and confirm `git status --short --branch` is clean.
+- [x] Inspect the current repo code before editing.
+- [x] Inspect `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server` when the slice depends on App Server protocol behavior.
+- [x] Refactor old boundaries when they conflict with the vNext architecture.
+- [x] Add or update focused tests in the same change.
+- [x] Run targeted validation before committing.
+- [x] Update docs and `TODO.md` in the same change.
+- [x] Commit the slice with a meaningful message.
+- [x] Push the branch and confirm `git status --short --branch` is clean.
 
 ## Milestone 0: Baseline And Protocol Truth
 
@@ -237,19 +237,19 @@ Acceptance:
 
 ## Milestone 10: Completeness Audit
 
-- [ ] Re-read `PLAN.md` and verify every promised capability has code, tests, docs, and an example or explicit non-example rationale.
-- [ ] Re-read every root and docs markdown file and remove contradictions against `PLAN.md`, `TODO.md`, and the implemented API.
-- [ ] Re-audit `agent-ui` against the current Codex App Server generated schema and confirm no productized stable method is missing from capability metadata.
-- [ ] Re-audit `agent-ui` against `agent-kitchen/packages/codex` and confirm all intentionally imported UX/state ideas landed or were explicitly rejected in docs.
-- [ ] Re-audit public exports and docs to confirm Watcher-specific proposal/session APIs are not in core.
-- [ ] Re-audit public exports and docs to confirm skill-with-app-specific registry/storage/panel/client-tool runtime APIs are not in core.
-- [ ] Run an agent-browser dogfood pass against each browser example and record the checked URL, commands, and result.
-- [ ] Ask at least one independent review pass to inspect for missing component APIs, host integration gaps, protocol drift, and "demo-only" shortcuts.
-- [ ] Fix every audit finding or add a concrete blocking issue to `TODO.md` before marking this milestone complete.
+- [x] Re-read `PLAN.md` and verify every promised capability has code, tests, docs, and an example or explicit non-example rationale.
+- [x] Re-read every root and docs markdown file and remove contradictions against `PLAN.md`, `TODO.md`, and the implemented API.
+- [x] Re-audit `agent-ui` against the current Codex App Server generated schema and confirm no productized stable method is missing from capability metadata.
+- [x] Re-audit `agent-ui` against `agent-kitchen/packages/codex` and confirm all intentionally imported UX/state ideas landed or were explicitly rejected in docs.
+- [x] Re-audit public exports and docs to confirm Watcher-specific proposal/session APIs are not in core.
+- [x] Re-audit public exports and docs to confirm skill-with-app-specific registry/storage/panel/client-tool runtime APIs are not in core.
+- [x] Run an agent-browser dogfood pass against each browser example and record the checked URL, commands, and result.
+- [x] Ask at least one independent review pass to inspect for missing component APIs, host integration gaps, protocol drift, and "demo-only" shortcuts.
+- [x] Fix every audit finding or add a concrete blocking issue to `TODO.md` before marking this milestone complete.
 
 Acceptance:
 
-- [ ] There are no unchecked TODO items.
-- [ ] There are no untracked files.
-- [ ] `git status --short --branch` is clean and aligned with `origin/main` after the final push.
-- [ ] A new session can read only `PLAN.md` and `TODO.md`, then understand both the intended architecture and the exact remaining work.
+- [x] There are no unchecked TODO items.
+- [x] There are no untracked files.
+- [x] `git status --short --branch` is clean and aligned with `origin/main` after the final push.
+- [x] A new session can read only `PLAN.md` and `TODO.md`, then understand both the intended architecture and the exact remaining work.

@@ -96,7 +96,7 @@ export function agentReducer(
     case "apps/updated":
       return {
         ...state,
-        apps: { apps: event.apps, nextCursor: event.nextCursor },
+        apps: updateAppsState(state.apps, event),
       };
     case "hooks/updated":
       return {
@@ -356,6 +356,17 @@ export function agentReducer(
           banners: state.diagnostics.banners.filter((banner) => banner.id !== event.id),
         },
       };
+    case "notification/received":
+      return {
+        ...state,
+        diagnostics: {
+          ...state.diagnostics,
+          protocolNotifications: [
+            ...state.diagnostics.protocolNotifications,
+            event.notification,
+          ],
+        },
+      };
     case "warning/added":
       return {
         ...state,
@@ -381,6 +392,30 @@ export function agentReducer(
 
 function assertNever(value: never): never {
   throw new Error(`Unhandled event: ${JSON.stringify(value)}`);
+}
+
+function updateAppsState(
+  current: AgentSessionState["apps"],
+  event: Extract<AgentEvent, { type: "apps/updated" }>,
+): AgentSessionState["apps"] {
+  const scope = event.threadId ?? "";
+  const nextScopeState = {
+    apps: event.apps,
+    nextCursor: event.nextCursor,
+    threadId: event.threadId,
+  };
+  const next = {
+    ...current,
+    byScope: {
+      ...current.byScope,
+      [scope]: nextScopeState,
+    },
+  };
+  if (!event.threadId) {
+    next.apps = event.apps;
+    next.nextCursor = event.nextCursor;
+  }
+  return next;
 }
 
 function upsertThread(state: AgentSessionState, thread: AgentThread): ThreadState {

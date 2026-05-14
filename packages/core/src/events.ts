@@ -10,6 +10,7 @@ import type {
   ExecutionModeId,
   ItemId,
   PendingServerRequest,
+  ProtocolNotificationState,
   RequestId,
   ReasoningEffort,
   ThreadId,
@@ -29,7 +30,7 @@ export type AgentEvent =
   | { type: "account/rateLimits/updated"; rateLimits: unknown }
   | { type: "usage/hostMetrics/updated"; metrics: unknown }
   | { type: "skills/updated"; cwd: string; skills: AgentSkill[] }
-  | { type: "apps/updated"; apps: AgentApp[]; nextCursor?: string | null }
+  | { type: "apps/updated"; apps: AgentApp[]; nextCursor?: string | null; threadId?: ThreadId }
   | { type: "hooks/updated"; cwd: string; hooks: AgentHook[] }
   | {
       type: "account/login/deviceCodeStarted";
@@ -99,6 +100,7 @@ export type AgentEvent =
   | { type: "serverRequest/rejected"; requestId: RequestId; error?: AgentError }
   | { type: "status/banner/added"; banner: StatusBannerState }
   | { type: "status/banner/removed"; id: string }
+  | { type: "notification/received"; notification: ProtocolNotificationState }
   | { type: "warning/added"; warning: WarningState }
   | { type: "error/added"; error: AgentError };
 

@@ -36,6 +36,7 @@ import {
   threadUnarchiveParams,
   turnInterruptParams,
   turnStartParams,
+  turnSteerParams,
   type CancelLoginAccountParams,
   type AppsListParams,
   type CodexUserInput,
@@ -57,6 +58,7 @@ import {
   type ThreadUnarchiveParams,
   type TurnInterruptParams,
   type TurnStartParams,
+  type TurnSteerParams,
 } from "./codex-request-params";
 import { useAgentContext } from "./provider";
 import {
@@ -440,7 +442,18 @@ export function useAgentTurn(threadId?: ThreadId) {
     [resolvedThreadId, transport],
   );
 
-  return { interruptTurn, startTurn };
+  const steerTurn = useCallback(
+    async (expectedTurnId: string, input: string | CodexUserInput[]) => {
+      if (!resolvedThreadId) throw new Error("No active thread");
+      return transport.request<TurnSteerParams>(
+        "turn/steer",
+        turnSteerParams({ expectedTurnId, input, threadId: resolvedThreadId }),
+      );
+    },
+    [resolvedThreadId, transport],
+  );
+
+  return { interruptTurn, startTurn, steerTurn };
 }
 
 export const useAgentTurnController = useAgentTurn;
@@ -812,6 +825,12 @@ export function useAgentHooks(cwd?: string) {
 
 export function useAgentApps(threadId?: string) {
   const { dispatch, state, transport } = useAgentContext();
+  const appScope = threadId ?? "";
+  const scopedApps = state.apps.byScope[appScope] ?? {
+    apps: threadId ? [] : state.apps.apps,
+    nextCursor: threadId ? null : state.apps.nextCursor,
+    threadId,
+  };
   const refreshApps = useCallback(
     async (params: AppsListParams = {}) => {
       const requestParams = appsListParams(
@@ -823,23 +842,24 @@ export function useAgentApps(threadId?: string) {
       );
       const { apps, nextCursor } = normalizeAppsList(response);
       dispatch({
-        apps: requestParams.cursor ? mergeApps(state.apps.apps, apps) : apps,
+        apps: requestParams.cursor ? mergeApps(scopedApps.apps, apps) : apps,
         nextCursor,
+        threadId: requestParams.threadId ?? undefined,
         type: "apps/updated",
       });
       return { apps, nextCursor };
     },
-    [dispatch, state.apps.apps, threadId, transport],
+    [dispatch, scopedApps.apps, threadId, transport],
   );
   const loadMoreApps = useCallback(
     async () =>
-      state.apps.nextCursor ? refreshApps({ cursor: state.apps.nextCursor }) : undefined,
-    [refreshApps, state.apps.nextCursor],
+      scopedApps.nextCursor ? refreshApps({ cursor: scopedApps.nextCursor }) : undefined,
+    [refreshApps, scopedApps.nextCursor],
   );
   return {
-    apps: state.apps.apps,
+    apps: scopedApps.apps,
     loadMoreApps,
-    nextCursor: state.apps.nextCursor,
+    nextCursor: scopedApps.nextCursor,
     refreshApps,
   };
 }

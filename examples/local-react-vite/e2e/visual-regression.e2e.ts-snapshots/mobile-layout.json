@@ -152,7 +152,7 @@
     "borderRadius": "0px",
     "display": "flex",
     "gridTemplateColumns": "none",
-    "height": 127,
+    "height": 126,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,

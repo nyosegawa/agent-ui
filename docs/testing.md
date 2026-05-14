@@ -336,6 +336,19 @@ The history and usage smoke path has also been verified against `codex app-serve
   `agent-browser --session m8-mobile screenshot
   /tmp/agent-ui-m8-usage-only-mobile.png` confirmed the usage-only primitive
   remains accessible at a mobile-sized viewport with no chat/sidebar controls.
+- Milestone 10 final agent-browser check on 2026-05-14: after reading
+  `agent-browser skills get core`, a dev server ran at
+  `http://127.0.0.1:5174/`; `agent-browser --session m10-final open
+  'http://127.0.0.1:5174/'`, `agent-browser --session m10-final snapshot -i`,
+  and `agent-browser --session m10-final screenshot
+  /tmp/agent-ui-m10-final-home.png` confirmed the default fixture shell still
+  exposes thread history, usage, approvals, run settings, App/Plugin mention
+  buttons, and the approval-gated composer. `agent-browser --session
+  m10-final-mobile open 'http://127.0.0.1:5174/usage-only'`, `agent-browser
+  --session m10-final-mobile set viewport 390 900`, `agent-browser --session
+  m10-final-mobile snapshot -i`, and `agent-browser --session
+  m10-final-mobile screenshot /tmp/agent-ui-m10-final-usage-mobile.png`
+  confirmed the usage-only primitive remains accessible at mobile width.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
 - Milestone 6 bridge checks cover host event callbacks, explicit server request
   policy opt-in, dynamic tool helper thread creation through generated

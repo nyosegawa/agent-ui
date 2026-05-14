@@ -231,6 +231,7 @@ describe("Codex protocol metadata", () => {
               name: "Chrome",
             },
           ],
+          threadId: "thread-apps",
         },
       }),
     ).toMatchObject([
@@ -245,7 +246,23 @@ describe("Codex protocol metadata", () => {
           },
         ],
         nextCursor: null,
+        threadId: "thread-apps",
         type: "apps/updated",
+      },
+    ]);
+
+    expect(
+      normalizeCodexServerMessage({
+        method: "rawResponseItem/completed",
+        params: { itemId: "item-raw", threadId: "thread-1", turnId: "turn-1" },
+      }),
+    ).toMatchObject([
+      {
+        notification: {
+          method: "rawResponseItem/completed",
+          params: { itemId: "item-raw", threadId: "thread-1", turnId: "turn-1" },
+        },
+        type: "notification/received",
       },
     ]);
 

@@ -17,8 +17,8 @@ follow the active thread or lock to a supplied `threadId`. Use `startThread()`
 for a new Codex thread and `resumeThread(threadId)` for a stored session.
 
 `useAgentTurnController()` is the vNext name for `useAgentTurn()`. It sends
-`turn/start` with normalized run settings and sends `turn/interrupt` for the
-visible stop action.
+`turn/start` with normalized run settings, `turn/steer` for continuing an active
+turn, and `turn/interrupt` for the visible stop action.
 
 ## Thread Collection And History
 
@@ -95,9 +95,9 @@ const apps = useAgentApps(threadId);
 
 `useAgentHooks()` calls `hooks/list` and stores normalized hook metadata.
 
-`useAgentApps()` calls `app/list`, preserves `nextCursor`, and exposes
-`loadMoreApps()` so hosts can page through connector/app metadata while keeping
-install/auth state visible.
+`useAgentApps()` calls `app/list`, preserves `nextCursor`, scopes state by
+`threadId`, and exposes `loadMoreApps()` so hosts can page through connector/app
+metadata while keeping install/auth state visible.
 
 Host-specific workflows can compose `useAgentThreadController()`,
 `useAgentTurnController()`, `useAgentServerRequests()`, and `AgentWorkspace`

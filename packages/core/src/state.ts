@@ -237,7 +237,14 @@ export interface StatusBannerState {
 export interface DiagnosticsState {
   banners: StatusBannerState[];
   errors: AgentError[];
+  protocolNotifications: ProtocolNotificationState[];
   warnings: WarningState[];
+}
+
+export interface ProtocolNotificationState {
+  id: string;
+  method: string;
+  params?: unknown;
 }
 
 export interface UsageState {
@@ -268,7 +275,14 @@ export interface AgentApp {
 
 export interface AppsState {
   apps: AgentApp[];
+  byScope: Record<string, ScopedAppsState>;
   nextCursor?: string | null;
+}
+
+export interface ScopedAppsState {
+  apps: AgentApp[];
+  nextCursor?: string | null;
+  threadId?: ThreadId;
 }
 
 export interface AgentHook {
@@ -305,10 +319,10 @@ export interface AgentSessionState {
 export function createInitialAgentState(): AgentSessionState {
   return {
     account: { status: "unknown" },
-    apps: { apps: [] },
+    apps: { apps: [], byScope: {} },
     configWarnings: [],
     connection: { status: "idle" },
-    diagnostics: { banners: [], errors: [], warnings: [] },
+    diagnostics: { banners: [], errors: [], protocolNotifications: [], warnings: [] },
     errors: [],
     hooks: { byCwd: {} },
     models: { models: [] },

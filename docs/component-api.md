@@ -118,10 +118,11 @@ rollback call generated-method request builders. Resume remains part of
 `AgentThreadHeader` because it depends on thread registry state and the loaded
 session lifecycle.
 
-Composer attachments are represented as visible chips for local image/file
-mentions, paste/drop files, and `app://` / `plugin://` mentions. The composer
-wires these chips into structured turn-start input items: images become
-`localImage` items and file/app/plugin chips become `mention` items.
+Composer attachments are represented as visible chips for `app://` and
+`plugin://` mentions by default. Local browser files are only enabled when the
+host supplies `resolveLocalAttachment`; that resolver must turn a `File` into a
+real Codex input such as a `localImage` path or uploaded image URL. The library
+does not treat browser-only `File.name` values as App Server-readable paths.
 
 ## Usage
 

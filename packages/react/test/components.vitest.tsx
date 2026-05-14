@@ -27,6 +27,8 @@ import {
   useAgentServerRequests,
   useAgentSkills,
   useAgentContext,
+  useAgentTurn,
+  localImageInput,
 } from "../src";
 
 expect.extend(toHaveNoViolations);
@@ -307,6 +309,69 @@ describe("AgentChat", () => {
     );
   });
 
+  it("keeps app/list state isolated by thread id", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method !== "app/list") return {};
+        const threadId = (request.params as { threadId?: string } | undefined)?.threadId;
+        return {
+          data: [
+            {
+              id: threadId === "thread-a" ? "a" : "b",
+              isAccessible: true,
+              isEnabled: true,
+              name: threadId === "thread-a" ? "App A" : "App B",
+            },
+          ],
+          nextCursor: null,
+        };
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentAppsPanel threadId="thread-a" />
+        <AgentAppsPanel threadId="thread-b" />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getAllByRole("button", { name: "Refresh" })[0]!);
+    await user.click(screen.getAllByRole("button", { name: "Refresh" })[1]!);
+
+    expect(await screen.findByText("App A")).toBeInTheDocument();
+    expect(await screen.findByText("App B")).toBeInTheDocument();
+  });
+
+  it("exposes turn steer through the public turn controller", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    function Probe() {
+      const { steerTurn } = useAgentTurn("thread-steer");
+      return (
+        <button onClick={() => void steerTurn("turn-1", "continue")} type="button">
+          Steer
+        </button>
+      );
+    }
+
+    render(
+      <AgentProvider transport={transport}>
+        <Probe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Steer" }));
+
+    expect(transport.requests.at(-1)).toMatchObject({
+      method: "turn/steer",
+      params: {
+        expectedTurnId: "turn-1",
+        input: [{ text: "continue", type: "text" }],
+        threadId: "thread-steer",
+      },
+    });
+  });
+
   it("exposes all queued server requests through useAgentServerRequests", () => {
     const initialState = createInitialAgentState();
     initialState.serverRequestQueue = {
@@ -426,7 +491,7 @@ describe("AgentChat", () => {
     prompt.mockRestore();
   });
 
-  it("surfaces composer file and app/plugin attachments", async () => {
+  it("surfaces composer app/plugin attachments", async () => {
     const user = userEvent.setup();
     const prompt = vi
       .spyOn(globalThis, "prompt")
@@ -457,6 +522,48 @@ describe("AgentChat", () => {
       "plugin://browser-tools",
     );
     prompt.mockRestore();
+  });
+
+  it("requires a host resolver before local files become Codex inputs", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-compose";
+    initialState.threads["thread-compose"] = {
+      orderedTurnIds: [],
+      status: "loaded",
+      thread: { id: "thread-compose", name: "Composer" },
+      turns: {},
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentThreadView
+          resolveLocalAttachment={(file) =>
+            localImageInput(`/tmp/agent-ui-test/${file.name}`)
+          }
+          threadId="thread-compose"
+        />
+      </AgentProvider>,
+    );
+
+    const input = screen.getByLabelText("Composer attachments").querySelector(
+      'input[accept="image/*"]',
+    ) as HTMLInputElement;
+    await user.upload(input, new File(["image"], "fixture.png", { type: "image/png" }));
+    await user.type(screen.getByLabelText("Message"), "inspect this");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(transport.requests.at(-1)).toMatchObject({
+      method: "turn/start",
+      params: {
+        input: [
+          { text: "inspect this", type: "text" },
+          { path: "/tmp/agent-ui-test/fixture.png", type: "localImage" },
+        ],
+        threadId: "thread-compose",
+      },
+    });
   });
 
   it("does not offer to start a thread before account bootstrap finishes", async () => {

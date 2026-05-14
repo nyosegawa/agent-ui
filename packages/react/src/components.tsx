@@ -25,7 +25,6 @@ import {
 } from "./hooks";
 import { AgentDiffViewer } from "./diff-viewer";
 import {
-  localImageInput,
   mentionInput,
   type CodexUserInput,
 } from "./codex-request-params";
@@ -123,12 +122,14 @@ export function AgentShell({
 export interface AgentThreadViewProps {
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
   renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
+  resolveLocalAttachment?: AgentLocalAttachmentResolver;
   threadId?: string;
 }
 
 export function AgentThreadView({
   renderApproval,
   renderItem,
+  resolveLocalAttachment,
   threadId,
 }: AgentThreadViewProps) {
   const { thread, threadId: resolvedThreadId } = useAgentThread(threadId);
@@ -138,7 +139,11 @@ export function AgentThreadView({
       <AgentThreadHeader thread={thread} threadId={resolvedThreadId} />
       <AgentThreadTimeline renderItem={renderItem} thread={thread} />
       <AgentApprovalQueue renderApproval={renderApproval} threadId={resolvedThreadId} />
-      <AgentComposerPanel thread={thread} threadId={resolvedThreadId} />
+      <AgentComposerPanel
+        resolveLocalAttachment={resolveLocalAttachment}
+        thread={thread}
+        threadId={resolvedThreadId}
+      />
     </>
   );
 }
@@ -473,10 +478,12 @@ function formatModelOption(model: { id: string; name?: string }): string {
 export function AgentComposer({
   disabled = false,
   placeholder = "Ask Codex to work in this thread",
+  resolveLocalAttachment,
   threadId,
 }: {
   disabled?: boolean;
   placeholder?: string;
+  resolveLocalAttachment?: AgentLocalAttachmentResolver;
   threadId?: string;
 }) {
   const composer = useAgentComposer(threadId);
@@ -487,6 +494,24 @@ export function AgentComposer({
   const removeAttachment = useCallback((id: string) => {
     setAttachments((current) => current.filter((attachment) => attachment.id !== id));
   }, []);
+  const addLocalFiles = useCallback(
+    async (files: FileList | File[]) => {
+      if (!resolveLocalAttachment) return;
+      for (const file of Array.from(files)) {
+        const kind = file.type.startsWith("image/") ? "image" : "file";
+        const input = await resolveLocalAttachment(file, kind);
+        if (!input) continue;
+        addAttachment({
+          id: `${kind}:${file.name}:${file.size}:${Date.now()}`,
+          input,
+          kind,
+          label: file.name || kind,
+          value: file.name,
+        });
+      }
+    },
+    [addAttachment, resolveLocalAttachment],
+  );
   return (
     <form
       className="aui-composer"
@@ -501,6 +526,7 @@ export function AgentComposer({
         disabled={disabled}
         onAdd={addAttachment}
         onRemove={removeAttachment}
+        onResolveLocalFiles={resolveLocalAttachment ? addLocalFiles : undefined}
       />
       <textarea
         aria-label="Message"
@@ -509,29 +535,15 @@ export function AgentComposer({
         onChange={(event) => composer.setValue(event.currentTarget.value)}
         onDrop={(event) => {
           if (disabled) return;
-          const files = Array.from(event.dataTransfer.files);
-          if (files.length === 0) return;
+          const files = event.dataTransfer.files;
+          if (!resolveLocalAttachment || files.length === 0) return;
           event.preventDefault();
-          for (const file of files) {
-            addAttachment({
-              id: `${file.name}:${file.size}:${Date.now()}`,
-              kind: file.type.startsWith("image/") ? "image" : "file",
-              label: file.name,
-              value: file.name,
-            });
-          }
+          void addLocalFiles(files);
         }}
         onPaste={(event) => {
           if (disabled) return;
-          const files = Array.from(event.clipboardData.files);
-          for (const file of files) {
-            addAttachment({
-              id: `${file.name}:${file.size}:${Date.now()}`,
-              kind: file.type.startsWith("image/") ? "image" : "file",
-              label: file.name || "pasted file",
-              value: file.name,
-            });
-          }
+          if (!resolveLocalAttachment || event.clipboardData.files.length === 0) return;
+          void addLocalFiles(event.clipboardData.files);
         }}
         placeholder={placeholder}
         rows={3}
@@ -546,8 +558,16 @@ export function AgentComposer({
 
 type ComposerAttachmentKind = "image" | "file" | "app" | "plugin";
 
+export type AgentLocalAttachmentKind = Extract<ComposerAttachmentKind, "image" | "file">;
+
+export type AgentLocalAttachmentResolver = (
+  file: File,
+  kind: AgentLocalAttachmentKind,
+) => CodexUserInput | null | undefined | Promise<CodexUserInput | null | undefined>;
+
 interface ComposerAttachment {
   id: string;
+  input?: CodexUserInput;
   kind: ComposerAttachmentKind;
   label: string;
   value: string;
@@ -558,11 +578,13 @@ function ComposerAttachmentToolbar({
   disabled,
   onAdd,
   onRemove,
+  onResolveLocalFiles,
 }: {
   attachments: ComposerAttachment[];
   disabled: boolean;
   onAdd: (attachment: ComposerAttachment) => void;
   onRemove: (id: string) => void;
+  onResolveLocalFiles?: (files: FileList | File[]) => void | Promise<void>;
 }) {
   const addMention = (kind: "app" | "plugin") => {
     const value = globalThis.prompt?.(
@@ -579,43 +601,35 @@ function ComposerAttachmentToolbar({
   };
   return (
     <div className="aui-attachment-toolbar" aria-label="Composer attachments">
-      <label className="aui-attachment-button">
-        <span>Image</span>
-        <input
-          accept="image/*"
-          disabled={disabled}
-          onChange={(event) => {
-            for (const file of Array.from(event.currentTarget.files ?? [])) {
-              onAdd({
-                id: `image:${file.name}:${file.size}:${Date.now()}`,
-                kind: "image",
-                label: file.name,
-                value: file.name,
-              });
-            }
-            event.currentTarget.value = "";
-          }}
-          type="file"
-        />
-      </label>
-      <label className="aui-attachment-button">
-        <span>File</span>
-        <input
-          disabled={disabled}
-          onChange={(event) => {
-            for (const file of Array.from(event.currentTarget.files ?? [])) {
-              onAdd({
-                id: `file:${file.name}:${file.size}:${Date.now()}`,
-                kind: "file",
-                label: file.name,
-                value: file.name,
-              });
-            }
-            event.currentTarget.value = "";
-          }}
-          type="file"
-        />
-      </label>
+      {onResolveLocalFiles ? (
+        <>
+          <label className="aui-attachment-button">
+            <span>Image</span>
+            <input
+              accept="image/*"
+              disabled={disabled}
+              onChange={(event) => {
+                const files = event.currentTarget.files;
+                if (files) void onResolveLocalFiles(files);
+                event.currentTarget.value = "";
+              }}
+              type="file"
+            />
+          </label>
+          <label className="aui-attachment-button">
+            <span>File</span>
+            <input
+              disabled={disabled}
+              onChange={(event) => {
+                const files = event.currentTarget.files;
+                if (files) void onResolveLocalFiles(files);
+                event.currentTarget.value = "";
+              }}
+              type="file"
+            />
+          </label>
+        </>
+      ) : null}
       <button disabled={disabled} onClick={() => addMention("app")} type="button">
         App
       </button>
@@ -644,14 +658,16 @@ function ComposerAttachmentToolbar({
 }
 
 function composerAttachmentInput(attachment: ComposerAttachment): CodexUserInput {
-  if (attachment.kind === "image") return localImageInput(attachment.value);
+  if (attachment.input) return attachment.input;
   return mentionInput(attachment.label, attachment.value);
 }
 
 export function AgentComposerPanel({
+  resolveLocalAttachment,
   thread,
   threadId,
 }: {
+  resolveLocalAttachment?: AgentLocalAttachmentResolver;
   thread: ThreadState;
   threadId?: string;
 }) {
@@ -678,6 +694,7 @@ export function AgentComposerPanel({
       <AgentComposer
         disabled={isBlocked}
         placeholder={composerPlaceholder(thread.status, isPreviewOnly)}
+        resolveLocalAttachment={resolveLocalAttachment}
         threadId={threadId}
       />
     </section>

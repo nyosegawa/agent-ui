@@ -220,6 +220,7 @@ describe("agentReducer", () => {
 
     expect(state.skills.byCwd["/repo"]?.[0]?.name).toBe("agent-browser");
     expect(state.apps.apps[0]?.id).toBe("app://browser");
+    expect(state.apps.byScope[""]?.apps[0]?.id).toBe("app://browser");
     expect(state.hooks.byCwd["/repo"]?.[0]?.id).toBe("hook-1");
     expect(selectUsage(state)).toEqual({
       accountRateLimits: { primary: { usedPercent: 33 } },
@@ -227,6 +228,42 @@ describe("agentReducer", () => {
     });
     expect(state.account.rateLimits).toEqual({ primary: { usedPercent: 33 } });
     expect(state.diagnostics.banners[0]?.kind).toBe("rateLimit");
+  });
+
+  it("keeps app connector lists scoped by thread id", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          apps: [{ id: "app://global", name: "Global" }],
+          nextCursor: null,
+          type: "apps/updated",
+        },
+      },
+      {
+        event: {
+          apps: [{ id: "app://thread-a", name: "Thread A" }],
+          nextCursor: "next-a",
+          threadId: "thread-a",
+          type: "apps/updated",
+        },
+      },
+      {
+        event: {
+          apps: [{ id: "app://thread-b", name: "Thread B" }],
+          nextCursor: null,
+          threadId: "thread-b",
+          type: "apps/updated",
+        },
+      },
+    ]);
+
+    expect(state.apps.apps[0]?.id).toBe("app://global");
+    expect(state.apps.byScope["thread-a"]).toMatchObject({
+      apps: [{ id: "app://thread-a", name: "Thread A" }],
+      nextCursor: "next-a",
+      threadId: "thread-a",
+    });
+    expect(state.apps.byScope["thread-b"]?.apps[0]?.id).toBe("app://thread-b");
   });
 
   it("loads the demo session fixture with threads, diff preview, and file approval", () => {
