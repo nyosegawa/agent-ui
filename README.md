@@ -12,6 +12,34 @@ Agent UI provides React components, headless hooks, state management, and transp
 
 The real local app path is the primary release target: browser UI -> same-origin host bridge -> `codex app-server --listen stdio://` -> real Codex account, usage, model, thread, turn, approval, and diff events.
 
+The core library is a Codex App Server UI component system. External host
+applications compose their own workflows from generic primitives; app-specific
+proposal flows, panel runtimes, storage, and sidecars do not live in the core
+packages.
+
+## Public API Shape
+
+Primary React surfaces:
+
+- `AgentProvider`
+- `AgentShell`
+- `AgentChat`
+- `AgentWorkspace`
+- `AgentThreadView`
+- `AgentThreadHeader`
+- `AgentThreadTimeline`
+- `AgentThreadSidebar`
+- `AgentComposerPanel`
+- `AgentApprovalQueue`
+- `AgentUsagePanel`
+- `AgentDiagnosticsPanel`
+- `AgentSkillsPanel`
+- `AgentAppsPanel`
+
+Headless hooks include `useAgentThreadController`,
+`useAgentTurnController`, `useAgentServerRequests`, `useAgentUsage`,
+`useAgentSkills`, and `useAgentApps`.
+
 ## Local Release Scope
 
 ```text
@@ -37,6 +65,15 @@ stable App Server API only
 ## Docs
 
 Start with [docs/README.md](./docs/README.md).
+
+Generic examples:
+
+- [examples/codex-local-web](./examples/codex-local-web/README.md): real local Codex web app.
+- [examples/scoped-thread-pane](./examples/scoped-thread-pane/README.md): fixed-thread composition.
+- [examples/usage-only](./examples/usage-only/README.md): standalone usage panel.
+- [examples/app-connectors](./examples/app-connectors/README.md): Codex Apps/connectors.
+- [examples/host-workflow-recipe](./examples/host-workflow-recipe/README.md): host-owned side panel slot.
+- [examples/fixture-gallery](./examples/fixture-gallery/README.md): deterministic browser QA states.
 
 ## Quickstart
 

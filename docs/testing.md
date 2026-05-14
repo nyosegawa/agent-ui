@@ -347,6 +347,15 @@ The history and usage smoke path has also been verified against `codex app-serve
 
 Fake stdio remains the deterministic CI gate for the browser approval UX, command output, and diff preview. Real Codex approval smoke is opt-in because it consumes a live model turn and depends on local auth, but it is now scripted and has been run successfully in this environment.
 
+Latest real Codex smoke on 2026-05-14:
+
+- `bun run test:e2e:real-codex`: authenticated account, usage present, 5 stored
+  threads, 6 models, assistant text `Agent UI real smoke ok.`, and 1 completed
+  turn.
+- `bun run test:e2e:real-codex:approval`: authenticated account, usage present,
+  5 stored threads, 6 models, and one command approval request observed and
+  declined.
+
 ## Visual Regression
 
 `bun run test:e2e:playwright` includes browser-level layout contract snapshots for the local Vite example at desktop and mobile widths. These snapshots capture rendered dimensions, overflow behavior, display mode, grid columns, border radius, and key colors for the shell, sidebar, chat, run controls, usage, message list, inline activity, approvals, and composer.

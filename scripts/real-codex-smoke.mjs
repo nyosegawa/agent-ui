@@ -104,7 +104,7 @@ try {
       "thread/read",
     );
     await withTimeout(
-      transport.request("thread/resume", { excludeTurns: true, threadId: storedThread.id }),
+      transport.request("thread/resume", { threadId: storedThread.id }),
       30_000,
       "thread/resume",
     );

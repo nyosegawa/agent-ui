@@ -10,6 +10,9 @@
 - Do not implement MVP shortcuts. The target is a complete Codex App Server UI
   component system with composable thread, usage, skills, apps, and browser
   verification surfaces.
+- Keep external app workflows outside the core library. Proposal/session
+  orchestration, app-specific panel runtimes, storage, and sidecar behavior
+  belong in host applications that compose Agent UI primitives.
 - Keep the default runtime local-first, single-user, stdio-first, and
   stable-API-first unless `PLAN.md` explicitly marks a surface as experimental
   or host-only.

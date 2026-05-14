@@ -206,34 +206,34 @@ Acceptance:
 
 ## Milestone 9: Validation And Release Gate
 
-- [ ] Update `README.md` for the final vNext public API and examples.
-- [ ] Update `AGENTS.md` for final repo working rules after the vNext implementation is complete.
-- [ ] Update `docs/architecture.md`, `docs/component-api.md`, `docs/headless-hooks.md`, `docs/packages.md`, `docs/product.md`, `docs/protocol.md`, `docs/protocol-drift.md`, `docs/testing.md`, and `docs/theming.md`.
-- [ ] Update every example README and package README affected by the new component/API shape.
-- [ ] Search root docs and examples for stale terms before validation: `MVP`, `post-MVP`, `AgentProvider experimental`, old monolithic `AgentChat`, old usage placement, and old skill/app server assumptions.
-- [ ] Run `bun run typecheck`.
-- [ ] Run `bun run lint`.
-- [ ] Run `bun test`.
-- [ ] Run `bun run build`.
-- [ ] Run `bun run test:protocol`.
-- [ ] Run `bun run test:fixtures`.
-- [ ] Run `bun run publint`.
-- [ ] Run `bun run attw`.
-- [ ] Run `bun run check:exports`.
-- [ ] Run `bun run test:e2e:playwright`.
-- [ ] Run `bun run test:node-compat`.
-- [ ] Run `bun run test:e2e:real-codex` when local Codex auth/environment is available.
-- [ ] Run `bun run test:e2e:real-codex:approval` when local approval smoke is available.
-- [ ] Run the `agent-browser` manual verification sequence for changed examples.
-- [ ] Update `PLAN.md`, `TODO.md`, and docs after implementation reality differs from the plan.
-- [ ] Confirm every milestone completion was committed and pushed in coherent slices rather than one final bulk commit.
+- [x] Update `README.md` for the final vNext public API and examples.
+- [x] Update `AGENTS.md` for final repo working rules after the vNext implementation is complete.
+- [x] Update `docs/architecture.md`, `docs/component-api.md`, `docs/headless-hooks.md`, `docs/packages.md`, `docs/product.md`, `docs/protocol.md`, `docs/protocol-drift.md`, `docs/testing.md`, and `docs/theming.md`.
+- [x] Update every example README and package README affected by the new component/API shape.
+- [x] Search root docs and examples for stale terms before validation: `MVP`, `post-MVP`, `AgentProvider experimental`, old monolithic `AgentChat`, old usage placement, and old skill/app server assumptions.
+- [x] Run `bun run typecheck`.
+- [x] Run `bun run lint`.
+- [x] Run `bun test`.
+- [x] Run `bun run build`.
+- [x] Run `bun run test:protocol`.
+- [x] Run `bun run test:fixtures`.
+- [x] Run `bun run publint`.
+- [x] Run `bun run attw`.
+- [x] Run `bun run check:exports`.
+- [x] Run `bun run test:e2e:playwright`.
+- [x] Run `bun run test:node-compat`.
+- [x] Run `bun run test:e2e:real-codex` when local Codex auth/environment is available.
+- [x] Run `bun run test:e2e:real-codex:approval` when local approval smoke is available.
+- [x] Run the `agent-browser` manual verification sequence for changed examples.
+- [x] Update `PLAN.md`, `TODO.md`, and docs after implementation reality differs from the plan.
+- [x] Confirm every milestone completion was committed and pushed in coherent slices rather than one final bulk commit.
 
 Acceptance:
 
-- [ ] All deterministic gates pass.
-- [ ] Any skipped real Codex or browser checks are documented with a concrete reason.
-- [ ] Public package exports pass package validation.
-- [ ] README, AGENTS, docs, package READMEs, and example READMEs describe the implemented API, not aspirational API that has not landed and not stale pre-vNext behavior.
+- [x] All deterministic gates pass.
+- [x] Any skipped real Codex or browser checks are documented with a concrete reason.
+- [x] Public package exports pass package validation.
+- [x] README, AGENTS, docs, package READMEs, and example READMEs describe the implemented API, not aspirational API that has not landed and not stale pre-vNext behavior.
 
 ## Milestone 10: Completeness Audit
 
