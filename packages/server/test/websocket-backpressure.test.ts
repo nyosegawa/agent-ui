@@ -1,0 +1,73 @@
+import { describe, expect, it, vi } from "vitest";
+import {
+  DEFAULT_WEBSOCKET_MAX_BUFFERED_BYTES,
+  createWebSocketBackpressureGuard,
+  sendJsonWithBackpressure,
+} from "../src/websocket-backpressure";
+
+describe("WebSocket backpressure guard", () => {
+  it("uses a bounded default buffer limit", () => {
+    expect(createWebSocketBackpressureGuard().maxBufferedBytes).toBe(
+      DEFAULT_WEBSOCKET_MAX_BUFFERED_BYTES,
+    );
+  });
+
+  it("sends while the socket buffer is below the configured limit", () => {
+    const socket = {
+      bufferedAmount: 4,
+      close: vi.fn(),
+      readyState: 1,
+      send: vi.fn(),
+    };
+
+    expect(
+      sendJsonWithBackpressure(
+        socket,
+        createWebSocketBackpressureGuard({ maxBufferedBytes: 8 }),
+        { ok: true },
+      ),
+    ).toBe(true);
+    expect(socket.send).toHaveBeenCalledWith('{"ok":true}');
+    expect(socket.close).not.toHaveBeenCalled();
+  });
+
+  it("closes slow consumers instead of growing the output queue forever", () => {
+    const socket = {
+      bufferedAmount: 9,
+      close: vi.fn(),
+      readyState: 1,
+      send: vi.fn(),
+    };
+
+    expect(
+      sendJsonWithBackpressure(
+        socket,
+        createWebSocketBackpressureGuard({ maxBufferedBytes: 8 }),
+        { ok: true },
+      ),
+    ).toBe(false);
+    expect(socket.send).not.toHaveBeenCalled();
+    expect(socket.close).toHaveBeenCalledWith(
+      1013,
+      "Agent UI bridge backpressure limit exceeded",
+    );
+  });
+
+  it("can be disabled for host-owned experiments", () => {
+    const socket = {
+      bufferedAmount: Number.MAX_SAFE_INTEGER,
+      close: vi.fn(),
+      readyState: 1,
+      send: vi.fn(),
+    };
+
+    expect(
+      sendJsonWithBackpressure(
+        socket,
+        createWebSocketBackpressureGuard({ maxBufferedBytes: false }),
+        { ok: true },
+      ),
+    ).toBe(true);
+    expect(socket.send).toHaveBeenCalled();
+  });
+});

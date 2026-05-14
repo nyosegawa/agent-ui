@@ -155,7 +155,7 @@ Acceptance:
 - [x] Add approval policy configuration that is explicit and visible to host apps.
 - [x] Add redaction tests for stderr and bridge logs.
 - [x] Add bridge tests for dynamic tool helper thread params against generated schema.
-- [ ] Add slow-consumer/backpressure tests, or add a focused harness if the current test infrastructure cannot simulate them.
+- [x] Add slow-consumer/backpressure tests, or add a focused harness if the current test infrastructure cannot simulate them.
 
 Acceptance:
 

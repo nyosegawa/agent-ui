@@ -12,11 +12,21 @@ import * as dynamicTools from "./dynamic-tools";
 import type { AgentUiHostEventSink } from "./host-events";
 import { emitHostEvent } from "./host-events";
 import * as requestPolicy from "./server-request-policy";
+import {
+  createWebSocketBackpressureGuard,
+  sendJsonWithBackpressure,
+  type WebSocketBackpressureOptions,
+} from "./websocket-backpressure";
 
 export interface AgentUiWebSocketBridgeOptions extends CodexAppServerBridgeOptions {
   dynamicToolHandler?: DynamicToolHandler;
   hostEvents?: AgentUiHostEventSink;
   idleTimeoutMs?: number | false;
+  /**
+   * Maximum browser socket output buffer before the bridge closes the session
+   * with 1013. Set to false only for host-owned experiments.
+   */
+  maxBufferedBytes?: WebSocketBackpressureOptions["maxBufferedBytes"];
   /**
    * Policy for server requests that can block a turn. Defaults to manual forwarding
    * so application UIs stay in control unless they explicitly opt in.
@@ -54,10 +64,12 @@ export function handleAgentUiWebSocketConnection(
     dynamicToolHandler = dynamicTools.defaultDynamicToolHandler,
     hostEvents,
     idleTimeoutMs = DEFAULT_IDLE_TIMEOUT_MS,
+    maxBufferedBytes,
     serverRequestPolicy,
     ...bridgeOptions
   } = options;
   const bridge = createCodexAppServerBridge(bridgeOptions);
+  const backpressure = createWebSocketBackpressureGuard({ maxBufferedBytes });
   const effectiveServerRequestPolicy =
     requestPolicy.resolveServerRequestPolicy(serverRequestPolicy);
   const log = (message: string) => {
@@ -154,11 +166,11 @@ export function handleAgentUiWebSocketConnection(
           });
           continue;
         }
-        sendEnvelope(socket, event);
+        sendEnvelope(socket, backpressure, event);
       }
     })
     .catch((error: unknown) => {
-      sendEnvelope(socket, {
+      sendEnvelope(socket, backpressure, {
         error: { message: error instanceof Error ? error.message : String(error) },
         type: "error",
       });
@@ -167,8 +179,8 @@ export function handleAgentUiWebSocketConnection(
 
   socket.on("message", (data) => {
     resetIdleTimer();
-    void handleClientMessage(socket, bridge.transport, data).catch((error: unknown) => {
-      sendEnvelope(socket, {
+    void handleClientMessage(socket, bridge.transport, backpressure, data).catch((error: unknown) => {
+      sendEnvelope(socket, backpressure, {
         error: { message: error instanceof Error ? error.message : String(error) },
         type: "error",
       });
@@ -202,15 +214,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 async function handleClientMessage(
   socket: WebSocket,
   transport: ReturnType<typeof createCodexAppServerBridge>["transport"],
+  backpressure: ReturnType<typeof createWebSocketBackpressureGuard>,
   data: RawData,
 ): Promise<void> {
   const message = parseJsonRpcLine(data.toString());
   if (isJsonRpcRequest(message)) {
     try {
       const result = await transport.request(message.method, message.params);
-      sendJson(socket, { id: message.id, result });
+      sendJson(socket, backpressure, { id: message.id, result });
     } catch (error) {
-      sendJson(socket, {
+      sendJson(socket, backpressure, {
         error: { message: error instanceof Error ? error.message : String(error) },
         id: message.id,
       });
@@ -229,11 +242,18 @@ async function handleClientMessage(
   }
 }
 
-function sendEnvelope(socket: WebSocket, event: AgentTransportEvent): void {
-  sendJson(socket, { event, type: "agent-ui/transport-event" });
+function sendEnvelope(
+  socket: WebSocket,
+  backpressure: ReturnType<typeof createWebSocketBackpressureGuard>,
+  event: AgentTransportEvent,
+): void {
+  sendJson(socket, backpressure, { event, type: "agent-ui/transport-event" });
 }
 
-function sendJson(socket: WebSocket, value: unknown): void {
-  if (socket.readyState !== 1) return;
-  socket.send(JSON.stringify(value));
+function sendJson(
+  socket: WebSocket,
+  backpressure: ReturnType<typeof createWebSocketBackpressureGuard>,
+  value: unknown,
+): void {
+  sendJsonWithBackpressure(socket, backpressure, value);
 }

@@ -317,6 +317,11 @@ The history and usage smoke path has also been verified against `codex app-serve
   web search, generic dynamic-tool approval, and disabled approval-gated
   composer after removing core skill-app runtime APIs.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
+- Milestone 6 bridge checks cover host event callbacks, explicit server request
+  policy opt-in, dynamic tool helper thread creation through generated
+  `thread/start` params, stderr redaction, idle shutdown, and a focused
+  WebSocket backpressure harness that closes slow consumers before the output
+  buffer can grow without bound.
 - `bun run test:e2e:playwright` also starts `examples/codex-local-web` against a fake stdio App Server and drives the real browser WebSocket transport through model list, usage, thread list/read/resume, thread start, turn start, streaming text, command output, structured diff preview, and command approval.
 - The fake stdio browser smoke emits unique turn and item ids for repeated `turn/start` calls, and includes a deterministic same-thread continuation test that sends two turns, waits for `Complete`, verifies the composer re-enables, and checks that the local web app still has no horizontal overflow.
 
