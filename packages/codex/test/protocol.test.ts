@@ -3,8 +3,13 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
   CODEX_PROTOCOL_COMMIT,
+  codexCapabilityMetadata,
+  experimentalAvailableMethods,
+  hostOnlyMethods,
+  stableAvailableMethods,
   stableClientMethods,
   stableNotificationMethods,
+  stableProductizedMethods,
   stableServerRequestMethods,
 } from "../src/protocol";
 import { encodeJsonRpcLine, parseJsonRpcLine } from "../src/json-rpc";
@@ -16,26 +21,27 @@ import {
 describe("Codex protocol metadata", () => {
   it("records upstream commit and stable release method surface", () => {
     expect(CODEX_PROTOCOL_COMMIT).toMatch(/^[0-9a-f]{40}$/);
-    expect(stableClientMethods).toMatchInlineSnapshot(`
-      [
-        "initialize",
-        "account/read",
-        "account/login/start",
-        "account/login/cancel",
-        "account/logout",
-        "model/list",
-        "thread/start",
-        "thread/resume",
-        "thread/list",
-        "thread/read",
-        "thread/unsubscribe",
-        "turn/start",
-        "turn/steer",
-        "turn/interrupt",
-      ]
-    `);
+    expect(stableClientMethods).toBe(stableProductizedMethods);
+    expect(stableProductizedMethods).toContain("account/rateLimits/read");
+    expect(stableProductizedMethods).toContain("skills/list");
+    expect(stableProductizedMethods).toContain("app/list");
+    expect(hostOnlyMethods).toContain("command/exec");
+    expect(experimentalAvailableMethods).toContain("thread/turns/items/list");
     expect(stableServerRequestMethods).toContain("item/commandExecution/requestApproval");
+    expect(stableServerRequestMethods).toContain("attestation/generate");
     expect(stableNotificationMethods).toContain("item/agentMessage/delta");
+  });
+
+  it("keeps capability metadata partitioned without duplicates", () => {
+    const metadataKeys = codexCapabilityMetadata.map((entry) => `${entry.status}:${entry.method}`);
+    expect(new Set(metadataKeys).size).toBe(metadataKeys.length);
+    expect(
+      codexCapabilityMetadata.filter((entry) => entry.method === "account/rateLimits/read"),
+    ).toEqual([{ method: "account/rateLimits/read", status: "stableProductized" }]);
+    expect(codexCapabilityMetadata).toContainEqual({
+      method: "thread/turns/list",
+      status: "experimentalAvailable",
+    });
   });
 
   it("round trips JSON-RPC-lite lines without jsonrpc header", () => {
@@ -244,7 +250,9 @@ describe("Codex protocol metadata", () => {
   });
 
   it("snapshots generated stable protocol method lists", () => {
-    expect(extractMethods("../src/generated/stable/ClientRequest.ts"))
+    const generatedStableClientMethods = extractMethods("../src/generated/stable/ClientRequest.ts");
+    expect(stableAvailableMethods).toEqual(generatedStableClientMethods);
+    expect(generatedStableClientMethods)
       .toMatchInlineSnapshot(`
       [
         "account/login/cancel",
@@ -263,9 +271,6 @@ describe("Codex protocol metadata", () => {
         "config/read",
         "config/value/write",
         "configRequirements/read",
-        "device/key/create",
-        "device/key/public",
-        "device/key/sign",
         "experimentalFeature/enablement/set",
         "experimentalFeature/list",
         "externalAgentConfig/detect",
@@ -298,6 +303,12 @@ describe("Codex protocol metadata", () => {
         "plugin/install",
         "plugin/list",
         "plugin/read",
+        "plugin/share/checkout",
+        "plugin/share/delete",
+        "plugin/share/list",
+        "plugin/share/save",
+        "plugin/share/updateTargets",
+        "plugin/skill/read",
         "plugin/uninstall",
         "review/start",
         "skills/config/write",
@@ -316,16 +327,20 @@ describe("Codex protocol metadata", () => {
         "thread/rollback",
         "thread/shellCommand",
         "thread/start",
-        "thread/turns/list",
         "thread/unarchive",
         "thread/unsubscribe",
         "turn/interrupt",
         "turn/start",
         "turn/steer",
+        "windowsSandbox/readiness",
         "windowsSandbox/setupStart",
       ]
     `);
-    expect(extractMethods("../src/generated/stable/ServerNotification.ts"))
+    const generatedStableNotificationMethods = extractMethods(
+      "../src/generated/stable/ServerNotification.ts",
+    );
+    expect(stableNotificationMethods).toEqual(generatedStableNotificationMethods);
+    expect(generatedStableNotificationMethods)
       .toMatchInlineSnapshot(`
       [
         "account/login/completed",
@@ -361,6 +376,8 @@ describe("Codex protocol metadata", () => {
         "mcpServer/startupStatus/updated",
         "model/rerouted",
         "model/verification",
+        "process/exited",
+        "process/outputDelta",
         "rawResponseItem/completed",
         "remoteControl/status/changed",
         "serverRequest/resolved",
@@ -392,11 +409,16 @@ describe("Codex protocol metadata", () => {
         "windowsSandbox/setupCompleted",
       ]
     `);
-    expect(extractMethods("../src/generated/stable/ServerRequest.ts"))
+    const generatedStableServerRequestMethods = extractMethods(
+      "../src/generated/stable/ServerRequest.ts",
+    );
+    expect(stableServerRequestMethods).toEqual(generatedStableServerRequestMethods);
+    expect(generatedStableServerRequestMethods)
       .toMatchInlineSnapshot(`
       [
         "account/chatgptAuthTokens/refresh",
         "applyPatchApproval",
+        "attestation/generate",
         "execCommandApproval",
         "item/commandExecution/requestApproval",
         "item/fileChange/requestApproval",
@@ -404,6 +426,44 @@ describe("Codex protocol metadata", () => {
         "item/tool/call",
         "item/tool/requestUserInput",
         "mcpServer/elicitation/request",
+      ]
+    `);
+  });
+
+  it("snapshots generated experimental-only client methods", () => {
+    const stable = extractMethods("../src/generated/stable/ClientRequest.ts");
+    const experimental = extractMethods("../src/generated/experimental/ClientRequest.ts");
+    const experimentalOnly = experimental.filter((method) => !stable.includes(method));
+    expect(experimentalAvailableMethods).toEqual(experimentalOnly);
+    expect(experimentalOnly).toMatchInlineSnapshot(`
+      [
+        "collaborationMode/list",
+        "environment/add",
+        "fuzzyFileSearch/sessionStart",
+        "fuzzyFileSearch/sessionStop",
+        "fuzzyFileSearch/sessionUpdate",
+        "memory/reset",
+        "mock/experimentalMethod",
+        "process/kill",
+        "process/resizePty",
+        "process/spawn",
+        "process/writeStdin",
+        "remoteControl/disable",
+        "remoteControl/enable",
+        "thread/backgroundTerminals/clean",
+        "thread/decrement_elicitation",
+        "thread/goal/clear",
+        "thread/goal/get",
+        "thread/goal/set",
+        "thread/increment_elicitation",
+        "thread/memoryMode/set",
+        "thread/realtime/appendAudio",
+        "thread/realtime/appendText",
+        "thread/realtime/listVoices",
+        "thread/realtime/start",
+        "thread/realtime/stop",
+        "thread/turns/items/list",
+        "thread/turns/list",
       ]
     `);
   });

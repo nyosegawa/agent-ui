@@ -35,8 +35,8 @@
   },
   "files": ["dist", "src/generated"],
   "agentUi": {
-    "codexProtocolCommit": "607b0dd1f06ce8b09db43f2ec3e0582daf21158e",
-    "generatedAt": "2026-05-09T00:00:00.000+09:00"
+    "codexProtocolCommit": "6a225e4005209f2325ab3c681c7c6beba2907d4d",
+    "generatedAt": "2026-05-14T15:21:25+09:00"
   },
   "scripts": {
     "build": "tsup",

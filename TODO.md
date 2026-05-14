@@ -34,25 +34,25 @@ For every coherent implementation slice:
 
 ## Milestone 0: Baseline And Protocol Truth
 
-- [ ] Confirm the working tree intentionally contains `.agents/skills/agent-browser` and `skills-lock.json`.
+- [x] Confirm the working tree intentionally contains `.agents/skills/agent-browser` and `skills-lock.json`.
 - [ ] Decide whether to keep any historical completed checklist items elsewhere, then keep this file focused on vNext implementation.
-- [ ] Inventory stale root/docs claims before implementation: `README.md`, `AGENTS.md`, `docs/*.md`, examples READMEs, and package READMEs.
+- [x] Inventory stale root/docs claims before implementation: `README.md`, `AGENTS.md`, `docs/*.md`, examples READMEs, and package READMEs.
 - [ ] Remove or flag stale MVP-era docs before any new API work begins, especially docs that describe old `AgentChat` composition as the final design.
-- [ ] Refresh generated stable App Server types from `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server`.
-- [ ] Refresh generated experimental App Server types in a separate generated tree.
-- [ ] Document the exact local App Server commit and generation commands used for the schema refresh.
-- [ ] Record the upstream App Server commit in `packages/codex/src/protocol.ts`.
-- [ ] Replace hand-written product method lists with generated-schema-derived capability metadata, keeping any unavoidable manual classification in one audited file with tests.
-- [ ] Split capability metadata into `stableAvailable`, `stableProductized`, `experimentalAvailable`, and `hostOnly`.
-- [ ] Add a protocol drift test that fails when generated files or capability metadata are stale.
-- [ ] Fix current drift around `account/rateLimits/read` and any other productized method missing from stable metadata.
-- [ ] Update `docs/protocol.md` only after the generated schema refresh and capability split are implemented.
+- [x] Refresh generated stable App Server types from `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server`.
+- [x] Refresh generated experimental App Server types in a separate generated tree.
+- [x] Document the exact local App Server commit and generation commands used for the schema refresh.
+- [x] Record the upstream App Server commit in `packages/codex/src/protocol.ts`.
+- [x] Replace hand-written product method lists with generated-schema-derived capability metadata, keeping any unavoidable manual classification in one audited file with tests.
+- [x] Split capability metadata into `stableAvailable`, `stableProductized`, `experimentalAvailable`, and `hostOnly`.
+- [x] Add a protocol drift test that fails when generated files or capability metadata are stale.
+- [x] Fix current drift around `account/rateLimits/read` and any other productized method missing from stable metadata.
+- [x] Update `docs/protocol.md` only after the generated schema refresh and capability split are implemented.
 
 Acceptance:
 
-- [ ] `bun run test:protocol` proves generated schema, protocol metadata, and capability lists agree.
-- [ ] Docs no longer mention non-existent public props such as `AgentProvider experimental`.
-- [ ] Root README and AGENTS instructions point implementers to `PLAN.md` and `TODO.md` as the active source of truth.
+- [x] `bun run test:protocol` proves generated schema, protocol metadata, and capability lists agree.
+- [x] Docs no longer mention non-existent public props such as `AgentProvider experimental`.
+- [x] Root README and AGENTS instructions point implementers to `PLAN.md` and `TODO.md` as the active source of truth.
 - [ ] The Milestone 0 implementation is committed and pushed before starting Milestone 1.
 
 ## Milestone 1: Core State Model

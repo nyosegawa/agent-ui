@@ -47,7 +47,12 @@ Implementation status:
 - `@nyosegawa/agent-ui-server` owns local process spawning for `codex app-server --listen stdio://`.
 - `createCodexAppServerBridge()` returns an `AgentTransport` and redacts stderr before forwarding logs.
 - The generated stable and experimental TypeScript schemas are vendored under `packages/codex/src/generated`.
-- Protocol metadata records upstream commit `607b0dd1f06ce8b09db43f2ec3e0582daf21158e`.
+- Protocol metadata records upstream commit `6a225e4005209f2325ab3c681c7c6beba2907d4d`.
+- The schema refresh command used for this pass was
+  `cargo run -p codex-app-server-protocol --bin export -- --out packages/codex/src/generated/stable`
+  and the same command with `--experimental` for
+  `packages/codex/src/generated/experimental`, run from
+  `/Users/sakasegawa/src/github.com/openai/codex/codex-rs`.
 
 ## WebSocket Transport
 
@@ -78,8 +83,11 @@ Default public API uses stable App Server protocol only.
 
 Experimental protocol support:
 
-```tsx
-<AgentProvider experimental={{ codex: true }}>
+```ts
+await transport.request("initialize", {
+  clientInfo: { name: "agent_ui_host" },
+  capabilities: { experimentalApi: true },
+});
 ```
 
 Generated experimental types may exist internally, but they must not appear in default public component props or normalized core state.
@@ -114,7 +122,7 @@ methods. Agent UI intentionally productizes the real local chat path first and
 does not claim complete Codex Desktop parity for every host utility. The
 coverage status is:
 
-Productized local chat path:
+Stable productized methods:
 
 - `initialize`
 - `account/read` with `{ refreshToken: false }` for startup bootstrap
@@ -125,37 +133,25 @@ Productized local chat path:
 - `model/list` with `{}` or stable pagination params
 - `thread/start`
 - `thread/resume`
-- `thread/list`
-- `thread/read`
-- `thread/unsubscribe`
-- `turn/start`
-- `turn/steer`
-- `turn/interrupt`
-
-Supported by generated types and host/headless APIs, not primary default UI:
-
 - `thread/fork`
+- `thread/list`
+- `thread/loaded/list`
+- `thread/read`
 - `thread/archive`
 - `thread/unarchive`
 - `thread/name/set`
 - `thread/metadata/update`
+- `thread/compact/start`
 - `thread/rollback`
-- `thread/loaded/list`
-- `thread/turns/list`
 - `thread/inject_items`
-- `review/start`
-- `getConversationSummary`
-- `gitDiffToRemote`
-- `getAuthStatus`
-- `modelProvider/capabilities/read`
-- `config/read`
-- `config/value/write`
-- `config/batchWrite`
-- `configRequirements/read`
-- `externalAgentConfig/detect`
-- `externalAgentConfig/import`
-- `account/sendAddCreditsNudgeEmail`
-- `feedback/upload`
+- `thread/unsubscribe`
+- `turn/start`
+- `turn/steer`
+- `turn/interrupt`
+- `skills/list`
+- `skills/config/write`
+- `hooks/list`
+- `app/list`
 
 Host-only or advanced local tooling:
 
@@ -176,24 +172,32 @@ Host-only or advanced local tooling:
 - `fs/watch`
 - `fs/unwatch`
 - `fuzzyFileSearch`
-- `windowsSandbox/setupStart`
-
-Deferred from the finished local web release:
-
-- `skills/list`
-- `skills/config/write`
-- `hooks/list`
+- `review/start`
+- `getConversationSummary`
+- `gitDiffToRemote`
+- `getAuthStatus`
+- `modelProvider/capabilities/read`
+- `config/read`
+- `config/value/write`
+- `config/batchWrite`
+- `configRequirements/read`
+- `externalAgentConfig/detect`
+- `externalAgentConfig/import`
+- `account/sendAddCreditsNudgeEmail`
+- `feedback/upload`
 - `marketplace/add`
 - `marketplace/remove`
 - `marketplace/upgrade`
 - `plugin/list`
 - `plugin/read`
+- `plugin/skill/read`
+- `plugin/share/save`
+- `plugin/share/updateTargets`
+- `plugin/share/list`
+- `plugin/share/checkout`
+- `plugin/share/delete`
 - `plugin/install`
 - `plugin/uninstall`
-- `app/list`
-- `device/key/create`
-- `device/key/public`
-- `device/key/sign`
 - `experimentalFeature/list`
 - `experimentalFeature/enablement/set`
 - `mcpServer/oauth/login`
@@ -201,12 +205,46 @@ Deferred from the finished local web release:
 - `mcpServerStatus/list`
 - `mcpServer/resource/read`
 - `mcpServer/tool/call`
+- `windowsSandbox/readiness`
+- `windowsSandbox/setupStart`
+
+Experimental available methods:
+
+- `collaborationMode/list`
+- `environment/add`
+- `fuzzyFileSearch/sessionStart`
+- `fuzzyFileSearch/sessionUpdate`
+- `fuzzyFileSearch/sessionStop`
+- `memory/reset`
+- `process/spawn`
+- `process/writeStdin`
+- `process/resizePty`
+- `process/kill`
+- `remoteControl/enable`
+- `remoteControl/disable`
+- `thread/backgroundTerminals/clean`
+- `thread/goal/set`
+- `thread/goal/get`
+- `thread/goal/clear`
+- `thread/memoryMode/set`
+- `thread/realtime/start`
+- `thread/realtime/appendAudio`
+- `thread/realtime/appendText`
+- `thread/realtime/listVoices`
+- `thread/realtime/stop`
+- `thread/turns/list`
+- `thread/turns/items/list`
 
 Server requests:
 
 - command approval
 - file change approval
 - user input request
+- MCP elicitation
+- dynamic tool call
+- auth refresh
+- attestation
+- legacy `applyPatchApproval` and `execCommandApproval` compatibility requests
 
 Notifications:
 
