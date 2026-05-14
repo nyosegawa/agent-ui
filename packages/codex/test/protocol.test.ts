@@ -102,6 +102,42 @@ describe("Codex protocol metadata", () => {
     ]);
   });
 
+  it("normalizes every productized server request kind", () => {
+    const cases = [
+      ["item/commandExecution/requestApproval", "commandApproval"],
+      ["item/fileChange/requestApproval", "fileChangeApproval"],
+      ["item/tool/requestUserInput", "userInput"],
+      ["mcpServer/elicitation/request", "mcpElicitation"],
+      ["item/permissions/requestApproval", "permissionsApproval"],
+      ["item/tool/call", "dynamicTool"],
+      ["account/chatgptAuthTokens/refresh", "authRefresh"],
+      ["attestation/generate", "attestation"],
+      ["execCommandApproval", "legacyExecApproval"],
+      ["applyPatchApproval", "legacyPatchApproval"],
+    ] as const;
+
+    for (const [method, kind] of cases) {
+      expect(
+        normalizeCodexServerMessage({
+          id: `request-${kind}`,
+          method,
+          params: { itemId: "item-1", threadId: "thread-1", turnId: "turn-1" },
+        }),
+      ).toMatchObject([
+        {
+          request: {
+            id: `request-${kind}`,
+            kind,
+            itemId: "item-1",
+            threadId: "thread-1",
+            turnId: "turn-1",
+          },
+          type: "serverRequest/created",
+        },
+      ]);
+    }
+  });
+
   it("normalizes structured App Server user content into display text", () => {
     expect(
       normalizeCodexServerMessage({
@@ -164,6 +200,79 @@ describe("Codex protocol metadata", () => {
         params: { rateLimits: { planType: "plus" } },
       }),
     ).toEqual([{ rateLimits: { planType: "plus" }, type: "account/rateLimits/updated" }]);
+  });
+
+  it("normalizes diff, app, skills, and status notifications", () => {
+    expect(
+      normalizeCodexServerMessage({
+        method: "turn/diff/updated",
+        params: { diff: "diff --git a/a b/a", threadId: "t1", turnId: "u1" },
+      }),
+    ).toEqual([
+      {
+        diff: "diff --git a/a b/a",
+        raw: { diff: "diff --git a/a b/a", threadId: "t1", turnId: "u1" },
+        threadId: "t1",
+        turnId: "u1",
+        type: "turn/diff/updated",
+      },
+    ]);
+
+    expect(
+      normalizeCodexServerMessage({
+        method: "app/list/updated",
+        params: {
+          data: [
+            {
+              id: "chrome",
+              installUrl: "app://chrome",
+              isAccessible: false,
+              isEnabled: true,
+              name: "Chrome",
+            },
+          ],
+        },
+      }),
+    ).toMatchObject([
+      {
+        apps: [
+          {
+            id: "chrome",
+            installed: true,
+            name: "Chrome",
+            needsAuth: true,
+            uri: "app://chrome",
+          },
+        ],
+        nextCursor: null,
+        type: "apps/updated",
+      },
+    ]);
+
+    expect(normalizeCodexServerMessage({ method: "skills/changed", params: {} })).toEqual([
+      {
+        banner: {
+          id: "skills-changed",
+          kind: "system",
+          message: "Skills changed. Re-run skills/list to refresh metadata.",
+          raw: {},
+        },
+        type: "status/banner/added",
+      },
+    ]);
+
+    expect(
+      normalizeCodexServerMessage({
+        method: "model/rerouted",
+        params: {
+          fromModel: "gpt-5.4",
+          reason: "rateLimited",
+          threadId: "t1",
+          toModel: "gpt-5.5",
+          turnId: "u1",
+        },
+      }),
+    ).toMatchObject([{ banner: { kind: "modelReroute" }, type: "status/banner/added" }]);
   });
 
   it("turns unsupported notifications into neutral warnings without raw payloads", () => {

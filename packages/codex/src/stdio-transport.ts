@@ -17,6 +17,10 @@ export interface CodexStdioTransportOptions {
   stdout: Readable;
   stderr?: Readable;
   initialize?: CodexInitializeOptions;
+  backpressure?: {
+    baseDelayMs?: number;
+    maxRetries?: number;
+  };
 }
 
 export function createCodexStdioTransport(options: CodexStdioTransportOptions): AgentTransport {
@@ -70,6 +74,30 @@ class CodexStdioTransport implements AgentTransport {
   }
 
   async request<TParams = unknown, TResult = unknown>(
+    method: string,
+    params?: TParams,
+  ): Promise<TResult> {
+    const maxRetries = this.#options.backpressure?.maxRetries ?? 2;
+    const baseDelayMs = this.#options.backpressure?.baseDelayMs ?? 100;
+    let attempt = 0;
+    for (;;) {
+      try {
+        return await this.#sendRequest<TParams, TResult>(method, params);
+      } catch (error) {
+        if (
+          !isBackpressureError(error) ||
+          !isBackpressureRetrySafeMethod(method) ||
+          attempt >= maxRetries
+        ) {
+          throw error;
+        }
+        attempt += 1;
+        await delay(baseDelayMs * 2 ** (attempt - 1));
+      }
+    }
+  }
+
+  async #sendRequest<TParams = unknown, TResult = unknown>(
     method: string,
     params?: TParams,
   ): Promise<TResult> {
@@ -132,7 +160,7 @@ class CodexStdioTransport implements AgentTransport {
       const pending = this.#pending.get(String(message.id));
       if (!pending) return;
       this.#pending.delete(String(message.id));
-      if ("error" in message) pending.reject(new Error(message.error.message));
+      if ("error" in message) pending.reject(jsonRpcError(message.error));
       else pending.resolve(message.result);
       this.#push({ payload: message, requestId: message.id, type: "response" });
       return;
@@ -170,4 +198,40 @@ class CodexStdioTransport implements AgentTransport {
     if (event) return Promise.resolve({ done: false, value: event });
     return new Promise((resolve) => this.#waiters.push(resolve));
   }
+}
+
+export function isBackpressureRetrySafeMethod(method: string): boolean {
+  return BACKPRESSURE_RETRY_SAFE_METHODS.has(method);
+}
+
+const BACKPRESSURE_RETRY_SAFE_METHODS = new Set([
+  "account/read",
+  "account/rateLimits/read",
+  "app/list",
+  "hooks/list",
+  "model/list",
+  "skills/list",
+  "thread/list",
+  "thread/loaded/list",
+  "thread/read",
+]);
+
+function jsonRpcError(error: { code?: number; message: string; data?: unknown }): Error {
+  const next = new Error(error.message) as Error & { code?: number; data?: unknown };
+  next.code = error.code;
+  next.data = error.data;
+  return next;
+}
+
+function isBackpressureError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === -32001
+  );
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

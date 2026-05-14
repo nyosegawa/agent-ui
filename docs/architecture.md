@@ -26,6 +26,25 @@ The chat-capable local bridge is `attachAgentUiWebSocketBridge()`. It keeps one 
 
 `createAgentUiNextRpcRoute()` is intentionally narrower: it starts an App Server process for one HTTP `POST`, sends one JSON-RPC-lite request, returns one response, and closes the process. It is useful for host-owned one-shot calls, but it cannot represent streaming turns, server approval requests, or browser approval responses. Next.js apps that need the full chat experience should host a WebSocket bridge in a Node server or use a separate same-origin bridge process.
 
+## Codex Session Facade
+
+`@nyosegawa/agent-ui-codex` owns the stable Codex product API boundary:
+
+- request builders live in `request-builders.ts` and are checked against
+  generated stable App Server params
+- `createCodexSession()` exposes account, model, thread, turn, skills, hooks,
+  and app helpers
+- React imports request builders through the Codex package instead of carrying
+  hand-written protocol copies
+- experimental methods require explicit `experimental: true` opt-in
+- `thread/turns/items/list` is disabled even with opt-in until upstream
+  implements it
+
+The stdio transport retries overload error `-32001` only for read-only,
+idempotent methods such as `thread/read`, `thread/list`, `skills/list`,
+`hooks/list`, `app/list`, `model/list`, `account/read`, and
+`account/rateLimits/read`.
+
 ## Core State
 
 ```ts
@@ -87,6 +106,8 @@ but new vNext code should use the normalized stores: `threadRegistry`,
   both account compatibility state and `usage.accountRateLimits`
 - `skills/updated`, `apps/updated`, and `hooks/updated`: update normalized
   host capability stores
+- `skills/changed`: add a refresh banner because the App Server notification is
+  an invalidation signal, not a full skills payload
 - `status/banner/*`: update model reroute, deprecation, config, account, MCP
   OAuth, rate-limit, and system banners
 - `item/started`: create in-progress item

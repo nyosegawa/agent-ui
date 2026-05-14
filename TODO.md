@@ -73,20 +73,20 @@ Acceptance:
 
 ## Milestone 2: Codex Adapter And Session API
 
-- [ ] Rebuild request builders so params `satisfies` generated App Server request types.
-- [ ] Expand the Codex client/session facade to cover thread start/resume/fork/list/loaded/read/archive/unarchive/name/metadata/compact/rollback/inject/unsubscribe.
-- [ ] Expand turn helpers to cover start, steer, and interrupt.
-- [ ] Normalize all supported App Server notifications into core events.
-- [ ] Normalize server requests for command approval, file-change approval, user input, MCP elicitation, dynamic tool call, auth refresh, and attestation.
-- [ ] Implement safe handling for legacy patch/exec approvals as compatibility normalizers only.
-- [ ] Add App Server backpressure handling for `-32001` with retry/backoff where retry is safe.
-- [ ] Add stable default behavior and explicit experimental opt-in behavior for field-level and method-level experimental APIs.
-- [ ] Disable `thread/turns/items/list` in product APIs until upstream implements it.
+- [x] Rebuild request builders so params `satisfies` generated App Server request types.
+- [x] Expand the Codex client/session facade to cover thread start/resume/fork/list/loaded/read/archive/unarchive/name/metadata/compact/rollback/inject/unsubscribe.
+- [x] Expand turn helpers to cover start, steer, and interrupt.
+- [x] Normalize all supported App Server notifications into core events.
+- [x] Normalize server requests for command approval, file-change approval, user input, MCP elicitation, dynamic tool call, auth refresh, and attestation.
+- [x] Implement safe handling for legacy patch/exec approvals as compatibility normalizers only.
+- [x] Add App Server backpressure handling for `-32001` with retry/backoff where retry is safe.
+- [x] Add stable default behavior and explicit experimental opt-in behavior for field-level and method-level experimental APIs.
+- [x] Disable `thread/turns/items/list` in product APIs until upstream implements it.
 
 Acceptance:
 
-- [ ] Adapter tests use generated types as the source of truth and do not copy protocol shapes by hand.
-- [ ] Fake App Server fixtures cover approvals, user input, MCP elicitation, dynamic tools, app list updates, skills changed, and account/rate-limit updates.
+- [x] Adapter tests use generated types as the source of truth and do not copy protocol shapes by hand.
+- [x] Fake App Server fixtures cover approvals, user input, MCP elicitation, dynamic tools, app list updates, skills changed, and account/rate-limit updates.
 
 ## Milestone 3: Public React API Redesign
 

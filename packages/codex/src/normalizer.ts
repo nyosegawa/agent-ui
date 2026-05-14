@@ -1,5 +1,6 @@
 import type {
   AgentEvent,
+  AgentApp,
   AgentItemState,
   AgentModel,
   AgentThread,
@@ -42,7 +43,6 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
       return [
         { type: "account/rateLimits/updated", rateLimits: params.rateLimits ?? params },
       ];
-    case "configWarning":
     case "warning":
       return [
         {
@@ -84,6 +84,30 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         {
           type: "thread/status/changed",
           status: normalizeThreadStatus(params.status),
+          threadId: String(params.threadId ?? params.thread_id),
+        },
+      ];
+    case "thread/archived":
+      return [
+        {
+          type: "thread/status/changed",
+          status: "archived",
+          threadId: String(params.threadId ?? params.thread_id),
+        },
+      ];
+    case "thread/unarchived":
+      return [
+        {
+          type: "thread/status/changed",
+          status: "loaded",
+          threadId: String(params.threadId ?? params.thread_id),
+        },
+      ];
+    case "thread/closed":
+      return [
+        {
+          type: "thread/status/changed",
+          status: "closed",
           threadId: String(params.threadId ?? params.thread_id),
         },
       ];
@@ -187,7 +211,6 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         },
       ];
     case "item/fileChange/patchUpdated":
-    case "turn/diff/updated":
       return [
         {
           type: "item/filePatch/updated",
@@ -197,11 +220,112 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
           turnId: String(params.turnId ?? params.turn_id ?? ""),
         },
       ];
+    case "turn/diff/updated":
+      return [
+        {
+          type: "turn/diff/updated",
+          diff: params.diff ?? params,
+          raw: params,
+          threadId: String(params.threadId ?? params.thread_id ?? ""),
+          turnId: String(params.turnId ?? params.turn_id ?? ""),
+        },
+      ];
     case "serverRequest/resolved":
       return [
         {
           type: "serverRequest/resolved",
           requestId: requestIdValue(params.requestId ?? params.request_id ?? params.id),
+        },
+      ];
+    case "app/list/updated":
+      return [
+        {
+          type: "apps/updated",
+          apps: normalizeApps(params.data ?? params.apps ?? []),
+          nextCursor: optionalStringValue(params.nextCursor ?? params.next_cursor) ?? null,
+        },
+      ];
+    case "skills/changed":
+      return [
+        {
+          type: "status/banner/added",
+          banner: {
+            id: "skills-changed",
+            kind: "system",
+            message: "Skills changed. Re-run skills/list to refresh metadata.",
+            raw: params,
+          },
+        },
+      ];
+    case "model/rerouted":
+      return [
+        {
+          type: "status/banner/added",
+          banner: {
+            id: `model-rerouted:${params.threadId ?? ""}:${params.turnId ?? ""}`,
+            kind: "modelReroute",
+            message: `Model rerouted from ${String(params.fromModel ?? "unknown")} to ${String(params.toModel ?? "unknown")}.`,
+            raw: params,
+          },
+        },
+      ];
+    case "deprecationNotice":
+      return [
+        {
+          type: "status/banner/added",
+          banner: {
+            id: `deprecation:${params.summary ?? "notice"}`,
+            kind: "deprecationNotice",
+            message: joinSummaryDetails(params.summary, params.details, "Deprecation notice"),
+            raw: params,
+          },
+        },
+      ];
+    case "configWarning":
+      return [
+        {
+          type: "status/banner/added",
+          banner: {
+            id: `config-warning:${params.path ?? params.summary ?? "warning"}`,
+            kind: "configWarning",
+            message: joinSummaryDetails(params.summary, params.details, "Config warning"),
+            raw: params,
+          },
+        },
+        {
+          type: "warning/added",
+          warning: {
+            id: `config-warning:${params.path ?? params.summary ?? "warning"}`,
+            message: joinSummaryDetails(params.summary, params.details, "Config warning"),
+            raw: params,
+          },
+        },
+      ];
+    case "mcpServer/oauthLogin/completed":
+      return [
+        {
+          type: "status/banner/added",
+          banner: {
+            id: `mcp-oauth:${params.name ?? "server"}`,
+            kind: "mcpOAuth",
+            message:
+              params.success === false
+                ? `MCP OAuth failed for ${String(params.name ?? "server")}.`
+                : `MCP OAuth completed for ${String(params.name ?? "server")}.`,
+            raw: params,
+          },
+        },
+      ];
+    case "mcpServer/startupStatus/updated":
+      return [
+        {
+          type: "status/banner/added",
+          banner: {
+            id: `mcp-startup:${params.name ?? "server"}`,
+            kind: "system",
+            message: `MCP server ${String(params.name ?? "server")} status: ${String(params.status ?? "unknown")}.`,
+            raw: params,
+          },
         },
       ];
     default:
@@ -215,6 +339,24 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
         },
       ];
   }
+}
+
+export function normalizeApps(raw: unknown): AgentApp[] {
+  const apps = Array.isArray(raw) ? raw : [];
+  return apps.flatMap((app) => {
+    const record = asRecord(app);
+    if (!record) return [];
+    return [
+      {
+        id: String(record.id ?? record.uri ?? record.name),
+        installed: booleanValue(record.installed ?? record.isEnabled),
+        name: stringValue(record.name),
+        needsAuth: booleanValue(record.needsAuth) ?? record.isAccessible === false,
+        raw: app,
+        uri: stringValue(record.uri ?? record.installUrl),
+      },
+    ];
+  });
 }
 
 export function normalizeModelListResponse(response: unknown): AgentModel[] {
@@ -384,6 +526,8 @@ function normalizeServerRequest(message: MethodMessage): PendingServerRequest {
 
 function isServerRequestMethod(method: string): boolean {
   return (
+    method === "account/chatgptAuthTokens/refresh" ||
+    method === "attestation/generate" ||
     method === "item/tool/call" ||
     method === "mcpServer/elicitation/request" ||
     method.includes("requestApproval") ||
@@ -393,15 +537,27 @@ function isServerRequestMethod(method: string): boolean {
 }
 
 function requestKind(method: string): PendingServerRequest["kind"] {
+  if (method === "account/chatgptAuthTokens/refresh") return "authRefresh";
+  if (method === "attestation/generate") return "attestation";
   if (method === "item/tool/call") return "dynamicTool";
   if (method === "mcpServer/elicitation/request") return "mcpElicitation";
   if (method === "item/permissions/requestApproval") return "permissionsApproval";
-  if (method.includes("command") || method === "execCommandApproval")
-    return "commandApproval";
-  if (method.includes("fileChange") || method === "applyPatchApproval")
-    return "fileChangeApproval";
+  if (method === "execCommandApproval") return "legacyExecApproval";
+  if (method === "applyPatchApproval") return "legacyPatchApproval";
+  if (method.includes("command")) return "commandApproval";
+  if (method.includes("fileChange")) return "fileChangeApproval";
   if (method.includes("requestUserInput")) return "userInput";
   return "unknown";
+}
+
+function joinSummaryDetails(
+  summary: unknown,
+  details: unknown,
+  fallback: string,
+): string {
+  const summaryText = stringValue(summary) ?? fallback;
+  const detailsText = stringValue(details);
+  return detailsText ? `${summaryText} ${detailsText}` : summaryText;
 }
 
 function accountStatus(account: unknown): "unauthenticated" | "authenticated" {

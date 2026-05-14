@@ -19,6 +19,16 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./request-builders": {
+      "import": {
+        "types": "./dist/request-builders.d.ts",
+        "default": "./dist/request-builders.js"
+      },
+      "require": {
+        "types": "./dist/request-builders.d.cts",
+        "default": "./dist/request-builders.cjs"
+      }
+    },
     "./websocket": {
       "import": {
         "types": "./dist/websocket.d.ts",

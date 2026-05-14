@@ -168,9 +168,13 @@ export interface AgentItemBlock {
 }
 
 export type PendingServerRequestKind =
+  | "attestation"
+  | "authRefresh"
   | "commandApproval"
   | "dynamicTool"
   | "fileChangeApproval"
+  | "legacyExecApproval"
+  | "legacyPatchApproval"
   | "mcpElicitation"
   | "permissionsApproval"
   | "userInput"

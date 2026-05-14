@@ -37,6 +37,8 @@ The default transport:
 - writes one JSON object per line
 - reads one JSON object per line
 - correlates request id to response promise
+- retries App Server overload `-32001` responses for idempotent read methods
+  only, with bounded backoff
 - exposes stderr logs separately
 - fails fast on process exit
 - supports server requests that require client responses
@@ -47,6 +49,14 @@ Implementation status:
 - `@nyosegawa/agent-ui-server` owns local process spawning for `codex app-server --listen stdio://`.
 - `createCodexAppServerBridge()` returns an `AgentTransport` and redacts stderr before forwarding logs.
 - The generated stable and experimental TypeScript schemas are vendored under `packages/codex/src/generated`.
+- `request-builders.ts` is the product request boundary. Builders return
+  params that satisfy generated stable App Server types; React re-exports those
+  builders instead of owning Codex-specific request shapes.
+- `createCodexSession()` is the stable facade for productized account, model,
+  thread, turn, skills, hooks, and app methods. Experimental method calls must
+  use `requestExperimental()` and require explicit opt-in.
+- `thread/turns/items/list` is intentionally disabled in the product facade
+  until upstream implements it.
 - Protocol metadata records upstream commit `6a225e4005209f2325ab3c681c7c6beba2907d4d`.
 - The schema refresh command used for this pass was
   `cargo run -p codex-app-server-protocol --bin export -- --out packages/codex/src/generated/stable`
@@ -91,6 +101,12 @@ await transport.request("initialize", {
 ```
 
 Generated experimental types may exist internally, but they must not appear in default public component props or normalized core state.
+
+`createCodexSession(transport)` defaults to stable methods only. Hosts that
+need experimental methods must opt in with
+`createCodexSession(transport, { experimental: true })`; even then,
+`thread/turns/items/list` remains disabled because it is not implemented
+upstream.
 
 ## Schema Drift
 
@@ -241,6 +257,7 @@ Server requests:
 - file change approval
 - user input request
 - MCP elicitation
+- permissions approval
 - dynamic tool call
 - auth refresh
 - attestation
@@ -254,8 +271,11 @@ Notifications:
 - agent message deltas
 - command output deltas
 - file patch updates
-- plan/reasoning deltas
+- plan, diff, and reasoning deltas
 - account updated/login completed
+- app list updates
+- skills changed invalidation
+- model reroutes, deprecation notices, config warnings, and MCP OAuth/status banners
 - warnings/errors
 
 Deferred:

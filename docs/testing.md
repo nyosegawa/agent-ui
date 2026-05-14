@@ -42,7 +42,15 @@ Schema-backed request tests cover the critical App Server params used by the rea
 - `thread/read`
 - `thread/resume`
 - `thread/start`
+- thread actions: fork, archive, unarchive, name, metadata, compact, rollback,
+  inject items, loaded list, unsubscribe
 - `turn/start`
+- `turn/steer`
+- `turn/interrupt`
+- `skills/list`
+- `skills/config/write`
+- `hooks/list`
+- `app/list`
 
 ## Normalizer and Reducer
 
@@ -94,6 +102,7 @@ Cases:
 - stderr redaction before browser/UI forwarding
 - timeout
 - overload error `-32001`
+- `-32001` retry only for idempotent reads and no retry for mutating methods
 - websocket auth header
 - websocket close/reconnect policy and pending request rejection
 

@@ -114,8 +114,8 @@ export function useAgentThread(threadId?: ThreadId) {
     async (params?: Record<string, unknown>) => {
       const requestParams = threadStartParams({
         cwd: runSettings.cwd,
-        modelId: runSettings.modelId,
-        params,
+        model: runSettings.modelId,
+        ...params,
       });
       const result = await transport.request<ThreadStartParams, unknown>(
         "thread/start",
@@ -301,11 +301,11 @@ export function useAgentTurn(threadId?: ThreadId) {
       );
       const requestParams = turnStartParams({
         cwd: runSettings.cwd,
-        effort: runSettings.effort,
-        executionParams: executionMode?.turnParams,
+        effort: runSettings.effort as TurnStartParams["effort"],
         input,
-        modelId: runSettings.modelId,
-        params,
+        model: runSettings.modelId,
+        ...executionMode?.turnParams,
+        ...params,
         threadId: resolvedThreadId,
       });
       return transport.request<TurnStartParams>("turn/start", requestParams);
