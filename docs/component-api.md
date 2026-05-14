@@ -96,10 +96,13 @@ Render a full workspace with a right-side skill/app panel:
 
 ```tsx
 <AgentWorkspace
-  panel={{ kind: "skills", open: true }}
-  sidePanel={<AgentSkillsPanel cwd={cwd} />}
+  panel={<AgentSkillsPanel cwd={cwd} />}
 />
 ```
+
+`SkillAppRegistry` can be built from static manifests, Vite globs, or remote
+manifest URLs. Client tools are exposed under non-App-Server-reserved names:
+`open_skill_app`, `update_skill_app`, and `request_skill_app_feedback`.
 
 ## Timeline And Approvals
 
@@ -128,9 +131,9 @@ rollback call generated-method request builders. Resume remains part of
 session lifecycle.
 
 Composer attachments are represented as visible chips for local image/file
-mentions, paste/drop files, and `app://` / `plugin://` mentions. The Milestone 4
-UI is intentionally state-local; Milestone 5 wires these chips into structured
-turn-start input items.
+mentions, paste/drop files, and `app://` / `plugin://` mentions. The composer
+wires these chips into structured turn-start input items: images become
+`localImage` items and file/app/plugin chips become `mention` items.
 
 ## Usage
 

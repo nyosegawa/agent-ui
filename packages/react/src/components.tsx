@@ -26,6 +26,11 @@ import {
   type SkillAppPanelState,
 } from "./hooks";
 import { AgentDiffViewer } from "./diff-viewer";
+import {
+  localImageInput,
+  mentionInput,
+  type CodexUserInput,
+} from "./codex-request-params";
 import { useAgentContext } from "./provider";
 import { rawThreadId } from "./thread-history";
 import { AgentMessageList } from "./timeline";
@@ -489,7 +494,7 @@ export function AgentComposer({
       className="aui-composer"
       onSubmit={(event) => {
         event.preventDefault();
-        deferAction(composer.submit);
+        deferAction(() => composer.submit(attachments.map(composerAttachmentInput)));
         setAttachments([]);
       }}
     >
@@ -638,6 +643,11 @@ function ComposerAttachmentToolbar({
       ) : null}
     </div>
   );
+}
+
+function composerAttachmentInput(attachment: ComposerAttachment): CodexUserInput {
+  if (attachment.kind === "image") return localImageInput(attachment.value);
+  return mentionInput(attachment.label, attachment.value);
 }
 
 export function AgentComposerPanel({
@@ -1270,7 +1280,7 @@ export function AgentTokenUsageBar({
 }
 
 export function AgentSkillsPanel({ cwd }: { cwd?: string }) {
-  const { refreshSkills, skills } = useAgentSkills(cwd);
+  const { refreshSkills, setSkillEnabled, skills } = useAgentSkills(cwd);
   return (
     <section className="aui-skills-panel" aria-label="Skills">
       <div className="aui-usage-header">
@@ -1288,7 +1298,18 @@ export function AgentSkillsPanel({ cwd }: { cwd?: string }) {
           {skills.map((skill) => (
             <li key={`${skill.path ?? ""}:${skill.name}`}>
               <span>{skill.name}</span>
-              {skill.enabled === false ? <small>disabled</small> : null}
+              <button
+                className="aui-link-button"
+                onClick={() =>
+                  void setSkillEnabled({
+                    enabled: skill.enabled === false,
+                    ...(skill.path ? { path: skill.path } : { name: skill.name }),
+                  }).catch(() => undefined)
+                }
+                type="button"
+              >
+                {skill.enabled === false ? "Enable" : "Disable"}
+              </button>
             </li>
           ))}
         </ul>
@@ -1300,7 +1321,7 @@ export function AgentSkillsPanel({ cwd }: { cwd?: string }) {
 }
 
 export function AgentAppsPanel({ threadId }: { threadId?: string }) {
-  const { apps, refreshApps } = useAgentApps(threadId);
+  const { apps, loadMoreApps, nextCursor, refreshApps } = useAgentApps(threadId);
   return (
     <section className="aui-apps-panel" aria-label="Apps">
       <div className="aui-usage-header">
@@ -1318,6 +1339,7 @@ export function AgentAppsPanel({ threadId }: { threadId?: string }) {
           {apps.map((app) => (
             <li key={app.id}>
               <span>{app.name ?? app.id}</span>
+              {app.installed === false ? <small>not installed</small> : null}
               {app.needsAuth ? <small>auth needed</small> : null}
             </li>
           ))}
@@ -1325,6 +1347,15 @@ export function AgentAppsPanel({ threadId }: { threadId?: string }) {
       ) : (
         <p className="aui-usage-empty">Apps are available after refresh.</p>
       )}
+      {nextCursor ? (
+        <button
+          className="aui-link-button"
+          onClick={() => void loadMoreApps()?.catch(() => undefined)}
+          type="button"
+        >
+          Load more
+        </button>
+      ) : null}
     </section>
   );
 }

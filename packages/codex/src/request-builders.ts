@@ -58,6 +58,12 @@ export type {
 
 export type CodexUserInput = UserInput;
 
+export interface AgentBrowserVerificationInputOptions {
+  prompt: string;
+  skillPath: string;
+  skillName?: string;
+}
+
 export const disabledProductMethods = ["thread/turns/items/list"] as const;
 
 export function accountReadParams(refreshToken = false): GetAccountParams {
@@ -209,6 +215,38 @@ export function turnSteerParams(options: {
   } satisfies TurnSteerParams;
 }
 
+export function skillInput(name: string, path: string): UserInput {
+  return { name, path, type: "skill" } satisfies UserInput;
+}
+
+export function mentionInput(name: string, path: string): UserInput {
+  return { name, path, type: "mention" } satisfies UserInput;
+}
+
+export function localImageInput(path: string): UserInput {
+  return { path, type: "localImage" } satisfies UserInput;
+}
+
+export function imageInput(url: string): UserInput {
+  return { type: "image", url } satisfies UserInput;
+}
+
+export function textInput(text: string): UserInput {
+  return { text, text_elements: [], type: "text" } satisfies UserInput;
+}
+
+export function agentBrowserSkillInput(path: string): UserInput {
+  return skillInput("agent-browser", path);
+}
+
+export function agentBrowserVerificationInput({
+  prompt,
+  skillName = "agent-browser",
+  skillPath,
+}: AgentBrowserVerificationInputOptions): UserInput[] {
+  return [textInput(prompt), skillInput(skillName, skillPath)];
+}
+
 export function turnInterruptParams(
   threadId: string,
   turnId: string,
@@ -235,7 +273,5 @@ export function appsListParams(params: AppsListParams = {}): AppsListParams {
 }
 
 function normalizeUserInput(input: string | UserInput[]): UserInput[] {
-  return typeof input === "string"
-    ? [{ text: input, text_elements: [], type: "text" }]
-    : input;
+  return typeof input === "string" ? [textInput(input)] : input;
 }

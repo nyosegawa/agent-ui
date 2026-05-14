@@ -127,25 +127,25 @@ Acceptance:
 
 ## Milestone 5: Skills, Apps, And agent-browser
 
-- [ ] Productize `skills/list` with cwd-aware `useAgentSkills()`.
-- [ ] Productize `skills/config/write` and `skills/changed`.
-- [ ] Add structured skill input items to turn-start helpers.
-- [ ] Add `app/list` and `app/list/updated` support with pagination, install/auth state, and `useAgentApps()`.
-- [ ] Add composer mention chips for `app://...` and `plugin://...`.
-- [ ] Add `SkillAppRegistry` that accepts static arrays, Vite glob outputs, and remote manifests.
-- [ ] Add `SkillAppPanel` with right panel, modal, inline, and fullscreen modes.
-- [ ] Add `SkillDataStore` in the server package for JSON/blob storage, path guards, transactions, and watch.
-- [ ] Replace `curl /api/app`-style prototypes with client tools such as `open_skill_app`, `update_skill_app`, and `request_skill_app_feedback`.
-- [ ] Validate client tool names against App Server reserved namespaces before exposing them.
-- [ ] Detect the repo `agent-browser` skill and global CLI availability.
-- [ ] Add a helper that injects the `agent-browser` skill into coding-agent verification turns.
-- [ ] Add diagnostics when `agent-browser` is missing or the browser binary is not installed.
+- [x] Productize `skills/list` with cwd-aware `useAgentSkills()`.
+- [x] Productize `skills/config/write` and `skills/changed`.
+- [x] Add structured skill input items to turn-start helpers.
+- [x] Add `app/list` and `app/list/updated` support with pagination, install/auth state, and `useAgentApps()`.
+- [x] Add composer mention chips for `app://...` and `plugin://...`.
+- [x] Add `SkillAppRegistry` that accepts static arrays, Vite glob outputs, and remote manifests.
+- [x] Add `SkillAppPanel` with right panel, modal, inline, and fullscreen modes.
+- [x] Add `SkillDataStore` in the server package for JSON/blob storage, path guards, transactions, and watch.
+- [x] Replace `curl /api/app`-style prototypes with client tools such as `open_skill_app`, `update_skill_app`, and `request_skill_app_feedback`.
+- [x] Validate client tool names against App Server reserved namespaces before exposing them.
+- [x] Detect the repo `agent-browser` skill and global CLI availability.
+- [x] Add a helper that injects the `agent-browser` skill into coding-agent verification turns.
+- [x] Add diagnostics when `agent-browser` is missing or the browser binary is not installed.
 
 Acceptance:
 
-- [ ] `agent-browser --version` and `agent-browser skills get core` succeed in local verification docs.
-- [ ] A local example can open a skill app panel, update it from an agent action, receive feedback, and close it.
-- [ ] A coding-agent workflow can be instructed to verify a local page with `agent-browser` through structured skill injection.
+- [x] `agent-browser --version` and `agent-browser skills get core` succeed in local verification docs.
+- [x] A local example can open a skill app panel, update it from an agent action, receive feedback, and close it.
+- [x] A coding-agent workflow can be instructed to verify a local page with `agent-browser` through structured skill injection.
 
 ## Milestone 6: Server Bridge And Host Integration
 

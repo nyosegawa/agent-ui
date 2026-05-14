@@ -22,6 +22,9 @@ import {
   AgentUsagePanel,
   AgentWorkspace,
   AgentSkillsPanel,
+  AgentAppsPanel,
+  createSkillAppClientTools,
+  loadSkillAppRegistry,
   useAgentAuth,
   useAgentServerRequests,
   useAgentSkills,
@@ -203,6 +206,140 @@ describe("AgentChat", () => {
     await user.click(screen.getByRole("button", { name: "Refresh" }));
 
     expect((await screen.findAllByText("agent-browser")).length).toBeGreaterThan(0);
+  });
+
+  it("writes skill config through generated params and updates local state", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "skills/list") {
+          return {
+            data: [
+              {
+                cwd: "/repo",
+                skills: [
+                  {
+                    enabled: false,
+                    name: "agent-browser",
+                    path: "/repo/.agents/skills/agent-browser/SKILL.md",
+                  },
+                ],
+              },
+            ],
+          };
+        }
+        if (request.method === "skills/config/write") {
+          return { effectiveEnabled: true };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentSkillsPanel cwd="/repo" />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Refresh" }));
+    await user.click(await screen.findByRole("button", { name: "Enable" }));
+
+    expect(transport.requests.at(-1)).toMatchObject({
+      method: "skills/config/write",
+      params: {
+        enabled: true,
+        path: "/repo/.agents/skills/agent-browser/SKILL.md",
+      },
+    });
+    expect(await screen.findByRole("button", { name: "Disable" })).toBeInTheDocument();
+  });
+
+  it("paginates app/list and surfaces install/auth state", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method !== "app/list") return {};
+        if ((request.params as { cursor?: string | null } | undefined)?.cursor === "page-2") {
+          return {
+            data: [
+              {
+                id: "drive",
+                installUrl: "app://drive",
+                isAccessible: true,
+                isEnabled: true,
+                name: "Drive",
+              },
+            ],
+            nextCursor: null,
+          };
+        }
+        return {
+          data: [
+            {
+              id: "browser",
+              installUrl: "app://browser",
+              isAccessible: false,
+              isEnabled: false,
+              name: "Browser",
+            },
+          ],
+          nextCursor: "page-2",
+        };
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentAppsPanel threadId="thread-apps" />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Refresh" }));
+    expect(await screen.findByText("Browser")).toBeInTheDocument();
+    expect(screen.getByText("not installed")).toBeInTheDocument();
+    expect(screen.getByText("auth needed")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Load more" }));
+
+    expect(await screen.findByText("Drive")).toBeInTheDocument();
+    expect(transport.requests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          method: "app/list",
+          params: { cursor: "page-2", threadId: "thread-apps" },
+        }),
+      ]),
+    );
+  });
+
+  it("loads skill app registries from static, Vite, and remote manifests", async () => {
+    const registry = await loadSkillAppRegistry({
+      fetcher: async () =>
+        ({
+          json: async () => ({ id: "remote", title: "Remote panel" }),
+          ok: true,
+        }) as Response,
+      manifests: [{ id: "static", title: "Static panel" }],
+      remoteManifests: ["https://example.com/manifest.json"],
+      viteGlob: {
+        "./panel.json": async () => ({
+          default: [{ id: "vite", title: "Vite panel" }],
+        }),
+      },
+    });
+    const tools = createSkillAppClientTools(registry);
+
+    expect(registry.list().map((manifest) => manifest.id)).toEqual([
+      "static",
+      "vite",
+      "remote",
+    ]);
+    expect(tools.map((tool) => tool.name)).toEqual([
+      "open_skill_app",
+      "update_skill_app",
+      "request_skill_app_feedback",
+    ]);
+    expect(tools[1]?.run({ id: "static", patch: { title: "Updated" } })).toMatchObject({
+      id: "static",
+      title: "Updated",
+    });
   });
 
   it("exposes all queued server requests through useAgentServerRequests", () => {
@@ -1219,6 +1356,43 @@ describe("AgentChat", () => {
         },
         threadId: "thread-demo",
       },
+    });
+  });
+
+  it("sends composer attachments as structured turn input items", async () => {
+    const user = userEvent.setup();
+    const prompt = vi
+      .spyOn(globalThis, "prompt")
+      .mockReturnValueOnce("app://browser")
+      .mockReturnValueOnce("plugin://browser-tools");
+    const transport = new FakeAgentTransport();
+    const initialState = runEventFixture(demoFixture as FixtureStep[]);
+    if (initialState.activeThreadId) {
+      initialState.threads[initialState.activeThreadId]!.status = "complete";
+    }
+    initialState.pendingServerRequests = {};
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "App" }));
+    await user.click(screen.getByRole("button", { name: "Plugin" }));
+    await user.type(screen.getByLabelText("Message"), "verify with attachments");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(prompt).toHaveBeenCalled();
+    expect(transport.requests.at(-1)?.params).toMatchObject({
+      input: [
+        { text: "verify with attachments", text_elements: [], type: "text" },
+        { name: "app://browser", path: "app://browser", type: "mention" },
+        {
+          name: "plugin://browser-tools",
+          path: "plugin://browser-tools",
+          type: "mention",
+        },
+      ],
     });
   });
 

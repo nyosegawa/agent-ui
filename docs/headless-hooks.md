@@ -89,7 +89,7 @@ const skills = useAgentSkills(cwd);
 const hooks = useAgentHooks(cwd);
 const apps = useAgentApps(threadId);
 const worker = useAgentWorkerSession(threadId);
-const panel = useSkillAppPanel({ kind: "skills", open: true });
+const panel = useSkillAppPanel({ target: "browser-verification", open: true });
 ```
 
 `useAgentSkills()` calls `skills/list`, stores normalized skills, and exposes
@@ -97,13 +97,25 @@ const panel = useSkillAppPanel({ kind: "skills", open: true });
 
 `useAgentHooks()` calls `hooks/list` and stores normalized hook metadata.
 
-`useAgentApps()` calls `app/list` and stores connected app state.
+`useAgentApps()` calls `app/list`, preserves `nextCursor`, and exposes
+`loadMoreApps()` so hosts can page through connector/app metadata while keeping
+install/auth state visible.
 
 `useAgentWorkerSession()` combines thread, turn, approvals, and queued server
 requests for worker-pane integrations.
 
 `useSkillAppPanel()` is a local controller for opening, closing, and switching
 skill/app side panels without coupling panel placement to `AgentChat`.
+
+`createSkillAppRegistry()` and `loadSkillAppRegistry()` accept static manifests,
+Vite glob modules, and remote manifest URLs. `createSkillAppClientTools()`
+provides the reserved-name-checked client tool surface:
+`open_skill_app`, `update_skill_app`, and `request_skill_app_feedback`.
+
+`@nyosegawa/agent-ui-codex/request-builders` also exports structured input
+helpers for skills, mentions, images, and the `agent-browser` verification
+workflow. Hosts can pass the returned `UserInput[]` directly to
+`turnStartParams()` or `useAgentTurn().startTurn()`.
 
 ## SDK Adapter Notes
 

@@ -70,6 +70,8 @@ Responsibilities:
 - App Server notifications to normalized events
 - device-code login request helpers
 - optional Codex SDK-like client adapter for hosts that already own a compatible client
+- generated-schema-backed input helpers for text, images, mentions, skills, and
+  agent-browser verification turns
 
 Default support is stable App Server API only. Experimental API requires explicit opt-in.
 
@@ -88,6 +90,7 @@ Responsibilities:
 - composer hooks
 - drop-in components
 - headless customization API
+- `SkillAppRegistry` and client tool helpers for skill/app panels
 - CSS variables and plain CSS theme
 
 The default UI keeps the high-traffic surfaces split internally:
@@ -109,6 +112,9 @@ Responsibilities:
 - Next.js one-shot RPC Route Handler helper
 - Express middleware
 - auth/token forwarding recipes
+- `SkillDataStore` for skill/app JSON and blob state with path guards,
+  serialized transactions, and watch support
+- `detectAgentBrowser()` for repo skill path, CLI version, and core skill checks
 
 Browser packages must not spawn child processes directly.
 

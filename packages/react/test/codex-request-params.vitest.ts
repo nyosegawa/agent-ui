@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
   accountReadParams,
+  agentBrowserVerificationInput,
   cancelLoginParams,
   deviceCodeLoginParams,
+  mentionInput,
   modelListParams,
   threadListParams,
   threadReadParams,
@@ -81,5 +83,30 @@ describe("Codex request params", () => {
       ],
       threadId: "thread-1",
     } satisfies TurnStartParams);
+  });
+
+  it("builds structured skill and mention inputs for verification turns", () => {
+    expect(
+      agentBrowserVerificationInput({
+        prompt: "Verify http://127.0.0.1:5174 with agent-browser.",
+        skillPath: "/repo/.agents/skills/agent-browser/SKILL.md",
+      }),
+    ).toEqual([
+      {
+        text: "Verify http://127.0.0.1:5174 with agent-browser.",
+        text_elements: [],
+        type: "text",
+      },
+      {
+        name: "agent-browser",
+        path: "/repo/.agents/skills/agent-browser/SKILL.md",
+        type: "skill",
+      },
+    ]);
+    expect(mentionInput("browser plugin", "plugin://browser")).toEqual({
+      name: "browser plugin",
+      path: "plugin://browser",
+      type: "mention",
+    });
   });
 });

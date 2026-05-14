@@ -112,3 +112,29 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
   }));
   expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
 });
+
+test("opens, updates, receives feedback, and closes a skill app panel", async ({ page }) => {
+  await page.goto("/skill-app");
+  await expect(page.getByRole("heading", { name: "Kitchen-quality Codex UX" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Open skill app panel" }).click();
+  await expect(page.getByLabel("Skill app panel content")).toContainText(
+    "Browser verification",
+  );
+  await expect(page.getByLabel("Skill app panel content")).toContainText(
+    "http://127.0.0.1:5174/",
+  );
+
+  await page.getByRole("button", { name: "Update panel" }).click();
+  await expect(page.getByLabel("Skill app panel content")).toContainText(
+    "http://127.0.0.1:5174/?state=kitchen",
+  );
+
+  await page.getByRole("button", { name: "Request feedback" }).click();
+  await expect(page.getByLabel("Skill app panel content")).toContainText(
+    "Agent requested browser verification feedback",
+  );
+
+  await page.getByRole("button", { name: "Close panel" }).click();
+  await expect(page.getByLabel("Skill app panel content")).toHaveCount(0);
+});

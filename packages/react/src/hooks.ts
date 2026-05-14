@@ -6,6 +6,7 @@ import {
   selectRunSettings,
   selectServerRequestQueue,
   selectThread,
+  type AgentApp,
   type AgentModel,
   type ExecutionModeId,
   type ReasoningEffort,
@@ -22,6 +23,7 @@ import {
   modelListParams,
   skillsConfigWriteParams,
   skillsListParams,
+  textInput,
   threadArchiveParams,
   threadCompactStartParams,
   threadForkParams,
@@ -480,11 +482,11 @@ export function useAgentServerRequests(threadId?: ThreadId) {
 export function useAgentComposer(threadId?: ThreadId) {
   const [value, setValue] = useState("");
   const { startTurn } = useAgentTurn(threadId);
-  const submit = useCallback(async () => {
+  const submit = useCallback(async (items: CodexUserInput[] = []) => {
     const input = value.trim();
-    if (!input) return;
+    if (!input && items.length === 0) return;
     setValue("");
-    await startTurn(input);
+    await startTurn(input ? [textInput(input), ...items] : items);
   }, [startTurn, value]);
   return { setValue, submit, value };
 }
@@ -764,9 +766,22 @@ export function useAgentSkills(cwd?: string) {
         "skills/config/write",
         skillsConfigWriteParams(params),
       );
+      const targetName = stringValue(params.name);
+      const targetPath = stringValue(params.path);
+      const updateCwd = cwd ?? key;
+      dispatch({
+        cwd: updateCwd,
+        skills: (state.skills.byCwd[updateCwd] ?? []).map((skill) => {
+          const matches =
+            (targetPath && skill.path === targetPath) ||
+            (!targetPath && targetName && skill.name === targetName);
+          return matches ? { ...skill, enabled: params.enabled } : skill;
+        }),
+        type: "skills/updated",
+      });
       return response;
     },
-    [transport],
+    [cwd, dispatch, key, state.skills.byCwd, transport],
   );
   return { refreshSkills, setSkillEnabled, skills };
 }
@@ -807,12 +822,26 @@ export function useAgentApps(threadId?: string) {
         requestParams,
       );
       const { apps, nextCursor } = normalizeAppsList(response);
-      dispatch({ apps, nextCursor, type: "apps/updated" });
+      dispatch({
+        apps: requestParams.cursor ? mergeApps(state.apps.apps, apps) : apps,
+        nextCursor,
+        type: "apps/updated",
+      });
       return { apps, nextCursor };
     },
-    [dispatch, threadId, transport],
+    [dispatch, state.apps.apps, threadId, transport],
   );
-  return { apps: state.apps.apps, nextCursor: state.apps.nextCursor, refreshApps };
+  const loadMoreApps = useCallback(
+    async () =>
+      state.apps.nextCursor ? refreshApps({ cursor: state.apps.nextCursor }) : undefined,
+    [refreshApps, state.apps.nextCursor],
+  );
+  return {
+    apps: state.apps.apps,
+    loadMoreApps,
+    nextCursor: state.apps.nextCursor,
+    refreshApps,
+  };
 }
 
 export function useAgentWorkerSession(threadId?: ThreadId) {
@@ -989,7 +1018,7 @@ function normalizeHooksList(response: unknown, fallbackCwd?: string) {
   });
 }
 
-function normalizeAppsList(response: unknown) {
+function normalizeAppsList(response: unknown): { apps: AgentApp[]; nextCursor: string | null } {
   const record = asRecord(response);
   const rawApps = Array.isArray(record?.data)
     ? record.data
@@ -1023,6 +1052,12 @@ function normalizeAppsList(response: unknown) {
     }),
     nextCursor: stringValue(record?.nextCursor) ?? stringValue(record?.next_cursor) ?? null,
   };
+}
+
+function mergeApps(current: AgentApp[], next: AgentApp[]) {
+  const byId = new Map(current.map((app) => [app.id, app]));
+  for (const app of next) byId.set(app.id, app);
+  return Array.from(byId.values());
 }
 
 function isDefaultModel(model: AgentModel): boolean {

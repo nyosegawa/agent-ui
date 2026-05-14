@@ -300,6 +300,21 @@ The history and usage smoke path has also been verified against `codex app-serve
   a fixed thread, plan/web-search renderers, rich command/user-input/dynamic
   tool approval cards, and a disabled approval-gated composer through
   accessible browser refs.
+- Milestone 5 local CLI check on 2026-05-14: `agent-browser --version`
+  returned `agent-browser 0.27.0`, and `agent-browser skills get core`
+  returned the core skill guide. `detectAgentBrowser()` covers the same
+  repo-skill, CLI-version, and core-skill checks in server tests.
+- Milestone 5 skill-app workspace path: `examples/local-react-vite` exposes
+  `/skill-app`, where the local `SkillAppRegistry` opens the Browser
+  verification panel, updates panel payload, receives feedback, and closes the
+  panel without a separate curl/SSE side server.
+- Milestone 5 agent-browser check on 2026-05-14: a dev server ran at
+  `http://127.0.0.1:5174/`; `agent-browser open
+  'http://127.0.0.1:5174/skill-app'`, `agent-browser snapshot -i`,
+  `agent-browser click @e2`, `agent-browser click @e3`, `agent-browser click
+  @e4`, `agent-browser screenshot
+  /tmp/agent-ui-m5-skill-app-browser-check.png`, and `agent-browser click @e5`
+  confirmed the skill app panel opens, updates, receives feedback, and closes.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
 - `bun run test:e2e:playwright` also starts `examples/codex-local-web` against a fake stdio App Server and drives the real browser WebSocket transport through model list, usage, thread list/read/resume, thread start, turn start, streaming text, command output, structured diff preview, and command approval.
 - The fake stdio browser smoke emits unique turn and item ids for repeated `turn/start` calls, and includes a deterministic same-thread continuation test that sends two turns, waits for `Complete`, verifies the composer re-enables, and checks that the local web app still has no horizontal overflow.
