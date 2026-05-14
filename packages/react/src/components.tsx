@@ -76,21 +76,27 @@ export function AgentChat({
     >
       <div className="aui-chat">
         <AgentStatusBar />
-        {diagnostics ? <AgentDiagnosticsPanel bootstrap={bootstrap} /> : null}
-        <AgentStatusBanners />
-        {usage ? <AgentUsagePanel autoRefresh={false} /> : null}
-        {thread ? (
-          <AgentThreadView
-            renderApproval={slots?.renderApproval}
-            renderItem={slots?.renderItem}
-            threadId={threadId}
-          />
-        ) : (
-          <div className="aui-empty">
-            <AgentRunControls autoRefresh={false} />
-            <AgentFirstRun onStartThread={() => void startThread()} />
+        <div className="aui-chat-body">
+          <div className="aui-thread-column">
+            {thread ? (
+              <AgentThreadView
+                renderApproval={slots?.renderApproval}
+                renderItem={slots?.renderItem}
+                threadId={threadId}
+              />
+            ) : (
+              <div className="aui-empty">
+                <AgentRunControls autoRefresh={false} />
+                <AgentFirstRun onStartThread={() => void startThread()} />
+              </div>
+            )}
           </div>
-        )}
+          <aside className="aui-chat-rail" aria-label="Agent context">
+            <AgentStatusBanners />
+            {usage ? <AgentUsagePanel autoRefresh={false} /> : null}
+            {diagnostics ? <AgentDiagnosticsPanel bootstrap={bootstrap} /> : null}
+          </aside>
+        </div>
       </div>
     </AgentShell>
   );
@@ -137,6 +143,7 @@ export function AgentThreadView({
   return (
     <>
       <AgentThreadHeader thread={thread} threadId={resolvedThreadId} />
+      <AgentCriticalStatusBanners />
       <AgentThreadTimeline renderItem={renderItem} thread={thread} />
       <AgentApprovalQueue renderApproval={renderApproval} threadId={resolvedThreadId} />
       <AgentComposerPanel
@@ -1153,16 +1160,54 @@ export function AgentStatusBanners() {
   const { state } = useAgentContext();
   const banners = state.diagnostics.banners.slice(-6);
   if (banners.length === 0) return null;
+  const criticalCount = banners.filter((banner) => isCriticalBanner(banner.kind)).length;
   return (
     <section className="aui-status-banners" aria-label="Status banners">
-      {banners.map((banner) => (
-        <article className="aui-status-banner" data-kind={banner.kind} key={banner.id}>
+      <details open={criticalCount > 0 ? true : undefined}>
+        <summary>
+          <strong>Status</strong>
+          <span>{statusSummary(banners.length, criticalCount)}</span>
+        </summary>
+        <div className="aui-status-banner-list">
+          {banners.map((banner) => (
+            <article className="aui-status-banner" data-kind={banner.kind} key={banner.id}>
+              <strong>{statusBannerTitle(banner.kind)}</strong>
+              <span>{banner.message}</span>
+            </article>
+          ))}
+        </div>
+      </details>
+    </section>
+  );
+}
+
+function AgentCriticalStatusBanners() {
+  const { state } = useAgentContext();
+  const banners = state.diagnostics.banners.filter((banner) =>
+    isCriticalBanner(banner.kind),
+  );
+  if (banners.length === 0) return null;
+  return (
+    <section className="aui-critical-banners" aria-label="Critical status">
+      {banners.slice(-2).map((banner) => (
+        <article className="aui-critical-banner" data-kind={banner.kind} key={banner.id}>
           <strong>{statusBannerTitle(banner.kind)}</strong>
           <span>{banner.message}</span>
         </article>
       ))}
     </section>
   );
+}
+
+function isCriticalBanner(kind: string): boolean {
+  return kind === "configWarning" || kind === "deprecationNotice" || kind === "rateLimit";
+}
+
+function statusSummary(total: number, criticalCount: number): string {
+  if (criticalCount > 0) {
+    return `${criticalCount} needs review · ${total} total`;
+  }
+  return `${total} background ${total === 1 ? "notice" : "notices"}`;
 }
 
 export interface AgentUsageProps {

@@ -15,6 +15,10 @@ import {
   AgentThreadView,
   AgentUsagePanel,
   AgentWorkspace,
+  normalizeUsageWindows,
+  useAgentApprovals,
+  useAgentThread,
+  useAgentUsage,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/style.css";
 import { useMemo, type ReactNode } from "react";
@@ -124,43 +128,46 @@ const visualQaStates: Array<{
 
 function VisualQaIndex() {
   return (
-    <main
-      style={{
-        background: "#f6f7f9",
-        color: "#14171f",
-        font: "14px/1.5 system-ui, sans-serif",
-        minHeight: "100vh",
-        padding: "32px 18px",
-      }}
-    >
-      <div style={{ margin: "0 auto", maxWidth: 860 }}>
-        <h1 style={{ fontSize: 24, margin: "0 0 8px" }}>Agent UI visual QA states</h1>
-        <p style={{ color: "#667085", margin: "0 0 20px" }}>
-          Deterministic fixture states for browser review. The real product path remains
-          examples/codex-local-web.
-        </p>
-        <div style={{ display: "grid", gap: 10 }}>
-          {visualQaStates.map((state) => (
-            <a
-              href={state.href}
-              key={state.href}
-              style={{
-                background: "#ffffff",
-                border: "1px solid #d7dde6",
-                borderRadius: 8,
-                color: "inherit",
-                display: "grid",
-                gap: 4,
-                padding: 14,
-                textDecoration: "none",
-              }}
-            >
-              <strong>{state.title}</strong>
-              <span style={{ color: "#667085" }}>{state.description}</span>
-              <code style={{ color: "#0f766e" }}>{state.href}</code>
-            </a>
-          ))}
+    <main className="aui-fixture-gallery">
+      <div className="aui-fixture-gallery-header">
+        <div>
+          <h1>Agent UI visual QA states</h1>
+          <p>
+            Fixture-backed previews for desktop and mobile review. These frames make
+            hierarchy, overflow, banner density, usage placement, and host-slot
+            composition comparable without switching routes manually.
+          </p>
         </div>
+        <div className="aui-fixture-gallery-actions">
+          <a href="/">Open default</a>
+          <a href="/?state=kitchen">Open kitchen</a>
+          <a href="/host-workflow-recipe">Open host workflow</a>
+        </div>
+      </div>
+      <div className="aui-fixture-gallery-grid">
+        {visualQaStates.map((state) => (
+          <article className="aui-fixture-preview" key={state.href}>
+            <header>
+              <div>
+                <strong>{state.title}</strong>
+                <span>{state.description}</span>
+              </div>
+              <a aria-label={`${state.title} ${state.href}`} href={state.href}>
+                {state.href}
+              </a>
+            </header>
+            <div className="aui-fixture-preview-frames">
+              <figure>
+                <figcaption>Desktop</figcaption>
+                <iframe src={state.href} title={`${state.title} desktop`} />
+              </figure>
+              <figure data-size="mobile">
+                <figcaption>Mobile</figcaption>
+                <iframe src={state.href} title={`${state.title} mobile`} />
+              </figure>
+            </div>
+          </article>
+        ))}
       </div>
     </main>
   );
@@ -280,22 +287,127 @@ function HostWorkflowRecipe() {
     <AgentProvider initialState={initialState} transport={transport}>
       <ExampleFrame title="Host workflow recipe">
         <AgentWorkspace
-          panel={
-            <section aria-label="Host-owned panel">
-              <h2>Host-owned panel</h2>
-              <p>Workflow state stays outside Agent UI core.</p>
-              <ol>
-                <li>Read normalized thread and server-request state.</li>
-                <li>Render host-specific controls in this slot.</li>
-                <li>Submit continuation through generic turn hooks.</li>
-              </ol>
-            </section>
-          }
+          diagnostics={false}
+          panel={<HostWorkflowPanel />}
           sidebar={false}
           usage={false}
         />
       </ExampleFrame>
     </AgentProvider>
+  );
+}
+
+function HostWorkflowPanel() {
+  const { thread } = useAgentThread();
+  const { approvals } = useAgentApprovals(thread?.thread.id);
+  const { rateLimits } = useAgentUsage();
+  const windows = normalizeUsageWindows(rateLimits);
+  const latestTurn = thread?.orderedTurnIds.at(-1)
+    ? thread.turns[thread.orderedTurnIds.at(-1)!]
+    : undefined;
+  const blocks = latestTurn
+    ? latestTurn.itemOrder
+        .map((itemId) => latestTurn.blocksByItemId[itemId])
+        .filter((block) => block !== undefined)
+    : [];
+  const plan = blocks.find((block) => block.kind === "plan");
+  const changedFiles = blocks
+    .filter((block) => block.kind === "fileChange")
+    .flatMap((block) => (Array.isArray(block.changes) ? block.changes : []))
+    .map((change) =>
+      change && typeof change === "object" && "path" in change
+        ? String(change.path)
+        : "unknown",
+    );
+  const commands = blocks.filter((block) => block.kind === "commandExecution");
+  const checks = [
+    ["Thread selected", Boolean(thread)],
+    ["Plan visible", Boolean(plan)],
+    ["Approvals routed", approvals.length > 0],
+    ["Verification command captured", commands.length > 0],
+  ] as const;
+  return (
+    <section className="aui-host-workflow" aria-label="Host-owned panel">
+      <header>
+        <span>Host workflow</span>
+        <strong>{thread?.thread.name ?? "No thread selected"}</strong>
+      </header>
+      <section className="aui-host-card" aria-label="Current thread summary">
+        <div className="aui-host-card-header">
+          <strong>Current thread</strong>
+          <span>{thread?.status ?? "unknown"}</span>
+        </div>
+        <dl className="aui-host-metrics">
+          <div>
+            <dt>Turns</dt>
+            <dd>{thread?.orderedTurnIds.length ?? 0}</dd>
+          </div>
+          <div>
+            <dt>Requests</dt>
+            <dd>{approvals.length}</dd>
+          </div>
+          <div>
+            <dt>Commands</dt>
+            <dd>{commands.length}</dd>
+          </div>
+        </dl>
+      </section>
+      <section className="aui-host-card" aria-label="Workflow status">
+        <div className="aui-host-card-header">
+          <strong>Workflow status</strong>
+          <span>ready for review</span>
+        </div>
+        <ul className="aui-host-checklist">
+          {checks.map(([label, complete]) => (
+            <li data-complete={complete ? "true" : "false"} key={label}>
+              <span>{complete ? "Done" : "Open"}</span>
+              <strong>{label}</strong>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className="aui-host-card" aria-label="Pending requests">
+        <div className="aui-host-card-header">
+          <strong>Pending requests</strong>
+          <span>{approvals.length} active</span>
+        </div>
+        <ul className="aui-host-list">
+          {approvals.map((approval) => (
+            <li key={String(approval.id)}>
+              <span>{approval.kind}</span>
+              <strong>{String(approval.id)}</strong>
+            </li>
+          ))}
+        </ul>
+      </section>
+      <section className="aui-host-card" aria-label="Plan and context">
+        <div className="aui-host-card-header">
+          <strong>Plan and context</strong>
+          <span>{changedFiles.length} files</span>
+        </div>
+        <pre>{plan?.text ?? plan?.content ?? "No active plan block."}</pre>
+        <ul className="aui-host-files">
+          {changedFiles.map((path) => (
+            <li key={path}>{path}</li>
+          ))}
+        </ul>
+      </section>
+      <section className="aui-host-card" aria-label="Usage summary">
+        <div className="aui-host-card-header">
+          <strong>Usage summary</strong>
+          <span>{windows.length} windows</span>
+        </div>
+        <AgentUsagePanel autoRefresh={false} />
+      </section>
+      <div className="aui-host-actions">
+        <button className="aui-button" type="button">
+          Continue selected thread
+        </button>
+        <button className="aui-button aui-button-secondary" type="button">
+          Export workflow note
+        </button>
+      </div>
+    </section>
   );
 }
 

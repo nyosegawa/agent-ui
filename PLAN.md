@@ -29,6 +29,12 @@ without host-side reimplementation of Codex App Server UI primitives. External
 apps remain responsible for their own proposal, workspace, storage, and sidecar
 runtime workflows.
 
+May 14 UI-quality review note: Milestones 4, 7, 8, and 10 were reopened after
+the earlier checklist closure proved too optimistic. Completion now requires
+the kitchen-quality preset hierarchy, real host-workflow example, visual QA
+gallery, agent-browser screenshot evidence, and renewed completeness audit
+recorded in `TODO.md` and `docs/testing.md`.
+
 Do not treat a demo, a narrow happy path, or a partial wrapper as completion.
 Every public capability must have:
 

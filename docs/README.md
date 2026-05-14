@@ -7,9 +7,10 @@ The docs are organized as implementation-facing specifications. They intentional
 ## vNext Status
 
 `PLAN.md` and `TODO.md` are the source of truth while Agent UI vNext is being
-implemented. Component and hook references describe the vNext primitive API as
-milestones land; older preset-only shapes should not be treated as the target
-API.
+implemented. The May 14 UI-quality review reopened Milestones 4, 7, 8, and 10
+even though earlier checklist entries were marked complete; current completion
+depends on the reopened quality gate, browser evidence, and audit notes in
+those files.
 
 ## Documents
 
@@ -40,10 +41,14 @@ bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 
 ## Fixture Package Smoke
 
-`examples/docs-site` is the static documentation and fixture-backed hosted-demo target. It renders implementation notes next to a fixture-backed `AgentChat`, so UI, usage, approval, command output, and diff surfaces can be checked without starting Codex.
+`examples/local-react-vite` is the deterministic fixture QA target. It exposes
+`/`, `/?state=kitchen`, `/usage-only`, `/scoped-thread-pane`, `/app-connectors`,
+`/host-workflow-recipe`, and `/fixture-gallery` so UI, usage, approval, command
+output, diff, host-slot, and Apps surfaces can be checked without starting
+Codex.
 
 ```sh
-bun run --cwd examples/docs-site dev
+bun run --cwd examples/local-react-vite dev
 ```
 
 ## Current Release Scope

@@ -3,9 +3,10 @@
 Deterministic Agent UI states for visual and browser review.
 
 Implementation lives in `examples/local-react-vite` at `/fixture-gallery`
-and `/qa`. The gallery links to default, empty, unauthenticated, bridge-error,
-kitchen-quality, scoped-thread, usage-only, app-connectors, and host-workflow
-states.
+and `/qa`. The gallery renders desktop and mobile iframe previews for default,
+empty, unauthenticated, bridge-error, kitchen-quality, scoped-thread,
+usage-only, app-connectors, and host-workflow states. It is a visual QA surface,
+not just a navigation index.
 
 Smoke path:
 

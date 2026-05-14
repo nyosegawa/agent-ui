@@ -111,6 +111,10 @@ Acceptance:
 
 ## Milestone 4: Kitchen-Quality Codex UX
 
+Reopened on 2026-05-14 after review found the earlier completion bar too low:
+the preset chat stacked diagnostics, banners, and usage above the thread, and
+the kitchen fixture proved presence more than visual quality.
+
 - [x] Port the useful `agent-kitchen` block taxonomy onto `agent-ui` normalized state.
 - [x] Implement polished renderers for command execution, file changes, tool calls, thinking, plans, diffs, images, system info, and web/search-style blocks.
 - [x] Implement status banners for model reroutes, deprecation notices, config warnings, account status, MCP OAuth, and rate limits.
@@ -125,6 +129,9 @@ Acceptance:
 - [x] Fixture gallery includes kitchen-derived examples for every renderer and banner.
 - [x] Component tests cover block rendering and approval response behavior.
 - [x] Browser checks prove no overlapping header/timeline/composer layout at narrow widths.
+- [x] Rework `AgentChat` so thread/timeline/work trace is the primary column and status, diagnostics, and usage move to compact secondary chrome.
+- [x] Replace full-width status-banner stacking with compact summary rail plus critical inline warnings near the thread.
+- [x] Re-run kitchen desktop/mobile visual QA with saved screenshots and update the Playwright layout contract snapshots.
 
 ## Milestone 5: Skills, Apps, And agent-browser
 
@@ -164,6 +171,10 @@ Acceptance:
 
 ## Milestone 7: Examples And Migration Targets
 
+Reopened on 2026-05-14 after review found `/host-workflow-recipe` was only an
+`h2/p/ol` explanation demo and `/fixture-gallery` was a link list rather than a
+visual QA surface.
+
 - [x] Update `examples/codex-local-web` to use the new preset shell.
 - [x] Add `examples/scoped-thread-pane` that demonstrates a generic fixed-thread pane.
 - [x] Add `examples/usage-only` that renders account/rate-limit usage without chat chrome.
@@ -176,8 +187,18 @@ Acceptance:
 
 - [x] Each example has a focused README and a deterministic smoke path.
 - [x] Examples do not justify new core APIs with external-app-specific workflows.
+- [x] Rebuild `/host-workflow-recipe` as a concrete host-owned workflow panel
+      composed from generic primitives, with thread summary, workflow status,
+      pending requests, plan/context files, usage, and host actions.
+- [x] Rebuild `/fixture-gallery` as a desktop/mobile iframe preview gallery for
+      default, kitchen, usage-only, scoped-thread, app-connectors, and
+      host-workflow states.
 
 ## Milestone 8: Browser Verification With agent-browser
+
+Reopened on 2026-05-14 because previous evidence leaned toward
+accessibility/existence checks and did not prove the visual quality of the
+changed routes.
 
 - [x] Add an implementation guide for using `agent-browser` during local UI work.
 - [x] Add scripts or docs for running examples and verifying them with `agent-browser`.
@@ -203,6 +224,11 @@ Acceptance:
 
 - [x] Browser verification is referenced in PR or implementation notes for any component/layout change.
 - [x] Playwright remains the deterministic CI gate; `agent-browser` is the agent-driven local verification gate.
+- [x] Capture current desktop and mobile screenshots under `docs/screenshots/`
+      for `/`, `/?state=kitchen`, `/host-workflow-recipe`, `/usage-only`,
+      `/scoped-thread-pane`, `/app-connectors`, and `/fixture-gallery`.
+- [x] Record visual-quality-focused browser commands, checked URLs, results,
+      and residual risk in `docs/testing.md`.
 
 ## Milestone 9: Validation And Release Gate
 
@@ -237,6 +263,10 @@ Acceptance:
 
 ## Milestone 10: Completeness Audit
 
+Reopened on 2026-05-14 because the previous audit accepted weak UI evidence and
+did not call out the stale completion status after Milestones 4/7/8 were
+reopened.
+
 - [x] Re-read `PLAN.md` and verify every promised capability has code, tests, docs, and an example or explicit non-example rationale.
 - [x] Re-read every root and docs markdown file and remove contradictions against `PLAN.md`, `TODO.md`, and the implemented API.
 - [x] Re-audit `agent-ui` against the current Codex App Server generated schema and confirm no productized stable method is missing from capability metadata.
@@ -253,3 +283,9 @@ Acceptance:
 - [x] There are no untracked files.
 - [x] `git status --short --branch` is clean and aligned with `origin/main` after the final push.
 - [x] A new session can read only `PLAN.md` and `TODO.md`, then understand both the intended architecture and the exact remaining work.
+- [x] Re-audit against `agent-kitchen/packages/codex` for remaining UX/state
+      ideas and document current deferrals rather than treating them as done.
+- [x] Re-audit against current App Server schema for Apps/connectors drift and
+      boundary risks.
+- [x] Re-search public exports/docs for Watcher-specific and skill-with-app
+      runtime APIs after the UI/example rewrite.

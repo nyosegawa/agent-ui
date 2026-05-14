@@ -2,9 +2,9 @@
 
 Embeddable UI for Codex-powered coding agents.
 
-Active planning for the next implementation pass lives in
-[`PLAN.md`](./PLAN.md) and [`TODO.md`](./TODO.md). Those files are the source
-of truth for Agent UI vNext while the redesign is in progress.
+Active planning and quality gates live in [`PLAN.md`](./PLAN.md) and
+[`TODO.md`](./TODO.md). Those files are the source of truth for Agent UI vNext,
+including the reopened UI-quality review for Milestones 4, 7, 8, and 10.
 
 Agent UI provides React components, headless hooks, state management, and transport adapters for applications built on OpenAI Codex App Server.
 
@@ -89,7 +89,11 @@ Then open the printed `http://127.0.0.1:5174` URL. The app starts a local Codex 
 Run the fixture-backed package smoke demo separately:
 
 ```sh
-bun run --cwd examples/docs-site dev
+bun run --cwd examples/local-react-vite dev
 ```
+
+Then open `/`, `/?state=kitchen`, `/host-workflow-recipe`, and
+`/fixture-gallery` for deterministic visual QA states. `examples/docs-site` is
+documentation-oriented and is not the primary fixture QA surface.
 
 The Next.js example is a one-shot RPC Route Handler only. Use the local web app's WebSocket bridge for streaming chat, approvals, and live diagnostics.

@@ -1,6 +1,7 @@
 # Completeness Audit
 
-Audit date: 2026-05-14.
+Audit date: 2026-05-14. Reopened UI-quality review completed after the earlier
+Milestone 4/7/8/10 closure was found too optimistic.
 
 ## Scope Boundary
 
@@ -24,7 +25,9 @@ Confirmed absent from public exports and docs as library APIs:
 ## PLAN Capability Coverage
 
 - Full Codex shell: `AgentChat`, `AgentShell`, `AgentProvider`, and
-  `examples/codex-local-web`.
+  `examples/codex-local-web`. The preset now keeps thread/timeline/work trace
+  in the primary column and moves status, usage, and diagnostics to compact
+  secondary chrome.
 - Fixed thread view: `AgentThreadView threadId`, controller hooks, component
   tests, and `examples/scoped-thread-pane`.
 - Usage-only panel: `AgentUsagePanel`, component tests, Playwright coverage, and
@@ -32,7 +35,9 @@ Confirmed absent from public exports and docs as library APIs:
 - Thread/sidebar primitives: `AgentThreadSidebar`, history hooks, stored-thread
   Playwright smoke.
 - Host-owned extension slot: `AgentWorkspace panel`, component tests, and
-  `examples/host-workflow-recipe`.
+  `examples/host-workflow-recipe`, which now renders a concrete workflow panel
+  with thread summary, workflow status, pending requests, plan/context files,
+  usage, and host actions.
 - Skills and Apps/connectors: `useAgentSkills`, `AgentSkillsPanel`,
   `useAgentApps`, `AgentAppsPanel`, protocol tests, and `examples/app-connectors`.
 - Browser verification: `detectAgentBrowser`, structured skill injection,
@@ -67,6 +72,10 @@ Imported from `agent-kitchen/packages/codex`:
 - block taxonomy for thinking, plan, command execution, file changes, tool calls,
   web search, images, and system info
 - richer default Codex UI treatment
+- compact treatment of background account/model/MCP/rate-limit status so the
+  timeline remains the primary surface
+- host panel composition as application-owned UI rather than core workflow
+  runtime
 
 Rejected:
 
@@ -75,26 +84,48 @@ Rejected:
 - monolithic chat component boundaries
 - host-app-specific workflow APIs
 
+Still deferred after the reopened quality pass:
+
+- a grouped `TimelineMessage` selector that renders assistant text and ordered
+  work blocks as one cohesive message model
+- protocol-shaped approval decision metadata and MCP/user-input forms beyond
+  the current normalized summaries
+- fuzzy-file-search state and renderer support
+
 ## Validation Evidence
 
-Latest Milestone 10 validation passed:
+Latest reopened UI-quality validation passed:
 
 - `bun run typecheck`
-- `bun run lint`
-- `bun test`
-- `bun run test`
-- `bun run build`
-- `bun run test:protocol`
-- `bun run test:fixtures`
-- `bun run publint`
-- `bun run attw`
-- `bun run check:exports`
+- `bunx vitest run packages/react/test/components.vitest.tsx`
+- `bun run --cwd examples/local-react-vite build`
 - `bun run test:e2e:playwright`
-- `bun run test:node-compat`
-- `bun run test:e2e:real-codex`
-- `bun run test:e2e:real-codex:approval`
+- `agent-browser` desktop/mobile screenshots for `/`, `/?state=kitchen`,
+  `/host-workflow-recipe`, `/usage-only`, `/scoped-thread-pane`,
+  `/app-connectors`, and `/fixture-gallery`
 
-Browser evidence is recorded in `docs/testing.md`.
+Historical full release validation, including protocol, package, Node
+compatibility, and real Codex smoke, remains recorded in `docs/testing.md`.
+Browser visual-quality evidence for the reopened gate is recorded there as
+well.
+
+## Protocol And Boundary Re-Audit
+
+The reopened audit regenerated the current local App Server stable protocol and
+diffed the Apps/connectors surface. `AppsListParams`, `AppsListResponse`,
+`AppInfo`, `AppMetadata`, `AppListUpdatedNotification`, `AppBranding`,
+`AppReview`, `AppScreenshot`, `AppToolsConfig`, and `AppsDefaultConfig` match
+the vendored generated files for the checked surface.
+
+Important caveat: the generated upstream Apps types still carry experimental
+wording, so docs should keep describing `app/list` as Codex Apps/connectors
+metadata support rather than a mature external app runtime contract.
+
+Public export and docs searches found no core library API for Watcher-specific
+or skill-with-app-specific runtime concepts such as `AgentWorkerPane`,
+`SkillAppRegistry`, `SkillAppPanel`, `SkillDataStore`,
+`createSkillAppClientTools`, `open_skill_app`, `update_skill_app`, or
+`request_skill_app_feedback`.
 
 ## Independent Review
 

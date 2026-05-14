@@ -33,9 +33,11 @@ fixtures, tests, or restored local state.
 ```
 
 The preset composes `AgentShell`, optional `AgentThreadSidebar`,
-`AgentStatusBar`, optional `AgentDiagnosticsPanel`, optional `AgentUsagePanel`,
-and `AgentThreadView`. Hosts can suppress the sidebar, usage, and diagnostics
-when those surfaces live elsewhere in the application.
+`AgentStatusBar`, `AgentThreadView`, and a secondary context rail for compact
+status, usage, and diagnostics. The conversation, work trace, approvals, and
+composer stay in the primary column; low-priority account/model/MCP/rate-limit
+notices do not stack above the timeline. Hosts can suppress the sidebar, usage,
+and diagnostics when those surfaces live elsewhere in the application.
 
 ## Layout Primitives
 
@@ -51,7 +53,9 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentApprovalQueue`: pending server-request approval cards.
 - `AgentComposerPanel`: run settings and turn composer.
 - `AgentStatusBanners`: model reroute, deprecation, config, account, MCP OAuth,
-  and rate-limit banners.
+  and rate-limit notices rendered as a compact summary. Critical warnings can
+  appear inline near the thread while background notices stay in secondary
+  chrome.
 - `AgentUsagePanel`: account rate-limit windows, renderable inside or outside a shell.
 - `AgentRateLimitBar`: one normalized rate-limit window.
 - `AgentTokenUsageBar`: per-thread input/output token usage.

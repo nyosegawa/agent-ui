@@ -349,6 +349,57 @@ The history and usage smoke path has also been verified against `codex app-serve
   m10-final-mobile snapshot -i`, and `agent-browser --session
   m10-final-mobile screenshot /tmp/agent-ui-m10-final-usage-mobile.png`
   confirmed the usage-only primitive remains accessible at mobile width.
+- Reopened UI-quality gate on 2026-05-14:
+  - Commands:
+    - `bun run --cwd examples/local-react-vite build`
+    - `bun run typecheck`
+    - `bunx vitest run packages/react/test/components.vitest.tsx`
+    - `bun run test:e2e:playwright`
+    - `AGENT_UI_REAL_CODEX_INIT_TIMEOUT_MS=30000 bun run test:e2e:real-codex`
+    - `AGENT_UI_REAL_CODEX_INIT_TIMEOUT_MS=30000 bun run test:e2e:real-codex:approval`
+    - `bun run --cwd examples/local-react-vite dev --host 127.0.0.1 --port 5174`
+    - `agent-browser skills get core`
+    - `agent-browser set viewport 1280 900`
+    - `agent-browser open http://127.0.0.1:5174/`
+    - `agent-browser open 'http://127.0.0.1:5174/?state=kitchen'`
+    - `agent-browser open http://127.0.0.1:5174/host-workflow-recipe`
+    - `agent-browser open http://127.0.0.1:5174/usage-only`
+    - `agent-browser open http://127.0.0.1:5174/scoped-thread-pane`
+    - `agent-browser open http://127.0.0.1:5174/app-connectors`
+    - `agent-browser open http://127.0.0.1:5174/fixture-gallery`
+    - `agent-browser set viewport 390 900`
+    - repeat the route opens above for mobile-sized captures
+  - Saved screenshots:
+    - `docs/screenshots/agent-ui-home-desktop.png`
+    - `docs/screenshots/agent-ui-home-mobile.png`
+    - `docs/screenshots/agent-ui-kitchen-desktop.png`
+    - `docs/screenshots/agent-ui-kitchen-mobile.png`
+    - `docs/screenshots/agent-ui-host-workflow-desktop.png`
+    - `docs/screenshots/agent-ui-host-workflow-mobile.png`
+    - `docs/screenshots/agent-ui-usage-only-desktop.png`
+    - `docs/screenshots/agent-ui-usage-only-mobile.png`
+    - `docs/screenshots/agent-ui-scoped-thread-desktop.png`
+    - `docs/screenshots/agent-ui-scoped-thread-mobile.png`
+    - `docs/screenshots/agent-ui-app-connectors-desktop.png`
+    - `docs/screenshots/agent-ui-app-connectors-mobile.png`
+    - `docs/screenshots/agent-ui-fixture-gallery-desktop.png`
+  - Results: `AgentChat` now renders the thread/timeline/work trace as the
+    primary column, keeps status/usage/diagnostics in compact secondary chrome,
+    and only repeats critical warnings inline near the thread. The
+    host-workflow route is a concrete host-owned workflow panel with current
+    thread summary, pending requests, plan/context, usage summary, and host
+    actions. The fixture gallery renders desktop/mobile iframe previews rather
+    than links only. Mobile checks keep the thread and host workflow readable
+    without document-level horizontal overflow.
+    The real Codex smoke returned an authenticated account, usage, 5 stored
+    threads, 6 models, assistant text `Agent UI real smoke ok.`, and 1
+    completed turn; the approval smoke observed and declined a command approval
+    request.
+  - Residual risk: the block model still uses the existing normalized item
+    ordering and work-trace cap. A future deeper kitchen-parity slice should
+    add a selector for grouped `TimelineMessage` blocks, protocol-shaped
+    approval decisions from normalized metadata, and fuzzy-search state
+    renderers instead of considering those part of this visual-quality slice.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
 - Milestone 6 bridge checks cover host event callbacks, explicit server request
   policy opt-in, dynamic tool helper thread creation through generated

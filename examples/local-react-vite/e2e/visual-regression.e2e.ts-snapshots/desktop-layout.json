@@ -4,8 +4,8 @@
     "scrollWidth": 1280
   },
   "shell": {
-    "backgroundColor": "rgb(246, 247, 249)",
-    "borderColor": "rgb(215, 221, 230)",
+    "backgroundColor": "rgb(243, 245, 248)",
+    "borderColor": "rgb(212, 220, 231)",
     "borderRadius": "8px",
     "display": "grid",
     "gridTemplateColumns": "300px 878px",
@@ -18,7 +18,7 @@
   },
   "sidebar": {
     "backgroundColor": "rgb(251, 252, 253)",
-    "borderColor": "rgb(20, 23, 31) rgb(215, 221, 230) rgb(20, 23, 31) rgb(20, 23, 31)",
+    "borderColor": "rgb(17, 24, 39) rgb(212, 220, 231) rgb(17, 24, 39) rgb(17, 24, 39)",
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "275px",
@@ -31,7 +31,7 @@
   },
   "chat": {
     "backgroundColor": "rgb(255, 255, 255)",
-    "borderColor": "rgb(20, 23, 31)",
+    "borderColor": "rgb(17, 24, 39)",
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "878px",
@@ -44,7 +44,7 @@
   },
   "status": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
-    "borderColor": "rgb(102, 112, 133) rgb(102, 112, 133) rgb(215, 221, 230)",
+    "borderColor": "rgb(95, 111, 133) rgb(95, 111, 133) rgb(212, 220, 231)",
     "borderRadius": "0px",
     "display": "flex",
     "gridTemplateColumns": "none",
@@ -56,60 +56,60 @@
     "width": 878
   },
   "usage": {
-    "backgroundColor": "rgba(0, 0, 0, 0)",
-    "borderColor": "rgb(20, 23, 31) rgb(20, 23, 31) rgb(215, 221, 230)",
-    "borderRadius": "0px",
+    "backgroundColor": "rgb(251, 252, 254)",
+    "borderColor": "rgb(212, 220, 231)",
+    "borderRadius": "8px",
     "display": "grid",
-    "gridTemplateColumns": "850px",
-    "height": 111,
+    "gridTemplateColumns": "298px",
+    "height": 187,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 878
+    "width": 320
   },
   "runControls": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
-    "borderColor": "rgb(20, 23, 31)",
+    "borderColor": "rgb(17, 24, 39)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "279.984px 200px 140px 200px",
+    "gridTemplateColumns": "260px 150px 120px 180px",
     "height": 81,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 878
+    "width": 520
   },
   "threadHeader": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
-    "borderColor": "rgb(20, 23, 31) rgb(20, 23, 31) rgb(215, 221, 230)",
+    "borderColor": "rgb(17, 24, 39) rgb(17, 24, 39) rgb(212, 220, 231)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "526.609px 313.391px",
+    "gridTemplateColumns": "168.609px 313.391px",
     "height": 72,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 878
+    "width": 520
   },
   "messageList": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
-    "borderColor": "rgb(20, 23, 31)",
+    "borderColor": "rgb(17, 24, 39)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "850px",
-    "height": 240,
+    "gridTemplateColumns": "492px",
+    "height": 220,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
     "visible": true,
-    "width": 878
+    "width": 520
   },
   "activity": {
-    "backgroundColor": "rgb(251, 252, 254)",
-    "borderColor": "rgb(215, 221, 230)",
+    "backgroundColor": "rgb(251, 253, 255)",
+    "borderColor": "rgb(212, 220, 231)",
     "borderRadius": "8px",
     "display": "block",
     "gridTemplateColumns": "none",
@@ -118,11 +118,11 @@
     "overflowY": "hidden",
     "present": true,
     "visible": true,
-    "width": 832
+    "width": 474
   },
   "diffActivity": {
-    "backgroundColor": "rgb(251, 252, 254)",
-    "borderColor": "rgb(215, 221, 230)",
+    "backgroundColor": "rgb(251, 253, 255)",
+    "borderColor": "rgb(212, 220, 231)",
     "borderRadius": "8px",
     "display": "block",
     "gridTemplateColumns": "none",
@@ -131,24 +131,24 @@
     "overflowY": "hidden",
     "present": true,
     "visible": true,
-    "width": 832
+    "width": 474
   },
   "approvals": {
-    "backgroundColor": "rgba(0, 0, 0, 0)",
-    "borderColor": "rgb(215, 221, 230) rgb(20, 23, 31) rgb(20, 23, 31)",
+    "backgroundColor": "rgb(255, 250, 242)",
+    "borderColor": "rgb(242, 207, 149) rgb(17, 24, 39) rgb(17, 24, 39)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "850px",
-    "height": 207,
+    "gridTemplateColumns": "492px",
+    "height": 259,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
     "visible": true,
-    "width": 878
+    "width": 520
   },
   "composer": {
     "backgroundColor": "rgb(255, 255, 255)",
-    "borderColor": "rgb(20, 23, 31)",
+    "borderColor": "rgb(17, 24, 39)",
     "borderRadius": "0px",
     "display": "flex",
     "gridTemplateColumns": "none",
@@ -157,6 +157,6 @@
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 878
+    "width": 520
   }
 }

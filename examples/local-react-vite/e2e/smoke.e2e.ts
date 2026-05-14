@@ -133,8 +133,8 @@ test("renders generic vNext composition examples", async ({ page }) => {
   await expect(page.getByText("Drive")).toBeVisible();
 
   await page.goto("/host-workflow-recipe");
-  await expect(page.getByLabel("Host-owned panel")).toContainText(
-    "Workflow state stays outside Agent UI core.",
-  );
+  await expect(page.getByLabel("Host-owned panel")).toContainText("Workflow status");
+  await expect(page.getByLabel("Host-owned panel")).toContainText("Pending requests");
+  await expect(page.getByLabel("Host-owned panel")).toContainText("Usage summary");
   await expect(page.getByRole("heading", { name: "Kitchen-quality Codex UX" })).toBeVisible();
 });
