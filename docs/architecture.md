@@ -32,10 +32,17 @@ The chat-capable local bridge is `attachAgentUiWebSocketBridge()`. It keeps one 
 type AgentSessionState = {
   connection: ConnectionState;
   account: AccountState;
+  usage: UsageState;
+  skills: SkillsState;
+  apps: AppsState;
+  hooks: HooksState;
   threads: Record<ThreadId, ThreadState>;
+  threadRegistry: ThreadRegistryState;
   activeThreadId?: ThreadId;
   pendingServerRequests: Record<RequestId, PendingServerRequest>;
+  serverRequestQueue: ServerRequestQueueState;
   models: ModelState;
+  diagnostics: DiagnosticsState;
   configWarnings: WarningState[];
 };
 
@@ -45,33 +52,48 @@ type ThreadState = {
   orderedTurnIds: TurnId[];
   tokenUsage?: ThreadTokenUsage;
   status: ThreadStatus;
+  registryStatus: "cold" | "preview" | "live" | "loaded";
 };
 
 type TurnState = {
   turn: AgentTurn;
   itemOrder: string[];
   items: Record<string, AgentItemState>;
+  blocksByItemId: Record<string, AgentItemBlock>;
   streamingTextByItemId: Record<string, string>;
   commandOutputByItemId: Record<string, string>;
   filePatchByItemId: Record<string, unknown>;
   plan?: TurnPlanState;
+  diff?: TurnDiffState;
 };
 ```
+
+The reducer keeps compatibility aliases such as `activeThreadId`,
+`pendingServerRequests`, `account.rateLimits`, `configWarnings`, and `errors`,
+but new vNext code should use the normalized stores: `threadRegistry`,
+`serverRequestQueue`, `usage`, and `diagnostics`.
 
 ## Reducer Rules
 
 - `thread/started`: upsert thread
+- `thread/upserted`: update registry state without stealing active selection
 - `thread/status/changed`: update thread status
 - `thread/name/updated`: update thread name
 - `thread/tokenUsage/updated`: update token usage
 - `turn/started`: create or update in-progress turn
 - `turn/plan/updated`: attach latest plan to the turn
-- `account/rateLimits/updated`: attach latest account rate-limit snapshot
+- `turn/diff/updated`: attach latest turn diff to the turn
+- `account/rateLimits/updated`: attach latest account rate-limit snapshot to
+  both account compatibility state and `usage.accountRateLimits`
+- `skills/updated`, `apps/updated`, and `hooks/updated`: update normalized
+  host capability stores
+- `status/banner/*`: update model reroute, deprecation, config, account, MCP
+  OAuth, rate-limit, and system banners
 - `item/started`: create in-progress item
 - delta notifications: append or update transient state
 - `item/completed`: replace item with authoritative item
 - `turn/completed`: replace terminal turn state
-- server request: create pending interaction
+- server request: create pending interaction in both map and FIFO queue
 - server request resolved/rejected: clear pending interaction
 - JSON-RPC error: attach request/global error state
 

@@ -1,7 +1,10 @@
 import type {
   AgentError,
+  AgentApp,
+  AgentHook,
   AgentItemState,
   AgentModel,
+  AgentSkill,
   AgentThread,
   AgentTurn,
   ExecutionModeId,
@@ -13,6 +16,7 @@ import type {
   ThreadStatus,
   ThreadTokenUsage,
   TurnId,
+  StatusBannerState,
   WarningState,
 } from "./state";
 
@@ -23,6 +27,10 @@ export type AgentEvent =
   | { type: "connection/error"; error: AgentError }
   | { type: "account/updated"; status?: "unauthenticated" | "authenticated"; account?: unknown }
   | { type: "account/rateLimits/updated"; rateLimits: unknown }
+  | { type: "usage/hostMetrics/updated"; metrics: unknown }
+  | { type: "skills/updated"; cwd: string; skills: AgentSkill[] }
+  | { type: "apps/updated"; apps: AgentApp[]; nextCursor?: string | null }
+  | { type: "hooks/updated"; cwd: string; hooks: AgentHook[] }
   | {
       type: "account/login/deviceCodeStarted";
       loginId?: string;
@@ -55,6 +63,7 @@ export type AgentEvent =
   | { type: "turn/started"; threadId: ThreadId; turn: AgentTurn }
   | { type: "turn/completed"; threadId: ThreadId; turn: AgentTurn; items?: AgentItemState[] }
   | { type: "turn/plan/updated"; threadId: ThreadId; turnId: TurnId; explanation?: string | null; plan: unknown; raw?: unknown }
+  | { type: "turn/diff/updated"; threadId: ThreadId; turnId: TurnId; diff: unknown; raw?: unknown }
   | { type: "item/started"; threadId: ThreadId; turnId: TurnId; item: AgentItemState }
   | {
       type: "item/agentMessage/delta";
@@ -88,6 +97,8 @@ export type AgentEvent =
   | { type: "serverRequest/created"; request: PendingServerRequest }
   | { type: "serverRequest/resolved"; requestId: RequestId }
   | { type: "serverRequest/rejected"; requestId: RequestId; error?: AgentError }
+  | { type: "status/banner/added"; banner: StatusBannerState }
+  | { type: "status/banner/removed"; id: string }
   | { type: "warning/added"; warning: WarningState }
   | { type: "error/added"; error: AgentError };
 

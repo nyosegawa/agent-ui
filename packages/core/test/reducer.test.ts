@@ -11,6 +11,9 @@ import {
   selectOrderedThreads,
   selectOrderedTurns,
   selectPendingApprovals,
+  selectServerRequestQueue,
+  selectThreadRegistry,
+  selectUsage,
 } from "../src/selectors";
 import type { FixtureStep } from "../src/fixtures";
 
@@ -22,6 +25,7 @@ describe("agentReducer", () => {
     expect(turns[0]?.streamingTextByItemId["item-1"]).toBe("Hello");
     expect(turns[0]?.commandOutputByItemId["cmd-1"]).toBe("ok\n");
     expect(turns[0]?.items["item-1"]?.status).toBe("completed");
+    expect(turns[0]?.blocksByItemId["item-1"]?.kind).toBe("text");
     expect(selectPendingApprovals(state, "thread-1")).toHaveLength(0);
   });
 
@@ -36,6 +40,7 @@ describe("agentReducer", () => {
       { event: { type: "connection/closed" } },
     ]);
     expect(state.pendingServerRequests).toEqual({});
+    expect(state.serverRequestQueue).toEqual({ byId: {}, order: [] });
   });
 
   it("marks a thread as waiting while approval is pending", () => {
@@ -54,6 +59,9 @@ describe("agentReducer", () => {
       },
     ]);
     expect(state.threads["thread-approval"]?.status).toBe("waitingForInput");
+    expect(selectServerRequestQueue(state, "thread-approval").map((request) => request.id)).toEqual([
+      "approval-1",
+    ]);
 
     const resolved = runEventFixture([
       { event: { thread: { id: "thread-approval" }, type: "thread/started" } },
@@ -71,6 +79,7 @@ describe("agentReducer", () => {
       { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
     ]);
     expect(resolved.threads["thread-approval"]?.status).toBe("running");
+    expect(selectServerRequestQueue(resolved, "thread-approval")).toEqual([]);
   });
 
   it("orders live deltas even when item start arrives late or is omitted", () => {
@@ -115,12 +124,109 @@ describe("agentReducer", () => {
           type: "item/filePatch/updated",
         },
       },
+      {
+        event: {
+          diff: "diff --git a/a b/a",
+          threadId: "thread-live",
+          turnId: "turn-live",
+          type: "turn/diff/updated",
+        },
+      },
     ]);
     expect(state.threads["thread-live"]?.turns["turn-live"]?.itemOrder).toEqual([
       "item-live",
       "cmd-live",
       "diff-live",
     ]);
+    expect(state.threads["thread-live"]?.turns["turn-live"]?.diff?.diff).toBe(
+      "diff --git a/a b/a",
+    );
+  });
+
+  it("updates non-active thread registries without changing active selection", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          status: "running",
+          thread: { id: "thread-active" },
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          status: "notLoaded",
+          thread: { id: "thread-preview" },
+          turns: [{ id: "turn-preview", threadId: "thread-preview" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          status: "running",
+          threadId: "thread-preview",
+          type: "thread/status/changed",
+        },
+      },
+    ]);
+    expect(state.activeThreadId).toBe("thread-active");
+    expect(selectThreadRegistry(state).activeThreadId).toBe("thread-active");
+    expect(selectThreadRegistry(state).liveThreadIds).toEqual([
+      "thread-active",
+      "thread-preview",
+    ]);
+  });
+
+  it("normalizes skills, apps, hooks, diagnostics, and split usage state", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          cwd: "/repo",
+          skills: [{ name: "agent-browser", path: "/repo/.agents/skills/agent-browser/SKILL.md" }],
+          type: "skills/updated",
+        },
+      },
+      {
+        event: {
+          apps: [{ id: "app://browser", name: "Browser", needsAuth: false }],
+          nextCursor: null,
+          type: "apps/updated",
+        },
+      },
+      {
+        event: {
+          cwd: "/repo",
+          hooks: [{ id: "hook-1", name: "SessionStart" }],
+          type: "hooks/updated",
+        },
+      },
+      { event: { metrics: { totalTokens: 12 }, type: "usage/hostMetrics/updated" } },
+      {
+        event: {
+          rateLimits: { primary: { usedPercent: 33 } },
+          type: "account/rateLimits/updated",
+        },
+      },
+      {
+        event: {
+          banner: {
+            id: "rate-limit",
+            kind: "rateLimit",
+            message: "Usage at 33%",
+          },
+          type: "status/banner/added",
+        },
+      },
+    ]);
+
+    expect(state.skills.byCwd["/repo"]?.[0]?.name).toBe("agent-browser");
+    expect(state.apps.apps[0]?.id).toBe("app://browser");
+    expect(state.hooks.byCwd["/repo"]?.[0]?.id).toBe("hook-1");
+    expect(selectUsage(state)).toEqual({
+      accountRateLimits: { primary: { usedPercent: 33 } },
+      hostMetrics: { totalTokens: 12 },
+    });
+    expect(state.account.rateLimits).toEqual({ primary: { usedPercent: 33 } });
+    expect(state.diagnostics.banners[0]?.kind).toBe("rateLimit");
   });
 
   it("loads the demo session fixture with threads, diff preview, and file approval", () => {
@@ -178,5 +284,6 @@ describe("agentReducer", () => {
         used: 12,
       },
     });
+    expect(rateLimited.usage.accountRateLimits).toEqual(rateLimited.account.rateLimits);
   });
 });

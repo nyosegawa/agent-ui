@@ -236,6 +236,15 @@ Latest manual real smoke:
 - Post-hardening re-run on 2026-05-09: `bun run test:e2e:real-codex` returned authenticated account, 6 models, usage, 5 stored threads, assistant text `Agent UI real smoke ok.`, and 1 completed turn. `bun run test:e2e:real-codex:approval` observed a command approval request and declined it. `AGENT_UI_REAL_CODEX_TIMEOUT_MS=180000 node scripts/real-codex-smoke.mjs --approval --file-only` observed a file-change approval request and declined it.
 - Final product-audit re-run on 2026-05-09: `bun run test:e2e:real-codex` again returned authenticated account, 6 models, usage, 5 stored threads, assistant text `Agent UI real smoke ok.`, and 1 completed turn. `AGENT_UI_REAL_CODEX_TIMEOUT_MS=180000 bun run test:e2e:real-codex:approval` observed a command approval request and declined it. `AGENT_UI_REAL_CODEX_TIMEOUT_MS=180000 node scripts/real-codex-smoke.mjs --approval --file-only` observed a file-change approval request and declined it.
 - Post-history-UX re-run on 2026-05-10: `bun run test:e2e:real-codex` returned authenticated account, 6 models, usage, 5 stored threads, assistant text `Agent UI real smoke ok.`, and 1 completed turn. `AGENT_UI_REAL_CODEX_TIMEOUT_MS=180000 bun run test:e2e:real-codex:approval` observed a command approval request and declined it. `AGENT_UI_REAL_CODEX_TIMEOUT_MS=180000 node scripts/real-codex-smoke.mjs --approval --file-only` observed a file-change approval request and declined it.
+- vNext Milestone 1 re-run on 2026-05-14: the first `bun run test:e2e:real-codex`
+  attempt timed out during `initialize` after the previous fixed 10 second
+  limit. The smoke script now supports
+  `AGENT_UI_REAL_CODEX_INIT_TIMEOUT_MS`, and
+  `AGENT_UI_REAL_CODEX_INIT_TIMEOUT_MS=30000 bun run test:e2e:real-codex`
+  returned authenticated account, 6 models, usage, 5 stored threads, assistant
+  text `Agent UI real smoke ok.`, and 1 completed turn.
+  `AGENT_UI_REAL_CODEX_INIT_TIMEOUT_MS=30000 bun run test:e2e:real-codex:approval`
+  observed a command approval request and declined it.
 - Browser smoke command: `bun run test:e2e:playwright`.
 - Browser smoke result: 8 Playwright tests passed after the Work trace, deferred action, and local server hardening pass. The real local app target used a fake stdio App Server while exercising the actual browser WebSocket transport and same-origin bridge path.
 - Playwright starts fresh local preview/dev servers for the fixture and real-local browser targets instead of reusing an existing `4173` or `4174` process. This avoids stale bridge/session state from hiding real regressions or creating local-only hangs after a failed run. If a local manual dev server is left behind, kill the orphan `examples/codex-local-web` process before re-running the smoke.

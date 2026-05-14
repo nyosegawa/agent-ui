@@ -15,6 +15,9 @@ const approvalDecision = process.argv.includes("--accept-for-session")
     ? "accept"
     : "decline";
 const timeoutMs = Number(process.env.AGENT_UI_REAL_CODEX_TIMEOUT_MS ?? 180_000);
+const initializeTimeoutMs = Number(
+  process.env.AGENT_UI_REAL_CODEX_INIT_TIMEOUT_MS ?? 30_000,
+);
 
 const child = spawn("codex", ["app-server", "--listen", "stdio://"], {
   stdio: ["pipe", "pipe", "pipe"],
@@ -69,7 +72,7 @@ const eventReader = (async () => {
 
 try {
   tmpRoot = await mkdtemp(join(tmpdir(), "agent-ui-real-codex-"));
-  await withTimeout(transport.connect(), 10_000, "initialize");
+  await withTimeout(transport.connect(), initializeTimeoutMs, "initialize");
 
   const account = await withTimeout(
     transport.request("account/read", { refreshToken: false }),

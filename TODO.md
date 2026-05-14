@@ -57,19 +57,19 @@ Acceptance:
 
 ## Milestone 1: Core State Model
 
-- [ ] Add normalized stores for skills, apps, hooks, account, rate limits, pending server requests, and diagnostics in `packages/core`.
-- [ ] Add turn plan and turn diff state.
-- [ ] Add status/banner state for model reroutes, deprecation notices, config warnings, account status, and MCP OAuth status.
-- [ ] Add registry-level thread state for cold history, preview threads, live threads, loaded threads, and active UI selection.
-- [ ] Ensure fixed-thread consumers can subscribe by `threadId` without following global active selection.
-- [ ] Add normalized item block types for text, thinking, plan, command execution, file change, tool call, MCP/collab tool call, web search, image, and system info.
-- [ ] Add a first-class server-request queue model.
-- [ ] Add usage state that separates App Server account/rate-limit windows from host-provided usage metrics.
+- [x] Add normalized stores for skills, apps, hooks, account, rate limits, pending server requests, and diagnostics in `packages/core`.
+- [x] Add turn plan and turn diff state.
+- [x] Add status/banner state for model reroutes, deprecation notices, config warnings, account status, and MCP OAuth status.
+- [x] Add registry-level thread state for cold history, preview threads, live threads, loaded threads, and active UI selection.
+- [x] Ensure fixed-thread consumers can subscribe by `threadId` without following global active selection.
+- [x] Add normalized item block types for text, thinking, plan, command execution, file change, tool call, MCP/collab tool call, web search, image, and system info.
+- [x] Add a first-class server-request queue model.
+- [x] Add usage state that separates App Server account/rate-limit windows from host-provided usage metrics.
 
 Acceptance:
 
-- [ ] Reducer tests cover text turns, command output deltas, file patches, plan updates, diff updates, rate-limit updates, and interrupted turns.
-- [ ] Reducer tests prove non-active thread notifications update the registry without changing the active displayed thread.
+- [x] Reducer tests cover text turns, command output deltas, file patches, plan updates, diff updates, rate-limit updates, and interrupted turns.
+- [x] Reducer tests prove non-active thread notifications update the registry without changing the active displayed thread.
 
 ## Milestone 2: Codex Adapter And Session API
 

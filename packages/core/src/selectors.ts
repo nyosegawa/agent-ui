@@ -25,6 +25,20 @@ export function selectPendingApprovals(state: AgentSessionState, threadId?: Thre
   });
 }
 
+export function selectServerRequestQueue(state: AgentSessionState, threadId?: ThreadId) {
+  return state.serverRequestQueue.order
+    .map((id) => state.serverRequestQueue.byId[id])
+    .filter((request) => request && (threadId == null || request.threadId === threadId));
+}
+
+export function selectUsage(state: AgentSessionState) {
+  return state.usage;
+}
+
+export function selectThreadRegistry(state: AgentSessionState) {
+  return state.threadRegistry;
+}
+
 export function selectRunSettings(state: AgentSessionState) {
   return state.runSettings;
 }

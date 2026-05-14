@@ -4,7 +4,9 @@ import type {
   AgentSessionState,
   AgentThread,
   AgentTurn,
+  AgentItemBlockKind,
   ThreadId,
+  ThreadRegistryStatus,
   ThreadState,
   TurnState,
 } from "./state";
@@ -24,6 +26,7 @@ export function agentReducer(
         ...state,
         connection: { status: "closed", reason: event.reason },
         pendingServerRequests: {},
+        serverRequestQueue: { byId: {}, order: [] },
       };
     case "connection/error":
       return {
@@ -71,6 +74,36 @@ export function agentReducer(
           ...state.account,
           rateLimits: event.rateLimits,
         },
+        usage: {
+          ...state.usage,
+          accountRateLimits: event.rateLimits,
+        },
+      };
+    case "usage/hostMetrics/updated":
+      return {
+        ...state,
+        usage: { ...state.usage, hostMetrics: event.metrics },
+      };
+    case "skills/updated":
+      return {
+        ...state,
+        skills: {
+          ...state.skills,
+          byCwd: { ...state.skills.byCwd, [event.cwd]: event.skills },
+        },
+      };
+    case "apps/updated":
+      return {
+        ...state,
+        apps: { apps: event.apps, nextCursor: event.nextCursor },
+      };
+    case "hooks/updated":
+      return {
+        ...state,
+        hooks: {
+          ...state.hooks,
+          byCwd: { ...state.hooks.byCwd, [event.cwd]: event.hooks },
+        },
       };
     case "models/updated":
       return {
@@ -112,11 +145,21 @@ export function agentReducer(
         ...state,
         activeThreadId:
           event.type === "thread/started" ? event.thread.id : state.activeThreadId,
+        threadRegistry: updateThreadRegistry(
+          state.threadRegistry,
+          event.thread.id,
+          classifyThreadRegistryStatus(event.status ?? threadState.status, event.turns),
+          event.type === "thread/started" ? event.thread.id : state.threadRegistry.activeThreadId,
+        ),
         threads: {
           ...state.threads,
           [event.thread.id]: {
             ...threadState,
             orderedTurnIds,
+            registryStatus: classifyThreadRegistryStatus(
+              event.status ?? threadState.status,
+              event.turns,
+            ),
             status: event.status ?? threadState.status,
             turns,
           },
@@ -124,10 +167,22 @@ export function agentReducer(
       };
     }
     case "thread/status/changed":
-      return updateThread(state, event.threadId, (thread) => ({
-        ...thread,
-        status: event.status,
-      }));
+      return updateThread(
+        {
+          ...state,
+          threadRegistry: updateThreadRegistry(
+            state.threadRegistry,
+            event.threadId,
+            classifyThreadRegistryStatus(event.status),
+          ),
+        },
+        event.threadId,
+        (thread) => ({
+          ...thread,
+          registryStatus: classifyThreadRegistryStatus(event.status),
+          status: event.status,
+        }),
+      );
     case "thread/name/updated":
       return updateThread(state, event.threadId, (thread) => ({
         ...thread,
@@ -139,7 +194,11 @@ export function agentReducer(
         tokenUsage: event.tokenUsage,
       }));
     case "thread/active/set":
-      return { ...state, activeThreadId: event.threadId };
+      return {
+        ...state,
+        activeThreadId: event.threadId,
+        threadRegistry: { ...state.threadRegistry, activeThreadId: event.threadId },
+      };
     case "turn/started":
       return updateThread(state, event.threadId, (thread) =>
         upsertTurn(thread, event.turn, "running"),
@@ -174,6 +233,14 @@ export function agentReducer(
         plan: {
           explanation: event.explanation,
           plan: event.plan,
+          raw: event.raw,
+        },
+      }));
+    case "turn/diff/updated":
+      return updateTurn(state, event.threadId, event.turnId, (turn) => ({
+        ...turn,
+        diff: {
+          diff: event.diff,
           raw: event.raw,
         },
       }));
@@ -220,6 +287,10 @@ export function agentReducer(
             ...state.pendingServerRequests,
             [String(event.request.id)]: event.request,
           },
+          serverRequestQueue: enqueueServerRequest(
+            state.serverRequestQueue,
+            event.request,
+          ),
         },
         event.request.threadId ?? "",
         (thread) => ({ ...thread, status: "waitingForInput" }),
@@ -229,7 +300,11 @@ export function agentReducer(
       const request = state.pendingServerRequests[requestId];
       const pendingServerRequests = { ...state.pendingServerRequests };
       delete pendingServerRequests[requestId];
-      const nextState = { ...state, pendingServerRequests };
+      const nextState = {
+        ...state,
+        pendingServerRequests,
+        serverRequestQueue: dequeueServerRequest(state.serverRequestQueue, requestId),
+      };
       if (
         !request?.threadId ||
         hasPendingThreadRequest(pendingServerRequests, request.threadId)
@@ -248,7 +323,11 @@ export function agentReducer(
       const nextState = {
         ...state,
         errors: event.error ? [...state.errors, event.error] : state.errors,
+        diagnostics: event.error
+          ? { ...state.diagnostics, errors: [...state.diagnostics.errors, event.error] }
+          : state.diagnostics,
         pendingServerRequests,
+        serverRequestQueue: dequeueServerRequest(state.serverRequestQueue, requestId),
       };
       if (
         !request?.threadId ||
@@ -260,10 +339,40 @@ export function agentReducer(
         thread.status === "waitingForInput" ? { ...thread, status: "running" } : thread,
       );
     }
+    case "status/banner/added":
+      return {
+        ...state,
+        diagnostics: {
+          ...state.diagnostics,
+          banners: upsertById(state.diagnostics.banners, event.banner),
+        },
+      };
+    case "status/banner/removed":
+      return {
+        ...state,
+        diagnostics: {
+          ...state.diagnostics,
+          banners: state.diagnostics.banners.filter((banner) => banner.id !== event.id),
+        },
+      };
     case "warning/added":
-      return { ...state, configWarnings: [...state.configWarnings, event.warning] };
+      return {
+        ...state,
+        configWarnings: [...state.configWarnings, event.warning],
+        diagnostics: {
+          ...state.diagnostics,
+          warnings: [...state.diagnostics.warnings, event.warning],
+        },
+      };
     case "error/added":
-      return { ...state, errors: [...state.errors, event.error] };
+      return {
+        ...state,
+        diagnostics: {
+          ...state.diagnostics,
+          errors: [...state.diagnostics.errors, event.error],
+        },
+        errors: [...state.errors, event.error],
+      };
     default:
       return assertNever(event);
   }
@@ -277,6 +386,7 @@ function upsertThread(state: AgentSessionState, thread: AgentThread): ThreadStat
   return (
     state.threads[thread.id] ?? {
       orderedTurnIds: [],
+      registryStatus: "loaded",
       status: "loaded",
       thread,
       turns: {},
@@ -315,6 +425,7 @@ function recordOrUndefined(value: unknown): Record<string, unknown> | undefined 
 
 function createTurnState(turn: AgentTurn, threadId: ThreadId): TurnState {
   return {
+    blocksByItemId: {},
     commandOutputByItemId: {},
     filePatchByItemId: {},
     itemOrder: [],
@@ -372,6 +483,16 @@ function updateTurn(
 function upsertItem(turn: TurnState, item: AgentItemState): TurnState {
   return {
     ...turn,
+    blocksByItemId: {
+      ...turn.blocksByItemId,
+      [item.id]: {
+        id: item.id,
+        kind: blockKindForItemKind(item.kind),
+        raw: item.raw,
+        status: item.status,
+        text: item.text,
+      },
+    },
     itemOrder: turn.itemOrder.includes(item.id)
       ? turn.itemOrder
       : [...turn.itemOrder, item.id],
@@ -392,4 +513,82 @@ function appendById(
 
 function ensureItemOrder(itemOrder: string[], itemId: string): string[] {
   return itemOrder.includes(itemId) ? itemOrder : [...itemOrder, itemId];
+}
+
+function blockKindForItemKind(kind: string): AgentItemBlockKind {
+  if (kind === "agentMessage" || kind === "assistantMessage" || kind === "userMessage")
+    return "text";
+  if (kind === "reasoning") return "thinking";
+  if (kind === "plan") return "plan";
+  if (kind === "commandExecution" || kind === "command") return "commandExecution";
+  if (kind === "fileChange" || kind === "patch") return "fileChange";
+  if (kind === "toolCall" || kind === "dynamicTool") return "toolCall";
+  if (kind === "mcpToolCall") return "mcpToolCall";
+  if (kind === "collabToolCall") return "collabToolCall";
+  if (kind === "webSearch") return "webSearch";
+  if (kind === "image") return "image";
+  if (kind === "systemInfo" || kind === "system") return "systemInfo";
+  return "unknown";
+}
+
+function classifyThreadRegistryStatus(
+  status?: string,
+  turns?: readonly AgentTurn[],
+): ThreadRegistryStatus {
+  if (status === "notLoaded") return turns?.length ? "preview" : "cold";
+  if (status === "running" || status === "waitingForInput") return "live";
+  return "loaded";
+}
+
+function updateThreadRegistry(
+  registry: AgentSessionState["threadRegistry"],
+  threadId: ThreadId,
+  status: ThreadRegistryStatus,
+  activeThreadId = registry.activeThreadId,
+): AgentSessionState["threadRegistry"] {
+  const remove = (ids: ThreadId[]) => ids.filter((id) => id !== threadId);
+  const add = (ids: ThreadId[]) => (ids.includes(threadId) ? ids : [...ids, threadId]);
+  const next = {
+    activeThreadId,
+    coldThreadIds: remove(registry.coldThreadIds),
+    liveThreadIds: remove(registry.liveThreadIds),
+    loadedThreadIds: remove(registry.loadedThreadIds),
+    previewThreadIds: remove(registry.previewThreadIds),
+  };
+  if (status === "cold") next.coldThreadIds = add(next.coldThreadIds);
+  if (status === "preview") next.previewThreadIds = add(next.previewThreadIds);
+  if (status === "live") next.liveThreadIds = add(next.liveThreadIds);
+  if (status === "loaded") next.loadedThreadIds = add(next.loadedThreadIds);
+  return next;
+}
+
+function enqueueServerRequest(
+  queue: AgentSessionState["serverRequestQueue"],
+  request: AgentSessionState["serverRequestQueue"]["byId"][string],
+): AgentSessionState["serverRequestQueue"] {
+  const id = String(request.id);
+  return {
+    byId: { ...queue.byId, [id]: request },
+    order: queue.order.includes(id) ? queue.order : [...queue.order, id],
+  };
+}
+
+function dequeueServerRequest(
+  queue: AgentSessionState["serverRequestQueue"],
+  requestId: string,
+): AgentSessionState["serverRequestQueue"] {
+  const byId = { ...queue.byId };
+  delete byId[requestId];
+  return {
+    byId,
+    order: queue.order.filter((id) => id !== requestId),
+  };
+}
+
+function upsertById<T extends { id: string }>(values: T[], value: T): T[] {
+  const index = values.findIndex((current) => current.id === value.id);
+  if (index === -1) return [...values, value];
+  const next = [...values];
+  next[index] = value;
+  return next;
 }
