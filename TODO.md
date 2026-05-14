@@ -179,15 +179,15 @@ Acceptance:
 
 ## Milestone 8: Browser Verification With agent-browser
 
-- [ ] Add an implementation guide for using `agent-browser` during local UI work.
-- [ ] Add scripts or docs for running examples and verifying them with `agent-browser`.
-- [ ] For each layout-impacting slice, capture `agent-browser snapshot -i` evidence.
-- [ ] Capture screenshots for desktop and mobile-sized verification where layout changed.
-- [ ] Verify no document-level horizontal overflow.
-- [ ] Verify composer visibility after completed turns.
-- [ ] Verify fixed-thread views ignore unrelated active-thread selection changes.
-- [ ] Verify usage-only rendering has no hidden chat/sidebar assumptions.
-- [ ] Verify host-owned side panels render through generic slots without core runtime state.
+- [x] Add an implementation guide for using `agent-browser` during local UI work.
+- [x] Add scripts or docs for running examples and verifying them with `agent-browser`.
+- [x] For each layout-impacting slice, capture `agent-browser snapshot -i` evidence.
+- [x] Capture screenshots for desktop and mobile-sized verification where layout changed.
+- [x] Verify no document-level horizontal overflow.
+- [x] Verify composer visibility after completed turns.
+- [x] Verify fixed-thread views ignore unrelated active-thread selection changes.
+- [x] Verify usage-only rendering has no hidden chat/sidebar assumptions.
+- [x] Verify host-owned side panels render through generic slots without core runtime state.
 
 Suggested manual command sequence:
 
@@ -201,8 +201,8 @@ agent-browser close
 
 Acceptance:
 
-- [ ] Browser verification is referenced in PR or implementation notes for any component/layout change.
-- [ ] Playwright remains the deterministic CI gate; `agent-browser` is the agent-driven local verification gate.
+- [x] Browser verification is referenced in PR or implementation notes for any component/layout change.
+- [x] Playwright remains the deterministic CI gate; `agent-browser` is the agent-driven local verification gate.
 
 ## Milestone 9: Validation And Release Gate
 

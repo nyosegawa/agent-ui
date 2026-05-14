@@ -329,6 +329,13 @@ The history and usage smoke path has also been verified against `codex app-serve
   m7-host snapshot -i`, and `agent-browser --session m7-host screenshot
   /tmp/agent-ui-m7-host-workflow.png` confirmed the host-owned panel slot
   renders beside the generic Codex thread UI.
+- Milestone 8 mobile agent-browser check on 2026-05-14: a dev server ran at
+  `http://127.0.0.1:5174/`; `agent-browser --session m8-mobile open
+  'http://127.0.0.1:5174/usage-only'`, `agent-browser --session m8-mobile set
+  viewport 390 900`, `agent-browser --session m8-mobile snapshot -i`, and
+  `agent-browser --session m8-mobile screenshot
+  /tmp/agent-ui-m8-usage-only-mobile.png` confirmed the usage-only primitive
+  remains accessible at a mobile-sized viewport with no chat/sidebar controls.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
 - Milestone 6 bridge checks cover host event callbacks, explicit server request
   policy opt-in, dynamic tool helper thread creation through generated

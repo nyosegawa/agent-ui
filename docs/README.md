@@ -24,6 +24,7 @@ API.
 - [Roadmap](./roadmap.md): implementation order and future expansion.
 - [Remote Deployment](./remote-deployment.md): advanced remote/WebSocket constraints.
 - [Protocol Drift](./protocol-drift.md): schema update and snapshot review workflow.
+- [agent-browser Verification](./agent-browser.md): local browser verification workflow.
 - [Theming](./theming.md): CSS variable customization.
 - [Component API](./component-api.md): drop-in component reference.
 - [Headless Hooks](./headless-hooks.md): hook reference for custom layouts.
