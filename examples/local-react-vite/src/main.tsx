@@ -58,21 +58,7 @@ function AgentDemo() {
 
   return (
     <AgentProvider initialState={initialState} transport={transport}>
-      <main style={{ margin: "28px auto", maxWidth: 1180 }}>
-        <div
-          style={{
-            background: "#fff8eb",
-            border: "1px solid #f4c16d",
-            borderRadius: 6,
-            color: "#7a4b00",
-            font: "13px/1.5 system-ui, sans-serif",
-            marginBottom: 12,
-            padding: "10px 12px",
-          }}
-        >
-          Fixture-backed package smoke. Run examples/codex-local-web for the real local
-          Codex app.
-        </div>
+      <main className="aui-demo-main">
         <AgentChat />
       </main>
     </AgentProvider>
@@ -82,94 +68,142 @@ function AgentDemo() {
 type DemoState = "default" | "empty" | "unauth" | "bridge-error";
 type KitchenDemoState = DemoState | "kitchen";
 
-const visualQaStates: Array<{
+type FixtureGroup = "core" | "states" | "primitives";
+
+interface FixtureState {
   description: string;
+  group: FixtureGroup;
   href: string;
+  meta: string;
   title: string;
-}> = [
+}
+
+const visualQaStates: FixtureState[] = [
   {
     description:
-      "Fixture-backed streaming, approvals, diff, usage, and stored thread preview.",
+      "Fixture-backed streaming, approvals, diff, usage, and stored thread preview through AgentChat.",
+    group: "core",
     href: "/",
-    title: "Default fixture conversation",
-  },
-  {
-    description: "Authenticated account with no stored Codex threads.",
-    href: "/?state=empty",
-    title: "Empty authenticated workspace",
-  },
-  {
-    description: "First-run device-code login without stale usage data.",
-    href: "/?state=unauth",
-    title: "Unauthenticated first run",
-  },
-  {
-    description: "Connection failure with diagnostics and no misleading start action.",
-    href: "/?state=bridge-error",
-    title: "Bridge error",
+    meta: "preset · default fixture",
+    title: "Default conversation",
   },
   {
     description:
-      "Kitchen-derived block renderers, status banners, token usage, and rich approval cards.",
+      "Kitchen-derived block taxonomy, severity-normalized status, rich approvals, plan and tool call.",
+    group: "core",
     href: "/?state=kitchen",
+    meta: "preset · kitchen fixture",
     title: "Kitchen-quality Codex UX",
   },
   {
-    description: "One fixed thread rendered without following active sidebar selection.",
-    href: "/scoped-thread-pane",
-    title: "Scoped thread pane",
+    description:
+      "Host workflow surface composed from independent thread, status, usage, approval, and composer primitives.",
+    group: "primitives",
+    href: "/host-workflow-recipe",
+    meta: "primitives · host slot",
+    title: "Host workflow recipe",
   },
   {
-    description: "Account/rate-limit usage rendered with no chat, composer, or sidebar.",
+    description:
+      "AgentUsagePanel rendered with no chat, composer, sidebar, or status chrome.",
+    group: "primitives",
     href: "/usage-only",
+    meta: "primitive · usage only",
     title: "Usage-only panel",
   },
   {
-    description: "Codex Apps/connectors metadata from app/list.",
+    description:
+      "AgentThreadView locked to a specific threadId, ignoring active sidebar selection.",
+    group: "primitives",
+    href: "/scoped-thread-pane",
+    meta: "primitive · fixed thread",
+    title: "Scoped thread pane",
+  },
+  {
+    description:
+      "Codex Apps/connectors metadata from app/list, paginated, with install and auth state.",
+    group: "primitives",
     href: "/app-connectors",
+    meta: "primitive · app metadata",
     title: "App connectors",
   },
   {
-    description: "Host-owned side panel composed through generic AgentWorkspace slots.",
-    href: "/host-workflow-recipe",
-    title: "Host workflow recipe",
+    description: "Authenticated Codex account with no stored threads — first-run after login.",
+    group: "states",
+    href: "/?state=empty",
+    meta: "preset · empty",
+    title: "Empty authenticated workspace",
+  },
+  {
+    description:
+      "First-run device-code login flow without stale account or usage state.",
+    group: "states",
+    href: "/?state=unauth",
+    meta: "preset · unauthenticated",
+    title: "Unauthenticated first run",
+  },
+  {
+    description:
+      "Failed local Codex bridge — diagnostics surface the cause and no misleading start action.",
+    group: "states",
+    href: "/?state=bridge-error",
+    meta: "preset · bridge error",
+    title: "Bridge error",
   },
 ];
 
+const fixtureGroupLabels: Record<FixtureGroup, string> = {
+  core: "Preset surfaces",
+  primitives: "Primitive compositions",
+  states: "Lifecycle states",
+};
+
 function VisualQaIndex() {
+  const grouped = useMemo(() => groupFixtures(visualQaStates), []);
   return (
     <main className="aui-fixture-gallery">
       <div className="aui-fixture-gallery-header">
         <div>
           <h1>Agent UI visual QA states</h1>
           <p>
-            Fixture-backed previews for desktop and mobile review. These frames make
-            hierarchy, overflow, banner density, usage placement, and host-slot
-            composition comparable without switching routes manually.
+            Desktop and mobile previews for every Agent UI surface. Compare typography
+            density, hierarchy, banner severity, usage placement, and primitive
+            composition without switching routes manually.
           </p>
         </div>
         <div className="aui-fixture-gallery-actions">
-          <a href="/">Open default</a>
-          <a href="/?state=kitchen">Open kitchen</a>
-          <a href="/host-workflow-recipe">Open host workflow</a>
+          <a href="/">Default</a>
+          <a href="/?state=kitchen">Kitchen</a>
+          <a href="/host-workflow-recipe">Host recipe</a>
         </div>
       </div>
-      <div className="aui-fixture-gallery-grid">
-        {visualQaStates.map((state) => (
-          <FixturePreview state={state} key={state.href} />
-        ))}
-      </div>
+      {grouped.map(({ group, states }) => (
+        <section className="aui-fixture-gallery-group" key={group}>
+          <header className="aui-fixture-gallery-group-header">
+            <h2>{fixtureGroupLabels[group]}</h2>
+            <span>{states.length} preview{states.length === 1 ? "" : "s"}</span>
+          </header>
+          <div className="aui-fixture-gallery-grid">
+            {states.map((state) => (
+              <FixturePreview state={state} key={state.href} />
+            ))}
+          </div>
+        </section>
+      ))}
     </main>
   );
 }
 
-function FixturePreview({
-  state,
-}: {
-  state: (typeof visualQaStates)[number];
-}) {
+function groupFixtures(states: FixtureState[]) {
+  const order: FixtureGroup[] = ["core", "primitives", "states"];
+  return order.map((group) => ({
+    group,
+    states: states.filter((state) => state.group === group),
+  }));
+}
+
+function FixturePreview({ state }: { state: FixtureState }) {
   const [reloadKey, setReloadKey] = useState(0);
-  const [loadedFrames, setLoadedFrames] = useState<Record<string, boolean>>({});
   return (
     <article className="aui-fixture-preview">
       <header>
@@ -188,23 +222,45 @@ function FixturePreview({
       </header>
       <div className="aui-fixture-preview-frames">
         {(["desktop", "mobile"] as const).map((size) => (
-          <figure data-size={size} key={`${state.href}:${size}`}>
-            <figcaption>{size === "desktop" ? "Desktop" : "Mobile"}</figcaption>
-            <div className="aui-fixture-frame-shell">
-              {!loadedFrames[size] ? <span>Loading {size} preview</span> : null}
-              <iframe
-                key={`${state.href}:${size}:${reloadKey}`}
-                onLoad={() =>
-                  setLoadedFrames((current) => ({ ...current, [size]: true }))
-                }
-                src={state.href}
-                title={`${state.title} ${size}`}
-              />
-            </div>
-          </figure>
+          <FixturePreviewFrame
+            key={`${state.href}:${size}:${reloadKey}`}
+            meta={state.meta}
+            size={size}
+            state={state}
+          />
         ))}
       </div>
     </article>
+  );
+}
+
+function FixturePreviewFrame({
+  meta,
+  size,
+  state,
+}: {
+  meta: string;
+  size: "desktop" | "mobile";
+  state: FixtureState;
+}) {
+  const [loaded, setLoaded] = useState(false);
+  return (
+    <figure data-size={size}>
+      <figcaption>
+        <span>{size === "desktop" ? "Desktop · 1280 × 900" : "Mobile · 390 × 900"}</span>
+        <span>{meta}</span>
+      </figcaption>
+      <div className="aui-fixture-frame-shell">
+        {!loaded ? (
+          <span className="aui-fixture-frame-status">Loading {size} preview</span>
+        ) : null}
+        <iframe
+          onLoad={() => setLoaded(true)}
+          src={state.href}
+          title={`${state.title} ${size}`}
+        />
+      </div>
+    </figure>
   );
 }
 
@@ -320,9 +376,7 @@ function HostWorkflowRecipe() {
   const transport = useMemo(() => createDemoTransport("kitchen"), []);
   return (
     <AgentProvider initialState={initialState} transport={transport}>
-      <ExampleFrame title="Host workflow recipe">
-        <HostWorkflowComposition />
-      </ExampleFrame>
+      <HostWorkflowComposition />
     </AgentProvider>
   );
 }
@@ -331,27 +385,58 @@ function HostWorkflowComposition() {
   const bootstrap = useAgentBootstrap();
   const { thread, threadId } = useAgentThread();
   if (!thread) return null;
+  const turnCount = thread.orderedTurnIds.length;
   return (
-    <section className="aui-host-composition" aria-label="Host primitive composition">
-      <div className="aui-host-thread">
-        <AgentThreadSurface>
-          <AgentThreadHeader thread={thread} threadId={threadId} />
-          <AgentCriticalNoticeList />
-          <AgentThreadTimeline thread={thread} />
-          <AgentApprovalQueue threadId={threadId} />
-          <AgentComposerPanel thread={thread} threadId={threadId} />
-        </AgentThreadSurface>
+    <main className="aui-host-recipe">
+      <div className="aui-host-recipe-shell">
+        <header className="aui-host-recipe-header">
+          <div>
+            <h1>Verify Codex local build</h1>
+            <p>
+              External host surface composed entirely from Agent UI primitives — no
+              AgentChat preset wrapping. The thread surface, status rail, usage panel,
+              and host workflow context are independent React regions, each placed by
+              the host into its own product chrome.
+            </p>
+          </div>
+          <div className="aui-host-recipe-meta">
+            <span className="aui-host-recipe-meta-kicker">Selected thread</span>
+            <span className="aui-host-recipe-meta-thread">
+              {thread.thread.name ?? thread.thread.id}
+            </span>
+            <span className="aui-host-recipe-meta-status">
+              {turnCount} turn{turnCount === 1 ? "" : "s"} · status {thread.status}
+            </span>
+          </div>
+        </header>
+        <section
+          className="aui-host-composition"
+          aria-label="Host primitive composition"
+        >
+          <div className="aui-host-thread">
+            <AgentThreadSurface>
+              <AgentThreadHeader thread={thread} threadId={threadId} />
+              <AgentCriticalNoticeList />
+              <AgentThreadTimeline thread={thread} />
+              <AgentApprovalQueue threadId={threadId} />
+              <AgentComposerPanel thread={thread} threadId={threadId} />
+            </AgentThreadSurface>
+          </div>
+          <aside
+            className="aui-host-context"
+            aria-label="Host workflow context"
+          >
+            <div className="aui-host-context-strip">
+              <AgentStatusSummary />
+              <AgentUsageSummary />
+            </div>
+            <HostWorkflowPanel />
+            <AgentStatusDetails />
+            <AgentDiagnosticsPanel bootstrap={bootstrap} />
+          </aside>
+        </section>
       </div>
-      <aside className="aui-host-context" aria-label="Host workflow context">
-        <div className="aui-host-context-strip">
-          <AgentStatusSummary />
-          <AgentUsageSummary />
-        </div>
-        <HostWorkflowPanel />
-        <AgentStatusDetails />
-        <AgentDiagnosticsPanel bootstrap={bootstrap} />
-      </aside>
-    </section>
+    </main>
   );
 }
 
@@ -374,24 +459,37 @@ function HostWorkflowPanel() {
     .flatMap((block) => (Array.isArray(block.changes) ? block.changes : []))
     .map((change) =>
       change && typeof change === "object" && "path" in change
-        ? String(change.path)
-        : "unknown",
+        ? {
+            kind:
+              typeof (change as Record<string, unknown>).kind === "string"
+                ? String((change as Record<string, unknown>).kind)
+                : "update",
+            path: String((change as Record<string, unknown>).path),
+          }
+        : { kind: "update", path: "unknown" },
     );
   const commands = blocks.filter((block) => block.kind === "commandExecution");
-  const checks = [
+  const verificationCommand = commands.find((block) =>
+    typeof block.command === "string"
+      ? block.command.includes("test")
+      : false,
+  );
+  const checks: ReadonlyArray<readonly [string, boolean]> = [
     ["Thread selected", Boolean(thread)],
     ["Plan visible", Boolean(plan)],
     ["Approvals routed", approvals.length > 0],
     ["Verification command captured", commands.length > 0],
   ] as const;
+  const completeChecks = checks.filter(([, done]) => done).length;
+  const planText = plan?.text ?? plan?.content ?? "";
   return (
-    <section className="aui-host-workflow" aria-label="Host-owned panel">
-      <header>
-        <span>Host workflow context</span>
-        <strong>{thread?.thread.name ?? "No thread selected"}</strong>
+    <section className="aui-host-block" aria-label="Host-owned panel">
+      <header className="aui-host-block-header">
+        <strong>Host workflow context</strong>
+        <span>{thread?.thread.name ?? "no thread"}</span>
       </header>
-      <section className="aui-host-overview" aria-label="Current thread summary">
-        <dl className="aui-host-metrics">
+      <div className="aui-host-block-body">
+        <dl className="aui-host-stat-row" aria-label="Current thread summary">
           <div>
             <dt>Turns</dt>
             <dd>{thread?.orderedTurnIds.length ?? 0}</dd>
@@ -405,57 +503,89 @@ function HostWorkflowPanel() {
             <dd>{commands.length}</dd>
           </div>
         </dl>
-      </section>
-      <section className="aui-host-section" aria-label="Workflow status">
-        <div className="aui-host-section-header">
-          <strong>Validation status</strong>
-          <span>ready for review</span>
-        </div>
-        <ul className="aui-host-checklist">
+      </div>
+      <header className="aui-host-block-header">
+        <strong>Validation status</strong>
+        <small>
+          {completeChecks}/{checks.length} ready
+        </small>
+      </header>
+      <div className="aui-host-block-body">
+        <ul className="aui-host-checks">
           {checks.map(([label, complete]) => (
             <li data-complete={complete ? "true" : "false"} key={label}>
-              <span>{complete ? "Done" : "Open"}</span>
-              <strong>{label}</strong>
+              <span className="aui-host-check-mark">{complete ? "✓" : "○"}</span>
+              <span>{label}</span>
             </li>
           ))}
         </ul>
-      </section>
-      <section className="aui-host-section" aria-label="Pending requests">
-        <div className="aui-host-section-header">
-          <strong>Pending requests</strong>
-          <span>{approvals.length} active</span>
-        </div>
-        <ul className="aui-host-list">
-          {approvals.map((approval) => (
-            <li key={String(approval.id)}>
-              <span>{approval.kind}</span>
-              <strong>{String(approval.id)}</strong>
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section className="aui-host-section" aria-label="Plan and context">
-        <div className="aui-host-section-header">
-          <strong>Plan and context</strong>
-          <span>{changedFiles.length} files</span>
-        </div>
-        <pre>{plan?.text ?? plan?.content ?? "No active plan block."}</pre>
-        <ul className="aui-host-files">
-          {changedFiles.map((path) => (
-            <li key={path}>{path}</li>
-          ))}
-        </ul>
-      </section>
-      <section className="aui-host-section" aria-label="Usage details">
-        <div className="aui-host-section-header">
-          <strong>Usage windows</strong>
-          <span>{windows.length} active</span>
-        </div>
+      </div>
+      <header className="aui-host-block-header">
+        <strong>Pending requests</strong>
+        <small>
+          {approvals.length} active
+        </small>
+      </header>
+      <div className="aui-host-block-body">
+        {approvals.length === 0 ? (
+          <p className="aui-host-empty">No pending Codex requests in this thread.</p>
+        ) : (
+          <ul className="aui-host-pending">
+            {approvals.map((approval) => (
+              <li key={String(approval.id)}>
+                <span className="aui-host-pending-kind">{approval.kind}</span>
+                <span className="aui-host-pending-title">
+                  {hostApprovalTitle(approval.kind)}
+                </span>
+                <span className="aui-host-pending-detail">{String(approval.id)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <header className="aui-host-block-header">
+        <strong>Plan and context</strong>
+        <small>
+          {changedFiles.length} file{changedFiles.length === 1 ? "" : "s"}
+        </small>
+      </header>
+      <div className="aui-host-block-body">
+        {planText.trim() ? (
+          <pre className="aui-host-plan-code">{planText.trim()}</pre>
+        ) : (
+          <p className="aui-host-empty">No active plan block in this turn.</p>
+        )}
+        {changedFiles.length > 0 ? (
+          <ul className="aui-host-files">
+            {changedFiles.map(({ kind, path }) => (
+              <li data-kind={kind} key={`${kind}:${path}`}>
+                <span>{shortKind(kind)}</span>
+                <code>{path}</code>
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
+      <header className="aui-host-block-header">
+        <strong>Usage windows</strong>
+        <small>
+          {windows.length} active
+        </small>
+      </header>
+      <div className="aui-host-block-body">
         <AgentUsagePanel autoRefresh={false} />
-      </section>
-      <div className="aui-host-actions">
-        <span>Host actions are intentionally demo-only in this fixture.</span>
-        <button className="aui-button aui-button-secondary" disabled type="button">
+      </div>
+      <div className="aui-host-block-actions">
+        <span>
+          {verificationCommand?.command
+            ? `Verification target: ${String(verificationCommand.command)}`
+            : "Host actions are deferred until the verification command is captured."}
+        </span>
+        <button
+          className="aui-button aui-button-secondary"
+          disabled={!verificationCommand || approvals.length > 0}
+          type="button"
+        >
           Continue selected thread
         </button>
       </div>
@@ -471,8 +601,14 @@ function ExampleFrame({
   title: string;
 }) {
   return (
-    <main style={{ margin: "28px auto", maxWidth: 1180 }}>
-      <h1 style={{ font: "600 22px/1.2 system-ui, sans-serif", margin: "0 0 12px" }}>
+    <main style={{ margin: "28px auto", maxWidth: 1180, padding: "0 18px" }}>
+      <h1
+        style={{
+          font: "650 22px/1.2 system-ui, sans-serif",
+          letterSpacing: "-0.015em",
+          margin: "0 0 14px",
+        }}
+      >
         {title}
       </h1>
       {children}
@@ -888,6 +1024,43 @@ function demoRateLimits() {
       },
     },
   };
+}
+
+function hostApprovalTitle(kind: string): string {
+  switch (kind) {
+    case "commandApproval":
+      return "Approve command";
+    case "fileChangeApproval":
+      return "Review file change";
+    case "userInput":
+      return "Provide user input";
+    case "mcpElicitation":
+      return "Provide MCP input";
+    case "dynamicTool":
+      return "Approve dynamic tool";
+    default:
+      return kind;
+  }
+}
+
+function shortKind(kind: string): string {
+  switch (kind) {
+    case "add":
+    case "added":
+    case "create":
+    case "created":
+      return "add";
+    case "delete":
+    case "deleted":
+    case "remove":
+    case "removed":
+      return "del";
+    case "rename":
+    case "renamed":
+      return "ren";
+    default:
+      return "mod";
+  }
 }
 
 class FailingTransport implements AgentTransport {

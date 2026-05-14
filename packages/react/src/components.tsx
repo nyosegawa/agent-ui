@@ -58,6 +58,7 @@ export function AgentChat({
   const { thread, threadId, startThread } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const hasRail = usage || diagnostics;
   return (
     <AgentShell
       className={className}
@@ -76,7 +77,7 @@ export function AgentChat({
     >
       <div className="aui-chat">
         <AgentStatusBar />
-        <div className="aui-chat-body">
+        <div className="aui-chat-body" data-rail={hasRail ? "visible" : "hidden"}>
           <div className="aui-thread-column">
             {thread ? (
               <AgentThreadView
@@ -91,12 +92,14 @@ export function AgentChat({
               </div>
             )}
           </div>
-          <aside className="aui-chat-rail" aria-label="Agent context">
-            <AgentStatusSummary />
-            <AgentStatusDetails />
-            {usage ? <AgentUsagePanel autoRefresh={false} /> : null}
-            {diagnostics ? <AgentDiagnosticsPanel bootstrap={bootstrap} /> : null}
-          </aside>
+          {hasRail ? (
+            <aside className="aui-chat-rail" aria-label="Agent context">
+              <AgentStatusSummary />
+              <AgentStatusDetails />
+              {usage ? <AgentUsagePanel autoRefresh={false} /> : null}
+              {diagnostics ? <AgentDiagnosticsPanel bootstrap={bootstrap} /> : null}
+            </aside>
+          ) : null}
         </div>
       </div>
     </AgentShell>
@@ -796,9 +799,9 @@ function AgentTurnStopControl({
 }
 
 function composerPlaceholder(status: ThreadState["status"], isPreviewOnly = false): string {
-  if (isPreviewOnly) return "Resume this stored thread before sending.";
-  if (status === "running") return "Codex is working. Stop the turn before sending.";
-  if (status === "waitingForInput") return "Resolve the pending approval before sending.";
+  if (isPreviewOnly) return "Stored thread";
+  if (status === "running") return "Codex is working";
+  if (status === "waitingForInput") return "Waiting on approval";
   return "Ask Codex to work in this thread";
 }
 

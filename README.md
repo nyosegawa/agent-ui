@@ -8,6 +8,19 @@ including the reopened UI-quality review for Milestones 4, 7, 8, and 10.
 
 Agent UI provides React components, headless hooks, state management, and transport adapters for applications built on OpenAI Codex App Server. `AgentChat` is a convenience preset; the core value is the primitive set that lets host apps place thread, status, usage, approvals, composer, apps, skills, and diagnostics surfaces in their own product shell.
 
+The visual design system is intentionally typography-led, not card-heavy. User
+messages render as right-aligned chat bubbles, assistant output flows as
+markdown without a bubble, reasoning is a muted blockquote, plan blocks use a
+green callout, and command/diff blocks share a dark code surface. Approval
+cards are the highest-contrast affordance on the thread surface, with a strong
+primary `Approve` button and outline secondaries. Status, usage, and
+diagnostics live in a compact secondary rail (warm bg with cohesive cards) and
+collapse into a horizontally scrollable strip on mobile. The same primitives
+are exported individually so host apps can rebuild this layout — or any other
+layout — without the preset. The `/host-workflow-recipe` example is the
+canonical proof of that composition; `/fixture-gallery` is the visual QA
+surface for every state. Saved evidence lives under `docs/screenshots/`.
+
 ## Status
 
 The real local app path is the primary release target: browser UI -> same-origin host bridge -> `codex app-server --listen stdio://` -> real Codex account, usage, model, thread, turn, approval, and diff events.

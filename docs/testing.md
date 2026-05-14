@@ -479,6 +479,85 @@ Latest real Codex smoke on 2026-05-15:
   authenticated account, usage present, 5 stored threads, 6 models, and one
   command approval request observed and declined.
 
+### Visual quality rebuild gate on 2026-05-15
+
+After the primitive-first gate closed, an external review still rejected the UI
+as "low-quality bordered cards on a fixed shell". The visual design system,
+preset hierarchy, host workflow recipe, fixture gallery, and mobile rail were
+all rebuilt. Verification commands run from the repo root:
+
+- `bun run typecheck`
+- `bun run lint`
+- `bunx vitest run --config vitest.config.ts --environment jsdom packages/react/test`
+  → 67 tests in 5 files passed
+- `bun test` (Bun fixture/protocol suite) → 60 tests passed
+- `bun run test:protocol` → 26 tests, 4 snapshots
+- `bun run test:fixtures` → 12 tests
+- `bun run build`
+- `bun run publint` (all packages green)
+- `bun run attw` (node10/node16 CJS+ESM/bundler green)
+- `bun run check:exports`
+- `bun run test:e2e:playwright -- --update-snapshots`
+  → 13 tests passed after refreshing the deliberately-changed layout-contract
+  snapshots
+- Browser verification with `agent-browser 0.27.0` on the fake local Vite
+  example at port 5184 (5174 was in use):
+
+```
+agent-browser open http://127.0.0.1:5184/
+agent-browser open 'http://127.0.0.1:5184/?state=kitchen'
+agent-browser open http://127.0.0.1:5184/host-workflow-recipe
+agent-browser open http://127.0.0.1:5184/usage-only
+agent-browser open http://127.0.0.1:5184/scoped-thread-pane
+agent-browser open http://127.0.0.1:5184/app-connectors
+agent-browser open http://127.0.0.1:5184/fixture-gallery
+agent-browser set viewport 1280 900
+agent-browser set viewport 390 900
+agent-browser screenshot docs/screenshots/agent-ui-<route>-<size>.png
+```
+
+All `docs/screenshots/agent-ui-*-{desktop,mobile}.png` files were rewritten
+from this run, including the fixture-gallery desktop snapshot that now uses
+grouped sections.
+
+Visual-quality results:
+
+- `AgentChat` is a thin preset that places `AgentThreadView` as the primary
+  column and pushes `AgentStatusSummary`, `AgentStatusDetails`, `AgentUsagePanel`,
+  and `AgentDiagnosticsPanel` into a compact secondary rail with cohesive
+  cards instead of disconnected bordered boxes.
+- The thread surface uses typography-led hierarchy: user messages are
+  right-aligned chat bubbles, assistant text flows as full-width markdown,
+  reasoning is rendered as an italic muted blockquote, plan blocks use a
+  green-tinted callout, and command/diff blocks share a dark code surface.
+- Approval cards use a warm tinted card with a strong primary `Approve` button
+  and outline secondary actions so the highest-stakes decision is always the
+  most prominent affordance.
+- The `/host-workflow-recipe` route is rebuilt from primitives only — no
+  `AgentChat` preset — with a real product header ("Verify Codex local build"),
+  a two-column composition, host-owned blocks for workflow stats, validation
+  checklist, pending requests, plan/context preview, and host actions wired to
+  the visible verification command.
+- The `/fixture-gallery` is rewritten as a true visual QA surface: previews
+  are grouped by `Preset surfaces`, `Primitive compositions`, and `Lifecycle
+  states`, each iframe is rendered inside a dark device frame with size and
+  meta labels, and the loading state never collapses into a blank white area.
+- Mobile keeps the secondary rail reachable: the rail becomes a horizontally
+  scrollable strip of compact status / usage / diagnostics chips below the
+  thread, and the host-workflow context stacks under the thread surface with
+  its own scrollable region.
+- Rate-limit notices that mention "below the warning threshold" are now `info`
+  severity. They appear in `Status details` but never in the `Critical
+  status` notice list.
+
+Residual risk:
+
+- The `AgentDiffViewer` CodeMirror surface still uses the same dark scheme;
+  per-language theming was intentionally not part of this rebuild.
+- Visual layout contract snapshots are still structural (boxes, columns,
+  overflow) rather than per-pixel. Pixel-level diffs remain opt-in to avoid
+  cross-OS font-rendering churn.
+
 ## Visual Regression
 
 `bun run test:e2e:playwright` includes browser-level layout contract snapshots for the local Vite example at desktop and mobile widths. These snapshots capture rendered dimensions, overflow behavior, display mode, grid columns, border radius, and key colors for the shell, sidebar, chat, run controls, usage, message list, inline activity, approvals, and composer.

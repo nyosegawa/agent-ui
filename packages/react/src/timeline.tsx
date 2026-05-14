@@ -293,7 +293,6 @@ function AgentCommandActivity({
         <span className="aui-command-title">{title}</span>
         <span className="aui-command-meta">
           {status}
-          {block?.cwd ? ` · ${block.cwd}` : ""}
           {block?.exitCode !== undefined ? ` · exit ${block.exitCode}` : ""}
           {block?.durationMs !== undefined ? ` · ${formatDuration(block.durationMs)}` : ""}
           {" · "}
@@ -541,11 +540,40 @@ function isHydratedThreadStatus(status: ThreadState["status"]): boolean {
 }
 
 function itemLabel(kind: string): string {
-  if (kind === "userMessage") return "You";
-  if (kind === "agentMessage") return "Assistant";
-  if (kind === "reasoning") return "Reasoning";
-  if (kind === "plan") return "Plan";
-  return kind;
+  switch (kind) {
+    case "userMessage":
+      return "You";
+    case "agentMessage":
+      return "Assistant";
+    case "reasoning":
+      return "Reasoning";
+    case "plan":
+      return "Plan";
+    case "commandExecution":
+      return "Command";
+    case "fileChange":
+      return "File change";
+    case "toolCall":
+    case "mcpToolCall":
+      return "Tool";
+    case "collabToolCall":
+      return "Collab";
+    case "webSearch":
+      return "Web search";
+    case "image":
+    case "imageView":
+      return "Image";
+    case "systemInfo":
+      return "System";
+    case "contextCompaction":
+      return "Compaction";
+    case "thinking":
+      return "Thinking";
+    default:
+      return kind
+        .replace(/([a-z])([A-Z])/g, "$1 $2")
+        .replace(/^./, (letter) => letter.toUpperCase());
+  }
 }
 
 function commandTextForItem(item: AgentItemState | undefined): string | undefined {

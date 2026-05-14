@@ -1,7 +1,11 @@
 # Completeness Audit
 
-Audit date: 2026-05-15. Reopened primitive-first UI review completed after the
-earlier Milestone 4/7/8/10 closure was found too preset-centered.
+Audit date: 2026-05-15. Reopened a third time on 2026-05-15 after an external
+review still rejected the UI as "bordered cards on a fixed shell". The visual
+design system, preset layout, host workflow recipe, fixture gallery, and
+mobile rail were rebuilt with a typography-led palette and primitive-first
+composition. Evidence under `docs/screenshots/` and the 2026-05-15 "Visual
+quality rebuild gate" entry in `docs/testing.md`.
 
 ## Scope Boundary
 

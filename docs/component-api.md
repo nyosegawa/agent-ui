@@ -44,6 +44,33 @@ suppress the sidebar, usage, and diagnostics when those surfaces live elsewhere
 in the application. On mobile the secondary chrome is not hidden; it remains
 reachable through compact details/summary affordances.
 
+### Visual design system
+
+The default style sheet is warm and typography-led, not card-heavy:
+
+- User messages are right-aligned chat bubbles tinted blue; assistant text
+  flows as full-width markdown without a bubble.
+- Reasoning is a muted italic block with a left rule; plan blocks use a
+  green-tinted callout; command and diff blocks share a single dark code
+  surface.
+- The approval card is the highest-contrast affordance in the surface, with a
+  strong primary `Approve` button and outline secondaries for session-approve
+  and decline.
+- Status, usage, and diagnostics live in a compact secondary rail with
+  cohesive cards on a warm `bg-soft` strip — never a stack of disconnected
+  bordered boxes.
+- The mobile rail collapses into a horizontally scrollable strip below the
+  thread so status, usage, and diagnostics stay reachable.
+- Item-kind labels are humanized (`MCP tool`, `Web search`, `Compaction`,
+  `Command`, `File change`) so the timeline never exposes camelCase protocol
+  identifiers.
+
+Saved screenshot evidence lives under `docs/screenshots/`. The host workflow
+recipe (`examples/local-react-vite` `/host-workflow-recipe`) is the canonical
+proof that the same primitives compose into a real product surface without the
+preset, and the fixture gallery (`/fixture-gallery`) is the visual QA index for
+every state.
+
 ## Layout Primitives
 
 Use these primitives when embedding Agent UI into existing product chrome:

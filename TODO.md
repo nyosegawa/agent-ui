@@ -120,6 +120,13 @@ looked like the center of the library, mobile secondary chrome could disappear,
 rate-limit normal status was treated too strongly, and the host workflow/gallery
 examples needed to prove real composition.
 
+Reopened a third time on 2026-05-15 because an external review still rejected
+the UI as "bordered card stacks on a fixed shell". The visual design system,
+preset hierarchy, and host workflow surface were rebuilt with a warm typography-
+led palette, primary-thread layout, condensed secondary rail, and host-recipe
+context blocks composed entirely from primitives. See the 2026-05-15 visual
+quality rebuild gate entry in `docs/testing.md`.
+
 - [x] Port the useful `agent-kitchen` block taxonomy onto `agent-ui` normalized state.
 - [x] Implement polished renderers for command execution, file changes, tool calls, thinking, plans, diffs, images, system info, and web/search-style blocks.
 - [x] Implement status banners for model reroutes, deprecation notices, config warnings, account status, MCP OAuth, and rate limits.
@@ -143,6 +150,17 @@ Acceptance:
       secondary chrome instead of hiding the rail.
 - [x] Normalize status severity so normal rate-limit messages do not render as
       critical thread warnings.
+- [x] Rebuild the design system with a warm, typography-led palette, reduced
+      card noise, and intentional message-bubble hierarchy (user bubble,
+      assistant flowing markdown, reasoning blockquote, plan callout, code
+      surface for command/diff).
+- [x] Rewrite the secondary rail as cohesive cards (status summary, status
+      details, usage, diagnostics) inside a bg-soft strip instead of a stack of
+      bordered boxes.
+- [x] Make the approval card the highest-contrast affordance on the thread
+      surface, with a strong primary Approve button and outline secondaries.
+- [x] Humanize item-kind labels (`MCP tool`, `Web search`, `Compaction`, etc.)
+      so meta lines never show camelCase protocol identifiers.
 
 ## Milestone 5: Skills, Apps, And agent-browser
 
@@ -212,6 +230,14 @@ Acceptance:
       primitives rather than placing an `AgentChat` preset beside a host card stack.
 - [x] Add gallery loading state, reload affordance, and Playwright checks that
       kitchen and host-workflow previews are not blank.
+- [x] Rewrite `/host-workflow-recipe` as a real product surface: intent header,
+      selected-thread meta, two-column composition, host-owned workflow context
+      blocks (stats, validation checklist, pending requests, plan/context,
+      usage windows), and host actions wired to the verification command. No
+      `h2/p/ol` demo prose, no generic metric cards.
+- [x] Rewrite `/fixture-gallery` as a grouped visual QA surface (Preset
+      surfaces, Primitive compositions, Lifecycle states) with dark device
+      frames, size labels, and per-frame loading state.
 
 ## Milestone 8: Browser Verification With agent-browser
 

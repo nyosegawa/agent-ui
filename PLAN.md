@@ -42,6 +42,18 @@ primitives, mobile-reachable secondary chrome, severity-normalized status, a
 host workflow route built without the preset, and nonblank gallery/screenshot
 smokes.
 
+May 15 visual-quality rebuild note: an external review still rejected the UI
+as "bordered cards on a fixed shell" after the primitive-first slice landed.
+Completion now requires a warm, typography-led design system instead of cool
+gray cards everywhere, an approval card with the strongest action affordance
+in the surface, a thread surface where user/assistant/reasoning/plan/command
+all use different visual treatments, a host workflow recipe that reads as a
+real product surface, a fixture gallery that groups previews by purpose and
+frames each iframe with size and meta labels, and humanized item-kind labels
+so the timeline never exposes camelCase protocol identifiers. The work is
+documented in the 2026-05-15 "Visual quality rebuild gate" entry in
+`docs/testing.md`.
+
 Do not treat a demo, a narrow happy path, or a partial wrapper as completion.
 Every public capability must have:
 

@@ -16,6 +16,7 @@ export default defineConfig({
       reporter: ["text", "lcov"],
     },
     environment: "node",
+    exclude: ["**/node_modules/**", "**/.git/**", "**/.claude/**", "**/dist/**"],
     globals: true,
     include: ["**/*.{test,spec,vitest}.{ts,tsx}"],
   },
