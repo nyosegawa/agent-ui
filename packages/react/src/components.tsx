@@ -13,6 +13,7 @@ import {
   useAgentComposer,
   useAgentModels,
   useAgentThreadHistory,
+  useAgentThreadActions,
   useAgentThreadReader,
   useAgentRunSettings,
   useAgentTurn,
@@ -74,6 +75,7 @@ export function AgentChat({
       <div className="aui-chat">
         <AgentStatusBar />
         {diagnostics ? <AgentDiagnosticsPanel bootstrap={bootstrap} /> : null}
+        <AgentStatusBanners />
         {usage ? <AgentUsagePanel autoRefresh={false} /> : null}
         {thread ? (
           <AgentThreadView
@@ -150,6 +152,7 @@ export function AgentThreadHeader({
       <div className="aui-thread-title">
         <h1>{thread.thread.name ?? "Untitled thread"}</h1>
         <p>{threadSubtitle(thread.thread)}</p>
+        {thread.tokenUsage ? <AgentTokenUsageBar {...thread.tokenUsage} /> : null}
       </div>
       <AgentThreadActions thread={thread} threadId={threadId} />
     </div>
@@ -237,6 +240,14 @@ function AgentThreadActions({
   threadId?: string;
 }) {
   const { resumeThread, startThread } = useAgentThread(threadId);
+  const {
+    archiveThread,
+    compactThread,
+    forkThread,
+    renameThread,
+    rollbackThread,
+    unarchiveThread,
+  } = useAgentThreadActions(threadId);
   const { interruptTurn } = useAgentTurn(threadId);
   const status = thread.status;
   const latestTurnId = thread.orderedTurnIds.at(-1);
@@ -274,6 +285,56 @@ function AgentThreadActions({
       >
         New thread
       </button>
+      <details className="aui-thread-action-menu">
+        <summary>Actions</summary>
+        <div>
+          <button
+            disabled={!threadId}
+            onClick={() => {
+              const name = globalThis.prompt?.("Thread name", thread.thread.name ?? "");
+              if (name?.trim()) deferAction(() => void renameThread(name.trim()));
+            }}
+            type="button"
+          >
+            Rename
+          </button>
+          <button
+            disabled={!threadId}
+            onClick={() => deferAction(() => void forkThread())}
+            type="button"
+          >
+            Fork
+          </button>
+          <button
+            disabled={!threadId || status === "archived"}
+            onClick={() => deferAction(() => void archiveThread())}
+            type="button"
+          >
+            Archive
+          </button>
+          <button
+            disabled={!threadId || status !== "archived"}
+            onClick={() => deferAction(() => void unarchiveThread())}
+            type="button"
+          >
+            Unarchive
+          </button>
+          <button
+            disabled={!threadId || !hasTurns}
+            onClick={() => deferAction(() => void compactThread())}
+            type="button"
+          >
+            Compact
+          </button>
+          <button
+            disabled={!threadId || !hasTurns}
+            onClick={() => deferAction(() => void rollbackThread(1))}
+            type="button"
+          >
+            Rollback
+          </button>
+        </div>
+      </details>
     </div>
   );
 }
@@ -416,19 +477,59 @@ export function AgentComposer({
   threadId?: string;
 }) {
   const composer = useAgentComposer(threadId);
+  const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
+  const addAttachment = useCallback((attachment: ComposerAttachment) => {
+    setAttachments((current) => [...current, attachment]);
+  }, []);
+  const removeAttachment = useCallback((id: string) => {
+    setAttachments((current) => current.filter((attachment) => attachment.id !== id));
+  }, []);
   return (
     <form
       className="aui-composer"
       onSubmit={(event) => {
         event.preventDefault();
         deferAction(composer.submit);
+        setAttachments([]);
       }}
     >
+      <ComposerAttachmentToolbar
+        attachments={attachments}
+        disabled={disabled}
+        onAdd={addAttachment}
+        onRemove={removeAttachment}
+      />
       <textarea
         aria-label="Message"
         className="aui-composer-input"
         disabled={disabled}
         onChange={(event) => composer.setValue(event.currentTarget.value)}
+        onDrop={(event) => {
+          if (disabled) return;
+          const files = Array.from(event.dataTransfer.files);
+          if (files.length === 0) return;
+          event.preventDefault();
+          for (const file of files) {
+            addAttachment({
+              id: `${file.name}:${file.size}:${Date.now()}`,
+              kind: file.type.startsWith("image/") ? "image" : "file",
+              label: file.name,
+              value: file.name,
+            });
+          }
+        }}
+        onPaste={(event) => {
+          if (disabled) return;
+          const files = Array.from(event.clipboardData.files);
+          for (const file of files) {
+            addAttachment({
+              id: `${file.name}:${file.size}:${Date.now()}`,
+              kind: file.type.startsWith("image/") ? "image" : "file",
+              label: file.name || "pasted file",
+              value: file.name,
+            });
+          }
+        }}
         placeholder={placeholder}
         rows={3}
         value={composer.value}
@@ -437,6 +538,105 @@ export function AgentComposer({
         Send
       </button>
     </form>
+  );
+}
+
+type ComposerAttachmentKind = "image" | "file" | "app" | "plugin";
+
+interface ComposerAttachment {
+  id: string;
+  kind: ComposerAttachmentKind;
+  label: string;
+  value: string;
+}
+
+function ComposerAttachmentToolbar({
+  attachments,
+  disabled,
+  onAdd,
+  onRemove,
+}: {
+  attachments: ComposerAttachment[];
+  disabled: boolean;
+  onAdd: (attachment: ComposerAttachment) => void;
+  onRemove: (id: string) => void;
+}) {
+  const addMention = (kind: "app" | "plugin") => {
+    const value = globalThis.prompt?.(
+      kind === "app" ? "App URI" : "Plugin URI",
+      kind === "app" ? "app://" : "plugin://",
+    );
+    if (!value?.trim()) return;
+    onAdd({
+      id: `${kind}:${value}:${Date.now()}`,
+      kind,
+      label: value.trim(),
+      value: value.trim(),
+    });
+  };
+  return (
+    <div className="aui-attachment-toolbar" aria-label="Composer attachments">
+      <label className="aui-attachment-button">
+        <span>Image</span>
+        <input
+          accept="image/*"
+          disabled={disabled}
+          onChange={(event) => {
+            for (const file of Array.from(event.currentTarget.files ?? [])) {
+              onAdd({
+                id: `image:${file.name}:${file.size}:${Date.now()}`,
+                kind: "image",
+                label: file.name,
+                value: file.name,
+              });
+            }
+            event.currentTarget.value = "";
+          }}
+          type="file"
+        />
+      </label>
+      <label className="aui-attachment-button">
+        <span>File</span>
+        <input
+          disabled={disabled}
+          onChange={(event) => {
+            for (const file of Array.from(event.currentTarget.files ?? [])) {
+              onAdd({
+                id: `file:${file.name}:${file.size}:${Date.now()}`,
+                kind: "file",
+                label: file.name,
+                value: file.name,
+              });
+            }
+            event.currentTarget.value = "";
+          }}
+          type="file"
+        />
+      </label>
+      <button disabled={disabled} onClick={() => addMention("app")} type="button">
+        App
+      </button>
+      <button disabled={disabled} onClick={() => addMention("plugin")} type="button">
+        Plugin
+      </button>
+      {attachments.length > 0 ? (
+        <ul className="aui-attachment-chips">
+          {attachments.map((attachment) => (
+            <li key={attachment.id}>
+              <span>{attachment.kind}</span>
+              <strong>{attachment.label}</strong>
+              <button
+                aria-label={`Remove ${attachment.label}`}
+                onClick={() => onRemove(attachment.id)}
+                type="button"
+              >
+                x
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </div>
   );
 }
 
@@ -608,16 +808,11 @@ function ApprovalCard({
   onReject: () => void;
 }) {
   const payload = isRecord(approval.payload) ? approval.payload : {};
-  const requestLabel =
-    approval.kind === "fileChangeApproval" ? "file-change request" : "command request";
+  const requestLabel = approvalRequestLabel(approval.kind);
   return (
     <article className="aui-approval">
       <div className="aui-approval-header">
-        <strong>
-          {approval.kind === "fileChangeApproval"
-            ? "Review file changes"
-            : "Approve command"}
-        </strong>
+        <strong>{approvalTitle(approval.kind)}</strong>
         <span>request {String(approval.id)}</span>
       </div>
       <ApprovalSummary approval={approval} payload={payload} />
@@ -661,7 +856,50 @@ function ApprovalSummary({
   if (approval.kind === "fileChangeApproval") {
     return <FileChangeApprovalSummary payload={payload} />;
   }
-  return <CommandApprovalSummary payload={payload} />;
+  if (approval.kind === "commandApproval" || approval.kind === "legacyExecApproval") {
+    return <CommandApprovalSummary payload={payload} />;
+  }
+  if (approval.kind === "userInput" || approval.kind === "mcpElicitation") {
+    return <UserInputApprovalSummary payload={payload} />;
+  }
+  if (approval.kind === "dynamicTool") {
+    return <DynamicToolApprovalSummary payload={payload} />;
+  }
+  if (approval.kind === "permissionsApproval") {
+    return <PermissionsApprovalSummary payload={payload} />;
+  }
+  return <GenericApprovalSummary kind={approval.kind} payload={payload} />;
+}
+
+function approvalTitle(kind: string): string {
+  switch (kind) {
+    case "fileChangeApproval":
+    case "legacyPatchApproval":
+      return "Review file changes";
+    case "commandApproval":
+    case "legacyExecApproval":
+      return "Approve command";
+    case "userInput":
+      return "User input requested";
+    case "mcpElicitation":
+      return "MCP input requested";
+    case "dynamicTool":
+      return "Approve dynamic tool";
+    case "permissionsApproval":
+      return "Approve permissions";
+    case "authRefresh":
+      return "Refresh authentication";
+    case "attestation":
+      return "Generate attestation";
+    default:
+      return "Review request";
+  }
+}
+
+function approvalRequestLabel(kind: string): string {
+  if (kind === "commandApproval") return "command request";
+  if (kind === "fileChangeApproval") return "file-change request";
+  return `${kind.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase()} request`;
 }
 
 function CommandApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
@@ -699,6 +937,67 @@ function FileChangeApprovalSummary({ payload }: { payload: Record<string, unknow
           Review the file-change request before deciding.
         </p>
       ) : null}
+    </div>
+  );
+}
+
+function UserInputApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
+  const prompt =
+    stringField(payload, "prompt") ??
+    stringField(payload, "question") ??
+    stringField(payload, "message") ??
+    "The agent is asking for user input.";
+  return (
+    <div className="aui-approval-summary">
+      <p className="aui-approval-copy">{prompt}</p>
+      <MetadataGrid rows={[["Item", stringField(payload, "itemId")]]} />
+    </div>
+  );
+}
+
+function DynamicToolApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
+  const namespace = stringField(payload, "namespace");
+  const tool = stringField(payload, "tool") ?? stringField(payload, "name") ?? "tool";
+  return (
+    <div className="aui-approval-summary">
+      <MetadataGrid
+        rows={[
+          ["Namespace", namespace],
+          ["Tool", tool],
+          ["Item", stringField(payload, "itemId")],
+        ]}
+      />
+      {payload.arguments ? (
+        <pre className="aui-approval-json">
+          {JSON.stringify(payload.arguments, null, 2)}
+        </pre>
+      ) : null}
+    </div>
+  );
+}
+
+function PermissionsApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
+  return (
+    <div className="aui-approval-summary">
+      <p className="aui-approval-copy">
+        Review the requested permission before allowing the agent to continue.
+      </p>
+      <pre className="aui-approval-json">{JSON.stringify(payload, null, 2)}</pre>
+    </div>
+  );
+}
+
+function GenericApprovalSummary({
+  kind,
+  payload,
+}: {
+  kind: string;
+  payload: Record<string, unknown>;
+}) {
+  return (
+    <div className="aui-approval-summary">
+      <p className="aui-approval-copy">Review {kind} before deciding.</p>
+      <pre className="aui-approval-json">{JSON.stringify(payload, null, 2)}</pre>
     </div>
   );
 }
@@ -825,6 +1124,22 @@ export function AgentDiagnosticsPanel({
 
 export const AgentDiagnostics = AgentDiagnosticsPanel;
 
+export function AgentStatusBanners() {
+  const { state } = useAgentContext();
+  const banners = state.diagnostics.banners.slice(-6);
+  if (banners.length === 0) return null;
+  return (
+    <section className="aui-status-banners" aria-label="Status banners">
+      {banners.map((banner) => (
+        <article className="aui-status-banner" data-kind={banner.kind} key={banner.id}>
+          <strong>{statusBannerTitle(banner.kind)}</strong>
+          <span>{banner.message}</span>
+        </article>
+      ))}
+    </section>
+  );
+}
+
 export interface AgentUsageProps {
   autoRefresh?: boolean;
 }
@@ -868,18 +1183,7 @@ export function AgentUsagePanel({ autoRefresh = true }: AgentUsageProps = {}) {
               <span>{window.label}</span>
               <strong>{window.valueLabel}</strong>
             </div>
-            <div
-              aria-label={`${window.label} usage`}
-              aria-valuemax={100}
-              aria-valuemin={0}
-              aria-valuenow={Math.round(window.percent)}
-              className="aui-meter"
-              role="progressbar"
-            >
-              <span
-                style={{ width: `${Math.min(100, Math.max(0, window.percent))}%` }}
-              />
-            </div>
+            <AgentRateLimitBar label={window.label} percent={window.percent} />
             {window.resetLabel ? <small>{window.resetLabel}</small> : null}
           </div>
         ))}
@@ -915,6 +1219,55 @@ export function AgentUsagePanel({ autoRefresh = true }: AgentUsageProps = {}) {
 }
 
 export const AgentUsage = AgentUsagePanel;
+
+export function AgentRateLimitBar({
+  label,
+  percent,
+}: {
+  label: string;
+  percent: number;
+}) {
+  return (
+    <div
+      aria-label={`${label} usage`}
+      aria-valuemax={100}
+      aria-valuemin={0}
+      aria-valuenow={Math.round(percent)}
+      className="aui-meter"
+      role="progressbar"
+    >
+      <span style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} />
+    </div>
+  );
+}
+
+export function AgentTokenUsageBar({
+  inputTokens = 0,
+  outputTokens = 0,
+  totalTokens = inputTokens + outputTokens,
+}: {
+  inputTokens?: number;
+  outputTokens?: number;
+  totalTokens?: number;
+}) {
+  const inputPercent = totalTokens > 0 ? (inputTokens / totalTokens) * 100 : 0;
+  const outputPercent = totalTokens > 0 ? (outputTokens / totalTokens) * 100 : 0;
+  return (
+    <div className="aui-token-usage" aria-label="Token usage">
+      <div className="aui-usage-row">
+        <span>Tokens</span>
+        <strong>{totalTokens.toLocaleString()}</strong>
+      </div>
+      <div className="aui-meter aui-token-meter">
+        <span data-kind="input" style={{ width: `${Math.max(0, inputPercent)}%` }} />
+        <span data-kind="output" style={{ width: `${Math.max(0, outputPercent)}%` }} />
+      </div>
+      <small>
+        {inputTokens.toLocaleString()} input · {outputTokens.toLocaleString()} output
+      </small>
+    </div>
+  );
+}
 
 export function AgentSkillsPanel({ cwd }: { cwd?: string }) {
   const { refreshSkills, skills } = useAgentSkills(cwd);
@@ -1400,6 +1753,25 @@ function diagnosticsTitle(messages: string[]): string {
   if (pluginWarnings === messages.length) return "Plugin manifest warnings";
   if (pluginWarnings > 0) return "Diagnostics and plugin warnings";
   return "Diagnostics";
+}
+
+function statusBannerTitle(kind: string): string {
+  switch (kind) {
+    case "modelReroute":
+      return "Model rerouted";
+    case "deprecationNotice":
+      return "Deprecation notice";
+    case "configWarning":
+      return "Config warning";
+    case "accountStatus":
+      return "Account";
+    case "mcpOAuth":
+      return "MCP OAuth";
+    case "rateLimit":
+      return "Rate limit";
+    default:
+      return "Status";
+  }
 }
 
 function isSuppressedDiagnostic(message: string): boolean {

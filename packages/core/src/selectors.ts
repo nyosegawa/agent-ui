@@ -19,9 +19,7 @@ export function selectOrderedThreads(state: AgentSessionState) {
 
 export function selectPendingApprovals(state: AgentSessionState, threadId?: ThreadId) {
   return Object.values(state.pendingServerRequests).filter((request) => {
-    const approval =
-      request.kind === "commandApproval" || request.kind === "fileChangeApproval";
-    return approval && (threadId == null || request.threadId === threadId);
+    return threadId == null || request.threadId === threadId;
   });
 }
 

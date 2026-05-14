@@ -93,4 +93,22 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
   );
   await expect(page.getByText("Codex bridge unavailable")).toBeVisible();
   await expect(page.getByRole("button", { name: "Start thread" })).toHaveCount(0);
+
+  await page.goto("/?state=kitchen");
+  await expect(
+    page.getByRole("heading", { name: "Kitchen-quality Codex UX" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Status banners")).toContainText("Model rerouted");
+  await expect(page.getByLabel("Plan")).toContainText("Render rich blocks");
+  await expect(page.getByLabel("Web search")).toContainText(
+    "Codex App Server generated protocol",
+  );
+  await expect(page.getByText("MCP tool")).toBeVisible();
+  await expect(page.getByText("User input requested")).toBeVisible();
+  await expect(page.getByLabel("Token usage")).toContainText("5,800");
+  const metrics = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
 });

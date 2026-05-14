@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import demoFixture from "../../../fixtures/app-server/demo-session.json" with { type: "json" };
 import {
   createInitialAgentState,
@@ -13,6 +13,7 @@ import {
 } from "@nyosegawa/agent-ui-core";
 import {
   AgentChat,
+  AgentApprovalQueue,
   AgentDiffViewer,
   AgentMessageList,
   AgentProvider,
@@ -28,6 +29,10 @@ import {
 } from "../src";
 
 expect.extend(toHaveNoViolations);
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe("AgentChat", () => {
   it("keeps fixture model ids visibly non-production", () => {
@@ -61,7 +66,11 @@ describe("AgentChat", () => {
     );
     expect(await screen.findByTestId("agent-chat")).toBeInTheDocument();
     expect(
-      await screen.findByRole("button", { name: "Start thread" }),
+      await screen.findByRole(
+        "button",
+        { name: "Start thread" },
+        { timeout: 5000 },
+      ),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
   });
@@ -222,6 +231,130 @@ describe("AgentChat", () => {
     );
 
     expect(screen.getByText("userInput")).toBeInTheDocument();
+  });
+
+  it("renders status banners as first-class shell content", () => {
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-banner";
+    initialState.diagnostics.banners = [
+      {
+        id: "model-reroute",
+        kind: "modelReroute",
+        message: "Model rerouted from gpt-5.5 to gpt-5.4.",
+      },
+      {
+        id: "mcp-oauth",
+        kind: "mcpOAuth",
+        message: "MCP OAuth completed for github.",
+      },
+    ];
+    initialState.threads["thread-banner"] = {
+      orderedTurnIds: [],
+      status: "loaded",
+      thread: { id: "thread-banner", name: "Banners" },
+      turns: {},
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat sidebar={false} usage={false} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("Status banners")).toHaveTextContent("Model rerouted");
+    expect(screen.getByLabelText("Status banners")).toHaveTextContent("MCP OAuth");
+  });
+
+  it("sends thread action requests through generated method params", async () => {
+    const user = userEvent.setup();
+    const prompt = vi.spyOn(globalThis, "prompt").mockReturnValue("Renamed thread");
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-actions";
+    initialState.threads["thread-actions"] = {
+      orderedTurnIds: ["turn-actions"],
+      status: "loaded",
+      thread: { id: "thread-actions", name: "Action thread" },
+      turns: {
+        "turn-actions": {
+          blocksByItemId: {},
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: [],
+          items: {},
+          streamingTextByItemId: {},
+          turn: { id: "turn-actions", threadId: "thread-actions" },
+        },
+      },
+    };
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/name/set") return {};
+        if (request.method === "thread/archive") return {};
+        if (request.method === "thread/fork") return {};
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat sidebar={false} usage={false} />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByText("Rename"));
+    await user.click(screen.getByText("Archive"));
+    await user.click(screen.getByText("Fork"));
+
+    expect(prompt).toHaveBeenCalled();
+    expect(transport.requests).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          method: "thread/name/set",
+          params: { name: "Renamed thread", threadId: "thread-actions" },
+        }),
+        expect.objectContaining({
+          method: "thread/archive",
+          params: { threadId: "thread-actions" },
+        }),
+        expect.objectContaining({
+          method: "thread/fork",
+          params: { threadId: "thread-actions" },
+        }),
+      ]),
+    );
+    prompt.mockRestore();
+  });
+
+  it("surfaces composer file and app/plugin attachments", async () => {
+    const user = userEvent.setup();
+    const prompt = vi
+      .spyOn(globalThis, "prompt")
+      .mockReturnValueOnce("app://browser")
+      .mockReturnValueOnce("plugin://browser-tools");
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-compose";
+    initialState.threads["thread-compose"] = {
+      orderedTurnIds: [],
+      status: "loaded",
+      thread: { id: "thread-compose", name: "Composer" },
+      turns: {},
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat sidebar={false} usage={false} />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "App" }));
+    await user.click(screen.getByRole("button", { name: "Plugin" }));
+
+    expect(screen.getByLabelText("Composer attachments")).toHaveTextContent(
+      "app://browser",
+    );
+    expect(screen.getByLabelText("Composer attachments")).toHaveTextContent(
+      "plugin://browser-tools",
+    );
+    prompt.mockRestore();
   });
 
   it("does not offer to start a thread before account bootstrap finishes", async () => {
@@ -622,6 +755,114 @@ describe("AgentChat", () => {
     expect(screen.getByText("Reply with exactly: agent-ui-ui-check")).toBeInTheDocument();
   });
 
+  it("renders kitchen-derived content blocks from normalized state", () => {
+    const initialState = runEventFixture([
+      { event: { thread: { id: "thread-blocks", name: "Block renderers" }, type: "thread/started" } },
+      {
+        event: {
+          threadId: "thread-blocks",
+          turn: { id: "turn-blocks", threadId: "thread-blocks" },
+          type: "turn/started",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "reasoning",
+            kind: "reasoning",
+            raw: {
+              content: [{ text: "Full hidden reasoning" }],
+              summary: [{ text: "Reviewing renderer taxonomy" }],
+            },
+            text: "Reviewing renderer taxonomy",
+            threadId: "thread-blocks",
+            turnId: "turn-blocks",
+          },
+          threadId: "thread-blocks",
+          turnId: "turn-blocks",
+          type: "item/started",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "plan",
+            kind: "plan",
+            text: "- Render command\n- Render tools",
+            threadId: "thread-blocks",
+            turnId: "turn-blocks",
+          },
+          threadId: "thread-blocks",
+          turnId: "turn-blocks",
+          type: "item/completed",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "tool",
+            kind: "mcpToolCall",
+            raw: {
+              arguments: { selector: "#app" },
+              result: { ok: true },
+              server: "agent-browser",
+              tool: "snapshot",
+            },
+            threadId: "thread-blocks",
+            turnId: "turn-blocks",
+          },
+          threadId: "thread-blocks",
+          turnId: "turn-blocks",
+          type: "item/completed",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "search",
+            kind: "webSearch",
+            raw: { query: "Codex App Server generated protocol" },
+            threadId: "thread-blocks",
+            turnId: "turn-blocks",
+          },
+          threadId: "thread-blocks",
+          turnId: "turn-blocks",
+          type: "item/completed",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "image",
+            kind: "imageView",
+            raw: { path: "/tmp/agent-ui.png" },
+            threadId: "thread-blocks",
+            turnId: "turn-blocks",
+          },
+          threadId: "thread-blocks",
+          turnId: "turn-blocks",
+          type: "item/completed",
+        },
+      },
+    ] as FixtureStep[]);
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat sidebar={false} usage={false} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("Reviewing renderer taxonomy")).toBeInTheDocument();
+    expect(screen.getByLabelText("Plan")).toHaveTextContent("Render command");
+    expect(screen.getByText("MCP tool")).toBeInTheDocument();
+    expect(screen.getByText("snapshot")).toBeInTheDocument();
+    expect(screen.getByText(/"selector": "#app"/)).toBeInTheDocument();
+    expect(screen.getByLabelText("Web search")).toHaveTextContent(
+      "Codex App Server generated protocol",
+    );
+    expect(screen.getByRole("img", { name: "/tmp/agent-ui.png" })).toBeInTheDocument();
+  });
+
   it("disables the composer and interrupts the active turn while running", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();
@@ -881,6 +1122,38 @@ describe("AgentChat", () => {
     );
 
     expect(transport.responses.get("approval-command")).toEqual({ decision: "decline" });
+  });
+
+  it("renders non-command server requests with specific approval context", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.serverRequestQueue = {
+      byId: {
+        "request-input": {
+          id: "request-input",
+          kind: "userInput",
+          payload: { prompt: "Choose a deployment target", itemId: "item-input" },
+          threadId: "thread-approval",
+        },
+      },
+      order: ["request-input"],
+    };
+    initialState.pendingServerRequests = initialState.serverRequestQueue.byId;
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentApprovalQueue threadId="thread-approval" />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("User input requested")).toBeInTheDocument();
+    expect(screen.getByText("Choose a deployment target")).toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Decline user input request request-input" }),
+    );
+
+    expect(transport.responses.get("request-input")).toEqual({ decision: "decline" });
   });
 
   it("approves command and file-change requests for the session", async () => {

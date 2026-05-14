@@ -249,6 +249,121 @@ describe("agentReducer", () => {
     ).toEqual(["commandApproval", "fileChangeApproval"]);
   });
 
+  it("ports the kitchen block taxonomy into normalized item blocks", () => {
+    const state = runEventFixture([
+      { event: { thread: { id: "thread-blocks" }, type: "thread/started" } },
+      {
+        event: {
+          threadId: "thread-blocks",
+          turn: { id: "turn-blocks", threadId: "thread-blocks" },
+          type: "turn/started",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "reasoning",
+            kind: "reasoning",
+            raw: {
+              content: [{ text: "full reasoning" }],
+              summary: [{ text: "short thought" }],
+            },
+            text: "short thought",
+            threadId: "thread-blocks",
+            turnId: "turn-blocks",
+          },
+          threadId: "thread-blocks",
+          turnId: "turn-blocks",
+          type: "item/started",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "command",
+            kind: "commandExecution",
+            raw: { command: "bun test", cwd: "/repo", durationMs: 1500, exitCode: 0 },
+            threadId: "thread-blocks",
+            turnId: "turn-blocks",
+          },
+          threadId: "thread-blocks",
+          turnId: "turn-blocks",
+          type: "item/completed",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "tool",
+            kind: "mcpToolCall",
+            raw: {
+              arguments: { q: "agent-ui" },
+              result: { ok: true },
+              server: "browser",
+              tool: "snapshot",
+            },
+            threadId: "thread-blocks",
+            turnId: "turn-blocks",
+          },
+          threadId: "thread-blocks",
+          turnId: "turn-blocks",
+          type: "item/completed",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "search",
+            kind: "webSearch",
+            raw: { query: "Codex App Server" },
+            threadId: "thread-blocks",
+            turnId: "turn-blocks",
+          },
+          threadId: "thread-blocks",
+          turnId: "turn-blocks",
+          type: "item/completed",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "image",
+            kind: "imageView",
+            raw: { path: "/tmp/screenshot.png" },
+            threadId: "thread-blocks",
+            turnId: "turn-blocks",
+          },
+          threadId: "thread-blocks",
+          turnId: "turn-blocks",
+          type: "item/completed",
+        },
+      },
+    ]);
+    const blocks = state.threads["thread-blocks"]?.turns["turn-blocks"]?.blocksByItemId;
+
+    expect(blocks?.reasoning).toMatchObject({
+      content: "full reasoning",
+      kind: "thinking",
+      summary: "short thought",
+    });
+    expect(blocks?.command).toMatchObject({
+      command: "bun test",
+      cwd: "/repo",
+      durationMs: 1500,
+      exitCode: 0,
+      kind: "commandExecution",
+    });
+    expect(blocks?.tool).toMatchObject({
+      arguments: { q: "agent-ui" },
+      result: { ok: true },
+      server: "browser",
+      tool: "snapshot",
+      toolType: "mcp",
+    });
+    expect(blocks?.search).toMatchObject({ kind: "webSearch", query: "Codex App Server" });
+    expect(blocks?.image).toMatchObject({ kind: "image", path: "/tmp/screenshot.png" });
+  });
+
   it("loads the device-code login fixture", () => {
     const state = runEventFixture(loginFixture as FixtureStep[]);
     expect(state.account.status).toBe("authenticated");

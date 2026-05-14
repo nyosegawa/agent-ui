@@ -22,10 +22,16 @@ import {
   modelListParams,
   skillsConfigWriteParams,
   skillsListParams,
+  threadArchiveParams,
+  threadCompactStartParams,
+  threadForkParams,
   threadListParams,
+  threadRollbackParams,
+  threadSetNameParams,
   threadReadParams,
   threadResumeParams,
   threadStartParams,
+  threadUnarchiveParams,
   turnInterruptParams,
   turnStartParams,
   type CancelLoginAccountParams,
@@ -37,10 +43,16 @@ import {
   type ModelListParams,
   type SkillsConfigWriteParams,
   type SkillsListParams,
+  type ThreadArchiveParams,
+  type ThreadCompactStartParams,
+  type ThreadForkParams,
   type ThreadListParams,
   type ThreadReadParams,
   type ThreadResumeParams,
+  type ThreadRollbackParams,
+  type ThreadSetNameParams,
   type ThreadStartParams,
+  type ThreadUnarchiveParams,
   type TurnInterruptParams,
   type TurnStartParams,
 } from "./codex-request-params";
@@ -177,6 +189,90 @@ export function useAgentThread(threadId?: ThreadId) {
 }
 
 export const useAgentThreadController = useAgentThread;
+
+export function useAgentThreadActions(threadId?: ThreadId) {
+  const { dispatch, state, transport } = useAgentContext();
+  const resolvedThreadId = threadId ?? state.activeThreadId;
+
+  const requireThreadId = useCallback(() => {
+    if (!resolvedThreadId) throw new Error("No thread selected");
+    return resolvedThreadId;
+  }, [resolvedThreadId]);
+
+  const renameThread = useCallback(
+    async (name: string) => {
+      const id = requireThreadId();
+      const params = threadSetNameParams(id, name);
+      const response = await transport.request<ThreadSetNameParams, unknown>(
+        "thread/name/set",
+        params,
+      );
+      dispatch({ name, threadId: id, type: "thread/name/updated" });
+      return response;
+    },
+    [dispatch, requireThreadId, transport],
+  );
+
+  const archiveThread = useCallback(async () => {
+    const id = requireThreadId();
+    const response = await transport.request<ThreadArchiveParams, unknown>(
+      "thread/archive",
+      threadArchiveParams(id),
+    );
+    dispatch({ status: "archived", threadId: id, type: "thread/status/changed" });
+    return response;
+  }, [dispatch, requireThreadId, transport]);
+
+  const unarchiveThread = useCallback(async () => {
+    const id = requireThreadId();
+    const response = await transport.request<ThreadUnarchiveParams, unknown>(
+      "thread/unarchive",
+      threadUnarchiveParams(id),
+    );
+    dispatch({ status: "loaded", threadId: id, type: "thread/status/changed" });
+    return response;
+  }, [dispatch, requireThreadId, transport]);
+
+  const forkThread = useCallback(
+    async (params: Omit<ThreadForkParams, "threadId"> = {}) => {
+      const id = requireThreadId();
+      return transport.request<ThreadForkParams, unknown>(
+        "thread/fork",
+        threadForkParams(id, params),
+      );
+    },
+    [requireThreadId, transport],
+  );
+
+  const compactThread = useCallback(async () => {
+    const id = requireThreadId();
+    return transport.request<ThreadCompactStartParams, unknown>(
+      "thread/compact/start",
+      threadCompactStartParams(id),
+    );
+  }, [requireThreadId, transport]);
+
+  const rollbackThread = useCallback(
+    async (numTurns = 1) => {
+      const id = requireThreadId();
+      return transport.request<ThreadRollbackParams, unknown>(
+        "thread/rollback",
+        threadRollbackParams(id, numTurns),
+      );
+    },
+    [requireThreadId, transport],
+  );
+
+  return {
+    archiveThread,
+    compactThread,
+    forkThread,
+    renameThread,
+    rollbackThread,
+    threadId: resolvedThreadId,
+    unarchiveThread,
+  };
+}
 
 export function useAgentThreads() {
   const { dispatch, state } = useAgentContext();

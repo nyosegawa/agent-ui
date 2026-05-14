@@ -156,6 +156,8 @@ visual states used in manual and automated QA:
 - `/?state=empty`: authenticated account, usage/model data, no stored threads
 - `/?state=unauth`: first-run device-code login state
 - `/?state=bridge-error`: connection diagnostics without a running bridge
+- `/?state=kitchen`: kitchen-derived renderer, banner, token-usage, and rich
+  approval-card coverage
 - `/`: approval, command output, diff, usage, run controls, and stored history
 - `/qa`: visual QA index linking to every fixture-backed state
 
@@ -289,6 +291,15 @@ The history and usage smoke path has also been verified against `codex app-serve
   and `agent-browser screenshot /tmp/agent-ui-m3-browser-check.png` confirmed
   the fixture shell exposed history, usage, pending approvals, run settings,
   and the disabled approval-gated composer through accessible browser refs.
+- `examples/local-react-vite` Milestone 4 agent-browser check on 2026-05-14:
+  after reading `agent-browser skills get core`, a dev server ran at
+  `http://127.0.0.1:5174/`; `agent-browser open
+  'http://127.0.0.1:5174/?state=kitchen'`, `agent-browser snapshot -i`, and
+  `agent-browser screenshot /tmp/agent-ui-m4-kitchen-browser-check.png`
+  confirmed the kitchen-derived QA state exposes status banners, rate usage,
+  a fixed thread, plan/web-search renderers, rich command/user-input/dynamic
+  tool approval cards, and a disabled approval-gated composer through
+  accessible browser refs.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
 - `bun run test:e2e:playwright` also starts `examples/codex-local-web` against a fake stdio App Server and drives the real browser WebSocket transport through model list, usage, thread list/read/resume, thread start, turn start, streaming text, command output, structured diff preview, and command approval.
 - The fake stdio browser smoke emits unique turn and item ids for repeated `turn/start` calls, and includes a deterministic same-thread continuation test that sends two turns, waits for `Complete`, verifies the composer re-enables, and checks that the local web app still has no horizontal overflow.

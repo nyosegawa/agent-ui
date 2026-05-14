@@ -165,7 +165,7 @@
 .aui-chat {
   background: var(--aui-panel);
   display: grid;
-  grid-template-rows: auto auto auto auto minmax(240px, 1fr) auto auto;
+  grid-template-rows: auto auto auto auto auto minmax(240px, 1fr) auto auto;
   min-height: 0;
   min-width: 0;
   overflow: hidden;
@@ -232,24 +232,28 @@
   grid-row: 2;
 }
 
-.aui-usage {
+.aui-status-banners {
   grid-row: 3;
 }
 
-.aui-thread-header {
+.aui-usage {
   grid-row: 4;
 }
 
-.aui-message-list {
+.aui-thread-header {
   grid-row: 5;
 }
 
-.aui-approvals {
+.aui-message-list {
   grid-row: 6;
 }
 
-.aui-compose-panel {
+.aui-approvals {
   grid-row: 7;
+}
+
+.aui-compose-panel {
+  grid-row: 8;
 }
 
 .aui-status,
@@ -424,6 +428,23 @@
   height: 100%;
 }
 
+.aui-token-usage {
+  display: grid;
+  gap: 6px;
+}
+
+.aui-token-meter {
+  display: flex;
+}
+
+.aui-token-meter span[data-kind="input"] {
+  background: #2563eb;
+}
+
+.aui-token-meter span[data-kind="output"] {
+  background: #16a34a;
+}
+
 .aui-link-button {
   background: transparent;
   border: 0;
@@ -503,6 +524,55 @@
   gap: 8px;
   justify-content: flex-end;
   min-width: 0;
+}
+
+.aui-thread-action-menu {
+  position: relative;
+}
+
+.aui-thread-action-menu summary {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  color: var(--aui-fg);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 7px 10px;
+}
+
+.aui-thread-action-menu > div {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  box-shadow: 0 12px 30px rgb(15 23 42 / 0.14);
+  display: grid;
+  gap: 2px;
+  min-width: 150px;
+  padding: 6px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 5;
+}
+
+.aui-thread-action-menu button {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--aui-fg);
+  cursor: pointer;
+  font: inherit;
+  padding: 7px 8px;
+  text-align: left;
+}
+
+.aui-thread-action-menu button:hover:not(:disabled) {
+  background: var(--aui-panel-alt);
+}
+
+.aui-thread-action-menu button:disabled {
+  color: var(--aui-muted);
+  cursor: not-allowed;
 }
 
 .aui-thread-header p {
@@ -868,12 +938,213 @@
   padding-top: 10px;
 }
 
+.aui-block-message {
+  display: grid;
+  gap: 8px;
+}
+
+.aui-content-block {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  color: var(--aui-fg);
+  font-size: 13px;
+  overflow: hidden;
+}
+
+.aui-content-block summary,
+.aui-content-block-heading,
+.aui-web-search-block {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px 10px;
+}
+
+.aui-content-block summary {
+  cursor: pointer;
+}
+
+.aui-content-block summary span,
+.aui-content-block-heading span,
+.aui-web-search-block span {
+  color: var(--aui-muted);
+  font-size: 11px;
+  text-transform: uppercase;
+}
+
+.aui-content-block summary strong,
+.aui-content-block-heading strong,
+.aui-web-search-block strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.aui-content-block summary small,
+.aui-content-block-heading small {
+  color: var(--aui-muted);
+}
+
+.aui-thinking-block pre,
+.aui-json-section pre {
+  background: var(--aui-code-bg);
+  color: var(--aui-code-fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+  padding: 10px;
+  white-space: pre-wrap;
+}
+
+.aui-plan-block {
+  padding: 10px;
+}
+
+.aui-plan-block > strong {
+  color: var(--aui-muted);
+  display: block;
+  font-size: 11px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.aui-json-section {
+  border-top: 1px solid var(--aui-border);
+}
+
+.aui-json-section > span {
+  color: var(--aui-muted);
+  display: block;
+  font-size: 11px;
+  padding: 8px 10px 0;
+}
+
+.aui-json-section[data-tone="danger"] pre {
+  color: #fecaca;
+}
+
+.aui-block-metadata {
+  display: grid;
+  gap: 4px 10px;
+  grid-template-columns: max-content minmax(0, 1fr);
+  margin: 0;
+  padding: 0 10px 10px;
+}
+
+.aui-block-metadata dt {
+  color: var(--aui-muted);
+}
+
+.aui-block-metadata dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.aui-system-info-block {
+  padding: 9px 10px;
+}
+
+.aui-system-info-block[data-subtype="error"] {
+  border-color: var(--aui-danger);
+  color: var(--aui-danger);
+}
+
+.aui-image-block {
+  display: inline-grid;
+  gap: 6px;
+  padding: 8px;
+}
+
+.aui-image-block img,
+.aui-image-block video {
+  border-radius: 6px;
+  max-height: 260px;
+  max-width: min(420px, 100%);
+}
+
+.aui-image-block figcaption {
+  color: var(--aui-muted);
+  font-size: 11px;
+}
+
+.aui-changed-file-list {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 8px 10px;
+}
+
+.aui-changed-file-list li {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.aui-changed-file-list span {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 4px;
+  color: var(--aui-muted);
+  flex: 0 0 auto;
+  font-size: 11px;
+  min-width: 22px;
+  padding: 1px 4px;
+  text-align: center;
+}
+
+.aui-changed-file-list code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 .aui-approvals {
   border-top: 1px solid var(--aui-border);
   display: grid;
   gap: 10px;
   overflow: auto;
   padding: 12px 14px;
+}
+
+.aui-status-banners {
+  display: grid;
+  gap: 8px;
+  padding: 10px 14px 0;
+}
+
+.aui-status-banner {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-left: 3px solid var(--aui-primary);
+  border-radius: var(--aui-radius);
+  display: grid;
+  gap: 4px;
+  padding: 8px 10px;
+}
+
+.aui-status-banner[data-kind="configWarning"],
+.aui-status-banner[data-kind="deprecationNotice"] {
+  border-left-color: #d97706;
+}
+
+.aui-status-banner[data-kind="rateLimit"] {
+  border-left-color: var(--aui-danger);
+}
+
+.aui-status-banner strong {
+  font-size: 12px;
+}
+
+.aui-status-banner span {
+  color: var(--aui-muted);
+  font-size: 12px;
 }
 
 .aui-section-header {
@@ -929,6 +1200,19 @@
 
 .aui-command-output {
   border-top: 1px solid #344054;
+}
+
+.aui-approval-json {
+  background: var(--aui-code-bg);
+  border-radius: 6px;
+  color: var(--aui-code-fg);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  margin: 8px 0 0;
+  max-height: 220px;
+  overflow: auto;
+  padding: 10px;
+  white-space: pre-wrap;
 }
 
 .aui-activity-card .aui-command-output {
@@ -1122,7 +1406,72 @@
 
 .aui-composer {
   background: var(--aui-panel);
+  flex-wrap: wrap;
   padding: 12px 14px;
+}
+
+.aui-attachment-toolbar {
+  align-items: center;
+  display: flex;
+  flex: 1 0 100%;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.aui-attachment-toolbar > button,
+.aui-attachment-button {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  color: var(--aui-fg);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 5px 8px;
+}
+
+.aui-attachment-button input {
+  display: none;
+}
+
+.aui-attachment-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aui-attachment-chips li {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 999px;
+  display: flex;
+  gap: 5px;
+  max-width: 220px;
+  padding: 3px 6px;
+}
+
+.aui-attachment-chips span {
+  color: var(--aui-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+}
+
+.aui-attachment-chips strong {
+  font-size: 12px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-attachment-chips button {
+  background: transparent;
+  border: 0;
+  color: var(--aui-muted);
+  cursor: pointer;
 }
 
 .aui-turn-control {
@@ -1358,7 +1707,7 @@
   }
 
   .aui-chat {
-    grid-template-rows: auto auto auto auto minmax(180px, 1fr) auto auto;
+    grid-template-rows: auto auto auto auto auto minmax(180px, 1fr) auto auto;
     order: 1;
   }
 

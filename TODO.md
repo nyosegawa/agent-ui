@@ -110,20 +110,20 @@ Acceptance:
 
 ## Milestone 4: Kitchen-Quality Codex UX
 
-- [ ] Port the useful `agent-kitchen` block taxonomy onto `agent-ui` normalized state.
-- [ ] Implement polished renderers for command execution, file changes, tool calls, thinking, plans, diffs, images, system info, and web/search-style blocks.
-- [ ] Implement status banners for model reroutes, deprecation notices, config warnings, account status, MCP OAuth, and rate limits.
-- [ ] Implement richer approval cards for every server-request type.
-- [ ] Implement token and rate-limit bars as standalone components usable inside or outside the shell.
-- [ ] Implement thread actions for rename, archive, unarchive, fork, resume, compact, and rollback, with disabled/error states only when the generated protocol or runtime capability explicitly lacks support.
-- [ ] Implement composer attachments for local images, file mentions, paste/drop, and app/plugin mentions.
-- [ ] Keep visual components independent from generated App Server types.
+- [x] Port the useful `agent-kitchen` block taxonomy onto `agent-ui` normalized state.
+- [x] Implement polished renderers for command execution, file changes, tool calls, thinking, plans, diffs, images, system info, and web/search-style blocks.
+- [x] Implement status banners for model reroutes, deprecation notices, config warnings, account status, MCP OAuth, and rate limits.
+- [x] Implement richer approval cards for every server-request type.
+- [x] Implement token and rate-limit bars as standalone components usable inside or outside the shell.
+- [x] Implement thread actions for rename, archive, unarchive, fork, resume, compact, and rollback, with disabled/error states only when the generated protocol or runtime capability explicitly lacks support.
+- [x] Implement composer attachments for local images, file mentions, paste/drop, and app/plugin mentions.
+- [x] Keep visual components independent from generated App Server types.
 
 Acceptance:
 
-- [ ] Fixture gallery includes kitchen-derived examples for every renderer and banner.
-- [ ] Component tests cover block rendering and approval response behavior.
-- [ ] Browser checks prove no overlapping header/timeline/composer layout at narrow widths.
+- [x] Fixture gallery includes kitchen-derived examples for every renderer and banner.
+- [x] Component tests cover block rendering and approval response behavior.
+- [x] Browser checks prove no overlapping header/timeline/composer layout at narrow widths.
 
 ## Milestone 5: Skills, Apps, And agent-browser
 
