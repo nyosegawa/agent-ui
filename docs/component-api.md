@@ -46,30 +46,56 @@ reachable through compact details/summary affordances.
 
 ### Visual design system
 
-The default style sheet is warm and typography-led, not card-heavy:
+The default style sheet is warm and typography-led, not card-heavy. The
+2026-05-15 craftsmanship pass rebuilt every interactive primitive (button,
+input, composer, approval) so the visual quality no longer depends on the
+overall layout — it lives in the parts themselves:
 
-- User messages are right-aligned chat bubbles tinted blue; assistant text
-  flows as full-width markdown without a bubble.
-- Reasoning is a muted italic block with a left rule; plan blocks use a
-  green-tinted callout; command and diff blocks share a single dark code
-  surface.
-- The approval card is the highest-contrast affordance in the surface, with a
-  strong primary `Approve` button and outline secondaries for session-approve
-  and decline.
-- Status, usage, and diagnostics live in a compact secondary rail with
-  cohesive cards on a warm `bg-soft` strip — never a stack of disconnected
-  bordered boxes.
-- The mobile rail collapses into a horizontally scrollable strip below the
-  thread so status, usage, and diagnostics stay reachable.
-- Item-kind labels are humanized (`MCP tool`, `Web search`, `Compaction`,
-  `Command`, `File change`) so the timeline never exposes camelCase protocol
-  identifiers.
+- **Composer**: a single bordered rounded card containing attachment chips,
+  an auto-resizing textarea, and an inline icon-button toolbar. Attach, App,
+  and Plugin live as icon-text ghost buttons on the left; the Send button is
+  a circular primary icon button on the right with an `Enter to send` hint.
+  Run settings collapse behind a chip-shape `<details>` summary so the
+  composer stays the primary surface. Pending-approval and preview-only
+  states show a warm notice strip without hiding the field.
+- **Button system**: `aui-btn` plus `aui-btn-primary | -secondary | -ghost |
+  -danger | -subtle` and `aui-btn-sm | -lg | -icon-only`. `Approve` is the
+  highest-contrast affordance in the surface, `Decline` is a danger button,
+  `Approve for session` is a scoped secondary outline, `New thread` and the
+  thread-action menu are icon-led ghosts, and link-style work (`Refresh`,
+  `Load`, `Hide`) uses the subtle variant.
+- **Inputs / selects / segmented**: a shared `aui-input-shell` with an
+  optional leading icon, a unified `aui-select` with a custom chevron, and a
+  refined segmented control with elevated pressed state. None of these read
+  as browser defaults.
+- **Approval card**: a shield icon, a humanized title and one-line reason,
+  a `LOW / MED / HIGH` risk pill, the command on a dark code surface, key
+  metadata in a grid, and three explicit decisions on a divider footer
+  (green primary `Approve`, secondary `Approve for session`, danger
+  `Decline`). The card colour rail switches with risk.
+- **Timeline**: user messages are right-aligned bubbles tinted with the
+  primary accent and a tail; assistant text flows as full-width markdown
+  without a bubble; reasoning is a muted italic blockquote; plan blocks use
+  a primary-tinted callout; command and diff blocks share a single dark
+  code surface. `COMPLETED` status labels are suppressed on user/assistant
+  bubbles so they stop competing with the content.
+- **Sidebar**: search input with a leading icon, refined thread list items
+  with a coloured status dot, and small icon-only toggles for collapse and
+  history navigation.
+- **Status / usage / status pills**: pill-shape summary chips in the rail
+  with a pulsing dot for `running`; the details disclosure is a separately
+  styled card so the two never read as a duplicate.
+- **Component close-ups**: `/fixture-gallery` now ends with a
+  `Component close-ups` section that renders the composer, approval cards,
+  command/diff surfaces, sidebar, chips, buttons, and inputs as live
+  primitives (no iframes) so reviewers can inspect part quality, not just
+  layout.
 
 Saved screenshot evidence lives under `docs/screenshots/`. The host workflow
 recipe (`examples/local-react-vite` `/host-workflow-recipe`) is the canonical
 proof that the same primitives compose into a real product surface without the
 preset, and the fixture gallery (`/fixture-gallery`) is the visual QA index for
-every state.
+every state plus the component-level close-ups.
 
 ## Layout Primitives
 

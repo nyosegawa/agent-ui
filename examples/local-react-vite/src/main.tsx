@@ -12,6 +12,7 @@ import {
   AgentAppsPanel,
   AgentApprovalQueue,
   AgentChat,
+  AgentComposer,
   AgentComposerPanel,
   AgentCriticalNoticeList,
   AgentDiagnosticsPanel,
@@ -190,7 +191,475 @@ function VisualQaIndex() {
           </div>
         </section>
       ))}
+      <ComponentCloseupGallery />
     </main>
+  );
+}
+
+function ComponentCloseupGallery() {
+  return (
+    <section
+      aria-label="Component close-ups"
+      className="aui-fixture-gallery-group"
+      data-testid="component-closeups"
+    >
+      <header className="aui-fixture-gallery-group-header">
+        <h2>Component close-ups</h2>
+        <span>Direct primitive renders · no iframe</span>
+      </header>
+      <div className="aui-closeup-grid">
+        <CloseupComposer />
+        <CloseupComposerFocused />
+        <CloseupComposerDisabled />
+        <CloseupComposerMobile />
+        <CloseupApprovalCommand />
+        <CloseupApprovalUserInput />
+        <CloseupCommandBlock />
+        <CloseupDiffBlock />
+        <CloseupSidebarSearch />
+        <CloseupUsageChips />
+        <CloseupButtonStates />
+        <CloseupInputStates />
+      </div>
+    </section>
+  );
+}
+
+function CloseupFrame({
+  title,
+  caption,
+  children,
+  tone,
+}: {
+  title: string;
+  caption: string;
+  children: ReactNode;
+  tone?: "panel" | "dark" | "mobile";
+}) {
+  return (
+    <article className="aui-closeup" data-testid={`closeup:${title}`}>
+      <header className="aui-closeup-header">
+        <strong>{title}</strong>
+        <span>{caption}</span>
+      </header>
+      <div className="aui-closeup-stage" data-tone={tone ?? "panel"}>
+        {children}
+      </div>
+    </article>
+  );
+}
+
+function CloseupComposerProvider({ children }: { children: ReactNode }) {
+  const initialState = useMemo(() => {
+    const state = createInitialAgentState();
+    state.account = {
+      account: { email: "fixture@example.com", planType: "pro" },
+      rateLimits: demoRateLimits(),
+      status: "authenticated",
+    };
+    state.models = { models: demoModels(), selectedModelId: "fixture-demo-model" };
+    state.activeThreadId = "thread-closeup";
+    state.threadRegistry.activeThreadId = "thread-closeup";
+    state.threadRegistry.liveThreadIds = ["thread-closeup"];
+    state.threads["thread-closeup"] = {
+      orderedTurnIds: [],
+      registryStatus: "live",
+      status: "loaded",
+      thread: {
+        id: "thread-closeup",
+        name: "Composer close-up",
+        path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+      },
+      turns: {},
+    };
+    return state;
+  }, []);
+  return (
+    <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+      {children}
+    </AgentProvider>
+  );
+}
+
+function CloseupComposer() {
+  return (
+    <CloseupFrame
+      title="Composer · normal"
+      caption="Textarea, inline icon toolbar, primary send."
+    >
+      <CloseupComposerProvider>
+        <AgentComposer threadId="thread-closeup" />
+      </CloseupComposerProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupComposerFocused() {
+  return (
+    <CloseupFrame
+      title="Composer · focused"
+      caption="Focus ring around the bordered card, hint visible."
+    >
+      <CloseupComposerProvider>
+        <div className="aui-composer" data-focused="true" aria-label="Composer attachments">
+          <textarea
+            aria-label="Message"
+            className="aui-composer-input"
+            defaultValue="Apply the renderer audit findings and verify the diff."
+            rows={2}
+          />
+          <div className="aui-composer-toolbar">
+            <div className="aui-composer-toolbar-start">
+              <button aria-label="Attach file" className="aui-btn aui-btn-ghost aui-btn-icon-only" type="button">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a5.5 5.5 0 01-7.78-7.78l9.2-9.19a3.67 3.67 0 015.19 5.19l-9.2 9.19a1.83 1.83 0 11-2.6-2.6l8.49-8.48"/></svg>
+              </button>
+              <button aria-label="App" className="aui-btn aui-btn-ghost aui-btn-sm" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+                <span>App</span>
+              </button>
+            </div>
+            <div className="aui-composer-toolbar-end">
+              <span className="aui-composer-hint">
+                <kbd>Enter</kbd> to send
+              </span>
+              <button aria-label="Send" className="aui-btn aui-btn-primary aui-btn-lg aui-btn-icon-only" type="button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l14-8-4 18-3-7-7-3z"/></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </CloseupComposerProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupComposerDisabled() {
+  const initialState = useMemo(() => {
+    const state = createKitchenInitialState();
+    return state;
+  }, []);
+  return (
+    <CloseupFrame
+      title="Composer · approval pending"
+      caption="Disabled state with surfaced reason, send greyed out."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentComposer
+          disabled
+          disabledReason="Resolve the pending approval before sending another message."
+          placeholder="Waiting on approval"
+          threadId="thread-kitchen"
+        />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupComposerMobile() {
+  return (
+    <CloseupFrame
+      title="Composer · mobile"
+      caption="Hint hides, tap targets stay reachable at 360px."
+      tone="mobile"
+    >
+      <CloseupComposerProvider>
+        <AgentComposer threadId="thread-closeup" />
+      </CloseupComposerProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupApprovalCommand() {
+  const initialState = useMemo(() => createKitchenInitialState(), []);
+  return (
+    <CloseupFrame
+      title="Approval · command"
+      caption="High-contrast Approve, danger Decline, scope outline."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentApprovalQueue threadId="thread-kitchen" />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupApprovalUserInput() {
+  const initialState = useMemo(() => {
+    const state = createInitialAgentState();
+    state.activeThreadId = "thread-user-input";
+    state.threadRegistry.activeThreadId = "thread-user-input";
+    state.threadRegistry.liveThreadIds = ["thread-user-input"];
+    state.threads["thread-user-input"] = {
+      orderedTurnIds: [],
+      registryStatus: "live",
+      status: "waitingForInput",
+      thread: { id: "thread-user-input", name: "User input close-up" },
+      turns: {},
+    };
+    state.pendingServerRequests = {
+      "approval-user-input-closeup": {
+        id: "approval-user-input-closeup",
+        kind: "userInput",
+        payload: {
+          prompt: "Which workspace folder should Codex inspect first?",
+        },
+        threadId: "thread-user-input",
+      },
+    };
+    state.serverRequestQueue = {
+      byId: state.pendingServerRequests,
+      order: ["approval-user-input-closeup"],
+    };
+    return state;
+  }, []);
+  return (
+    <CloseupFrame
+      title="Approval · user input"
+      caption="Low risk, neutral framing, three explicit decisions."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentApprovalQueue threadId="thread-user-input" />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupCommandBlock() {
+  const initialState = useMemo(() => createKitchenInitialState(), []);
+  return (
+    <CloseupFrame
+      title="Command block"
+      caption="Expandable terminal output with exit code and duration."
+      tone="dark"
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <CloseupCommandStage />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupCommandStage() {
+  const { thread } = useAgentThread();
+  if (!thread) return null;
+  return <AgentThreadTimeline thread={thread} />;
+}
+
+function CloseupDiffBlock() {
+  return (
+    <CloseupFrame
+      title="Diff / file change"
+      caption="Add/delete chips, mono path, dark surface."
+      tone="dark"
+    >
+      <div className="aui-diff">
+        <div className="aui-diff-header">
+          <strong>2 files changed</strong>
+          <span className="aui-diff-stat aui-diff-stat-add">+42</span>
+          <span className="aui-diff-stat aui-diff-stat-remove">−7</span>
+        </div>
+        <ul className="aui-diff-files">
+          <li>
+            <span>packages/react/src/components.tsx</span>
+            <em>+34 / −5</em>
+          </li>
+          <li>
+            <span>packages/react/src/style.css</span>
+            <em>+8 / −2</em>
+          </li>
+        </ul>
+        <pre className="aui-diff-source">{`@@ composer rebuild\n- <textarea className="aui-composer-input" />\n+ <textarea className="aui-composer-input" />\n+ <Toolbar />\n`}</pre>
+      </div>
+    </CloseupFrame>
+  );
+}
+
+function CloseupSidebarSearch() {
+  return (
+    <CloseupFrame
+      title="Sidebar search + threads"
+      caption="Icon-prefix search, status dot, selected row."
+    >
+      <div style={{ display: "grid", gap: 12 }}>
+        <form className="aui-history-controls" onSubmit={(event) => event.preventDefault()}>
+          <div className="aui-input-shell aui-input-with-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input
+              aria-label="Search history"
+              className="aui-text-input"
+              defaultValue="render"
+              placeholder="Search history"
+              type="search"
+            />
+          </div>
+          <button aria-label="Load" className="aui-btn aui-btn-secondary aui-btn-sm" type="submit">
+            Load
+          </button>
+        </form>
+        <nav aria-label="Threads" className="aui-thread-list">
+          <button
+            aria-current="page"
+            className="aui-thread-list-item"
+            data-status="running"
+            type="button"
+          >
+            <span className="aui-thread-list-name">Renderer audit thread</span>
+            <span className="aui-thread-list-meta">
+              <span aria-hidden="true" className="aui-thread-list-dot" data-status="running" />
+              <small>Running · packages/react</small>
+            </span>
+          </button>
+          <button className="aui-thread-list-item" data-status="waitingForInput" type="button">
+            <span className="aui-thread-list-name">Approve diff for protocol drift</span>
+            <span className="aui-thread-list-meta">
+              <span aria-hidden="true" className="aui-thread-list-dot" data-status="waitingForInput" />
+              <small>Needs approval · packages/codex</small>
+            </span>
+          </button>
+          <button className="aui-thread-list-item" data-status="complete" type="button">
+            <span className="aui-thread-list-name">Stored verification session</span>
+            <span className="aui-thread-list-meta">
+              <span aria-hidden="true" className="aui-thread-list-dot" data-status="complete" />
+              <small>Complete · 8h ago</small>
+            </span>
+          </button>
+        </nav>
+      </div>
+    </CloseupFrame>
+  );
+}
+
+function CloseupUsageChips() {
+  return (
+    <CloseupFrame
+      title="Usage / status chips"
+      caption="Pill-shape summaries used in secondary chrome."
+    >
+      <div style={{ display: "grid", gap: 8 }}>
+        <div className="aui-status-summary" aria-label="Status summary">
+          <strong>Status</strong>
+          <span data-severity="info">2 background notices</span>
+        </div>
+        <div className="aui-usage-summary" aria-label="Usage summary">
+          <strong>Usage</strong>
+          <span>5h 12%</span>
+        </div>
+        <span className="aui-status-pill" data-status="running">
+          <span className="aui-status-pill-dot" aria-hidden="true" />
+          Running
+        </span>
+        <span className="aui-status-pill" data-status="waitingForInput">
+          <span className="aui-status-pill-dot" aria-hidden="true" />
+          Needs approval
+        </span>
+        <span className="aui-status-pill" data-status="error">
+          <span className="aui-status-pill-dot" aria-hidden="true" />
+          Failed
+        </span>
+      </div>
+    </CloseupFrame>
+  );
+}
+
+function CloseupButtonStates() {
+  return (
+    <CloseupFrame
+      title="Button system"
+      caption="primary / secondary / ghost / danger / subtle."
+    >
+      <div style={{ display: "grid", gap: 10 }}>
+        <div className="aui-closeup-row">
+          <button className="aui-btn aui-btn-primary" type="button">
+            Approve
+          </button>
+          <button className="aui-btn aui-btn-secondary" type="button">
+            Approve for session
+          </button>
+          <button className="aui-btn aui-btn-danger" type="button">
+            Decline
+          </button>
+          <button className="aui-btn aui-btn-ghost" type="button">
+            Cancel
+          </button>
+          <button className="aui-btn aui-btn-subtle" type="button">
+            Load all
+          </button>
+        </div>
+        <div className="aui-closeup-row">
+          <button className="aui-btn aui-btn-primary aui-btn-sm" type="button">
+            Send
+          </button>
+          <button className="aui-btn aui-btn-secondary aui-btn-sm" type="button">
+            Load
+          </button>
+          <button className="aui-btn aui-btn-ghost aui-btn-sm" type="button">
+            Resume
+          </button>
+          <button aria-label="More" className="aui-btn aui-btn-ghost aui-btn-icon-only aui-btn-sm" type="button">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+          </button>
+        </div>
+        <div className="aui-closeup-row">
+          <button className="aui-btn aui-btn-primary aui-btn-lg" type="button">
+            Start thread
+          </button>
+          <button className="aui-btn aui-btn-secondary aui-btn-lg" type="button">
+            Open device login
+          </button>
+          <button className="aui-btn aui-btn-primary" disabled type="button">
+            Sending…
+          </button>
+        </div>
+      </div>
+    </CloseupFrame>
+  );
+}
+
+function CloseupInputStates() {
+  return (
+    <CloseupFrame
+      title="Inputs · selects · segmented"
+      caption="Unified shells, focus ring, no browser defaults."
+    >
+      <div style={{ display: "grid", gap: 10 }}>
+        <label className="aui-field">
+          <span>Working directory</span>
+          <div className="aui-input-shell aui-input-with-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+            <input
+              aria-label="Working directory"
+              className="aui-text-input"
+              defaultValue="/Users/sakasegawa/src/github.com/nyosegawa/agent-ui"
+              type="text"
+            />
+          </div>
+        </label>
+        <label className="aui-field">
+          <span>Model</span>
+          <select aria-label="Model" className="aui-select" defaultValue="fixture-demo-model">
+            <option value="fixture-demo-model">Fixture Model (fixture-demo-model)</option>
+            <option value="other">Other model</option>
+          </select>
+        </label>
+        <fieldset className="aui-mode-group">
+          <legend>Execution mode</legend>
+          <div className="aui-segmented" role="tablist">
+            <button aria-pressed="true" className="aui-segment" type="button">
+              auto
+            </button>
+            <button aria-pressed="false" className="aui-segment" type="button">
+              workspace-write
+            </button>
+            <button aria-pressed="false" className="aui-segment" type="button">
+              read-only
+            </button>
+            <button aria-pressed="false" className="aui-segment" type="button">
+              danger
+            </button>
+          </div>
+        </fieldset>
+      </div>
+    </CloseupFrame>
   );
 }
 

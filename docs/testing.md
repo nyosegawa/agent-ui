@@ -558,6 +558,93 @@ Residual risk:
   overflow) rather than per-pixel. Pixel-level diffs remain opt-in to avoid
   cross-OS font-rendering churn.
 
+### Primitive craftsmanship rebuild on 2026-05-15 (later pass)
+
+The 2026-05-15 visual-quality gate above closed after layouts were fixed, but
+an external review still rejected the UI: **"layout を直しても composer / button
+/ approval / input といった基本部品の作り込みが弱い限り、完成品には見えない"**. The
+problem was diagnosed as *primitive craftsmanship*, not layout. This pass
+rebuilt the interactive layer in place rather than re-arranging the screen.
+
+Specifically:
+
+- **Composer**: replaced the row-of-form-controls layout with a single
+  bordered rounded card containing attachment chips, an auto-resizing
+  textarea, and an inline icon-button toolbar (paperclip, image, App, Plugin,
+  send). Focus/disabled/drag states have explicit `data-*` attributes for
+  styling. `Enter` submits, `Shift+Enter` inserts a newline, IME composition
+  is respected. Run settings now collapse behind a chip-shape `<details>`
+  summary so the composer is the primary affordance, not run controls.
+- **Buttons**: introduced an explicit `aui-btn` system with `primary /
+  secondary / ghost / danger / subtle` variants plus `sm / md / lg` sizes
+  and an `icon-only` modifier. `Approve` uses success green, `Decline` is
+  danger red, `Approve for session` is a scoped secondary outline, scope
+  decisions are clearly distinct from one another, and `New thread`,
+  thread-action menu, sidebar collapse, and usage refresh are icon-led
+  ghost buttons.
+- **Inputs**: added a shared `aui-input-shell` with optional leading icon
+  and a unified `aui-select` with a custom chevron, so the cwd input, search
+  input, and selects share one visual language and a single focus ring.
+- **Approval card**: rebuilt with a shield icon, humanized title, one-line
+  reason, `LOW / MED / HIGH` risk pill driven by sandbox/command heuristics,
+  command on a dark code surface, metadata grid for `Working directory /
+  Sandbox / Approval policy`, and a divider footer with three explicit
+  decisions where the primary uses success green and decline uses danger
+  red.
+- **Timeline**: user bubbles use a primary-tinted background with a tail and
+  the `completed` meta label is suppressed on user/assistant content so it
+  no longer competes with the message. Plan callouts use the primary tint
+  rather than green to align with the rest of the system. Work-trace summary
+  now uses warm `bg-soft` for the closed state and crisp panel for the open
+  state.
+- **Sidebar**: search input is now an `aui-input-shell` with a search icon,
+  thread list items carry a coloured status dot per `data-status`, and
+  Hide/Load/Load all use the subtle button variant instead of full secondary
+  buttons.
+- **Status / usage chips**: the rail summary widgets became pill-shape chips,
+  visually distinct from the `Status details` disclosure card. The
+  `running` status pill has a pulsing dot. The host workflow recipe and
+  `AgentChat` rail are tested to never duplicate `AgentStatusSummary`.
+- **Component close-up gallery**: `/fixture-gallery` now ends with a
+  `Component close-ups` section that renders composer (normal / focused /
+  approval pending / mobile), approval cards (command / user input),
+  command and diff blocks, sidebar search + threads, usage and status
+  chips, the full button palette, and inputs / selects / segmented as
+  *live* primitives — not iframes — so reviewers can inspect part quality
+  directly.
+
+Verification commands run from the repo root after the rebuild:
+
+- `bun run typecheck`
+- `bun run lint`
+- `bunx vitest run packages/react/test` → 67 tests in 5 files passed
+- `bun test` (Bun fixture/protocol suite) → 60 tests passed
+- `bun run build`
+- `bun run test:e2e:playwright` → 19 Playwright tests passed, including new
+  guards for composer states, approval risk + decisions, host workflow
+  duplicate-status, mobile tap targets, and the close-up gallery render.
+- `CAPTURE_DOCS_SCREENSHOTS=1 bunx playwright test
+  examples/local-react-vite/e2e/capture-docs-screenshots.e2e.ts` refreshed
+  every `docs/screenshots/agent-ui-*-{desktop,mobile}.png` against the new
+  primitives.
+
+Browser verification with Claude-in-Chrome at `http://127.0.0.1:5184/`
+covered `/`, `/?state=kitchen`, `/host-workflow-recipe`, `/usage-only`,
+`/fixture-gallery`, desktop 1280×900, and mobile 390×900. Port 5174 was
+already bound by another local dev server so 5184 was used. No document-
+level horizontal overflow was observed; the composer stayed visible after
+completed turns; the host workflow rendered one `Status summary` (no
+duplicate); the close-up gallery rendered every required section.
+
+Residual risk:
+
+- The CodeMirror diff viewer still uses the default vendored theme. It
+  reads cleanly inside the new dark code surface but is not custom-tuned.
+- The composer auto-resize cap is 220px; very long drafts still need
+  manual scroll inside the textarea.
+- Pixel-level visual regressions are still opt-in because cross-OS font
+  rendering produces noisy diffs.
+
 ## Visual Regression
 
 `bun run test:e2e:playwright` includes browser-level layout contract snapshots for the local Vite example at desktop and mobile widths. These snapshots capture rendered dimensions, overflow behavior, display mode, grid columns, border radius, and key colors for the shell, sidebar, chat, run controls, usage, message list, inline activity, approvals, and composer.

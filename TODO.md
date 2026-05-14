@@ -127,6 +127,46 @@ led palette, primary-thread layout, condensed secondary rail, and host-recipe
 context blocks composed entirely from primitives. See the 2026-05-15 visual
 quality rebuild gate entry in `docs/testing.md`.
 
+Reopened a fourth time on 2026-05-15 after a follow-up review found that the
+layout was fine but the *basic primitives themselves* (composer, button, input,
+approval, command/diff block, sidebar) were under-crafted: the composer read
+as a row of form controls, button hierarchy was unclear, App/Plugin chips
+looked careless, and the approval card lacked decision affordance. The
+interactive layer was rebuilt in place. See the 2026-05-15 primitive
+craftsmanship rebuild entry in `docs/testing.md`.
+
+- [x] Rebuild the composer as one bordered rounded card with attachment
+      chips, an auto-resizing textarea, an inline icon-button toolbar
+      (paperclip, image, App, Plugin), and a primary circular send icon
+      button with an `Enter to send` hint and natural focus / disabled /
+      drag states.
+- [x] Replace the ad-hoc `aui-button*` classes with an explicit `aui-btn`
+      system (`primary | secondary | ghost | danger | subtle`,
+      `sm | md | lg`, `icon-only`) so `Approve`, `Decline`,
+      `Approve for session`, `New thread`, `Refresh`, `Hide`, and
+      `App / Plugin` mention buttons each render at the right hierarchy.
+- [x] Unify the input layer with a shared `aui-input-shell` (icon prefix,
+      one focus ring) and `aui-select` (custom chevron) so cwd / search /
+      model / effort / segmented controls share one visual language.
+- [x] Rebuild the approval card with shield icon, humanized title and
+      reason, `LOW / MED / HIGH` risk pill, command on a dark surface, a
+      metadata grid for cwd / sandbox / approval policy, and three explicit
+      decisions on a divider footer.
+- [x] Refine the timeline: user bubble uses primary-tinted accent, assistant
+      text flows as markdown, plan callout uses primary tint, command/diff
+      share a dark code surface, and `COMPLETED` meta is suppressed on
+      user/assistant items.
+- [x] Polish sidebar search and thread list: icon-prefix search,
+      coloured status dot per thread, subtle-variant Load/Load all/Hide so
+      secondary chrome never reads as primary actions.
+- [x] Add a `Component close-ups` section to `/fixture-gallery` that renders
+      composer (normal/focused/approval-pending/mobile), approval cards
+      (command/user input), command/diff surfaces, sidebar search + threads,
+      usage/status chips, the full button palette, and inputs/selects/
+      segmented as direct live primitives — not iframes.
+- [x] Fix the host workflow recipe so `AgentStatusSummary` is rendered
+      exactly once, with a Playwright regression that asserts no duplicates.
+
 - [x] Port the useful `agent-kitchen` block taxonomy onto `agent-ui` normalized state.
 - [x] Implement polished renderers for command execution, file changes, tool calls, thinking, plans, diffs, images, system info, and web/search-style blocks.
 - [x] Implement status banners for model reroutes, deprecation notices, config warnings, account status, MCP OAuth, and rate limits.

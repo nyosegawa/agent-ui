@@ -34,6 +34,174 @@ import { AgentMessageList } from "./timeline";
 import { normalizeUsageWindows } from "./usage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+// --- Icon set ---------------------------------------------------------------
+// Inline SVG icons keep the React package zero-dep. Each icon respects
+// currentColor so button/text variants can recolor them via CSS.
+
+function Icon({
+  children,
+  size = 16,
+  strokeWidth = 1.75,
+  title,
+}: {
+  children: React.ReactNode;
+  size?: number;
+  strokeWidth?: number;
+  title?: string;
+}) {
+  return (
+    <svg
+      aria-hidden={title ? undefined : "true"}
+      aria-label={title}
+      fill="none"
+      focusable="false"
+      height={size}
+      role={title ? "img" : undefined}
+      stroke="currentColor"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth={strokeWidth}
+      viewBox="0 0 24 24"
+      width={size}
+    >
+      {children}
+    </svg>
+  );
+}
+
+const IconPaperclip = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M21.44 11.05l-9.19 9.19a5.5 5.5 0 01-7.78-7.78l9.2-9.19a3.67 3.67 0 015.19 5.19l-9.2 9.19a1.83 1.83 0 11-2.6-2.6l8.49-8.48" />
+  </Icon>
+);
+
+const IconAt = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M16 8v5a3 3 0 006 0v-1a10 10 0 10-3.92 7.94" />
+  </Icon>
+);
+
+const IconApp = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <rect x="3" y="3" width="7" height="7" rx="1.5" />
+    <rect x="14" y="3" width="7" height="7" rx="1.5" />
+    <rect x="3" y="14" width="7" height="7" rx="1.5" />
+    <rect x="14" y="14" width="7" height="7" rx="1.5" />
+  </Icon>
+);
+
+const IconPlugin = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M9 2v4M15 2v4M7 6h10v6a5 5 0 01-10 0V6zM12 17v5" />
+  </Icon>
+);
+
+const IconSend = (props: { size?: number }) => (
+  <Icon size={props.size} strokeWidth={2}>
+    <path d="M5 12l14-8-4 18-3-7-7-3z" />
+  </Icon>
+);
+
+const IconStop = (props: { size?: number }) => (
+  <Icon size={props.size} strokeWidth={0}>
+    <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />
+  </Icon>
+);
+
+const IconFolder = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+  </Icon>
+);
+
+const IconSearch = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="M21 21l-4.35-4.35" />
+  </Icon>
+);
+
+const IconShield = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M12 3l8 3v6c0 4.4-3.4 8-8 9-4.6-1-8-4.6-8-9V6l8-3z" />
+    <path d="M9 12l2 2 4-4" />
+  </Icon>
+);
+
+const IconClose = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M6 6l12 12M6 18L18 6" />
+  </Icon>
+);
+
+const IconCheck = (props: { size?: number }) => (
+  <Icon size={props.size} strokeWidth={2.2}>
+    <path d="M5 13l4 4L19 7" />
+  </Icon>
+);
+
+const IconBlock = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M5.6 5.6l12.8 12.8" />
+  </Icon>
+);
+
+const IconSpark = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M12 3v4M12 17v4M3 12h4M17 12h4M5.6 5.6l2.8 2.8M15.6 15.6l2.8 2.8M5.6 18.4l2.8-2.8M15.6 8.4l2.8-2.8" />
+  </Icon>
+);
+
+const IconChevronDown = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M6 9l6 6 6-6" />
+  </Icon>
+);
+
+const IconHistory = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M3 12a9 9 0 109-9 9.3 9.3 0 00-7 3M3 3v5h5M12 7v5l3 2" />
+  </Icon>
+);
+
+const IconAdd = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M12 5v14M5 12h14" />
+  </Icon>
+);
+
+const IconMoreVertical = (props: { size?: number }) => (
+  <Icon size={props.size} strokeWidth={2.4}>
+    <circle cx="12" cy="5" r="1" />
+    <circle cx="12" cy="12" r="1" />
+    <circle cx="12" cy="19" r="1" />
+  </Icon>
+);
+
+const IconRefresh = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M3 12a9 9 0 0115-6.7L21 8M21 3v5h-5M21 12a9 9 0 01-15 6.7L3 16M3 21v-5h5" />
+  </Icon>
+);
+
+// --- Button helper ----------------------------------------------------------
+
+type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "subtle";
+type ButtonSize = "sm" | "md" | "lg";
+
+function buttonClass(
+  variant: ButtonVariant = "secondary",
+  options: { className?: string; iconOnly?: boolean; size?: ButtonSize } = {},
+): string {
+  const parts = ["aui-btn", `aui-btn-${variant}`];
+  if (options.size && options.size !== "md") parts.push(`aui-btn-${options.size}`);
+  if (options.iconOnly) parts.push("aui-btn-icon-only");
+  if (options.className) parts.push(options.className);
+  return parts.join(" ");
+}
+
 export interface AgentChatSlots {
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
   renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
@@ -87,7 +255,6 @@ export function AgentChat({
               />
             ) : (
               <div className="aui-empty">
-                <AgentRunControls autoRefresh={false} />
                 <AgentFirstRun onStartThread={() => void startThread()} />
               </div>
             )}
@@ -103,6 +270,51 @@ export function AgentChat({
         </div>
       </div>
     </AgentShell>
+  );
+}
+
+/**
+ * Cohesive secondary-chrome card combining status summary and details so the
+ * rail never renders two near-identical status widgets stacked on each other.
+ */
+export function AgentStatusCard() {
+  const { state } = useAgentContext();
+  const notices = normalizedStatusNotices(state.diagnostics.banners);
+  if (notices.length === 0) return null;
+  const criticalCount = notices.filter((notice) => notice.severity === "critical").length;
+  const warningCount = notices.filter((notice) => notice.severity === "warning").length;
+  const summary = statusSummary(notices.length, warningCount, criticalCount);
+  const detailsNotices = notices.filter((notice) => notice.severity !== "critical");
+  return (
+    <section className="aui-status-card" aria-label="Status">
+      <header className="aui-status-card-header">
+        <strong>Status</strong>
+        <span data-severity={criticalCount > 0 ? "critical" : warningCount > 0 ? "warning" : "info"}>
+          {summary}
+        </span>
+      </header>
+      {detailsNotices.length > 0 ? (
+        <details className="aui-status-card-details">
+          <summary>
+            <span>Background notices</span>
+            <small>{detailsNotices.length}</small>
+          </summary>
+          <div className="aui-status-card-list">
+            {detailsNotices.slice(-6).map((notice) => (
+              <article
+                className="aui-status-banner"
+                data-kind={notice.kind}
+                data-severity={notice.severity}
+                key={notice.id}
+              >
+                <strong>{notice.title}</strong>
+                <span>{notice.message}</span>
+              </article>
+            ))}
+          </div>
+        </details>
+      ) : null}
+    </section>
   );
 }
 
@@ -221,7 +433,7 @@ function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
       <div className="aui-first-run">
         <strong>Preparing Codex</strong>
         <p>Connecting to the local bridge and checking account state.</p>
-        <button className="aui-button aui-button-secondary" disabled type="button">
+        <button className={buttonClass("secondary")} disabled type="button">
           Syncing
         </button>
       </div>
@@ -232,7 +444,11 @@ function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
       <div className="aui-first-run">
         <strong>Connect Codex</strong>
         <p>Sign in with ChatGPT device code before starting a real local thread.</p>
-        <button className="aui-button" onClick={() => deferAction(login)} type="button">
+        <button
+          className={buttonClass("primary")}
+          onClick={() => deferAction(login)}
+          type="button"
+        >
           Start device-code login
         </button>
       </div>
@@ -244,7 +460,7 @@ function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
         <strong>Complete Codex login</strong>
         <p>Open the device login link and enter the code shown in the status bar.</p>
         <button
-          className="aui-button aui-button-secondary"
+          className={buttonClass("secondary")}
           disabled={!account.login?.loginId}
           onClick={() => deferAction(cancelLogin)}
           type="button"
@@ -258,8 +474,14 @@ function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
     <div className="aui-first-run">
       <strong>Start a Codex thread</strong>
       <p>Choose a model, effort, execution mode, and working directory, then start.</p>
-      <button className="aui-button" onClick={() => deferAction(onStartThread)} type="button">
-        Start thread
+      <AgentRunControls autoRefresh={false} variant="panel" />
+      <button
+        className={buttonClass("primary")}
+        onClick={() => deferAction(onStartThread)}
+        type="button"
+      >
+        <IconSpark size={14} />
+        <span>Start thread</span>
       </button>
     </div>
   );
@@ -289,11 +511,12 @@ function AgentThreadActions({
   return (
     <div className="aui-thread-actions">
       <span className="aui-status-pill" data-status={status}>
+        <span className="aui-status-pill-dot" aria-hidden="true" />
         {formatThreadStatus(status, { hasTurns })}
       </span>
       {canResume ? (
         <button
-          className="aui-button aui-button-secondary"
+          className={buttonClass("secondary", { size: "sm" })}
           onClick={() =>
             deferAction(() => void resumeThread(threadId, { excludeTurns: true }))
           }
@@ -304,22 +527,28 @@ function AgentThreadActions({
       ) : null}
       {status === "running" && latestTurnId ? (
         <button
-          className="aui-button aui-button-secondary"
+          className={buttonClass("danger", { size: "sm" })}
           onClick={() => deferAction(() => void interruptTurn(latestTurnId))}
           type="button"
         >
-          Stop
+          <IconStop size={12} />
+          <span>Stop</span>
         </button>
       ) : null}
       <button
-        className="aui-button aui-button-secondary"
+        aria-label="New thread"
+        className={buttonClass("ghost", { size: "sm" })}
         onClick={() => deferAction(startThread)}
+        title="New thread"
         type="button"
       >
-        New thread
+        <IconAdd size={14} />
+        <span>New thread</span>
       </button>
       <details className="aui-thread-action-menu">
-        <summary>Actions</summary>
+        <summary aria-label="Actions" title="Thread actions">
+          <IconMoreVertical size={16} />
+        </summary>
         <div>
           <button
             disabled={!threadId}
@@ -374,9 +603,19 @@ function AgentThreadActions({
 
 export interface AgentRunControlsProps {
   autoRefresh?: boolean;
+  /**
+   * "compact" renders an inline, dense form intended to sit inside another
+   * surface (the composer or a host-owned panel). "panel" renders the legacy
+   * full-width labeled settings form used by the empty-state and the
+   * fixture gallery close-up.
+   */
+  variant?: "compact" | "panel";
 }
 
-export function AgentRunControls({ autoRefresh = true }: AgentRunControlsProps = {}) {
+export function AgentRunControls({
+  autoRefresh = true,
+  variant = "panel",
+}: AgentRunControlsProps = {}) {
   const { state } = useAgentContext();
   const { models, refreshModels } = useAgentModels();
   const {
@@ -409,10 +648,13 @@ export function AgentRunControls({ autoRefresh = true }: AgentRunControlsProps =
   }, [autoRefresh, models.length, refreshModels, state.connection.status]);
 
   return (
-    <section className="aui-run-controls" aria-label="Run settings">
+    <section
+      className={variant === "compact" ? "aui-run-controls-compact" : "aui-run-controls"}
+      aria-label="Run settings"
+    >
       <fieldset className="aui-mode-group">
         <legend>Execution mode</legend>
-        <div className="aui-segmented">
+        <div className="aui-segmented" role="tablist">
           {executionModes.map((mode) => (
             <button
               aria-pressed={runSettings.executionMode === mode.id}
@@ -431,6 +673,7 @@ export function AgentRunControls({ autoRefresh = true }: AgentRunControlsProps =
         <span>Model</span>
         <select
           aria-label="Model"
+          className="aui-select"
           onChange={(event) => setModelId(event.currentTarget.value)}
           value={runSettings.modelId ?? ""}
         >
@@ -446,6 +689,7 @@ export function AgentRunControls({ autoRefresh = true }: AgentRunControlsProps =
         <span>Effort</span>
         <select
           aria-label="Effort"
+          className="aui-select"
           disabled={!hasEffortOptions}
           onChange={(event) => setEffort(event.currentTarget.value)}
           value={runSettings.effort ?? ""}
@@ -462,9 +706,11 @@ export function AgentRunControls({ autoRefresh = true }: AgentRunControlsProps =
       </label>
       <label className="aui-field aui-field-wide">
         <span>Working directory</span>
-        <div className="aui-cwd-input">
+        <div className="aui-input-shell aui-input-with-icon">
+          <IconFolder size={14} />
           <input
             aria-label="Working directory"
+            className="aui-text-input"
             list={cwdOptions.length > 0 ? "aui-cwd-options" : undefined}
             onChange={(event) => setCwd(event.currentTarget.value)}
             placeholder={cwdOptions[0] ?? "Server default cwd"}
@@ -474,12 +720,12 @@ export function AgentRunControls({ autoRefresh = true }: AgentRunControlsProps =
           {runSettings.cwd ? (
             <button
               aria-label="Clear working directory"
-              className="aui-icon-button"
+              className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
               onClick={() => setCwd("")}
               title="Clear working directory"
               type="button"
             >
-              x
+              <IconClose size={14} />
             </button>
           ) : null}
           {cwdOptions.length > 0 ? (
@@ -502,17 +748,26 @@ function formatModelOption(model: { id: string; name?: string }): string {
 
 export function AgentComposer({
   disabled = false,
+  disabledReason,
   placeholder = "Ask Codex to work in this thread",
   resolveLocalAttachment,
   threadId,
 }: {
   disabled?: boolean;
+  disabledReason?: string;
   placeholder?: string;
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   threadId?: string;
 }) {
   const composer = useAgentComposer(threadId);
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
+  const [isFocused, setFocused] = useState(false);
+  const [isDragOver, setDragOver] = useState(false);
+  const dragCounter = useRef(0);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const imageInputRef = useRef<HTMLInputElement | null>(null);
+
   const addAttachment = useCallback((attachment: ComposerAttachment) => {
     setAttachments((current) => [...current, attachment]);
   }, []);
@@ -537,46 +792,225 @@ export function AgentComposer({
     },
     [addAttachment, resolveLocalAttachment],
   );
+
+  // Auto-resize textarea up to a max height.
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 220)}px`;
+  }, [composer.value]);
+
+  const submit = () => {
+    if (disabled) return;
+    if (!composer.value.trim() && attachments.length === 0) return;
+    deferAction(() => composer.submit(attachments.map(composerAttachmentInput)));
+    setAttachments([]);
+  };
+
+  const isComposing = useRef(false);
+  const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
+    if (event.key === "Enter" && !event.shiftKey && !isComposing.current) {
+      event.preventDefault();
+      submit();
+    }
+  };
+
+  const canSubmit = !disabled && (composer.value.trim().length > 0 || attachments.length > 0);
+
+  const handleMention = (kind: "app" | "plugin") => {
+    const value = globalThis.prompt?.(
+      kind === "app" ? "App URI" : "Plugin URI",
+      kind === "app" ? "app://" : "plugin://",
+    );
+    if (!value?.trim()) return;
+    addAttachment({
+      id: `${kind}:${value}:${Date.now()}`,
+      kind,
+      label: value.trim(),
+      value: value.trim(),
+    });
+  };
+
   return (
     <form
+      aria-label="Composer attachments"
       className="aui-composer"
+      data-disabled={disabled ? "true" : undefined}
+      data-focused={isFocused ? "true" : undefined}
+      data-drag={isDragOver ? "true" : undefined}
+      onDragEnter={(event) => {
+        if (!resolveLocalAttachment || disabled) return;
+        event.preventDefault();
+        dragCounter.current += 1;
+        if (dragCounter.current === 1) setDragOver(true);
+      }}
+      onDragLeave={(event) => {
+        if (!resolveLocalAttachment || disabled) return;
+        event.preventDefault();
+        dragCounter.current -= 1;
+        if (dragCounter.current <= 0) {
+          dragCounter.current = 0;
+          setDragOver(false);
+        }
+      }}
+      onDragOver={(event) => {
+        if (!resolveLocalAttachment || disabled) return;
+        event.preventDefault();
+      }}
+      onDrop={(event) => {
+        if (!resolveLocalAttachment || disabled) return;
+        event.preventDefault();
+        dragCounter.current = 0;
+        setDragOver(false);
+        const files = event.dataTransfer.files;
+        if (files && files.length > 0) void addLocalFiles(files);
+      }}
       onSubmit={(event) => {
         event.preventDefault();
-        deferAction(() => composer.submit(attachments.map(composerAttachmentInput)));
-        setAttachments([]);
+        submit();
       }}
     >
-      <ComposerAttachmentToolbar
-        attachments={attachments}
-        disabled={disabled}
-        onAdd={addAttachment}
-        onRemove={removeAttachment}
-        onResolveLocalFiles={resolveLocalAttachment ? addLocalFiles : undefined}
-      />
+      {disabled && disabledReason ? (
+        <div className="aui-composer-notice" role="status">
+          <IconShield size={14} />
+          <span>{disabledReason}</span>
+        </div>
+      ) : null}
+      {attachments.length > 0 ? (
+        <ul className="aui-composer-chips" aria-label="Pending attachments">
+          {attachments.map((attachment) => (
+            <li className="aui-composer-chip" data-kind={attachment.kind} key={attachment.id}>
+              <span className="aui-composer-chip-icon" aria-hidden="true">
+                {attachment.kind === "image" ? <IconAt size={14} /> : null}
+                {attachment.kind === "file" ? <IconPaperclip size={14} /> : null}
+                {attachment.kind === "app" ? <IconApp size={14} /> : null}
+                {attachment.kind === "plugin" ? <IconPlugin size={14} /> : null}
+              </span>
+              <span className="aui-composer-chip-label">{attachment.label}</span>
+              <button
+                aria-label={`Remove ${attachment.label}`}
+                className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
+                onClick={() => removeAttachment(attachment.id)}
+                type="button"
+              >
+                <IconClose size={12} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
       <textarea
         aria-label="Message"
         className="aui-composer-input"
         disabled={disabled}
+        onBlur={() => setFocused(false)}
         onChange={(event) => composer.setValue(event.currentTarget.value)}
-        onDrop={(event) => {
-          if (disabled) return;
-          const files = event.dataTransfer.files;
-          if (!resolveLocalAttachment || files.length === 0) return;
-          event.preventDefault();
-          void addLocalFiles(files);
+        onCompositionEnd={() => {
+          isComposing.current = false;
         }}
+        onCompositionStart={() => {
+          isComposing.current = true;
+        }}
+        onFocus={() => setFocused(true)}
+        onKeyDown={onKeyDown}
         onPaste={(event) => {
           if (disabled) return;
           if (!resolveLocalAttachment || event.clipboardData.files.length === 0) return;
+          event.preventDefault();
           void addLocalFiles(event.clipboardData.files);
         }}
         placeholder={placeholder}
-        rows={3}
+        ref={textareaRef}
+        rows={1}
         value={composer.value}
       />
-      <button className="aui-button" disabled={disabled} type="submit">
-        Send
-      </button>
+      <div className="aui-composer-toolbar">
+        <div className="aui-composer-toolbar-start">
+          {resolveLocalAttachment ? (
+            <>
+              <button
+                aria-label="Attach file"
+                className={buttonClass("ghost", { iconOnly: true })}
+                disabled={disabled}
+                onClick={() => fileInputRef.current?.click()}
+                title="Attach file"
+                type="button"
+              >
+                <IconPaperclip size={16} />
+              </button>
+              <input
+                accept="*"
+                hidden
+                onChange={(event) => {
+                  const files = event.currentTarget.files;
+                  if (files) void addLocalFiles(files);
+                  event.currentTarget.value = "";
+                }}
+                ref={fileInputRef}
+                type="file"
+              />
+              <button
+                aria-label="Attach image"
+                className={buttonClass("ghost", { iconOnly: true })}
+                disabled={disabled}
+                onClick={() => imageInputRef.current?.click()}
+                title="Attach image"
+                type="button"
+              >
+                <IconAt size={16} />
+              </button>
+              <input
+                accept="image/*"
+                hidden
+                onChange={(event) => {
+                  const files = event.currentTarget.files;
+                  if (files) void addLocalFiles(files);
+                  event.currentTarget.value = "";
+                }}
+                ref={imageInputRef}
+                type="file"
+              />
+            </>
+          ) : null}
+          <button
+            aria-label="App"
+            className={buttonClass("ghost", { size: "sm" })}
+            disabled={disabled}
+            onClick={() => handleMention("app")}
+            title="Mention an app"
+            type="button"
+          >
+            <IconApp size={14} />
+            <span>App</span>
+          </button>
+          <button
+            aria-label="Plugin"
+            className={buttonClass("ghost", { size: "sm" })}
+            disabled={disabled}
+            onClick={() => handleMention("plugin")}
+            title="Mention a plugin"
+            type="button"
+          >
+            <IconPlugin size={14} />
+            <span>Plugin</span>
+          </button>
+        </div>
+        <div className="aui-composer-toolbar-end">
+          <span className="aui-composer-hint" aria-hidden="true">
+            <kbd>Enter</kbd> to send
+          </span>
+          <button
+            aria-label="Send"
+            className={buttonClass("primary", { iconOnly: true, size: "lg" })}
+            disabled={!canSubmit}
+            title="Send message"
+            type="submit"
+          >
+            <IconSend size={18} />
+          </button>
+        </div>
+      </div>
     </form>
   );
 }
@@ -598,90 +1032,6 @@ interface ComposerAttachment {
   value: string;
 }
 
-function ComposerAttachmentToolbar({
-  attachments,
-  disabled,
-  onAdd,
-  onRemove,
-  onResolveLocalFiles,
-}: {
-  attachments: ComposerAttachment[];
-  disabled: boolean;
-  onAdd: (attachment: ComposerAttachment) => void;
-  onRemove: (id: string) => void;
-  onResolveLocalFiles?: (files: FileList | File[]) => void | Promise<void>;
-}) {
-  const addMention = (kind: "app" | "plugin") => {
-    const value = globalThis.prompt?.(
-      kind === "app" ? "App URI" : "Plugin URI",
-      kind === "app" ? "app://" : "plugin://",
-    );
-    if (!value?.trim()) return;
-    onAdd({
-      id: `${kind}:${value}:${Date.now()}`,
-      kind,
-      label: value.trim(),
-      value: value.trim(),
-    });
-  };
-  return (
-    <div className="aui-attachment-toolbar" aria-label="Composer attachments">
-      {onResolveLocalFiles ? (
-        <>
-          <label className="aui-attachment-button">
-            <span>Image</span>
-            <input
-              accept="image/*"
-              disabled={disabled}
-              onChange={(event) => {
-                const files = event.currentTarget.files;
-                if (files) void onResolveLocalFiles(files);
-                event.currentTarget.value = "";
-              }}
-              type="file"
-            />
-          </label>
-          <label className="aui-attachment-button">
-            <span>File</span>
-            <input
-              disabled={disabled}
-              onChange={(event) => {
-                const files = event.currentTarget.files;
-                if (files) void onResolveLocalFiles(files);
-                event.currentTarget.value = "";
-              }}
-              type="file"
-            />
-          </label>
-        </>
-      ) : null}
-      <button disabled={disabled} onClick={() => addMention("app")} type="button">
-        App
-      </button>
-      <button disabled={disabled} onClick={() => addMention("plugin")} type="button">
-        Plugin
-      </button>
-      {attachments.length > 0 ? (
-        <ul className="aui-attachment-chips">
-          {attachments.map((attachment) => (
-            <li key={attachment.id}>
-              <span>{attachment.kind}</span>
-              <strong>{attachment.label}</strong>
-              <button
-                aria-label={`Remove ${attachment.label}`}
-                onClick={() => onRemove(attachment.id)}
-                type="button"
-              >
-                x
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-    </div>
-  );
-}
-
 function composerAttachmentInput(attachment: ComposerAttachment): CodexUserInput {
   if (attachment.input) return attachment.input;
   return mentionInput(attachment.label, attachment.value);
@@ -699,29 +1049,26 @@ export function AgentComposerPanel({
   const isRunning = thread.status === "running";
   const isPreviewOnly = isPreviewOnlyThread(thread);
   const isBlocked = isRunning || thread.status === "waitingForInput" || isPreviewOnly;
-  const compactRunSettings = useCompactLayout();
   return (
     <section className="aui-compose-panel" aria-label="Message composer">
-      {compactRunSettings ? (
-        <details className="aui-run-settings-details">
-          <summary>
-            <span>Run settings</span>
-            <RunSettingsSummary />
-          </summary>
-          <AgentRunControls autoRefresh={false} />
-        </details>
-      ) : (
-        <AgentRunControls autoRefresh={false} />
-      )}
-      {isBlocked ? (
-        <AgentTurnStopControl isPreviewOnly={isPreviewOnly} thread={thread} />
-      ) : null}
-      <AgentComposer
-        disabled={isBlocked}
-        placeholder={composerPlaceholder(thread.status, isPreviewOnly)}
-        resolveLocalAttachment={resolveLocalAttachment}
-        threadId={threadId}
-      />
+      <details className="aui-run-settings-details">
+        <summary>
+          <IconSpark size={14} />
+          <span>Run settings</span>
+          <RunSettingsSummary />
+          <IconChevronDown size={14} />
+        </summary>
+        <AgentRunControls autoRefresh={false} variant="compact" />
+      </details>
+      <div className="aui-composer-shell">
+        <AgentComposer
+          disabled={isBlocked}
+          disabledReason={composerDisabledReason(thread.status, isPreviewOnly)}
+          placeholder={composerPlaceholder(thread.status, isPreviewOnly)}
+          resolveLocalAttachment={resolveLocalAttachment}
+          threadId={threadId}
+        />
+      </div>
     </section>
   );
 }
@@ -735,6 +1082,18 @@ function RunSettingsSummary() {
     runSettings.cwd ? compactPath(runSettings.cwd) : "server cwd",
   ];
   return <small>{parts.join(" · ")}</small>;
+}
+
+function composerDisabledReason(
+  status: ThreadState["status"],
+  isPreviewOnly: boolean,
+): string | undefined {
+  if (isPreviewOnly) return "Resume this stored thread before sending a new message.";
+  if (status === "running") return "Codex is working — send is available after the turn.";
+  if (status === "waitingForInput") {
+    return "Resolve the pending approval before sending another message.";
+  }
+  return undefined;
 }
 
 function compactPath(path: string): string {
@@ -768,33 +1127,6 @@ function isPreviewOnlyThread(thread: ThreadState): boolean {
   return (
     thread.status === "notLoaded" ||
     (thread.status === "loaded" && thread.orderedTurnIds.length > 0)
-  );
-}
-
-function AgentTurnStopControl({
-  isPreviewOnly = false,
-  thread,
-}: {
-  isPreviewOnly?: boolean;
-  thread: ThreadState;
-}) {
-  if (
-    thread.status !== "running" &&
-    thread.status !== "waitingForInput" &&
-    !isPreviewOnly
-  ) {
-    return null;
-  }
-  return (
-    <div className="aui-turn-control">
-      <span>
-        {isPreviewOnly
-          ? "Resume this stored thread before sending a new message."
-          : thread.status === "running"
-            ? "Codex is working. Stop is available in the thread header."
-            : "Resolve the pending approval before sending another message."}
-      </span>
-    </div>
   );
 }
 
@@ -859,41 +1191,116 @@ function ApprovalCard({
 }) {
   const payload = isRecord(approval.payload) ? approval.payload : {};
   const requestLabel = approvalRequestLabel(approval.kind);
+  const risk = approvalRisk(approval.kind, payload);
   return (
-    <article className="aui-approval">
-      <div className="aui-approval-header">
-        <strong>{approvalTitle(approval.kind)}</strong>
-        <span>request {String(approval.id)}</span>
-      </div>
+    <article
+      aria-labelledby={`aui-approval-title-${String(approval.id)}`}
+      className="aui-approval"
+      data-kind={approval.kind}
+      data-risk={risk}
+    >
+      <header className="aui-approval-header">
+        <span className="aui-approval-icon" aria-hidden="true" data-risk={risk}>
+          <IconShield size={18} />
+        </span>
+        <div className="aui-approval-title">
+          <strong id={`aui-approval-title-${String(approval.id)}`}>
+            {approvalTitle(approval.kind)}
+          </strong>
+          <small>{approvalSubtitle(approval.kind, payload)}</small>
+        </div>
+        <span className="aui-approval-risk" data-risk={risk}>
+          {riskLabel(risk)} risk
+        </span>
+      </header>
       <ApprovalSummary approval={approval} payload={payload} />
-      <div className="aui-actions">
+      <footer className="aui-approval-actions">
         <button
           aria-label={`Approve ${requestLabel} ${String(approval.id)}`}
-          className="aui-button"
+          className={buttonClass("primary", { size: "md" })}
           onClick={onApprove}
           type="button"
         >
-          Approve
+          <IconCheck size={14} />
+          <span>Approve</span>
         </button>
         <button
           aria-label={`Approve ${requestLabel} ${String(approval.id)} for session`}
-          className="aui-button aui-button-secondary"
+          className={buttonClass("secondary", { size: "md" })}
           onClick={onApproveForSession}
           type="button"
         >
-          Approve session
+          Approve for session
         </button>
         <button
           aria-label={`Decline ${requestLabel} ${String(approval.id)}`}
-          className="aui-button aui-button-secondary"
+          className={buttonClass("danger", { size: "md" })}
           onClick={onReject}
           type="button"
         >
-          Decline
+          <IconBlock size={14} />
+          <span>Decline</span>
         </button>
-      </div>
+      </footer>
     </article>
   );
+}
+
+type ApprovalRisk = "high" | "medium" | "low";
+
+function approvalRisk(kind: string, payload: Record<string, unknown>): ApprovalRisk {
+  if (kind === "fileChangeApproval" || kind === "legacyPatchApproval") return "medium";
+  if (kind === "commandApproval" || kind === "legacyExecApproval") {
+    const sandbox =
+      typeof payload.sandbox === "string" ? payload.sandbox : payload.sandboxPolicy;
+    if (typeof sandbox === "string" && /none|disable|no-sandbox/i.test(sandbox)) {
+      return "high";
+    }
+    const command = typeof payload.command === "string" ? payload.command : "";
+    if (/\brm\b\s+-rf|sudo|curl\s.*sh|chmod\s+777/i.test(command)) return "high";
+    return "medium";
+  }
+  if (kind === "dynamicTool" || kind === "permissionsApproval") return "medium";
+  if (kind === "userInput" || kind === "mcpElicitation") return "low";
+  return "low";
+}
+
+function riskLabel(risk: ApprovalRisk): string {
+  switch (risk) {
+    case "high":
+      return "High";
+    case "medium":
+      return "Med";
+    default:
+      return "Low";
+  }
+}
+
+function approvalSubtitle(kind: string, payload: Record<string, unknown>): string {
+  const reason = stringField(payload, "reason");
+  if (reason) return reason;
+  switch (kind) {
+    case "fileChangeApproval":
+    case "legacyPatchApproval":
+      return "Codex wants to apply file changes to your workspace.";
+    case "commandApproval":
+    case "legacyExecApproval":
+      return "Codex wants to run a shell command in your workspace.";
+    case "dynamicTool":
+      return "Codex wants to call a host-registered dynamic tool.";
+    case "permissionsApproval":
+      return "Codex wants to use an additional permission.";
+    case "userInput":
+      return "Codex needs a free-form answer to continue.";
+    case "mcpElicitation":
+      return "An MCP server needs additional input to continue.";
+    case "authRefresh":
+      return "Codex wants to refresh its credentials.";
+    case "attestation":
+      return "Codex wants to generate a runtime attestation.";
+    default:
+      return `Codex is requesting a ${kind} decision.`;
+  }
 }
 
 function ApprovalSummary({
@@ -961,12 +1368,14 @@ function CommandApprovalSummary({ payload }: { payload: Record<string, unknown> 
     stringField(payload, "sandbox") ?? stringField(payload, "sandboxPolicy");
   return (
     <div className="aui-approval-summary">
-      <code className="aui-command-line">{command}</code>
+      <pre className="aui-command-line">
+        <code>$ {command}</code>
+      </pre>
       <MetadataGrid
         rows={[
           ["Working directory", cwd],
-          ["Approval policy", policy],
           ["Sandbox", sandbox],
+          ["Approval policy", policy],
         ]}
       />
     </div>
@@ -979,7 +1388,12 @@ function FileChangeApprovalSummary({ payload }: { payload: Record<string, unknow
   const patch = payload.patch ?? payload.diff ?? payload.fileChanges;
   return (
     <div className="aui-approval-summary">
-      {path ? <div className="aui-file-path">{path}</div> : null}
+      {path ? (
+        <div className="aui-approval-filepath">
+          <IconPaperclip size={12} />
+          <code>{path}</code>
+        </div>
+      ) : null}
       {summary ? <p className="aui-approval-copy">{summary}</p> : null}
       {patch ? <AgentDiffViewer patch={patch} /> : null}
       {!path && !summary && !patch ? (
@@ -1102,7 +1516,7 @@ export function AgentStatusBar() {
           {account.login.userCode ? <code>{account.login.userCode}</code> : null}
           {account.login.loginId ? (
             <button
-              className="aui-button aui-button-secondary"
+              className={buttonClass("secondary", { size: "sm" })}
               onClick={() => void cancelLogin()}
               type="button"
             >
@@ -1112,12 +1526,20 @@ export function AgentStatusBar() {
         </div>
       ) : null}
       {account.status === "unknown" ? (
-        <button className="aui-button aui-button-secondary" disabled type="button">
+        <button
+          className={buttonClass("secondary", { size: "sm" })}
+          disabled
+          type="button"
+        >
           {state.connection.status === "connected" ? "Checking" : "Connecting"}
         </button>
       ) : null}
       {account.status === "unauthenticated" ? (
-        <button className="aui-button" onClick={() => void login()} type="button">
+        <button
+          className={buttonClass("primary", { size: "sm" })}
+          onClick={() => void login()}
+          type="button"
+        >
           Login
         </button>
       ) : null}
@@ -1332,15 +1754,18 @@ export function AgentUsagePanel({ autoRefresh = true }: AgentUsageProps = {}) {
   }, [autoRefresh, refreshUsage, state.connection.status]);
   const refreshButton = (
     <button
-      className="aui-link-button"
+      aria-label="Refresh"
+      className={buttonClass("ghost", { size: "sm" })}
       disabled={isRefreshing}
       onClick={() => {
         setIsRefreshing(true);
         void refreshUsage().finally(() => setIsRefreshing(false));
       }}
+      title="Refresh usage"
       type="button"
     >
-      {isRefreshing ? "Refreshing" : "Refresh"}
+      <IconRefresh size={12} />
+      <span>{isRefreshing ? "Refreshing…" : "Refresh"}</span>
     </button>
   );
   const usageBody =
@@ -1456,11 +1881,14 @@ export function AgentSkillsPanel({ cwd }: { cwd?: string }) {
       <div className="aui-usage-header">
         <strong>Skills</strong>
         <button
-          className="aui-link-button"
+          aria-label="Refresh"
+          className={buttonClass("ghost", { size: "sm" })}
           onClick={() => void refreshSkills().catch(() => undefined)}
+          title="Refresh skills"
           type="button"
         >
-          Refresh
+          <IconRefresh size={12} />
+          <span>Refresh</span>
         </button>
       </div>
       {skills.length > 0 ? (
@@ -1469,7 +1897,7 @@ export function AgentSkillsPanel({ cwd }: { cwd?: string }) {
             <li key={`${skill.path ?? ""}:${skill.name}`}>
               <span>{skill.name}</span>
               <button
-                className="aui-link-button"
+                className={buttonClass("subtle", { size: "sm" })}
                 onClick={() =>
                   void setSkillEnabled({
                     enabled: skill.enabled === false,
@@ -1497,11 +1925,14 @@ export function AgentAppsPanel({ threadId }: { threadId?: string }) {
       <div className="aui-usage-header">
         <strong>Apps</strong>
         <button
-          className="aui-link-button"
+          aria-label="Refresh"
+          className={buttonClass("ghost", { size: "sm" })}
           onClick={() => void refreshApps().catch(() => undefined)}
+          title="Refresh apps"
           type="button"
         >
-          Refresh
+          <IconRefresh size={12} />
+          <span>Refresh</span>
         </button>
       </div>
       {apps.length > 0 ? (
@@ -1519,7 +1950,7 @@ export function AgentAppsPanel({ threadId }: { threadId?: string }) {
       )}
       {nextCursor ? (
         <button
-          className="aui-link-button"
+          className={buttonClass("subtle", { size: "sm" })}
           onClick={() => void loadMoreApps()?.catch(() => undefined)}
           type="button"
         >
@@ -1567,18 +1998,31 @@ export function ThreadList({
 }) {
   return (
     <nav className="aui-thread-list" aria-label="Threads">
-      {threads.map((thread) => (
-        <button
-          aria-current={thread.thread.id === activeThreadId ? "page" : undefined}
-          className="aui-thread-list-item"
-          key={thread.thread.id}
-          onClick={() => onSelectThread?.(thread.thread.id)}
-          type="button"
-        >
-          <span>{thread.thread.name ?? thread.thread.id}</span>
-          <small>{threadListMeta(thread)}</small>
-        </button>
-      ))}
+      {threads.map((thread) => {
+        const meta = threadListMeta(thread);
+        return (
+          <button
+            aria-current={thread.thread.id === activeThreadId ? "page" : undefined}
+            className="aui-thread-list-item"
+            data-status={thread.status}
+            key={thread.thread.id}
+            onClick={() => onSelectThread?.(thread.thread.id)}
+            type="button"
+          >
+            <span className="aui-thread-list-name">
+              {thread.thread.name ?? thread.thread.id}
+            </span>
+            <span className="aui-thread-list-meta">
+              <span
+                aria-hidden="true"
+                className="aui-thread-list-dot"
+                data-status={thread.status}
+              />
+              <small>{meta}</small>
+            </span>
+          </button>
+        );
+      })}
     </nav>
   );
 }
@@ -1782,12 +2226,12 @@ export function ThreadSidebar({
       <aside className="aui-sidebar aui-sidebar-collapsed" data-collapsed="true">
         <button
           aria-label="Expand history"
-          className="aui-sidebar-toggle"
+          className={buttonClass("ghost", { iconOnly: true })}
           onClick={() => onCollapsedChange?.(false)}
           title="Expand history"
           type="button"
         >
-          History
+          <IconHistory size={16} />
         </button>
       </aside>
     );
@@ -1798,12 +2242,12 @@ export function ThreadSidebar({
         <div className="aui-sidebar-title">Threads</div>
         <button
           aria-label="Collapse history"
-          className="aui-sidebar-toggle"
+          className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
           onClick={() => onCollapsedChange?.(true)}
           title="Collapse history"
           type="button"
         >
-          Hide
+          <IconClose size={14} />
         </button>
       </div>
       <form
@@ -1813,15 +2257,20 @@ export function ThreadSidebar({
           void loadThreadPage({ searchTerm }).catch(() => undefined);
         }}
       >
-        <input
-          aria-label="Search history"
-          onChange={(event) => setSearchTerm(event.currentTarget.value)}
-          placeholder="Search history"
-          type="search"
-          value={searchTerm}
-        />
+        <div className="aui-input-shell aui-input-with-icon">
+          <IconSearch size={14} />
+          <input
+            aria-label="Search history"
+            className="aui-text-input"
+            onChange={(event) => setSearchTerm(event.currentTarget.value)}
+            placeholder="Search history"
+            type="search"
+            value={searchTerm}
+          />
+        </div>
         <button
-          className="aui-button aui-button-secondary"
+          aria-label="Load"
+          className={buttonClass("secondary", { size: "sm" })}
           disabled={isLoading}
           type="submit"
         >
@@ -1848,7 +2297,7 @@ export function ThreadSidebar({
         {(nextCursor ?? cursor) ? (
           <div className="aui-history-pagination">
             <button
-              className="aui-button aui-button-secondary aui-history-load-more"
+              className={buttonClass("subtle", { size: "sm" })}
               disabled={isLoading || isLoadingAll}
               onClick={() => {
                 void loadThreadPage({
@@ -1862,7 +2311,7 @@ export function ThreadSidebar({
               {isLoading ? "Loading" : "Load more"}
             </button>
             <button
-              className="aui-button aui-button-secondary aui-history-load-more"
+              className={buttonClass("subtle", { size: "sm" })}
               disabled={isLoading || isLoadingAll}
               onClick={() => {
                 void loadAllThreadPages().catch(() => undefined);

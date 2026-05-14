@@ -101,8 +101,12 @@ test("real local app shell has stable desktop and mobile layout contracts", asyn
     page.locator('select[aria-label="Model"] option[value="smoke-model"]'),
   ).toHaveText("Smoke Model (smoke-model)");
   await expect(noHorizontalOverflow(page)).resolves.toBe(true);
-  const desktopRunControls = page.getByLabel("Run settings");
-  await expect(desktopRunControls).toBeVisible();
+  // Run settings collapse behind a chip inside the composer panel.
+  await expect(page.locator(".aui-run-settings-details summary").first()).toContainText(
+    "Run settings",
+  );
+  await page.locator(".aui-run-settings-details summary").first().click();
+  await expect(page.getByLabel("Run settings")).toBeVisible();
   await expect(page.locator(".aui-composer")).toBeInViewport();
   await expect(independentScrollSurfaces(page)).resolves.toBe(true);
   await page.getByRole("button", { name: "Collapse history" }).click();
@@ -113,7 +117,7 @@ test("real local app shell has stable desktop and mobile layout contracts", asyn
   await page.setViewportSize({ width: 390, height: 900 });
   await page.reload();
   await expect(page.getByTestId("agent-chat")).toBeVisible();
-  await expect(page.locator(".aui-run-settings-details summary")).toContainText(
+  await expect(page.locator(".aui-run-settings-details summary").first()).toContainText(
     "Run settings",
   );
   await expect(page.getByLabel("Run settings")).not.toBeVisible();

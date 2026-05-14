@@ -3084,3 +3084,1317 @@
     min-height: 480px;
   }
 }
+
+/* ===========================================================================
+ *  Primitive craftsmanship overlay
+ *
+ *  Rebuilt from the agent-kitchen quality bar: every interactive primitive
+ *  (button, input, composer, approval) gets a strong, opinionated visual
+ *  identity rather than relying on browser defaults.
+ *
+ *  Anything below this rule supersedes earlier declarations and is the
+ *  single source of truth for new components. Older selectors above stay
+ *  only to keep the timeline/markdown/diff/work-trace surfaces intact while
+ *  we rebuild the interaction layer.
+ * ======================================================================== */
+
+:root {
+  --aui-focus-ring: 0 0 0 3px rgba(13, 148, 136, 0.28);
+  --aui-focus-ring-danger: 0 0 0 3px rgba(185, 28, 28, 0.28);
+  --aui-elevation-1: 0 1px 0 rgba(20, 18, 14, 0.05);
+  --aui-elevation-2: 0 6px 22px -14px rgba(20, 18, 14, 0.22);
+  --aui-radius-md: 8px;
+  --aui-radius-lg: 12px;
+  --aui-radius-xl: 16px;
+  --aui-easing: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --aui-tap-target: 36px;
+}
+
+/* --- Button system -------------------------------------------------------- */
+
+.aui-btn {
+  align-items: center;
+  background: var(--aui-panel);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--aui-fg);
+  cursor: pointer;
+  display: inline-flex;
+  font: 600 13px/1 var(--aui-font);
+  gap: 6px;
+  justify-content: center;
+  letter-spacing: -0.005em;
+  min-height: var(--aui-tap-target);
+  padding: 0 14px;
+  transition:
+    background-color 140ms var(--aui-easing),
+    border-color 140ms var(--aui-easing),
+    color 140ms var(--aui-easing),
+    box-shadow 140ms var(--aui-easing),
+    transform 80ms var(--aui-easing);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.aui-btn:focus-visible {
+  box-shadow: var(--aui-focus-ring);
+  outline: none;
+}
+
+.aui-btn:disabled,
+.aui-btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.aui-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.aui-btn > svg {
+  flex: 0 0 auto;
+}
+
+.aui-btn-sm {
+  font-size: 12px;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 10px;
+}
+
+.aui-btn-lg {
+  font-size: 14px;
+  min-height: 40px;
+  padding: 0 18px;
+}
+
+.aui-btn-icon-only {
+  padding: 0;
+  width: var(--aui-tap-target);
+}
+
+.aui-btn-icon-only.aui-btn-sm {
+  width: 28px;
+}
+
+.aui-btn-icon-only.aui-btn-lg {
+  width: 40px;
+}
+
+.aui-btn-primary {
+  background: var(--aui-primary);
+  border-color: var(--aui-primary);
+  color: var(--aui-primary-fg);
+}
+
+.aui-btn-primary:hover:not(:disabled) {
+  background: var(--aui-primary-strong);
+  border-color: var(--aui-primary-strong);
+}
+
+.aui-btn-secondary {
+  background: var(--aui-panel);
+  border-color: var(--aui-border-strong);
+  color: var(--aui-fg);
+}
+
+.aui-btn-secondary:hover:not(:disabled) {
+  background: var(--aui-panel-alt);
+  border-color: var(--aui-fg-muted);
+}
+
+.aui-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--aui-fg-muted);
+}
+
+.aui-btn-ghost:hover:not(:disabled) {
+  background: var(--aui-panel-alt);
+  color: var(--aui-fg);
+}
+
+.aui-btn-danger {
+  background: var(--aui-danger);
+  border-color: var(--aui-danger);
+  color: #ffffff;
+}
+
+.aui-btn-danger:hover:not(:disabled) {
+  background: #991b1b;
+  border-color: #991b1b;
+}
+
+.aui-btn-danger:focus-visible {
+  box-shadow: var(--aui-focus-ring-danger);
+}
+
+.aui-btn-subtle {
+  background: transparent;
+  border-color: transparent;
+  color: var(--aui-primary);
+  font-weight: 600;
+  padding: 0 6px;
+  min-height: 26px;
+}
+
+.aui-btn-subtle:hover:not(:disabled) {
+  color: var(--aui-primary-strong);
+  text-decoration: underline;
+}
+
+/* Legacy class aliases — keep existing call sites working until removed. */
+.aui-button {
+  background: var(--aui-primary);
+  border: 1px solid var(--aui-primary);
+  border-radius: 8px;
+  color: var(--aui-primary-fg);
+  cursor: pointer;
+  font: 600 13px/1 var(--aui-font);
+  letter-spacing: -0.005em;
+  min-height: var(--aui-tap-target);
+  padding: 0 14px;
+  transition:
+    background-color 140ms var(--aui-easing),
+    border-color 140ms var(--aui-easing),
+    box-shadow 140ms var(--aui-easing);
+}
+
+.aui-button:hover:not(:disabled) {
+  background: var(--aui-primary-strong);
+  border-color: var(--aui-primary-strong);
+}
+
+.aui-button:focus-visible {
+  box-shadow: var(--aui-focus-ring);
+  outline: none;
+}
+
+.aui-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.aui-button-secondary {
+  background: var(--aui-panel);
+  border-color: var(--aui-border-strong);
+  color: var(--aui-fg);
+}
+
+.aui-button-secondary:hover:not(:disabled) {
+  background: var(--aui-panel-alt);
+}
+
+/* --- Input shell ---------------------------------------------------------- */
+
+.aui-input-shell {
+  align-items: center;
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border-strong);
+  border-radius: 8px;
+  color: var(--aui-fg);
+  display: flex;
+  gap: 6px;
+  min-height: var(--aui-tap-target);
+  padding: 0 10px;
+  transition: border-color 140ms var(--aui-easing), box-shadow 140ms var(--aui-easing);
+  width: 100%;
+}
+
+.aui-input-shell:focus-within {
+  border-color: var(--aui-primary);
+  box-shadow: var(--aui-focus-ring);
+}
+
+.aui-input-shell > svg {
+  color: var(--aui-fg-faint);
+  flex: 0 0 auto;
+}
+
+.aui-text-input {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  flex: 1;
+  font: inherit;
+  font-size: 13px;
+  min-width: 0;
+  outline: none;
+  padding: 8px 0;
+}
+
+.aui-text-input::placeholder {
+  color: var(--aui-fg-faint);
+}
+
+.aui-text-input:disabled {
+  color: var(--aui-fg-faint);
+  cursor: not-allowed;
+}
+
+/* --- Select unified ------------------------------------------------------- */
+
+.aui-select {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border-strong);
+  border-radius: 8px;
+  color: var(--aui-fg);
+  font: inherit;
+  font-size: 13px;
+  min-height: var(--aui-tap-target);
+  padding: 0 30px 0 10px;
+  transition: border-color 140ms var(--aui-easing), box-shadow 140ms var(--aui-easing);
+  width: 100%;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b6660' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 10px center;
+  background-repeat: no-repeat;
+  background-size: 14px;
+}
+
+.aui-select:focus-visible {
+  border-color: var(--aui-primary);
+  box-shadow: var(--aui-focus-ring);
+  outline: none;
+}
+
+.aui-select:disabled {
+  background-color: var(--aui-panel-quiet);
+  color: var(--aui-fg-faint);
+  cursor: not-allowed;
+}
+
+/* --- Segmented control (rebuilt) ----------------------------------------- */
+
+.aui-segmented {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 8px;
+  display: grid;
+  gap: 0;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  padding: 3px;
+}
+
+.aui-segment {
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  color: var(--aui-fg-muted);
+  cursor: pointer;
+  font: 600 12px/1 var(--aui-font);
+  letter-spacing: -0.002em;
+  min-height: 30px;
+  padding: 0 10px;
+  transition: background-color 140ms var(--aui-easing), color 140ms var(--aui-easing);
+}
+
+.aui-segment:hover:not([aria-pressed="true"]):not(:disabled) {
+  color: var(--aui-fg);
+}
+
+.aui-segment:focus-visible {
+  box-shadow: var(--aui-focus-ring);
+  outline: none;
+}
+
+.aui-segment[aria-pressed="true"] {
+  background: var(--aui-panel);
+  box-shadow: var(--aui-elevation-1), 0 1px 2px rgba(20, 18, 14, 0.06);
+  color: var(--aui-fg-strong);
+}
+
+/* --- Status pill (refined) ----------------------------------------------- */
+
+.aui-status-pill {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 999px;
+  color: var(--aui-fg-muted);
+  display: inline-flex;
+  font: 600 11.5px/1 var(--aui-font);
+  gap: 6px;
+  letter-spacing: 0.005em;
+  padding: 4px 10px;
+}
+
+.aui-status-pill-dot {
+  background: currentColor;
+  border-radius: 999px;
+  display: inline-block;
+  height: 6px;
+  width: 6px;
+}
+
+.aui-status-pill[data-status="running"] {
+  background: var(--aui-primary-soft);
+  border-color: rgba(13, 148, 136, 0.4);
+  color: var(--aui-primary-strong);
+}
+
+.aui-status-pill[data-status="running"] .aui-status-pill-dot {
+  animation: aui-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes aui-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* --- Composer (rebuilt) -------------------------------------------------- */
+
+.aui-compose-panel {
+  background: var(--aui-bg-soft);
+  border-top: 1px solid var(--aui-border);
+  display: grid;
+  gap: 10px;
+  padding: 14px 18px 18px;
+}
+
+.aui-composer-shell {
+  min-width: 0;
+}
+
+.aui-composer {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border-strong);
+  border-radius: 14px;
+  box-shadow: var(--aui-elevation-1);
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  padding: 10px 12px 8px;
+  transition: border-color 160ms var(--aui-easing), box-shadow 160ms var(--aui-easing);
+}
+
+.aui-composer[data-focused="true"] {
+  border-color: var(--aui-primary);
+  box-shadow: var(--aui-focus-ring), var(--aui-elevation-2);
+}
+
+.aui-composer[data-disabled="true"] {
+  background: var(--aui-panel-quiet);
+}
+
+.aui-composer[data-drag="true"] {
+  background: var(--aui-primary-soft);
+  border-color: var(--aui-primary);
+}
+
+.aui-composer-notice {
+  align-items: center;
+  background: var(--aui-warn-soft);
+  border: 1px solid rgba(180, 83, 9, 0.28);
+  border-radius: 8px;
+  color: var(--aui-warn);
+  display: flex;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 8px;
+  margin: 2px 2px 8px;
+  padding: 7px 10px;
+}
+
+.aui-composer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 2px 2px 8px;
+  padding: 0;
+}
+
+.aui-composer-chip {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 12px;
+  gap: 6px;
+  max-width: 240px;
+  padding: 3px 4px 3px 10px;
+}
+
+.aui-composer-chip[data-kind="image"] {
+  background: var(--aui-info-soft);
+  border-color: rgba(37, 99, 235, 0.22);
+}
+
+.aui-composer-chip[data-kind="app"],
+.aui-composer-chip[data-kind="plugin"] {
+  background: var(--aui-primary-soft);
+  border-color: rgba(13, 148, 136, 0.32);
+}
+
+.aui-composer-chip-icon {
+  align-items: center;
+  color: var(--aui-fg-muted);
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.aui-composer-chip-label {
+  color: var(--aui-fg);
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-composer .aui-composer-input {
+  background: transparent;
+  border: 0;
+  color: var(--aui-fg);
+  display: block;
+  font: 400 14px/1.55 var(--aui-font);
+  max-height: 220px;
+  min-height: 28px;
+  outline: none;
+  padding: 6px 4px 4px;
+  resize: none;
+  width: 100%;
+}
+
+.aui-composer .aui-composer-input::placeholder {
+  color: var(--aui-fg-faint);
+}
+
+.aui-composer .aui-composer-input:disabled {
+  color: var(--aui-fg-faint);
+  cursor: not-allowed;
+}
+
+.aui-composer-toolbar {
+  align-items: center;
+  border-top: 1px solid var(--aui-rule);
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+  margin-top: 6px;
+  padding-top: 6px;
+}
+
+.aui-composer-toolbar-start,
+.aui-composer-toolbar-end {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+}
+
+.aui-composer-hint {
+  color: var(--aui-fg-faint);
+  font-size: 11px;
+  margin-right: 4px;
+}
+
+.aui-composer-hint kbd {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 4px;
+  color: var(--aui-fg-muted);
+  font: inherit;
+  font-family: var(--aui-font-mono);
+  font-size: 10.5px;
+  padding: 1px 5px;
+}
+
+.aui-composer .aui-btn-primary.aui-btn-icon-only {
+  border-radius: 999px;
+}
+
+/* --- Run settings (compact, hosted inside composer) ---------------------- */
+
+.aui-run-settings-details {
+  background: transparent;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.aui-run-settings-details summary {
+  align-items: center;
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 999px;
+  color: var(--aui-fg-muted);
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  min-height: 30px;
+  padding: 4px 12px;
+  width: max-content;
+  max-width: 100%;
+}
+
+.aui-run-settings-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.aui-run-settings-details summary:hover {
+  border-color: var(--aui-border-strong);
+  color: var(--aui-fg);
+}
+
+.aui-run-settings-details summary span {
+  color: var(--aui-fg);
+  font: 600 12px/1 var(--aui-font);
+}
+
+.aui-run-settings-details summary small {
+  color: var(--aui-fg-muted);
+  font-family: var(--aui-font-mono);
+  font-size: 11px;
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-run-settings-details[open] summary {
+  background: var(--aui-panel-alt);
+}
+
+.aui-run-controls-compact {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 12px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: minmax(260px, 1.4fr) minmax(150px, 1fr) minmax(120px, 0.7fr) minmax(220px, 1.2fr);
+  margin-top: 8px;
+  padding: 12px 14px;
+}
+
+.aui-run-controls-compact .aui-mode-group legend,
+.aui-run-controls-compact .aui-field span {
+  color: var(--aui-fg-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 0 0 4px;
+  text-transform: uppercase;
+}
+
+.aui-run-controls-compact .aui-field {
+  display: grid;
+  gap: 4px;
+}
+
+@media (max-width: 760px) {
+  .aui-run-controls-compact {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .aui-run-controls-compact .aui-mode-group,
+  .aui-run-controls-compact .aui-field-wide {
+    grid-column: 1 / -1;
+  }
+}
+
+/* --- Approval card (rebuilt) -------------------------------------------- */
+
+.aui-approvals {
+  background: linear-gradient(180deg, #fff7e0 0%, #fff5e0 100%);
+  border-top: 1px solid #f1d6a3;
+  display: grid;
+  gap: 12px;
+  max-height: min(36vh, 360px);
+  overflow: auto;
+  padding: 14px 20px 16px;
+}
+
+.aui-approval {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-left: 4px solid var(--aui-warn);
+  border-radius: 12px;
+  box-shadow: var(--aui-elevation-2);
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px 14px;
+}
+
+.aui-approval[data-risk="high"] {
+  border-left-color: var(--aui-danger);
+}
+
+.aui-approval[data-risk="low"] {
+  border-left-color: var(--aui-primary);
+}
+
+.aui-approval-header {
+  align-items: flex-start;
+  display: grid;
+  gap: 10px 12px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.aui-approval-icon {
+  align-items: center;
+  background: var(--aui-warn-soft);
+  border-radius: 10px;
+  color: var(--aui-warn);
+  display: inline-flex;
+  height: 36px;
+  justify-content: center;
+  width: 36px;
+}
+
+.aui-approval-icon[data-risk="high"] {
+  background: var(--aui-danger-soft);
+  color: var(--aui-danger);
+}
+
+.aui-approval-icon[data-risk="low"] {
+  background: var(--aui-primary-soft);
+  color: var(--aui-primary-strong);
+}
+
+.aui-approval-title {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.aui-approval-title strong {
+  color: var(--aui-fg-strong);
+  font: 650 15px/1.25 var(--aui-font);
+  letter-spacing: -0.012em;
+}
+
+.aui-approval-title small {
+  color: var(--aui-fg-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.aui-approval-risk {
+  align-self: start;
+  background: var(--aui-warn-soft);
+  border: 1px solid rgba(180, 83, 9, 0.32);
+  border-radius: 999px;
+  color: var(--aui-warn);
+  font: 600 10.5px/1 var(--aui-font);
+  letter-spacing: 0.04em;
+  padding: 4px 9px;
+  text-transform: uppercase;
+}
+
+.aui-approval-risk[data-risk="high"] {
+  background: var(--aui-danger-soft);
+  border-color: rgba(185, 28, 28, 0.3);
+  color: var(--aui-danger);
+}
+
+.aui-approval-risk[data-risk="low"] {
+  background: var(--aui-primary-soft);
+  border-color: rgba(13, 148, 136, 0.32);
+  color: var(--aui-primary-strong);
+}
+
+.aui-approval-summary {
+  display: grid;
+  gap: 10px;
+}
+
+.aui-approval-copy {
+  color: var(--aui-fg);
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.aui-approval-filepath {
+  align-items: center;
+  background: var(--aui-panel-quiet);
+  border: 1px solid var(--aui-border);
+  border-radius: 7px;
+  color: var(--aui-fg);
+  display: inline-flex;
+  font: 500 12.5px/1 var(--aui-font-mono);
+  gap: 6px;
+  padding: 6px 9px;
+}
+
+.aui-approval-filepath > svg {
+  color: var(--aui-fg-faint);
+}
+
+.aui-approval pre.aui-command-line {
+  background: var(--aui-code-bg);
+  border-radius: 8px;
+  color: var(--aui-code-fg);
+  margin: 0;
+  overflow: auto;
+  padding: 12px 14px;
+}
+
+.aui-approval pre.aui-command-line code {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: 500 12.5px/1.45 var(--aui-font-mono);
+  padding: 0;
+}
+
+.aui-approval .aui-metadata-grid {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.aui-approval-actions {
+  align-items: center;
+  border-top: 1px solid var(--aui-rule);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding-top: 12px;
+}
+
+.aui-approval-actions .aui-btn-primary {
+  background: var(--aui-success);
+  border-color: var(--aui-success);
+  color: #ffffff;
+}
+
+.aui-approval-actions .aui-btn-primary:hover:not(:disabled) {
+  background: #126331;
+  border-color: #126331;
+}
+
+/* --- Status summary / details (refined to look intentionally different) -- */
+
+.aui-status-summary,
+.aui-usage-summary {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 999px;
+  box-shadow: var(--aui-elevation-1);
+  display: inline-grid;
+  gap: 8px;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-self: stretch;
+  min-height: 30px;
+  padding: 5px 12px;
+  width: 100%;
+}
+
+.aui-status-summary strong,
+.aui-usage-summary strong {
+  color: var(--aui-fg-muted);
+  font: 700 10.5px/1 var(--aui-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.aui-status-summary span,
+.aui-usage-summary span {
+  color: var(--aui-fg);
+  font-size: 12.5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-status-banners {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-md);
+  box-shadow: var(--aui-elevation-1);
+  overflow: hidden;
+}
+
+.aui-status-banners summary {
+  align-items: center;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  list-style: none;
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+.aui-status-banners summary::-webkit-details-marker {
+  display: none;
+}
+
+.aui-status-banners summary strong {
+  color: var(--aui-fg-muted);
+  font: 700 10.5px/1 var(--aui-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.aui-status-banners summary span {
+  color: var(--aui-fg);
+  font-size: 12.5px;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-status-banners summary::after {
+  color: var(--aui-fg-faint);
+  content: "";
+  height: 14px;
+  width: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398948b' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  transition: transform 160ms var(--aui-easing);
+}
+
+.aui-status-banners details[open] summary::after {
+  transform: rotate(180deg);
+}
+
+/* --- Status card (rail composition) ------------------------------------- */
+
+.aui-status-card {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-md);
+  box-shadow: var(--aui-elevation-1);
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+}
+
+.aui-status-card-header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 10px 14px;
+}
+
+.aui-status-card-header strong {
+  color: var(--aui-fg-muted);
+  font: 700 10.5px/1 var(--aui-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.aui-status-card-header span {
+  color: var(--aui-fg);
+  font-size: 12.5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-status-card-header span[data-severity="warning"] {
+  color: var(--aui-warn);
+}
+
+.aui-status-card-header span[data-severity="critical"] {
+  color: var(--aui-danger);
+}
+
+.aui-status-card-details {
+  border-top: 1px solid var(--aui-rule);
+}
+
+.aui-status-card-details summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  min-height: 34px;
+  padding: 7px 14px;
+}
+
+.aui-status-card-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.aui-status-card-details summary span {
+  color: var(--aui-fg-muted);
+  font: 600 11.5px/1 var(--aui-font);
+}
+
+.aui-status-card-details summary small {
+  color: var(--aui-fg-faint);
+  font-size: 11px;
+  margin-left: auto;
+}
+
+.aui-status-card-list {
+  display: grid;
+  gap: 4px;
+  padding: 0 10px 10px;
+}
+
+/* --- Sidebar thread list (refined) -------------------------------------- */
+
+.aui-thread-list-item {
+  display: grid;
+  gap: 4px;
+  padding: 9px 12px;
+}
+
+.aui-thread-list-name {
+  color: var(--aui-fg);
+  display: -webkit-box;
+  font: 600 13px/1.35 var(--aui-font);
+  letter-spacing: -0.005em;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.aui-thread-list-meta {
+  align-items: center;
+  color: var(--aui-fg-muted);
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.aui-thread-list-dot {
+  background: var(--aui-fg-faint);
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 6px;
+  width: 6px;
+}
+
+.aui-thread-list-dot[data-status="running"] {
+  background: var(--aui-primary);
+}
+
+.aui-thread-list-dot[data-status="waitingForInput"] {
+  background: var(--aui-warn);
+}
+
+.aui-thread-list-dot[data-status="error"] {
+  background: var(--aui-danger);
+}
+
+.aui-thread-list-dot[data-status="complete"],
+.aui-thread-list-dot[data-status="completed"] {
+  background: var(--aui-success);
+}
+
+.aui-thread-list-meta small {
+  color: var(--aui-fg-muted);
+  font-size: 11.5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- Sidebar header / search -------------------------------------------- */
+
+.aui-sidebar-header {
+  padding: 2px 2px 0;
+}
+
+.aui-history-controls {
+  align-items: center;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.aui-history-controls .aui-input-shell {
+  min-height: 32px;
+}
+
+.aui-history-controls .aui-text-input {
+  font-size: 12.5px;
+  padding: 4px 0;
+}
+
+.aui-sidebar-toggle.aui-btn-icon-only.aui-btn-ghost {
+  border-radius: 999px;
+}
+
+/* --- Thread action menu (icon trigger) ---------------------------------- */
+
+.aui-thread-action-menu summary {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--aui-fg-muted);
+  cursor: pointer;
+  display: inline-flex;
+  height: 28px;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+  width: 28px;
+}
+
+.aui-thread-action-menu summary:hover {
+  background: var(--aui-panel-alt);
+  color: var(--aui-fg);
+}
+
+.aui-thread-action-menu[open] summary {
+  background: var(--aui-panel-alt);
+}
+
+/* --- First-run --------------------------------------------------------- */
+
+.aui-first-run {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-lg);
+  box-shadow: var(--aui-elevation-1);
+  display: grid;
+  gap: 14px;
+  max-width: 520px;
+  padding: 24px;
+}
+
+.aui-first-run .aui-run-controls {
+  background: var(--aui-panel-quiet);
+  border: 1px solid var(--aui-border);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.aui-first-run .aui-btn {
+  width: max-content;
+}
+
+/* --- Composer/run controls inside the legacy panel preserved ----------- */
+
+.aui-run-controls .aui-cwd-input,
+.aui-run-controls-compact .aui-cwd-input {
+  display: none;
+}
+
+/* --- Component close-up gallery ---------------------------------------- */
+
+.aui-closeup-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+}
+
+.aui-closeup {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 14px;
+  box-shadow: var(--aui-elevation-1);
+  display: grid;
+  gap: 10px;
+  overflow: hidden;
+  padding: 14px 16px 16px;
+}
+
+.aui-closeup-header {
+  display: grid;
+  gap: 4px;
+}
+
+.aui-closeup-header strong {
+  color: var(--aui-fg-strong);
+  font: 650 14px/1.3 var(--aui-font);
+  letter-spacing: -0.005em;
+}
+
+.aui-closeup-header span {
+  color: var(--aui-fg-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.aui-closeup-stage {
+  background: var(--aui-bg);
+  border: 1px solid var(--aui-rule);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.aui-closeup-stage[data-tone="dark"] {
+  background: linear-gradient(180deg, #1a1c20 0%, #14161a 100%);
+  border-color: #2a3038;
+}
+
+.aui-closeup-stage[data-tone="mobile"] {
+  background: var(--aui-bg-soft);
+  margin: 0 auto;
+  max-width: 360px;
+}
+
+.aui-closeup-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.aui-closeup-col {
+  display: grid;
+  gap: 8px;
+}
+
+.aui-closeup-label {
+  color: var(--aui-fg-faint);
+  font: 700 10.5px/1 var(--aui-font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* --- Activity card (command/diff dark surface polish) ------------------ */
+
+.aui-activity-card {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.aui-activity-card summary {
+  background: var(--aui-panel-quiet);
+  border-bottom: 1px solid transparent;
+  transition: background-color 140ms var(--aui-easing);
+}
+
+.aui-activity-card summary:hover {
+  background: var(--aui-panel-alt);
+}
+
+.aui-activity-card[open] summary {
+  border-bottom-color: var(--aui-rule);
+}
+
+.aui-activity-card[data-status="failed"] summary,
+.aui-activity-card[data-exit-fail="true"] summary {
+  background: var(--aui-danger-soft);
+}
+
+.aui-command-output {
+  background: var(--aui-code-bg);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  font-size: 12.5px;
+  letter-spacing: 0.005em;
+  line-height: 1.55;
+  padding: 14px 16px;
+}
+
+.aui-file-change-card .aui-diff {
+  border-radius: 0;
+  border-top: 1px solid var(--aui-rule);
+}
+
+/* --- Message bubbles (refined) ----------------------------------------- */
+
+.aui-message[data-kind="userMessage"] {
+  background: var(--aui-primary-soft);
+  border: 1px solid rgba(13, 148, 136, 0.18);
+  border-radius: 14px 14px 4px 14px;
+  margin-left: auto;
+  max-width: min(680px, 88%);
+  padding: 10px 14px;
+}
+
+.aui-message[data-kind="userMessage"] .aui-message-meta {
+  color: var(--aui-primary-strong);
+  letter-spacing: 0.04em;
+}
+
+.aui-message[data-kind="userMessage"] .aui-message-meta span:last-child {
+  display: none; /* "completed" status on user bubbles is noise */
+}
+
+.aui-message[data-kind="agentMessage"] .aui-message-meta span:last-child,
+.aui-message[data-kind="stream"] .aui-message-meta span:last-child {
+  display: none; /* "completed" status under flowing assistant text is noise */
+}
+
+.aui-message[data-kind="reasoning"] {
+  border-left-color: var(--aui-border-strong);
+  border-radius: 0;
+}
+
+.aui-message[data-kind="reasoning"] .aui-message-meta {
+  letter-spacing: 0.02em;
+}
+
+/* Plan callout: warm, primary tint instead of green block. */
+.aui-plan-block {
+  background: var(--aui-primary-soft);
+  border-color: rgba(13, 148, 136, 0.22);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.aui-plan-block > strong {
+  color: var(--aui-primary-strong);
+}
+
+/* Work trace summary contrast bump. */
+.aui-work-trace {
+  background: var(--aui-bg-soft);
+}
+
+.aui-work-trace > summary strong {
+  color: var(--aui-fg-strong);
+}
+
+/* Command title — make typography read as code, not text. */
+.aui-command-title::before {
+  color: var(--aui-fg-faint);
+  content: "$ ";
+  font-weight: 400;
+}
+
+.aui-command-card[open] .aui-command-title::before {
+  content: "$ ";
+}
+
+/* --- Mobile composer polish -------------------------------------------- */
+
+@media (max-width: 640px) {
+  .aui-compose-panel {
+    padding: 10px 12px 14px;
+  }
+  .aui-composer {
+    padding: 8px 10px 6px;
+  }
+  .aui-composer .aui-composer-input {
+    font-size: 15px;
+  }
+  .aui-composer-hint {
+    display: none;
+  }
+  .aui-approvals {
+    padding: 12px 12px;
+  }
+  .aui-approval {
+    padding: 14px 14px 12px;
+  }
+  .aui-approval-actions {
+    gap: 6px;
+  }
+  .aui-approval-actions .aui-btn {
+    flex: 1 1 100%;
+  }
+  .aui-approval-actions .aui-btn-primary {
+    order: -1;
+  }
+}

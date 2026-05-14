@@ -54,6 +54,49 @@ so the timeline never exposes camelCase protocol identifiers. The work is
 documented in the 2026-05-15 "Visual quality rebuild gate" entry in
 `docs/testing.md`.
 
+May 15 primitive-craftsmanship rebuild note: after that gate closed, a
+follow-up external review still rejected the UI — not because of layout,
+but because the *basic primitives themselves* (composer, button, input,
+approval, command/diff block, sidebar) were under-crafted. Completion now
+also requires:
+
+- A composer that reads as the centerpiece of the product: a single bordered
+  rounded card with attachment chips, an auto-resizing textarea, an inline
+  icon-button toolbar (paperclip, image, App, Plugin), a primary circular
+  send icon button, an `Enter to send` hint, focus and disabled state
+  treatments, and natural approval-pending and drag states.
+- A real button hierarchy: explicit primary / secondary / ghost / danger /
+  subtle variants with `sm / md / lg` sizes and an `icon-only` modifier.
+  `Approve` is success green, `Decline` is danger red, `Approve for session`
+  is a scoped secondary outline, and `New thread / Actions / Refresh / Hide`
+  use icon-led ghost or subtle variants instead of bordered buttons.
+- A unified input shell: text inputs and selects share one component
+  language (icon prefix, focus ring, no browser-default chrome) and the
+  segmented control has an elevated pressed state.
+- An approval card with shield icon, humanized title and reason, `LOW / MED /
+  HIGH` risk pill, command on a dark code surface, metadata grid for
+  `Working directory / Sandbox / Approval policy`, and three explicit
+  decisions on a divider footer.
+- A timeline that reads as flow rather than labels: user bubble uses
+  primary-tinted accent, assistant text flows as markdown, reasoning is a
+  muted italic blockquote, plan blocks use a primary-tinted callout,
+  command/diff blocks share a dark code surface, and the `COMPLETED` meta
+  noise is suppressed on user/assistant items.
+- A sidebar with icon-prefix search, coloured status dots per thread, and
+  subtle-variant Load/Load more/Hide controls so secondary chrome never
+  reads as primary actions.
+- A `Component close-ups` section appended to `/fixture-gallery` that
+  renders composer (normal/focused/approval-pending/mobile), approval
+  (command/user input), command and diff blocks, sidebar search + threads,
+  usage/status chips, button states, and inputs/selects/segmented as
+  *direct primitives* (not iframes) so reviewers can inspect part quality
+  rather than layout.
+- A duplicate-status guard in the host workflow recipe so
+  `AgentStatusSummary` is never rendered twice in the same surface.
+
+This pass is documented in the 2026-05-15 "Primitive craftsmanship rebuild"
+entry in `docs/testing.md`.
+
 Do not treat a demo, a narrow happy path, or a partial wrapper as completion.
 Every public capability must have:
 

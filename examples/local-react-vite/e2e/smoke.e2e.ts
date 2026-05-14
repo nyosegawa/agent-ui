@@ -9,6 +9,9 @@ test("renders Agent UI chat", async ({ page }) => {
   await expect(page.getByLabel("Command output")).toContainText("7 tests passed");
   await expect(page.getByLabel("Diff preview")).toContainText("AgentDiffPanel");
   await expect(page.getByRole("button", { name: "Approve" }).first()).toBeVisible();
+  // Run settings live behind a summary chip inside the composer.
+  await expect(page.locator(".aui-run-settings-details summary")).toContainText("Run settings");
+  await page.locator(".aui-run-settings-details summary").click();
   await expect(page.getByLabel("Run settings")).toContainText("Execution mode");
   await expect(page.getByLabel("Usage limits")).toContainText(
     "fixture-demo-model weekly",
@@ -21,7 +24,12 @@ test("renders Agent UI chat", async ({ page }) => {
     page.getByText("Stored session history can be read before resuming."),
   ).toBeVisible();
   await page.getByRole("button", { name: "Resume" }).click();
-  await expect(page.locator(".aui-status-pill")).toHaveText("Ready");
+  await expect(page.locator(".aui-status-pill")).toContainText("Ready");
+  // Re-open run settings to verify the resumed run-settings restoration.
+  await page.locator(".aui-run-settings-details").first().evaluate((element) => {
+    (element as HTMLDetailsElement).open = true;
+  });
+  await expect(page.getByLabel("Run settings")).toBeVisible();
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue(
     "fixture-demo-model",
   );
@@ -41,7 +49,7 @@ test("renders Agent UI chat", async ({ page }) => {
 test("does not overflow on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/");
-  await expect(page.locator(".aui-run-settings-details summary")).toContainText(
+  await expect(page.locator(".aui-run-settings-details summary").first()).toContainText(
     "Run settings",
   );
   await expect(page.getByLabel("Run settings")).not.toBeVisible();

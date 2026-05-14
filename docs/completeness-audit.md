@@ -144,3 +144,34 @@ Findings fixed in this audit slice:
 - `useAgentTurnController()` exposes `steerTurn()` for `turn/steer`
 - `useAgentApps(threadId)` stores Apps/connectors lists by scope so fixed
   thread panes do not overwrite each other
+
+## 2026-05-15 Primitive craftsmanship audit (later pass)
+
+A follow-up external review after the visual-quality rebuild diagnosed the
+remaining problem as *primitive craftsmanship*, not layout: the composer
+read as a row of form controls rather than as the product's centerpiece,
+button hierarchy was unclear, `App / Plugin` chips looked careless, the
+approval card lacked decision affordance, and the message timeline relied on
+labels rather than typography.
+
+This pass rebuilt the interactive layer in place rather than re-arranging
+the screen. The relevant rebuilds (composer, button system, inputs / selects
+/ segmented, approval card, timeline, sidebar, status / usage chips,
+command/diff surface, component close-up gallery, and the duplicate-status
+guard for the host workflow recipe) are captured in the new checklist items
+under Milestone 4 in `TODO.md` and in the 2026-05-15 "Primitive
+craftsmanship rebuild" entry in `docs/testing.md`.
+
+Verification: 67 vitest tests + 60 bun tests + 19 Playwright tests pass
+locally; all 14 `docs/screenshots/agent-ui-*-{desktop,mobile}.png` files
+were regenerated against the new primitives; Claude-in-Chrome browser
+verification at `http://127.0.0.1:5184` confirmed `/`, `/?state=kitchen`,
+`/host-workflow-recipe`, `/usage-only`, and `/fixture-gallery` at desktop
+1280×900 and mobile 390×900 without horizontal overflow and with the
+composer staying primary.
+
+Boundary re-audit: a fresh grep across `packages/`, `docs/`, and `examples/`
+for `AgentWorkerPane`, `useAgentWorkerSession`, `SkillAppRegistry`,
+`SkillAppPanel`, `useSkillAppPanel`, `SkillDataStore`,
+`createSkillAppClientTools`, `open_skill_app`, `update_skill_app`, and
+`request_skill_app_feedback` returned zero hits.

@@ -29,6 +29,99 @@ test("matches mobile visual layout contract", async ({ page }) => {
   expect(await visualContractJson(page)).toMatchSnapshot("mobile-layout.json");
 });
 
+test("component close-up gallery renders direct primitives, not iframes", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/fixture-gallery");
+  const closeups = page.getByTestId("component-closeups");
+  await expect(closeups).toBeVisible();
+  for (const title of [
+    "Composer · normal",
+    "Composer · focused",
+    "Composer · approval pending",
+    "Composer · mobile",
+    "Approval · command",
+    "Approval · user input",
+    "Command block",
+    "Diff / file change",
+    "Sidebar search + threads",
+    "Usage / status chips",
+    "Button system",
+    "Inputs · selects · segmented",
+  ]) {
+    await expect(closeups.getByTestId(`closeup:${title}`)).toBeVisible();
+  }
+  // Direct render, not iframe.
+  await expect(closeups.locator("iframe")).toHaveCount(0);
+  // The "Approval · command" close-up should expose its primary Approve.
+  const commandCloseup = closeups.getByTestId("closeup:Approval · command");
+  await expect(
+    commandCloseup.getByRole("button", { name: /^Approve command request approval-command-kitchen$/ }),
+  ).toBeVisible();
+});
+
+test("composer is a single bordered card with inline icon toolbar and primary send", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/?state=kitchen");
+  const closeups = page.getByTestId("agent-chat");
+  await expect(closeups).toBeVisible();
+  // Composer disabled because the kitchen fixture is waitingForInput.
+  const composer = page.locator(".aui-composer").first();
+  await expect(composer).toBeVisible();
+  await expect(composer).toHaveAttribute("data-disabled", "true");
+  await expect(composer.locator(".aui-composer-notice")).toContainText("pending approval");
+  // Send button is icon-only and currently disabled.
+  const send = composer.getByRole("button", { name: "Send" });
+  await expect(send).toBeDisabled();
+});
+
+test("composer is the primary, bordered card with App / Plugin mention buttons", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/fixture-gallery");
+  // The close-up "Composer · normal" stage renders a live, enabled composer.
+  const closeup = page.getByTestId("closeup:Composer · normal");
+  const composer = closeup.locator(".aui-composer");
+  await expect(composer).toBeVisible();
+  await expect(composer).not.toHaveAttribute("data-disabled", "true");
+  await expect(composer.getByRole("button", { name: "App" })).toBeVisible();
+  await expect(composer.getByRole("button", { name: "Plugin" })).toBeVisible();
+  await expect(composer.getByRole("button", { name: "Send" })).toBeVisible();
+});
+
+test("approval card renders shield + risk + green Approve + danger Decline", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/?state=kitchen");
+  const approval = page.locator(".aui-approval").first();
+  await expect(approval).toBeVisible();
+  // Risk badge present.
+  await expect(approval.locator(".aui-approval-risk")).toBeVisible();
+  // Three explicit decisions: scope-aware Approve (primary), Approve for session, Decline.
+  await expect(
+    approval.getByRole("button", { name: /^Approve [a-z ]+request [a-z0-9-]+$/ }),
+  ).toBeVisible();
+  await expect(approval.getByRole("button", { name: /for session$/ })).toBeVisible();
+  await expect(approval.getByRole("button", { name: /^Decline / })).toBeVisible();
+});
+
+test("host workflow recipe never duplicates the status summary", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/host-workflow-recipe");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  await expect(page.locator('[aria-label="Status summary"]')).toHaveCount(1);
+});
+
+test("mobile composer keeps tap targets above 32px and hides keyboard hint", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/");
+  const composer = page.locator(".aui-composer").first();
+  await expect(composer).toBeVisible();
+  await expect(composer.locator(".aui-composer-hint")).toBeHidden();
+  // Send button stays large enough for thumb tap (~36 default tap target).
+  const send = composer.getByRole("button", { name: "Send" });
+  const box = await send.boundingBox();
+  expect(box).not.toBeNull();
+  expect(box!.height).toBeGreaterThanOrEqual(36);
+});
+
 async function visualContractJson(page: Page) {
   return `${JSON.stringify(await visualContract(page), null, 2)}\n`;
 }
