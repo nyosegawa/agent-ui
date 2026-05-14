@@ -35,6 +35,13 @@ the kitchen-quality preset hierarchy, real host-workflow example, visual QA
 gallery, agent-browser screenshot evidence, and renewed completeness audit
 recorded in `TODO.md` and `docs/testing.md`.
 
+May 15 primitive-first review note: the same UI gates were reopened again
+because `AgentChat` still read too much like a fixed app shell. Completion now
+requires independently exported thread/status/usage/approval/composer
+primitives, mobile-reachable secondary chrome, severity-normalized status, a
+host workflow route built without the preset, and nonblank gallery/screenshot
+smokes.
+
 Do not treat a demo, a narrow happy path, or a partial wrapper as completion.
 Every public capability must have:
 
@@ -258,13 +265,19 @@ The React package should expose three levels:
 
 2. Composable regions:
    - `AgentShell`
+   - `AgentThreadSurface`
    - `AgentThreadView`
    - `AgentThreadHeader`
    - `AgentThreadTimeline`
    - `AgentThreadSidebar`
    - `AgentComposerPanel`
    - `AgentApprovalQueue`
+   - `AgentStatusSummary`
+   - `AgentStatusDetails`
+   - `AgentCriticalNoticeList`
    - `AgentUsagePanel`
+   - `AgentUsageSummary`
+   - `AgentTokenUsageBar`
    - `AgentDiagnosticsPanel`
    - `AgentSkillsPanel`
    - `AgentAppsPanel`
@@ -309,6 +322,17 @@ Usage must be host-composable:
 - App Server account/rate-limit windows are separate from host-defined usage
   metrics.
 - Host apps can observe usage events without reading internal React state.
+
+Status must be host-composable:
+
+- `AgentStatusSummary` and `AgentStatusDetails` belong in secondary product
+  chrome by default.
+- `AgentCriticalNoticeList` belongs near the thread only for blocking, failed,
+  dangerous, or limit-reached states.
+- Rate-limit notices are severity-normalized by content and threshold, not by
+  protocol kind alone.
+- Mobile layouts must keep status, usage, and diagnostics reachable through
+  compact chrome instead of hiding the secondary rail.
 
 ### Server Request Model
 

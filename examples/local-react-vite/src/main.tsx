@@ -10,18 +10,28 @@ import {
 } from "@nyosegawa/agent-ui-core";
 import {
   AgentAppsPanel,
+  AgentApprovalQueue,
   AgentChat,
+  AgentComposerPanel,
+  AgentCriticalNoticeList,
+  AgentDiagnosticsPanel,
   AgentProvider,
+  AgentStatusDetails,
+  AgentStatusSummary,
+  AgentThreadHeader,
+  AgentThreadSurface,
+  AgentThreadTimeline,
   AgentThreadView,
   AgentUsagePanel,
-  AgentWorkspace,
+  AgentUsageSummary,
   normalizeUsageWindows,
   useAgentApprovals,
+  useAgentBootstrap,
   useAgentThread,
   useAgentUsage,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/style.css";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import demoFixture from "../../../fixtures/app-server/demo-session.json";
 
@@ -146,30 +156,55 @@ function VisualQaIndex() {
       </div>
       <div className="aui-fixture-gallery-grid">
         {visualQaStates.map((state) => (
-          <article className="aui-fixture-preview" key={state.href}>
-            <header>
-              <div>
-                <strong>{state.title}</strong>
-                <span>{state.description}</span>
-              </div>
-              <a aria-label={`${state.title} ${state.href}`} href={state.href}>
-                {state.href}
-              </a>
-            </header>
-            <div className="aui-fixture-preview-frames">
-              <figure>
-                <figcaption>Desktop</figcaption>
-                <iframe src={state.href} title={`${state.title} desktop`} />
-              </figure>
-              <figure data-size="mobile">
-                <figcaption>Mobile</figcaption>
-                <iframe src={state.href} title={`${state.title} mobile`} />
-              </figure>
-            </div>
-          </article>
+          <FixturePreview state={state} key={state.href} />
         ))}
       </div>
     </main>
+  );
+}
+
+function FixturePreview({
+  state,
+}: {
+  state: (typeof visualQaStates)[number];
+}) {
+  const [reloadKey, setReloadKey] = useState(0);
+  const [loadedFrames, setLoadedFrames] = useState<Record<string, boolean>>({});
+  return (
+    <article className="aui-fixture-preview">
+      <header>
+        <div>
+          <strong>{state.title}</strong>
+          <span>{state.description}</span>
+        </div>
+        <div className="aui-fixture-preview-actions">
+          <button onClick={() => setReloadKey((key) => key + 1)} type="button">
+            Reload preview
+          </button>
+          <a aria-label={`${state.title} ${state.href}`} href={state.href}>
+            {state.href}
+          </a>
+        </div>
+      </header>
+      <div className="aui-fixture-preview-frames">
+        {(["desktop", "mobile"] as const).map((size) => (
+          <figure data-size={size} key={`${state.href}:${size}`}>
+            <figcaption>{size === "desktop" ? "Desktop" : "Mobile"}</figcaption>
+            <div className="aui-fixture-frame-shell">
+              {!loadedFrames[size] ? <span>Loading {size} preview</span> : null}
+              <iframe
+                key={`${state.href}:${size}:${reloadKey}`}
+                onLoad={() =>
+                  setLoadedFrames((current) => ({ ...current, [size]: true }))
+                }
+                src={state.href}
+                title={`${state.title} ${size}`}
+              />
+            </div>
+          </figure>
+        ))}
+      </div>
+    </article>
   );
 }
 
@@ -286,14 +321,37 @@ function HostWorkflowRecipe() {
   return (
     <AgentProvider initialState={initialState} transport={transport}>
       <ExampleFrame title="Host workflow recipe">
-        <AgentWorkspace
-          diagnostics={false}
-          panel={<HostWorkflowPanel />}
-          sidebar={false}
-          usage={false}
-        />
+        <HostWorkflowComposition />
       </ExampleFrame>
     </AgentProvider>
+  );
+}
+
+function HostWorkflowComposition() {
+  const bootstrap = useAgentBootstrap();
+  const { thread, threadId } = useAgentThread();
+  if (!thread) return null;
+  return (
+    <section className="aui-host-composition" aria-label="Host primitive composition">
+      <div className="aui-host-thread">
+        <AgentThreadSurface>
+          <AgentThreadHeader thread={thread} threadId={threadId} />
+          <AgentCriticalNoticeList />
+          <AgentThreadTimeline thread={thread} />
+          <AgentApprovalQueue threadId={threadId} />
+          <AgentComposerPanel thread={thread} threadId={threadId} />
+        </AgentThreadSurface>
+      </div>
+      <aside className="aui-host-context" aria-label="Host workflow context">
+        <div className="aui-host-context-strip">
+          <AgentStatusSummary />
+          <AgentUsageSummary />
+        </div>
+        <HostWorkflowPanel />
+        <AgentStatusDetails />
+        <AgentDiagnosticsPanel bootstrap={bootstrap} />
+      </aside>
+    </section>
   );
 }
 
@@ -329,14 +387,10 @@ function HostWorkflowPanel() {
   return (
     <section className="aui-host-workflow" aria-label="Host-owned panel">
       <header>
-        <span>Host workflow</span>
+        <span>Host workflow context</span>
         <strong>{thread?.thread.name ?? "No thread selected"}</strong>
       </header>
-      <section className="aui-host-card" aria-label="Current thread summary">
-        <div className="aui-host-card-header">
-          <strong>Current thread</strong>
-          <span>{thread?.status ?? "unknown"}</span>
-        </div>
+      <section className="aui-host-overview" aria-label="Current thread summary">
         <dl className="aui-host-metrics">
           <div>
             <dt>Turns</dt>
@@ -352,9 +406,9 @@ function HostWorkflowPanel() {
           </div>
         </dl>
       </section>
-      <section className="aui-host-card" aria-label="Workflow status">
-        <div className="aui-host-card-header">
-          <strong>Workflow status</strong>
+      <section className="aui-host-section" aria-label="Workflow status">
+        <div className="aui-host-section-header">
+          <strong>Validation status</strong>
           <span>ready for review</span>
         </div>
         <ul className="aui-host-checklist">
@@ -366,8 +420,8 @@ function HostWorkflowPanel() {
           ))}
         </ul>
       </section>
-      <section className="aui-host-card" aria-label="Pending requests">
-        <div className="aui-host-card-header">
+      <section className="aui-host-section" aria-label="Pending requests">
+        <div className="aui-host-section-header">
           <strong>Pending requests</strong>
           <span>{approvals.length} active</span>
         </div>
@@ -380,8 +434,8 @@ function HostWorkflowPanel() {
           ))}
         </ul>
       </section>
-      <section className="aui-host-card" aria-label="Plan and context">
-        <div className="aui-host-card-header">
+      <section className="aui-host-section" aria-label="Plan and context">
+        <div className="aui-host-section-header">
           <strong>Plan and context</strong>
           <span>{changedFiles.length} files</span>
         </div>
@@ -392,19 +446,17 @@ function HostWorkflowPanel() {
           ))}
         </ul>
       </section>
-      <section className="aui-host-card" aria-label="Usage summary">
-        <div className="aui-host-card-header">
-          <strong>Usage summary</strong>
-          <span>{windows.length} windows</span>
+      <section className="aui-host-section" aria-label="Usage details">
+        <div className="aui-host-section-header">
+          <strong>Usage windows</strong>
+          <span>{windows.length} active</span>
         </div>
         <AgentUsagePanel autoRefresh={false} />
       </section>
       <div className="aui-host-actions">
-        <button className="aui-button" type="button">
+        <span>Host actions are intentionally demo-only in this fixture.</span>
+        <button className="aui-button aui-button-secondary" disabled type="button">
           Continue selected thread
-        </button>
-        <button className="aui-button aui-button-secondary" type="button">
-          Export workflow note
         </button>
       </div>
     </section>

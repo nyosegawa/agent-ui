@@ -1,15 +1,17 @@
 # Host Workflow Recipe
 
-Host-owned workflow composition using generic Agent UI slots.
+Host-owned workflow composition using generic Agent UI primitives.
 
 Implementation lives in `examples/local-react-vite` at `/host-workflow-recipe`
-and uses `AgentWorkspace panel={...}`. The host-owned panel renders current
-thread summary, workflow status, pending requests, plan/context files, usage,
-and host actions from generic Agent UI hooks and primitives.
+and builds the thread column from `AgentThreadSurface`, `AgentThreadHeader`,
+`AgentThreadTimeline`, `AgentApprovalQueue`, `AgentComposerPanel`, and status
+and usage primitives. The host-owned context panel renders current thread
+summary, validation status, pending requests, plan/context files, usage, and
+non-interactive demo action state from generic Agent UI hooks.
 
 Workflow-specific panel state, storage, registries, and app tools stay in the
-host application. This route intentionally does not introduce Watcher-specific
-or skill-with-app-specific core APIs.
+host application. This route intentionally does not introduce app-specific core
+APIs.
 
 Smoke path:
 

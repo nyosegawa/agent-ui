@@ -400,6 +400,56 @@ The history and usage smoke path has also been verified against `codex app-serve
     add a selector for grouped `TimelineMessage` blocks, protocol-shaped
     approval decisions from normalized metadata, and fuzzy-search state
     renderers instead of considering those part of this visual-quality slice.
+- Primitive-first UI gate on 2026-05-15:
+  - Commands:
+    - `bun run typecheck`
+    - `bunx vitest run packages/react/test/components.vitest.tsx`
+    - `bun run --cwd examples/local-react-vite build`
+    - `bun run test:e2e:playwright`
+    - `bun run --cwd examples/local-react-vite dev --host 127.0.0.1 --port 5174`
+    - `agent-browser skills get core`
+    - `agent-browser set viewport 1280 900`
+    - `agent-browser open http://127.0.0.1:5174/`
+    - `agent-browser open 'http://127.0.0.1:5174/?state=kitchen'`
+    - `agent-browser open http://127.0.0.1:5174/host-workflow-recipe`
+    - `agent-browser open http://127.0.0.1:5174/usage-only`
+    - `agent-browser open http://127.0.0.1:5174/scoped-thread-pane`
+    - `agent-browser open http://127.0.0.1:5174/app-connectors`
+    - `agent-browser open http://127.0.0.1:5174/fixture-gallery`
+    - `agent-browser set viewport 390 900`
+    - repeat the route opens above for mobile screenshots
+  - Saved screenshots:
+    - `docs/screenshots/agent-ui-home-desktop.png`
+    - `docs/screenshots/agent-ui-home-mobile.png`
+    - `docs/screenshots/agent-ui-kitchen-desktop.png`
+    - `docs/screenshots/agent-ui-kitchen-mobile.png`
+    - `docs/screenshots/agent-ui-host-workflow-desktop.png`
+    - `docs/screenshots/agent-ui-host-workflow-mobile.png`
+    - `docs/screenshots/agent-ui-usage-only-desktop.png`
+    - `docs/screenshots/agent-ui-usage-only-mobile.png`
+    - `docs/screenshots/agent-ui-scoped-thread-desktop.png`
+    - `docs/screenshots/agent-ui-scoped-thread-mobile.png`
+    - `docs/screenshots/agent-ui-app-connectors-desktop.png`
+    - `docs/screenshots/agent-ui-app-connectors-mobile.png`
+    - `docs/screenshots/agent-ui-fixture-gallery-desktop.png`
+  - Added Playwright checks:
+    - mobile `/?state=kitchen` keeps `Agent context`, `Status summary`, and
+      `Usage limits` visible instead of hiding secondary chrome
+    - normal rate-limit text such as "below the warning threshold" does not
+      create a critical thread notice
+    - `/fixture-gallery` loads kitchen and host-workflow iframe previews with
+      major text visible and includes reload controls
+    - kitchen desktop and host-workflow mobile screenshots have nonblank buffer
+      diversity
+  - Results: React component tests passed, local Vite build passed, and
+    Playwright passed 13 tests covering the fake local web bridge plus fixture
+    routes. Visual layout JSON snapshots were refreshed after the mobile rail
+    became reachable. `agent-browser` snapshots confirmed kitchen exposes the
+    thread/timeline, approvals, status details, and usage, while host workflow
+    exposes a primitive-composed thread plus host-owned context.
+  - Residual risk: screenshot-buffer diversity is a smoke check, not a stable
+    pixel baseline. It catches blank previews without making CI depend on
+    platform-specific font rendering.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
 - Milestone 6 bridge checks cover host event callbacks, explicit server request
   policy opt-in, dynamic tool helper thread creation through generated
@@ -420,9 +470,24 @@ Latest real Codex smoke on 2026-05-14:
   5 stored threads, 6 models, and one command approval request observed and
   declined.
 
+Latest real Codex smoke on 2026-05-15:
+
+- `AGENT_UI_REAL_CODEX_INIT_TIMEOUT_MS=30000 bun run test:e2e:real-codex`:
+  authenticated account, usage present, 5 stored threads, 6 models, assistant
+  text `Agent UI real smoke ok.`, and 1 completed turn.
+- `AGENT_UI_REAL_CODEX_INIT_TIMEOUT_MS=30000 bun run test:e2e:real-codex:approval`:
+  authenticated account, usage present, 5 stored threads, 6 models, and one
+  command approval request observed and declined.
+
 ## Visual Regression
 
 `bun run test:e2e:playwright` includes browser-level layout contract snapshots for the local Vite example at desktop and mobile widths. These snapshots capture rendered dimensions, overflow behavior, display mode, grid columns, border radius, and key colors for the shell, sidebar, chat, run controls, usage, message list, inline activity, approvals, and composer.
+
+The fixture smoke also captures screenshot buffers for kitchen desktop and host
+workflow mobile routes and asserts they are not blank. The gallery smoke opens
+iframe previews and checks visible text inside the kitchen and host workflow
+frames, so the visual QA route cannot silently degrade into empty white preview
+areas.
 
 Image snapshots are intentionally not the default CI gate because OS font rendering can create noisy diffs across macOS and Linux. If pixel-level screenshots are added later, keep them in a separate opt-in job or generate Linux baselines in CI.
 

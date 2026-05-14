@@ -115,6 +115,11 @@ Reopened on 2026-05-14 after review found the earlier completion bar too low:
 the preset chat stacked diagnostics, banners, and usage above the thread, and
 the kitchen fixture proved presence more than visual quality.
 
+Reopened again on 2026-05-15 for the primitive-first UI pass: `AgentChat` still
+looked like the center of the library, mobile secondary chrome could disappear,
+rate-limit normal status was treated too strongly, and the host workflow/gallery
+examples needed to prove real composition.
+
 - [x] Port the useful `agent-kitchen` block taxonomy onto `agent-ui` normalized state.
 - [x] Implement polished renderers for command execution, file changes, tool calls, thinking, plans, diffs, images, system info, and web/search-style blocks.
 - [x] Implement status banners for model reroutes, deprecation notices, config warnings, account status, MCP OAuth, and rate limits.
@@ -132,6 +137,12 @@ Acceptance:
 - [x] Rework `AgentChat` so thread/timeline/work trace is the primary column and status, diagnostics, and usage move to compact secondary chrome.
 - [x] Replace full-width status-banner stacking with compact summary rail plus critical inline warnings near the thread.
 - [x] Re-run kitchen desktop/mobile visual QA with saved screenshots and update the Playwright layout contract snapshots.
+- [x] Add primitive-first status/thread/usage exports so host apps can recreate
+      the preset from independently placed components.
+- [x] Keep mobile status, usage, and diagnostics reachable through compact
+      secondary chrome instead of hiding the rail.
+- [x] Normalize status severity so normal rate-limit messages do not render as
+      critical thread warnings.
 
 ## Milestone 5: Skills, Apps, And agent-browser
 
@@ -175,6 +186,10 @@ Reopened on 2026-05-14 after review found `/host-workflow-recipe` was only an
 `h2/p/ol` explanation demo and `/fixture-gallery` was a link list rather than a
 visual QA surface.
 
+Reopened again on 2026-05-15 because the host workflow route still used the
+preset shell too heavily and the fixture gallery needed stronger loading and
+nonblank preview checks.
+
 - [x] Update `examples/codex-local-web` to use the new preset shell.
 - [x] Add `examples/scoped-thread-pane` that demonstrates a generic fixed-thread pane.
 - [x] Add `examples/usage-only` that renders account/rate-limit usage without chat chrome.
@@ -193,12 +208,20 @@ Acceptance:
 - [x] Rebuild `/fixture-gallery` as a desktop/mobile iframe preview gallery for
       default, kitchen, usage-only, scoped-thread, app-connectors, and
       host-workflow states.
+- [x] Rebuild `/host-workflow-recipe` from thread/status/usage/approval/composer
+      primitives rather than placing an `AgentChat` preset beside a host card stack.
+- [x] Add gallery loading state, reload affordance, and Playwright checks that
+      kitchen and host-workflow previews are not blank.
 
 ## Milestone 8: Browser Verification With agent-browser
 
 Reopened on 2026-05-14 because previous evidence leaned toward
 accessibility/existence checks and did not prove the visual quality of the
 changed routes.
+
+Reopened again on 2026-05-15 to add mobile secondary-chrome reachability,
+rate-limit severity, duplicate-status, gallery-preview, and screenshot-buffer
+smoke checks.
 
 - [x] Add an implementation guide for using `agent-browser` during local UI work.
 - [x] Add scripts or docs for running examples and verifying them with `agent-browser`.
@@ -229,6 +252,9 @@ Acceptance:
       `/scoped-thread-pane`, `/app-connectors`, and `/fixture-gallery`.
 - [x] Record visual-quality-focused browser commands, checked URLs, results,
       and residual risk in `docs/testing.md`.
+- [x] Add Playwright coverage for mobile secondary chrome, rate-limit normal
+      status, non-duplicate critical status, gallery preview loading, and
+      screenshot-buffer nonblank smoke.
 
 ## Milestone 9: Validation And Release Gate
 
@@ -267,6 +293,9 @@ Reopened on 2026-05-14 because the previous audit accepted weak UI evidence and
 did not call out the stale completion status after Milestones 4/7/8 were
 reopened.
 
+Reopened again on 2026-05-15 to re-check primitive-first exports, public docs,
+visual examples, and host-specific boundary terms after the composition rewrite.
+
 - [x] Re-read `PLAN.md` and verify every promised capability has code, tests, docs, and an example or explicit non-example rationale.
 - [x] Re-read every root and docs markdown file and remove contradictions against `PLAN.md`, `TODO.md`, and the implemented API.
 - [x] Re-audit `agent-ui` against the current Codex App Server generated schema and confirm no productized stable method is missing from capability metadata.
@@ -289,3 +318,5 @@ Acceptance:
       boundary risks.
 - [x] Re-search public exports/docs for Watcher-specific and skill-with-app
       runtime APIs after the UI/example rewrite.
+- [x] Re-search public exports/docs/examples for host-specific worker-pane and
+      app-panel runtime terms after the primitive-first rewrite.

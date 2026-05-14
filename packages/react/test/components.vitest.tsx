@@ -18,8 +18,11 @@ import {
   AgentMessageList,
   AgentProvider,
   AgentShell,
+  AgentStatusDetails,
+  AgentStatusSummary,
   AgentThreadView,
   AgentUsagePanel,
+  AgentUsageSummary,
   AgentWorkspace,
   AgentSkillsPanel,
   AgentAppsPanel,
@@ -159,6 +162,76 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("Usage limits")).toHaveTextContent("fixture-demo-model");
     expect(screen.queryByRole("navigation", { name: "Threads" })).not.toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Implement approval UI" })).toBeInTheDocument();
+  });
+
+  it("exposes status and usage primitives without the AgentChat preset", () => {
+    const initialState = createInitialAgentState();
+    initialState.account.rateLimits = {
+      rateLimitsByLimitId: {
+        weekly: {
+          limitName: "fixture-demo-model",
+          secondary: { usedPercent: 55, windowDurationMins: 10080 },
+        },
+      },
+    };
+    initialState.diagnostics.banners = [
+      {
+        id: "model",
+        kind: "modelReroute",
+        message: "Model rerouted from fixture-heavy-model.",
+      },
+      {
+        id: "config",
+        kind: "configWarning",
+        message: "Config warning normalized.",
+      },
+    ];
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentStatusSummary />
+        <AgentStatusDetails />
+        <AgentUsageSummary />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("Status summary")).toHaveTextContent(
+      "1 warning · 2 total",
+    );
+    expect(screen.getByLabelText("Status details")).toHaveTextContent(
+      "Model rerouted",
+    );
+    expect(screen.getByLabelText("Usage summary")).toHaveTextContent("55%");
+  });
+
+  it("keeps normal rate-limit notices out of critical thread warnings", () => {
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-rate";
+    initialState.diagnostics.banners = [
+      {
+        id: "rate-normal",
+        kind: "rateLimit",
+        message: "Weekly rate-limit usage is below the warning threshold.",
+      },
+    ];
+    initialState.threads["thread-rate"] = {
+      orderedTurnIds: [],
+      registryStatus: "live",
+      status: "complete",
+      thread: { id: "thread-rate", name: "Rate status" },
+      turns: {},
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat sidebar={false} />
+      </AgentProvider>,
+    );
+
+    expect(screen.queryByLabelText("Critical status")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Status details")).toHaveTextContent(
+      "below the warning threshold",
+    );
   });
 
   it("renders a workspace with a side panel", () => {
@@ -428,8 +501,11 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(screen.getByLabelText("Status banners")).toHaveTextContent("Model rerouted");
-    expect(screen.getByLabelText("Status banners")).toHaveTextContent("MCP OAuth");
+    expect(screen.getByLabelText("Status summary")).toHaveTextContent(
+      "2 background notices",
+    );
+    expect(screen.getByLabelText("Status details")).toHaveTextContent("Model rerouted");
+    expect(screen.getByLabelText("Status details")).toHaveTextContent("MCP OAuth");
   });
 
   it("sends thread action requests through generated method params", async () => {

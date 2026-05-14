@@ -92,7 +92,8 @@ export function AgentChat({
             )}
           </div>
           <aside className="aui-chat-rail" aria-label="Agent context">
-            <AgentStatusBanners />
+            <AgentStatusSummary />
+            <AgentStatusDetails />
             {usage ? <AgentUsagePanel autoRefresh={false} /> : null}
             {diagnostics ? <AgentDiagnosticsPanel bootstrap={bootstrap} /> : null}
           </aside>
@@ -141,9 +142,9 @@ export function AgentThreadView({
   const { thread, threadId: resolvedThreadId } = useAgentThread(threadId);
   if (!thread) return null;
   return (
-    <>
+    <AgentThreadSurface>
       <AgentThreadHeader thread={thread} threadId={resolvedThreadId} />
-      <AgentCriticalStatusBanners />
+      <AgentCriticalNoticeList />
       <AgentThreadTimeline renderItem={renderItem} thread={thread} />
       <AgentApprovalQueue renderApproval={renderApproval} threadId={resolvedThreadId} />
       <AgentComposerPanel
@@ -151,7 +152,21 @@ export function AgentThreadView({
         thread={thread}
         threadId={resolvedThreadId}
       />
-    </>
+    </AgentThreadSurface>
+  );
+}
+
+export function AgentThreadSurface({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={["aui-thread-surface", className].filter(Boolean).join(" ")}>
+      {children}
+    </div>
   );
 }
 
@@ -1156,23 +1171,53 @@ export function AgentDiagnosticsPanel({
 
 export const AgentDiagnostics = AgentDiagnosticsPanel;
 
-export function AgentStatusBanners() {
+type AgentStatusSeverity = "info" | "warning" | "critical";
+
+interface AgentStatusNotice {
+  id: string;
+  kind: string;
+  message: string;
+  severity: AgentStatusSeverity;
+  title: string;
+}
+
+export function AgentStatusSummary() {
   const { state } = useAgentContext();
-  const banners = state.diagnostics.banners.slice(-6);
-  if (banners.length === 0) return null;
-  const criticalCount = banners.filter((banner) => isCriticalBanner(banner.kind)).length;
+  const notices = normalizedStatusNotices(state.diagnostics.banners);
+  if (notices.length === 0) return null;
+  const criticalCount = notices.filter((notice) => notice.severity === "critical").length;
+  const warningCount = notices.filter((notice) => notice.severity === "warning").length;
   return (
-    <section className="aui-status-banners" aria-label="Status banners">
-      <details open={criticalCount > 0 ? true : undefined}>
+    <section className="aui-status-summary" aria-label="Status summary">
+      <strong>Status</strong>
+      <span>{statusSummary(notices.length, warningCount, criticalCount)}</span>
+    </section>
+  );
+}
+
+export function AgentStatusDetails({ includeCritical = false }: { includeCritical?: boolean }) {
+  const { state } = useAgentContext();
+  const notices = normalizedStatusNotices(state.diagnostics.banners)
+    .filter((notice) => includeCritical || notice.severity !== "critical")
+    .slice(-6);
+  if (notices.length === 0) return null;
+  return (
+    <section className="aui-status-banners" aria-label="Status details">
+      <details>
         <summary>
-          <strong>Status</strong>
-          <span>{statusSummary(banners.length, criticalCount)}</span>
+          <strong>Details</strong>
+          <span>{statusDetailsSummary(notices)}</span>
         </summary>
         <div className="aui-status-banner-list">
-          {banners.map((banner) => (
-            <article className="aui-status-banner" data-kind={banner.kind} key={banner.id}>
-              <strong>{statusBannerTitle(banner.kind)}</strong>
-              <span>{banner.message}</span>
+          {notices.map((notice) => (
+            <article
+              className="aui-status-banner"
+              data-kind={notice.kind}
+              data-severity={notice.severity}
+              key={notice.id}
+            >
+              <strong>{notice.title}</strong>
+              <span>{notice.message}</span>
             </article>
           ))}
         </div>
@@ -1181,33 +1226,84 @@ export function AgentStatusBanners() {
   );
 }
 
-function AgentCriticalStatusBanners() {
+export const AgentStatusDrawer = AgentStatusDetails;
+export const AgentStatusBanners = AgentStatusDetails;
+
+export function AgentCriticalNoticeList() {
   const { state } = useAgentContext();
-  const banners = state.diagnostics.banners.filter((banner) =>
-    isCriticalBanner(banner.kind),
+  const notices = normalizedStatusNotices(state.diagnostics.banners).filter(
+    (notice) => notice.severity === "critical",
   );
-  if (banners.length === 0) return null;
+  if (notices.length === 0) return null;
   return (
     <section className="aui-critical-banners" aria-label="Critical status">
-      {banners.slice(-2).map((banner) => (
-        <article className="aui-critical-banner" data-kind={banner.kind} key={banner.id}>
-          <strong>{statusBannerTitle(banner.kind)}</strong>
-          <span>{banner.message}</span>
+      {notices.slice(-2).map((notice) => (
+        <article
+          className="aui-critical-banner"
+          data-kind={notice.kind}
+          data-severity={notice.severity}
+          key={notice.id}
+        >
+          <strong>{notice.title}</strong>
+          <span>{notice.message}</span>
         </article>
       ))}
     </section>
   );
 }
 
-function isCriticalBanner(kind: string): boolean {
-  return kind === "configWarning" || kind === "deprecationNotice" || kind === "rateLimit";
+function normalizedStatusNotices(
+  banners: Array<{ id: string; kind: string; message: string }>,
+): AgentStatusNotice[] {
+  return banners.map((banner) => ({
+    id: banner.id,
+    kind: banner.kind,
+    message: banner.message,
+    severity: statusSeverity(banner.kind, banner.message),
+    title: statusBannerTitle(banner.kind),
+  }));
 }
 
-function statusSummary(total: number, criticalCount: number): string {
+function statusSeverity(kind: string, message: string): AgentStatusSeverity {
+  if (kind === "rateLimit") return rateLimitSeverity(message);
+  if (kind === "configWarning" || kind === "deprecationNotice") return "warning";
+  if (/failed|blocked|danger|requires action|needs action/i.test(message)) {
+    return "critical";
+  }
+  return "info";
+}
+
+function rateLimitSeverity(message: string): AgentStatusSeverity {
+  if (/below (the )?warning threshold|normal|available|ready/i.test(message)) {
+    return "info";
+  }
+  if (
+    /exceeded|blocked|at (the )?limit|reached|0\s*remaining|100\s*%|99\s*%|98\s*%|97\s*%|96\s*%|95\s*%/i.test(
+      message,
+    )
+  ) {
+    return "critical";
+  }
+  if (/warning|near|approach|80\s*%|85\s*%|90\s*%|91\s*%|92\s*%|93\s*%|94\s*%/i.test(message)) {
+    return "warning";
+  }
+  return "info";
+}
+
+function statusSummary(total: number, warningCount: number, criticalCount: number): string {
   if (criticalCount > 0) {
-    return `${criticalCount} needs review · ${total} total`;
+    return `${criticalCount} critical · ${warningCount} warning · ${total} total`;
+  }
+  if (warningCount > 0) {
+    return `${warningCount} warning · ${total} total`;
   }
   return `${total} background ${total === 1 ? "notice" : "notices"}`;
+}
+
+function statusDetailsSummary(notices: AgentStatusNotice[]): string {
+  const warningCount = notices.filter((notice) => notice.severity === "warning").length;
+  if (warningCount > 0) return `${warningCount} warning · ${notices.length} notices`;
+  return `${notices.length} background ${notices.length === 1 ? "notice" : "notices"}`;
 }
 
 export interface AgentUsageProps {
@@ -1289,6 +1385,17 @@ export function AgentUsagePanel({ autoRefresh = true }: AgentUsageProps = {}) {
 }
 
 export const AgentUsage = AgentUsagePanel;
+
+export function AgentUsageSummary() {
+  const { rateLimits } = useAgentUsage();
+  const windows = useMemo(() => normalizeUsageWindows(rateLimits), [rateLimits]);
+  return (
+    <section className="aui-usage-summary" aria-label="Usage summary">
+      <strong>Usage</strong>
+      <span>{usageSummary(windows)}</span>
+    </section>
+  );
+}
 
 export function AgentRateLimitBar({
   label,

@@ -98,7 +98,9 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
   await expect(
     page.getByRole("heading", { name: "Kitchen-quality Codex UX" }),
   ).toBeVisible();
-  await expect(page.getByLabel("Status banners")).toContainText("Model rerouted");
+  await expect(page.getByLabel("Status summary")).toContainText("2 warning");
+  await expect(page.getByLabel("Status details")).toContainText("Model rerouted");
+  await expect(page.getByLabel("Critical status")).toHaveCount(0);
   await expect(page.getByLabel("Plan")).toContainText("Render rich blocks");
   await expect(page.getByLabel("Web search")).toContainText(
     "Codex App Server generated protocol",
@@ -133,8 +135,60 @@ test("renders generic vNext composition examples", async ({ page }) => {
   await expect(page.getByText("Drive")).toBeVisible();
 
   await page.goto("/host-workflow-recipe");
-  await expect(page.getByLabel("Host-owned panel")).toContainText("Workflow status");
+  await expect(page.getByLabel("Host primitive composition")).toBeVisible();
+  await expect(page.getByLabel("Host workflow context")).toContainText(
+    "Host workflow context",
+  );
+  await expect(page.getByLabel("Host-owned panel")).toContainText("Validation status");
   await expect(page.getByLabel("Host-owned panel")).toContainText("Pending requests");
-  await expect(page.getByLabel("Host-owned panel")).toContainText("Usage summary");
+  await expect(page.getByLabel("Host-owned panel")).toContainText("Usage windows");
   await expect(page.getByRole("heading", { name: "Kitchen-quality Codex UX" })).toBeVisible();
+});
+
+test("mobile keeps secondary chrome reachable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/?state=kitchen");
+  await expect(page.getByLabel("Agent context")).toBeVisible();
+  await expect(page.getByLabel("Status summary")).toBeVisible();
+  await expect(page.getByLabel("Usage limits")).toBeVisible();
+  await expect(page.getByLabel("Diagnostics")).toHaveCount(0);
+  const railDisplay = await page
+    .locator(".aui-chat-rail")
+    .evaluate((element) => getComputedStyle(element).display);
+  expect(railDisplay).not.toBe("none");
+  const metrics = await page.evaluate(() => ({
+    clientWidth: document.documentElement.clientWidth,
+    scrollWidth: document.documentElement.scrollWidth,
+  }));
+  expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
+});
+
+test("fixture gallery previews load meaningful content", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/fixture-gallery");
+  await expect(
+    page.getByRole("heading", { name: "Agent UI visual QA states" }),
+  ).toBeVisible();
+  const kitchenFrame = page.frameLocator('iframe[title="Kitchen-quality Codex UX desktop"]');
+  await expect(
+    kitchenFrame.getByRole("heading", { name: "Kitchen-quality Codex UX" }),
+  ).toBeVisible();
+  const hostFrame = page.frameLocator('iframe[title="Host workflow recipe desktop"]');
+  await expect(hostFrame.getByLabel("Host primitive composition")).toBeVisible();
+  const reloadButtons = await page.getByRole("button", { name: "Reload preview" }).count();
+  expect(reloadButtons).toBeGreaterThan(0);
+});
+
+test("desktop and mobile screenshot buffers are not blank", async ({ page }) => {
+  for (const target of [
+    { height: 900, url: "/?state=kitchen", width: 1280 },
+    { height: 900, url: "/host-workflow-recipe", width: 390 },
+  ]) {
+    await page.setViewportSize({ width: target.width, height: target.height });
+    await page.goto(target.url);
+    await expect(page.locator("body")).toBeVisible();
+    const screenshot = await page.screenshot({ fullPage: false });
+    expect(screenshot.length).toBeGreaterThan(20_000);
+    expect(new Set(screenshot).size).toBeGreaterThan(120);
+  }
 });

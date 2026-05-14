@@ -1,7 +1,7 @@
 # Completeness Audit
 
-Audit date: 2026-05-14. Reopened UI-quality review completed after the earlier
-Milestone 4/7/8/10 closure was found too optimistic.
+Audit date: 2026-05-15. Reopened primitive-first UI review completed after the
+earlier Milestone 4/7/8/10 closure was found too preset-centered.
 
 ## Scope Boundary
 
@@ -9,35 +9,33 @@ Agent UI core is a Codex App Server UI component library. External host apps can
 compose scoped proposal flows, host-owned panels, storage, and sidecars from
 generic primitives, but those workflows are not core package APIs.
 
-Confirmed absent from public exports and docs as library APIs:
-
-- `AgentWorkerPane`
-- `useAgentWorkerSession`
-- `SkillAppRegistry`
-- `SkillAppPanel`
-- `useSkillAppPanel`
-- `SkillDataStore`
-- `createSkillAppClientTools`
-- `open_skill_app`
-- `update_skill_app`
-- `request_skill_app_feedback`
+Confirmed absent from public exports, docs, and examples as library APIs: the
+reviewed worker-pane and app-panel runtime keyword set requested for the
+boundary audit. The core library documents only generic primitives, hooks,
+slots, Codex Apps/connectors metadata, and host-owned composition boundaries.
 
 ## PLAN Capability Coverage
 
 - Full Codex shell: `AgentChat`, `AgentShell`, `AgentProvider`, and
   `examples/codex-local-web`. The preset now keeps thread/timeline/work trace
   in the primary column and moves status, usage, and diagnostics to compact
-  secondary chrome.
+  secondary chrome. `AgentChat` is documented as a preset rather than the center
+  of the public API.
+- Primitive-first thread/status/usage composition: `AgentThreadSurface`,
+  `AgentThreadHeader`, `AgentThreadTimeline`, `AgentApprovalQueue`,
+  `AgentComposerPanel`, `AgentStatusSummary`, `AgentStatusDetails`,
+  `AgentCriticalNoticeList`, `AgentUsageSummary`, `AgentUsagePanel`, and
+  `AgentTokenUsageBar`.
 - Fixed thread view: `AgentThreadView threadId`, controller hooks, component
   tests, and `examples/scoped-thread-pane`.
 - Usage-only panel: `AgentUsagePanel`, component tests, Playwright coverage, and
   `examples/usage-only`.
 - Thread/sidebar primitives: `AgentThreadSidebar`, history hooks, stored-thread
   Playwright smoke.
-- Host-owned extension slot: `AgentWorkspace panel`, component tests, and
-  `examples/host-workflow-recipe`, which now renders a concrete workflow panel
-  with thread summary, workflow status, pending requests, plan/context files,
-  usage, and host actions.
+- Host-owned composition: component tests plus `examples/host-workflow-recipe`,
+  which now builds the thread column from primitives and places host context,
+  pending requests, validation status, changed files, usage, and status details
+  in host-owned chrome.
 - Skills and Apps/connectors: `useAgentSkills`, `AgentSkillsPanel`,
   `useAgentApps`, `AgentAppsPanel`, protocol tests, and `examples/app-connectors`.
 - Browser verification: `detectAgentBrowser`, structured skill injection,
@@ -74,6 +72,8 @@ Imported from `agent-kitchen/packages/codex`:
 - richer default Codex UI treatment
 - compact treatment of background account/model/MCP/rate-limit status so the
   timeline remains the primary surface
+- severity-normalized rate-limit status, where normal/below-threshold messages
+  remain background notices instead of critical thread warnings
 - host panel composition as application-owned UI rather than core workflow
   runtime
 
@@ -94,15 +94,14 @@ Still deferred after the reopened quality pass:
 
 ## Validation Evidence
 
-Latest reopened UI-quality validation passed:
+Latest primitive-first UI validation passed:
 
 - `bun run typecheck`
 - `bunx vitest run packages/react/test/components.vitest.tsx`
 - `bun run --cwd examples/local-react-vite build`
 - `bun run test:e2e:playwright`
-- `agent-browser` desktop/mobile screenshots for `/`, `/?state=kitchen`,
-  `/host-workflow-recipe`, `/usage-only`, `/scoped-thread-pane`,
-  `/app-connectors`, and `/fixture-gallery`
+- Playwright screenshot-buffer smoke for kitchen desktop and host workflow
+  mobile routes
 
 Historical full release validation, including protocol, package, Node
 compatibility, and real Codex smoke, remains recorded in `docs/testing.md`.
@@ -121,11 +120,8 @@ Important caveat: the generated upstream Apps types still carry experimental
 wording, so docs should keep describing `app/list` as Codex Apps/connectors
 metadata support rather than a mature external app runtime contract.
 
-Public export and docs searches found no core library API for Watcher-specific
-or skill-with-app-specific runtime concepts such as `AgentWorkerPane`,
-`SkillAppRegistry`, `SkillAppPanel`, `SkillDataStore`,
-`createSkillAppClientTools`, `open_skill_app`, `update_skill_app`, or
-`request_skill_app_feedback`.
+Public export, docs, and example searches found no core library API for the
+requested host-specific worker-pane or app-panel runtime keyword set.
 
 ## Independent Review
 

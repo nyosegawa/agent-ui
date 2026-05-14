@@ -6,7 +6,7 @@ Active planning and quality gates live in [`PLAN.md`](./PLAN.md) and
 [`TODO.md`](./TODO.md). Those files are the source of truth for Agent UI vNext,
 including the reopened UI-quality review for Milestones 4, 7, 8, and 10.
 
-Agent UI provides React components, headless hooks, state management, and transport adapters for applications built on OpenAI Codex App Server.
+Agent UI provides React components, headless hooks, state management, and transport adapters for applications built on OpenAI Codex App Server. `AgentChat` is a convenience preset; the core value is the primitive set that lets host apps place thread, status, usage, approvals, composer, apps, skills, and diagnostics surfaces in their own product shell.
 
 ## Status
 
@@ -25,13 +25,19 @@ Primary React surfaces:
 - `AgentShell`
 - `AgentChat`
 - `AgentWorkspace`
+- `AgentThreadSurface`
 - `AgentThreadView`
 - `AgentThreadHeader`
 - `AgentThreadTimeline`
 - `AgentThreadSidebar`
 - `AgentComposerPanel`
 - `AgentApprovalQueue`
+- `AgentStatusSummary`
+- `AgentStatusDetails`
+- `AgentCriticalNoticeList`
 - `AgentUsagePanel`
+- `AgentUsageSummary`
+- `AgentTokenUsageBar`
 - `AgentDiagnosticsPanel`
 - `AgentSkillsPanel`
 - `AgentAppsPanel`
@@ -93,7 +99,10 @@ bun run --cwd examples/local-react-vite dev
 ```
 
 Then open `/`, `/?state=kitchen`, `/host-workflow-recipe`, and
-`/fixture-gallery` for deterministic visual QA states. `examples/docs-site` is
-documentation-oriented and is not the primary fixture QA surface.
+`/fixture-gallery` for deterministic visual QA states. The host-workflow route
+is built from primitives rather than the `AgentChat` preset, and the gallery
+loads desktop/mobile previews with reload controls for browser QA.
+`examples/docs-site` is documentation-oriented and is not the primary fixture
+QA surface.
 
 The Next.js example is a one-shot RPC Route Handler only. Use the local web app's WebSocket bridge for streaming chat, approvals, and live diagnostics.

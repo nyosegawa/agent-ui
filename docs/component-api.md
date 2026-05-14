@@ -18,7 +18,10 @@ fixtures, tests, or restored local state.
 
 ## Preset Chat
 
-`AgentChat` is a preset composition, not the only supported layout.
+`AgentChat` is a preset composition, not the primary abstraction. The React
+package is primitive-first: host apps can place thread, status, usage,
+approvals, composer, diagnostics, skills, and Apps/connectors surfaces in their
+own shell without adopting the default chat layout.
 
 ```tsx
 <AgentChat
@@ -33,11 +36,13 @@ fixtures, tests, or restored local state.
 ```
 
 The preset composes `AgentShell`, optional `AgentThreadSidebar`,
-`AgentStatusBar`, `AgentThreadView`, and a secondary context rail for compact
-status, usage, and diagnostics. The conversation, work trace, approvals, and
-composer stay in the primary column; low-priority account/model/MCP/rate-limit
-notices do not stack above the timeline. Hosts can suppress the sidebar, usage,
-and diagnostics when those surfaces live elsewhere in the application.
+`AgentStatusBar`, `AgentThreadSurface`, `AgentThreadView`, and a secondary
+context rail for compact status, usage, and diagnostics. The conversation, work
+trace, approvals, and composer stay in the primary column; low-priority
+account/model/MCP/rate-limit notices do not stack above the timeline. Hosts can
+suppress the sidebar, usage, and diagnostics when those surfaces live elsewhere
+in the application. On mobile the secondary chrome is not hidden; it remains
+reachable through compact details/summary affordances.
 
 ## Layout Primitives
 
@@ -45,6 +50,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
 
 - `AgentShell`: app viewport layout with an optional sidebar slot.
 - `AgentThreadSidebar`: persisted Codex thread history browser.
+- `AgentThreadSurface`: unopinionated thread column surface for host-arranged
+  header, notices, timeline, approvals, and composer primitives.
 - `AgentThreadView`: one thread with header, timeline, approvals, and composer.
 - `AgentThreadHeader`: title, cwd/session context, resume, stop, and new-thread actions.
 - `AgentThreadTimeline`: normalized turn and item renderer.
@@ -52,11 +59,13 @@ Use these primitives when embedding Agent UI into existing product chrome:
   command, file-change, tool, web search, image, and system-info blocks.
 - `AgentApprovalQueue`: pending server-request approval cards.
 - `AgentComposerPanel`: run settings and turn composer.
-- `AgentStatusBanners`: model reroute, deprecation, config, account, MCP OAuth,
-  and rate-limit notices rendered as a compact summary. Critical warnings can
-  appear inline near the thread while background notices stay in secondary
-  chrome.
+- `AgentStatusSummary`, `AgentStatusDetails`, and `AgentCriticalNoticeList`:
+  severity-normalized model reroute, deprecation, config, account, MCP OAuth,
+  and rate-limit notices. Info/background notices stay in secondary chrome,
+  warnings stay visible without interrupting the timeline, and only genuinely
+  blocking or dangerous critical notices render near the thread.
 - `AgentUsagePanel`: account rate-limit windows, renderable inside or outside a shell.
+- `AgentUsageSummary`: compact usage primitive for host chrome.
 - `AgentRateLimitBar`: one normalized rate-limit window.
 - `AgentTokenUsageBar`: per-thread input/output token usage.
 - `AgentDiagnosticsPanel`: bridge/account/model startup diagnostics.
@@ -96,6 +105,18 @@ Render a full workspace with a host-owned side panel:
 The side panel is a generic render slot. Host applications own any app runtime,
 panel state, storage, registry, or custom tool workflow they place inside it.
 
+Render a host-owned thread layout without the preset:
+
+```tsx
+<AgentThreadSurface>
+  <AgentThreadHeader thread={thread} threadId={threadId} />
+  <AgentCriticalNoticeList />
+  <AgentThreadTimeline thread={thread} />
+  <AgentApprovalQueue threadId={threadId} />
+  <AgentComposerPanel thread={thread} threadId={threadId} />
+</AgentThreadSurface>
+```
+
 ## Timeline And Approvals
 
 `AgentThreadTimeline` renders user messages, assistant messages, reasoning,
@@ -134,6 +155,12 @@ does not treat browser-only `File.name` values as App Server-readable paths.
 `account/rateLimits/updated` notifications or explicit reads. It is safe to use
 standalone in product chrome; pass `autoRefresh={false}` when another bootstrap
 surface already owns startup reads.
+
+`AgentStatusSummary` and `AgentStatusDetails` use the same normalized severity
+model as `AgentCriticalNoticeList`. A rate-limit notice is not critical merely
+because its protocol kind is `rateLimit`; normal and below-threshold messages
+remain background status, near-threshold messages are warnings, and only
+reached/exceeded/blocked limit messages become critical.
 
 `AgentTokenUsageBar` renders per-thread token usage as an embeddable primitive
 for full-shell, worker-pane, or usage-only host chrome.
