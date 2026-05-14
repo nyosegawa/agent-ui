@@ -1,8 +1,9 @@
 # TODO
 
 This checklist is the execution source of truth for Agent UI vNext. The plan is
-defined in `PLAN.md`. Backward compatibility with the current Watcher and
-`skill-with-app` experiments is not required.
+defined in `PLAN.md`. External app workflows are not core library scope;
+Watcher-style proposal flows and skill-with-app-style runtimes must be composed
+outside the package from generic Codex App Server UI primitives.
 
 ## Completion Rule
 
@@ -95,9 +96,9 @@ Acceptance:
 - [x] Introduce `AgentThreadHeader`, `AgentThreadTimeline`, `AgentApprovalQueue`, `AgentComposerPanel`, `AgentUsagePanel`, `AgentDiagnosticsPanel`, `AgentSkillsPanel`, and `AgentThreadSidebar`.
 - [x] Redesign `AgentChat` as a preset composition of primitives.
 - [x] Make usage in presets suppressible and relocatable.
-- [x] Add `AgentWorkerPane` for plan-only first turn plus approved continuation.
-- [x] Add `AgentWorkspace` for chat plus optional right-side skill/app panel.
-- [x] Add headless hooks/controllers: `useAgentThreadController`, `useAgentTurnController`, `useAgentServerRequests`, `useAgentUsage`, `useAgentSkills`, `useAgentApps`, `useAgentWorkerSession`, and `useSkillAppPanel`.
+- [x] Add generic fixed-thread composition with `AgentThreadView`.
+- [x] Add `AgentWorkspace` for chat plus optional host-owned side panel slot.
+- [x] Add headless hooks/controllers: `useAgentThreadController`, `useAgentTurnController`, `useAgentServerRequests`, `useAgentUsage`, `useAgentSkills`, and `useAgentApps`.
 - [x] Keep the old public API only where it remains naturally compatible with the new primitives; do not preserve awkward shapes for compatibility.
 
 Acceptance:
@@ -132,11 +133,9 @@ Acceptance:
 - [x] Add structured skill input items to turn-start helpers.
 - [x] Add `app/list` and `app/list/updated` support with pagination, install/auth state, and `useAgentApps()`.
 - [x] Add composer mention chips for `app://...` and `plugin://...`.
-- [x] Add `SkillAppRegistry` that accepts static arrays, Vite glob outputs, and remote manifests.
-- [x] Add `SkillAppPanel` with right panel, modal, inline, and fullscreen modes.
-- [x] Add `SkillDataStore` in the server package for JSON/blob storage, path guards, transactions, and watch.
-- [x] Replace `curl /api/app`-style prototypes with client tools such as `open_skill_app`, `update_skill_app`, and `request_skill_app_feedback`.
-- [x] Validate client tool names against App Server reserved namespaces before exposing them.
+- [x] Keep skill-with-app-style registry, panel runtime, storage, and client tools out of core package scope.
+- [x] Add generic workspace slots for host-owned panels without library-owned runtime state.
+- [x] Keep dynamic tool bridges generic and host opt-in rather than exposing app-specific client tools.
 - [x] Detect the repo `agent-browser` skill and global CLI availability.
 - [x] Add a helper that injects the `agent-browser` skill into coding-agent verification turns.
 - [x] Add diagnostics when `agent-browser` is missing or the browser binary is not installed.
@@ -144,39 +143,39 @@ Acceptance:
 Acceptance:
 
 - [x] `agent-browser --version` and `agent-browser skills get core` succeed in local verification docs.
-- [x] A local example can open a skill app panel, update it from an agent action, receive feedback, and close it.
+- [x] React tests prove a host-owned panel can render through generic workspace slots.
 - [x] A coding-agent workflow can be instructed to verify a local page with `agent-browser` through structured skill injection.
 
 ## Milestone 6: Server Bridge And Host Integration
 
-- [ ] Split bridge internals into transport bridge, policy engine, dynamic tool bridge, and host event sink.
-- [ ] Keep `stdio://` as the default local App Server transport.
-- [ ] Treat direct App Server WebSocket transport as experimental/unsupported in docs and API naming.
-- [ ] Add host event callbacks for thread events, turn events, usage deltas, and server requests.
-- [ ] Add approval policy configuration that is explicit and visible to host apps.
-- [ ] Add redaction tests for stderr and bridge logs.
-- [ ] Add bridge tests for dynamic tool helper thread params against generated schema.
+- [x] Split bridge internals into transport bridge, policy engine, dynamic tool bridge, and host event sink.
+- [x] Keep `stdio://` as the default local App Server transport.
+- [x] Treat direct App Server WebSocket transport as experimental/unsupported in docs and API naming.
+- [x] Add host event callbacks for thread events, turn events, usage deltas, and server requests.
+- [x] Add approval policy configuration that is explicit and visible to host apps.
+- [x] Add redaction tests for stderr and bridge logs.
+- [x] Add bridge tests for dynamic tool helper thread params against generated schema.
 - [ ] Add slow-consumer/backpressure tests, or add a focused harness if the current test infrastructure cannot simulate them.
 
 Acceptance:
 
-- [ ] Watcher-style host apps can receive worker lifecycle and usage events without reading internal React state.
-- [ ] Dynamic tools and approval policies require explicit host opt-in.
+- [x] Host apps can receive thread, turn, usage, and server-request events without reading internal React state.
+- [x] Dynamic tools and approval policies require explicit host opt-in.
 
 ## Milestone 7: Examples And Migration Targets
 
 - [ ] Update `examples/codex-local-web` to use the new preset shell.
-- [ ] Add `examples/scoped-thread-pane` that demonstrates a Watcher-style fixed thread worker pane.
+- [ ] Add `examples/scoped-thread-pane` that demonstrates a generic fixed-thread pane.
 - [ ] Add `examples/usage-only` that renders account/rate-limit usage without chat chrome.
-- [ ] Add `examples/skill-app-workspace` that replaces the `skill-with-app` architecture without a separate `:5191` curl/SSE server.
+- [ ] Add `examples/app-connectors` that demonstrates `app/list` Apps/connectors support.
+- [ ] Add `examples/host-workflow-recipe` that demonstrates host-owned side panels through generic slots.
 - [ ] Add `examples/fixture-gallery` for deterministic UI state regression.
-- [ ] Document how Watcher should migrate to `AgentWorkerPane`.
-- [ ] Document how `skill-with-app` should migrate to `AgentWorkspace`, `SkillAppRegistry`, and `SkillAppPanel`.
+- [ ] Document that external apps compose proposal/workspace workflows from generic primitives rather than core workflow-specific APIs.
 
 Acceptance:
 
 - [ ] Each example has a focused README and a deterministic smoke path.
-- [ ] Watcher and `skill-with-app` can be simplified by deleting host-side reimplementations rather than adapting around them.
+- [ ] Examples do not justify new core APIs with external-app-specific workflows.
 
 ## Milestone 8: Browser Verification With agent-browser
 
@@ -188,7 +187,7 @@ Acceptance:
 - [ ] Verify composer visibility after completed turns.
 - [ ] Verify fixed-thread views ignore unrelated active-thread selection changes.
 - [ ] Verify usage-only rendering has no hidden chat/sidebar assumptions.
-- [ ] Verify skill/app panel open/update/feedback/close flow.
+- [ ] Verify host-owned side panels render through generic slots without core runtime state.
 
 Suggested manual command sequence:
 
@@ -242,8 +241,8 @@ Acceptance:
 - [ ] Re-read every root and docs markdown file and remove contradictions against `PLAN.md`, `TODO.md`, and the implemented API.
 - [ ] Re-audit `agent-ui` against the current Codex App Server generated schema and confirm no productized stable method is missing from capability metadata.
 - [ ] Re-audit `agent-ui` against `agent-kitchen/packages/codex` and confirm all intentionally imported UX/state ideas landed or were explicitly rejected in docs.
-- [ ] Re-audit the Watcher integration path and confirm `AgentWorkerPane` can replace the current host-side worker session orchestration.
-- [ ] Re-audit the `skill-with-app` integration path and confirm `AgentWorkspace` plus `SkillAppPanel` can replace the separate curl/SSE app server pattern.
+- [ ] Re-audit public exports and docs to confirm Watcher-specific proposal/session APIs are not in core.
+- [ ] Re-audit public exports and docs to confirm skill-with-app-specific registry/storage/panel/client-tool runtime APIs are not in core.
 - [ ] Run an agent-browser dogfood pass against each browser example and record the checked URL, commands, and result.
 - [ ] Ask at least one independent review pass to inspect for missing component APIs, host integration gaps, protocol drift, and "demo-only" shortcuts.
 - [ ] Fix every audit finding or add a concrete blocking issue to `TODO.md` before marking this milestone complete.

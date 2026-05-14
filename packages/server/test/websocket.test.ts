@@ -620,6 +620,66 @@ describe("attachAgentUiWebSocketBridge", () => {
     await transport.close();
   });
 
+  it("emits host events for thread, turn, usage, and server request lifecycles", async () => {
+    const received = {
+      requests: [] as AgentTransportEvent[],
+      threads: [] as AgentTransportEvent[],
+      transports: [] as AgentTransportEvent[],
+      turns: [] as AgentTransportEvent[],
+      usage: [] as AgentTransportEvent[],
+    };
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      hostEvents: {
+        onServerRequest: (event) => received.requests.push(event),
+        onThreadEvent: (event) => received.threads.push(event),
+        onTransportEvent: (event) => received.transports.push(event),
+        onTurnEvent: (event) => received.turns.push(event),
+        onUsageEvent: (event) => received.usage.push(event),
+      },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        method: "thread/status/changed",
+        params: { status: "running", threadId: "thread-host" },
+      })}\n`,
+    );
+    stdout.write(
+      `${JSON.stringify({
+        method: "turn/started",
+        params: { threadId: "thread-host", turn: { id: "turn-host", threadId: "thread-host" } },
+      })}\n`,
+    );
+    stdout.write(
+      `${JSON.stringify({
+        method: "thread/tokenUsage/updated",
+        params: { threadId: "thread-host", tokenUsage: { inputTokens: 1, outputTokens: 2, totalTokens: 3 } },
+      })}\n`,
+    );
+    stdout.write(
+      `${JSON.stringify({
+        id: "request-host",
+        method: "item/commandExecution/requestApproval",
+        params: { command: "bun test", threadId: "thread-host", turnId: "turn-host" },
+      })}\n`,
+    );
+
+    await nextTransportEvent(transport, (event) => event.type === "request");
+    await waitFor(() => received.requests.length === 1);
+    expect(received.threads.some((event) => event.event?.type === "thread/status/changed")).toBe(true);
+    expect(received.turns.some((event) => event.event?.type === "turn/started")).toBe(true);
+    expect(received.usage.some((event) => event.event?.type === "thread/tokenUsage/updated")).toBe(true);
+    expect(received.requests[0]?.request?.kind).toBe("commandApproval");
+    expect(received.transports.length).toBeGreaterThanOrEqual(4);
+    await transport.close();
+  });
+
   it("forwards only redacted stderr through the browser transport", async () => {
     const { stderr, stdout, transport, writes } = await createBridgeBackedTransport();
 
@@ -682,7 +742,7 @@ describe("attachAgentUiWebSocketBridge", () => {
 });
 
 async function createBridgeBackedTransport(
-  options: Pick<AgentUiWebSocketBridgeOptions, "serverRequestPolicy"> = {},
+  options: Pick<AgentUiWebSocketBridgeOptions, "hostEvents" | "serverRequestPolicy"> = {},
 ) {
   const stdin = new PassThrough();
   const stdout = new PassThrough();

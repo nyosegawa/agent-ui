@@ -57,10 +57,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentTokenUsageBar`: per-thread input/output token usage.
 - `AgentDiagnosticsPanel`: bridge/account/model startup diagnostics.
 - `AgentSkillsPanel`: skill list and enable/disable controls.
-- `AgentAppsPanel`: connected app list.
-- `AgentWorkerPane`: focused single-thread worker surface for embedded panes.
-- `AgentWorkspace`: chat plus optional skill/app side panel.
-- `SkillAppPanel`: local controller for skills/apps panel placement.
+- `AgentAppsPanel`: Codex Apps/connectors list from `app/list`.
+- `AgentWorkspace`: chat plus optional host-owned side panel slot.
 
 `ThreadSidebar`, `AgentUsage`, `AgentDiagnostics`, and `AgentApprovalPrompt`
 remain as compatible aliases where the names still map cleanly to the vNext
@@ -83,26 +81,16 @@ Render usage in host chrome while the chat stays sidebar-free:
 </AgentShell>
 ```
 
-Render a worker pane:
-
-```tsx
-<AgentWorkerPane
-  threadId="thread_123"
-  renderApproval={(approval) => <HostApproval approval={approval} />}
-/>
-```
-
-Render a full workspace with a right-side skill/app panel:
+Render a full workspace with a host-owned side panel:
 
 ```tsx
 <AgentWorkspace
-  panel={<AgentSkillsPanel cwd={cwd} />}
+  panel={<HostPanel threadId="thread_123" />}
 />
 ```
 
-`SkillAppRegistry` can be built from static manifests, Vite globs, or remote
-manifest URLs. Client tools are exposed under non-App-Server-reserved names:
-`open_skill_app`, `update_skill_app`, and `request_skill_app_feedback`.
+The side panel is a generic render slot. Host applications own any app runtime,
+panel state, storage, registry, or custom tool workflow they place inside it.
 
 ## Timeline And Approvals
 

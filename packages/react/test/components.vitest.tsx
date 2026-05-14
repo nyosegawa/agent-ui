@@ -23,8 +23,6 @@ import {
   AgentWorkspace,
   AgentSkillsPanel,
   AgentAppsPanel,
-  createSkillAppClientTools,
-  loadSkillAppRegistry,
   useAgentAuth,
   useAgentServerRequests,
   useAgentSkills,
@@ -167,11 +165,11 @@ describe("AgentChat", () => {
         initialState={runEventFixture(demoFixture as FixtureStep[])}
         transport={new FakeAgentTransport()}
       >
-        <AgentWorkspace sidebar={false} panel={<div>Skill app content</div>} />
+        <AgentWorkspace sidebar={false} panel={<div>Host panel content</div>} />
       </AgentProvider>,
     );
 
-    expect(screen.getByText("Skill app content")).toBeInTheDocument();
+    expect(screen.getByText("Host panel content")).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Implement approval UI" })).toBeInTheDocument();
   });
 
@@ -307,39 +305,6 @@ describe("AgentChat", () => {
         }),
       ]),
     );
-  });
-
-  it("loads skill app registries from static, Vite, and remote manifests", async () => {
-    const registry = await loadSkillAppRegistry({
-      fetcher: async () =>
-        ({
-          json: async () => ({ id: "remote", title: "Remote panel" }),
-          ok: true,
-        }) as Response,
-      manifests: [{ id: "static", title: "Static panel" }],
-      remoteManifests: ["https://example.com/manifest.json"],
-      viteGlob: {
-        "./panel.json": async () => ({
-          default: [{ id: "vite", title: "Vite panel" }],
-        }),
-      },
-    });
-    const tools = createSkillAppClientTools(registry);
-
-    expect(registry.list().map((manifest) => manifest.id)).toEqual([
-      "static",
-      "vite",
-      "remote",
-    ]);
-    expect(tools.map((tool) => tool.name)).toEqual([
-      "open_skill_app",
-      "update_skill_app",
-      "request_skill_app_feedback",
-    ]);
-    expect(tools[1]?.run({ id: "static", patch: { title: "Updated" } })).toMatchObject({
-      id: "static",
-      title: "Updated",
-    });
   });
 
   it("exposes all queued server requests through useAgentServerRequests", () => {

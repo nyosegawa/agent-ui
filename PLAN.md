@@ -2,9 +2,10 @@
 
 This document defines the ideal direction for `agent-ui` as the primary UI
 component system for Codex App Server. Backward compatibility with the current
-Watcher and `skill-with-app` experiments is not a constraint. The goal is to
-make `agent-ui` the source of truth, then absorb the useful Codex-specific
-implementation patterns from `agent-kitchen`.
+external host-app experiments is not a constraint. The goal is to make
+`agent-ui` the source of truth, then absorb the useful Codex-specific
+implementation patterns from `agent-kitchen` without importing app-specific
+workflows into the core library.
 
 ## Product Goal
 
@@ -14,18 +15,19 @@ Codex-powered coding agent into other applications.
 The public API must support all of these without host-side reimplementation:
 
 - A full Codex chat/workspace shell.
-- A single fixed thread view for host workflows such as Watcher worker panes.
+- A single fixed thread view for host workflows.
 - A usage-only panel.
 - A thread list/sidebar without a chat body.
-- Skill/app side panels driven by agent actions.
+- Generic extension slots and render props for host-owned side panels.
 - Browser-verification workflows for coding agents through `agent-browser`.
 
 ## Completion Contract
 
 This is not an MVP plan. The work is complete only when `TODO.md` is fully
 checked off and the resulting library can replace the current `agent-ui`,
-Watcher worker pane, and `skill-with-app` prototype responsibilities without
-host-side workaround code.
+without host-side reimplementation of Codex App Server UI primitives. External
+apps remain responsible for their own proposal, workspace, storage, and sidecar
+runtime workflows.
 
 Do not treat a demo, a narrow happy path, or a partial wrapper as completion.
 Every public capability must have:
@@ -153,44 +155,24 @@ Important App Server surfaces for vNext:
 - Experimental features: thread turn pagination, realtime, process APIs,
   collaboration mode, environments, memory/goal APIs.
 
-### Watcher
+### External Host Apps
 
-Watcher proves that host apps need a scoped worker pane, not just a full chat.
+Host apps such as scoped worker panes or app workspaces are consumers of
+`agent-ui`, not part of its core design surface. They can compose Codex App
+Server workflows from generic primitives:
 
-Current integration uses `AgentProvider`, `useAgentThread`, `useAgentTurn`,
-`AgentMessageList`, `AgentApprovalPrompt`, and `AgentComposer` directly. This
-works, but it leaks too much library internals into the host:
+- `AgentThreadView` and thread/turn/server-request hooks for fixed-thread
+  surfaces.
+- Generic lifecycle callbacks for thread, turn, usage, transport, and
+  server-request events.
+- `AgentWorkspace` as a layout slot for host-owned panels.
+- Structured input helpers for skills, app/plugin mentions, images, and browser
+  verification.
 
-- Thread id extraction and localStorage session mapping.
-- Plan-only first turn and approved continuation orchestration.
-- Pending server request payload classification.
-- Worker usage/lifecycle events not flowing back into Watcher state.
-- Hardcoded bridge URL and cwd.
-- Browser/computer verification expressed only as prompt convention.
-
-Ideal direction: `agent-ui` should expose `AgentWorkerPane` and
-`useAgentWorkerSession` so Watcher passes proposal/context/attachments and
-receives lifecycle, usage, and server-request events.
-
-### skill-with-app
-
-`skill-with-app` proves that agent UI often needs a right-side app panel.
-
-Current integration uses `@agent-kitchen/codex` for chat and a separate
-`:5191` HTTP/SSE server for app panel updates. Agents drive the panel by
-running `curl` commands. That is useful as a prototype but should not be the
-ideal architecture.
-
-Ideal direction: `agent-ui` should own a first-class skill/app workspace:
-
-- `AgentWorkspace` for chat plus app panel layout.
-- `SkillAppRegistry` from static manifests, Vite globs, or remote manifests.
-- `SkillAppPanel` and `useSkillAppPanel`.
-- Client-side tools such as `open_skill_app`, `update_skill_app`, and
-  `request_skill_app_feedback`.
-- `SkillDataStore` for JSON/blob data with path guards and change watching.
-- App-to-agent feedback as thread input or structured tool response, not
-  polling a side file.
+The core library must not name or encode host-specific proposal approval,
+plan-only first turns, sidecar storage, app-panel registries, or curl/SSE
+workflows. Those belong in external applications or examples that demonstrate
+composition.
 
 ### Agent Skills and agent-browser
 
@@ -256,7 +238,6 @@ agent-browser 0.27.0
 - Same-origin WebSocket bridge for browser apps.
 - Policy engine for approvals, dynamic tool bridge, host event sink, redaction,
   process lifecycle, and App Server retry/backpressure behavior.
-- Skill data store for local skill/app examples.
 
 `@nyosegawa/agent-ui-web-components`
 
@@ -269,7 +250,6 @@ The React package should expose three levels:
 1. Presets:
    - `AgentChat`
    - `AgentWorkspace`
-   - `AgentWorkerPane`
 
 2. Composable regions:
    - `AgentShell`
@@ -282,7 +262,7 @@ The React package should expose three levels:
    - `AgentUsagePanel`
    - `AgentDiagnosticsPanel`
    - `AgentSkillsPanel`
-   - `SkillAppPanel`
+   - `AgentAppsPanel`
 
 3. Headless hooks/controllers:
    - `useAgentThreadController(threadId?)`
@@ -293,8 +273,6 @@ The React package should expose three levels:
    - `useAgentUsage()`
    - `useAgentSkills()`
    - `useAgentApps()`
-   - `useAgentWorkerSession(sessionKey)`
-   - `useSkillAppPanel()`
 
 ### Thread Model
 
@@ -325,8 +303,7 @@ Usage must be host-composable:
   suppressible.
 - App Server account/rate-limit windows are separate from host-defined usage
   metrics.
-- Host apps can provide extra usage sources, for example Watcher monitor cost,
-  worker execution cost, and weekly budget projection.
+- Host apps can observe usage events without reading internal React state.
 
 ### Server Request Model
 
@@ -358,8 +335,10 @@ Apps:
 
 - Public `listApps` and `useAgentApps()` with pagination and install/auth state.
 - Composer mention chips for `app://...` and `plugin://...`.
-- `AgentWorkspace.SkillDirectory` for manual app/skill browsing.
-- Client tool bridge for skill app panels, with reserved namespace validation.
+- `AgentAppsPanel` for Codex App Server Apps/connectors metadata.
+- Host-owned app workspaces can render inside generic `AgentWorkspace` slots,
+  but their registries, storage, and client tools are external application
+  concerns.
 
 Agent-browser:
 
@@ -393,10 +372,12 @@ UI, but its internals must remain generated-schema-first and componentized.
 The examples should become acceptance fixtures:
 
 - `examples/codex-local-web`: full local Codex app shell through the Node bridge.
-- `examples/scoped-thread-pane`: Watcher-style single thread worker pane.
+- `examples/scoped-thread-pane`: single fixed thread composed from
+  `AgentThreadView` and hooks.
 - `examples/usage-only`: account/rate-limit panel with no chat shell.
-- `examples/skill-app-workspace`: skill/app right-panel workflow replacing
-  `skill-with-app`.
+- `examples/app-connectors`: Codex Apps/connectors listing through `app/list`.
+- `examples/host-workflow-recipe`: host-owned side panel composed through
+  generic slots without adding workflow-specific API to the library.
 - `examples/fixture-gallery`: kitchen-derived UI states for deterministic
   visual and reducer regression testing.
 
@@ -444,7 +425,8 @@ Acceptance criteria for browser verification:
 - Composer stays visible and usable after completed turns.
 - Fixed thread views do not change when another thread is selected elsewhere.
 - Usage-only example renders without chat/sidebar chrome.
-- Skill/app panel can open, update, receive feedback, and close.
+- Host-provided panels render through generic slots without library-owned
+  runtime state.
 - Real or fake approval requests can be answered from the UI.
 - `agent-browser` evidence is recorded in docs or test output for any UI slice
   that changes layout or browser behavior.
@@ -457,7 +439,8 @@ Acceptance criteria for browser verification:
 3. Redesign public React API around primitives first, presets second.
 4. Implement thread, usage, server-request, skills, and apps state in core.
 5. Port `agent-kitchen` UX components onto normalized state.
-6. Add Watcher and `skill-with-app` replacement examples.
+6. Add generic examples for scoped threads, usage-only rendering, apps
+   connectors, and host-owned workflow composition.
 7. Wire `agent-browser` into implementation-time and acceptance-time browser
    verification.
 8. Update docs only after code and tests define the final API.

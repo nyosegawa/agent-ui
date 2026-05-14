@@ -183,17 +183,7 @@
   min-height: 0;
 }
 
-.aui-worker-pane {
-  background: var(--aui-panel);
-  border: 1px solid var(--aui-border);
-  border-radius: var(--aui-radius);
-  display: grid;
-  grid-template-rows: auto minmax(0, 1fr) auto auto;
-  min-height: 420px;
-  overflow: hidden;
-}
-
-.aui-skill-app-panel,
+.aui-extension-panel,
 .aui-skills-panel,
 .aui-apps-panel {
   background: var(--aui-panel);
@@ -203,26 +193,6 @@
   gap: 10px;
   min-height: 0;
   padding: 12px;
-}
-
-.aui-skill-app-panel[data-mode="inline"] {
-  border-style: dashed;
-}
-
-.aui-skill-app-panel[data-mode="modal"] {
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.22);
-  justify-self: center;
-  max-height: min(70vh, 640px);
-  max-width: 720px;
-  overflow: auto;
-  width: min(100%, 720px);
-}
-
-.aui-skill-app-panel[data-mode="fullscreen"] {
-  align-self: stretch;
-  grid-column: 1 / -1;
-  min-height: 70vh;
-  overflow: auto;
 }
 
 .aui-plain-list {

@@ -66,7 +66,9 @@ Implementation status:
 
 ## WebSocket Transport
 
-WebSocket support is optional and advanced.
+Direct WebSocket support to Codex App Server is experimental and unsupported
+upstream. Agent UI's productized browser path is a same-origin host bridge that
+keeps Codex App Server on the default `stdio://` transport.
 
 Rules:
 

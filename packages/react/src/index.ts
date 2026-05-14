@@ -1,7 +1,6 @@
 export * from "./provider";
 export * from "./hooks";
 export * from "./components";
-export * from "./skill-apps";
 export * from "./diff-viewer";
 export * from "./timeline";
 export * from "./codex-request-params";

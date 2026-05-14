@@ -1,9 +1,9 @@
 # Headless Hooks
 
 Headless hooks are the stable customization surface for hosts that need custom
-layout, product chrome, or embedded worker panes. Hooks return normalized Agent
-UI state and stable actions; generated Codex App Server payloads stay behind
-request builders and normalizers.
+layout, product chrome, fixed thread views, or host-owned panels. Hooks return
+normalized Agent UI state and stable actions; generated Codex App Server
+payloads stay behind request builders and normalizers.
 
 ## Thread Controllers
 
@@ -88,8 +88,6 @@ normalized rate-limit snapshot used by `AgentUsagePanel`.
 const skills = useAgentSkills(cwd);
 const hooks = useAgentHooks(cwd);
 const apps = useAgentApps(threadId);
-const worker = useAgentWorkerSession(threadId);
-const panel = useSkillAppPanel({ target: "browser-verification", open: true });
 ```
 
 `useAgentSkills()` calls `skills/list`, stores normalized skills, and exposes
@@ -101,16 +99,10 @@ const panel = useSkillAppPanel({ target: "browser-verification", open: true });
 `loadMoreApps()` so hosts can page through connector/app metadata while keeping
 install/auth state visible.
 
-`useAgentWorkerSession()` combines thread, turn, approvals, and queued server
-requests for worker-pane integrations.
-
-`useSkillAppPanel()` is a local controller for opening, closing, and switching
-skill/app side panels without coupling panel placement to `AgentChat`.
-
-`createSkillAppRegistry()` and `loadSkillAppRegistry()` accept static manifests,
-Vite glob modules, and remote manifest URLs. `createSkillAppClientTools()`
-provides the reserved-name-checked client tool surface:
-`open_skill_app`, `update_skill_app`, and `request_skill_app_feedback`.
+Host-specific workflows can compose `useAgentThreadController()`,
+`useAgentTurnController()`, `useAgentServerRequests()`, and `AgentWorkspace`
+slots. The core library does not own app registries, sidecar storage, plan-only
+turn orchestration, or workflow-specific panel state.
 
 `@nyosegawa/agent-ui-codex/request-builders` also exports structured input
 helpers for skills, mentions, images, and the `agent-browser` verification

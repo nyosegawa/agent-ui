@@ -11,12 +11,9 @@ import {
 import {
   AgentChat,
   AgentProvider,
-  AgentWorkspace,
-  createSkillAppRegistry,
-  useSkillAppPanel,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/style.css";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import demoFixture from "../../../fixtures/app-server/demo-session.json";
 
@@ -28,7 +25,6 @@ declare global {
 
 function DemoApp() {
   if (window.location.pathname === "/qa") return <VisualQaIndex />;
-  if (window.location.pathname === "/skill-app") return <SkillAppWorkspaceDemo />;
   return <AgentDemo />;
 }
 
@@ -95,11 +91,6 @@ const visualQaStates: Array<{
     href: "/?state=kitchen",
     title: "Kitchen-quality Codex UX",
   },
-  {
-    description: "Skill app panel open, update, feedback, and close flow.",
-    href: "/skill-app",
-    title: "Skill app workspace",
-  },
 ];
 
 function VisualQaIndex() {
@@ -143,88 +134,6 @@ function VisualQaIndex() {
         </div>
       </div>
     </main>
-  );
-}
-
-function SkillAppWorkspaceDemo() {
-  const registry = useMemo(
-    () =>
-      createSkillAppRegistry([
-        {
-          description: "Browser verification workspace panel.",
-          entry: "local://browser-verification",
-          id: "browser-verification",
-          mode: "panel",
-          title: "Browser verification",
-        },
-      ]),
-    [],
-  );
-  const panel = useSkillAppPanel();
-  const [feedback, setFeedback] = useState("No feedback requested");
-  const manifest = registry.get("browser-verification");
-  const initialState = useMemo(() => createKitchenInitialState(), []);
-  const transport = useMemo(() => createDemoTransport("kitchen"), []);
-
-  return (
-    <AgentProvider initialState={initialState} transport={transport}>
-      <main style={{ margin: "28px auto", maxWidth: 1280 }}>
-        <div
-          style={{
-            display: "flex",
-            gap: 8,
-            marginBottom: 12,
-          }}
-        >
-          <button
-            onClick={() =>
-              panel.openPanel({
-                mode: "panel",
-                payload: { checkedUrl: "http://127.0.0.1:5174/" },
-                target: manifest?.id,
-              })
-            }
-            type="button"
-          >
-            Open skill app panel
-          </button>
-          <button
-            onClick={() =>
-              panel.updatePanel({
-                payload: { checkedUrl: "http://127.0.0.1:5174/?state=kitchen" },
-              })
-            }
-            type="button"
-          >
-            Update panel
-          </button>
-          <button
-            onClick={() => setFeedback("Agent requested browser verification feedback")}
-            type="button"
-          >
-            Request feedback
-          </button>
-          <button onClick={panel.closePanel} type="button">
-            Close panel
-          </button>
-        </div>
-        <AgentWorkspace
-          panel={
-            panel.panel.open ? (
-              <section aria-label="Skill app panel content">
-                <h2>{manifest?.title}</h2>
-                <p>{manifest?.description}</p>
-                <pre>{JSON.stringify(panel.panel.payload ?? {}, null, 2)}</pre>
-                <output>{feedback}</output>
-              </section>
-            ) : null
-          }
-          panelMode={panel.panel.mode}
-          sidebar={false}
-          usage={false}
-        />
-      </main>
-    </AgentProvider>
   );
 }
 
@@ -409,7 +318,7 @@ function createKitchenInitialState(): AgentSessionState {
       id: "approval-input-kitchen",
       kind: "userInput",
       payload: {
-        prompt: "Choose the deployment target for this worker pane.",
+        prompt: "Choose the verification target for this thread.",
       },
       threadId: "thread-kitchen",
     },
@@ -417,8 +326,8 @@ function createKitchenInitialState(): AgentSessionState {
       id: "approval-tool-kitchen",
       kind: "dynamicTool",
       payload: {
-        tool: "open_skill_app",
-        arguments: { panel: "browser-verification" },
+        tool: "browser_verification_snapshot",
+        arguments: { url: "http://127.0.0.1:5174/?state=kitchen" },
       },
       threadId: "thread-kitchen",
     },

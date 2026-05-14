@@ -844,44 +844,6 @@ export function useAgentApps(threadId?: string) {
   };
 }
 
-export function useAgentWorkerSession(threadId?: ThreadId) {
-  const thread = useAgentThread(threadId);
-  const turn = useAgentTurn(thread.threadId);
-  const requests = useAgentServerRequests(thread.threadId);
-  return { ...thread, ...turn, ...requests };
-}
-
-export interface SkillAppPanelState {
-  mode: "inline" | "modal" | "panel" | "fullscreen";
-  open: boolean;
-  payload?: unknown;
-  target?: string;
-}
-
-export function useSkillAppPanel(initialState: Partial<SkillAppPanelState> = {}) {
-  const [panel, setPanel] = useState<SkillAppPanelState>({
-    mode: initialState.mode ?? "panel",
-    open: initialState.open ?? false,
-    payload: initialState.payload,
-    target: initialState.target,
-  });
-  const openPanel = useCallback(
-    (next: Partial<Omit<SkillAppPanelState, "open">> = {}) =>
-      setPanel((current) => ({ ...current, ...next, open: true })),
-    [],
-  );
-  const closePanel = useCallback(
-    () => setPanel((current) => ({ ...current, open: false })),
-    [],
-  );
-  const updatePanel = useCallback(
-    (next: Partial<SkillAppPanelState>) =>
-      setPanel((current) => ({ ...current, ...next })),
-    [],
-  );
-  return { closePanel, openPanel, panel, updatePanel };
-}
-
 export function useAgentModels() {
   const { dispatch, state, transport } = useAgentContext();
   const refreshModels = useCallback(async () => {

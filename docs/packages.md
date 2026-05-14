@@ -90,7 +90,6 @@ Responsibilities:
 - composer hooks
 - drop-in components
 - headless customization API
-- `SkillAppRegistry` and client tool helpers for skill/app panels
 - CSS variables and plain CSS theme
 
 The default UI keeps the high-traffic surfaces split internally:
@@ -112,8 +111,6 @@ Responsibilities:
 - Next.js one-shot RPC Route Handler helper
 - Express middleware
 - auth/token forwarding recipes
-- `SkillDataStore` for skill/app JSON and blob state with path guards,
-  serialized transactions, and watch support
 - `detectAgentBrowser()` for repo skill path, CLI version, and core skill checks
 
 Browser packages must not spawn child processes directly.

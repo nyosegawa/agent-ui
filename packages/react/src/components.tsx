@@ -22,8 +22,6 @@ import {
   useAgentUsage,
   useAgentSkills,
   useAgentApps,
-  useSkillAppPanel,
-  type SkillAppPanelState,
 } from "./hooks";
 import { AgentDiffViewer } from "./diff-viewer";
 import {
@@ -1360,50 +1358,21 @@ export function AgentAppsPanel({ threadId }: { threadId?: string }) {
   );
 }
 
-export interface AgentWorkerPaneProps extends AgentThreadViewProps {
-  className?: string;
-}
-
-export function AgentWorkerPane({ className, ...props }: AgentWorkerPaneProps) {
-  return (
-    <section className={["aui-worker-pane", className].filter(Boolean).join(" ")}>
-      <AgentThreadView {...props} />
-    </section>
-  );
-}
-
 export interface AgentWorkspaceProps extends AgentChatProps {
   panel?: React.ReactNode;
-  panelMode?: SkillAppPanelState["mode"];
+  panelClassName?: string;
 }
 
-export function AgentWorkspace({ panel, panelMode = "panel", ...chatProps }: AgentWorkspaceProps) {
+export function AgentWorkspace({ panel, panelClassName, ...chatProps }: AgentWorkspaceProps) {
   return (
     <section className="aui-workspace">
       <AgentChat {...chatProps} sidebar={chatProps.sidebar ?? true} />
       {panel ? (
-        <aside className="aui-skill-app-panel" data-mode={panelMode}>
+        <aside className={["aui-extension-panel", panelClassName].filter(Boolean).join(" ")}>
           {panel}
         </aside>
       ) : null}
     </section>
-  );
-}
-
-export function SkillAppPanel({
-  children,
-  state,
-}: {
-  children?: React.ReactNode;
-  state?: SkillAppPanelState;
-}) {
-  const controller = useSkillAppPanel(state);
-  const panel = state ?? controller.panel;
-  if (!panel.open) return null;
-  return (
-    <aside className="aui-skill-app-panel" data-mode={panel.mode}>
-      {children ?? <pre>{JSON.stringify(panel.payload ?? {}, null, 2)}</pre>}
-    </aside>
   );
 }
 

@@ -139,7 +139,6 @@ Default primitives:
 - `AgentSkillsPanel`
 - `AgentAppsPanel`
 - `AgentThreadSidebar`
-- `AgentWorkerPane`
 - `AgentWorkspace`
 
 Customization:
@@ -152,7 +151,7 @@ Customization:
 
 `AgentChat` is a preset composition over the same primitives. Hosts can render a
 single fixed thread, move usage into host chrome, hide the built-in sidebar, or
-embed a worker pane without depending on the preset shell.
+embed their own side panels without depending on the preset shell.
 
 `AgentMessageList` owns the real Codex session timeline. User messages,
 assistant messages, and reasoning stay as the primary conversation. Command
