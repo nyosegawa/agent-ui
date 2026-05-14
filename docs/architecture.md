@@ -124,17 +124,23 @@ but new vNext code should use the normalized stores: `threadRegistry`,
 
 The drop-in UI is a convenience layer over the headless API.
 
-Default components:
+Default primitives:
 
 - `AgentProvider`
+- `AgentShell`
 - `AgentChat`
-- `AgentComposer`
-- `AgentMessageList`
-- `AgentApprovalPrompt`
-- `AgentDiffViewer`
-- `AgentStatusBar`
-- `ThreadList`
-- `ThreadSidebar`
+- `AgentThreadView`
+- `AgentThreadHeader`
+- `AgentThreadTimeline`
+- `AgentApprovalQueue`
+- `AgentComposerPanel`
+- `AgentUsagePanel`
+- `AgentDiagnosticsPanel`
+- `AgentSkillsPanel`
+- `AgentAppsPanel`
+- `AgentThreadSidebar`
+- `AgentWorkerPane`
+- `AgentWorkspace`
 
 Customization:
 
@@ -143,6 +149,10 @@ Customization:
 - slots
 - render props
 - headless hooks
+
+`AgentChat` is a preset composition over the same primitives. Hosts can render a
+single fixed thread, move usage into host chrome, hide the built-in sidebar, or
+embed a worker pane without depending on the preset shell.
 
 `AgentMessageList` owns the real Codex session timeline. User messages,
 assistant messages, and reasoning stay as the primary conversation. Command
@@ -159,6 +169,6 @@ work from the assistant context and makes stored Codex sessions unreadable.
 - Modal and side-panel approvals are supported through slots.
 - Diff viewer uses a read-only CodeMirror surface with a textual fallback.
 - Monaco is deferred because it requires heavier worker and asset configuration from hosts.
-- `ThreadList` / `ThreadSidebar` ship as minimal components.
+- `ThreadList` / `AgentThreadSidebar` ship as minimal components.
 - Full navigation layouts live in examples.
 - `thread/shellCommand` is host-only in the local release.

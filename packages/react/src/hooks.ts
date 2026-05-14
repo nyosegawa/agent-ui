@@ -4,6 +4,7 @@ import {
   selectOrderedTurns,
   selectPendingApprovals,
   selectRunSettings,
+  selectServerRequestQueue,
   selectThread,
   type AgentModel,
   type ExecutionModeId,
@@ -15,8 +16,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   accountReadParams,
   cancelLoginParams,
+  appsListParams,
   deviceCodeLoginParams,
+  hooksListParams,
   modelListParams,
+  skillsConfigWriteParams,
+  skillsListParams,
   threadListParams,
   threadReadParams,
   threadResumeParams,
@@ -24,10 +29,14 @@ import {
   turnInterruptParams,
   turnStartParams,
   type CancelLoginAccountParams,
+  type AppsListParams,
   type CodexUserInput,
   type GetAccountParams,
+  type HooksListParams,
   type LoginAccountParams,
   type ModelListParams,
+  type SkillsConfigWriteParams,
+  type SkillsListParams,
   type ThreadListParams,
   type ThreadReadParams,
   type ThreadResumeParams,
@@ -166,6 +175,8 @@ export function useAgentThread(threadId?: ThreadId) {
 
   return { resumeThread, startThread, thread, threadId: resolvedThreadId, turns };
 }
+
+export const useAgentThreadController = useAgentThread;
 
 export function useAgentThreads() {
   const { dispatch, state } = useAgentContext();
@@ -334,6 +345,8 @@ export function useAgentTurn(threadId?: ThreadId) {
   return { interruptTurn, startTurn };
 }
 
+export const useAgentTurnController = useAgentTurn;
+
 export function useAgentApprovals(threadId?: ThreadId) {
   const { dispatch, state, transport } = useAgentContext();
   const approvals = useMemo(
@@ -359,6 +372,13 @@ export function useAgentApprovals(threadId?: ThreadId) {
   );
 
   return { approvals, approve, reject };
+}
+
+export function useAgentServerRequests(threadId?: ThreadId) {
+  const approvals = useAgentApprovals(threadId);
+  const { state } = useAgentContext();
+  const queue = selectServerRequestQueue(state, threadId);
+  return { ...approvals, requests: queue };
 }
 
 export function useAgentComposer(threadId?: ThreadId) {
@@ -621,6 +641,122 @@ export function useAgentUsage() {
   return { rateLimits: state.account.rateLimits, refreshUsage };
 }
 
+export function useAgentSkills(cwd?: string) {
+  const { dispatch, state, transport } = useAgentContext();
+  const key = cwd ?? "";
+  const skills = state.skills.byCwd[key] ?? [];
+  const refreshSkills = useCallback(
+    async (params: SkillsListParams = {}) => {
+      const requestParams = skillsListParams(
+        cwd && !params.cwds ? { ...params, cwds: [cwd] } : params,
+      );
+      const response = await transport.request<SkillsListParams, unknown>(
+        "skills/list",
+        requestParams,
+      );
+      const entries = normalizeSkillsList(response, cwd);
+      for (const entry of entries) {
+        dispatch({ cwd: entry.cwd, skills: entry.skills, type: "skills/updated" });
+      }
+      return entries;
+    },
+    [cwd, dispatch, transport],
+  );
+  const setSkillEnabled = useCallback(
+    async (params: SkillsConfigWriteParams) => {
+      const response = await transport.request<SkillsConfigWriteParams, unknown>(
+        "skills/config/write",
+        skillsConfigWriteParams(params),
+      );
+      return response;
+    },
+    [transport],
+  );
+  return { refreshSkills, setSkillEnabled, skills };
+}
+
+export function useAgentHooks(cwd?: string) {
+  const { dispatch, state, transport } = useAgentContext();
+  const key = cwd ?? "";
+  const hooks = state.hooks.byCwd[key] ?? [];
+  const refreshHooks = useCallback(
+    async (params: HooksListParams = {}) => {
+      const requestParams = hooksListParams(
+        cwd && !params.cwds ? { ...params, cwds: [cwd] } : params,
+      );
+      const response = await transport.request<HooksListParams, unknown>(
+        "hooks/list",
+        requestParams,
+      );
+      const entries = normalizeHooksList(response, cwd);
+      for (const entry of entries) {
+        dispatch({ cwd: entry.cwd, hooks: entry.hooks, type: "hooks/updated" });
+      }
+      return entries;
+    },
+    [cwd, dispatch, transport],
+  );
+  return { hooks, refreshHooks };
+}
+
+export function useAgentApps(threadId?: string) {
+  const { dispatch, state, transport } = useAgentContext();
+  const refreshApps = useCallback(
+    async (params: AppsListParams = {}) => {
+      const requestParams = appsListParams(
+        threadId && !params.threadId ? { ...params, threadId } : params,
+      );
+      const response = await transport.request<AppsListParams, unknown>(
+        "app/list",
+        requestParams,
+      );
+      const { apps, nextCursor } = normalizeAppsList(response);
+      dispatch({ apps, nextCursor, type: "apps/updated" });
+      return { apps, nextCursor };
+    },
+    [dispatch, threadId, transport],
+  );
+  return { apps: state.apps.apps, nextCursor: state.apps.nextCursor, refreshApps };
+}
+
+export function useAgentWorkerSession(threadId?: ThreadId) {
+  const thread = useAgentThread(threadId);
+  const turn = useAgentTurn(thread.threadId);
+  const requests = useAgentServerRequests(thread.threadId);
+  return { ...thread, ...turn, ...requests };
+}
+
+export interface SkillAppPanelState {
+  mode: "inline" | "modal" | "panel" | "fullscreen";
+  open: boolean;
+  payload?: unknown;
+  target?: string;
+}
+
+export function useSkillAppPanel(initialState: Partial<SkillAppPanelState> = {}) {
+  const [panel, setPanel] = useState<SkillAppPanelState>({
+    mode: initialState.mode ?? "panel",
+    open: initialState.open ?? false,
+    payload: initialState.payload,
+    target: initialState.target,
+  });
+  const openPanel = useCallback(
+    (next: Partial<Omit<SkillAppPanelState, "open">> = {}) =>
+      setPanel((current) => ({ ...current, ...next, open: true })),
+    [],
+  );
+  const closePanel = useCallback(
+    () => setPanel((current) => ({ ...current, open: false })),
+    [],
+  );
+  const updatePanel = useCallback(
+    (next: Partial<SkillAppPanelState>) =>
+      setPanel((current) => ({ ...current, ...next })),
+    [],
+  );
+  return { closePanel, openPanel, panel, updatePanel };
+}
+
 export function useAgentModels() {
   const { dispatch, state, transport } = useAgentContext();
   const refreshModels = useCallback(async () => {
@@ -691,6 +827,106 @@ function normalizeSupportedEfforts(
 
 function normalizeReasoningEffort(value: unknown): ReasoningEffort | undefined {
   return typeof value === "string" && value.trim() ? value : undefined;
+}
+
+function normalizeSkillsList(response: unknown, fallbackCwd?: string) {
+  const record = asRecord(response);
+  const rawEntries = Array.isArray(record?.data)
+    ? record.data
+    : Array.isArray(response)
+      ? response
+      : [];
+  return rawEntries.flatMap((entry) => {
+    const entryRecord = asRecord(entry);
+    if (!entryRecord) return [];
+    const cwd = stringValue(entryRecord.cwd) ?? fallbackCwd ?? "";
+    const rawSkills = Array.isArray(entryRecord.skills) ? entryRecord.skills : [];
+    return [
+      {
+        cwd,
+        skills: rawSkills.flatMap((skill) => {
+          const skillRecord = asRecord(skill);
+          if (!skillRecord) return [];
+          return [
+            {
+              enabled: typeof skillRecord.enabled === "boolean" ? skillRecord.enabled : undefined,
+              name: String(skillRecord.name ?? ""),
+              path: stringValue(skillRecord.path),
+              raw: skill,
+            },
+          ];
+        }),
+      },
+    ];
+  });
+}
+
+function normalizeHooksList(response: unknown, fallbackCwd?: string) {
+  const record = asRecord(response);
+  const rawEntries = Array.isArray(record?.data)
+    ? record.data
+    : Array.isArray(response)
+      ? response
+      : [];
+  return rawEntries.flatMap((entry) => {
+    const entryRecord = asRecord(entry);
+    if (!entryRecord) return [];
+    const cwd = stringValue(entryRecord.cwd) ?? fallbackCwd ?? "";
+    const rawHooks = Array.isArray(entryRecord.hooks) ? entryRecord.hooks : [];
+    return [
+      {
+        cwd,
+        hooks: rawHooks.flatMap((hook) => {
+          const hookRecord = asRecord(hook);
+          if (!hookRecord) return [];
+          return [
+            {
+              enabled: typeof hookRecord.enabled === "boolean" ? hookRecord.enabled : undefined,
+              id: String(hookRecord.id ?? hookRecord.name ?? hookRecord.path),
+              name: stringValue(hookRecord.name),
+              raw: hook,
+            },
+          ];
+        }),
+      },
+    ];
+  });
+}
+
+function normalizeAppsList(response: unknown) {
+  const record = asRecord(response);
+  const rawApps = Array.isArray(record?.data)
+    ? record.data
+    : Array.isArray(record?.apps)
+      ? record.apps
+      : Array.isArray(response)
+        ? response
+        : [];
+  return {
+    apps: rawApps.flatMap((app) => {
+      const appRecord = asRecord(app);
+      if (!appRecord) return [];
+      return [
+        {
+          id: String(appRecord.id ?? appRecord.uri ?? appRecord.name),
+          installed:
+            typeof appRecord.installed === "boolean"
+              ? appRecord.installed
+              : typeof appRecord.isEnabled === "boolean"
+                ? appRecord.isEnabled
+                : undefined,
+          name: stringValue(appRecord.name),
+          needsAuth:
+            typeof appRecord.needsAuth === "boolean"
+              ? appRecord.needsAuth
+              : appRecord.isAccessible === false,
+          raw: app,
+          uri: stringValue(appRecord.uri) ?? stringValue(appRecord.installUrl),
+        },
+      ];
+    }),
+    nextCursor: stringValue(record?.nextCursor) ?? stringValue(record?.next_cursor) ?? null,
+  };
 }
 
 function isDefaultModel(model: AgentModel): boolean {

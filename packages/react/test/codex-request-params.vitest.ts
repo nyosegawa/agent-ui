@@ -48,13 +48,13 @@ describe("Codex request params", () => {
       excludeTurns: true,
       threadId: "thread-1",
     } satisfies ThreadResumeParams);
-    expect(threadStartParams({ cwd: "/tmp/project", modelId: "gpt-5.5" })).toEqual({
+    expect(threadStartParams({ cwd: "/tmp/project", model: "gpt-5.5" })).toEqual({
       cwd: "/tmp/project",
       model: "gpt-5.5",
     } satisfies ThreadStartParams);
     expect(
       turnStartParams({
-        executionParams: { approvalPolicy: "on-request" },
+        approvalPolicy: "on-request",
         input: "hello",
         threadId: "thread-1",
       }),

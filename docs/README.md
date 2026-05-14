@@ -7,10 +7,9 @@ The docs are organized as implementation-facing specifications. They intentional
 ## vNext Status
 
 `PLAN.md` and `TODO.md` are the source of truth while Agent UI vNext is being
-implemented. Some package and component reference pages still describe the
-pre-vNext implementation, especially the monolithic `AgentChat` preset. Treat
-those pages as current-code notes until the corresponding TODO milestone lands,
-not as the final vNext component API.
+implemented. Component and hook references describe the vNext primitive API as
+milestones land; older preset-only shapes should not be treated as the target
+API.
 
 ## Documents
 

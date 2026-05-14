@@ -19,6 +19,10 @@ import {
   useAgentThread,
   useAgentThreads,
   useAgentUsage,
+  useAgentSkills,
+  useAgentApps,
+  useSkillAppPanel,
+  type SkillAppPanelState,
 } from "./hooks";
 import { AgentDiffViewer } from "./diff-viewer";
 import { useAgentContext } from "./provider";
@@ -34,47 +38,49 @@ export interface AgentChatSlots {
 
 export interface AgentChatProps {
   className?: string;
+  diagnostics?: boolean;
+  sidebar?: boolean;
   slots?: AgentChatSlots;
+  usage?: boolean;
 }
 
-export function AgentChat({ className, slots }: AgentChatProps = {}) {
+export function AgentChat({
+  className,
+  diagnostics = true,
+  sidebar = true,
+  slots,
+  usage = true,
+}: AgentChatProps = {}) {
   const bootstrap = useAgentBootstrap();
   const { thread, threadId, startThread } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
   const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
   return (
-    <section
-      className={["aui-shell", className].filter(Boolean).join(" ")}
+    <AgentShell
+      className={className}
       data-sidebar-collapsed={isSidebarCollapsed ? "true" : "false"}
-      data-testid="agent-chat"
+      sidebar={
+        sidebar ? (
+          <ThreadSidebar
+            activeThreadId={activeThreadId}
+            collapsed={isSidebarCollapsed}
+            onCollapsedChange={setSidebarCollapsed}
+            onSelectThread={setActiveThread}
+            threads={threads}
+          />
+        ) : undefined
+      }
     >
-      <ThreadSidebar
-        activeThreadId={activeThreadId}
-        collapsed={isSidebarCollapsed}
-        onCollapsedChange={setSidebarCollapsed}
-        onSelectThread={setActiveThread}
-        threads={threads}
-      />
       <div className="aui-chat">
         <AgentStatusBar />
-        <AgentDiagnostics bootstrap={bootstrap} />
-        <AgentUsage autoRefresh={false} />
+        {diagnostics ? <AgentDiagnosticsPanel bootstrap={bootstrap} /> : null}
+        {usage ? <AgentUsagePanel autoRefresh={false} /> : null}
         {thread ? (
-          <>
-            <div className="aui-thread-header">
-              <div className="aui-thread-title">
-                <h1>{thread.thread.name ?? "Untitled thread"}</h1>
-                <p>{threadSubtitle(thread.thread)}</p>
-              </div>
-              <AgentThreadActions thread={thread} threadId={threadId} />
-            </div>
-            <AgentMessageList renderItem={slots?.renderItem} thread={thread} />
-            <AgentApprovalPrompt
-              renderApproval={slots?.renderApproval}
-              threadId={threadId}
-            />
-            <AgentComposerPanel thread={thread} threadId={threadId} />
-          </>
+          <AgentThreadView
+            renderApproval={slots?.renderApproval}
+            renderItem={slots?.renderItem}
+            threadId={threadId}
+          />
         ) : (
           <div className="aui-empty">
             <AgentRunControls autoRefresh={false} />
@@ -82,8 +88,82 @@ export function AgentChat({ className, slots }: AgentChatProps = {}) {
           </div>
         )}
       </div>
+    </AgentShell>
+  );
+}
+
+export interface AgentShellProps extends React.HTMLAttributes<HTMLElement> {
+  sidebar?: React.ReactNode;
+}
+
+export function AgentShell({
+  children,
+  className,
+  sidebar,
+  ...props
+}: AgentShellProps) {
+  return (
+    <section
+      className={["aui-shell", className].filter(Boolean).join(" ")}
+      data-sidebar-present={sidebar ? "true" : "false"}
+      data-testid="agent-chat"
+      {...props}
+    >
+      {sidebar}
+      {children}
     </section>
   );
+}
+
+export interface AgentThreadViewProps {
+  renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
+  renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
+  threadId?: string;
+}
+
+export function AgentThreadView({
+  renderApproval,
+  renderItem,
+  threadId,
+}: AgentThreadViewProps) {
+  const { thread, threadId: resolvedThreadId } = useAgentThread(threadId);
+  if (!thread) return null;
+  return (
+    <>
+      <AgentThreadHeader thread={thread} threadId={resolvedThreadId} />
+      <AgentThreadTimeline renderItem={renderItem} thread={thread} />
+      <AgentApprovalQueue renderApproval={renderApproval} threadId={resolvedThreadId} />
+      <AgentComposerPanel thread={thread} threadId={resolvedThreadId} />
+    </>
+  );
+}
+
+export function AgentThreadHeader({
+  thread,
+  threadId,
+}: {
+  thread: ThreadState;
+  threadId?: string;
+}) {
+  return (
+    <div className="aui-thread-header">
+      <div className="aui-thread-title">
+        <h1>{thread.thread.name ?? "Untitled thread"}</h1>
+        <p>{threadSubtitle(thread.thread)}</p>
+      </div>
+      <AgentThreadActions thread={thread} threadId={threadId} />
+    </div>
+  );
+}
+
+export function AgentThreadTimeline({
+  renderItem,
+  thread,
+}: {
+  renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
+  thread: ThreadState;
+}) {
+  return <AgentMessageList renderItem={renderItem} thread={thread} />;
 }
 
 function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {
@@ -360,7 +440,7 @@ export function AgentComposer({
   );
 }
 
-function AgentComposerPanel({
+export function AgentComposerPanel({
   thread,
   threadId,
 }: {
@@ -475,7 +555,7 @@ function composerPlaceholder(status: ThreadState["status"], isPreviewOnly = fals
   return "Ask Codex to work in this thread";
 }
 
-export function AgentApprovalPrompt({
+export function AgentApprovalQueue({
   renderApproval,
   threadId,
 }: {
@@ -513,6 +593,8 @@ export function AgentApprovalPrompt({
     </section>
   );
 }
+
+export const AgentApprovalPrompt = AgentApprovalQueue;
 
 function ApprovalCard({
   approval,
@@ -704,7 +786,7 @@ function accountLabelText(
   return email ?? planType;
 }
 
-function AgentDiagnostics({
+export function AgentDiagnosticsPanel({
   bootstrap,
 }: {
   bootstrap: ReturnType<typeof useAgentBootstrap>;
@@ -741,11 +823,13 @@ function AgentDiagnostics({
   );
 }
 
+export const AgentDiagnostics = AgentDiagnosticsPanel;
+
 export interface AgentUsageProps {
   autoRefresh?: boolean;
 }
 
-export function AgentUsage({ autoRefresh = true }: AgentUsageProps = {}) {
+export function AgentUsagePanel({ autoRefresh = true }: AgentUsageProps = {}) {
   const { state } = useAgentContext();
   const { rateLimits, refreshUsage } = useAgentUsage();
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -827,6 +911,115 @@ export function AgentUsage({ autoRefresh = true }: AgentUsageProps = {}) {
       </div>
       {usageBody}
     </section>
+  );
+}
+
+export const AgentUsage = AgentUsagePanel;
+
+export function AgentSkillsPanel({ cwd }: { cwd?: string }) {
+  const { refreshSkills, skills } = useAgentSkills(cwd);
+  return (
+    <section className="aui-skills-panel" aria-label="Skills">
+      <div className="aui-usage-header">
+        <strong>Skills</strong>
+        <button
+          className="aui-link-button"
+          onClick={() => void refreshSkills().catch(() => undefined)}
+          type="button"
+        >
+          Refresh
+        </button>
+      </div>
+      {skills.length > 0 ? (
+        <ul className="aui-plain-list">
+          {skills.map((skill) => (
+            <li key={`${skill.path ?? ""}:${skill.name}`}>
+              <span>{skill.name}</span>
+              {skill.enabled === false ? <small>disabled</small> : null}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="aui-usage-empty">Skills are available after refresh.</p>
+      )}
+    </section>
+  );
+}
+
+export function AgentAppsPanel({ threadId }: { threadId?: string }) {
+  const { apps, refreshApps } = useAgentApps(threadId);
+  return (
+    <section className="aui-apps-panel" aria-label="Apps">
+      <div className="aui-usage-header">
+        <strong>Apps</strong>
+        <button
+          className="aui-link-button"
+          onClick={() => void refreshApps().catch(() => undefined)}
+          type="button"
+        >
+          Refresh
+        </button>
+      </div>
+      {apps.length > 0 ? (
+        <ul className="aui-plain-list">
+          {apps.map((app) => (
+            <li key={app.id}>
+              <span>{app.name ?? app.id}</span>
+              {app.needsAuth ? <small>auth needed</small> : null}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="aui-usage-empty">Apps are available after refresh.</p>
+      )}
+    </section>
+  );
+}
+
+export interface AgentWorkerPaneProps extends AgentThreadViewProps {
+  className?: string;
+}
+
+export function AgentWorkerPane({ className, ...props }: AgentWorkerPaneProps) {
+  return (
+    <section className={["aui-worker-pane", className].filter(Boolean).join(" ")}>
+      <AgentThreadView {...props} />
+    </section>
+  );
+}
+
+export interface AgentWorkspaceProps extends AgentChatProps {
+  panel?: React.ReactNode;
+  panelMode?: SkillAppPanelState["mode"];
+}
+
+export function AgentWorkspace({ panel, panelMode = "panel", ...chatProps }: AgentWorkspaceProps) {
+  return (
+    <section className="aui-workspace">
+      <AgentChat {...chatProps} sidebar={chatProps.sidebar ?? true} />
+      {panel ? (
+        <aside className="aui-skill-app-panel" data-mode={panelMode}>
+          {panel}
+        </aside>
+      ) : null}
+    </section>
+  );
+}
+
+export function SkillAppPanel({
+  children,
+  state,
+}: {
+  children?: React.ReactNode;
+  state?: SkillAppPanelState;
+}) {
+  const controller = useSkillAppPanel(state);
+  const panel = state ?? controller.panel;
+  if (!panel.open) return null;
+  return (
+    <aside className="aui-skill-app-panel" data-mode={panel.mode}>
+      {children ?? <pre>{JSON.stringify(panel.payload ?? {}, null, 2)}</pre>}
+    </aside>
   );
 }
 
@@ -1168,6 +1361,8 @@ export function ThreadSidebar({
     </aside>
   );
 }
+
+export const AgentThreadSidebar = ThreadSidebar;
 
 function responseCursor(response: Record<string, unknown> | undefined): string | null {
   if (!response) return null;

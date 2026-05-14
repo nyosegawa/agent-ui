@@ -90,23 +90,23 @@ Acceptance:
 
 ## Milestone 3: Public React API Redesign
 
-- [ ] Introduce `AgentShell` as a layout primitive.
-- [ ] Introduce `AgentThreadView` for one thread with timeline, approvals, and composer but no required sidebar or usage panel.
-- [ ] Introduce `AgentThreadHeader`, `AgentThreadTimeline`, `AgentApprovalQueue`, `AgentComposerPanel`, `AgentUsagePanel`, `AgentDiagnosticsPanel`, `AgentSkillsPanel`, and `AgentThreadSidebar`.
-- [ ] Redesign `AgentChat` as a preset composition of primitives.
-- [ ] Make usage in presets suppressible and relocatable.
-- [ ] Add `AgentWorkerPane` for plan-only first turn plus approved continuation.
-- [ ] Add `AgentWorkspace` for chat plus optional right-side skill/app panel.
-- [ ] Add headless hooks/controllers: `useAgentThreadController`, `useAgentTurnController`, `useAgentServerRequests`, `useAgentUsage`, `useAgentSkills`, `useAgentApps`, `useAgentWorkerSession`, and `useSkillAppPanel`.
-- [ ] Keep the old public API only where it remains naturally compatible with the new primitives; do not preserve awkward shapes for compatibility.
+- [x] Introduce `AgentShell` as a layout primitive.
+- [x] Introduce `AgentThreadView` for one thread with timeline, approvals, and composer but no required sidebar or usage panel.
+- [x] Introduce `AgentThreadHeader`, `AgentThreadTimeline`, `AgentApprovalQueue`, `AgentComposerPanel`, `AgentUsagePanel`, `AgentDiagnosticsPanel`, `AgentSkillsPanel`, and `AgentThreadSidebar`.
+- [x] Redesign `AgentChat` as a preset composition of primitives.
+- [x] Make usage in presets suppressible and relocatable.
+- [x] Add `AgentWorkerPane` for plan-only first turn plus approved continuation.
+- [x] Add `AgentWorkspace` for chat plus optional right-side skill/app panel.
+- [x] Add headless hooks/controllers: `useAgentThreadController`, `useAgentTurnController`, `useAgentServerRequests`, `useAgentUsage`, `useAgentSkills`, `useAgentApps`, `useAgentWorkerSession`, and `useSkillAppPanel`.
+- [x] Keep the old public API only where it remains naturally compatible with the new primitives; do not preserve awkward shapes for compatibility.
 
 Acceptance:
 
-- [ ] A host can render only a specific thread by id.
-- [ ] A host can render only usage.
-- [ ] A host can render chat with no sidebar.
-- [ ] A host can render chat with usage moved outside the shell.
-- [ ] React tests cover each composition.
+- [x] A host can render only a specific thread by id.
+- [x] A host can render only usage.
+- [x] A host can render chat with no sidebar.
+- [x] A host can render chat with usage moved outside the shell.
+- [x] React tests cover each composition.
 
 ## Milestone 4: Kitchen-Quality Codex UX
 

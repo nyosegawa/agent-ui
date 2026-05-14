@@ -1,8 +1,8 @@
 # Theming
 
-Status: this page documents the current pre-vNext `AgentChat` shell. vNext
-theming must cover the composable shell, fixed-thread pane, usage-only panel,
-and skill/app workspace surfaces tracked in `PLAN.md` and `TODO.md`.
+Status: this page documents the vNext composable shell, fixed-thread pane,
+usage-only panel, worker pane, and skill/app workspace surfaces tracked in
+`PLAN.md` and `TODO.md`.
 
 `@nyosegawa/agent-ui-react/style.css` ships a practical default theme and CSS variables. Hosts can override variables globally or within a wrapper.
 
@@ -32,13 +32,16 @@ The default components use `--aui-*` tokens for surfaces, borders, text, accents
 
 ## Layout
 
-`AgentChat` renders a two-column shell:
+`AgentShell` renders the shared shell contract used by `AgentChat` and custom
+host layouts:
 
-- sidebar thread list
+- optional sidebar thread list
 - main thread header, conversation timeline, per-turn Work traces for command/diff activity, approvals, composer
+- optional standalone usage, diagnostics, skills, apps, or workspace panels
 - CodeMirror diff surfaces inherit `--aui-code-bg`, `--aui-code-fg`, and the package monospace stack
 
-Hosts can set `className` on `AgentChat` and constrain height with normal CSS.
+Hosts can set `className` on `AgentChat`, `AgentShell`, or a host wrapper and
+constrain height with normal CSS.
 
 ```tsx
 <AgentChat className="my-agent-ui" />

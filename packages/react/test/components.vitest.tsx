@@ -16,7 +16,14 @@ import {
   AgentDiffViewer,
   AgentMessageList,
   AgentProvider,
+  AgentShell,
+  AgentThreadView,
+  AgentUsagePanel,
+  AgentWorkspace,
+  AgentSkillsPanel,
   useAgentAuth,
+  useAgentServerRequests,
+  useAgentSkills,
   useAgentContext,
 } from "../src";
 
@@ -57,6 +64,164 @@ describe("AgentChat", () => {
       await screen.findByRole("button", { name: "Start thread" }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
+  });
+
+  it("renders only a fixed thread without following active selection", () => {
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-active";
+    initialState.threads["thread-active"] = {
+      orderedTurnIds: [],
+      status: "loaded",
+      thread: { id: "thread-active", name: "Active global thread" },
+      turns: {},
+    };
+    initialState.threads["thread-fixed"] = {
+      orderedTurnIds: ["turn-fixed"],
+      status: "complete",
+      thread: { id: "thread-fixed", name: "Fixed worker thread" },
+      turns: {
+        "turn-fixed": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-fixed"],
+          items: {
+            "item-fixed": {
+              id: "item-fixed",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Only this thread should render.",
+              threadId: "thread-fixed",
+              turnId: "turn-fixed",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-fixed", threadId: "thread-fixed" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentThreadView threadId="thread-fixed" />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByRole("heading", { name: "Fixed worker thread" })).toBeInTheDocument();
+    expect(screen.getByText("Only this thread should render.")).toBeInTheDocument();
+    expect(screen.queryByText("Active global thread")).not.toBeInTheDocument();
+  });
+
+  it("renders usage as a standalone primitive without chat chrome", () => {
+    const initialState = createInitialAgentState();
+    initialState.account.rateLimits = {
+      rateLimitsByLimitId: {
+        weekly: {
+          limitName: "fixture-demo-model",
+          primary: { usedPercent: 12, windowDurationMins: 300 },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentUsagePanel autoRefresh={false} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("Usage limits")).toHaveTextContent("12%");
+    expect(screen.queryByTestId("agent-chat")).not.toBeInTheDocument();
+    expect(screen.queryByRole("navigation", { name: "Threads" })).not.toBeInTheDocument();
+  });
+
+  it("supports shell composition with usage moved outside a sidebar-free chat", () => {
+    const initialState = runEventFixture(demoFixture as FixtureStep[]);
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentShell>
+          <AgentUsagePanel autoRefresh={false} />
+          <AgentChat sidebar={false} usage={false} />
+        </AgentShell>
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("Usage limits")).toHaveTextContent("fixture-demo-model");
+    expect(screen.queryByRole("navigation", { name: "Threads" })).not.toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Implement approval UI" })).toBeInTheDocument();
+  });
+
+  it("renders a workspace with a side panel", () => {
+    render(
+      <AgentProvider
+        initialState={runEventFixture(demoFixture as FixtureStep[])}
+        transport={new FakeAgentTransport()}
+      >
+        <AgentWorkspace sidebar={false} panel={<div>Skill app content</div>} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("Skill app content")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Implement approval UI" })).toBeInTheDocument();
+  });
+
+  it("refreshes skills through the public hook and panel", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "skills/list") {
+          return {
+            data: [
+              {
+                cwd: "/repo",
+                skills: [{ enabled: true, name: "agent-browser", path: "/repo/SKILL.md" }],
+              },
+            ],
+          };
+        }
+        return {};
+      },
+    });
+    function Probe() {
+      const { skills } = useAgentSkills("/repo");
+      return <output>{skills.map((skill) => skill.name).join(",")}</output>;
+    }
+    render(
+      <AgentProvider transport={transport}>
+        <AgentSkillsPanel cwd="/repo" />
+        <Probe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Refresh" }));
+
+    expect((await screen.findAllByText("agent-browser")).length).toBeGreaterThan(0);
+  });
+
+  it("exposes all queued server requests through useAgentServerRequests", () => {
+    const initialState = createInitialAgentState();
+    initialState.serverRequestQueue = {
+      byId: {
+        "request-input": {
+          id: "request-input",
+          kind: "userInput",
+          payload: {},
+          threadId: "thread-1",
+        },
+      },
+      order: ["request-input"],
+    };
+    initialState.pendingServerRequests = initialState.serverRequestQueue.byId;
+    function Probe() {
+      const { requests } = useAgentServerRequests("thread-1");
+      return <output>{requests.map((request) => request.kind).join(",")}</output>;
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <Probe />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("userInput")).toBeInTheDocument();
   });
 
   it("does not offer to start a thread before account bootstrap finishes", async () => {

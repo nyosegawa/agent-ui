@@ -143,10 +143,10 @@ Component tests:
 
 Accessibility tests required for release:
 
-- `AgentComposer`
-- `AgentApprovalPrompt`
+- `AgentComposerPanel`
+- `AgentApprovalQueue`
 - dialog/modal approval variants
-- `ThreadList`
+- `ThreadList` / `AgentThreadSidebar`
 
 Streaming log and diff viewer start with snapshot and keyboard smoke tests.
 
@@ -254,8 +254,17 @@ Latest manual real smoke:
   text `Agent UI real smoke ok.`, and 1 completed turn.
   `AGENT_UI_REAL_CODEX_INIT_TIMEOUT_MS=30000 bun run test:e2e:real-codex:approval`
   observed a command approval request and declined it.
+- vNext Milestone 3 re-run on 2026-05-14:
+  `AGENT_UI_REAL_CODEX_INIT_TIMEOUT_MS=30000 bun run test:e2e:real-codex`
+  returned authenticated account, usage, 5 stored threads, 6 models, assistant
+  text `Agent UI real smoke ok.`, and 1 completed turn.
+  `AGENT_UI_REAL_CODEX_INIT_TIMEOUT_MS=30000 bun run test:e2e:real-codex:approval`
+  observed a command approval request and declined it.
 - Browser smoke command: `bun run test:e2e:playwright`.
-- Browser smoke result: 8 Playwright tests passed after the Work trace, deferred action, and local server hardening pass. The real local app target used a fake stdio App Server while exercising the actual browser WebSocket transport and same-origin bridge path.
+- Browser smoke result: 9 Playwright tests passed after the vNext React
+  primitive API pass. The real local app target used a fake stdio App Server
+  while exercising the actual browser WebSocket transport and same-origin
+  bridge path.
 - Playwright starts fresh local preview/dev servers for the fixture and real-local browser targets instead of reusing an existing `4173` or `4174` process. This avoids stale bridge/session state from hiding real regressions or creating local-only hangs after a failed run. If a local manual dev server is left behind, kill the orphan `examples/codex-local-web` process before re-running the smoke.
 - Do not run `bun run build` concurrently with `bun run test:e2e:playwright`. The browser smoke previews built `dist` output; a simultaneous workspace build can clean or replace that output while Playwright is waiting on the first page. The full sweep should run build first, then Playwright.
 - `examples/codex-local-web` disables Vite HMR in its custom middleware server. The production-like local bridge path needs a stable same-origin WebSocket endpoint for `/agent-ui/ws`; a separate dev HMR websocket is not part of the product path and can make browser automation noisy.
@@ -274,6 +283,12 @@ The history and usage smoke path has also been verified against `codex app-serve
 - `examples/codex-local-web` real browser turn check on 2026-05-10 after preview/readiness hardening: a headless browser opened `http://127.0.0.1:5174/`, started a new real thread, observed the thread as `Ready`, sent `Reply with exactly: agent-ui-browser-final-check-6`, observed the assistant message `agent-ui-browser-final-check-6`, saw the thread leave `Running` as `Complete`, and verified no horizontal overflow with the composer still visible and enabled.
 - `examples/codex-local-web` real browser continuation check on 2026-05-10: a headless browser opened `http://127.0.0.1:5174/`, started a new real thread, sent `Reply with exactly: agent-ui-second-turn-one`, waited for completion, then sent `Reply with exactly: agent-ui-second-turn-two` in the same thread. The app showed the second assistant message, left `Running` as `Complete`, kept the composer enabled, and kept horizontal overflow at 0.
 - `examples/codex-local-web` real history exhaustion check on 2026-05-10: a headless browser opened `http://127.0.0.1:5174/`, clicked `Load all`, followed real `thread/list` cursors from 25 visible rows to 684 rows, reached `684 threads loaded · all loaded`, removed `Load more` / `Load all`, and kept the narrow layout free of horizontal overflow.
+- `examples/local-react-vite` agent-browser check on 2026-05-14: after
+  reading `agent-browser skills get core`, a dev server ran at
+  `http://127.0.0.1:5174/`; `agent-browser open`, `agent-browser snapshot -i`,
+  and `agent-browser screenshot /tmp/agent-ui-m3-browser-check.png` confirmed
+  the fixture shell exposed history, usage, pending approvals, run settings,
+  and the disabled approval-gated composer through accessible browser refs.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
 - `bun run test:e2e:playwright` also starts `examples/codex-local-web` against a fake stdio App Server and drives the real browser WebSocket transport through model list, usage, thread list/read/resume, thread start, turn start, streaming text, command output, structured diff preview, and command approval.
 - The fake stdio browser smoke emits unique turn and item ids for repeated `turn/start` calls, and includes a deterministic same-thread continuation test that sends two turns, waits for `Complete`, verifies the composer re-enables, and checks that the local web app still has no horizontal overflow.
