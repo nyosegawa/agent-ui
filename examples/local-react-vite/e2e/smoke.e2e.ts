@@ -73,9 +73,7 @@ async function headerDoesNotOverlapTimeline(page: Page) {
 
 test("renders deterministic empty, login, and bridge-error states", async ({ page }) => {
   await page.goto("/qa");
-  await expect(
-    page.getByRole("heading", { name: "Agent UI visual QA states" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Agent UI visual QA" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Bridge error/ })).toBeVisible();
 
   await page.goto("/?state=empty");
@@ -130,8 +128,12 @@ test("renders generic vNext composition examples", async ({ page }) => {
   await expect(page.getByText("Active host thread")).toHaveCount(0);
 
   await page.goto("/usage-only");
-  await expect(page.getByRole("heading", { name: "Usage only" })).toBeVisible();
-  await expect(page.getByLabel("Usage limits")).toContainText(
+  await expect(
+    page.getByRole("heading", {
+      name: "Drop the Codex usage primitive into any host surface",
+    }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Usage limits").first()).toContainText(
     "fixture-demo-model weekly",
   );
   await expect(page.getByLabel("Message composer")).toHaveCount(0);
@@ -174,9 +176,7 @@ test("mobile keeps secondary chrome reachable", async ({ page }) => {
 test("fixture gallery previews load meaningful content", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/fixture-gallery");
-  await expect(
-    page.getByRole("heading", { name: "Agent UI visual QA states" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Agent UI visual QA" })).toBeVisible();
   const kitchenFrame = page.frameLocator('iframe[title="Kitchen-quality Codex UX desktop"]');
   await expect(
     kitchenFrame.getByRole("heading", { name: "Kitchen-quality Codex UX" }),

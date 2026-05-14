@@ -45,6 +45,7 @@ test("component close-up gallery renders direct primitives, not iframes", async 
     "Diff / file change",
     "Sidebar search + threads",
     "Usage / status chips",
+    "Usage panel",
     "Button system",
     "Inputs · selects · segmented",
   ]) {
@@ -57,6 +58,52 @@ test("component close-up gallery renders direct primitives, not iframes", async 
   await expect(
     commandCloseup.getByRole("button", { name: /^Approve command request approval-command-kitchen$/ }),
   ).toBeVisible();
+});
+
+test("focused composer close-up renders the real AgentComposer, not hand-written DOM", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/fixture-gallery");
+  const focused = page.getByTestId("closeup:Composer · focused");
+  await expect(focused).toBeVisible();
+  // The focus-injection wrapper proves the real component is being targeted.
+  await expect(focused.locator('[data-focus-first="true"]')).toBeAttached();
+  const composer = focused.locator(".aui-composer");
+  // Real AgentComposer always has aria-label "Composer attachments" on its <form>.
+  await expect(composer).toHaveAttribute("aria-label", "Composer attachments");
+  // Body got pre-populated by the focus effect.
+  const textarea = focused.locator("textarea.aui-composer-input");
+  await expect(textarea).toHaveValue(
+    "Apply the renderer audit findings and verify the diff.",
+  );
+  await expect(composer).toHaveAttribute("data-focused", "true");
+});
+
+test("fixture-gallery places component close-ups above any iframe preview", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/fixture-gallery");
+  await expect(page.getByTestId("component-closeups")).toBeVisible();
+  const closeupTop = await page
+    .getByTestId("component-closeups")
+    .evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+  const firstIframeTop = await page
+    .locator("iframe")
+    .first()
+    .evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+  expect(closeupTop).toBeLessThan(firstIframeTop);
+  // First close-up should be reachable within ~2 viewports from the top so QA
+  // does not require a long scroll past iframes.
+  expect(closeupTop).toBeLessThan(900 * 2);
+});
+
+test("fixture-gallery places component close-ups near the top of the mobile viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/fixture-gallery");
+  await expect(page.getByTestId("component-closeups")).toBeVisible();
+  const closeupTop = await page
+    .getByTestId("component-closeups")
+    .evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
+  // Mobile gallery should not push close-ups past the third viewport.
+  expect(closeupTop).toBeLessThan(900 * 3);
 });
 
 test("composer is a single bordered card with inline icon toolbar and primary send", async ({ page }) => {
@@ -100,6 +147,37 @@ test("approval card renders shield + risk + green Approve + danger Decline", asy
   ).toBeVisible();
   await expect(approval.getByRole("button", { name: /for session$/ })).toBeVisible();
   await expect(approval.getByRole("button", { name: /^Decline / })).toBeVisible();
+});
+
+test("usage-only page demonstrates four host shells, not a blank page", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/usage-only");
+  for (const heading of [
+    "Drop the Codex usage primitive into any host surface",
+    "Compact rail slot",
+    "Standalone quota panel",
+    "Dashboard widget",
+    "Inline thread chrome",
+  ]) {
+    await expect(page.getByRole("heading", { name: heading })).toBeVisible();
+  }
+  // Multiple AgentUsagePanel renders prove the primitive composes.
+  const usagePanels = page.locator(".aui-usage");
+  expect(await usagePanels.count()).toBeGreaterThanOrEqual(3);
+  // No blank gap above the fold: at least the summary chip is visible early.
+  const summary = page.locator('[aria-label="Usage summary"]').first();
+  const summaryTop = await summary.evaluate(
+    (el) => el.getBoundingClientRect().top + window.scrollY,
+  );
+  expect(summaryTop).toBeLessThan(900);
+});
+
+test("usage-only mobile keeps content stacked instead of leaving whitespace", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/usage-only");
+  await expect(page.getByRole("heading", { name: "Standalone quota panel" })).toBeVisible();
+  const sections = page.locator(".aui-usage-only-section");
+  expect(await sections.count()).toBe(4);
 });
 
 test("host workflow recipe never duplicates the status summary", async ({ page }) => {

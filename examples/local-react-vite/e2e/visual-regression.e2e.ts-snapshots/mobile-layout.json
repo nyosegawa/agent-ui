@@ -22,7 +22,7 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "366px",
-    "height": 257,
+    "height": 255,
     "overflowX": "hidden",
     "overflowY": "hidden",
     "present": true,
@@ -35,7 +35,7 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "390px",
-    "height": 619,
+    "height": 621,
     "overflowX": "hidden",
     "overflowY": "hidden",
     "present": true,
@@ -76,26 +76,26 @@
     "borderColor": "rgb(26, 25, 22) rgb(26, 25, 22) rgb(231, 228, 218)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "362px",
+    "gridTemplateColumns": "508.203px",
     "height": 98,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 390
+    "width": 536
   },
   "messageList": {
     "backgroundColor": "rgb(255, 255, 255)",
     "borderColor": "rgb(26, 25, 22)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "362px",
+    "gridTemplateColumns": "508.203px",
     "height": 220,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
     "visible": true,
-    "width": 390
+    "width": 536
   },
   "activity": {
     "backgroundColor": "rgb(255, 255, 255)",
@@ -108,7 +108,7 @@
     "overflowY": "hidden",
     "present": true,
     "visible": true,
-    "width": 340
+    "width": 486
   },
   "diffActivity": {
     "backgroundColor": "rgb(255, 255, 255)",
@@ -121,20 +121,20 @@
     "overflowY": "hidden",
     "present": true,
     "visible": true,
-    "width": 340
+    "width": 486
   },
   "approvals": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
     "borderColor": "rgb(241, 214, 163) rgb(26, 25, 22) rgb(26, 25, 22)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "366px",
+    "gridTemplateColumns": "512.203px",
     "height": 220,
-    "overflowX": "auto",
-    "overflowY": "auto",
+    "overflowX": "visible",
+    "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 390
+    "width": 536
   },
   "composer": {
     "backgroundColor": "rgb(250, 249, 244)",

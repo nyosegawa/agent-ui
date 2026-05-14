@@ -386,3 +386,51 @@ Acceptance:
       runtime APIs after the UI/example rewrite.
 - [x] Re-search public exports/docs/examples for host-specific worker-pane and
       app-panel runtime terms after the primitive-first rewrite.
+
+## Milestone 11: Composer Resolver API And Visual QA Hardening
+
+Reopened on 2026-05-15 to fix four primitive-quality gaps that survived the
+craftsmanship rebuild: the chat input still relied on `globalThis.prompt()` for
+App / Plugin mentions, image attachments reused the `@`-mention icon,
+`packages/react/src/style.css` carried duplicated composer rules, and
+`/fixture-gallery` plus `/usage-only` were not credible visual QA surfaces.
+
+- [x] Replace `globalThis.prompt()` App / Plugin mention flow with host-supplied
+      `onRequestAppMention` / `onRequestPluginMention` resolvers on
+      `AgentComposer`, `AgentComposerPanel`, `AgentThreadView`, and `AgentChat`.
+- [x] Hide composer App / Plugin buttons unless the host wires the matching
+      resolver so embedders never ship a button that does nothing.
+- [x] Add a dedicated `IconImage` and use it for the attach-image button and
+      the image attachment chip; retire `IconAt` from those slots.
+- [x] Delete legacy composer / button / segmented / status-pill /
+      history-controls CSS blocks that were superseded by the rebuilt section
+      in `packages/react/src/style.css`.
+- [x] Cover composer behaviour with new vitest specs (no `globalThis.prompt`
+      ever, resolver-driven chips, hidden buttons without resolvers, image
+      icon on image chips) and a `style-duplication.vitest.ts` regression
+      test for composer / button / status-pill duplication.
+- [x] Reorder `/fixture-gallery` so component close-ups, critical interaction
+      states, preset surfaces, then full-page iframe previews appear in that
+      order on desktop and mobile.
+- [x] Replace the hand-written `CloseupComposerFocused` DOM with the real
+      `AgentComposer` driven by a `FocusFirstTextarea` effect, and add
+      Playwright assertions that close-ups are rendered above iframes and
+      reachable inside the first ~2 viewports.
+- [x] Rebuild `/usage-only` as a four-section host-shell demo (compact rail,
+      standalone quota panel, dashboard widget, inline thread chrome) using
+      only generic `AgentUsagePanel` / `AgentUsageSummary` primitives.
+- [x] Refresh `docs/screenshots/agent-ui-*` for every captured route after the
+      composer + usage-only + fixture-gallery rebuild.
+- [x] Update `docs/component-api.md` to document the resolver API, the image
+      icon, and the no-`prompt()` guarantee.
+
+Acceptance:
+
+- [x] `bun run typecheck`, `bun run lint`, `bun test`, `bunx vitest run`,
+      `bun run test:protocol`, `bun run test:fixtures`, `bun run build`,
+      `bun run publint`, `bun run attw`, and `bun run test:e2e:playwright`
+      all pass on the rebuilt branch.
+- [x] No `skill-with-app`-specific registry, panel, storage, or client-tool
+      APIs reappeared in `packages/`, `docs/`, or `examples/`.
+- [x] `app/list` is still framed as Codex Apps/connectors, not as
+      skill-with-app surface.
