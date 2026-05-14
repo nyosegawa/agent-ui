@@ -4,6 +4,14 @@ Agent UI is an embeddable UI library for applications built on OpenAI Codex App 
 
 The docs are organized as implementation-facing specifications. They intentionally avoid market/competitor background and focus on the decisions needed to build the library.
 
+## vNext Status
+
+`PLAN.md` and `TODO.md` are the source of truth while Agent UI vNext is being
+implemented. Some package and component reference pages still describe the
+pre-vNext implementation, especially the monolithic `AgentChat` preset. Treat
+those pages as current-code notes until the corresponding TODO milestone lands,
+not as the final vNext component API.
+
 ## Documents
 
 - [Product](./product.md): product name, scope, non-goals, and release definition.

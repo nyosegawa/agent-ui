@@ -1,5 +1,9 @@
 # Roadmap
 
+Status: this file records the completed pre-vNext buildout. The active vNext
+execution plan is `PLAN.md` plus `TODO.md`; do not use the historical order
+below to decide remaining implementation scope.
+
 ## Implementation Order
 
 ```text

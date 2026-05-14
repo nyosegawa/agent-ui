@@ -1,5 +1,9 @@
 # Theming
 
+Status: this page documents the current pre-vNext `AgentChat` shell. vNext
+theming must cover the composable shell, fixed-thread pane, usage-only panel,
+and skill/app workspace surfaces tracked in `PLAN.md` and `TODO.md`.
+
 `@nyosegawa/agent-ui-react/style.css` ships a practical default theme and CSS variables. Hosts can override variables globally or within a wrapper.
 
 ## Import

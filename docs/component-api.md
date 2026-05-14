@@ -1,5 +1,10 @@
 # Component API
 
+Status: this page documents the pre-vNext React surface that exists today. The
+target vNext API is defined by `PLAN.md` and `TODO.md`; the final component API
+must replace this monolithic `AgentChat`-first shape with composable primitives
+as the milestones land.
+
 The React package exposes drop-in components backed by headless hooks. Components accept normalized core state, not generated Codex protocol types.
 
 ## Provider

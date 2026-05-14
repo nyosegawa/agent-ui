@@ -35,9 +35,9 @@ For every coherent implementation slice:
 ## Milestone 0: Baseline And Protocol Truth
 
 - [x] Confirm the working tree intentionally contains `.agents/skills/agent-browser` and `skills-lock.json`.
-- [ ] Decide whether to keep any historical completed checklist items elsewhere, then keep this file focused on vNext implementation.
+- [x] Decide whether to keep any historical completed checklist items elsewhere, then keep this file focused on vNext implementation.
 - [x] Inventory stale root/docs claims before implementation: `README.md`, `AGENTS.md`, `docs/*.md`, examples READMEs, and package READMEs.
-- [ ] Remove or flag stale MVP-era docs before any new API work begins, especially docs that describe old `AgentChat` composition as the final design.
+- [x] Remove or flag stale MVP-era docs before any new API work begins, especially docs that describe old `AgentChat` composition as the final design.
 - [x] Refresh generated stable App Server types from `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server`.
 - [x] Refresh generated experimental App Server types in a separate generated tree.
 - [x] Document the exact local App Server commit and generation commands used for the schema refresh.
@@ -53,7 +53,7 @@ Acceptance:
 - [x] `bun run test:protocol` proves generated schema, protocol metadata, and capability lists agree.
 - [x] Docs no longer mention non-existent public props such as `AgentProvider experimental`.
 - [x] Root README and AGENTS instructions point implementers to `PLAN.md` and `TODO.md` as the active source of truth.
-- [ ] The Milestone 0 implementation is committed and pushed before starting Milestone 1.
+- [x] The Milestone 0 implementation is committed and pushed before starting Milestone 1.
 
 ## Milestone 1: Core State Model
 
