@@ -316,6 +316,19 @@ The history and usage smoke path has also been verified against `codex app-serve
   confirmed the kitchen QA state still exposes status banners, usage, plan,
   web search, generic dynamic-tool approval, and disabled approval-gated
   composer after removing core skill-app runtime APIs.
+- Milestone 7 examples are deterministic routes in `examples/local-react-vite`:
+  `/scoped-thread-pane`, `/usage-only`, `/app-connectors`,
+  `/host-workflow-recipe`, and `/fixture-gallery`. Playwright covers each route
+  as generic Agent UI composition, not as external-app-specific migration code.
+- Milestone 7 agent-browser check on 2026-05-14: a dev server ran at
+  `http://127.0.0.1:5174/`; `agent-browser open
+  'http://127.0.0.1:5174/fixture-gallery'`, `agent-browser snapshot -i`, and
+  `agent-browser screenshot /tmp/agent-ui-m7-fixture-gallery.png` confirmed the
+  gallery links all generic examples. `agent-browser --session m7-host open
+  'http://127.0.0.1:5174/host-workflow-recipe'`, `agent-browser --session
+  m7-host snapshot -i`, and `agent-browser --session m7-host screenshot
+  /tmp/agent-ui-m7-host-workflow.png` confirmed the host-owned panel slot
+  renders beside the generic Codex thread UI.
 - The server package now includes a WebSocket integration test proving `createCodexWebSocketTransport()` can consume the local bridge, receive streaming assistant text, command output, and file patch events, and send approval responses back to the stdio side.
 - Milestone 6 bridge checks cover host event callbacks, explicit server request
   policy opt-in, dynamic tool helper thread creation through generated

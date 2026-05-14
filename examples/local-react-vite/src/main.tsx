@@ -9,11 +9,15 @@ import {
   type FixtureStep,
 } from "@nyosegawa/agent-ui-core";
 import {
+  AgentAppsPanel,
   AgentChat,
   AgentProvider,
+  AgentThreadView,
+  AgentUsagePanel,
+  AgentWorkspace,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/style.css";
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import demoFixture from "../../../fixtures/app-server/demo-session.json";
 
@@ -24,7 +28,12 @@ declare global {
 }
 
 function DemoApp() {
+  if (window.location.pathname === "/app-connectors") return <AppConnectorsExample />;
+  if (window.location.pathname === "/fixture-gallery") return <VisualQaIndex />;
+  if (window.location.pathname === "/host-workflow-recipe") return <HostWorkflowRecipe />;
   if (window.location.pathname === "/qa") return <VisualQaIndex />;
+  if (window.location.pathname === "/scoped-thread-pane") return <ScopedThreadPaneExample />;
+  if (window.location.pathname === "/usage-only") return <UsageOnlyExample />;
   return <AgentDemo />;
 }
 
@@ -91,6 +100,26 @@ const visualQaStates: Array<{
     href: "/?state=kitchen",
     title: "Kitchen-quality Codex UX",
   },
+  {
+    description: "One fixed thread rendered without following active sidebar selection.",
+    href: "/scoped-thread-pane",
+    title: "Scoped thread pane",
+  },
+  {
+    description: "Account/rate-limit usage rendered with no chat, composer, or sidebar.",
+    href: "/usage-only",
+    title: "Usage-only panel",
+  },
+  {
+    description: "Codex Apps/connectors metadata from app/list.",
+    href: "/app-connectors",
+    title: "App connectors",
+  },
+  {
+    description: "Host-owned side panel composed through generic AgentWorkspace slots.",
+    href: "/host-workflow-recipe",
+    title: "Host workflow recipe",
+  },
 ];
 
 function VisualQaIndex() {
@@ -133,6 +162,156 @@ function VisualQaIndex() {
           ))}
         </div>
       </div>
+    </main>
+  );
+}
+
+function ScopedThreadPaneExample() {
+  const initialState = useMemo(() => {
+    const state = createInitialAgentState();
+    state.activeThreadId = "thread-active";
+    state.threads["thread-active"] = {
+      orderedTurnIds: [],
+      registryStatus: "live",
+      status: "loaded",
+      thread: { id: "thread-active", name: "Active host thread" },
+      turns: {},
+    };
+    state.threads["thread-fixed"] = {
+      orderedTurnIds: ["turn-fixed"],
+      registryStatus: "live",
+      status: "complete",
+      thread: { id: "thread-fixed", name: "Scoped thread pane" },
+      turns: {
+        "turn-fixed": {
+          blocksByItemId: {},
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-fixed"],
+          items: {
+            "item-fixed": {
+              id: "item-fixed",
+              kind: "agentMessage",
+              status: "completed",
+              text: "This pane stays locked to thread-fixed.",
+              threadId: "thread-fixed",
+              turnId: "turn-fixed",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-fixed", threadId: "thread-fixed" },
+        },
+      },
+    };
+    return state;
+  }, []);
+  return (
+    <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+      <ExampleFrame title="Scoped thread pane">
+        <AgentThreadView threadId="thread-fixed" />
+      </ExampleFrame>
+    </AgentProvider>
+  );
+}
+
+function UsageOnlyExample() {
+  const initialState = useMemo(() => {
+    const state = createInitialAgentState();
+    state.account = {
+      account: { email: "fixture@example.com", planType: "pro" },
+      rateLimits: demoRateLimits(),
+      status: "authenticated",
+    };
+    return state;
+  }, []);
+  return (
+    <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+      <ExampleFrame title="Usage only">
+        <AgentUsagePanel autoRefresh={false} />
+      </ExampleFrame>
+    </AgentProvider>
+  );
+}
+
+function AppConnectorsExample() {
+  const transport = useMemo(
+    () =>
+      new FakeAgentTransport({
+        onRequest(request) {
+          if (request.method === "app/list") {
+            return {
+              data: [
+                {
+                  id: "browser",
+                  installUrl: "app://browser",
+                  isAccessible: true,
+                  isEnabled: true,
+                  name: "Browser",
+                },
+                {
+                  id: "drive",
+                  installUrl: "app://drive",
+                  isAccessible: false,
+                  isEnabled: false,
+                  name: "Drive",
+                },
+              ],
+              nextCursor: null,
+            };
+          }
+          return {};
+        },
+      }),
+    [],
+  );
+  return (
+    <AgentProvider transport={transport}>
+      <ExampleFrame title="App connectors">
+        <AgentAppsPanel threadId="thread-connectors" />
+      </ExampleFrame>
+    </AgentProvider>
+  );
+}
+
+function HostWorkflowRecipe() {
+  const initialState = useMemo(() => createKitchenInitialState(), []);
+  const transport = useMemo(() => createDemoTransport("kitchen"), []);
+  return (
+    <AgentProvider initialState={initialState} transport={transport}>
+      <ExampleFrame title="Host workflow recipe">
+        <AgentWorkspace
+          panel={
+            <section aria-label="Host-owned panel">
+              <h2>Host-owned panel</h2>
+              <p>Workflow state stays outside Agent UI core.</p>
+              <ol>
+                <li>Read normalized thread and server-request state.</li>
+                <li>Render host-specific controls in this slot.</li>
+                <li>Submit continuation through generic turn hooks.</li>
+              </ol>
+            </section>
+          }
+          sidebar={false}
+          usage={false}
+        />
+      </ExampleFrame>
+    </AgentProvider>
+  );
+}
+
+function ExampleFrame({
+  children,
+  title,
+}: {
+  children: ReactNode;
+  title: string;
+}) {
+  return (
+    <main style={{ margin: "28px auto", maxWidth: 1180 }}>
+      <h1 style={{ font: "600 22px/1.2 system-ui, sans-serif", margin: "0 0 12px" }}>
+        {title}
+      </h1>
+      {children}
     </main>
   );
 }

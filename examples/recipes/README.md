@@ -10,3 +10,9 @@ Typed implementation recipes for host applications.
 - `api-key-remote-deployment.md`: server-side API-key bridge constraints.
 
 The WebSocket recipe assumes the host application owns `/agent-ui/ws` authentication. Do not put bearer tokens in query strings.
+
+External product workflows should compose Agent UI primitives rather than add
+workflow-specific APIs to the library. Use `AgentThreadView` and headless hooks
+for fixed-thread flows, `AgentUsagePanel` for usage-only chrome, `AgentAppsPanel`
+for Codex Apps/connectors metadata, and `AgentWorkspace` slots for host-owned
+panels.

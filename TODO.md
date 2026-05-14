@@ -164,18 +164,18 @@ Acceptance:
 
 ## Milestone 7: Examples And Migration Targets
 
-- [ ] Update `examples/codex-local-web` to use the new preset shell.
-- [ ] Add `examples/scoped-thread-pane` that demonstrates a generic fixed-thread pane.
-- [ ] Add `examples/usage-only` that renders account/rate-limit usage without chat chrome.
-- [ ] Add `examples/app-connectors` that demonstrates `app/list` Apps/connectors support.
-- [ ] Add `examples/host-workflow-recipe` that demonstrates host-owned side panels through generic slots.
-- [ ] Add `examples/fixture-gallery` for deterministic UI state regression.
-- [ ] Document that external apps compose proposal/workspace workflows from generic primitives rather than core workflow-specific APIs.
+- [x] Update `examples/codex-local-web` to use the new preset shell.
+- [x] Add `examples/scoped-thread-pane` that demonstrates a generic fixed-thread pane.
+- [x] Add `examples/usage-only` that renders account/rate-limit usage without chat chrome.
+- [x] Add `examples/app-connectors` that demonstrates `app/list` Apps/connectors support.
+- [x] Add `examples/host-workflow-recipe` that demonstrates host-owned side panels through generic slots.
+- [x] Add `examples/fixture-gallery` for deterministic UI state regression.
+- [x] Document that external apps compose proposal/workspace workflows from generic primitives rather than core workflow-specific APIs.
 
 Acceptance:
 
-- [ ] Each example has a focused README and a deterministic smoke path.
-- [ ] Examples do not justify new core APIs with external-app-specific workflows.
+- [x] Each example has a focused README and a deterministic smoke path.
+- [x] Examples do not justify new core APIs with external-app-specific workflows.
 
 ## Milestone 8: Browser Verification With agent-browser
 

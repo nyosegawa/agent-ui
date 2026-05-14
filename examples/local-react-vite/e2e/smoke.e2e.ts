@@ -21,7 +21,7 @@ test("renders Agent UI chat", async ({ page }) => {
     page.getByText("Stored session history can be read before resuming."),
   ).toBeVisible();
   await page.getByRole("button", { name: "Resume" }).click();
-  await expect(page.locator(".aui-status-pill")).toHaveText("Preview");
+  await expect(page.locator(".aui-status-pill")).toHaveText("Ready");
   await expect(page.getByLabel("Model", { exact: true })).toHaveValue(
     "fixture-demo-model",
   );
@@ -111,4 +111,30 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
     scrollWidth: document.documentElement.scrollWidth,
   }));
   expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
+});
+
+test("renders generic vNext composition examples", async ({ page }) => {
+  await page.goto("/scoped-thread-pane");
+  await expect(page.getByRole("heading", { name: "Scoped thread pane" }).first()).toBeVisible();
+  await expect(page.getByText("This pane stays locked to thread-fixed.")).toBeVisible();
+  await expect(page.getByText("Active host thread")).toHaveCount(0);
+
+  await page.goto("/usage-only");
+  await expect(page.getByRole("heading", { name: "Usage only" })).toBeVisible();
+  await expect(page.getByLabel("Usage limits")).toContainText(
+    "fixture-demo-model weekly",
+  );
+  await expect(page.getByLabel("Message composer")).toHaveCount(0);
+
+  await page.goto("/app-connectors");
+  await expect(page.getByRole("heading", { name: "App connectors" })).toBeVisible();
+  await page.getByRole("button", { name: "Refresh" }).click();
+  await expect(page.getByText("Browser")).toBeVisible();
+  await expect(page.getByText("Drive")).toBeVisible();
+
+  await page.goto("/host-workflow-recipe");
+  await expect(page.getByLabel("Host-owned panel")).toContainText(
+    "Workflow state stays outside Agent UI core.",
+  );
+  await expect(page.getByRole("heading", { name: "Kitchen-quality Codex UX" })).toBeVisible();
 });
