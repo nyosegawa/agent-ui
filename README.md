@@ -2,6 +2,10 @@
 
 Embeddable UI for Codex-powered coding agents.
 
+Active planning for the next implementation pass lives in
+[`PLAN.md`](./PLAN.md) and [`TODO.md`](./TODO.md). Those files are the source
+of truth for Agent UI vNext while the redesign is in progress.
+
 Agent UI provides React components, headless hooks, state management, and transport adapters for applications built on OpenAI Codex App Server.
 
 ## Status

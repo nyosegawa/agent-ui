@@ -4,14 +4,45 @@ This checklist is the execution source of truth for Agent UI vNext. The plan is
 defined in `PLAN.md`. Backward compatibility with the current Watcher and
 `skill-with-app` experiments is not required.
 
+## Completion Rule
+
+This is not an MVP checklist. Do not stop after a demo, scaffold, happy path, or
+"good enough" component shell.
+
+The work is complete only when every milestone in this file is checked off, all
+deterministic validation gates pass, browser-visible behavior has Playwright or
+`agent-browser` evidence, and any skipped real Codex check is documented with an
+environment-specific reason.
+
+If implementation uncovers missing protocol coverage, weak API boundaries,
+layout defects, host integration gaps, or stale documentation, add new TODO
+items before continuing. A task is not done until code, tests, docs, examples,
+and verification all match.
+
+## Work Loop Rule
+
+For every coherent implementation slice:
+
+- [ ] Inspect the current repo code before editing.
+- [ ] Inspect `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server` when the slice depends on App Server protocol behavior.
+- [ ] Refactor old boundaries when they conflict with the vNext architecture.
+- [ ] Add or update focused tests in the same change.
+- [ ] Run targeted validation before committing.
+- [ ] Update docs and `TODO.md` in the same change.
+- [ ] Commit the slice with a meaningful message.
+- [ ] Push the branch and confirm `git status --short --branch` is clean.
+
 ## Milestone 0: Baseline And Protocol Truth
 
 - [ ] Confirm the working tree intentionally contains `.agents/skills/agent-browser` and `skills-lock.json`.
 - [ ] Decide whether to keep any historical completed checklist items elsewhere, then keep this file focused on vNext implementation.
+- [ ] Inventory stale root/docs claims before implementation: `README.md`, `AGENTS.md`, `docs/*.md`, examples READMEs, and package READMEs.
+- [ ] Remove or flag stale MVP-era docs before any new API work begins, especially docs that describe old `AgentChat` composition as the final design.
 - [ ] Refresh generated stable App Server types from `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server`.
 - [ ] Refresh generated experimental App Server types in a separate generated tree.
+- [ ] Document the exact local App Server commit and generation commands used for the schema refresh.
 - [ ] Record the upstream App Server commit in `packages/codex/src/protocol.ts`.
-- [ ] Replace hand-written product method lists with generated-schema-derived capability metadata where practical.
+- [ ] Replace hand-written product method lists with generated-schema-derived capability metadata, keeping any unavoidable manual classification in one audited file with tests.
 - [ ] Split capability metadata into `stableAvailable`, `stableProductized`, `experimentalAvailable`, and `hostOnly`.
 - [ ] Add a protocol drift test that fails when generated files or capability metadata are stale.
 - [ ] Fix current drift around `account/rateLimits/read` and any other productized method missing from stable metadata.
@@ -21,6 +52,8 @@ Acceptance:
 
 - [ ] `bun run test:protocol` proves generated schema, protocol metadata, and capability lists agree.
 - [ ] Docs no longer mention non-existent public props such as `AgentProvider experimental`.
+- [ ] Root README and AGENTS instructions point implementers to `PLAN.md` and `TODO.md` as the active source of truth.
+- [ ] The Milestone 0 implementation is committed and pushed before starting Milestone 1.
 
 ## Milestone 1: Core State Model
 
@@ -82,7 +115,7 @@ Acceptance:
 - [ ] Implement status banners for model reroutes, deprecation notices, config warnings, account status, MCP OAuth, and rate limits.
 - [ ] Implement richer approval cards for every server-request type.
 - [ ] Implement token and rate-limit bars as standalone components usable inside or outside the shell.
-- [ ] Implement thread actions for rename, archive, unarchive, fork, resume, compact, and rollback where supported.
+- [ ] Implement thread actions for rename, archive, unarchive, fork, resume, compact, and rollback, with disabled/error states only when the generated protocol or runtime capability explicitly lacks support.
 - [ ] Implement composer attachments for local images, file mentions, paste/drop, and app/plugin mentions.
 - [ ] Keep visual components independent from generated App Server types.
 
@@ -123,7 +156,7 @@ Acceptance:
 - [ ] Add approval policy configuration that is explicit and visible to host apps.
 - [ ] Add redaction tests for stderr and bridge logs.
 - [ ] Add bridge tests for dynamic tool helper thread params against generated schema.
-- [ ] Add slow-consumer/backpressure tests where practical.
+- [ ] Add slow-consumer/backpressure tests, or add a focused harness if the current test infrastructure cannot simulate them.
 
 Acceptance:
 
@@ -174,6 +207,11 @@ Acceptance:
 
 ## Milestone 9: Validation And Release Gate
 
+- [ ] Update `README.md` for the final vNext public API and examples.
+- [ ] Update `AGENTS.md` for final repo working rules after the vNext implementation is complete.
+- [ ] Update `docs/architecture.md`, `docs/component-api.md`, `docs/headless-hooks.md`, `docs/packages.md`, `docs/product.md`, `docs/protocol.md`, `docs/protocol-drift.md`, `docs/testing.md`, and `docs/theming.md`.
+- [ ] Update every example README and package README affected by the new component/API shape.
+- [ ] Search root docs and examples for stale terms before validation: `MVP`, `post-MVP`, `AgentProvider experimental`, old monolithic `AgentChat`, old usage placement, and old skill/app server assumptions.
 - [ ] Run `bun run typecheck`.
 - [ ] Run `bun run lint`.
 - [ ] Run `bun test`.
@@ -189,10 +227,30 @@ Acceptance:
 - [ ] Run `bun run test:e2e:real-codex:approval` when local approval smoke is available.
 - [ ] Run the `agent-browser` manual verification sequence for changed examples.
 - [ ] Update `PLAN.md`, `TODO.md`, and docs after implementation reality differs from the plan.
+- [ ] Confirm every milestone completion was committed and pushed in coherent slices rather than one final bulk commit.
 
 Acceptance:
 
 - [ ] All deterministic gates pass.
 - [ ] Any skipped real Codex or browser checks are documented with a concrete reason.
 - [ ] Public package exports pass package validation.
-- [ ] Docs describe the implemented API, not aspirational API that has not landed.
+- [ ] README, AGENTS, docs, package READMEs, and example READMEs describe the implemented API, not aspirational API that has not landed and not stale pre-vNext behavior.
+
+## Milestone 10: Completeness Audit
+
+- [ ] Re-read `PLAN.md` and verify every promised capability has code, tests, docs, and an example or explicit non-example rationale.
+- [ ] Re-read every root and docs markdown file and remove contradictions against `PLAN.md`, `TODO.md`, and the implemented API.
+- [ ] Re-audit `agent-ui` against the current Codex App Server generated schema and confirm no productized stable method is missing from capability metadata.
+- [ ] Re-audit `agent-ui` against `agent-kitchen/packages/codex` and confirm all intentionally imported UX/state ideas landed or were explicitly rejected in docs.
+- [ ] Re-audit the Watcher integration path and confirm `AgentWorkerPane` can replace the current host-side worker session orchestration.
+- [ ] Re-audit the `skill-with-app` integration path and confirm `AgentWorkspace` plus `SkillAppPanel` can replace the separate curl/SSE app server pattern.
+- [ ] Run an agent-browser dogfood pass against each browser example and record the checked URL, commands, and result.
+- [ ] Ask at least one independent review pass to inspect for missing component APIs, host integration gaps, protocol drift, and "demo-only" shortcuts.
+- [ ] Fix every audit finding or add a concrete blocking issue to `TODO.md` before marking this milestone complete.
+
+Acceptance:
+
+- [ ] There are no unchecked TODO items.
+- [ ] There are no untracked files.
+- [ ] `git status --short --branch` is clean and aligned with `origin/main` after the final push.
+- [ ] A new session can read only `PLAN.md` and `TODO.md`, then understand both the intended architecture and the exact remaining work.

@@ -20,6 +20,50 @@ The public API must support all of these without host-side reimplementation:
 - Skill/app side panels driven by agent actions.
 - Browser-verification workflows for coding agents through `agent-browser`.
 
+## Completion Contract
+
+This is not an MVP plan. The work is complete only when `TODO.md` is fully
+checked off and the resulting library can replace the current `agent-ui`,
+Watcher worker pane, and `skill-with-app` prototype responsibilities without
+host-side workaround code.
+
+Do not treat a demo, a narrow happy path, or a partial wrapper as completion.
+Every public capability must have:
+
+- A generated-protocol-backed implementation or a documented upstream blocker.
+- A composable React API, not only a preset shell.
+- Unit or reducer coverage for behavior.
+- Browser or Playwright coverage for visible UI behavior.
+- Documentation that matches the implemented API.
+- An example proving the host integration shape when the feature is meant for
+  external apps.
+
+If a task reveals a missing protocol surface, broken upstream behavior, or a
+larger design issue, update `PLAN.md` and `TODO.md` before moving on. The right
+response is to expand the checklist, not to ship a smaller interpretation.
+
+## Execution Discipline
+
+Implementation should proceed as a sequence of complete slices, not as one large
+unverified rewrite. Each slice should include code, tests, docs, TODO updates,
+and a commit/push when it reaches a coherent checkpoint.
+
+Expected working loop:
+
+1. Pick the highest unblocked `TODO.md` item.
+2. Inspect the relevant current code and, for protocol questions, inspect
+   `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server`.
+3. Implement the smallest coherent slice that advances the milestone.
+4. Add or update focused tests for the behavior.
+5. Run targeted validation immediately.
+6. Update docs and `TODO.md` in the same change.
+7. Commit and push the slice.
+8. Continue until every milestone and completion audit item is checked.
+
+Refactoring is expected when old component boundaries block the vNext API. The
+goal is a clean final architecture, not compatibility with the current shell
+shape.
+
 ## Research Summary
 
 ### agent-ui
@@ -196,7 +240,8 @@ agent-browser 0.27.0
 - App Server client/session facade.
 - Stable/experimental capability registry derived from generated schema.
 - Skills, apps, plugins, account, model, and thread helper methods.
-- Stdio, bridge, WebSocket, and Unix-socket transport adapters where supported.
+- Stdio, bridge, WebSocket, and Unix-socket transport adapters with each
+  adapter explicitly classified as supported, experimental, or host-only.
 
 `@nyosegawa/agent-ui-react`
 
@@ -373,7 +418,10 @@ bun run test:e2e:playwright
 bun run test:node-compat
 ```
 
-Real Codex checks remain opt-in:
+Real Codex checks are required for release when local Codex auth and a current
+App Server checkout are available. If the environment is unavailable, the skip
+must be recorded with the exact reason and the deterministic gates must still
+pass:
 
 ```bash
 bun run test:e2e:real-codex
