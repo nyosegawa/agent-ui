@@ -25,6 +25,7 @@ import {
   AgentThreadView,
   AgentUsagePanel,
   AgentUsageSummary,
+  localImageInput,
   normalizeUsageWindows,
   useAgentApprovals,
   useAgentBootstrap,
@@ -32,7 +33,7 @@ import {
   useAgentUsage,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/style.css";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import demoFixture from "../../../fixtures/app-server/demo-session.json";
 
@@ -165,21 +166,28 @@ function VisualQaIndex() {
     <main className="aui-fixture-gallery">
       <div className="aui-fixture-gallery-header">
         <div>
-          <h1>Agent UI visual QA states</h1>
+          <h1>Agent UI visual QA</h1>
           <p>
-            Desktop and mobile previews for every Agent UI surface. Compare typography
-            density, hierarchy, banner severity, usage placement, and primitive
-            composition without switching routes manually.
+            Primitive close-ups come first so each interactive component can be
+            inspected without scrolling past iframes. Lifecycle and preset surfaces
+            follow underneath for full-page comparison.
           </p>
         </div>
         <div className="aui-fixture-gallery-actions">
-          <a href="/">Default</a>
-          <a href="/?state=kitchen">Kitchen</a>
-          <a href="/host-workflow-recipe">Host recipe</a>
+          <a href="#component-closeups">Component close-ups</a>
+          <a href="#critical-states">Critical states</a>
+          <a href="#preset-surfaces">Preset surfaces</a>
+          <a href="#full-page-previews">Full-page previews</a>
         </div>
       </div>
+      <ComponentCloseupGallery />
+      <CriticalInteractionStates />
       {grouped.map(({ group, states }) => (
-        <section className="aui-fixture-gallery-group" key={group}>
+        <section
+          className="aui-fixture-gallery-group"
+          id={group === "core" ? "preset-surfaces" : group === "primitives" ? "primitive-compositions" : "full-page-previews"}
+          key={group}
+        >
           <header className="aui-fixture-gallery-group-header">
             <h2>{fixtureGroupLabels[group]}</h2>
             <span>{states.length} preview{states.length === 1 ? "" : "s"}</span>
@@ -191,7 +199,6 @@ function VisualQaIndex() {
           </div>
         </section>
       ))}
-      <ComponentCloseupGallery />
     </main>
   );
 }
@@ -202,6 +209,7 @@ function ComponentCloseupGallery() {
       aria-label="Component close-ups"
       className="aui-fixture-gallery-group"
       data-testid="component-closeups"
+      id="component-closeups"
     >
       <header className="aui-fixture-gallery-group-header">
         <h2>Component close-ups</h2>
@@ -218,8 +226,30 @@ function ComponentCloseupGallery() {
         <CloseupDiffBlock />
         <CloseupSidebarSearch />
         <CloseupUsageChips />
+        <CloseupUsagePanel />
         <CloseupButtonStates />
         <CloseupInputStates />
+      </div>
+    </section>
+  );
+}
+
+function CriticalInteractionStates() {
+  return (
+    <section
+      aria-label="Critical interaction states"
+      className="aui-fixture-gallery-group"
+      data-testid="critical-states"
+      id="critical-states"
+    >
+      <header className="aui-fixture-gallery-group-header">
+        <h2>Critical interaction states</h2>
+        <span>Live primitives · no iframe</span>
+      </header>
+      <div className="aui-closeup-grid">
+        <CloseupApprovalQueue />
+        <CloseupComposerWithMentions />
+        <CloseupBannerStack />
       </div>
     </section>
   );
@@ -281,6 +311,48 @@ function CloseupComposerProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const sampleAppMention = () => ({
+  label: "Browser",
+  value: "app://browser",
+});
+
+const sampleAppMentionAlt = () => ({
+  label: "Drive",
+  value: "app://drive",
+});
+
+const samplePluginMention = () => ({
+  label: "Browser tools",
+  value: "plugin://browser-tools",
+});
+
+function FocusFirstTextarea() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const textarea = containerRef.current?.parentElement?.querySelector(
+      "textarea.aui-composer-input",
+    ) as HTMLTextAreaElement | null;
+    if (!textarea) return;
+    const valueSetter = Object.getOwnPropertyDescriptor(
+      HTMLTextAreaElement.prototype,
+      "value",
+    )?.set;
+    valueSetter?.call(
+      textarea,
+      "Apply the renderer audit findings and verify the diff.",
+    );
+    textarea.dispatchEvent(new Event("input", { bubbles: true }));
+    textarea.focus({ preventScroll: true });
+  }, []);
+  return (
+    <div
+      data-focus-first="true"
+      ref={containerRef}
+      style={{ height: 1, width: "100%" }}
+    />
+  );
+}
+
 function CloseupComposer() {
   return (
     <CloseupFrame
@@ -288,7 +360,14 @@ function CloseupComposer() {
       caption="Textarea, inline icon toolbar, primary send."
     >
       <CloseupComposerProvider>
-        <AgentComposer threadId="thread-closeup" />
+        <AgentComposer
+          onRequestAppMention={sampleAppMention}
+          onRequestPluginMention={samplePluginMention}
+          resolveLocalAttachment={(file) =>
+            localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
+          }
+          threadId="thread-closeup"
+        />
       </CloseupComposerProvider>
     </CloseupFrame>
   );
@@ -298,35 +377,19 @@ function CloseupComposerFocused() {
   return (
     <CloseupFrame
       title="Composer · focused"
-      caption="Focus ring around the bordered card, hint visible."
+      caption="Real composer focus ring, hint visible, prefilled body."
     >
       <CloseupComposerProvider>
-        <div className="aui-composer" data-focused="true" aria-label="Composer attachments">
-          <textarea
-            aria-label="Message"
-            className="aui-composer-input"
-            defaultValue="Apply the renderer audit findings and verify the diff."
-            rows={2}
+        <div style={{ position: "relative" }}>
+          <FocusFirstTextarea />
+          <AgentComposer
+            onRequestAppMention={sampleAppMention}
+            onRequestPluginMention={samplePluginMention}
+            resolveLocalAttachment={(file) =>
+              localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
+            }
+            threadId="thread-closeup"
           />
-          <div className="aui-composer-toolbar">
-            <div className="aui-composer-toolbar-start">
-              <button aria-label="Attach file" className="aui-btn aui-btn-ghost aui-btn-icon-only" type="button">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a5.5 5.5 0 01-7.78-7.78l9.2-9.19a3.67 3.67 0 015.19 5.19l-9.2 9.19a1.83 1.83 0 11-2.6-2.6l8.49-8.48"/></svg>
-              </button>
-              <button aria-label="App" className="aui-btn aui-btn-ghost aui-btn-sm" type="button">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-                <span>App</span>
-              </button>
-            </div>
-            <div className="aui-composer-toolbar-end">
-              <span className="aui-composer-hint">
-                <kbd>Enter</kbd> to send
-              </span>
-              <button aria-label="Send" className="aui-btn aui-btn-primary aui-btn-lg aui-btn-icon-only" type="button">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l14-8-4 18-3-7-7-3z"/></svg>
-              </button>
-            </div>
-          </div>
         </div>
       </CloseupComposerProvider>
     </CloseupFrame>
@@ -347,6 +410,8 @@ function CloseupComposerDisabled() {
         <AgentComposer
           disabled
           disabledReason="Resolve the pending approval before sending another message."
+          onRequestAppMention={sampleAppMention}
+          onRequestPluginMention={samplePluginMention}
           placeholder="Waiting on approval"
           threadId="thread-kitchen"
         />
@@ -363,8 +428,106 @@ function CloseupComposerMobile() {
       tone="mobile"
     >
       <CloseupComposerProvider>
-        <AgentComposer threadId="thread-closeup" />
+        <AgentComposer
+          onRequestAppMention={sampleAppMention}
+          onRequestPluginMention={samplePluginMention}
+          resolveLocalAttachment={(file) =>
+            localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
+          }
+          threadId="thread-closeup"
+        />
       </CloseupComposerProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupComposerWithMentions() {
+  const initialState = useMemo(() => {
+    const state = createInitialAgentState();
+    state.activeThreadId = "thread-mentions";
+    state.threadRegistry.activeThreadId = "thread-mentions";
+    state.threadRegistry.liveThreadIds = ["thread-mentions"];
+    state.threads["thread-mentions"] = {
+      orderedTurnIds: [],
+      registryStatus: "live",
+      status: "loaded",
+      thread: { id: "thread-mentions", name: "Mentions composer" },
+      turns: {},
+    };
+    return state;
+  }, []);
+  const appCalled = useRef(0);
+  return (
+    <CloseupFrame
+      title="Composer · App + Plugin mentions"
+      caption="Host-provided resolver chips. Click App / Plugin to add more."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentComposer
+          onRequestAppMention={() => {
+            appCalled.current += 1;
+            return appCalled.current % 2 === 1 ? sampleAppMention() : sampleAppMentionAlt();
+          }}
+          onRequestPluginMention={samplePluginMention}
+          resolveLocalAttachment={(file) =>
+            localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
+          }
+          threadId="thread-mentions"
+        />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupApprovalQueue() {
+  const initialState = useMemo(() => createKitchenInitialState(), []);
+  return (
+    <CloseupFrame
+      title="Approval queue · 3 pending"
+      caption="Command, user input, and dynamic tool requests stacked."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentApprovalQueue threadId="thread-kitchen" />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupBannerStack() {
+  const initialState = useMemo(() => createKitchenInitialState(), []);
+  return (
+    <CloseupFrame
+      title="Status banners · severity stack"
+      caption="Critical / warning / info notices, normalized."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <div style={{ display: "grid", gap: 10 }}>
+          <AgentStatusSummary />
+          <AgentStatusDetails />
+        </div>
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupUsagePanel() {
+  const initialState = useMemo(() => {
+    const state = createInitialAgentState();
+    state.account = {
+      account: { email: "fixture@example.com", planType: "pro" },
+      rateLimits: demoRateLimits(),
+      status: "authenticated",
+    };
+    return state;
+  }, []);
+  return (
+    <CloseupFrame
+      title="Usage panel"
+      caption="Standalone rate-limit windows, no chat chrome."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentUsagePanel autoRefresh={false} />
+      </AgentProvider>
     </CloseupFrame>
   );
 }
@@ -793,10 +956,140 @@ function UsageOnlyExample() {
   }, []);
   return (
     <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-      <ExampleFrame title="Usage only">
-        <AgentUsagePanel autoRefresh={false} />
-      </ExampleFrame>
+      <main className="aui-usage-only" aria-label="Usage primitive demo">
+        <header className="aui-usage-only-header">
+          <div>
+            <span className="aui-usage-only-kicker">Primitive · usage</span>
+            <h1>Drop the Codex usage primitive into any host surface</h1>
+            <p>
+              <code>AgentUsagePanel</code> and <code>AgentUsageSummary</code> are
+              pure render-only Codex App Server primitives. They consume the same
+              account / rateLimits state as the full chat preset, so a host can
+              place them anywhere — a sidebar rail slot, a settings page, a
+              dashboard widget, or inline next to a thread title — without
+              adopting the rest of <code>AgentChat</code>.
+            </p>
+          </div>
+          <AgentUsageSummary />
+        </header>
+
+        <section
+          aria-label="Compact rail slot"
+          className="aui-usage-only-section"
+          data-variant="rail"
+        >
+          <header>
+            <h2>Compact rail slot</h2>
+            <p>
+              The same primitive used inside the secondary rail of{" "}
+              <code>AgentChat</code>. Mobile auto-collapses into a{" "}
+              <code>&lt;details&gt;</code> summary; desktop stays expanded. This is
+              the surface a host shell embeds beside its own conversation column.
+            </p>
+          </header>
+          <div className="aui-usage-only-rail">
+            <AgentUsagePanel autoRefresh={false} />
+          </div>
+        </section>
+
+        <section
+          aria-label="Standalone quota panel"
+          className="aui-usage-only-section"
+          data-variant="card"
+        >
+          <header>
+            <h2>Standalone quota panel</h2>
+            <p>
+              Bordered card variant for settings, billing pages, or onboarding —
+              renders without any chat shell. Pair it with the inline summary
+              for header chrome.
+            </p>
+          </header>
+          <div className="aui-usage-only-card-row">
+            <AgentUsagePanel autoRefresh={false} />
+            <AgentUsageSummary />
+          </div>
+        </section>
+
+        <section
+          aria-label="Dashboard widget grid"
+          className="aui-usage-only-section"
+          data-variant="dashboard"
+        >
+          <header>
+            <h2>Dashboard widget</h2>
+            <p>
+              Rate-limit windows project naturally onto a dashboard tile so a
+              host can publish Codex usage alongside CI, deploy, or telemetry
+              widgets. Same primitive, different shell.
+            </p>
+          </header>
+          <div className="aui-usage-only-dashboard">
+            <UsageDashboardCard
+              caption="Resets every 5 hours · throttled at 100%"
+              title="Five-hour window"
+              valueFn={(windows) => windows[0]?.valueLabel ?? "sync pending"}
+            />
+            <UsageDashboardCard
+              caption="Resets every 7 days · throttled at 100%"
+              title="Weekly window"
+              valueFn={(windows) => windows[1]?.valueLabel ?? "sync pending"}
+            />
+            <div className="aui-usage-only-dashboard-card aui-usage-only-dashboard-card--full">
+              <strong>Live rate limits</strong>
+              <AgentUsagePanel autoRefresh={false} />
+            </div>
+          </div>
+        </section>
+
+        <section
+          aria-label="Inline thread chrome"
+          className="aui-usage-only-section"
+          data-variant="inline"
+        >
+          <header>
+            <h2>Inline thread chrome</h2>
+            <p>
+              The chip-shaped <code>AgentUsageSummary</code> sits next to the
+              thread title; the full <code>AgentUsagePanel</code> can drop in a
+              row below for hosts that want both surfaces.
+            </p>
+          </header>
+          <div className="aui-usage-only-inline">
+            <header className="aui-usage-only-inline-thread">
+              <div>
+                <strong>verify-codex-local-build</strong>
+                <small>
+                  packages/react/src/components.tsx · running
+                </small>
+              </div>
+              <AgentUsageSummary />
+            </header>
+            <AgentUsagePanel autoRefresh={false} />
+          </div>
+        </section>
+      </main>
     </AgentProvider>
+  );
+}
+
+function UsageDashboardCard({
+  caption,
+  title,
+  valueFn,
+}: {
+  caption: string;
+  title: string;
+  valueFn: (windows: ReturnType<typeof normalizeUsageWindows>) => string;
+}) {
+  const { rateLimits } = useAgentUsage();
+  const windows = normalizeUsageWindows(rateLimits);
+  return (
+    <div className="aui-usage-only-dashboard-card">
+      <strong>{title}</strong>
+      <span className="aui-usage-only-dashboard-card-value">{valueFn(windows)}</span>
+      <small>{caption}</small>
+    </div>
   );
 }
 
@@ -1051,7 +1344,7 @@ function HostWorkflowPanel() {
             : "Host actions are deferred until the verification command is captured."}
         </span>
         <button
-          className="aui-button aui-button-secondary"
+          className="aui-btn aui-btn-secondary aui-btn-sm"
           disabled={!verificationCommand || approvals.length > 0}
           type="button"
         >

@@ -567,12 +567,9 @@ describe("AgentChat", () => {
     prompt.mockRestore();
   });
 
-  it("surfaces composer app/plugin attachments", async () => {
+  it("surfaces composer app/plugin attachments through host resolvers", async () => {
     const user = userEvent.setup();
-    const prompt = vi
-      .spyOn(globalThis, "prompt")
-      .mockReturnValueOnce("app://browser")
-      .mockReturnValueOnce("plugin://browser-tools");
+    const prompt = vi.spyOn(globalThis, "prompt");
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-compose";
     initialState.threads["thread-compose"] = {
@@ -584,20 +581,115 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentChat sidebar={false} usage={false} />
+        <AgentChat
+          onRequestAppMention={() => ({ label: "Browser", value: "app://browser" })}
+          onRequestPluginMention={() => ({
+            label: "Browser tools",
+            value: "plugin://browser-tools",
+          })}
+          sidebar={false}
+          usage={false}
+        />
       </AgentProvider>,
     );
 
     await user.click(screen.getByRole("button", { name: "App" }));
     await user.click(screen.getByRole("button", { name: "Plugin" }));
 
+    expect(screen.getByLabelText("Composer attachments")).toHaveTextContent("Browser");
     expect(screen.getByLabelText("Composer attachments")).toHaveTextContent(
-      "app://browser",
+      "Browser tools",
     );
-    expect(screen.getByLabelText("Composer attachments")).toHaveTextContent(
-      "plugin://browser-tools",
+    expect(prompt).not.toHaveBeenCalled();
+  });
+
+  it("hides composer App/Plugin buttons when no host resolver is provided", async () => {
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-compose-noresolver";
+    initialState.threads["thread-compose-noresolver"] = {
+      orderedTurnIds: [],
+      status: "loaded",
+      thread: { id: "thread-compose-noresolver", name: "Composer" },
+      turns: {},
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat sidebar={false} usage={false} />
+      </AgentProvider>,
     );
-    prompt.mockRestore();
+
+    expect(screen.queryByRole("button", { name: "App" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Plugin" })).not.toBeInTheDocument();
+  });
+
+  it("never opens browser prompts from the composer", async () => {
+    const user = userEvent.setup();
+    const prompt = vi.spyOn(globalThis, "prompt");
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-compose-prompt";
+    initialState.threads["thread-compose-prompt"] = {
+      orderedTurnIds: [],
+      status: "loaded",
+      thread: { id: "thread-compose-prompt", name: "Composer" },
+      turns: {},
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          onRequestAppMention={() => null}
+          onRequestPluginMention={() => null}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "App" }));
+    await user.click(screen.getByRole("button", { name: "Plugin" }));
+    await user.type(screen.getByLabelText("Message"), "still works without prompt");
+
+    expect(prompt).not.toHaveBeenCalled();
+  });
+
+  it("renders image attachments with the image icon, not the @ icon", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-image";
+    initialState.threads["thread-image"] = {
+      orderedTurnIds: [],
+      status: "loaded",
+      thread: { id: "thread-image", name: "Composer" },
+      turns: {},
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          resolveLocalAttachment={(file) =>
+            localImageInput(`/tmp/agent-ui-image-test/${file.name}`)
+          }
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const attachImage = screen.getByRole("button", { name: "Attach image" });
+    expect(attachImage.querySelector("rect")).not.toBeNull();
+
+    const imageInput = document.querySelector(
+      'input[type="file"][accept="image/*"]',
+    ) as HTMLInputElement;
+    const file = new File(["binary"], "shot.png", { type: "image/png" });
+    await user.upload(imageInput, file);
+
+    const chip = screen.getByLabelText("Pending attachments").querySelector(
+      '.aui-composer-chip[data-kind="image"]',
+    );
+    expect(chip).not.toBeNull();
+    expect(chip?.querySelector("rect")).not.toBeNull();
   });
 
   it("requires a host resolver before local files become Codex inputs", async () => {
@@ -1509,10 +1601,7 @@ describe("AgentChat", () => {
 
   it("sends composer attachments as structured turn input items", async () => {
     const user = userEvent.setup();
-    const prompt = vi
-      .spyOn(globalThis, "prompt")
-      .mockReturnValueOnce("app://browser")
-      .mockReturnValueOnce("plugin://browser-tools");
+    const prompt = vi.spyOn(globalThis, "prompt");
     const transport = new FakeAgentTransport();
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
     if (initialState.activeThreadId) {
@@ -1521,7 +1610,16 @@ describe("AgentChat", () => {
     initialState.pendingServerRequests = {};
     render(
       <AgentProvider initialState={initialState} transport={transport}>
-        <AgentChat />
+        <AgentChat
+          onRequestAppMention={() => ({
+            label: "app://browser",
+            value: "app://browser",
+          })}
+          onRequestPluginMention={() => ({
+            label: "plugin://browser-tools",
+            value: "plugin://browser-tools",
+          })}
+        />
       </AgentProvider>,
     );
 
@@ -1530,7 +1628,7 @@ describe("AgentChat", () => {
     await user.type(screen.getByLabelText("Message"), "verify with attachments");
     await user.click(screen.getByRole("button", { name: "Send" }));
 
-    expect(prompt).toHaveBeenCalled();
+    expect(prompt).not.toHaveBeenCalled();
     expect(transport.requests.at(-1)?.params).toMatchObject({
       input: [
         { text: "verify with attachments", text_elements: [], type: "text" },

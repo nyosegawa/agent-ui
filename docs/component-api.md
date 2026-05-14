@@ -28,6 +28,9 @@ own shell without adopting the default chat layout.
   sidebar={false}
   usage={false}
   diagnostics={false}
+  onRequestAppMention={openAppPicker}
+  onRequestPluginMention={openPluginPicker}
+  resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
   slots={{
     renderApproval: (approval) => <CustomApproval approval={approval} />,
     renderItem: (item, turn) => <CustomItem item={item} turn={turn} />,
@@ -52,8 +55,11 @@ input, composer, approval) so the visual quality no longer depends on the
 overall layout — it lives in the parts themselves:
 
 - **Composer**: a single bordered rounded card containing attachment chips,
-  an auto-resizing textarea, and an inline icon-button toolbar. Attach, App,
-  and Plugin live as icon-text ghost buttons on the left; the Send button is
+  an auto-resizing textarea, and an inline icon-button toolbar. Attach file
+  and Attach image use a paperclip and a dedicated image icon. App and Plugin
+  appear as icon-text ghost buttons only when the host supplies the matching
+  `onRequestAppMention` / `onRequestPluginMention` resolver — the library
+  never opens a browser `prompt()` dialog. The Send button is
   a circular primary icon button on the right with an `Enter to send` hint.
   Run settings collapse behind a chip-shape `<details>` summary so the
   composer stays the primary surface. Pending-approval and preview-only
@@ -197,10 +203,33 @@ rollback call generated-method request builders. Resume remains part of
 session lifecycle.
 
 Composer attachments are represented as visible chips for `app://` and
-`plugin://` mentions by default. Local browser files are only enabled when the
-host supplies `resolveLocalAttachment`; that resolver must turn a `File` into a
-real Codex input such as a `localImage` path or uploaded image URL. The library
-does not treat browser-only `File.name` values as App Server-readable paths.
+`plugin://` mentions. The library does not invoke `globalThis.prompt` for any
+mention flow — instead, hosts supply `onRequestAppMention` and
+`onRequestPluginMention` resolvers (`AgentComposerProps`,
+`AgentChatProps`, `AgentThreadViewProps`). Each resolver is called when the
+user clicks the matching toolbar button and may return (or asynchronously
+resolve to) `{ label, value, input?, id? }`. When no resolver is provided, the
+matching toolbar button is hidden so an embedder cannot end up with a button
+that does nothing. This lets a host wire the flow into a command palette,
+picker dialog, MCP tool, or workspace registry without the library shipping
+an opinion about that picker's UI.
+
+```tsx
+<AgentChat
+  onRequestAppMention={async () => {
+    const app = await openAppPicker();
+    return app && { label: app.name, value: app.uri };
+  }}
+  onRequestPluginMention={async () => openPluginPalette()}
+/>
+```
+
+Local browser files are only enabled when the host supplies
+`resolveLocalAttachment`; that resolver must turn a `File` into a real Codex
+input such as a `localImage` path or uploaded image URL. The library does not
+treat browser-only `File.name` values as App Server-readable paths. The
+attach-image button and image attachment chip use a dedicated image icon, not
+the `@`-mention icon, so attachment kinds are visually distinguishable.
 
 ## Usage
 

@@ -75,10 +75,11 @@ const IconPaperclip = (props: { size?: number }) => (
   </Icon>
 );
 
-const IconAt = (props: { size?: number }) => (
+const IconImage = (props: { size?: number }) => (
   <Icon size={props.size}>
-    <circle cx="12" cy="12" r="4" />
-    <path d="M16 8v5a3 3 0 006 0v-1a10 10 0 10-3.92 7.94" />
+    <rect x="3" y="4" width="18" height="16" rx="2" />
+    <circle cx="9" cy="10" r="1.6" />
+    <path d="M3.5 17.5l4.5-4.5 4 4 3-3 5.5 5.5" />
   </Icon>
 );
 
@@ -210,6 +211,9 @@ export interface AgentChatSlots {
 export interface AgentChatProps {
   className?: string;
   diagnostics?: boolean;
+  onRequestAppMention?: AgentComposerMentionResolver;
+  onRequestPluginMention?: AgentComposerMentionResolver;
+  resolveLocalAttachment?: AgentLocalAttachmentResolver;
   sidebar?: boolean;
   slots?: AgentChatSlots;
   usage?: boolean;
@@ -218,6 +222,9 @@ export interface AgentChatProps {
 export function AgentChat({
   className,
   diagnostics = true,
+  onRequestAppMention,
+  onRequestPluginMention,
+  resolveLocalAttachment,
   sidebar = true,
   slots,
   usage = true,
@@ -249,8 +256,11 @@ export function AgentChat({
           <div className="aui-thread-column">
             {thread ? (
               <AgentThreadView
+                onRequestAppMention={onRequestAppMention}
+                onRequestPluginMention={onRequestPluginMention}
                 renderApproval={slots?.renderApproval}
                 renderItem={slots?.renderItem}
+                resolveLocalAttachment={resolveLocalAttachment}
                 threadId={threadId}
               />
             ) : (
@@ -342,6 +352,8 @@ export function AgentShell({
 }
 
 export interface AgentThreadViewProps {
+  onRequestAppMention?: AgentComposerMentionResolver;
+  onRequestPluginMention?: AgentComposerMentionResolver;
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
   renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
@@ -349,6 +361,8 @@ export interface AgentThreadViewProps {
 }
 
 export function AgentThreadView({
+  onRequestAppMention,
+  onRequestPluginMention,
   renderApproval,
   renderItem,
   resolveLocalAttachment,
@@ -363,6 +377,8 @@ export function AgentThreadView({
       <AgentThreadTimeline renderItem={renderItem} thread={thread} />
       <AgentApprovalQueue renderApproval={renderApproval} threadId={resolvedThreadId} />
       <AgentComposerPanel
+        onRequestAppMention={onRequestAppMention}
+        onRequestPluginMention={onRequestPluginMention}
         resolveLocalAttachment={resolveLocalAttachment}
         thread={thread}
         threadId={resolvedThreadId}
@@ -749,16 +765,12 @@ function formatModelOption(model: { id: string; name?: string }): string {
 export function AgentComposer({
   disabled = false,
   disabledReason,
+  onRequestAppMention,
+  onRequestPluginMention,
   placeholder = "Ask Codex to work in this thread",
   resolveLocalAttachment,
   threadId,
-}: {
-  disabled?: boolean;
-  disabledReason?: string;
-  placeholder?: string;
-  resolveLocalAttachment?: AgentLocalAttachmentResolver;
-  threadId?: string;
-}) {
+}: AgentComposerProps) {
   const composer = useAgentComposer(threadId);
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [isFocused, setFocused] = useState(false);
@@ -818,19 +830,27 @@ export function AgentComposer({
 
   const canSubmit = !disabled && (composer.value.trim().length > 0 || attachments.length > 0);
 
-  const handleMention = (kind: "app" | "plugin") => {
-    const value = globalThis.prompt?.(
-      kind === "app" ? "App URI" : "Plugin URI",
-      kind === "app" ? "app://" : "plugin://",
-    );
-    if (!value?.trim()) return;
-    addAttachment({
-      id: `${kind}:${value}:${Date.now()}`,
-      kind,
-      label: value.trim(),
-      value: value.trim(),
-    });
-  };
+  const handleMention = useCallback(
+    async (kind: "app" | "plugin") => {
+      const resolver = kind === "app" ? onRequestAppMention : onRequestPluginMention;
+      if (!resolver) return;
+      const result = await Promise.resolve(resolver());
+      if (!result) return;
+      const label = result.label?.trim();
+      const value = result.value?.trim();
+      if (!label && !value) return;
+      const finalLabel = label || value || kind;
+      const finalValue = value || label || kind;
+      addAttachment({
+        id: result.id ?? `${kind}:${finalValue}:${Date.now()}`,
+        input: result.input,
+        kind,
+        label: finalLabel,
+        value: finalValue,
+      });
+    },
+    [addAttachment, onRequestAppMention, onRequestPluginMention],
+  );
 
   return (
     <form
@@ -882,7 +902,7 @@ export function AgentComposer({
           {attachments.map((attachment) => (
             <li className="aui-composer-chip" data-kind={attachment.kind} key={attachment.id}>
               <span className="aui-composer-chip-icon" aria-hidden="true">
-                {attachment.kind === "image" ? <IconAt size={14} /> : null}
+                {attachment.kind === "image" ? <IconImage size={14} /> : null}
                 {attachment.kind === "file" ? <IconPaperclip size={14} /> : null}
                 {attachment.kind === "app" ? <IconApp size={14} /> : null}
                 {attachment.kind === "plugin" ? <IconPlugin size={14} /> : null}
@@ -958,7 +978,7 @@ export function AgentComposer({
                 title="Attach image"
                 type="button"
               >
-                <IconAt size={16} />
+                <IconImage size={16} />
               </button>
               <input
                 accept="image/*"
@@ -973,28 +993,32 @@ export function AgentComposer({
               />
             </>
           ) : null}
-          <button
-            aria-label="App"
-            className={buttonClass("ghost", { size: "sm" })}
-            disabled={disabled}
-            onClick={() => handleMention("app")}
-            title="Mention an app"
-            type="button"
-          >
-            <IconApp size={14} />
-            <span>App</span>
-          </button>
-          <button
-            aria-label="Plugin"
-            className={buttonClass("ghost", { size: "sm" })}
-            disabled={disabled}
-            onClick={() => handleMention("plugin")}
-            title="Mention a plugin"
-            type="button"
-          >
-            <IconPlugin size={14} />
-            <span>Plugin</span>
-          </button>
+          {onRequestAppMention ? (
+            <button
+              aria-label="App"
+              className={buttonClass("ghost", { size: "sm" })}
+              disabled={disabled}
+              onClick={() => void handleMention("app")}
+              title="Mention an app"
+              type="button"
+            >
+              <IconApp size={14} />
+              <span>App</span>
+            </button>
+          ) : null}
+          {onRequestPluginMention ? (
+            <button
+              aria-label="Plugin"
+              className={buttonClass("ghost", { size: "sm" })}
+              disabled={disabled}
+              onClick={() => void handleMention("plugin")}
+              title="Mention a plugin"
+              type="button"
+            >
+              <IconPlugin size={14} />
+              <span>Plugin</span>
+            </button>
+          ) : null}
         </div>
         <div className="aui-composer-toolbar-end">
           <span className="aui-composer-hint" aria-hidden="true">
@@ -1024,6 +1048,31 @@ export type AgentLocalAttachmentResolver = (
   kind: AgentLocalAttachmentKind,
 ) => CodexUserInput | null | undefined | Promise<CodexUserInput | null | undefined>;
 
+export type AgentMentionAttachmentKind = Extract<ComposerAttachmentKind, "app" | "plugin">;
+
+export interface AgentComposerMentionAttachment {
+  id?: string;
+  input?: CodexUserInput;
+  label: string;
+  value: string;
+}
+
+export type AgentComposerMentionResolver = () =>
+  | AgentComposerMentionAttachment
+  | null
+  | undefined
+  | Promise<AgentComposerMentionAttachment | null | undefined>;
+
+export interface AgentComposerProps {
+  disabled?: boolean;
+  disabledReason?: string;
+  onRequestAppMention?: AgentComposerMentionResolver;
+  onRequestPluginMention?: AgentComposerMentionResolver;
+  placeholder?: string;
+  resolveLocalAttachment?: AgentLocalAttachmentResolver;
+  threadId?: string;
+}
+
 interface ComposerAttachment {
   id: string;
   input?: CodexUserInput;
@@ -1037,15 +1086,21 @@ function composerAttachmentInput(attachment: ComposerAttachment): CodexUserInput
   return mentionInput(attachment.label, attachment.value);
 }
 
-export function AgentComposerPanel({
-  resolveLocalAttachment,
-  thread,
-  threadId,
-}: {
+export interface AgentComposerPanelProps {
+  onRequestAppMention?: AgentComposerMentionResolver;
+  onRequestPluginMention?: AgentComposerMentionResolver;
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   thread: ThreadState;
   threadId?: string;
-}) {
+}
+
+export function AgentComposerPanel({
+  onRequestAppMention,
+  onRequestPluginMention,
+  resolveLocalAttachment,
+  thread,
+  threadId,
+}: AgentComposerPanelProps) {
   const isRunning = thread.status === "running";
   const isPreviewOnly = isPreviewOnlyThread(thread);
   const isBlocked = isRunning || thread.status === "waitingForInput" || isPreviewOnly;
@@ -1064,6 +1119,8 @@ export function AgentComposerPanel({
         <AgentComposer
           disabled={isBlocked}
           disabledReason={composerDisabledReason(thread.status, isPreviewOnly)}
+          onRequestAppMention={onRequestAppMention}
+          onRequestPluginMention={onRequestPluginMention}
           placeholder={composerPlaceholder(thread.status, isPreviewOnly)}
           resolveLocalAttachment={resolveLocalAttachment}
           threadId={threadId}

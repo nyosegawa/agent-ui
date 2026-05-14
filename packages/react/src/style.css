@@ -159,30 +159,6 @@
   writing-mode: vertical-rl;
 }
 
-.aui-history-controls {
-  display: grid;
-  gap: 6px;
-  grid-template-columns: minmax(0, 1fr) auto;
-}
-
-.aui-history-controls input {
-  background: var(--aui-panel);
-  border: 1px solid var(--aui-border);
-  border-radius: var(--aui-radius-sm);
-  color: var(--aui-fg);
-  font: inherit;
-  font-size: 13px;
-  min-height: 32px;
-  min-width: 0;
-  padding: 5px 9px;
-}
-
-.aui-history-controls input:focus-visible {
-  border-color: var(--aui-primary);
-  box-shadow: var(--aui-shadow-focus);
-  outline: none;
-}
-
 .aui-sidebar-error {
   color: var(--aui-danger);
   font-size: 12px;
@@ -440,35 +416,6 @@
   min-width: 0;
 }
 
-.aui-status-pill {
-  background: var(--aui-panel-alt);
-  border: 1px solid var(--aui-border);
-  border-radius: var(--aui-radius-pill);
-  color: var(--aui-fg-muted);
-  font-size: 11.5px;
-  font-weight: 600;
-  letter-spacing: 0.005em;
-  padding: 3px 9px;
-}
-
-.aui-status-pill[data-status="running"] {
-  background: var(--aui-primary-soft);
-  border-color: rgba(13, 148, 136, 0.4);
-  color: var(--aui-primary-strong);
-}
-
-.aui-status-pill[data-status="waitingForInput"] {
-  background: var(--aui-warn-soft);
-  border-color: rgba(180, 83, 9, 0.32);
-  color: var(--aui-warn);
-}
-
-.aui-status-pill[data-status="error"] {
-  background: var(--aui-danger-soft);
-  border-color: rgba(185, 28, 28, 0.32);
-  color: var(--aui-danger);
-}
-
 .aui-thread-action-menu {
   position: relative;
 }
@@ -523,68 +470,6 @@
 .aui-thread-action-menu button:disabled {
   color: var(--aui-fg-faint);
   cursor: not-allowed;
-}
-
-/* --- Buttons -------------------------------------------------------- */
-
-.aui-button {
-  background: var(--aui-primary);
-  border: 0;
-  border-radius: var(--aui-radius-sm);
-  color: var(--aui-primary-fg);
-  cursor: pointer;
-  font: inherit;
-  font-size: 13px;
-  font-weight: 650;
-  letter-spacing: -0.005em;
-  min-height: 34px;
-  padding: 6px 14px;
-  transition: background-color 120ms ease;
-}
-
-.aui-button:hover:not(:disabled) {
-  background: var(--aui-primary-strong);
-}
-
-.aui-button:focus-visible {
-  box-shadow: var(--aui-shadow-focus);
-  outline: none;
-}
-
-.aui-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.aui-button-secondary {
-  background: var(--aui-panel);
-  border: 1px solid var(--aui-border-strong);
-  color: var(--aui-fg);
-}
-
-.aui-button-secondary:hover:not(:disabled) {
-  background: var(--aui-panel-alt);
-}
-
-.aui-link-button {
-  background: transparent;
-  border: 0;
-  color: var(--aui-primary);
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 0;
-}
-
-.aui-link-button:hover:not(:disabled) {
-  color: var(--aui-primary-strong);
-  text-decoration: underline;
-}
-
-.aui-link-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
 }
 
 /* --- Empty / first run --------------------------------------------- */
@@ -1228,65 +1113,10 @@
 
 /* --- Approvals ----------------------------------------------------- */
 
-.aui-approvals {
-  background: linear-gradient(180deg, #fffaf0 0%, #fff7e6 100%);
-  border-top: 1px solid #f1d6a3;
-  display: grid;
-  gap: 12px;
-  max-height: min(36vh, 320px);
-  overflow: auto;
-  padding: 16px 22px;
-}
-
-.aui-approval {
-  background: var(--aui-panel);
-  border: 1px solid #ecc97a;
-  border-radius: var(--aui-radius);
-  box-shadow: 0 6px 18px -10px rgba(180, 83, 9, 0.32);
-  display: grid;
-  gap: 10px;
-  margin: 0;
-  padding: 14px 16px;
-}
-
-.aui-approval-header {
-  align-items: baseline;
-  display: flex;
-  gap: 12px;
-  justify-content: space-between;
-}
-
-.aui-approval-header strong {
-  color: var(--aui-fg-strong);
-  font-size: 14px;
-  font-weight: 650;
-  letter-spacing: -0.005em;
-}
-
-.aui-approval-header span,
 .aui-file-path {
   color: var(--aui-fg-faint);
   font-family: var(--aui-font-mono);
   font-size: 11px;
-}
-
-.aui-approval-summary {
-  display: grid;
-  gap: 10px;
-}
-
-.aui-approval-copy {
-  color: var(--aui-fg);
-  font-size: 13.5px;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.aui-approval .aui-actions {
-  align-items: center;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
 }
 
 .aui-command-line {
@@ -1736,149 +1566,6 @@
   overflow-wrap: anywhere;
 }
 
-/* --- Compose panel ------------------------------------------------- */
-
-.aui-compose-panel {
-  background: var(--aui-panel);
-  border-top: 1px solid var(--aui-border);
-  display: block;
-  overflow: hidden;
-  overscroll-behavior: contain;
-}
-
-.aui-composer {
-  align-items: flex-end;
-  background: var(--aui-panel);
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 12px 20px 16px;
-}
-
-.aui-attachment-toolbar {
-  align-items: center;
-  display: flex;
-  flex: 1 0 100%;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.aui-attachment-toolbar > button,
-.aui-attachment-button {
-  align-items: center;
-  background: var(--aui-panel-alt);
-  border: 1px solid var(--aui-border);
-  border-radius: 6px;
-  color: var(--aui-fg);
-  cursor: pointer;
-  display: inline-flex;
-  font-size: 12px;
-  font-weight: 600;
-  gap: 4px;
-  padding: 5px 10px;
-}
-
-.aui-attachment-toolbar > button:hover:not(:disabled),
-.aui-attachment-button:hover {
-  background: var(--aui-bg-soft);
-  border-color: var(--aui-border-strong);
-}
-
-.aui-attachment-button input {
-  display: none;
-}
-
-.aui-attachment-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.aui-attachment-chips li {
-  align-items: center;
-  background: var(--aui-info-soft);
-  border: 1px solid rgba(37, 99, 235, 0.22);
-  border-radius: var(--aui-radius-pill);
-  display: flex;
-  gap: 6px;
-  max-width: 240px;
-  padding: 3px 4px 3px 10px;
-}
-
-.aui-attachment-chips span {
-  color: rgba(37, 99, 235, 0.85);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.aui-attachment-chips strong {
-  color: var(--aui-fg);
-  font-size: 12px;
-  font-weight: 500;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.aui-attachment-chips button {
-  background: transparent;
-  border: 0;
-  color: var(--aui-fg-muted);
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
-  padding: 0 4px;
-}
-
-.aui-attachment-chips button:hover {
-  color: var(--aui-danger);
-}
-
-.aui-composer-input {
-  background: var(--aui-panel-quiet);
-  border: 1px solid var(--aui-border-strong);
-  border-radius: 8px;
-  color: var(--aui-fg);
-  flex: 1;
-  font: inherit;
-  font-size: 14px;
-  line-height: 1.55;
-  min-height: 64px;
-  padding: 10px 12px;
-  resize: vertical;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
-}
-
-.aui-composer-input:focus {
-  background: var(--aui-panel);
-  border-color: var(--aui-primary);
-  box-shadow: var(--aui-shadow-focus);
-  outline: none;
-}
-
-.aui-composer .aui-button {
-  align-self: flex-end;
-  min-height: 38px;
-}
-
-.aui-turn-control {
-  align-items: center;
-  background: var(--aui-panel-quiet);
-  border-bottom: 1px solid var(--aui-border);
-  color: var(--aui-fg-muted);
-  display: flex;
-  font-size: 12.5px;
-  gap: 10px;
-  justify-content: space-between;
-  padding: 10px 20px;
-}
-
 /* --- Run controls (settings) --------------------------------------- */
 
 .aui-run-settings-details {
@@ -1952,34 +1639,6 @@
   letter-spacing: 0.04em;
   padding: 0;
   text-transform: uppercase;
-}
-
-.aui-segmented {
-  background: var(--aui-panel-alt);
-  border: 1px solid var(--aui-border);
-  border-radius: 7px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  padding: 2px;
-}
-
-.aui-segment {
-  background: transparent;
-  border: 0;
-  border-radius: 5px;
-  color: var(--aui-fg-muted);
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  min-height: 30px;
-  padding: 5px 8px;
-}
-
-.aui-segment[aria-pressed="true"] {
-  background: var(--aui-panel);
-  box-shadow: var(--aui-shadow-card), 0 1px 2px rgba(20, 18, 14, 0.08);
-  color: var(--aui-fg);
 }
 
 .aui-field {
@@ -3021,14 +2680,6 @@
     grid-column: 1 / -1;
   }
 
-  .aui-composer {
-    padding: 10px 14px 14px;
-  }
-
-  .aui-composer-input {
-    min-height: 60px;
-  }
-
   .aui-run-settings-details summary {
     padding: 9px 14px;
   }
@@ -3088,14 +2739,10 @@
 /* ===========================================================================
  *  Primitive craftsmanship overlay
  *
- *  Rebuilt from the agent-kitchen quality bar: every interactive primitive
- *  (button, input, composer, approval) gets a strong, opinionated visual
- *  identity rather than relying on browser defaults.
- *
- *  Anything below this rule supersedes earlier declarations and is the
- *  single source of truth for new components. Older selectors above stay
- *  only to keep the timeline/markdown/diff/work-trace surfaces intact while
- *  we rebuild the interaction layer.
+ *  Single source of truth for every interactive primitive (button, input,
+ *  composer, approval, status pill). Earlier sections in this file only own
+ *  the timeline, markdown, diff, and work-trace surfaces — the interaction
+ *  layer is owned by the declarations below.
  * ======================================================================== */
 
 :root {
@@ -3241,48 +2888,6 @@
 .aui-btn-subtle:hover:not(:disabled) {
   color: var(--aui-primary-strong);
   text-decoration: underline;
-}
-
-/* Legacy class aliases — keep existing call sites working until removed. */
-.aui-button {
-  background: var(--aui-primary);
-  border: 1px solid var(--aui-primary);
-  border-radius: 8px;
-  color: var(--aui-primary-fg);
-  cursor: pointer;
-  font: 600 13px/1 var(--aui-font);
-  letter-spacing: -0.005em;
-  min-height: var(--aui-tap-target);
-  padding: 0 14px;
-  transition:
-    background-color 140ms var(--aui-easing),
-    border-color 140ms var(--aui-easing),
-    box-shadow 140ms var(--aui-easing);
-}
-
-.aui-button:hover:not(:disabled) {
-  background: var(--aui-primary-strong);
-  border-color: var(--aui-primary-strong);
-}
-
-.aui-button:focus-visible {
-  box-shadow: var(--aui-focus-ring);
-  outline: none;
-}
-
-.aui-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
-}
-
-.aui-button-secondary {
-  background: var(--aui-panel);
-  border-color: var(--aui-border-strong);
-  color: var(--aui-fg);
-}
-
-.aui-button-secondary:hover:not(:disabled) {
-  background: var(--aui-panel-alt);
 }
 
 /* --- Input shell ---------------------------------------------------------- */
@@ -3432,6 +3037,18 @@
   background: var(--aui-primary-soft);
   border-color: rgba(13, 148, 136, 0.4);
   color: var(--aui-primary-strong);
+}
+
+.aui-status-pill[data-status="waitingForInput"] {
+  background: var(--aui-warn-soft);
+  border-color: rgba(180, 83, 9, 0.32);
+  color: var(--aui-warn);
+}
+
+.aui-status-pill[data-status="error"] {
+  background: var(--aui-danger-soft);
+  border-color: rgba(185, 28, 28, 0.32);
+  color: var(--aui-danger);
 }
 
 .aui-status-pill[data-status="running"] .aui-status-pill-dot {
@@ -3706,7 +3323,11 @@
   border-top: 1px solid #f1d6a3;
   display: grid;
   gap: 12px;
-  max-height: min(36vh, 360px);
+  /* Cap the stack height so multiple pending approvals do not push the
+   * composer off-screen. The container scrolls internally when more than ~2
+   * cards stack, but each card's actions stay reachable because the first
+   * card always shows its full action row before scroll begins. */
+  max-height: min(50vh, 480px);
   overflow: auto;
   padding: 14px 20px 16px;
 }
@@ -4396,5 +4017,188 @@
   }
   .aui-approval-actions .aui-btn-primary {
     order: -1;
+  }
+}
+
+/* --- Usage-only demo page (host shell) ---------------------------------- */
+/* Styles below are owned by the /usage-only example page, not by the core
+ * Agent UI primitives. They demonstrate four host shells around the same
+ * AgentUsagePanel / AgentUsageSummary primitives. */
+
+.aui-usage-only {
+  background: var(--aui-bg-soft);
+  display: grid;
+  gap: 28px;
+  margin: 0 auto;
+  max-width: 1180px;
+  min-height: 100vh;
+  padding: 36px 24px 64px;
+}
+
+.aui-usage-only-header {
+  align-items: end;
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  box-shadow: var(--aui-elevation-2);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.6fr);
+  padding: 24px 26px;
+}
+
+.aui-usage-only-header h1 {
+  color: var(--aui-fg-strong);
+  font: 650 24px/1.2 var(--aui-font);
+  letter-spacing: -0.02em;
+  margin: 6px 0 8px;
+}
+
+.aui-usage-only-header p {
+  color: var(--aui-fg-muted);
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.aui-usage-only-header code {
+  background: var(--aui-panel-quiet);
+  border-radius: 4px;
+  font-size: 12.5px;
+  padding: 1px 5px;
+}
+
+.aui-usage-only-kicker {
+  color: var(--aui-primary-strong);
+  font: 700 11px/1 var(--aui-font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.aui-usage-only-section {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  box-shadow: var(--aui-elevation-1);
+  display: grid;
+  gap: 16px;
+  padding: 22px 24px 24px;
+}
+
+.aui-usage-only-section > header {
+  display: grid;
+  gap: 6px;
+}
+
+.aui-usage-only-section > header h2 {
+  color: var(--aui-fg-strong);
+  font: 650 17px/1.25 var(--aui-font);
+  letter-spacing: -0.012em;
+  margin: 0;
+}
+
+.aui-usage-only-section > header p {
+  color: var(--aui-fg-muted);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.aui-usage-only-section > header code {
+  background: var(--aui-panel-quiet);
+  border-radius: 4px;
+  font-size: 12.5px;
+  padding: 1px 5px;
+}
+
+.aui-usage-only-rail {
+  background: var(--aui-bg-soft);
+  border: 1px dashed var(--aui-border);
+  border-radius: 12px;
+  max-width: 360px;
+  padding: 14px;
+}
+
+.aui-usage-only-card-row {
+  align-items: start;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+.aui-usage-only-dashboard {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.aui-usage-only-dashboard-card {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 12px;
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+}
+
+.aui-usage-only-dashboard-card strong {
+  color: var(--aui-fg-strong);
+  font: 650 13px/1 var(--aui-font);
+}
+
+.aui-usage-only-dashboard-card-value {
+  color: var(--aui-primary-strong);
+  font: 650 22px/1.1 var(--aui-font-mono);
+  letter-spacing: -0.01em;
+}
+
+.aui-usage-only-dashboard-card small {
+  color: var(--aui-fg-muted);
+  font-size: 12px;
+}
+
+.aui-usage-only-dashboard-card--full {
+  grid-column: 1 / -1;
+}
+
+.aui-usage-only-inline {
+  display: grid;
+  gap: 12px;
+}
+
+.aui-usage-only-inline-thread {
+  align-items: center;
+  background: var(--aui-bg-soft);
+  border: 1px solid var(--aui-border);
+  border-radius: 10px;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.aui-usage-only-inline-thread strong {
+  color: var(--aui-fg-strong);
+  display: block;
+  font: 650 14px/1.2 var(--aui-font);
+}
+
+.aui-usage-only-inline-thread small {
+  color: var(--aui-fg-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .aui-usage-only {
+    padding: 22px 14px 48px;
+  }
+  .aui-usage-only-header,
+  .aui-usage-only-card-row,
+  .aui-usage-only-inline-thread {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .aui-usage-only-inline-thread {
+    align-items: stretch;
+    flex-direction: column;
   }
 }
