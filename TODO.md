@@ -201,6 +201,9 @@ Acceptance:
       surface, with a strong primary Approve button and outline secondaries.
 - [x] Humanize item-kind labels (`MCP tool`, `Web search`, `Compaction`, etc.)
       so meta lines never show camelCase protocol identifiers.
+- [x] Fix mobile approval/composer horizontal clipping after the approval
+      hit-test pass, and add bounding-rect viewport guards so overflow hidden
+      cannot hide regressions from Playwright.
 
 ## Milestone 5: Skills, Apps, And agent-browser
 

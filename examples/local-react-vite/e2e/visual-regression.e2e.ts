@@ -29,6 +29,68 @@ test("matches mobile visual layout contract", async ({ page }) => {
   expect(await visualContractJson(page)).toMatchSnapshot("mobile-layout.json");
 });
 
+test("kitchen mobile keeps approval and composer surfaces inside the viewport", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/?state=kitchen");
+  await expect(page.getByTestId("agent-chat")).toBeVisible();
+  for (const selector of [
+    ".aui-thread-surface",
+    ".aui-approvals",
+    ".aui-approval",
+    ".aui-compose-panel",
+    ".aui-composer",
+    ".aui-approval-actions",
+    ".aui-approval-actions .aui-btn",
+    ".aui-run-settings-details",
+    ".aui-run-settings-details summary",
+  ]) {
+    await expectWithinViewport(page, selector);
+  }
+});
+
+for (const route of ["/", "/host-workflow-recipe"] as const) {
+  test(`${route} mobile keeps thread controls inside the viewport`, async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    await page.goto(route);
+    await expect(page.locator(".aui-thread-surface").first()).toBeVisible();
+    for (const selector of [
+      ".aui-thread-surface",
+      ".aui-approvals",
+      ".aui-approval",
+      ".aui-compose-panel",
+      ".aui-composer",
+      ".aui-approval-actions",
+      ".aui-approval-actions .aui-btn",
+      ".aui-run-settings-details",
+      ".aui-run-settings-details summary",
+    ]) {
+      await expectWithinViewport(page, selector);
+    }
+  });
+}
+
+test("fixture gallery mobile close-up stage stays inside the viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/fixture-gallery");
+  await expect(page.getByTestId("component-closeups")).toBeVisible();
+  for (const selector of [
+    ".aui-fixture-gallery",
+    '[data-testid="component-closeups"]',
+    ".aui-closeup",
+    ".aui-closeup-stage",
+    ".aui-closeup-stage .aui-composer",
+    ".aui-closeup-stage .aui-approval",
+    ".aui-closeup-stage .aui-approval-actions",
+    ".aui-closeup-stage .aui-approval-actions .aui-btn",
+    ".aui-closeup-stage .aui-run-settings-details",
+    ".aui-closeup-stage .aui-run-settings-details summary",
+  ]) {
+    await expectWithinViewport(page, selector);
+  }
+});
+
 test("component close-up gallery renders direct primitives, not iframes", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/fixture-gallery");
@@ -288,6 +350,43 @@ async function expectActuallyClickable(locator: Locator) {
   });
   expect(hitTest.clickable, JSON.stringify(hitTest)).toBe(true);
   await locator.click({ trial: true });
+}
+
+async function expectWithinViewport(page: Page, selector: string) {
+  const failures = await page.locator(selector).evaluateAll((elements, selector) => {
+    return elements.flatMap((element) => {
+      const rect = element.getBoundingClientRect();
+      const styles = getComputedStyle(element);
+      if (
+        styles.display === "none" ||
+        styles.visibility === "hidden" ||
+        rect.width === 0 ||
+        rect.height === 0
+      ) {
+        return [];
+      }
+      const viewportWidth = window.innerWidth;
+      const epsilon = 1;
+      if (
+        rect.left < -epsilon ||
+        rect.right > viewportWidth + epsilon ||
+        rect.width > viewportWidth + epsilon
+      ) {
+        return [
+          {
+            selector,
+            text: element.textContent?.trim().replace(/\s+/g, " ").slice(0, 80) ?? "",
+            left: Math.round(rect.left),
+            right: Math.round(rect.right),
+            width: Math.round(rect.width),
+            viewportWidth,
+          },
+        ];
+      }
+      return [];
+    });
+  }, selector);
+  expect(failures, JSON.stringify(failures, null, 2)).toEqual([]);
 }
 
 async function visualContract(page: Page) {

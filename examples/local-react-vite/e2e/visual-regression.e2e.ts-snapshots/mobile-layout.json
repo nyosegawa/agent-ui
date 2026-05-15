@@ -76,26 +76,26 @@
     "borderColor": "rgb(26, 25, 22) rgb(26, 25, 22) rgb(231, 228, 218)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "508.203px",
+    "gridTemplateColumns": "362px",
     "height": 98,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 536
+    "width": 390
   },
   "messageList": {
     "backgroundColor": "rgb(255, 255, 255)",
     "borderColor": "rgb(26, 25, 22)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "508.203px",
+    "gridTemplateColumns": "362px",
     "height": 0,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
     "visible": false,
-    "width": 536
+    "width": 390
   },
   "activity": {
     "backgroundColor": "rgb(255, 255, 255)",
@@ -108,7 +108,7 @@
     "overflowY": "hidden",
     "present": true,
     "visible": true,
-    "width": 486
+    "width": 340
   },
   "diffActivity": {
     "backgroundColor": "rgb(255, 255, 255)",
@@ -121,32 +121,32 @@
     "overflowY": "hidden",
     "present": true,
     "visible": true,
-    "width": 486
+    "width": 340
   },
   "approvals": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
     "borderColor": "rgb(241, 214, 163) rgb(26, 25, 22) rgb(26, 25, 22)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "512.203px",
+    "gridTemplateColumns": "366px",
     "height": 222,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
     "visible": true,
-    "width": 536
+    "width": 390
   },
   "composer": {
     "backgroundColor": "rgb(250, 249, 244)",
     "borderColor": "rgb(208, 204, 192)",
     "borderRadius": "14px",
     "display": "grid",
-    "gridTemplateColumns": "490.203px",
-    "height": 143,
+    "gridTemplateColumns": "344px",
+    "height": 158,
     "overflowX": "hidden",
     "overflowY": "hidden",
     "present": true,
     "visible": true,
-    "width": 512
+    "width": 366
   }
 }
