@@ -170,6 +170,8 @@ a dedicated layout audit gate.
 - [x] Add `AgentRunSettingsPanel` as a standalone compact primitive.
 - [x] Add `scripts/real-local-web-layout-audit.mjs` for the already-running
       real `examples/codex-local-web` port-5175 gate.
+- [x] Gate the real local web composer with viewport rect and send-button
+      hit-test checks so the transcript cannot push the composer offscreen.
 - [x] Extend the CSS duplication guard to the transcript, composer, sidebar,
       run settings, and rail selectors named in the transcript-first audit.
 

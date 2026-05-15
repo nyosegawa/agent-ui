@@ -71,7 +71,63 @@ for (const route of ["/", "/host-workflow-recipe"] as const) {
   });
 }
 
-test("fixture gallery mobile close-up stage stays inside the viewport", async ({ page }) => {
+for (const route of ["/", "/host-workflow-recipe"] as const) {
+  for (const viewport of [
+    { height: 900, name: "desktop", width: 1280 },
+    { height: 900, name: "mobile", width: 390 },
+  ] as const) {
+    test(`${route} keeps transcript, composer, approval, and run settings reachable on ${viewport.name}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize(viewport);
+      await page.goto(route);
+      await expect(page.locator(".aui-thread-surface").first()).toBeVisible();
+      for (const selector of [
+        ".aui-thread-surface",
+        ".aui-message-list",
+        ".aui-compose-panel",
+        ".aui-composer",
+        ".aui-approvals",
+        ".aui-approval-actions .aui-btn",
+        ".aui-run-settings-popover summary",
+      ]) {
+        if (route === "/host-workflow-recipe") {
+          await page.locator(selector).first().scrollIntoViewIfNeeded();
+        }
+        await expectVisibleInViewport(page, selector);
+      }
+      if (route === "/host-workflow-recipe") {
+        await page
+          .locator(".aui-composer button[aria-label='Send']")
+          .first()
+          .scrollIntoViewIfNeeded();
+      }
+      await expectActuallyHitTestable(
+        page.locator(".aui-composer button[aria-label='Send']").first(),
+      );
+      await page.locator(".aui-run-settings-popover summary").first().click();
+      if (route === "/host-workflow-recipe") {
+        await page.locator(".aui-run-settings-sheet").first().scrollIntoViewIfNeeded();
+      }
+      await expectVisibleInViewport(page, ".aui-run-settings-sheet");
+      if (route === "/host-workflow-recipe") {
+        await page.locator(".aui-composer").first().scrollIntoViewIfNeeded();
+      }
+      await expectVisibleInViewport(page, ".aui-composer");
+      if (route === "/host-workflow-recipe") {
+        await page
+          .locator(".aui-approval-actions .aui-btn")
+          .first()
+          .scrollIntoViewIfNeeded();
+      }
+      await expectVisibleInViewport(page, ".aui-approval-actions .aui-btn");
+    });
+  }
+}
+
+test("fixture gallery mobile close-up stage stays inside the viewport", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/fixture-gallery");
   await expect(page.getByTestId("component-closeups")).toBeVisible();
@@ -91,7 +147,9 @@ test("fixture gallery mobile close-up stage stays inside the viewport", async ({
   }
 });
 
-test("component close-up gallery renders direct primitives, not iframes", async ({ page }) => {
+test("component close-up gallery renders direct primitives, not iframes", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/fixture-gallery");
   const closeups = page.getByTestId("component-closeups");
@@ -118,7 +176,9 @@ test("component close-up gallery renders direct primitives, not iframes", async 
   // The "Approval · command" close-up should expose its primary Approve.
   const commandCloseup = closeups.getByTestId("closeup:Approval · command");
   await expect(
-    commandCloseup.getByRole("button", { name: /^Approve command request approval-command-kitchen$/ }),
+    commandCloseup.getByRole("button", {
+      name: /^Approve command request approval-command-kitchen$/,
+    }),
   ).toBeVisible();
   await expect(commandCloseup.locator(".aui-approval")).toHaveCount(1);
   await expect(commandCloseup.locator(".aui-approval").first()).toHaveAttribute(
@@ -136,7 +196,9 @@ test("component close-up gallery renders direct primitives, not iframes", async 
   await expect(commandBlock.locator(".aui-message-list")).toHaveCount(0);
 });
 
-test("focused composer close-up renders the real AgentComposer, not hand-written DOM", async ({ page }) => {
+test("focused composer close-up renders the real AgentComposer, not hand-written DOM", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/fixture-gallery");
   const focused = page.getByTestId("closeup:Composer · focused");
@@ -154,7 +216,9 @@ test("focused composer close-up renders the real AgentComposer, not hand-written
   await expect(composer).toHaveAttribute("data-focused", "true");
 });
 
-test("fixture-gallery places component close-ups above any iframe preview", async ({ page }) => {
+test("fixture-gallery places component close-ups above any iframe preview", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/fixture-gallery");
   await expect(page.getByTestId("component-closeups")).toBeVisible();
@@ -171,7 +235,9 @@ test("fixture-gallery places component close-ups above any iframe preview", asyn
   expect(closeupTop).toBeLessThan(900 * 2);
 });
 
-test("fixture-gallery places component close-ups near the top of the mobile viewport", async ({ page }) => {
+test("fixture-gallery places component close-ups near the top of the mobile viewport", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/fixture-gallery");
   await expect(page.getByTestId("component-closeups")).toBeVisible();
@@ -182,7 +248,9 @@ test("fixture-gallery places component close-ups near the top of the mobile view
   expect(closeupTop).toBeLessThan(900 * 3);
 });
 
-test("composer is a single bordered card with inline icon toolbar and primary send", async ({ page }) => {
+test("composer is a single bordered card with inline icon toolbar and primary send", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/?state=kitchen");
   const closeups = page.getByTestId("agent-chat");
@@ -191,13 +259,17 @@ test("composer is a single bordered card with inline icon toolbar and primary se
   const composer = page.locator(".aui-composer").first();
   await expect(composer).toBeVisible();
   await expect(composer).toHaveAttribute("data-disabled", "true");
-  await expect(composer.locator(".aui-composer-notice")).toContainText("pending approval");
+  await expect(composer.locator(".aui-composer-notice")).toContainText(
+    "pending approval",
+  );
   // Send button is icon-only and currently disabled.
   const send = composer.getByRole("button", { name: "Send" });
   await expect(send).toBeDisabled();
 });
 
-test("composer is the primary, bordered card with App / Plugin mention buttons", async ({ page }) => {
+test("composer is the primary, bordered card with App / Plugin mention buttons", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/fixture-gallery");
   // The close-up "Composer · normal" stage renders a live, enabled composer.
@@ -210,7 +282,9 @@ test("composer is the primary, bordered card with App / Plugin mention buttons",
   await expect(composer.getByRole("button", { name: "Send" })).toBeVisible();
 });
 
-test("approval card renders shield + risk + green Approve + danger Decline", async ({ page }) => {
+test("approval card renders shield + risk + green Approve + danger Decline", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/?state=kitchen");
   const approval = page.locator(".aui-approval").first();
@@ -229,7 +303,9 @@ for (const viewport of [
   { height: 900, name: "desktop", width: 1280 },
   { height: 900, name: "mobile", width: 390 },
 ] as const) {
-  test(`kitchen approval actions are actually clickable on ${viewport.name}`, async ({ page }) => {
+  test(`kitchen approval actions are actually clickable on ${viewport.name}`, async ({
+    page,
+  }) => {
     await page.setViewportSize(viewport);
     await page.goto("/?state=kitchen");
     const approval = page.locator(".aui-approval").first();
@@ -239,7 +315,9 @@ for (const viewport of [
     }
   });
 
-  test(`default approval primary action is actually clickable on ${viewport.name}`, async ({ page }) => {
+  test(`default approval primary action is actually clickable on ${viewport.name}`, async ({
+    page,
+  }) => {
     await page.setViewportSize(viewport);
     await page.goto("/");
     const approval = page.locator(".aui-approval").first();
@@ -264,7 +342,9 @@ for (const viewport of [
   });
 }
 
-test("usage-only page demonstrates four host shells, not a blank page", async ({ page }) => {
+test("usage-only page demonstrates four host shells, not a blank page", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/usage-only");
   for (const heading of [
@@ -287,10 +367,14 @@ test("usage-only page demonstrates four host shells, not a blank page", async ({
   expect(summaryTop).toBeLessThan(900);
 });
 
-test("usage-only mobile keeps content stacked instead of leaving whitespace", async ({ page }) => {
+test("usage-only mobile keeps content stacked instead of leaving whitespace", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/usage-only");
-  await expect(page.getByRole("heading", { name: "Standalone quota panel" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Standalone quota panel" }),
+  ).toBeVisible();
   const sections = page.locator(".aui-usage-only-section");
   expect(await sections.count()).toBe(4);
 });
@@ -298,11 +382,15 @@ test("usage-only mobile keeps content stacked instead of leaving whitespace", as
 test("host workflow recipe never duplicates the status summary", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/host-workflow-recipe");
-  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Verify Codex local build" }),
+  ).toBeVisible();
   await expect(page.locator('[aria-label="Status summary"]')).toHaveCount(1);
 });
 
-test("mobile composer keeps tap targets above 32px and hides keyboard hint", async ({ page }) => {
+test("mobile composer keeps tap targets above 32px and hides keyboard hint", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/");
   const composer = page.locator(".aui-composer").first();
@@ -352,6 +440,29 @@ async function expectActuallyClickable(locator: Locator) {
   await locator.click({ trial: true });
 }
 
+async function expectActuallyHitTestable(locator: Locator) {
+  await expect(locator).toBeVisible();
+  const hitTest = await locator.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const hit = document.elementFromPoint(x, y);
+    return {
+      clickable: hit === element || element.contains(hit),
+      hitClass: hit instanceof HTMLElement ? hit.className : null,
+      hitTag: hit?.tagName ?? null,
+      rect: {
+        bottom: Math.round(rect.bottom),
+        height: Math.round(rect.height),
+        left: Math.round(rect.left),
+        top: Math.round(rect.top),
+        width: Math.round(rect.width),
+      },
+    };
+  });
+  expect(hitTest.clickable, JSON.stringify(hitTest)).toBe(true);
+}
+
 async function expectWithinViewport(page: Page, selector: string) {
   const failures = await page.locator(selector).evaluateAll((elements, selector) => {
     return elements.flatMap((element) => {
@@ -387,6 +498,39 @@ async function expectWithinViewport(page: Page, selector: string) {
     });
   }, selector);
   expect(failures, JSON.stringify(failures, null, 2)).toEqual([]);
+}
+
+async function expectVisibleInViewport(page: Page, selector: string) {
+  const result = await page
+    .locator(selector)
+    .first()
+    .evaluate((element, selector) => {
+      const rect = element.getBoundingClientRect();
+      const visible =
+        rect.width > 0 &&
+        rect.height > 0 &&
+        rect.right > 0 &&
+        rect.left < window.innerWidth &&
+        rect.bottom > 0 &&
+        rect.top < window.innerHeight;
+      return {
+        selector,
+        visible,
+        rect: {
+          bottom: Math.round(rect.bottom),
+          height: Math.round(rect.height),
+          left: Math.round(rect.left),
+          right: Math.round(rect.right),
+          top: Math.round(rect.top),
+          width: Math.round(rect.width),
+        },
+        viewport: {
+          height: window.innerHeight,
+          width: window.innerWidth,
+        },
+      };
+    }, selector);
+  expect(result.visible, JSON.stringify(result)).toBe(true);
 }
 
 async function visualContract(page: Page) {

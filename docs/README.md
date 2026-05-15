@@ -39,7 +39,8 @@ those files.
 bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 ```
 
-Manual real-local layout audit:
+Manual real-local layout audit. Start the port-5175 server first; the audit
+script checks the already-running page and does not start the example server.
 
 ```sh
 AGENT_UI_PORT=5175 AGENT_UI_HOST=127.0.0.1 \

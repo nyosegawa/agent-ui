@@ -90,11 +90,11 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "362px",
-    "height": 0,
+    "height": 36,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
-    "visible": false,
+    "visible": true,
     "width": 390
   },
   "activity": {
@@ -129,7 +129,7 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "366px",
-    "height": 222,
+    "height": 191,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,

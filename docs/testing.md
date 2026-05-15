@@ -687,12 +687,18 @@ desktop 1280x900 and mobile 390x900. Checked routes:
 - `http://127.0.0.1:5174/usage-only`
 - `http://127.0.0.1:5175/`
 
-The DOM audit checked both document scroll width and bounding rects for the
+The DOM audit checks both document scroll width and bounding rects for the
 message list, turns, messages, transcript cards, command output, diff viewer,
 thread header, sidebar rows, sidebar meta, composer, and run settings surface.
-No horizontal overflow offenders were found on the checked desktop or mobile
-viewports. The audit also verified that legacy work/trace classes and labels
-are absent from the rendered DOM.
+It is intentionally a manual gate over an already-running port-5175
+`examples/codex-local-web` server; the script does not start that server.
+The audit fails if the thread surface, message list, compose panel, composer,
+sidebar, thread list, run-settings summary, or open run-settings sheet is
+outside the viewport. It also hit-tests the Send button center point, including
+the disabled waiting-for-input state, so an overlaid or offscreen composer is a
+hard failure. No horizontal overflow offenders were found on the checked
+desktop or mobile viewports. The audit also verified that legacy work/trace
+classes and labels are absent from the rendered DOM.
 
 ## Visual Regression
 

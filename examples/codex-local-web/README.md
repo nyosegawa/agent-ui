@@ -16,7 +16,8 @@ bun run --filter @nyosegawa/agent-ui-example-codex-local-web dev
 bun run test:e2e:playwright
 ```
 
-Manual real-local layout gate:
+Manual real-local layout gate. Start this example on port 5175 first; the
+audit script checks the already-running page and does not start the server:
 
 ```bash
 AGENT_UI_PORT=5175 \

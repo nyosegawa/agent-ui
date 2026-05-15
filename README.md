@@ -119,7 +119,8 @@ Then open the printed `http://127.0.0.1:5174` URL. The app starts a local Codex 
 
 For the real local layout gate used during release work, start the app on the
 canonical audit port and run the browser audit against the already-running
-server:
+server. `bun run test:e2e:real-local-web-layout` only audits the running page;
+it does not start `examples/codex-local-web`.
 
 ```sh
 AGENT_UI_PORT=5175 \
