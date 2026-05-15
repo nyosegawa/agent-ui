@@ -653,6 +653,38 @@ describe("AgentChat", () => {
     expect(prompt).not.toHaveBeenCalled();
   });
 
+  it("handles rejected composer mention resolvers without adding attachments", async () => {
+    const user = userEvent.setup();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-compose-reject";
+    initialState.threads["thread-compose-reject"] = {
+      orderedTurnIds: [],
+      status: "loaded",
+      thread: { id: "thread-compose-reject", name: "Composer" },
+      turns: {},
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          onRequestAppMention={() => Promise.reject(new Error("resolver failed"))}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "App" }));
+
+    expect(screen.queryByLabelText("Pending attachments")).not.toBeInTheDocument();
+    expect(warn).toHaveBeenCalledWith(
+      "AgentComposer app mention resolver failed",
+      expect.any(Error),
+    );
+    warn.mockRestore();
+  });
+
   it("renders image attachments with the image icon, not the @ icon", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();

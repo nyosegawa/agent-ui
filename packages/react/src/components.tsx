@@ -834,7 +834,13 @@ export function AgentComposer({
     async (kind: "app" | "plugin") => {
       const resolver = kind === "app" ? onRequestAppMention : onRequestPluginMention;
       if (!resolver) return;
-      const result = await Promise.resolve(resolver());
+      let result: AgentComposerMentionAttachment | null | undefined;
+      try {
+        result = await Promise.resolve(resolver());
+      } catch (error) {
+        console.warn(`AgentComposer ${kind} mention resolver failed`, error);
+        return;
+      }
       if (!result) return;
       const label = result.label?.trim();
       const value = result.value?.trim();

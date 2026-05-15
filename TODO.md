@@ -434,3 +434,36 @@ Acceptance:
       APIs reappeared in `packages/`, `docs/`, or `examples/`.
 - [x] `app/list` is still framed as Codex Apps/connectors, not as
       skill-with-app surface.
+
+## Milestone 12: Approval Hit-Testing And Gallery Truthfulness
+
+Reopened on 2026-05-15 after review found that visible approval actions in
+`/?state=kitchen` were not actually clickable because composer/sidebar chrome
+could cover their center points.
+
+- [x] Make pending approval layouts reserve real pointer space above composer
+      chrome on desktop and mobile instead of relying on visibility alone.
+- [x] Add Playwright hit-test guards using `document.elementFromPoint()` and
+      `locator.click({ trial: true })` for approval actions on `/`,
+      `/?state=kitchen`, and `/host-workflow-recipe` at desktop and mobile
+      sizes.
+- [x] Keep `/fixture-gallery` close-up titles aligned with their rendered
+      content: command and user-input approval close-ups show one approval
+      each, and `Command block` shows the isolated command surface rather than
+      a full timeline.
+- [x] Handle rejected composer App / Plugin mention resolvers without
+      unhandled promise rejections and without adding attachments.
+- [x] Refresh docs screenshots after the approval layout and fixture-gallery
+      changes.
+- [x] Re-run the full validation ladder and browser QA for `/`,
+      `/?state=kitchen`, `/host-workflow-recipe`, `/usage-only`, and
+      `/fixture-gallery`.
+
+Acceptance:
+
+- [x] Approval action center points hit the intended button or its child for
+      `Approve`, `Approve for session`, and `Decline` in the kitchen and
+      host-workflow surfaces on desktop and mobile.
+- [x] No `globalThis.prompt()` composer mention flow, `IconAt` image
+      attachment, skill-with-app-specific API, or non-Apps/connectors framing
+      for `app/list` has returned.

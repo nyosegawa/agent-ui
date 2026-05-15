@@ -162,8 +162,23 @@ async function usableMessageTimeline(page: Page) {
     const messages = document.querySelector(".aui-message-list")?.getBoundingClientRect();
     const composer = document.querySelector(".aui-composer")?.getBoundingClientRect();
     if (!messages || !composer) return false;
+    const approvals = document.querySelector(".aui-approvals");
+    if (approvals) {
+      const approvalButton = approvals.querySelector("button");
+      if (!approvalButton) return false;
+      const rect = approvalButton.getBoundingClientRect();
+      const hit = document.elementFromPoint(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+      );
+      return (
+        (hit === approvalButton || approvalButton.contains(hit)) &&
+        composer.height >= 80 &&
+        composer.top < window.innerHeight
+      );
+    }
     return (
-      messages.height >= 150 &&
+      messages.height >= 64 &&
       composer.height >= 80 &&
       composer.top < window.innerHeight
     );

@@ -533,7 +533,10 @@ function CloseupUsagePanel() {
 }
 
 function CloseupApprovalCommand() {
-  const initialState = useMemo(() => createKitchenInitialState(), []);
+  const initialState = useMemo(
+    () => createSingleApprovalState("approval-command-kitchen"),
+    [],
+  );
   return (
     <CloseupFrame
       title="Approval · command"
@@ -547,41 +550,17 @@ function CloseupApprovalCommand() {
 }
 
 function CloseupApprovalUserInput() {
-  const initialState = useMemo(() => {
-    const state = createInitialAgentState();
-    state.activeThreadId = "thread-user-input";
-    state.threadRegistry.activeThreadId = "thread-user-input";
-    state.threadRegistry.liveThreadIds = ["thread-user-input"];
-    state.threads["thread-user-input"] = {
-      orderedTurnIds: [],
-      registryStatus: "live",
-      status: "waitingForInput",
-      thread: { id: "thread-user-input", name: "User input close-up" },
-      turns: {},
-    };
-    state.pendingServerRequests = {
-      "approval-user-input-closeup": {
-        id: "approval-user-input-closeup",
-        kind: "userInput",
-        payload: {
-          prompt: "Which workspace folder should Codex inspect first?",
-        },
-        threadId: "thread-user-input",
-      },
-    };
-    state.serverRequestQueue = {
-      byId: state.pendingServerRequests,
-      order: ["approval-user-input-closeup"],
-    };
-    return state;
-  }, []);
+  const initialState = useMemo(
+    () => createSingleApprovalState("approval-input-kitchen"),
+    [],
+  );
   return (
     <CloseupFrame
       title="Approval · user input"
       caption="Low risk, neutral framing, three explicit decisions."
     >
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentApprovalQueue threadId="thread-user-input" />
+        <AgentApprovalQueue threadId="thread-kitchen" />
       </AgentProvider>
     </CloseupFrame>
   );
@@ -603,9 +582,31 @@ function CloseupCommandBlock() {
 }
 
 function CloseupCommandStage() {
-  const { thread } = useAgentThread();
-  if (!thread) return null;
-  return <AgentThreadTimeline thread={thread} />;
+  return (
+    <details className="aui-activity-card aui-command-card" data-status="completed" open>
+      <summary>
+        <span className="aui-terminal-label">Command</span>
+        <span className="aui-command-title">bun run test:e2e:playwright</span>
+        <span className="aui-command-meta">exit 0 · 8.4s</span>
+        <span className="aui-command-preview">
+          /Users/sakasegawa/src/github.com/nyosegawa/agent-ui
+        </span>
+      </summary>
+      <pre className="aui-command-output">9 passed{"\n"}</pre>
+    </details>
+  );
+}
+
+function createSingleApprovalState(id: string): AgentSessionState {
+  const state = createKitchenInitialState();
+  const request = state.pendingServerRequests[id];
+  if (!request) return state;
+  state.pendingServerRequests = { [id]: request };
+  state.serverRequestQueue = {
+    byId: state.pendingServerRequests,
+    order: [id],
+  };
+  return state;
 }
 
 function CloseupDiffBlock() {

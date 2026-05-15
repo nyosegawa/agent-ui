@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 const selectors = [
   ["shell", ".aui-shell"],
@@ -58,6 +58,20 @@ test("component close-up gallery renders direct primitives, not iframes", async 
   await expect(
     commandCloseup.getByRole("button", { name: /^Approve command request approval-command-kitchen$/ }),
   ).toBeVisible();
+  await expect(commandCloseup.locator(".aui-approval")).toHaveCount(1);
+  await expect(commandCloseup.locator(".aui-approval").first()).toHaveAttribute(
+    "data-kind",
+    "commandApproval",
+  );
+  const userInputCloseup = closeups.getByTestId("closeup:Approval · user input");
+  await expect(userInputCloseup.locator(".aui-approval")).toHaveCount(1);
+  await expect(userInputCloseup.locator(".aui-approval").first()).toHaveAttribute(
+    "data-kind",
+    "userInput",
+  );
+  const commandBlock = closeups.getByTestId("closeup:Command block");
+  await expect(commandBlock.locator(".aui-activity-card")).toHaveCount(1);
+  await expect(commandBlock.locator(".aui-message-list")).toHaveCount(0);
 });
 
 test("focused composer close-up renders the real AgentComposer, not hand-written DOM", async ({ page }) => {
@@ -149,6 +163,45 @@ test("approval card renders shield + risk + green Approve + danger Decline", asy
   await expect(approval.getByRole("button", { name: /^Decline / })).toBeVisible();
 });
 
+for (const viewport of [
+  { height: 900, name: "desktop", width: 1280 },
+  { height: 900, name: "mobile", width: 390 },
+] as const) {
+  test(`kitchen approval actions are actually clickable on ${viewport.name}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/?state=kitchen");
+    const approval = page.locator(".aui-approval").first();
+    await expect(approval).toBeVisible();
+    for (const button of firstApprovalActionButtons(approval)) {
+      await expectActuallyClickable(button);
+    }
+  });
+
+  test(`default approval primary action is actually clickable on ${viewport.name}`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/");
+    const approval = page.locator(".aui-approval").first();
+    await expect(approval).toBeVisible();
+    await expectActuallyClickable(
+      approval.getByRole("button", { name: /^Approve / }).first(),
+    );
+  });
+
+  test(`host workflow approval actions are actually clickable after natural scroll on ${viewport.name}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/host-workflow-recipe");
+    const approval = page.locator(".aui-host-thread .aui-approval").first();
+    await approval.scrollIntoViewIfNeeded();
+    await expect(approval).toBeVisible();
+    for (const button of firstApprovalActionButtons(approval)) {
+      await button.scrollIntoViewIfNeeded();
+      await expectActuallyClickable(button);
+    }
+  });
+}
+
 test("usage-only page demonstrates four host shells, not a blank page", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/usage-only");
@@ -202,6 +255,39 @@ test("mobile composer keeps tap targets above 32px and hides keyboard hint", asy
 
 async function visualContractJson(page: Page) {
   return `${JSON.stringify(await visualContract(page), null, 2)}\n`;
+}
+
+function firstApprovalActionButtons(approval: Locator) {
+  return [
+    approval.getByRole("button", { name: /^Approve [a-z -]+request [a-z0-9-]+$/ }),
+    approval.getByRole("button", { name: /for session$/ }),
+    approval.getByRole("button", { name: /^Decline / }),
+  ];
+}
+
+async function expectActuallyClickable(locator: Locator) {
+  await expect(locator).toBeVisible();
+  const hitTest = await locator.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const hit = document.elementFromPoint(x, y);
+    return {
+      clickable: hit === element || element.contains(hit),
+      hitClass: hit instanceof HTMLElement ? hit.className : null,
+      hitTag: hit?.tagName ?? null,
+      hitText: hit?.textContent?.trim().slice(0, 80) ?? null,
+      rect: {
+        bottom: Math.round(rect.bottom),
+        height: Math.round(rect.height),
+        left: Math.round(rect.left),
+        top: Math.round(rect.top),
+        width: Math.round(rect.width),
+      },
+    };
+  });
+  expect(hitTest.clickable, JSON.stringify(hitTest)).toBe(true);
+  await locator.click({ trial: true });
 }
 
 async function visualContract(page: Page) {

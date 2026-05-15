@@ -294,11 +294,19 @@
   background: var(--aui-panel);
   display: grid;
   flex: 1 1 auto;
-  grid-template-rows: auto auto minmax(220px, 1fr) auto auto;
+  grid-template-rows: auto auto minmax(0, 1fr) minmax(0, auto) auto;
   height: 100%;
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+}
+
+.aui-thread-surface:has(.aui-approvals) {
+  grid-template-rows: auto auto auto minmax(0, auto) auto;
+}
+
+.aui-thread-surface:has(.aui-approvals) .aui-message-list {
+  height: 160px;
 }
 
 /* --- Status bar ----------------------------------------------------- */
@@ -516,7 +524,7 @@
   gap: 18px;
   list-style: none;
   margin: 0;
-  min-height: 220px;
+  min-height: 0;
   overflow: auto;
   overscroll-behavior: contain;
   padding: 18px 22px 28px;
@@ -3323,13 +3331,12 @@
   border-top: 1px solid #f1d6a3;
   display: grid;
   gap: 12px;
-  /* Cap the stack height so multiple pending approvals do not push the
-   * composer off-screen. The container scrolls internally when more than ~2
-   * cards stack, but each card's actions stay reachable because the first
-   * card always shows its full action row before scroll begins. */
-  max-height: min(50vh, 480px);
+  max-height: min(42vh, 380px);
+  min-height: 0;
   overflow: auto;
+  overscroll-behavior: contain;
   padding: 14px 20px 16px;
+  scroll-padding: 14px 20px 16px;
 }
 
 .aui-approval {
@@ -4004,13 +4011,26 @@
     display: none;
   }
   .aui-approvals {
+    max-height: min(46vh, 420px);
     padding: 12px 12px;
+  }
+  .aui-thread-surface:has(.aui-approvals) {
+    grid-template-rows: auto auto auto minmax(0, auto) auto;
+  }
+  .aui-thread-surface:has(.aui-approvals) .aui-message-list {
+    height: 0;
+    padding-bottom: 0;
+    padding-top: 0;
   }
   .aui-approval {
     padding: 14px 14px 12px;
   }
+  .aui-approval-summary {
+    order: 2;
+  }
   .aui-approval-actions {
     gap: 6px;
+    order: 1;
   }
   .aui-approval-actions .aui-btn {
     flex: 1 1 100%;
