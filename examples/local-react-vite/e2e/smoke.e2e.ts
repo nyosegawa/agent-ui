@@ -10,8 +10,8 @@ test("renders Agent UI chat", async ({ page }) => {
   await expect(page.getByLabel("Diff preview")).toContainText("AgentDiffPanel");
   await expect(page.getByRole("button", { name: "Approve" }).first()).toBeVisible();
   // Run settings live behind a summary chip inside the composer.
-  await expect(page.locator(".aui-run-settings-details summary")).toContainText("Run settings");
-  await page.locator(".aui-run-settings-details summary").click();
+  await expect(page.locator(".aui-run-settings-popover summary")).toContainText("Run settings");
+  await page.locator(".aui-run-settings-popover summary").click();
   await expect(page.getByLabel("Run settings")).toContainText("Execution mode");
   await expect(page.getByLabel("Usage limits")).toContainText(
     "fixture-demo-model weekly",
@@ -26,7 +26,7 @@ test("renders Agent UI chat", async ({ page }) => {
   await page.getByRole("button", { name: "Resume" }).click();
   await expect(page.locator(".aui-status-pill")).toContainText("Ready");
   // Re-open run settings to verify the resumed run-settings restoration.
-  await page.locator(".aui-run-settings-details").first().evaluate((element) => {
+  await page.locator(".aui-run-settings-popover").first().evaluate((element) => {
     (element as HTMLDetailsElement).open = true;
   });
   await expect(page.getByLabel("Run settings")).toBeVisible();
@@ -38,26 +38,18 @@ test("renders Agent UI chat", async ({ page }) => {
     "aria-pressed",
     "true",
   );
-  const metrics = await page.evaluate(() => ({
-    clientWidth: document.documentElement.clientWidth,
-    scrollWidth: document.documentElement.scrollWidth,
-  }));
-  expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
   await expect(headerDoesNotOverlapTimeline(page)).resolves.toBe(true);
 });
 
 test("does not overflow on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/");
-  await expect(page.locator(".aui-run-settings-details summary").first()).toContainText(
+  await expect(page.locator(".aui-run-settings-popover summary").first()).toContainText(
     "Run settings",
   );
   await expect(page.getByLabel("Run settings")).not.toBeVisible();
-  const metrics = await page.evaluate(() => ({
-    clientWidth: document.documentElement.clientWidth,
-    scrollWidth: document.documentElement.scrollWidth,
-  }));
-  expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
   await expect(headerDoesNotOverlapTimeline(page)).resolves.toBe(true);
 });
 
@@ -68,6 +60,38 @@ async function headerDoesNotOverlapTimeline(page: Page) {
     const messages = document.querySelector(".aui-message-list")?.getBoundingClientRect();
     if (!header || !actions || !messages) return false;
     return actions.bottom <= header.bottom && header.bottom <= messages.top;
+  });
+}
+
+async function horizontalOverflowOffenders(page: Page) {
+  return page.evaluate(() => {
+    const offenders: string[] = [];
+    if (document.documentElement.scrollWidth > document.documentElement.clientWidth) {
+      offenders.push("document");
+    }
+    const selectors = [
+      ".aui-message-list",
+      ".aui-turn",
+      ".aui-message",
+      ".aui-markdown",
+      ".aui-command-output",
+      ".aui-diff",
+      ".aui-thread-title",
+      ".aui-thread-list-item",
+      ".aui-thread-list-meta",
+      ".aui-run-settings-popover",
+      ".aui-composer",
+    ];
+    const viewportRight = window.innerWidth + 0.5;
+    for (const selector of selectors) {
+      for (const element of document.querySelectorAll(selector)) {
+        const rect = element.getBoundingClientRect();
+        if (rect.left < -0.5 || rect.right > viewportRight) {
+          offenders.push(`${selector}:${Math.round(rect.left)}:${Math.round(rect.right)}`);
+        }
+      }
+    }
+    return offenders;
   });
 }
 

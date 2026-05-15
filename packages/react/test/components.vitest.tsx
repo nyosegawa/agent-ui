@@ -1389,7 +1389,7 @@ describe("AgentChat", () => {
     expect(screen.queryByText("inProgress")).not.toBeInTheDocument();
   });
 
-  it("keeps large historical command output inside a per-turn work trace", () => {
+  it("keeps large historical command output inline in transcript order", () => {
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-history";
     const itemOrder = Array.from({ length: 80 }, (_, index) => `command-${index}`);
@@ -1430,14 +1430,13 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(
-      screen.getByText("72 older work steps collapsed in this turn"),
-    ).toBeInTheDocument();
-    expect(screen.getByLabelText("Work trace")).toHaveTextContent("80 commands");
+    expect(screen.queryByText(/older work steps collapsed/)).not.toBeInTheDocument();
+    expect(document.querySelector("[class*=work][class*=trace]")).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText("Command output")).toHaveLength(80);
+    expect(screen.getByText("echo 0")).toBeInTheDocument();
     expect(screen.getByText("echo 79")).toBeInTheDocument();
     expect(screen.getAllByText("output 79")).toHaveLength(2);
     expect(document.querySelector(".aui-worklog")).not.toBeInTheDocument();
-    expect(screen.queryByText("echo 0")).not.toBeInTheDocument();
   });
 
   it("renders the fixture UI and resolves file-change approvals", async () => {
@@ -1457,11 +1456,15 @@ describe("AgentChat", () => {
     ).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Threads" })).toBeInTheDocument();
     expect(screen.getByText("Protocol docs update")).toBeInTheDocument();
-    expect(screen.getByLabelText("Work trace")).toHaveTextContent(
-      "1 command, 1 file change",
-    );
+    expect(document.querySelector("[class*=work][class*=trace]")).not.toBeInTheDocument();
     expect(screen.getByLabelText("Command output")).toHaveTextContent("7 tests passed");
     expect(screen.getByLabelText("Diff preview")).toHaveTextContent("AgentDiffPanel");
+    expect(
+      screen
+        .getByLabelText("Command output")
+        .compareDocumentPosition(screen.getByLabelText("Diff preview")) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
     expect(screen.getAllByLabelText("CodeMirror patch viewer").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Run settings")).toHaveTextContent("Execution mode");
     expect(screen.getByLabelText("Usage limits")).toHaveTextContent(
@@ -2329,7 +2332,7 @@ describe("AgentChat", () => {
     expect(await screen.findByText(/1 thread loaded · more available/)).toBeInTheDocument();
     const feedback = container.querySelector(".aui-history-feedback");
     expect(feedback).toContainElement(screen.getByText(/1 thread loaded/));
-    expect(feedback).toContainElement(screen.getByRole("button", { name: "Load more" }));
+    expect(feedback).not.toContainElement(screen.getByRole("button", { name: "Load more" }));
     expect(screen.getByRole("navigation", { name: "Threads" })).not.toBe(feedback);
     await user.click(screen.getByRole("button", { name: "Load more" }));
 
@@ -2346,7 +2349,7 @@ describe("AgentChat", () => {
     ).toBeTruthy();
   });
 
-  it("loads all stored thread pages until the cursor is exhausted", async () => {
+  it("does not expose bulk pagination in the default thread sidebar", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
       onRequest(request) {
@@ -2358,7 +2361,7 @@ describe("AgentChat", () => {
               {
                 cwd: "/Users/example/page-two",
                 id: "thread-load-all-2",
-                name: "Load all page two",
+                name: "Page two",
                 status: { type: "notLoaded" },
               },
             ],
@@ -2371,7 +2374,7 @@ describe("AgentChat", () => {
               {
                 cwd: "/Users/example/page-three",
                 id: "thread-load-all-3",
-                name: "Load all page three",
+                name: "Page three",
                 status: { type: "notLoaded" },
               },
             ],
@@ -2383,7 +2386,7 @@ describe("AgentChat", () => {
             {
               cwd: "/Users/example/page-one",
               id: "thread-load-all-1",
-              name: "Load all page one",
+              name: "Page one",
               status: { type: "notLoaded" },
             },
           ],
@@ -2398,11 +2401,13 @@ describe("AgentChat", () => {
     );
 
     await user.click(await screen.findByRole("button", { name: "Load" }));
-    await user.click(await screen.findByRole("button", { name: "Load all" }));
+    expect(screen.queryByRole("button", { name: /Load\s+all/ })).not.toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: "Load more" }));
+    await user.click(await screen.findByRole("button", { name: "Load more" }));
 
-    expect(await screen.findByText("Load all page three")).toBeInTheDocument();
+    expect(await screen.findByText("Page three")).toBeInTheDocument();
     expect(screen.getByText(/3 threads loaded · all loaded/)).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Load all" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Load\s+all/ })).not.toBeInTheDocument();
     expect(
       transport.requests.filter((request) => request.method === "thread/list").length,
     ).toBeGreaterThanOrEqual(3);

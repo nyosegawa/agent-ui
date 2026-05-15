@@ -36,7 +36,7 @@ The default components use `--aui-*` tokens for surfaces, borders, text, accents
 host layouts:
 
 - optional sidebar thread list
-- main thread header, conversation timeline, per-turn Work traces for command/diff activity, approvals, composer
+- main thread header, transcript timeline with inline command/diff/tool items, approvals, composer
 - optional standalone usage, diagnostics, skills, apps, or workspace panels
 - CodeMirror diff surfaces inherit `--aui-code-bg`, `--aui-code-fg`, and the package monospace stack
 

@@ -120,8 +120,8 @@ Component tests:
 - show pending approval
 - approve/reject server requests
 - render command output
-- keep command output and file-change diffs in per-turn Work traces rather than detached panels
-- keep very large persisted command-output histories collapsed to recent Work trace activity
+- keep command output and file-change diffs inline with the surrounding transcript items rather than detached panels
+- keep very large persisted command-output histories scroll-contained without reclassifying them into UI-owned activity groups
 - keep long persisted messages behind a preview/expand affordance
 - render structured App Server message content arrays as readable text
 - show completed message status after real thread completion and hydrated history reads
@@ -132,7 +132,7 @@ Component tests:
 - keep narrow-width usage collapsed into an expandable summary so the chat history remains the primary scroll surface
 - collapse and expand the history sidebar through accessible controls
 - preserve working directory from `cwd` in `thread/list`, `thread/read`, `thread/resume`, and `thread/start` responses while hiding internal `.codex/sessions/*.jsonl` paths
-- show compact cwd context in stored-history rows and follow paginated `thread/list` cursors through the `Load all` history action
+- show compact cwd context in stored-history rows and follow paginated `thread/list` cursors through infinite scroll plus the fallback Load more action
 - keep history loading/count/pagination feedback outside the thread-list scroll container so real large histories do not rely on implicit grid rows
 - keep App Server plugin manifest warnings in diagnostics instead of the primary chat flow
 - suppress known low-value Codex plugin `interface.defaultPrompt` warnings from visible diagnostics
@@ -270,7 +270,7 @@ Latest manual real smoke:
 - Playwright starts fresh local preview/dev servers for the fixture and real-local browser targets instead of reusing an existing `4173` or `4174` process. This avoids stale bridge/session state from hiding real regressions or creating local-only hangs after a failed run. If a local manual dev server is left behind, kill the orphan `examples/codex-local-web` process before re-running the smoke.
 - Do not run `bun run build` concurrently with `bun run test:e2e:playwright`. The browser smoke previews built `dist` output; a simultaneous workspace build can clean or replace that output while Playwright is waiting on the first page. The full sweep should run build first, then Playwright.
 - `examples/codex-local-web` disables Vite HMR in its custom middleware server. The production-like local bridge path needs a stable same-origin WebSocket endpoint for `/agent-ui/ws`; a separate dev HMR websocket is not part of the product path and can make browser automation noisy.
-- Real local UI screen check after Work trace and history hardening: in the in-app browser at `http://127.0.0.1:5174/`, an authenticated real session loaded account, usage, and stored threads; the latest stored session auto-previewed in the main pane; narrow-width layout showed the chat pane before the thread history; command/file-change activity was grouped into per-turn Work traces instead of a detached terminal shelf.
+- Real local UI screen check after transcript and history hardening: in the in-app browser at `http://127.0.0.1:5174/`, an authenticated real session loaded account, usage, and stored threads; the latest stored session auto-previewed in the main pane; narrow-width layout showed the chat pane before the thread history; command/file-change items stayed inline with the transcript instead of a detached terminal shelf.
 
 The history and usage smoke path has also been verified against `codex app-server --listen stdio://`:
 
@@ -284,7 +284,7 @@ The history and usage smoke path has also been verified against `codex app-serve
 - `examples/codex-local-web` real payload and layout audit on 2026-05-10: `thread/list` and `thread/read` returned internal JSONL session `path` plus real project `cwd`; Agent UI now normalizes `cwd` as the user-facing working directory and keeps the internal session path out of subtitles and cwd suggestions. Narrow browser inspection found that always-expanded usage and run controls could crush the message timeline, so mobile/narrow layouts now show compact expandable summaries. The grid rows for status, diagnostics, usage, thread header, timeline, approvals, and composer are explicitly assigned so optional diagnostics or approvals cannot shift the composer into the timeline row.
 - `examples/codex-local-web` real browser turn check on 2026-05-10 after preview/readiness hardening: a headless browser opened `http://127.0.0.1:5174/`, started a new real thread, observed the thread as `Ready`, sent `Reply with exactly: agent-ui-browser-final-check-6`, observed the assistant message `agent-ui-browser-final-check-6`, saw the thread leave `Running` as `Complete`, and verified no horizontal overflow with the composer still visible and enabled.
 - `examples/codex-local-web` real browser continuation check on 2026-05-10: a headless browser opened `http://127.0.0.1:5174/`, started a new real thread, sent `Reply with exactly: agent-ui-second-turn-one`, waited for completion, then sent `Reply with exactly: agent-ui-second-turn-two` in the same thread. The app showed the second assistant message, left `Running` as `Complete`, kept the composer enabled, and kept horizontal overflow at 0.
-- `examples/codex-local-web` real history exhaustion check on 2026-05-10: a headless browser opened `http://127.0.0.1:5174/`, clicked `Load all`, followed real `thread/list` cursors from 25 visible rows to 684 rows, reached `684 threads loaded · all loaded`, removed `Load more` / `Load all`, and kept the narrow layout free of horizontal overflow.
+- `examples/codex-local-web` real history exhaustion check on 2026-05-10: a headless browser opened `http://127.0.0.1:5174/`, followed real `thread/list` cursors from 25 visible rows to 684 rows, reached `684 threads loaded · all loaded`, removed the fallback pagination control, and kept the narrow layout free of horizontal overflow.
 - `examples/local-react-vite` agent-browser check on 2026-05-14: after
   reading `agent-browser skills get core`, a dev server ran at
   `http://127.0.0.1:5174/`; `agent-browser open`, `agent-browser snapshot -i`,
@@ -383,7 +383,7 @@ The history and usage smoke path has also been verified against `codex app-serve
     - `docs/screenshots/agent-ui-app-connectors-desktop.png`
     - `docs/screenshots/agent-ui-app-connectors-mobile.png`
     - `docs/screenshots/agent-ui-fixture-gallery-desktop.png`
-  - Results: `AgentChat` now renders the thread/timeline/work trace as the
+  - Results: `AgentChat` now renders the thread/transcript as the
     primary column, keeps status/usage/diagnostics in compact secondary chrome,
     and only repeats critical warnings inline near the thread. The
     host-workflow route is a concrete host-owned workflow panel with current
@@ -396,7 +396,7 @@ The history and usage smoke path has also been verified against `codex app-serve
     completed turn; the approval smoke observed and declined a command approval
     request.
   - Residual risk: the block model still uses the existing normalized item
-    ordering and work-trace cap. A future deeper kitchen-parity slice should
+    ordering. A future deeper kitchen-parity slice should
     add a selector for grouped `TimelineMessage` blocks, protocol-shaped
     approval decisions from normalized metadata, and fuzzy-search state
     renderers instead of considering those part of this visual-quality slice.
@@ -594,12 +594,11 @@ Specifically:
 - **Timeline**: user bubbles use a primary-tinted background with a tail and
   the `completed` meta label is suppressed on user/assistant content so it
   no longer competes with the message. Plan callouts use the primary tint
-  rather than green to align with the rest of the system. Work-trace summary
-  now uses warm `bg-soft` for the closed state and crisp panel for the open
-  state.
+  rather than green to align with the rest of the system. Command and diff
+  transcript items now share the same dark code surface.
 - **Sidebar**: search input is now an `aui-input-shell` with a search icon,
   thread list items carry a coloured status dot per `data-status`, and
-  Hide/Load/Load all use the subtle button variant instead of full secondary
+  Hide/Load/Load more use the subtle button variant instead of full secondary
   buttons.
 - **Status / usage chips**: the rail summary widgets became pill-shape chips,
   visually distinct from the `Status details` disclosure card. The
@@ -644,6 +643,47 @@ Residual risk:
   manual scroll inside the textarea.
 - Pixel-level visual regressions are still opt-in because cross-OS font
   rendering produces noisy diffs.
+
+### Transcript-first repair gate on 2026-05-15
+
+This pass removed the default UI-owned work grouping and made the transcript
+the primary rendering contract. Commands, command output, tool calls, file
+changes, diffs, reasoning, messages, and approvals now render inline in
+turn/item order. The history sidebar uses cursor pagination through scroll
+sentinels with a fallback manual next-page action, and the run settings surface
+is a compact popover so it cannot displace the composer.
+
+Verification commands run from the repo root after the repair:
+
+- `bun run typecheck`
+- `bun run lint`
+- `bun test` -> 60 tests passed
+- `bunx vitest run packages/react/test` -> 83 tests passed
+- `bunx vitest run packages/react/test/components.vitest.tsx` -> 60 tests passed
+- `bun run test:protocol`
+- `bun run test:fixtures`
+- `bun run build`
+- `bun run publint`
+- `bun run attw`
+- `bun run test:e2e:playwright` -> 33 passed, 1 skipped
+- `bunx playwright test examples/local-react-vite/e2e/visual-regression.e2e.ts --project=chromium --update-snapshots`
+- `CAPTURE_DOCS_SCREENSHOTS=1 bunx playwright test examples/local-react-vite/e2e/capture-docs-screenshots.e2e.ts --project=chromium`
+
+Browser verification covered the fixture app and the real local web example at
+desktop 1280x900 and mobile 390x900. Checked routes:
+
+- `http://127.0.0.1:5174/`
+- `http://127.0.0.1:5174/fixture-gallery`
+- `http://127.0.0.1:5174/host-workflow-recipe`
+- `http://127.0.0.1:5174/usage-only`
+- `http://127.0.0.1:5175/`
+
+The DOM audit checked both document scroll width and bounding rects for the
+message list, turns, messages, transcript cards, command output, diff viewer,
+thread header, sidebar rows, sidebar meta, composer, and run settings surface.
+No horizontal overflow offenders were found on the checked desktop or mobile
+viewports. The audit also verified that legacy work/trace classes and labels
+are absent from the rendered DOM.
 
 ## Visual Regression
 

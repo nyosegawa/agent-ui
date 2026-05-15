@@ -1112,14 +1112,15 @@ export function AgentComposerPanel({
   const isBlocked = isRunning || thread.status === "waitingForInput" || isPreviewOnly;
   return (
     <section className="aui-compose-panel" aria-label="Message composer">
-      <details className="aui-run-settings-details">
+      <details className="aui-run-settings-popover">
         <summary>
           <IconSpark size={14} />
           <span>Run settings</span>
-          <RunSettingsSummary />
           <IconChevronDown size={14} />
         </summary>
-        <AgentRunControls autoRefresh={false} variant="compact" />
+        <div className="aui-run-settings-sheet">
+          <AgentRunControls autoRefresh={false} variant="compact" />
+        </div>
       </details>
       <div className="aui-composer-shell">
         <AgentComposer
@@ -1134,17 +1135,6 @@ export function AgentComposerPanel({
       </div>
     </section>
   );
-}
-
-function RunSettingsSummary() {
-  const { runSettings, selectedModel } = useAgentRunSettings();
-  const parts = [
-    runSettings.executionMode,
-    runSettings.modelId ?? selectedModel?.id ?? "server model",
-    runSettings.effort ? `effort ${runSettings.effort}` : "default effort",
-    runSettings.cwd ? compactPath(runSettings.cwd) : "server cwd",
-  ];
-  return <small>{parts.join(" · ")}</small>;
 }
 
 function composerDisabledReason(
@@ -2052,10 +2042,12 @@ function usageSummary(windows: ReturnType<typeof normalizeUsageWindows>): string
 
 export function ThreadList({
   activeThreadId,
+  footer,
   onSelectThread,
   threads,
 }: {
   activeThreadId?: string;
+  footer?: React.ReactNode;
   onSelectThread?: (threadId: string) => void;
   threads: ThreadState[];
 }) {
@@ -2086,6 +2078,7 @@ export function ThreadList({
           </button>
         );
       })}
+      {footer}
     </nav>
   );
 }
@@ -2187,10 +2180,10 @@ export function ThreadSidebar({
   const { readThread } = useAgentThreadReader();
   const [searchTerm, setSearchTerm] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
-  const [isLoadingAll, setIsLoadingAll] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>();
   const [visibleThreadIds, setVisibleThreadIds] = useState<string[] | undefined>();
   const didAutoLoad = useRef(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const visibleThreads = useMemo(() => {
     if (!visibleThreadIds) return threads;
     const byId = new Map(threads.map((thread) => [thread.thread.id, thread]));
@@ -2238,39 +2231,28 @@ export function ThreadSidebar({
     },
     [listThreads, onSelectThread, readThread, state.activeThreadId],
   );
-  const loadAllThreadPages = useCallback(async () => {
-    let pageCursor = nextCursor ?? cursor ?? null;
-    if (!pageCursor) return;
-    setIsLoadingAll(true);
-    try {
-      const seenCursors = new Set<string>();
-      while (pageCursor && !seenCursors.has(pageCursor)) {
-        seenCursors.add(pageCursor);
-        const response = await listThreads({
-          cursor: pageCursor,
-          limit: 25,
-          searchTerm,
-        });
-        const rawThreads = Array.isArray(response?.data)
-          ? response.data
-          : Array.isArray(response?.threads)
-            ? response.threads
-            : [];
-        const threadIds = rawThreads.flatMap((rawThread: Record<string, unknown>) => {
-          const threadId = rawThreadId(rawThread);
-          return threadId ? [threadId] : [];
-        });
-        setVisibleThreadIds((current) =>
-          Array.from(new Set([...(current ?? []), ...threadIds])),
-        );
-        pageCursor = responseCursor(response);
-        setNextCursor(pageCursor);
-        setHasLoaded(true);
-      }
-    } finally {
-      setIsLoadingAll(false);
-    }
-  }, [cursor, listThreads, nextCursor, searchTerm]);
+  const loadNextThreadPage = useCallback(() => {
+    const pageCursor = nextCursor ?? cursor ?? null;
+    if (!pageCursor || isLoading) return;
+    void loadThreadPage({
+      append: true,
+      cursor: pageCursor,
+      searchTerm,
+    }).catch(() => undefined);
+  }, [cursor, isLoading, loadThreadPage, nextCursor, searchTerm]);
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !(nextCursor ?? cursor)) return;
+    if (typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) loadNextThreadPage();
+      },
+      { root: sentinel.closest(".aui-thread-list"), rootMargin: "160px 0px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [cursor, loadNextThreadPage, nextCursor]);
   useEffect(() => {
     if (
       state.connection.status === "connected" &&
@@ -2342,12 +2324,12 @@ export function ThreadSidebar({
       </form>
       <div className="aui-history-feedback" aria-live="polite">
         {error ? <p className="aui-sidebar-error">{error.message}</p> : null}
-        {isLoading || isLoadingAll ? (
+        {isLoading ? (
           <p className="aui-sidebar-status">
-            {isLoadingAll ? "Loading all threads..." : "Loading threads..."}
+            Loading threads...
           </p>
         ) : null}
-        {!isLoading && !isLoadingAll && hasLoaded && visibleThreads.length === 0 ? (
+        {!isLoading && hasLoaded && visibleThreads.length === 0 ? (
           <p className="aui-sidebar-status">No threads found.</p>
         ) : null}
         {hasLoaded && visibleThreads.length > 0 ? (
@@ -2357,37 +2339,23 @@ export function ThreadSidebar({
             {(nextCursor ?? cursor) ? " · more available" : " · all loaded"}
           </p>
         ) : null}
-        {(nextCursor ?? cursor) ? (
-          <div className="aui-history-pagination">
-            <button
-              className={buttonClass("subtle", { size: "sm" })}
-              disabled={isLoading || isLoadingAll}
-              onClick={() => {
-                void loadThreadPage({
-                  append: true,
-                  cursor: nextCursor ?? cursor ?? null,
-                  searchTerm,
-                }).catch(() => undefined);
-              }}
-              type="button"
-            >
-              {isLoading ? "Loading" : "Load more"}
-            </button>
-            <button
-              className={buttonClass("subtle", { size: "sm" })}
-              disabled={isLoading || isLoadingAll}
-              onClick={() => {
-                void loadAllThreadPages().catch(() => undefined);
-              }}
-              type="button"
-            >
-              {isLoadingAll ? "Loading" : "Load all"}
-            </button>
-          </div>
-        ) : null}
       </div>
       <ThreadList
         activeThreadId={activeThreadId}
+        footer={
+          nextCursor ?? cursor ? (
+            <div className="aui-thread-list-sentinel" ref={sentinelRef}>
+              <button
+                className={buttonClass("subtle", { size: "sm" })}
+                disabled={isLoading}
+                onClick={loadNextThreadPage}
+                type="button"
+              >
+                {isLoading ? "Loading" : "Load more"}
+              </button>
+            </div>
+          ) : null
+        }
         onSelectThread={(threadId) => {
           void readThread(threadId, { activate: true, includeTurns: true }).catch(() => {
             onSelectThread?.(threadId);

@@ -153,14 +153,12 @@ Customization:
 single fixed thread, move usage into host chrome, hide the built-in sidebar, or
 embed their own side panels without depending on the preset shell.
 
-`AgentMessageList` owns the real Codex session timeline. User messages,
-assistant messages, and reasoning stay as the primary conversation. Command
-output and file-change diffs are grouped into a per-turn Work trace so the
-work remains attached to the conversation without making stored sessions read
-like a terminal log. Work traces are collapsed by default for completed
-conversation turns and open for command-only or running turns. Command output
-and diffs are not rendered as detached bottom panels because that separates the
-work from the assistant context and makes stored Codex sessions unreadable.
+`AgentTranscript` / `AgentMessageList` own the real Codex session timeline.
+User messages, assistant messages, reasoning, tool calls, command output, and
+file-change diffs render in App Server turn/item order. Command output and
+diffs are not grouped into a UI-owned activity bucket or rendered as detached
+bottom panels because either choice separates the work from the assistant
+context and makes stored Codex sessions harder to audit.
 
 ## Fixed UI Decisions
 

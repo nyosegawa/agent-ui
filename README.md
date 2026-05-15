@@ -11,7 +11,8 @@ Agent UI provides React components, headless hooks, state management, and transp
 The visual design system is intentionally typography-led, not card-heavy. User
 messages render as right-aligned chat bubbles, assistant output flows as
 markdown without a bubble, reasoning is a muted blockquote, plan blocks use a
-green callout, and command/diff blocks share a dark code surface. Approval
+primary-tinted callout, and command/diff blocks share a dark code surface inline
+with the transcript. Approval
 cards are the highest-contrast affordance on the thread surface, with a strong
 primary `Approve` button and outline secondaries. Status, usage, and
 diagnostics live in a compact secondary rail (warm bg with cohesive cards) and
@@ -42,6 +43,15 @@ Primary React surfaces:
 - `AgentThreadView`
 - `AgentThreadHeader`
 - `AgentThreadTimeline`
+- `AgentTranscript`
+- `AgentTurn`
+- `AgentMessageItem`
+- `AgentReasoningItem`
+- `AgentToolCallItem`
+- `AgentCommandItem`
+- `AgentCommandOutputItem`
+- `AgentFileChangeItem`
+- `AgentDiffItem`
 - `AgentThreadSidebar`
 - `AgentComposerPanel`
 - `AgentApprovalQueue`

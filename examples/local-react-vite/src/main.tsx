@@ -583,7 +583,7 @@ function CloseupCommandBlock() {
 
 function CloseupCommandStage() {
   return (
-    <details className="aui-activity-card aui-command-card" data-status="completed" open>
+    <details className="aui-transcript-card aui-command-card" data-status="completed" open>
       <summary>
         <span className="aui-terminal-label">Command</span>
         <span className="aui-command-title">bun run test:e2e:playwright</span>
@@ -746,7 +746,7 @@ function CloseupButtonStates() {
             Cancel
           </button>
           <button className="aui-btn aui-btn-subtle" type="button">
-            Load all
+            Load more
           </button>
         </div>
         <div className="aui-closeup-row">

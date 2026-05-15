@@ -95,7 +95,7 @@ Responsibilities:
 The default UI keeps the high-traffic surfaces split internally:
 
 - `components.tsx`: shell, auth/status, run controls, approvals, usage, and thread history
-- `timeline.tsx`: conversation messages, per-turn Work traces, command output, and file-change activity
+- `timeline.tsx`: transcript item primitives for messages, reasoning, tool calls, command output, and file-change diffs in App Server item order
 - `diff-viewer.tsx`: read-only diff rendering and patch payload normalization
 
 React must be a peer dependency.

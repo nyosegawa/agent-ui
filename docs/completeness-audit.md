@@ -21,10 +21,10 @@ slots, Codex Apps/connectors metadata, and host-owned composition boundaries.
 ## PLAN Capability Coverage
 
 - Full Codex shell: `AgentChat`, `AgentShell`, `AgentProvider`, and
-  `examples/codex-local-web`. The preset now keeps thread/timeline/work trace
-  in the primary column and moves status, usage, and diagnostics to compact
-  secondary chrome. `AgentChat` is documented as a preset rather than the center
-  of the public API.
+  `examples/codex-local-web`. The preset now keeps the thread transcript in the
+  primary column and moves status, usage, and diagnostics to compact secondary
+  chrome. `AgentChat` is documented as a preset rather than the center of the
+  public API.
 - Primitive-first thread/status/usage composition: `AgentThreadSurface`,
   `AgentThreadHeader`, `AgentThreadTimeline`, `AgentApprovalQueue`,
   `AgentComposerPanel`, `AgentStatusSummary`, `AgentStatusDetails`,

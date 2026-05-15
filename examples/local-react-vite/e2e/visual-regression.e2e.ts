@@ -9,7 +9,7 @@ const selectors = [
   ["runControls", ".aui-run-controls"],
   ["threadHeader", ".aui-thread-header"],
   ["messageList", ".aui-message-list"],
-  ["activity", ".aui-activity-card"],
+  ["activity", ".aui-transcript-card"],
   ["diffActivity", ".aui-file-change-card"],
   ["approvals", ".aui-approvals"],
   ["composer", ".aui-composer"],
@@ -43,8 +43,8 @@ test("kitchen mobile keeps approval and composer surfaces inside the viewport", 
     ".aui-composer",
     ".aui-approval-actions",
     ".aui-approval-actions .aui-btn",
-    ".aui-run-settings-details",
-    ".aui-run-settings-details summary",
+    ".aui-run-settings-popover",
+    ".aui-run-settings-popover summary",
   ]) {
     await expectWithinViewport(page, selector);
   }
@@ -63,8 +63,8 @@ for (const route of ["/", "/host-workflow-recipe"] as const) {
       ".aui-composer",
       ".aui-approval-actions",
       ".aui-approval-actions .aui-btn",
-      ".aui-run-settings-details",
-      ".aui-run-settings-details summary",
+      ".aui-run-settings-popover",
+      ".aui-run-settings-popover summary",
     ]) {
       await expectWithinViewport(page, selector);
     }
@@ -84,8 +84,8 @@ test("fixture gallery mobile close-up stage stays inside the viewport", async ({
     ".aui-closeup-stage .aui-approval",
     ".aui-closeup-stage .aui-approval-actions",
     ".aui-closeup-stage .aui-approval-actions .aui-btn",
-    ".aui-closeup-stage .aui-run-settings-details",
-    ".aui-closeup-stage .aui-run-settings-details summary",
+    ".aui-closeup-stage .aui-run-settings-popover",
+    ".aui-closeup-stage .aui-run-settings-popover summary",
   ]) {
     await expectWithinViewport(page, selector);
   }
@@ -132,7 +132,7 @@ test("component close-up gallery renders direct primitives, not iframes", async 
     "userInput",
   );
   const commandBlock = closeups.getByTestId("closeup:Command block");
-  await expect(commandBlock.locator(".aui-activity-card")).toHaveCount(1);
+  await expect(commandBlock.locator(".aui-transcript-card")).toHaveCount(1);
   await expect(commandBlock.locator(".aui-message-list")).toHaveCount(0);
 });
 

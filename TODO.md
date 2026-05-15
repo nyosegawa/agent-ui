@@ -135,6 +135,27 @@ looked careless, and the approval card lacked decision affordance. The
 interactive layer was rebuilt in place. See the 2026-05-15 primitive
 craftsmanship rebuild entry in `docs/testing.md`.
 
+Reopened a fifth time on 2026-05-15 because the default UI still treated
+command/file-change work as a UI-owned activity grouping instead of a Codex App
+Server transcript. This pass removes that grouping from the default path,
+keeps command/tool/diff items inline in turn order, hardens long transcript
+layout, moves run settings into a compact composer popover, and makes history
+pagination infinite-scroll first.
+
+- [x] Remove the default activity grouping surface and render command,
+      tool-call, command-output, file-change, and diff items inline with the
+      transcript item order.
+- [x] Export transcript item primitives for host-owned composition and
+      component QA.
+- [x] Replace the composer settings strip with a compact popover/sheet that
+      does not squeeze the textarea or approval actions.
+- [x] Make the thread sidebar cursor pagination infinite-scroll first with a
+      single Load more fallback and no bulk-load control.
+- [x] Harden message list, turns, markdown, command output, diff, thread title,
+      and sidebar row overflow behavior with element-level bounding checks.
+- [x] Update docs, tests, examples, and QA notes so the default surface is
+      transcript-first rather than dashboard/activity-first.
+
 - [x] Rebuild the composer as one bordered rounded card with attachment
       chips, an auto-resizing textarea, an inline icon-button toolbar
       (paperclip, image, App, Plugin), and a primary circular send icon
@@ -157,7 +178,7 @@ craftsmanship rebuild entry in `docs/testing.md`.
       share a dark code surface, and `COMPLETED` meta is suppressed on
       user/assistant items.
 - [x] Polish sidebar search and thread list: icon-prefix search,
-      coloured status dot per thread, subtle-variant Load/Load all/Hide so
+      coloured status dot per thread, subtle-variant Load/Load more/Hide so
       secondary chrome never reads as primary actions.
 - [x] Add a `Component close-ups` section to `/fixture-gallery` that renders
       composer (normal/focused/approval-pending/mobile), approval cards
@@ -181,7 +202,7 @@ Acceptance:
 - [x] Fixture gallery includes kitchen-derived examples for every renderer and banner.
 - [x] Component tests cover block rendering and approval response behavior.
 - [x] Browser checks prove no overlapping header/timeline/composer layout at narrow widths.
-- [x] Rework `AgentChat` so thread/timeline/work trace is the primary column and status, diagnostics, and usage move to compact secondary chrome.
+- [x] Rework `AgentChat` so thread/transcript is the primary column and status, diagnostics, and usage move to compact secondary chrome.
 - [x] Replace full-width status-banner stacking with compact summary rail plus critical inline warnings near the thread.
 - [x] Re-run kitchen desktop/mobile visual QA with saved screenshots and update the Playwright layout contract snapshots.
 - [x] Add primitive-first status/thread/usage exports so host apps can recreate

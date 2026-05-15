@@ -40,12 +40,29 @@ own shell without adopting the default chat layout.
 
 The preset composes `AgentShell`, optional `AgentThreadSidebar`,
 `AgentStatusBar`, `AgentThreadSurface`, `AgentThreadView`, and a secondary
-context rail for compact status, usage, and diagnostics. The conversation, work
-trace, approvals, and composer stay in the primary column; low-priority
+context rail for compact status, usage, and diagnostics. The transcript,
+approvals, and composer stay in the primary column; low-priority
 account/model/MCP/rate-limit notices do not stack above the timeline. Hosts can
 suppress the sidebar, usage, and diagnostics when those surfaces live elsewhere
 in the application. On mobile the secondary chrome is not hidden; it remains
 reachable through compact details/summary affordances.
+
+## Transcript Primitives
+
+`AgentTranscript` / `AgentMessageList` render App Server turn items in order.
+The default path does not regroup command execution, tool calls, or file-change
+diffs into UI-owned buckets.
+
+Transcript item primitives are exported for host composition and close-up QA:
+
+- `AgentTurn`
+- `AgentMessageItem`
+- `AgentReasoningItem`
+- `AgentToolCallItem`
+- `AgentCommandItem`
+- `AgentCommandOutputItem`
+- `AgentFileChangeItem`
+- `AgentDiffItem`
 
 ### Visual design system
 
@@ -108,7 +125,9 @@ every state plus the component-level close-ups.
 Use these primitives when embedding Agent UI into existing product chrome:
 
 - `AgentShell`: app viewport layout with an optional sidebar slot.
-- `AgentThreadSidebar`: persisted Codex thread history browser.
+- `AgentThreadSidebar`: persisted Codex thread history browser. It follows
+  `thread/list` cursors with an IntersectionObserver sentinel and keeps the
+  visible fallback to a single Load more action.
 - `AgentThreadSurface`: unopinionated thread column surface for host-arranged
   header, notices, timeline, approvals, and composer primitives.
 - `AgentThreadView`: one thread with header, timeline, approvals, and composer.

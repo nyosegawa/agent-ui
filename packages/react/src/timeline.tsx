@@ -27,7 +27,7 @@ export function AgentMessageList({
       {thread.orderedTurnIds.map((turnId) => {
         const turn = thread.turns[turnId];
         return turn ? (
-          <AgentTurnView
+          <AgentTurn
             key={turnId}
             renderItem={renderItem}
             threadStatus={thread.status}
@@ -39,7 +39,9 @@ export function AgentMessageList({
   );
 }
 
-function AgentTurnView({
+export const AgentTranscript = AgentMessageList;
+
+export function AgentTurn({
   renderItem,
   threadStatus,
   turn,
@@ -49,28 +51,12 @@ function AgentTurnView({
   turn: TurnState;
 }) {
   const timelineItemIds = turnTimelineItemIds(turn);
-  const activityItemIds = timelineItemIds.filter((itemId) =>
-    activityKindForId(turn, itemId),
-  );
-  const hiddenActivityCount = Math.max(
-    0,
-    activityItemIds.length - MAX_INLINE_ACTIVITY_ITEMS,
-  );
-  const visibleActivityItemIds = activityItemIds.slice(hiddenActivityCount);
-  const hasConversationText = timelineItemIds.some((id) => {
-    if (activityKindForId(turn, id)) return false;
-    const item = turn.items[id];
-    const text = displayText(item?.text ?? turn.streamingTextByItemId[id]);
-    return Boolean(text?.trim());
-  });
   return (
     <li className="aui-turn">
       {timelineItemIds.map((id) => {
         const item = turn.items[id];
         const block = turn.blocksByItemId?.[id];
         const text = displayText(item?.text ?? turn.streamingTextByItemId[id]);
-        const activityKind = activityKindForId(turn, id);
-        if (activityKind) return null;
         if (item && renderItem) {
           const rendered = renderItem(item, turn);
           if (rendered !== undefined) return <div key={id}>{rendered}</div>;
@@ -89,7 +75,27 @@ function AgentTurnView({
                 <span>{status}</span>
               </div>
               <AgentContentBlockView
-                block={block}
+                block={blockForTranscriptItem(turn, id, block)}
+                output={turn.commandOutputByItemId[id]}
+                patch={turn.filePatchByItemId[id]}
+              />
+            </article>
+          );
+        }
+        const synthesizedBlock = blockForTranscriptItem(turn, id, block);
+        if (synthesizedBlock.kind !== "text") {
+          return (
+            <article
+              className="aui-message aui-block-message"
+              data-kind={synthesizedBlock.kind}
+              key={id}
+            >
+              <div className="aui-message-meta">
+                <span>{itemLabel(synthesizedBlock.kind)}</span>
+                <span>{status}</span>
+              </div>
+              <AgentContentBlockView
+                block={synthesizedBlock}
                 output={turn.commandOutputByItemId[id]}
                 patch={turn.filePatchByItemId[id]}
               />
@@ -107,126 +113,8 @@ function AgentTurnView({
           </article>
         );
       })}
-      {activityItemIds.length > 0 ? (
-        <AgentWorkTrace
-          activityItemIds={activityItemIds}
-          defaultOpen={
-            !hasConversationText ||
-            threadStatus === "running" ||
-            threadStatus === "waitingForInput"
-          }
-          hiddenActivityCount={hiddenActivityCount}
-          itemIds={visibleActivityItemIds}
-          turn={turn}
-        />
-      ) : null}
     </li>
   );
-}
-
-const MAX_INLINE_ACTIVITY_ITEMS = 8;
-
-function AgentWorkTrace({
-  activityItemIds,
-  defaultOpen,
-  hiddenActivityCount,
-  itemIds,
-  turn,
-}: {
-  activityItemIds: string[];
-  defaultOpen: boolean;
-  hiddenActivityCount: number;
-  itemIds: string[];
-  turn: TurnState;
-}) {
-  const commandCount = activityItemIds.filter(
-    (itemId) => activityKindForId(turn, itemId) === "commandExecution",
-  ).length;
-  const fileChangeCount = activityItemIds.filter(
-    (itemId) => activityKindForId(turn, itemId) === "fileChange",
-  ).length;
-  return (
-    <details
-      aria-label="Work trace"
-      className="aui-work-trace"
-      open={defaultOpen ? true : undefined}
-    >
-      <summary>
-        <span>Work trace</span>
-        <strong>{activitySummary(commandCount, fileChangeCount)}</strong>
-        {hiddenActivityCount > 0 ? (
-          <small>{hiddenActivityCount} older steps collapsed</small>
-        ) : null}
-      </summary>
-      <div className="aui-work-trace-list">
-        {hiddenActivityCount > 0 ? (
-          <ActivityCollapseNotice count={hiddenActivityCount} />
-        ) : null}
-        {itemIds.map((id) => {
-          const item = turn.items[id];
-          const activityKind = activityKindForId(turn, id);
-          if (!activityKind) return null;
-          return (
-            <AgentActivityItem
-              block={turn.blocksByItemId?.[id]}
-              item={item}
-              itemId={id}
-              key={id}
-              kind={activityKind}
-              output={turn.commandOutputByItemId[id]}
-              patch={turn.filePatchByItemId[id]}
-            />
-          );
-        })}
-      </div>
-    </details>
-  );
-}
-
-function activitySummary(commandCount: number, fileChangeCount: number): string {
-  const parts = [];
-  if (commandCount > 0) parts.push(formatCount(commandCount, "command"));
-  if (fileChangeCount > 0) parts.push(formatCount(fileChangeCount, "file change"));
-  return parts.length > 0 ? parts.join(", ") : "No captured work";
-}
-
-function ActivityCollapseNotice({ count }: { count: number }) {
-  return (
-    <div className="aui-activity-collapsed">
-      {count} older work {count === 1 ? "step" : "steps"} collapsed in this turn
-    </div>
-  );
-}
-
-function AgentActivityItem({
-  block,
-  item,
-  itemId,
-  kind,
-  output,
-  patch,
-}: {
-  block?: AgentItemBlock;
-  item?: AgentItemState;
-  itemId: string;
-  kind: "commandExecution" | "fileChange";
-  output?: string;
-  patch?: unknown;
-}) {
-  if (kind === "commandExecution") {
-    return (
-      <AgentCommandActivity
-        block={block}
-        item={item}
-        itemId={itemId}
-        output={output}
-      />
-    );
-  }
-  if (kind === "fileChange") {
-    return <AgentFileChangeActivity block={block} item={item} patch={patch} />;
-  }
-  return null;
 }
 
 export function AgentContentBlockView({
@@ -240,16 +128,16 @@ export function AgentContentBlockView({
 }) {
   switch (block.kind) {
     case "thinking":
-      return <ThinkingBlock block={block} />;
+      return <AgentReasoningItem block={block} />;
     case "plan":
       return <PlanBlock block={block} />;
     case "commandExecution":
-      return <AgentCommandActivity block={block} output={output ?? block.output} />;
+      return <AgentCommandItem block={block} output={output ?? block.output} />;
     case "fileChange":
-      return <AgentFileChangeActivity block={block} patch={patch} />;
+      return <AgentFileChangeItem block={block} patch={patch} />;
     case "toolCall":
     case "mcpToolCall":
-      return <ToolCallBlock block={block} />;
+      return <AgentToolCallItem block={block} />;
     case "collabToolCall":
       return <CollabToolCallBlock block={block} />;
     case "webSearch":
@@ -259,14 +147,14 @@ export function AgentContentBlockView({
     case "systemInfo":
       return <SystemInfoBlock block={block} />;
     case "text":
-      return block.text ? <MessageBody text={block.text} /> : null;
+      return block.text ? <AgentMessageItem text={block.text} /> : null;
     case "unknown":
     default:
       return <SystemInfoBlock block={{ ...block, kind: "systemInfo" }} />;
   }
 }
 
-function AgentCommandActivity({
+export function AgentCommandItem({
   block,
   item,
   itemId,
@@ -285,7 +173,7 @@ function AgentCommandActivity({
   return (
     <details
       aria-label="Command output"
-      className="aui-activity-card aui-command-card"
+      className="aui-transcript-card aui-command-card"
       open={defaultOpen ? true : undefined}
     >
       <summary>
@@ -305,13 +193,13 @@ function AgentCommandActivity({
       {normalizedOutput ? (
         <pre className="aui-command-output">{normalizedOutput}</pre>
       ) : (
-        <div className="aui-activity-empty">No terminal output captured.</div>
+        <div className="aui-transcript-empty">No terminal output captured.</div>
       )}
     </details>
   );
 }
 
-function AgentFileChangeActivity({
+export function AgentFileChangeItem({
   block,
   item,
   patch,
@@ -322,7 +210,7 @@ function AgentFileChangeActivity({
 }) {
   const changes = block?.changes ?? [];
   return (
-    <details aria-label="Diff preview" className="aui-activity-card aui-file-change-card">
+    <details aria-label="Diff preview" className="aui-transcript-card aui-file-change-card">
       <summary>
         <span className="aui-terminal-label">diff</span>
         <span className="aui-command-title">
@@ -337,13 +225,13 @@ function AgentFileChangeActivity({
       {patch ? (
         <AgentDiffViewer patch={patch} />
       ) : (
-        <div className="aui-activity-empty">No patch payload captured.</div>
+        <div className="aui-transcript-empty">No patch payload captured.</div>
       )}
     </details>
   );
 }
 
-function ThinkingBlock({ block }: { block: AgentItemBlock }) {
+export function AgentReasoningItem({ block }: { block: AgentItemBlock }) {
   const summary = block.summary ?? block.text ?? "Thinking";
   const content = block.content ?? block.text;
   return (
@@ -366,7 +254,7 @@ function PlanBlock({ block }: { block: AgentItemBlock }) {
   );
 }
 
-function ToolCallBlock({ block }: { block: AgentItemBlock }) {
+export function AgentToolCallItem({ block }: { block: AgentItemBlock }) {
   return (
     <details className="aui-content-block aui-tool-block">
       <summary>
@@ -499,7 +387,7 @@ function JsonSection({
   );
 }
 
-function MessageBody({ text }: { text: string }) {
+export function AgentMessageItem({ text }: { text: string }) {
   const trimmed = text.trim();
   const isLong = trimmed.length > 1800 || trimmed.split(/\r?\n/).length > 18;
   if (!isLong) return <MarkdownMessage className="aui-message-body" text={trimmed} />;
@@ -509,6 +397,13 @@ function MessageBody({ text }: { text: string }) {
       <MarkdownMessage text={trimmed} />
     </details>
   );
+}
+
+export const AgentCommandOutputItem = AgentCommandItem;
+export const AgentDiffItem = AgentFileChangeItem;
+
+function MessageBody({ text }: { text: string }) {
+  return <AgentMessageItem text={text} />;
 }
 
 function displayText(value: unknown): string | undefined {
@@ -601,6 +496,37 @@ function activityKindForId(
   return undefined;
 }
 
+function blockForTranscriptItem(
+  turn: TurnState,
+  itemId: string,
+  block: AgentItemBlock | undefined,
+): AgentItemBlock {
+  if (block) return block;
+  const item = turn.items[itemId];
+  const activityKind = activityKindForId(turn, itemId);
+  if (activityKind === "commandExecution") {
+    return {
+      command: commandTextForItem(item) ?? displayText(item?.text) ?? itemId,
+      id: itemId,
+      kind: "commandExecution",
+      status: item?.status,
+    };
+  }
+  if (activityKind === "fileChange") {
+    return {
+      id: itemId,
+      kind: "fileChange",
+      status: item?.status,
+      text: displayText(item?.text),
+    };
+  }
+  return {
+    id: itemId,
+    kind: "text",
+    text: displayText(item?.text ?? turn.streamingTextByItemId[itemId]) ?? "",
+  };
+}
+
 function lineCount(value: string): number {
   if (!value) return 0;
   return value.split(/\r?\n/).length;
@@ -619,10 +545,6 @@ function commandPreview(text: string): string {
     .find(Boolean);
   if (!preview) return "";
   return preview.length > 180 ? `${preview.slice(0, 177)}...` : preview;
-}
-
-function formatCount(count: number, singular: string) {
-  return `${count} ${count === 1 ? singular : `${singular}s`}`;
 }
 
 function formatDuration(durationMs: number): string {
