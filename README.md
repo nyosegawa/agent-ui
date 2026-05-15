@@ -14,11 +14,12 @@ markdown without a bubble, reasoning is a muted blockquote, plan blocks use a
 primary-tinted callout, and command/diff blocks share a dark code surface inline
 with the transcript. Approval
 cards are the highest-contrast affordance on the thread surface, with a strong
-primary `Approve` button and outline secondaries. Status, usage, and
-diagnostics live in a compact secondary rail (warm bg with cohesive cards) and
-collapse into a horizontally scrollable strip on mobile. The same primitives
-are exported individually so host apps can rebuild this layout — or any other
-layout — without the preset. The `/host-workflow-recipe` example is the
+primary `Approve` button and outline secondaries. `AgentChat` now defaults to
+the transcript plus optional sidebar; usage and diagnostics are opt-in
+secondary chrome for host composition, not preset defaults. The same primitives
+are exported individually so host apps can rebuild this layout, add their own
+usage/status rail, or use any other shell without the preset. The
+`/host-workflow-recipe` example is the
 canonical proof of that composition; `/fixture-gallery` is the visual QA
 surface for every state. Saved evidence lives under `docs/screenshots/`.
 
@@ -54,6 +55,7 @@ Primary React surfaces:
 - `AgentDiffItem`
 - `AgentThreadSidebar`
 - `AgentComposerPanel`
+- `AgentRunSettingsPanel`
 - `AgentApprovalQueue`
 - `AgentStatusSummary`
 - `AgentStatusDetails`
@@ -114,6 +116,19 @@ bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 ```
 
 Then open the printed `http://127.0.0.1:5174` URL. The app starts a local Codex App Server through `@nyosegawa/agent-ui-server`.
+
+For the real local layout gate used during release work, start the app on the
+canonical audit port and run the browser audit against the already-running
+server:
+
+```sh
+AGENT_UI_PORT=5175 \
+AGENT_UI_HOST=127.0.0.1 \
+AGENT_UI_CODEX_CWD=/Users/sakasegawa/src/github.com/nyosegawa/agent-ui \
+bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
+
+bun run test:e2e:real-local-web-layout
+```
 
 Run the fixture-backed package smoke demo separately:
 

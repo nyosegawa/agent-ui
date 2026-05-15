@@ -18,10 +18,11 @@ fixtures, tests, or restored local state.
 
 ## Preset Chat
 
-`AgentChat` is a preset composition, not the primary abstraction. The React
-package is primitive-first: host apps can place thread, status, usage,
-approvals, composer, diagnostics, skills, and Apps/connectors surfaces in their
-own shell without adopting the default chat layout.
+`AgentChat` is a transcript-first convenience preset, not the primary
+abstraction. By default it renders the thread transcript, approvals, composer,
+and optional sidebar. Usage and diagnostics are off by default because they are
+host-composition primitives; opt into them only when the preset should own that
+secondary chrome.
 
 ```tsx
 <AgentChat
@@ -39,19 +40,22 @@ own shell without adopting the default chat layout.
 ```
 
 The preset composes `AgentShell`, optional `AgentThreadSidebar`,
-`AgentStatusBar`, `AgentThreadSurface`, `AgentThreadView`, and a secondary
-context rail for compact status, usage, and diagnostics. The transcript,
-approvals, and composer stay in the primary column; low-priority
-account/model/MCP/rate-limit notices do not stack above the timeline. Hosts can
-suppress the sidebar, usage, and diagnostics when those surfaces live elsewhere
-in the application. On mobile the secondary chrome is not hidden; it remains
-reachable through compact details/summary affordances.
+`AgentStatusBar`, `AgentThreadSurface`, and `AgentThreadView`. When hosts pass
+`usage` or `diagnostics`, the preset adds a secondary context rail; otherwise
+the primary transcript column is the whole experience. Low-priority
+account/model/MCP/rate-limit notices do not stack above the timeline.
 
 ## Transcript Primitives
 
 `AgentTranscript` / `AgentMessageList` render App Server turn items in order.
 The default path does not regroup command execution, tool calls, or file-change
 diffs into UI-owned buckets.
+
+Large stored threads are rendered incrementally. The initial hydrated history
+mounts only the latest transcript items, keeps order intact, and exposes
+`Show earlier items` to reveal older items in batches. Heavy bodies such as
+command output, JSON/tool results, long markdown, and CodeMirror-backed diffs
+stay unmounted until their details disclosure is opened.
 
 Transcript item primitives are exported for host composition and close-up QA:
 
@@ -137,6 +141,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
   command, file-change, tool, web search, image, and system-info blocks.
 - `AgentApprovalQueue`: pending server-request approval cards.
 - `AgentComposerPanel`: run settings and turn composer.
+- `AgentRunSettingsPanel`: compact model, effort, cwd, and execution-mode
+  settings primitive for popovers, sheets, or host-owned settings panels.
 - `AgentStatusSummary`, `AgentStatusDetails`, and `AgentCriticalNoticeList`:
   severity-normalized model reroute, deprecation, config, account, MCP OAuth,
   and rate-limit notices. Info/background notices stay in secondary chrome,

@@ -1,11 +1,11 @@
 # Completeness Audit
 
-Audit date: 2026-05-15. Reopened a third time on 2026-05-15 after an external
-review still rejected the UI as "bordered cards on a fixed shell". The visual
-design system, preset layout, host workflow recipe, fixture gallery, and
-mobile rail were rebuilt with a typography-led palette and primitive-first
-composition. Evidence under `docs/screenshots/` and the 2026-05-15 "Visual
-quality rebuild gate" entry in `docs/testing.md`.
+Audit date: 2026-05-15. Reopened again on 2026-05-15 to finish the
+transcript-first contract. The default chat now treats the Codex App Server
+transcript as the product: usage and diagnostics are opt-in host-composition
+primitives, large hydrated histories render incrementally, heavy transcript
+bodies are lazy-mounted, and the real `examples/codex-local-web` app has a
+port-5175 layout audit gate. Evidence is recorded in `docs/testing.md`.
 
 ## Scope Boundary
 
@@ -21,10 +21,9 @@ slots, Codex Apps/connectors metadata, and host-owned composition boundaries.
 ## PLAN Capability Coverage
 
 - Full Codex shell: `AgentChat`, `AgentShell`, `AgentProvider`, and
-  `examples/codex-local-web`. The preset now keeps the thread transcript in the
-  primary column and moves status, usage, and diagnostics to compact secondary
-  chrome. `AgentChat` is documented as a preset rather than the center of the
-  public API.
+  `examples/codex-local-web`. The preset now defaults to transcript-first
+  chrome with optional sidebar; usage, diagnostics, and status details are
+  standalone primitives or opt-in secondary chrome.
 - Primitive-first thread/status/usage composition: `AgentThreadSurface`,
   `AgentThreadHeader`, `AgentThreadTimeline`, `AgentApprovalQueue`,
   `AgentComposerPanel`, `AgentStatusSummary`, `AgentStatusDetails`,
@@ -45,6 +44,9 @@ slots, Codex Apps/connectors metadata, and host-owned composition boundaries.
 - Browser verification: `detectAgentBrowser`, structured skill injection,
   `docs/agent-browser.md`, Playwright, and recorded `agent-browser` evidence in
   `docs/testing.md`.
+- Large history rendering: `AgentMessageList` reveals hydrated transcript
+  history in batches and lazy-mounts command output, long markdown, JSON/tool
+  bodies, and CodeMirror diffs.
 
 ## Protocol Audit
 
@@ -90,8 +92,6 @@ Rejected:
 
 Still deferred after the reopened quality pass:
 
-- a grouped `TimelineMessage` selector that renders assistant text and ordered
-  work blocks as one cohesive message model
 - protocol-shaped approval decision metadata and MCP/user-input forms beyond
   the current normalized summaries
 - fuzzy-file-search state and renderer support
@@ -102,8 +102,10 @@ Latest primitive-first UI validation passed:
 
 - `bun run typecheck`
 - `bunx vitest run packages/react/test/components.vitest.tsx`
+- `bunx vitest run packages/react/test/style-duplication.vitest.ts`
 - `bun run --cwd examples/local-react-vite build`
 - `bun run test:e2e:playwright`
+- `bun run test:e2e:real-local-web-layout`
 - Playwright screenshot-buffer smoke for kitchen desktop and host workflow
   mobile routes
 

@@ -5,9 +5,15 @@ import type {
   TurnState,
 } from "@nyosegawa/agent-ui-core";
 import type React from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AgentDiffViewer } from "./diff-viewer";
 import { MarkdownMessage } from "./markdown";
+import {
+  DEFAULT_TRANSCRIPT_ITEM_LIMIT,
+  TRANSCRIPT_ITEM_INCREMENT,
+  transcriptItemIds,
+  visibleTranscriptWindow,
+} from "./transcript-window";
 
 export function AgentMessageList({
   renderItem,
@@ -17,6 +23,19 @@ export function AgentMessageList({
   thread: ThreadState;
 }) {
   const listRef = useRef<HTMLOListElement | null>(null);
+  const [visibleItemState, setVisibleItemState] = useState({
+    limit: DEFAULT_TRANSCRIPT_ITEM_LIMIT,
+    threadId: thread.thread.id,
+  });
+  const visibleItemLimit =
+    visibleItemState.threadId === thread.thread.id
+      ? visibleItemState.limit
+      : DEFAULT_TRANSCRIPT_ITEM_LIMIT;
+  const visibleTurnItems = useMemo(
+    () => visibleTranscriptWindow(thread, visibleItemLimit),
+    [thread, visibleItemLimit],
+  );
+  const hiddenItemCount = Math.max(0, visibleTurnItems.totalItemCount - visibleTurnItems.visibleItemCount);
   useEffect(() => {
     const list = listRef.current;
     if (!list) return;
@@ -24,14 +43,36 @@ export function AgentMessageList({
   }, [thread.thread.id, thread.orderedTurnIds.length]);
   return (
     <ol className="aui-message-list" ref={listRef}>
+      {hiddenItemCount > 0 ? (
+        <li className="aui-transcript-pagination">
+          <button
+            className="aui-btn aui-btn-subtle aui-btn-sm"
+            onClick={() =>
+              setVisibleItemState({
+                limit: visibleItemLimit + TRANSCRIPT_ITEM_INCREMENT,
+                threadId: thread.thread.id,
+              })
+            }
+            type="button"
+          >
+            Show earlier items
+          </button>
+          <span>
+            {hiddenItemCount} earlier {hiddenItemCount === 1 ? "item" : "items"} hidden
+          </span>
+        </li>
+      ) : null}
       {thread.orderedTurnIds.map((turnId) => {
         const turn = thread.turns[turnId];
+        const visibleItemIds = visibleTurnItems.itemIdsByTurnId.get(turnId);
+        if (!visibleItemIds || visibleItemIds.length === 0) return null;
         return turn ? (
           <AgentTurn
             key={turnId}
             renderItem={renderItem}
             threadStatus={thread.status}
             turn={turn}
+            visibleItemIds={visibleItemIds}
           />
         ) : null;
       })}
@@ -45,12 +86,14 @@ export function AgentTurn({
   renderItem,
   threadStatus,
   turn,
+  visibleItemIds,
 }: {
   renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
   threadStatus: ThreadState["status"];
   turn: TurnState;
+  visibleItemIds?: string[];
 }) {
-  const timelineItemIds = turnTimelineItemIds(turn);
+  const timelineItemIds = visibleItemIds ?? transcriptItemIds(turn);
   return (
     <li className="aui-turn">
       {timelineItemIds.map((id) => {
@@ -165,16 +208,16 @@ export function AgentCommandItem({
   itemId?: string;
   output?: string;
 }) {
+  const [isOpen, setOpen] = useState(false);
   const normalizedOutput = output?.trimEnd() ?? "";
   const title =
     block?.command ?? commandTextForItem(item) ?? displayText(item?.text) ?? itemId ?? "Command";
   const status = block?.status ?? item?.status ?? "completed";
-  const defaultOpen = normalizedOutput.length > 0 && normalizedOutput.length <= 1200;
   return (
     <details
       aria-label="Command output"
       className="aui-transcript-card aui-command-card"
-      open={defaultOpen ? true : undefined}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary>
         <span className="aui-terminal-label">terminal</span>
@@ -190,11 +233,11 @@ export function AgentCommandItem({
           <span className="aui-command-preview">{commandPreview(normalizedOutput)}</span>
         ) : null}
       </summary>
-      {normalizedOutput ? (
+      {isOpen && normalizedOutput ? (
         <pre className="aui-command-output">{normalizedOutput}</pre>
-      ) : (
+      ) : isOpen ? (
         <div className="aui-transcript-empty">No terminal output captured.</div>
-      )}
+      ) : null}
     </details>
   );
 }
@@ -208,9 +251,14 @@ export function AgentFileChangeItem({
   item?: AgentItemState;
   patch?: unknown;
 }) {
+  const [isOpen, setOpen] = useState(false);
   const changes = block?.changes ?? [];
   return (
-    <details aria-label="Diff preview" className="aui-transcript-card aui-file-change-card">
+    <details
+      aria-label="Diff preview"
+      className="aui-transcript-card aui-file-change-card"
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
       <summary>
         <span className="aui-terminal-label">diff</span>
         <span className="aui-command-title">
@@ -221,12 +269,12 @@ export function AgentFileChangeItem({
         </span>
         <span className="aui-command-meta">{block?.status ?? item?.status ?? "completed"}</span>
       </summary>
-      {changes.length > 0 ? <ChangedFileList changes={changes} /> : null}
-      {patch ? (
+      {isOpen && changes.length > 0 ? <ChangedFileList changes={changes} /> : null}
+      {isOpen && patch ? (
         <AgentDiffViewer patch={patch} />
-      ) : (
+      ) : isOpen ? (
         <div className="aui-transcript-empty">No patch payload captured.</div>
-      )}
+      ) : null}
     </details>
   );
 }
@@ -388,13 +436,17 @@ function JsonSection({
 }
 
 export function AgentMessageItem({ text }: { text: string }) {
+  const [isOpen, setOpen] = useState(false);
   const trimmed = text.trim();
   const isLong = trimmed.length > 1800 || trimmed.split(/\r?\n/).length > 18;
   if (!isLong) return <MarkdownMessage className="aui-message-body" text={trimmed} />;
   return (
-    <details className="aui-message-body aui-message-body-collapsible">
+    <details
+      className="aui-message-body aui-message-body-collapsible"
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
       <summary>{messagePreview(trimmed)}</summary>
-      <MarkdownMessage text={trimmed} />
+      {isOpen ? <MarkdownMessage text={trimmed} /> : null}
     </details>
   );
 }
@@ -476,13 +528,6 @@ function commandTextForItem(item: AgentItemState | undefined): string | undefine
   if (!isRecord(raw)) return undefined;
   const command = raw.command;
   return typeof command === "string" && command.trim() ? command.trim() : undefined;
-}
-
-function turnTimelineItemIds(turn: TurnState): string[] {
-  const ids = new Set(turn.itemOrder);
-  for (const itemId of Object.keys(turn.commandOutputByItemId)) ids.add(itemId);
-  for (const itemId of Object.keys(turn.filePatchByItemId)) ids.add(itemId);
-  return [...ids];
 }
 
 function activityKindForId(

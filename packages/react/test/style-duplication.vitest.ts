@@ -32,6 +32,15 @@ describe("packages/react style.css", () => {
   const occurrences = topLevelSelectorOccurrences(css);
 
   it.each([
+    ".aui-run-settings-popover",
+    ".aui-run-settings-sheet",
+    ".aui-run-controls-compact",
+    ".aui-transcript-card",
+    ".aui-message-list",
+    ".aui-turn",
+    ".aui-message",
+    ".aui-thread-list-item",
+    ".aui-chat-rail",
     ".aui-compose-panel",
     ".aui-composer",
     ".aui-composer-shell",

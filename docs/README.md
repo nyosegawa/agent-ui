@@ -33,10 +33,20 @@ those files.
 
 ## Real Local App
 
-`examples/codex-local-web` is the primary local Codex web experience. It starts a same-origin host bridge, which starts `codex app-server --listen stdio://`, then renders the React package against real account, usage, model, thread, turn, approval, and diff events.
+`examples/codex-local-web` is the primary local Codex web experience. It starts a same-origin host bridge, which starts `codex app-server --listen stdio://`, then renders the React package against real account, model, thread, turn, approval, and diff events. The default chat is transcript-first; usage and diagnostics are standalone primitives that hosts can opt into.
 
 ```sh
 bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
+```
+
+Manual real-local layout audit:
+
+```sh
+AGENT_UI_PORT=5175 AGENT_UI_HOST=127.0.0.1 \
+AGENT_UI_CODEX_CWD=/Users/sakasegawa/src/github.com/nyosegawa/agent-ui \
+bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
+
+bun run test:e2e:real-local-web-layout
 ```
 
 ## Fixture Package Smoke

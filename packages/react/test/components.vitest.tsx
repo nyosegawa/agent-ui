@@ -126,6 +126,60 @@ describe("AgentChat", () => {
     expect(screen.queryByText("Active global thread")).not.toBeInTheDocument();
   });
 
+  it("renders large stored transcripts incrementally while preserving order", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    const itemOrder = Array.from({ length: 80 }, (_, index) => `cmd-${index + 1}`);
+    initialState.threads["thread-large"] = {
+      orderedTurnIds: ["turn-large"],
+      status: "loaded",
+      thread: { id: "thread-large", name: "Large transcript" },
+      turns: {
+        "turn-large": {
+          commandOutputByItemId: Object.fromEntries(
+            itemOrder.map((id, index) => [id, `output ${index + 1}\n`.repeat(4)]),
+          ),
+          filePatchByItemId: {},
+          itemOrder,
+          items: Object.fromEntries(
+            itemOrder.map((id, index) => [
+              id,
+              {
+                id,
+                kind: "commandExecution",
+                raw: { command: `echo ${index + 1}` },
+                status: "completed",
+                text: `echo ${index + 1}`,
+                threadId: "thread-large",
+                turnId: "turn-large",
+              },
+            ]),
+          ),
+          streamingTextByItemId: {},
+          turn: { id: "turn-large", threadId: "thread-large" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList thread={initialState.threads["thread-large"]!} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getAllByLabelText("Command output")).toHaveLength(48);
+    expect(screen.getByText("32 earlier items hidden")).toBeInTheDocument();
+    expect(screen.queryByText("echo 1")).not.toBeInTheDocument();
+    expect(screen.getByText("echo 33")).toBeInTheDocument();
+    expect(screen.getByText("echo 80")).toBeInTheDocument();
+    expect(screen.queryByText(/output 80\noutput 80/)).not.toBeInTheDocument();
+
+    await user.click(screen.getByText("Show earlier items"));
+    expect(screen.getAllByLabelText("Command output")).toHaveLength(80);
+    expect(screen.getByText("echo 1")).toBeInTheDocument();
+    expect(screen.getByText("echo 80")).toBeInTheDocument();
+  });
+
   it("renders usage as a standalone primitive without chat chrome", () => {
     const initialState = createInitialAgentState();
     initialState.account.rateLimits = {
@@ -146,6 +200,20 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("Usage limits")).toHaveTextContent("12%");
     expect(screen.queryByTestId("agent-chat")).not.toBeInTheDocument();
     expect(screen.queryByRole("navigation", { name: "Threads" })).not.toBeInTheDocument();
+  });
+
+  it("defaults to transcript-first chrome without usage or diagnostics rail", () => {
+    const initialState = runEventFixture(demoFixture as FixtureStep[]);
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByRole("heading", { name: "Implement approval UI" })).toBeInTheDocument();
+    expect(screen.queryByLabelText("Agent context")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Usage limits")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Diagnostics")).not.toBeInTheDocument();
   });
 
   it("supports shell composition with usage moved outside a sidebar-free chat", () => {
@@ -224,7 +292,7 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentChat sidebar={false} />
+        <AgentChat diagnostics sidebar={false} />
       </AgentProvider>,
     );
 
@@ -497,7 +565,7 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentChat sidebar={false} usage={false} />
+        <AgentChat diagnostics sidebar={false} usage={false} />
       </AgentProvider>,
     );
 
@@ -822,7 +890,7 @@ describe("AgentChat", () => {
     });
     render(
       <AgentProvider transport={transport}>
-        <AgentChat />
+        <AgentChat usage />
       </AgentProvider>,
     );
 
@@ -899,7 +967,7 @@ describe("AgentChat", () => {
     });
     render(
       <AgentProvider transport={transport}>
-        <AgentChat />
+        <AgentChat usage />
       </AgentProvider>,
     );
 
@@ -968,7 +1036,7 @@ describe("AgentChat", () => {
     });
     render(
       <AgentProvider transport={transport}>
-        <AgentChat />
+        <AgentChat diagnostics />
       </AgentProvider>,
     );
 
@@ -1389,7 +1457,8 @@ describe("AgentChat", () => {
     expect(screen.queryByText("inProgress")).not.toBeInTheDocument();
   });
 
-  it("keeps large historical command output inline in transcript order", () => {
+  it("keeps large historical command output inline in transcript order", async () => {
+    const user = userEvent.setup();
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-history";
     const itemOrder = Array.from({ length: 80 }, (_, index) => `command-${index}`);
@@ -1432,10 +1501,15 @@ describe("AgentChat", () => {
 
     expect(screen.queryByText(/older work steps collapsed/)).not.toBeInTheDocument();
     expect(document.querySelector("[class*=work][class*=trace]")).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText("Command output")).toHaveLength(48);
+    expect(screen.getByText("32 earlier items hidden")).toBeInTheDocument();
+    expect(screen.queryByText("echo 0")).not.toBeInTheDocument();
+    expect(screen.getByText("echo 79")).toBeInTheDocument();
+    expect(screen.queryByText("output 79")).toBeInTheDocument();
+    expect(screen.queryByText(/output 79\n/)).not.toBeInTheDocument();
+    await user.click(screen.getByText("Show earlier items"));
     expect(screen.getAllByLabelText("Command output")).toHaveLength(80);
     expect(screen.getByText("echo 0")).toBeInTheDocument();
-    expect(screen.getByText("echo 79")).toBeInTheDocument();
-    expect(screen.getAllByText("output 79")).toHaveLength(2);
     expect(document.querySelector(".aui-worklog")).not.toBeInTheDocument();
   });
 
@@ -1447,7 +1521,7 @@ describe("AgentChat", () => {
         initialState={runEventFixture(demoFixture as FixtureStep[])}
         transport={transport}
       >
-        <AgentChat />
+        <AgentChat usage />
       </AgentProvider>,
     );
 
@@ -1457,7 +1531,9 @@ describe("AgentChat", () => {
     expect(screen.getByRole("navigation", { name: "Threads" })).toBeInTheDocument();
     expect(screen.getByText("Protocol docs update")).toBeInTheDocument();
     expect(document.querySelector("[class*=work][class*=trace]")).not.toBeInTheDocument();
+    await user.click(screen.getByLabelText("Command output").querySelector("summary")!);
     expect(screen.getByLabelText("Command output")).toHaveTextContent("7 tests passed");
+    await user.click(screen.getByLabelText("Diff preview").querySelector("summary")!);
     expect(screen.getByLabelText("Diff preview")).toHaveTextContent("AgentDiffPanel");
     expect(
       screen
@@ -1523,7 +1599,7 @@ describe("AgentChat", () => {
         initialState={runEventFixture(demoFixture as FixtureStep[])}
         transport={transport}
       >
-        <AgentChat />
+        <AgentChat usage />
       </AgentProvider>,
     );
 
@@ -1576,7 +1652,7 @@ describe("AgentChat", () => {
         initialState={runEventFixture(demoFixture as FixtureStep[])}
         transport={transport}
       >
-        <AgentChat />
+        <AgentChat usage />
       </AgentProvider>,
     );
 
@@ -1973,7 +2049,7 @@ describe("AgentChat", () => {
     });
     render(
       <AgentProvider transport={transport}>
-        <AgentChat />
+        <AgentChat usage />
       </AgentProvider>,
     );
 
@@ -2138,6 +2214,7 @@ describe("AgentChat", () => {
     expect(screen.getByText("Codex session")).toBeInTheDocument();
     expect(screen.queryByText(/rollout-demo\.jsonl/)).not.toBeInTheDocument();
     expect(screen.getByText("The stored thread was loaded.")).toBeInTheDocument();
+    await user.click(screen.getByLabelText("Command output").querySelector("summary")!);
     expect(screen.getByLabelText("Command output")).toHaveTextContent("ok");
     expect(screen.getByText("Preview")).toBeInTheDocument();
     expect(screen.getByLabelText("Message")).toBeDisabled();

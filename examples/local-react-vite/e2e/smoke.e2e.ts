@@ -6,7 +6,9 @@ test("renders Agent UI chat", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Implement approval UI" }),
   ).toBeVisible();
+  await page.getByLabel("Command output").first().click();
   await expect(page.getByLabel("Command output")).toContainText("7 tests passed");
+  await page.getByLabel("Diff preview").first().click();
   await expect(page.getByLabel("Diff preview")).toContainText("AgentDiffPanel");
   await expect(page.getByRole("button", { name: "Approve" }).first()).toBeVisible();
   // Run settings live behind a summary chip inside the composer.

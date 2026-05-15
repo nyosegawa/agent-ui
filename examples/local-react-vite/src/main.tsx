@@ -61,7 +61,7 @@ function AgentDemo() {
   return (
     <AgentProvider initialState={initialState} transport={transport}>
       <main className="aui-demo-main">
-        <AgentChat />
+        <AgentChat diagnostics usage />
       </main>
     </AgentProvider>
   );

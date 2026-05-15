@@ -58,6 +58,7 @@ const routes: ReadonlyArray<{
 test.describe.configure({ mode: "default" });
 
 test("refresh docs/screenshots", async ({ browser }) => {
+  test.setTimeout(120_000);
   test.skip(!shouldRun, "Run with CAPTURE_DOCS_SCREENSHOTS=1 to regenerate docs screenshots");
   for (const route of routes) {
     for (const size of ["desktop", "mobile"] as const) {
@@ -68,8 +69,8 @@ test("refresh docs/screenshots", async ({ browser }) => {
             : { width: 390, height: 900 },
       });
       const page = await context.newPage();
-      await page.goto(route.path);
-      await page.waitForLoadState("networkidle");
+      await page.goto(route.path, { waitUntil: "domcontentloaded" });
+      await page.locator("body").waitFor({ state: "visible" });
       // Trigger sidebar history load on routes that have a sidebar so the
       // captured screenshot includes representative thread rows.
       const loadButton = page.getByRole("button", { name: "Load" });

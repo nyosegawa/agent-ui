@@ -653,6 +653,14 @@ turn/item order. The history sidebar uses cursor pagination through scroll
 sentinels with a fallback manual next-page action, and the run settings surface
 is a compact popover so it cannot displace the composer.
 
+The 2026-05-15 follow-up completed the transcript-first gate: `AgentChat`
+defaults to `usage={false}` and `diagnostics={false}`, `AgentMessageList`
+renders large hydrated histories in batches with `Show earlier items`, and
+command output, long markdown, JSON/tool bodies, and CodeMirror diffs are not
+mounted until their disclosure is opened. `scripts/real-local-web-layout-audit.mjs`
+is the manual real-local-web gate for an already-running
+`examples/codex-local-web` instance on port 5175.
+
 Verification commands run from the repo root after the repair:
 
 - `bun run typecheck`
@@ -666,6 +674,7 @@ Verification commands run from the repo root after the repair:
 - `bun run publint`
 - `bun run attw`
 - `bun run test:e2e:playwright` -> 33 passed, 1 skipped
+- `bun run test:e2e:real-local-web-layout`
 - `bunx playwright test examples/local-react-vite/e2e/visual-regression.e2e.ts --project=chromium --update-snapshots`
 - `CAPTURE_DOCS_SCREENSHOTS=1 bunx playwright test examples/local-react-vite/e2e/capture-docs-screenshots.e2e.ts --project=chromium`
 

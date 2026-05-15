@@ -48,10 +48,4 @@ async function openRealLocalApp(
   await expect(
     page.locator('select[aria-label="Model"] option[value="smoke-model"]'),
   ).toHaveText("Smoke Model (smoke-model)", { timeout: 30_000 });
-  await expect(page.getByLabel("Usage limits")).toContainText("codex 5h", {
-    timeout: 30_000,
-  });
-  await expect(page.getByLabel("Usage limits")).toContainText("codex weekly", {
-    timeout: 30_000,
-  });
 }

@@ -142,6 +142,12 @@ keeps command/tool/diff items inline in turn order, hardens long transcript
 layout, moves run settings into a compact composer popover, and makes history
 pagination infinite-scroll first.
 
+Reopened a sixth time on 2026-05-15 because removing the Work trace surface did
+not finish the transcript-first architecture: huge hydrated threads could still
+mount every item and heavy body immediately, `AgentChat` still defaulted to
+dashboard-like usage/diagnostics chrome, and the real local web example needed
+a dedicated layout audit gate.
+
 - [x] Remove the default activity grouping surface and render command,
       tool-call, command-output, file-change, and diff items inline with the
       transcript item order.
@@ -155,6 +161,17 @@ pagination infinite-scroll first.
       and sidebar row overflow behavior with element-level bounding checks.
 - [x] Update docs, tests, examples, and QA notes so the default surface is
       transcript-first rather than dashboard/activity-first.
+- [x] Make `AgentChat` default to transcript-first chrome with `usage=false`
+      and `diagnostics=false`.
+- [x] Render large hydrated transcripts incrementally with `Show earlier items`
+      while preserving App Server turn/item order.
+- [x] Keep command output, long markdown, JSON/tool payloads, and CodeMirror
+      diffs unmounted until their details disclosure is opened.
+- [x] Add `AgentRunSettingsPanel` as a standalone compact primitive.
+- [x] Add `scripts/real-local-web-layout-audit.mjs` for the already-running
+      real `examples/codex-local-web` port-5175 gate.
+- [x] Extend the CSS duplication guard to the transcript, composer, sidebar,
+      run settings, and rail selectors named in the transcript-first audit.
 
 - [x] Rebuild the composer as one bordered rounded card with attachment
       chips, an auto-resizing textarea, an inline icon-button toolbar

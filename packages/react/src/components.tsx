@@ -221,13 +221,13 @@ export interface AgentChatProps {
 
 export function AgentChat({
   className,
-  diagnostics = true,
+  diagnostics = false,
   onRequestAppMention,
   onRequestPluginMention,
   resolveLocalAttachment,
   sidebar = true,
   slots,
-  usage = true,
+  usage = false,
 }: AgentChatProps = {}) {
   const bootstrap = useAgentBootstrap();
   const { thread, threadId, startThread } = useAgentThread();
@@ -757,6 +757,16 @@ export function AgentRunControls({
   );
 }
 
+export interface AgentRunSettingsPanelProps {
+  autoRefresh?: boolean;
+}
+
+export function AgentRunSettingsPanel({
+  autoRefresh = false,
+}: AgentRunSettingsPanelProps = {}) {
+  return <AgentRunControls autoRefresh={autoRefresh} variant="compact" />;
+}
+
 function formatModelOption(model: { id: string; name?: string }): string {
   if (!model.name || model.name === model.id) return model.id;
   return `${model.name} (${model.id})`;
@@ -1119,7 +1129,7 @@ export function AgentComposerPanel({
           <IconChevronDown size={14} />
         </summary>
         <div className="aui-run-settings-sheet">
-          <AgentRunControls autoRefresh={false} variant="compact" />
+          <AgentRunSettingsPanel />
         </div>
       </details>
       <div className="aui-composer-shell">

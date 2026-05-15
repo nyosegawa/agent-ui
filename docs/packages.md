@@ -92,10 +92,15 @@ Responsibilities:
 - headless customization API
 - CSS variables and plain CSS theme
 
+The default UI is transcript-first. Usage, diagnostics, status summaries, run
+settings, and side panels are exported as host-composition primitives instead
+of being mandatory chat chrome.
+
 The default UI keeps the high-traffic surfaces split internally:
 
-- `components.tsx`: shell, auth/status, run controls, approvals, usage, and thread history
+- `components.tsx`: shell, auth/status, run settings, approvals, usage, and thread history
 - `timeline.tsx`: transcript item primitives for messages, reasoning, tool calls, command output, and file-change diffs in App Server item order
+- `transcript-window.ts`: large hydrated transcript item ordering and incremental window policy
 - `diff-viewer.tsx`: read-only diff rendering and patch payload normalization
 
 React must be a peer dependency.
