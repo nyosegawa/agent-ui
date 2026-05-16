@@ -1,0 +1,273 @@
+/* --- Approval surface (in-transcript pending decision) ----------------- */
+
+/* The approval surface is a transcript item, never an independent scroll
+ * pane. It carries no max-height and no overflow of its own — the transcript
+ * scroll area owns scrolling. */
+.aui-approvals {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.aui-approvals-count {
+  color: var(--aui-warn);
+  font: 700 10.5px/1 var(--aui-font);
+  letter-spacing: 0.06em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.aui-approval {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-left: 3px solid var(--aui-warn);
+  border-radius: 10px;
+  box-shadow: var(--aui-elevation-1);
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 11px 13px;
+  width: 100%;
+}
+
+.aui-approval[data-risk="high"] {
+  border-left-color: var(--aui-danger);
+}
+
+.aui-approval[data-risk="low"] {
+  border-left-color: var(--aui-primary);
+}
+
+.aui-approval-header {
+  align-items: center;
+  display: grid;
+  gap: 2px 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-width: 0;
+}
+
+.aui-approval-icon {
+  align-items: center;
+  background: var(--aui-warn-soft);
+  border-radius: 8px;
+  color: var(--aui-warn);
+  display: inline-flex;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+
+.aui-approval-icon[data-risk="high"] {
+  background: var(--aui-danger-soft);
+  color: var(--aui-danger);
+}
+
+.aui-approval-icon[data-risk="low"] {
+  background: var(--aui-primary-soft);
+  color: var(--aui-primary-strong);
+}
+
+.aui-approval-title {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.aui-approval-title strong {
+  color: var(--aui-fg-strong);
+  font: 650 14px/1.3 var(--aui-font);
+  letter-spacing: -0.01em;
+}
+
+.aui-approval-title small {
+  color: var(--aui-fg-muted);
+  display: -webkit-box;
+  font-size: 12px;
+  line-height: 1.45;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.aui-approval-risk {
+  align-self: center;
+  background: var(--aui-warn-soft);
+  border: 1px solid rgba(180, 83, 9, 0.32);
+  border-radius: 999px;
+  color: var(--aui-warn);
+  font: 700 10px/1 var(--aui-font);
+  letter-spacing: 0.04em;
+  padding: 4px 8px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.aui-approval-risk[data-risk="high"] {
+  background: var(--aui-danger-soft);
+  border-color: rgba(185, 28, 28, 0.3);
+  color: var(--aui-danger);
+}
+
+.aui-approval-risk[data-risk="low"] {
+  background: var(--aui-primary-soft);
+  border-color: rgba(13, 148, 136, 0.32);
+  color: var(--aui-primary-strong);
+}
+
+.aui-approval-summary {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.aui-approval-copy {
+  color: var(--aui-fg);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.aui-approval-filepath {
+  align-items: center;
+  background: var(--aui-panel-quiet);
+  border: 1px solid var(--aui-border);
+  border-radius: 7px;
+  color: var(--aui-fg);
+  display: inline-flex;
+  font: 500 12px/1 var(--aui-font-mono);
+  gap: 6px;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 5px 9px;
+}
+
+.aui-approval-filepath > code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-approval-filepath > svg {
+  color: var(--aui-fg-faint);
+  flex: 0 0 auto;
+}
+
+.aui-approval pre.aui-command-line {
+  background: var(--aui-code-bg);
+  border-radius: 8px;
+  color: var(--aui-code-fg);
+  margin: 0;
+  max-height: 156px;
+  /* y-only scroll for very long commands; never a horizontal scroller. */
+  overflow: hidden auto;
+  padding: 10px 12px;
+}
+
+.aui-approval pre.aui-command-line code {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font: 500 12.5px/1.45 var(--aui-font-mono);
+  padding: 0;
+}
+
+.aui-approval .aui-approval-json {
+  max-height: 156px;
+  overflow: hidden auto;
+  overflow-wrap: anywhere;
+}
+
+/* Compact picker rows for additional pending approvals. */
+.aui-approval-more {
+  display: grid;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.aui-approval-compact {
+  align-items: center;
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-left: 3px solid var(--aui-warn);
+  border-radius: 9px;
+  cursor: pointer;
+  display: grid;
+  gap: 4px 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  padding: 8px 10px;
+  text-align: left;
+  width: 100%;
+}
+
+.aui-approval-compact:hover {
+  background: var(--aui-panel-alt);
+  border-color: var(--aui-border-strong);
+}
+
+.aui-approval-compact:focus-visible {
+  box-shadow: var(--aui-focus-ring);
+  outline: none;
+}
+
+.aui-approval-compact[data-risk="high"] {
+  border-left-color: var(--aui-danger);
+}
+
+.aui-approval-compact[data-risk="low"] {
+  border-left-color: var(--aui-primary);
+}
+
+.aui-approval-compact-icon {
+  align-items: center;
+  color: var(--aui-fg-faint);
+  display: inline-flex;
+}
+
+.aui-approval-compact-body {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.aui-approval-compact-body strong {
+  color: var(--aui-fg-strong);
+  font: 650 12.5px/1.3 var(--aui-font);
+}
+
+.aui-approval-compact-body small {
+  color: var(--aui-fg-muted);
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-approval-compact-cta {
+  color: var(--aui-primary-strong);
+  font: 700 11px/1 var(--aui-font);
+}
+
+.aui-approval-actions {
+  align-items: center;
+  border-top: 1px solid var(--aui-rule);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  min-width: 0;
+  padding-top: 12px;
+}
+
+.aui-approval-actions .aui-btn-primary {
+  background: var(--aui-success);
+  border-color: var(--aui-success);
+  color: #ffffff;
+}
+
+.aui-approval-actions .aui-btn-primary:hover:not(:disabled) {
+  background: #126331;
+  border-color: #126331;
+}

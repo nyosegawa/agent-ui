@@ -1,0 +1,194 @@
+/* --- Component close-up gallery ---------------------------------------- */
+
+.aui-closeup-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(min(360px, 100%), 1fr));
+}
+
+.aui-closeup {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 14px;
+  box-shadow: var(--aui-elevation-1);
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  overflow: hidden;
+  padding: 14px 16px 16px;
+}
+
+.aui-closeup,
+.aui-closeup * {
+  box-sizing: border-box;
+}
+
+.aui-closeup-header {
+  display: grid;
+  gap: 4px;
+}
+
+.aui-closeup-header strong {
+  color: var(--aui-fg-strong);
+  font: 650 14px/1.3 var(--aui-font);
+  letter-spacing: -0.005em;
+}
+
+.aui-closeup-header span {
+  color: var(--aui-fg-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.aui-closeup-stage {
+  background: var(--aui-bg);
+  border: 1px solid var(--aui-rule);
+  border-radius: 10px;
+  min-width: 0;
+  padding: 14px;
+}
+
+.aui-closeup-stage[data-tone="dark"] {
+  background: linear-gradient(180deg, #1a1c20 0%, #14161a 100%);
+  border-color: #2a3038;
+}
+
+.aui-closeup-stage[data-tone="mobile"] {
+  background: var(--aui-bg-soft);
+  margin: 0 auto;
+  max-width: 360px;
+}
+
+.aui-closeup-mobile-shell {
+  border: 1px solid var(--aui-border-strong);
+  border-radius: 14px;
+  margin: 0 auto;
+  overflow: hidden;
+  width: 100%;
+}
+
+.aui-closeup-mobile-shell iframe {
+  background: var(--aui-panel);
+  border: 0;
+  display: block;
+  height: 560px;
+  width: 100%;
+}
+
+.aui-closeup-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.aui-closeup-col {
+  display: grid;
+  gap: 8px;
+}
+
+.aui-closeup-label {
+  color: var(--aui-fg-faint);
+  font: 700 10.5px/1 var(--aui-font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.aui-file-change-card .aui-diff {
+  border-radius: 0;
+  border-top: 1px solid var(--aui-rule);
+}
+
+/* --- Message metadata refinements -------------------------------------- */
+
+.aui-message[data-kind="userMessage"] .aui-message-meta span:last-child {
+  display: none; /* "completed" status on user bubbles is noise */
+}
+
+.aui-message[data-kind="agentMessage"] .aui-message-meta span:last-child,
+.aui-message[data-kind="stream"] .aui-message-meta span:last-child {
+  display: none; /* "completed" status under flowing assistant text is noise */
+}
+
+.aui-message[data-kind="commandExecution"] > .aui-message-meta,
+.aui-message[data-kind="dynamicTool"] > .aui-message-meta,
+.aui-message[data-kind="dynamicToolCall"] > .aui-message-meta,
+.aui-message[data-kind="fileChange"] > .aui-message-meta,
+.aui-message[data-kind="mcpToolCall"] > .aui-message-meta,
+.aui-message[data-kind="toolCall"] > .aui-message-meta {
+  display: none;
+}
+
+.aui-message[data-kind="reasoning"] .aui-message-meta {
+  letter-spacing: 0.02em;
+}
+
+
+.aui-plan-block > strong {
+  color: var(--aui-primary-strong);
+}
+
+/* Command title — make typography read as code, not text. */
+.aui-command-title::before {
+  color: var(--aui-fg-faint);
+  content: "$ ";
+  font-weight: 400;
+}
+
+.aui-command-card[open] .aui-command-title::before {
+  content: "$ ";
+}
+
+/* --- Mobile composer polish -------------------------------------------- */
+
+@media (max-width: 640px) {
+  .aui-threads-trigger {
+    display: inline-flex;
+  }
+  .aui-compose-panel {
+    max-width: 100%;
+    min-width: 0;
+    padding: 10px 12px 14px;
+    width: 100%;
+  }
+  .aui-composer {
+    max-width: 100%;
+    min-width: 0;
+    padding: 8px 10px 6px;
+    width: 100%;
+  }
+  .aui-composer .aui-composer-input {
+    font-size: 15px;
+  }
+  .aui-composer-hint {
+    display: none;
+  }
+  .aui-composer-tool {
+    max-width: 100%;
+  }
+  .aui-approvals {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+  .aui-approval {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+  /* Approve spans the full row; the scoped + decline decisions share one. */
+  .aui-approval-actions {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+  }
+  .aui-approval-actions .aui-btn {
+    min-width: 0;
+    white-space: normal;
+    width: 100%;
+  }
+  .aui-approval-actions .aui-btn-primary {
+    grid-column: 1 / -1;
+    order: -1;
+  }
+}

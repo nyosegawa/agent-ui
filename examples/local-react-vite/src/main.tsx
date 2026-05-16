@@ -23,7 +23,7 @@ import {
   useAgentThread,
   useAgentUsage,
 } from "@nyosegawa/agent-ui-react";
-import "@nyosegawa/agent-ui-react/style.css";
+import "@nyosegawa/agent-ui-react/styles.css";
 import { useMemo, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import {
@@ -282,7 +282,7 @@ function UsageOnlyExample() {
               <div>
                 <strong>verify-codex-local-build</strong>
                 <small>
-                  packages/react/src/components.tsx · running
+                  packages/react/src/components-main.tsx · running
                 </small>
               </div>
               <AgentUsageSummary />

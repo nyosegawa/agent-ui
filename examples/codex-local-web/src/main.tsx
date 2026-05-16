@@ -7,7 +7,7 @@ import {
   type AgentLocalAttachmentKind,
   type CodexUserInput,
 } from "@nyosegawa/agent-ui-react";
-import "@nyosegawa/agent-ui-react/style.css";
+import "@nyosegawa/agent-ui-react/styles.css";
 import { useMemo } from "react";
 import { createRoot, type Root } from "react-dom/client";
 

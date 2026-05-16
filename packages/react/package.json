@@ -4,7 +4,10 @@
   "description": "React hooks and components for Agent UI.",
   "license": "MIT",
   "type": "module",
-  "sideEffects": ["./dist/style.css"],
+  "sideEffects": [
+    "./dist/styles.css",
+    "./dist/styles/*.css"
+  ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,17 +22,19 @@
         "default": "./dist/index.cjs"
       }
     },
-    "./style.css": {
-      "types": "./dist/style.css.d.ts",
-      "default": "./dist/style.css"
+    "./styles.css": {
+      "types": "./dist/styles.css.d.ts",
+      "default": "./dist/styles.css"
     }
   },
   "engines": {
     "node": ">=20"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "tsup && cp src/style.css dist/style.css && cp src/style.css.d.ts dist/style.css.d.ts",
+    "build": "tsup && cp src/styles.css dist/styles.css && cp src/styles.css.d.ts dist/styles.css.d.ts && rm -rf dist/styles && cp -R src/styles dist/styles",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --config ../../vitest.config.ts --environment jsdom packages/react/test"
   },

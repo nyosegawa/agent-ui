@@ -1818,7 +1818,7 @@ describe("AgentChat", () => {
             {
               diff: "@@ -1 +1,2 @@\n-old\n+new\n+next\n",
               kind: "update",
-              path: "packages/react/src/components.tsx",
+              path: "packages/react/src/components-main.tsx",
             },
             {
               diff: "+added\n",
@@ -1834,7 +1834,7 @@ describe("AgentChat", () => {
     expect(screen.getByText("+3")).toBeInTheDocument();
     expect(screen.getByText("-1")).toBeInTheDocument();
     expect(screen.getByLabelText("Changed files")).toHaveTextContent(
-      "packages/react/src/components.tsx",
+      "packages/react/src/components-main.tsx",
     );
     expect(screen.getByLabelText("Changed files")).toHaveTextContent("docs/testing.md");
   });

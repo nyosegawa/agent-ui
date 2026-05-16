@@ -358,7 +358,7 @@ custom element accepts `transport`, `initialState`, and `slots` as JavaScript
 properties and renders the standard preset chat.
 
 ```ts
-import "@nyosegawa/agent-ui-react/style.css";
+import "@nyosegawa/agent-ui-react/styles.css";
 import { defineAgentChatElement } from "@nyosegawa/agent-ui-web-components";
 
 defineAgentChatElement();

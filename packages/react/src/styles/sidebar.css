@@ -1,0 +1,126 @@
+/* --- Sidebar -------------------------------------------------------- */
+
+.aui-sidebar {
+  background: var(--aui-bg-soft);
+  border-right: 1px solid var(--aui-border);
+  display: grid;
+  gap: 12px;
+  grid-template-rows: auto auto auto minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+  padding: 14px 12px;
+}
+
+.aui-sidebar-header {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.aui-sidebar-title {
+  color: var(--aui-fg-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.aui-sidebar-toggle,
+.aui-icon-button {
+  background: transparent;
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-sm);
+  color: var(--aui-fg-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 28px;
+  padding: 4px 8px;
+}
+
+.aui-sidebar-toggle:hover,
+.aui-icon-button:hover {
+  background: var(--aui-panel-alt);
+  border-color: var(--aui-border-strong);
+  color: var(--aui-fg);
+}
+
+.aui-sidebar-collapsed {
+  align-content: start;
+  justify-content: center;
+  min-height: 48px;
+  padding: 8px 4px;
+}
+
+.aui-sidebar-collapsed .aui-sidebar-toggle {
+  height: 96px;
+  padding: 6px 4px;
+  writing-mode: vertical-rl;
+}
+
+.aui-sidebar-error {
+  color: var(--aui-danger);
+  font-size: 12px;
+  margin: 0;
+}
+
+.aui-sidebar-status {
+  color: var(--aui-fg-muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+.aui-history-feedback {
+  display: grid;
+  gap: 8px;
+  min-height: 0;
+}
+
+.aui-thread-list {
+  align-content: start;
+  display: grid;
+  gap: 2px;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding-bottom: 4px;
+}
+
+.aui-thread-list-item {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--aui-radius-sm);
+  color: var(--aui-fg);
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  gap: 4px;
+  min-height: 50px;
+  min-width: 0;
+  padding: 9px 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.aui-thread-list-item:hover {
+  background: var(--aui-panel-alt);
+}
+
+.aui-thread-list-item[aria-current="page"] {
+  background: var(--aui-panel);
+  border-color: var(--aui-border-strong);
+  box-shadow: var(--aui-shadow-card);
+}
+
+.aui-history-pagination {
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.aui-history-load-more {
+  justify-self: stretch;
+}

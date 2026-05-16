@@ -1,0 +1,120 @@
+/* --- Diff viewer -------------------------------------------------- */
+
+.aui-diff {
+  background: var(--aui-code-bg);
+  border: 1px solid var(--aui-code-rule);
+  border-radius: 8px;
+  color: var(--aui-code-fg);
+  font-family: var(--aui-font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.aui-diff-header {
+  align-items: center;
+  border-bottom: 1px solid var(--aui-code-rule);
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+  padding: 9px 12px;
+}
+
+.aui-diff-header strong {
+  color: var(--aui-code-fg);
+  font-family: var(--aui-font);
+  font-size: 12px;
+  font-weight: 650;
+  margin-right: auto;
+}
+
+.aui-diff-stat {
+  border-radius: var(--aui-radius-pill);
+  font-family: var(--aui-font);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+}
+
+.aui-diff-stat-add {
+  background: rgba(21, 128, 61, 0.22);
+  color: #a7f3c8;
+}
+
+.aui-diff-stat-remove {
+  background: rgba(185, 28, 28, 0.24);
+  color: #fecaca;
+}
+
+.aui-diff-files {
+  border-bottom: 1px solid var(--aui-code-rule);
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+  padding: 9px 12px;
+}
+
+.aui-diff-files li {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
+}
+
+.aui-diff-files span {
+  color: var(--aui-code-fg);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.aui-diff-files em {
+  color: var(--aui-code-muted);
+  font-family: var(--aui-font);
+  font-size: 11px;
+  font-style: normal;
+  margin-left: auto;
+}
+
+.aui-codemirror-diff {
+  max-width: 100%;
+  min-height: 84px;
+  min-width: 0;
+  overflow: auto;
+}
+
+.aui-diff-source {
+  color: var(--aui-code-fg);
+  font-family: var(--aui-font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 100%;
+  overflow: auto;
+  padding: 12px 14px;
+  white-space: pre;
+}
+
+/* --- Generic utility ---------------------------------------------- */
+
+.aui-visually-hidden {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.aui-actions {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}

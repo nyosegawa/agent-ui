@@ -98,7 +98,7 @@ of being mandatory chat chrome.
 
 The default UI keeps the high-traffic surfaces split internally:
 
-- `components.tsx`: shell, auth/status, run settings, approvals, usage, and thread history
+- `components.ts`: public barrel; `components-main.tsx`: shell, auth/status, run settings, approvals, usage, and thread history
 - `timeline.tsx`: transcript item primitives for messages, reasoning, tool calls, command output, and file-change diffs in App Server item order
 - `transcript-window.ts`: large hydrated transcript item ordering and incremental window policy
 - `diff-viewer.tsx`: read-only diff rendering and patch payload normalization
@@ -130,7 +130,7 @@ Responsibilities:
 - accept `transport`, `initialState`, and `slots` as JavaScript properties
 - render the standard React `AgentChat` inside `AgentProvider`
 
-The wrapper does not create transports, spawn Codex, or include CSS automatically. Hosts should import `@nyosegawa/agent-ui-react/style.css`.
+The wrapper does not create transports, spawn Codex, or include CSS automatically. Hosts should import `@nyosegawa/agent-ui-react/styles.css`.
 
 ## Examples
 

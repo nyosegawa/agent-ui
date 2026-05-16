@@ -436,7 +436,7 @@ Acceptance:
 Reopened on 2026-05-15 to fix four primitive-quality gaps that survived the
 craftsmanship rebuild: the chat input still relied on `globalThis.prompt()` for
 App / Plugin mentions, image attachments reused the `@`-mention icon,
-`packages/react/src/style.css` carried duplicated composer rules, and
+`packages/react/src/styles.css` carried duplicated composer rules, and
 `/fixture-gallery` plus `/usage-only` were not credible visual QA surfaces.
 
 - [x] Replace `globalThis.prompt()` App / Plugin mention flow with host-supplied
@@ -448,7 +448,7 @@ App / Plugin mentions, image attachments reused the `@`-mention icon,
       the image attachment chip; retire `IconAt` from those slots.
 - [x] Delete legacy composer / button / segmented / status-pill /
       history-controls CSS blocks that were superseded by the rebuilt section
-      in `packages/react/src/style.css`.
+      in `packages/react/src/styles.css`.
 - [x] Cover composer behaviour with new vitest specs (no `globalThis.prompt`
       ever, resolver-driven chips, hidden buttons without resolvers, image
       icon on image chips) and a `style-duplication.vitest.ts` regression
@@ -638,7 +638,7 @@ details disclosure is opened.
 - [x] Add pure timeline helper tests for block synthesis, transcript-window
       retention, text/status formatting, and preview suppression.
 - [x] Move shared internal icons and button class construction out of
-      `packages/react/src/components.tsx` without changing public exports.
+      `packages/react/src/components-main.tsx` without changing public exports.
 - [x] Update README and docs for the refactored internal architecture and
       remove stale vocabulary.
 - [x] Re-run the required validation ladder and browser QA for 5174 fixture

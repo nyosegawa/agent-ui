@@ -1,0 +1,414 @@
+/* --- Chat container ------------------------------------------------- */
+
+.aui-chat {
+  background: var(--aui-bg);
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.aui-chat > * {
+  min-width: 0;
+  width: 100%;
+}
+
+.aui-chat-body {
+  display: grid;
+  gap: 0;
+  grid-template-columns: minmax(0, 1fr) minmax(240px, 308px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.aui-chat-body[data-rail="hidden"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.aui-thread-column {
+  background: var(--aui-panel);
+  border-right: 1px solid var(--aui-border);
+  display: grid;
+  grid-template-rows: minmax(0, 1fr);
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.aui-chat-rail {
+  align-content: start;
+  background: var(--aui-bg-soft);
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px;
+}
+
+/* Header, optional critical notices, the transcript scroll area, then the
+ * composer. Pending approvals are NOT a row here — they render inside the
+ * transcript scroll area as a trailing pending-decision item. */
+.aui-thread-surface {
+  background: var(--aui-panel);
+  display: grid;
+  flex: 1 1 auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.aui-thread-surface,
+.aui-thread-surface * {
+  box-sizing: border-box;
+}
+
+.aui-thread-surface > * {
+  max-width: 100%;
+  min-height: 0;
+  min-width: 0;
+}
+
+.aui-thread-surface > .aui-thread-header {
+  grid-row: 1;
+}
+
+.aui-thread-surface > .aui-critical-banners {
+  grid-row: 2;
+}
+
+.aui-thread-surface > .aui-message-list {
+  grid-row: 3;
+}
+
+.aui-thread-surface > .aui-compose-panel {
+  grid-row: 4;
+}
+
+/* --- Status bar ----------------------------------------------------- */
+
+.aui-status {
+  align-items: center;
+  background: var(--aui-panel);
+  border-bottom: 1px solid var(--aui-border);
+  color: var(--aui-fg-muted);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 8px 16px;
+}
+
+.aui-brand {
+  align-items: baseline;
+  display: flex;
+  gap: 10px;
+  min-width: 0;
+}
+
+.aui-brand strong {
+  color: var(--aui-fg-strong);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.aui-brand span {
+  color: var(--aui-fg-muted);
+  font-size: 12px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-login-code {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.aui-login-code a {
+  color: var(--aui-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.aui-login-code code {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 5px;
+  color: var(--aui-fg);
+  font-family: var(--aui-font-mono);
+  font-size: 12px;
+  padding: 3px 6px;
+}
+
+/* --- Thread header -------------------------------------------------- */
+
+.aui-thread-header {
+  align-items: center;
+  background: var(--aui-panel);
+  border-bottom: 1px solid var(--aui-border);
+  display: grid;
+  gap: 8px 16px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding: 16px 20px 14px;
+}
+
+.aui-thread-title {
+  min-width: 0;
+}
+
+.aui-thread-title h1 {
+  color: var(--aui-fg-strong);
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: -0.012em;
+  line-height: 1.25;
+  margin: 0;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.aui-thread-title p {
+  color: var(--aui-fg-muted);
+  font-family: var(--aui-font-mono);
+  font-size: 11.5px;
+  margin: 4px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 540px;
+}
+
+.aui-thread-title .aui-token-usage {
+  margin-top: 10px;
+  max-width: 380px;
+}
+
+.aui-thread-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.aui-thread-action-menu {
+  position: relative;
+}
+
+.aui-thread-action-menu summary {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border-strong);
+  border-radius: var(--aui-radius-sm);
+  color: var(--aui-fg);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  list-style: none;
+  padding: 6px 10px;
+}
+
+.aui-thread-action-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.aui-thread-action-menu > div {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  box-shadow: var(--aui-shadow-lift);
+  display: grid;
+  gap: 2px;
+  min-width: 160px;
+  padding: 6px;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 10;
+}
+
+.aui-thread-action-menu button {
+  background: transparent;
+  border: 0;
+  border-radius: 5px;
+  color: var(--aui-fg);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  text-align: left;
+}
+
+.aui-thread-action-menu button:hover:not(:disabled) {
+  background: var(--aui-panel-alt);
+}
+
+.aui-thread-action-menu button:disabled {
+  color: var(--aui-fg-faint);
+  cursor: not-allowed;
+}
+
+/* --- Empty / first run --------------------------------------------- */
+
+.aui-empty {
+  align-items: center;
+  display: grid;
+  gap: 18px;
+  justify-content: center;
+  min-height: 360px;
+  padding: 24px;
+}
+
+.aui-first-run {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  box-shadow: var(--aui-shadow-card);
+  display: grid;
+  gap: 10px;
+  max-width: 380px;
+  padding: 20px;
+}
+
+.aui-first-run strong {
+  color: var(--aui-fg-strong);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.aui-first-run p {
+  color: var(--aui-fg-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* --- Message list / turns ------------------------------------------ */
+
+.aui-message-list {
+  align-content: start;
+  background: var(--aui-panel);
+  display: grid;
+  gap: 18px;
+  list-style: none;
+  margin: 0;
+  min-height: 0;
+  min-width: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 18px 22px 28px;
+  scroll-behavior: auto;
+}
+
+.aui-turn {
+  display: grid;
+  gap: 10px;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.aui-transcript-pagination {
+  align-items: center;
+  color: var(--aui-fg-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  gap: 8px;
+  justify-content: center;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Trailing transcript slot — hosts the pending-approval surface inside the
+ * scroll area so it reads as the last item of the thread, not a pane. */
+.aui-transcript-tail {
+  display: grid;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Conversation bubbles: typography-led, not heavy cards.            */
+.aui-message {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  max-width: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 0;
+}
+
+.aui-message[data-kind="userMessage"] {
+  background: var(--aui-primary-soft);
+  border: 1px solid rgba(13, 148, 136, 0.18);
+  border-radius: 14px 14px 4px 14px;
+  margin-left: auto;
+  max-width: min(680px, 88%);
+  padding: 10px 14px;
+}
+
+.aui-message[data-kind="userMessage"] .aui-message-meta {
+  color: var(--aui-primary-strong);
+  letter-spacing: 0.04em;
+}
+
+.aui-message[data-kind="agentMessage"],
+.aui-message[data-kind="stream"] {
+  background: transparent;
+  border: 0;
+  max-width: 100%;
+  padding: 0;
+}
+
+.aui-message[data-kind="reasoning"] {
+  background: transparent;
+  border-left: 2px solid var(--aui-border-strong);
+  color: var(--aui-fg-muted);
+  margin: 0;
+  padding: 2px 0 2px 12px;
+}
+
+.aui-message[data-kind="reasoning"] .aui-message-body {
+  color: var(--aui-fg-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.aui-message-meta {
+  align-items: baseline;
+  color: var(--aui-fg-faint);
+  display: flex;
+  font-size: 11px;
+  font-weight: 600;
+  gap: 8px;
+  justify-content: space-between;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.aui-message-meta span:first-child {
+  color: var(--aui-fg-muted);
+}
+
+.aui-message-body {
+  color: var(--aui-fg);
+  font-size: 14.5px;
+  line-height: 1.62;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.aui-block-message {
+  display: grid;
+  gap: 6px;
+}

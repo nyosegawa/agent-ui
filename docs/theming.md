@@ -4,12 +4,12 @@ Status: this page documents the vNext composable shell, fixed-thread view,
 usage-only panel, generic workspace slot, skills, apps/connectors, and browser
 verification surfaces tracked in `PLAN.md` and `TODO.md`.
 
-`@nyosegawa/agent-ui-react/style.css` ships a practical default theme and CSS variables. Hosts can override variables globally or within a wrapper.
+`@nyosegawa/agent-ui-react/styles.css` ships a practical default theme and CSS variables. Hosts can override variables globally or within a wrapper.
 
 ## Import
 
 ```ts
-import "@nyosegawa/agent-ui-react/style.css";
+import "@nyosegawa/agent-ui-react/styles.css";
 ```
 
 ## Variables

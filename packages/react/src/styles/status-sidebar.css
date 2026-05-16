@@ -1,0 +1,372 @@
+/* --- Status summary / details (refined to look intentionally different) -- */
+
+.aui-status-summary,
+.aui-usage-summary {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 999px;
+  box-shadow: var(--aui-elevation-1);
+  display: inline-grid;
+  gap: 8px;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-self: stretch;
+  min-height: 30px;
+  padding: 5px 12px;
+  width: 100%;
+}
+
+.aui-status-summary strong,
+.aui-usage-summary strong {
+  color: var(--aui-fg-muted);
+  font: 700 10.5px/1 var(--aui-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.aui-status-summary span,
+.aui-usage-summary span {
+  color: var(--aui-fg);
+  font-size: 12.5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-status-banners {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-md);
+  box-shadow: var(--aui-elevation-1);
+  overflow: hidden;
+}
+
+.aui-status-banners summary {
+  align-items: center;
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  list-style: none;
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+.aui-status-banners summary::-webkit-details-marker {
+  display: none;
+}
+
+.aui-status-banners summary strong {
+  color: var(--aui-fg-muted);
+  font: 700 10.5px/1 var(--aui-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.aui-status-banners summary span {
+  color: var(--aui-fg);
+  font-size: 12.5px;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-status-banners summary::after {
+  color: var(--aui-fg-faint);
+  content: "";
+  height: 14px;
+  width: 14px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2398948b' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  transition: transform 160ms var(--aui-easing);
+}
+
+.aui-status-banners details[open] summary::after {
+  transform: rotate(180deg);
+}
+
+/* --- Status card (rail composition) ------------------------------------- */
+
+.aui-status-card {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-md);
+  box-shadow: var(--aui-elevation-1);
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+}
+
+.aui-status-card-header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 10px 14px;
+}
+
+.aui-status-card-header strong {
+  color: var(--aui-fg-muted);
+  font: 700 10.5px/1 var(--aui-font);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.aui-status-card-header span {
+  color: var(--aui-fg);
+  font-size: 12.5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-status-card-header span[data-severity="warning"] {
+  color: var(--aui-warn);
+}
+
+.aui-status-card-header span[data-severity="critical"] {
+  color: var(--aui-danger);
+}
+
+.aui-status-card-details {
+  border-top: 1px solid var(--aui-rule);
+}
+
+.aui-status-card-details summary {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  list-style: none;
+  min-height: 34px;
+  padding: 7px 14px;
+}
+
+.aui-status-card-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.aui-status-card-details summary span {
+  color: var(--aui-fg-muted);
+  font: 600 11.5px/1 var(--aui-font);
+}
+
+.aui-status-card-details summary small {
+  color: var(--aui-fg-faint);
+  font-size: 11px;
+  margin-left: auto;
+}
+
+.aui-status-card-list {
+  display: grid;
+  gap: 4px;
+  padding: 0 10px 10px;
+}
+
+.aui-thread-list-name {
+  color: var(--aui-fg);
+  display: block;
+  font: 600 13px/1.35 var(--aui-font);
+  letter-spacing: -0.005em;
+  min-height: 18px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-thread-list-meta {
+  align-items: center;
+  color: var(--aui-fg-muted);
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+
+.aui-thread-list-dot {
+  background: var(--aui-fg-faint);
+  border-radius: 999px;
+  display: inline-block;
+  flex: 0 0 auto;
+  height: 6px;
+  width: 6px;
+}
+
+.aui-thread-list-dot[data-status="running"] {
+  background: var(--aui-primary);
+}
+
+.aui-thread-list-dot[data-status="waitingForInput"] {
+  background: var(--aui-warn);
+}
+
+.aui-thread-list-dot[data-status="error"] {
+  background: var(--aui-danger);
+}
+
+.aui-thread-list-dot[data-status="complete"],
+.aui-thread-list-dot[data-status="completed"] {
+  background: var(--aui-success);
+}
+
+.aui-thread-list-meta small {
+  color: var(--aui-fg-muted);
+  font-size: 11.5px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-thread-list-sentinel {
+  display: grid;
+  min-height: 44px;
+  padding: 8px 0 4px;
+  place-items: center;
+}
+
+.aui-thread-list-sentinel .aui-btn {
+  justify-self: stretch;
+  width: 100%;
+}
+
+/* --- Sidebar header / search -------------------------------------------- */
+
+.aui-sidebar-header {
+  padding: 2px 2px 0;
+}
+
+.aui-history-controls {
+  display: block;
+}
+
+.aui-history-controls .aui-input-shell {
+  min-height: 34px;
+}
+
+.aui-history-controls .aui-text-input {
+  font-size: 12.5px;
+  padding: 4px 0;
+}
+
+.aui-history-spinner {
+  animation: aui-spin 0.9s linear infinite;
+  border: 2px solid var(--aui-border-strong);
+  border-radius: 50%;
+  border-top-color: var(--aui-primary);
+  flex: 0 0 auto;
+  height: 13px;
+  width: 13px;
+}
+
+/* --- Mobile thread drawer ------------------------------------------------ */
+
+.aui-threads-trigger {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 999px;
+  color: var(--aui-fg);
+  cursor: pointer;
+  display: none;
+  flex: 0 0 auto;
+  font: 600 12px/1 var(--aui-font);
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 12px;
+}
+
+.aui-threads-trigger:hover {
+  background: var(--aui-panel);
+  border-color: var(--aui-border-strong);
+}
+
+.aui-threads-trigger:focus-visible {
+  box-shadow: var(--aui-focus-ring);
+  outline: none;
+}
+
+.aui-sidebar-backdrop {
+  background: rgba(15, 14, 12, 0.42);
+  border: 0;
+  cursor: pointer;
+  display: block;
+  inset: 0;
+  padding: 0;
+  position: fixed;
+  z-index: 45;
+}
+
+.aui-sidebar-toggle.aui-btn-icon-only.aui-btn-ghost {
+  border-radius: 999px;
+}
+
+/* --- Thread action menu (icon trigger) ---------------------------------- */
+
+.aui-thread-action-menu summary {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  color: var(--aui-fg-muted);
+  cursor: pointer;
+  display: inline-flex;
+  height: 28px;
+  justify-content: center;
+  list-style: none;
+  padding: 0;
+  width: 28px;
+}
+
+.aui-thread-action-menu summary:hover {
+  background: var(--aui-panel-alt);
+  color: var(--aui-fg);
+}
+
+.aui-thread-action-menu[open] summary {
+  background: var(--aui-panel-alt);
+}
+
+/* --- First-run --------------------------------------------------------- */
+
+.aui-first-run {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-lg);
+  box-shadow: var(--aui-elevation-1);
+  display: grid;
+  gap: 14px;
+  max-width: 520px;
+  padding: 24px;
+}
+
+.aui-first-run .aui-run-controls {
+  background: var(--aui-panel-quiet);
+  border: 1px solid var(--aui-border);
+  border-radius: 10px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  padding: 12px 14px;
+}
+
+/* The first-run card is narrow, so the thread-start panel stacks: execution
+ * mode and working directory span the full width, model and effort pair up. */
+.aui-first-run .aui-run-controls .aui-mode-group,
+.aui-first-run .aui-run-controls .aui-field-wide {
+  grid-column: 1 / -1;
+}
+
+.aui-first-run .aui-btn {
+  width: max-content;
+}
+
+/* --- Composer/run controls inside the legacy panel preserved ----------- */
+
+.aui-run-controls .aui-cwd-input,
+.aui-run-controls-compact .aui-cwd-input {
+  display: none;
+}

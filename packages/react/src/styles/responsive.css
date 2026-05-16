@@ -1,0 +1,269 @@
+/* --- Responsive 900px / mid ---------------------------------------- */
+
+@media (max-width: 980px) and (min-width: 641px) {
+  .aui-chat-body {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+
+  .aui-chat-rail {
+    display: grid;
+    gap: 8px;
+    grid-auto-columns: minmax(220px, 1fr);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    max-height: 96px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 12px 16px;
+  }
+
+  .aui-thread-column {
+    border-right: 0;
+  }
+
+  .aui-host-composition {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    min-height: auto;
+  }
+
+  .aui-host-thread {
+    border-bottom: 1px solid var(--aui-border);
+    border-right: 0;
+    min-height: 520px;
+  }
+
+  .aui-fixture-gallery-header,
+  .aui-fixture-preview header,
+  .aui-fixture-preview-frames {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aui-run-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+
+  .aui-mode-group,
+  .aui-field-wide {
+    grid-column: 1 / -1;
+  }
+}
+
+/* --- Responsive mobile -------------------------------------------- */
+
+@media (max-width: 640px) {
+  .aui-shell {
+    border-radius: 0;
+    border-width: 0;
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr);
+    height: calc(100vh - 24px);
+    min-height: 0;
+  }
+
+  .aui-shell[data-sidebar-collapsed="true"] {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  .aui-chat-body {
+    gap: 0;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    padding: 0;
+  }
+
+  .aui-thread-column {
+    border-right: 0;
+  }
+
+  .aui-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    overflow: visible;
+    padding: 0;
+  }
+
+  .aui-host-recipe {
+    padding: 12px 12px 24px;
+  }
+
+  .aui-host-recipe-shell {
+    border-radius: 10px;
+  }
+
+  .aui-host-recipe-header {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 18px 18px 16px;
+  }
+
+  .aui-host-recipe-meta {
+    justify-items: start;
+  }
+
+  .aui-host-composition {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(520px, 1fr) auto;
+    min-height: auto;
+  }
+
+  .aui-host-thread {
+    border-bottom: 1px solid var(--aui-border);
+    border-right: 0;
+    min-height: 520px;
+  }
+
+  .aui-host-context {
+    max-height: 320px;
+    padding: 12px 14px 18px;
+  }
+
+  .aui-chat-rail {
+    display: grid;
+    gap: 8px;
+    grid-auto-columns: minmax(208px, 78vw);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    max-height: 84px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    padding: 8px 12px;
+  }
+
+  .aui-chat-rail > * {
+    align-self: start;
+    flex: 0 0 min(78vw, 280px);
+  }
+
+  .aui-thread-header {
+    align-items: flex-start;
+    grid-template-columns: minmax(0, 1fr);
+    min-width: 0;
+    padding: 12px 14px;
+    width: 100%;
+  }
+
+  .aui-thread-title h1 {
+    font-size: 15.5px;
+  }
+
+  .aui-thread-actions {
+    justify-content: flex-start;
+    min-width: 0;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+  }
+
+  .aui-thread-title,
+  .aui-thread-title .aui-token-usage {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .aui-thread-title p {
+    max-width: none;
+  }
+
+  .aui-message-list {
+    gap: 14px;
+    padding: 14px 14px 22px;
+  }
+
+  .aui-message[data-kind="userMessage"] {
+    max-width: 92%;
+  }
+
+  .aui-sidebar {
+    border-right: 1px solid var(--aui-border);
+    bottom: 0;
+    box-shadow: var(--aui-shadow-lift);
+    gap: 10px;
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    left: 0;
+    max-height: none;
+    padding: 12px 14px;
+    position: fixed;
+    top: 0;
+    width: min(86vw, 332px);
+    z-index: 50;
+  }
+
+  .aui-run-controls {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    padding: 12px 14px 14px;
+  }
+
+  .aui-mode-group,
+  .aui-field-wide {
+    grid-column: 1 / -1;
+  }
+
+  .aui-approvals {
+    padding: 12px 14px;
+  }
+
+  .aui-status-banners summary,
+  .aui-usage-compact summary {
+    min-height: 38px;
+  }
+
+  .aui-status-banner-list,
+  .aui-usage-compact-body {
+    max-height: 280px;
+  }
+
+  .aui-status {
+    min-height: 44px;
+    padding: 7px 14px;
+  }
+
+  .aui-thread-list {
+    max-height: none;
+  }
+
+  .aui-fixture-gallery {
+    padding: 18px 12px;
+  }
+
+  .aui-fixture-gallery-header,
+  .aui-fixture-preview header,
+  .aui-fixture-preview-frames {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aui-fixture-gallery-actions {
+    justify-content: start;
+  }
+
+  .aui-fixture-preview iframe {
+    height: 480px;
+  }
+
+  .aui-fixture-frame-shell {
+    min-height: 480px;
+  }
+}
+
+/* ===========================================================================
+ *  Primitive craftsmanship overlay
+ *
+ *  Single source of truth for every interactive primitive (button, input,
+ *  composer, approval, status pill). Earlier sections in this file only own
+ *  the transcript, markdown, command, and diff surfaces — the interaction
+ *  layer is owned by the declarations below.
+ * ======================================================================== */
+
+:root {
+  --aui-focus-ring: 0 0 0 3px rgba(13, 148, 136, 0.28);
+  --aui-focus-ring-danger: 0 0 0 3px rgba(185, 28, 28, 0.28);
+  --aui-elevation-1: 0 1px 0 rgba(20, 18, 14, 0.05);
+  --aui-elevation-2: 0 6px 22px -14px rgba(20, 18, 14, 0.22);
+  --aui-radius-md: 8px;
+  --aui-radius-lg: 12px;
+  --aui-radius-xl: 16px;
+  --aui-easing: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --aui-tap-target: 36px;
+}

@@ -1,6 +1,6 @@
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
-import "@nyosegawa/agent-ui-react/style.css";
+import "@nyosegawa/agent-ui-react/styles.css";
 import "./themed.css";
 
 export function ThemedExample({ transport }: { transport: AgentTransport }) {

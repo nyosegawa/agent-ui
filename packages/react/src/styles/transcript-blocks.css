@@ -1,0 +1,327 @@
+/* --- Transcript command / diff items ------------------------------- */
+
+.aui-transcript-card {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 10px;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.aui-transcript-card summary {
+  align-items: center;
+  background: var(--aui-panel-quiet);
+  cursor: pointer;
+  display: grid;
+  gap: 6px 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  list-style: none;
+  min-height: 40px;
+  padding: 8px 12px;
+  transition: background-color 140ms var(--aui-easing);
+}
+
+.aui-transcript-card summary::-webkit-details-marker {
+  display: none;
+}
+
+.aui-transcript-card[open] summary {
+  border-bottom: 1px solid var(--aui-rule);
+}
+
+.aui-transcript-card summary:hover {
+  background: var(--aui-panel-alt);
+}
+
+.aui-transcript-card[data-status="failed"] summary,
+.aui-transcript-card[data-exit-fail="true"] summary {
+  background: var(--aui-danger-soft);
+}
+
+.aui-transcript-empty {
+  color: var(--aui-fg-faint);
+  font-size: 12px;
+  padding: 10px 12px;
+}
+
+.aui-terminal-label {
+  color: var(--aui-fg-muted);
+  display: inline-block;
+  font-family: var(--aui-font);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.aui-command-title {
+  color: var(--aui-fg);
+  font-family: var(--aui-font-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-command-meta {
+  color: var(--aui-fg-faint);
+  font-family: var(--aui-font);
+  font-size: 11px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-command-preview {
+  color: var(--aui-fg-muted);
+  font-family: var(--aui-font-mono);
+  font-size: 11px;
+  grid-column: 2 / 4;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-command-output {
+  background: var(--aui-code-bg);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  color: var(--aui-code-fg);
+  font-family: var(--aui-font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.005em;
+  line-height: 1.55;
+  margin: 0;
+  max-height: 360px;
+  max-width: 100%;
+  overflow: auto;
+  overflow-wrap: normal;
+  padding: 14px 16px;
+  white-space: pre;
+}
+
+.aui-transcript-card .aui-command-output {
+  border-top: 0;
+  max-height: 280px;
+}
+
+.aui-file-change-card .aui-diff {
+  border: 0;
+  border-radius: 0;
+}
+
+/* --- Content blocks (plan, thinking, tool, web, image, sys) -------- */
+
+.aui-content-block {
+  background: var(--aui-panel-quiet);
+  border: 1px solid var(--aui-border);
+  border-radius: 8px;
+  color: var(--aui-fg);
+  font-size: 13px;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.aui-content-block summary,
+.aui-content-block-heading,
+.aui-web-search-block {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  list-style: none;
+  min-width: 0;
+  padding: 9px 12px;
+}
+
+.aui-content-block summary::-webkit-details-marker {
+  display: none;
+}
+
+.aui-content-block summary {
+  cursor: pointer;
+}
+
+.aui-content-block summary span,
+.aui-content-block-heading span,
+.aui-web-search-block span {
+  color: var(--aui-fg-muted);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.aui-content-block summary strong,
+.aui-content-block-heading strong,
+.aui-web-search-block strong {
+  color: var(--aui-fg);
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.aui-content-block summary small,
+.aui-content-block-heading small {
+  color: var(--aui-fg-faint);
+  font-size: 11px;
+}
+
+.aui-tool-preview {
+  color: var(--aui-fg-muted);
+  flex-basis: 100%;
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.45;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-thinking-block pre,
+.aui-json-section pre {
+  background: var(--aui-code-bg);
+  color: var(--aui-code-fg);
+  font-family: var(--aui-font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  margin: 0;
+  max-height: 260px;
+  overflow: auto;
+  padding: 12px 14px;
+  white-space: pre-wrap;
+}
+
+.aui-plan-block {
+  background: var(--aui-primary-soft);
+  border-color: rgba(13, 148, 136, 0.22);
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.aui-plan-block > strong {
+  color: var(--aui-primary-strong);
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+
+.aui-plan-block .aui-message-body {
+  color: var(--aui-fg);
+  font-size: 13.5px;
+}
+
+.aui-json-section {
+  border-top: 1px solid var(--aui-rule);
+}
+
+.aui-json-section > span {
+  color: var(--aui-fg-muted);
+  display: block;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 8px 12px 0;
+  text-transform: uppercase;
+}
+
+.aui-json-section[data-tone="danger"] pre {
+  color: #fecaca;
+}
+
+.aui-block-metadata {
+  display: grid;
+  gap: 4px 12px;
+  grid-template-columns: max-content minmax(0, 1fr);
+  margin: 0;
+  padding: 0 12px 12px;
+}
+
+.aui-block-metadata dt {
+  color: var(--aui-fg-muted);
+  font-size: 12px;
+}
+
+.aui-block-metadata dd {
+  font-size: 12.5px;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.aui-system-info-block {
+  padding: 9px 12px;
+}
+
+.aui-system-info-block[data-subtype="error"] {
+  background: var(--aui-danger-soft);
+  border-color: rgba(185, 28, 28, 0.24);
+  color: var(--aui-danger);
+}
+
+.aui-image-block {
+  display: inline-grid;
+  gap: 6px;
+  padding: 10px;
+}
+
+.aui-image-block img,
+.aui-image-block video {
+  border-radius: 6px;
+  max-height: 260px;
+  max-width: min(420px, 100%);
+}
+
+.aui-image-block figcaption {
+  color: var(--aui-fg-faint);
+  font-size: 11px;
+}
+
+.aui-changed-file-list {
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  margin: 0;
+  padding: 10px 12px;
+}
+
+.aui-changed-file-list li {
+  align-items: center;
+  display: flex;
+  font-family: var(--aui-font-mono);
+  font-size: 12px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.aui-changed-file-list span {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 4px;
+  color: var(--aui-fg-muted);
+  flex: 0 0 auto;
+  font-family: var(--aui-font);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  min-width: 22px;
+  padding: 1px 5px;
+  text-align: center;
+}
+
+.aui-changed-file-list code {
+  font-family: var(--aui-font-mono);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

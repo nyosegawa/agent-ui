@@ -193,8 +193,8 @@ components.
 
 The React package keeps zero-dependency visual primitives internal. Shared
 icons and the button class helper live in
-`packages/react/src/components-internal.tsx`; `components.tsx` remains the
-public component surface and should not grow another local icon/button system.
+`packages/react/src/components-internal.tsx`; `components.ts` remains the
+public component barrel and should not grow another local icon/button system.
 
 The Vite fixture app is split by intent. Route composition stays in
 `examples/local-react-vite/src/main.tsx`, visual close-ups live under

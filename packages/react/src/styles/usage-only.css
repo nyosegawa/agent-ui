@@ -1,0 +1,182 @@
+/* --- Usage-only demo page (host shell) ---------------------------------- */
+/* Styles below are owned by the /usage-only example page, not by the core
+ * Agent UI primitives. They demonstrate four host shells around the same
+ * AgentUsagePanel / AgentUsageSummary primitives. */
+
+.aui-usage-only {
+  background: var(--aui-bg-soft);
+  display: grid;
+  gap: 28px;
+  margin: 0 auto;
+  max-width: 1180px;
+  min-height: 100vh;
+  padding: 36px 24px 64px;
+}
+
+.aui-usage-only-header {
+  align-items: end;
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  box-shadow: var(--aui-elevation-2);
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.6fr);
+  padding: 24px 26px;
+}
+
+.aui-usage-only-header h1 {
+  color: var(--aui-fg-strong);
+  font: 650 24px/1.2 var(--aui-font);
+  letter-spacing: -0.02em;
+  margin: 6px 0 8px;
+}
+
+.aui-usage-only-header p {
+  color: var(--aui-fg-muted);
+  font-size: 13.5px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.aui-usage-only-header code {
+  background: var(--aui-panel-quiet);
+  border-radius: 4px;
+  font-size: 12.5px;
+  padding: 1px 5px;
+}
+
+.aui-usage-only-kicker {
+  color: var(--aui-primary-strong);
+  font: 700 11px/1 var(--aui-font);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.aui-usage-only-section {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  box-shadow: var(--aui-elevation-1);
+  display: grid;
+  gap: 16px;
+  padding: 22px 24px 24px;
+}
+
+.aui-usage-only-section > header {
+  display: grid;
+  gap: 6px;
+}
+
+.aui-usage-only-section > header h2 {
+  color: var(--aui-fg-strong);
+  font: 650 17px/1.25 var(--aui-font);
+  letter-spacing: -0.012em;
+  margin: 0;
+}
+
+.aui-usage-only-section > header p {
+  color: var(--aui-fg-muted);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.aui-usage-only-section > header code {
+  background: var(--aui-panel-quiet);
+  border-radius: 4px;
+  font-size: 12.5px;
+  padding: 1px 5px;
+}
+
+.aui-usage-only-rail {
+  background: var(--aui-bg-soft);
+  border: 1px dashed var(--aui-border);
+  border-radius: 12px;
+  max-width: 360px;
+  padding: 14px;
+}
+
+.aui-usage-only-card-row {
+  align-items: start;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+}
+
+.aui-usage-only-dashboard {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.aui-usage-only-dashboard-card {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 12px;
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+}
+
+.aui-usage-only-dashboard-card strong {
+  color: var(--aui-fg-strong);
+  font: 650 13px/1 var(--aui-font);
+}
+
+.aui-usage-only-dashboard-card-value {
+  color: var(--aui-primary-strong);
+  font: 650 22px/1.1 var(--aui-font-mono);
+  letter-spacing: -0.01em;
+}
+
+.aui-usage-only-dashboard-card small {
+  color: var(--aui-fg-muted);
+  font-size: 12px;
+}
+
+.aui-usage-only-dashboard-card--full {
+  grid-column: 1 / -1;
+}
+
+.aui-usage-only-inline {
+  display: grid;
+  gap: 12px;
+}
+
+.aui-usage-only-inline-thread {
+  align-items: center;
+  background: var(--aui-bg-soft);
+  border: 1px solid var(--aui-border);
+  border-radius: 10px;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.aui-usage-only-inline-thread strong {
+  color: var(--aui-fg-strong);
+  display: block;
+  font: 650 14px/1.2 var(--aui-font);
+}
+
+.aui-usage-only-inline-thread small {
+  color: var(--aui-fg-muted);
+  font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .aui-usage-only {
+    padding: 22px 14px 48px;
+  }
+  .aui-usage-only-header,
+  .aui-usage-only-card-row,
+  .aui-usage-only-inline-thread {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .aui-usage-only-inline-thread {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

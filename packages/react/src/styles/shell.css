@@ -1,0 +1,41 @@
+/* --- Shell ---------------------------------------------------------- */
+
+.aui-shell {
+  background: var(--aui-bg);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius);
+  display: grid;
+  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  height: calc(100vh - 32px);
+  min-height: 640px;
+  overflow: hidden;
+  position: relative;
+}
+
+.aui-shell,
+.aui-shell * {
+  box-sizing: border-box;
+}
+
+.aui-shell[data-sidebar-collapsed="true"] {
+  grid-template-columns: 52px minmax(0, 1fr);
+}
+
+.aui-shell[data-sidebar-present="false"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 721px) {
+  .aui-shell {
+    height: min(900px, calc(100vh - 32px));
+  }
+
+  .aui-sidebar,
+  .aui-chat {
+    min-height: 0;
+  }
+
+  .aui-chat {
+    overflow: hidden;
+  }
+}

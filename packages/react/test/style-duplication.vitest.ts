@@ -1,8 +1,18 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const STYLE_PATH = join(__dirname, "..", "src", "style.css");
+const STYLE_PATH = join(__dirname, "..", "src", "styles.css");
+const STYLE_DIR = join(__dirname, "..", "src", "styles");
+
+function readStyles(): string {
+  const entry = readFileSync(STYLE_PATH, "utf8");
+  const chunks = readdirSync(STYLE_DIR)
+    .filter((name) => name.endsWith(".css"))
+    .sort()
+    .map((name) => readFileSync(join(STYLE_DIR, name), "utf8"));
+  return [entry, ...chunks].join("\n");
+}
 
 function topLevelSelectorOccurrences(css: string): Map<string, number[]> {
   const occurrences = new Map<string, number[]>();
@@ -27,8 +37,8 @@ function topLevelSelectorOccurrences(css: string): Map<string, number[]> {
   return occurrences;
 }
 
-describe("packages/react style.css", () => {
-  const css = readFileSync(STYLE_PATH, "utf8");
+describe("packages/react styles.css", () => {
+  const css = readStyles();
   const occurrences = topLevelSelectorOccurrences(css);
 
   it.each([
