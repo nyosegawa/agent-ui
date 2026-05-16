@@ -161,6 +161,15 @@ diffs are not grouped into a UI-owned activity bucket or rendered as detached
 bottom panels because either choice separates the work from the assistant
 context and makes stored Codex sessions harder to audit.
 
+Pending approvals are part of that same transcript. `AgentThreadView` and
+`AgentChat` append `AgentApprovalQueue` as the final item of the transcript
+scroll area, so an approval reads as the last pending-decision item of the
+thread rather than a separate pane wedged between the transcript and the
+composer. `AgentThreadSurface` therefore has exactly four grid rows — header,
+optional critical notices, transcript, composer — and the transcript scroll
+area is the only scroll container. The approval surface never carries its own
+`max-height` or `overflow`.
+
 Hydrated history is intentionally incremental. `AgentMessageList` starts from
 the newest transcript items, reveals older items through `Show earlier items`,
 and keeps expensive command output, JSON, long markdown, and CodeMirror diff

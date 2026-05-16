@@ -87,7 +87,7 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "617px",
-    "height": 227,
+    "height": 553,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
@@ -122,16 +122,16 @@
   },
   "approvals": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
-    "borderColor": "rgb(241, 214, 163) rgb(26, 25, 22) rgb(26, 25, 22)",
+    "borderColor": "rgb(26, 25, 22)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "625px",
-    "height": 325,
-    "overflowX": "auto",
-    "overflowY": "auto",
+    "gridTemplateColumns": "617px",
+    "height": 281,
+    "overflowX": "visible",
+    "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 661
+    "width": 617
   },
   "composer": {
     "backgroundColor": "rgb(250, 249, 244)",

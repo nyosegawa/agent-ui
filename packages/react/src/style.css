@@ -293,11 +293,14 @@
   padding: 14px;
 }
 
+/* Header, optional critical notices, the transcript scroll area, then the
+ * composer. Pending approvals are NOT a row here — they render inside the
+ * transcript scroll area as a trailing pending-decision item. */
 .aui-thread-surface {
   background: var(--aui-panel);
   display: grid;
   flex: 1 1 auto;
-  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
   height: 100%;
   min-height: 0;
   min-width: 0;
@@ -327,16 +330,8 @@
   grid-row: 3;
 }
 
-.aui-thread-surface > .aui-approvals {
-  grid-row: 4;
-}
-
 .aui-thread-surface > .aui-compose-panel {
-  grid-row: 5;
-}
-
-.aui-thread-surface:has(.aui-approvals) {
-  grid-template-rows: auto auto minmax(36px, 1fr) auto auto;
+  grid-row: 4;
 }
 
 /* --- Status bar ----------------------------------------------------- */
@@ -577,6 +572,14 @@
   font-size: 12px;
   gap: 8px;
   justify-content: center;
+  max-width: 100%;
+  min-width: 0;
+}
+
+/* Trailing transcript slot — hosts the pending-approval surface inside the
+ * scroll area so it reads as the last item of the thread, not a pane. */
+.aui-transcript-tail {
+  display: grid;
   max-width: 100%;
   min-width: 0;
 }
@@ -1141,6 +1144,7 @@
   font-size: 11px;
 }
 
+/* Command line — wraps long content so it can never push the viewport. */
 .aui-command-line {
   background: var(--aui-code-bg);
   border-radius: 7px;
@@ -1148,22 +1152,22 @@
   display: block;
   font-family: var(--aui-font-mono);
   font-size: 12.5px;
-  overflow: auto;
+  margin: 0;
+  overflow-wrap: anywhere;
   padding: 10px 12px;
+  white-space: pre-wrap;
 }
 
 /* Compact inline metadata — wraps key/value pairs onto 1–2 lines instead of
- * stacking large three-column cards. */
+ * stacking large three-column cards. No border so it reads as a metadata
+ * row rather than a nested card. */
 .aui-metadata-grid {
-  background: var(--aui-panel-quiet);
-  border: 1px solid var(--aui-rule);
-  border-radius: 7px;
-  column-gap: 16px;
+  column-gap: 14px;
   display: flex;
   flex-wrap: wrap;
   margin: 0;
-  padding: 7px 10px;
-  row-gap: 3px;
+  padding: 0;
+  row-gap: 4px;
 }
 
 .aui-metadata-grid div {
@@ -1188,9 +1192,7 @@
   font-size: 11.5px;
   margin: 0;
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
 .aui-approval-json {
@@ -3519,20 +3521,15 @@
   }
 }
 
-/* --- Approval card (rebuilt) -------------------------------------------- */
+/* --- Approval surface (in-transcript pending decision) ----------------- */
 
+/* The approval surface is a transcript item, never an independent scroll
+ * pane. It carries no max-height and no overflow of its own — the transcript
+ * scroll area owns scrolling. */
 .aui-approvals {
-  background: linear-gradient(180deg, #fff8e6 0%, #fffaf0 100%);
-  border-top: 1px solid #f1d6a3;
   display: grid;
   gap: 8px;
-  max-height: min(54vh, 460px);
-  min-height: 0;
   min-width: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
-  padding: 12px 18px 14px;
-  scroll-padding: 12px 18px 14px;
   width: 100%;
 }
 
@@ -3549,11 +3546,11 @@
   border: 1px solid var(--aui-border);
   border-left: 3px solid var(--aui-warn);
   border-radius: 10px;
-  box-shadow: var(--aui-elevation-2);
+  box-shadow: var(--aui-elevation-1);
   display: grid;
   gap: 10px;
   min-width: 0;
-  padding: 12px 14px;
+  padding: 11px 13px;
   width: 100%;
 }
 
@@ -3684,8 +3681,9 @@
   border-radius: 8px;
   color: var(--aui-code-fg);
   margin: 0;
-  max-height: 168px;
-  overflow: auto;
+  max-height: 156px;
+  /* y-only scroll for very long commands; never a horizontal scroller. */
+  overflow: hidden auto;
   padding: 10px 12px;
 }
 
@@ -3698,7 +3696,9 @@
 }
 
 .aui-approval .aui-approval-json {
-  max-height: 168px;
+  max-height: 156px;
+  overflow: hidden auto;
+  overflow-wrap: anywhere;
 }
 
 /* Compact picker rows for additional pending approvals. */
@@ -4353,10 +4353,8 @@
     max-width: 100%;
   }
   .aui-approvals {
-    max-height: min(58vh, 460px);
     max-width: 100%;
     min-width: 0;
-    padding: 12px 12px;
     width: 100%;
   }
   .aui-approval {
@@ -4364,13 +4362,19 @@
     min-width: 0;
     width: 100%;
   }
+  /* Approve spans the full row; the scoped + decline decisions share one. */
+  .aui-approval-actions {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+  }
   .aui-approval-actions .aui-btn {
-    flex: 1 1 100%;
     min-width: 0;
     white-space: normal;
     width: 100%;
   }
   .aui-approval-actions .aui-btn-primary {
+    grid-column: 1 / -1;
     order: -1;
   }
 }

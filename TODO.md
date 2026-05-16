@@ -557,3 +557,56 @@ Acceptance:
 - [x] Real port-5175 verification: composer, mode/model/effort menus, history
       search, mobile drawer, and pasted-image attachment all work; no
       `Work trace` UI and no `Load all` control.
+
+## Milestone 14: Approval In Transcript
+
+Reopened on 2026-05-16 because the approval UI still failed: `AgentApprovalQueue`
+was an independent `AgentThreadSurface` grid row with its own `max-height` +
+`overflow: auto`, so on mobile the approval pane took ~350-400px while the
+message list collapsed to ~36px, `.aui-command-line` / `.aui-metadata-grid`
+clipped past a 390px viewport, and the experience read as a pane wedged between
+the transcript and the composer instead of a pending decision at the end of the
+thread.
+
+- [x] Add a `footer` slot to `AgentMessageList` and render it as the final
+      `<li>` of the transcript scroll area.
+- [x] Make `AgentThreadTimeline` accept `threadId` and append the thread's
+      pending `AgentApprovalQueue` into the transcript footer.
+- [x] Remove the standalone `AgentApprovalQueue` row from `AgentThreadView`
+      and the host-workflow recipe composition.
+- [x] Drop the `.aui-approvals` grid row and the `:has(.aui-approvals)`
+      row-shrink rule from `.aui-thread-surface` (now four rows: header,
+      critical notices, transcript, composer).
+- [x] Remove `max-height`, `overflow`, the gradient background, and the pane
+      border from `.aui-approvals`; the transcript scroll area is the only
+      scroll container.
+- [x] Rebuild the approval card compact: drop heavy elevation, wrap command
+      lines (`white-space: pre-wrap`) and metadata (`overflow-wrap: anywhere`),
+      and use a 2-column mobile action grid with a full-width primary
+      `Approve`.
+- [x] Pull the transcript auto-scroll back from the bottom when a pending
+      approval's decision footer would be clipped above the fold.
+- [x] Add a Playwright gate asserting the approval is inside `.aui-message-list`,
+      has no `max-height`, is not an independent scroll pane, the message list
+      stays >=160px, and the document has no horizontal overflow at desktop and
+      mobile.
+- [x] Extend `scripts/real-local-web-layout-audit.mjs` with the same
+      approval-pane checks (skipped when no approval is pending).
+- [x] Update `docs/component-api.md`, `docs/architecture.md`, `docs/testing.md`,
+      `README.md`, and the host-workflow recipe README for the in-transcript
+      approval surface; refresh `docs/screenshots/*`.
+
+Acceptance:
+
+- [x] `bun run typecheck`, `bun run lint`, `bun test`, `bunx vitest run`,
+      `bun run test:protocol`, `bun run test:fixtures`, `bun run build`,
+      `bun run publint`, `bun run attw`, `bun run test:node-compat`, and
+      `bun run test:e2e:playwright` all pass.
+- [x] `bun run test:e2e:real-local-web-layout` passes against a live port-5175
+      `examples/codex-local-web` server, and the audit also passes against
+      port-5174 `/?state=kitchen` (approval fixture) with the message list at
+      496px / 387px and zero overflow offenders.
+- [x] Browser QA on port-5174 (`/`, `/?state=kitchen`, `/host-workflow-recipe`)
+      and port-5175 confirms the approval is a transcript item, the decision
+      footer is hit-testable, and there is no horizontal overflow on desktop
+      or mobile.

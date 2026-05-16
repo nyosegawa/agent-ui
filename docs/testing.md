@@ -717,9 +717,10 @@ the chat. This pass rebuilt them:
   mobile, with `Esc` / outside-click / arrow-key support. The standalone
   run-settings popover and `aui-run-settings-popover` / `aui-run-settings-sheet`
   CSS were deleted.
-- `AgentApprovalQueue` is a compact pending-decision surface above the
-  composer: one expanded card plus compact picker rows for any other pending
-  requests, with inline (not three-column-card) metadata.
+- `AgentApprovalQueue` is a compact pending-decision surface: one expanded
+  card plus compact picker rows for any other pending requests, with inline
+  (not three-column-card) metadata. (The 2026-05-16 approval-in-transcript
+  gate below moved it inside the transcript scroll area.)
 - Working directory is a thread-start setting only. The composer toolbar on an
   existing thread exposes no cwd editor; cwd shows read-only in the header.
 - The thread sidebar auto-loads page one and debounce-filters from the search
@@ -739,6 +740,43 @@ port-5175 `examples/codex-local-web` server (real Codex, 25 stored threads):
 desktop and mobile, closed and run-settings-open phases, reported no overflow
 offenders and a hit-testable Send button, and the real composer accepted a
 pasted image that uploaded to the host endpoint and rendered as a chip.
+
+### Approval-in-transcript gate on 2026-05-16
+
+A follow-up review found the approval surface still failed: `AgentApprovalQueue`
+was an independent `AgentThreadSurface` grid row with its own
+`max-height` + `overflow: auto`, so on mobile the approval pane occupied
+~350–400px while the message list collapsed to ~36px, and `.aui-command-line`
+/ `.aui-metadata-grid` clipped past a 390px viewport. This pass moved the
+approval into the transcript:
+
+- `AgentMessageList` accepts a `footer` slot; `AgentThreadTimeline` renders the
+  approval queue into it, so the approval is the final `<li>` of the transcript
+  scroll area — a pending-decision item, not a pane between the transcript and
+  the composer.
+- `AgentThreadSurface` dropped the `.aui-approvals` grid row and the
+  `:has(.aui-approvals)` row-shrink rule. It now has four rows: header,
+  critical notices, transcript, composer.
+- `.aui-approvals` lost its `max-height`, `overflow`, gradient background, and
+  pane border — the transcript scroll area is the only scroll container.
+- The approval card dropped the heavy elevation; command lines wrap
+  (`white-space: pre-wrap`) and metadata wraps (`overflow-wrap: anywhere`) so
+  nothing overflows a 390px viewport. Mobile actions are a 2-column grid with a
+  full-width primary `Approve`.
+- The transcript auto-scroll pulls back from the very bottom when a pending
+  approval's decision footer would otherwise be clipped above the fold, so
+  `Approve` / `Decline` stay visible and hit-testable without a manual scroll.
+
+New coverage: a Playwright gate (`kitchen approval renders inside the
+transcript, not a separate pane`) asserts, at desktop 1280×900 and mobile
+390×900, that the approval is inside `.aui-message-list`, has no `max-height`,
+is not an independent scroll pane, the message list stays ≥160px, and the
+document has no horizontal overflow. `scripts/real-local-web-layout-audit.mjs`
+gained the same checks (skipped when no approval is pending) and was run
+against both port-5175 (real Codex) and port-5174 `/?state=kitchen` (approval
+fixture): desktop and mobile reported message lists of 496px / 387px, the
+approval inside the transcript, no independent scroll pane, and zero overflow
+offenders.
 
 ## Visual Regression
 

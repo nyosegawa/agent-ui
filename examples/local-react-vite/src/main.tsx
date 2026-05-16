@@ -1392,8 +1392,7 @@ function HostWorkflowComposition() {
             <AgentThreadSurface>
               <AgentThreadHeader thread={thread} threadId={threadId} />
               <AgentCriticalNoticeList />
-              <AgentThreadTimeline thread={thread} />
-              <AgentApprovalQueue threadId={threadId} />
+              <AgentThreadTimeline thread={thread} threadId={threadId} />
               <AgentComposerPanel thread={thread} threadId={threadId} />
             </AgentThreadSurface>
           </div>

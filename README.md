@@ -22,11 +22,13 @@ Working directory is chosen at thread start and shown read-only afterward.
 Image and file attachments work through paste, drag-and-drop, and the file
 pickers when the host wires `resolveLocalAttachment`.
 
-`AgentApprovalQueue` is a compact pending-decision surface directly above the
-composer — one expanded card plus compact picker rows — never a large
-independent scroll pane. Approval actions stay reachable on desktop and mobile.
-On mobile, chat and composer are the primary surface and thread history is an
-off-canvas drawer opened from a `Threads` trigger.
+`AgentApprovalQueue` is a compact pending-decision surface rendered as the
+final item of the transcript scroll area — one expanded card plus compact
+picker rows. It is a transcript item, not a pane wedged between the transcript
+and the composer, and it has no scroll pane of its own. The transcript scrolls
+so the decision footer stays reachable on desktop and mobile. On mobile, chat
+and composer are the primary surface and thread history is an off-canvas drawer
+opened from a `Threads` trigger.
 
 `AgentChat` defaults to the transcript plus optional sidebar; usage and
 diagnostics are opt-in secondary chrome for host composition. The same

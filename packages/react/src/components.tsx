@@ -421,8 +421,12 @@ export function AgentThreadView({
     <AgentThreadSurface>
       <AgentThreadHeader thread={thread} threadId={resolvedThreadId} />
       <AgentCriticalNoticeList />
-      <AgentThreadTimeline renderItem={renderItem} thread={thread} />
-      <AgentApprovalQueue renderApproval={renderApproval} threadId={resolvedThreadId} />
+      <AgentThreadTimeline
+        renderApproval={renderApproval}
+        renderItem={renderItem}
+        thread={thread}
+        threadId={resolvedThreadId}
+      />
       <AgentComposerPanel
         onRequestAppMention={onRequestAppMention}
         onRequestPluginMention={onRequestPluginMention}
@@ -467,14 +471,40 @@ export function AgentThreadHeader({
   );
 }
 
+/**
+ * Renders the thread transcript. When a `threadId` is supplied, pending
+ * approvals for that thread are appended to the end of the transcript as a
+ * pending-decision item — they are part of the scroll area, not a separate
+ * pane stacked above the composer.
+ */
 export function AgentThreadTimeline({
+  renderApproval,
   renderItem,
   thread,
+  threadId,
 }: {
+  renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
   renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
   thread: ThreadState;
+  threadId?: string;
 }) {
-  return <AgentMessageList renderItem={renderItem} thread={thread} />;
+  const approvalThreadId = threadId ?? thread.thread.id;
+  const { approvals } = useAgentApprovals(approvalThreadId);
+  return (
+    <AgentMessageList
+      footer={
+        approvals.length > 0 ? (
+          <AgentApprovalQueue
+            renderApproval={renderApproval}
+            threadId={approvalThreadId}
+          />
+        ) : undefined
+      }
+      renderItem={renderItem}
+      scrollKey={approvals.length}
+      thread={thread}
+    />
+  );
 }
 
 function AgentFirstRun({ onStartThread }: { onStartThread: () => void }) {

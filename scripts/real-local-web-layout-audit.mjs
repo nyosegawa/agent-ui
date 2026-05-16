@@ -95,6 +95,21 @@ for (const result of results) {
     if (audit.messageOverlapsComposer) {
       failures.push(`${result.viewport}:${phase}: message list overlaps composer`);
     }
+    if (audit.approvalOutsideTranscript) {
+      failures.push(
+        `${result.viewport}:${phase}: approval surface is outside the transcript scroll area`,
+      );
+    }
+    if (audit.approvalsIndependentScrollPane) {
+      failures.push(
+        `${result.viewport}:${phase}: approval surface is an independent scroll pane`,
+      );
+    }
+    if (audit.approvalPresent && audit.messageListHeight < 160) {
+      failures.push(
+        `${result.viewport}:${phase}: message list crushed to ${audit.messageListHeight}px under a pending approval`,
+      );
+    }
     for (const hidden of audit.notVisibleInViewport) {
       failures.push(`${result.viewport}:${phase}: not visible in viewport ${hidden}`);
     }
@@ -173,12 +188,23 @@ async function auditPage(page, requiredViewportSelectors, viewportName) {
           );
         }
       }
-      const messageRect = document
-        .querySelector(".aui-message-list")
-        ?.getBoundingClientRect();
+      const messageListEl = document.querySelector(".aui-message-list");
+      const messageRect = messageListEl?.getBoundingClientRect();
       const composePanelRect = document
         .querySelector(".aui-compose-panel")
         ?.getBoundingClientRect();
+      // Pending approvals must stay inside the transcript scroll area and
+      // must never become an independent scroll pane that crushes the list.
+      const approvalsEl = document.querySelector(".aui-approvals");
+      const approvalCardEl = document.querySelector(".aui-approval");
+      const approvalsStyle = approvalsEl ? getComputedStyle(approvalsEl) : null;
+      const approvalsIndependentScrollPane = approvalsEl
+        ? ["auto", "scroll"].includes(approvalsStyle?.overflowY ?? "") &&
+          approvalsEl.scrollHeight - approvalsEl.clientHeight > 4
+        : false;
+      const approvalOutsideTranscript = Boolean(
+        approvalsEl && messageListEl && !messageListEl.contains(approvalsEl),
+      );
       const composerRect = document
         .querySelector(".aui-composer")
         ?.getBoundingClientRect();
@@ -206,8 +232,12 @@ async function auditPage(page, requiredViewportSelectors, viewportName) {
           ? Boolean(document.querySelector(".aui-sidebar .aui-thread-list"))
           : Boolean(document.querySelector(".aui-threads-trigger"));
       return {
+        approvalOutsideTranscript,
+        approvalPresent: Boolean(approvalCardEl),
+        approvalsIndependentScrollPane,
         hasComposer: Boolean(document.querySelector(".aui-compose-panel .aui-composer")),
         hasLoadAll: document.body.textContent?.includes("Load all") ?? false,
+        messageListHeight: messageRect ? Math.round(messageRect.height) : 0,
         hasMainThread: Boolean(
           document.querySelector(".aui-thread-surface .aui-message-list"),
         ),

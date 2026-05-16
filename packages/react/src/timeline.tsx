@@ -16,10 +16,20 @@ import {
 } from "./transcript-window";
 
 export function AgentMessageList({
+  footer,
   renderItem,
+  scrollKey,
   thread,
 }: {
+  /**
+   * Trailing transcript content rendered as the final scroll-area item.
+   * The default thread view uses it to keep the pending-approval surface
+   * inside the transcript instead of in a separate scroll pane.
+   */
+  footer?: React.ReactNode;
   renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
+  /** Changing this value scrolls the transcript to its end (e.g. a new approval). */
+  scrollKey?: string | number;
   thread: ThreadState;
 }) {
   const listRef = useRef<HTMLOListElement | null>(null);
@@ -40,7 +50,19 @@ export function AgentMessageList({
     const list = listRef.current;
     if (!list) return;
     list.scrollTop = list.scrollHeight;
-  }, [thread.thread.id, thread.orderedTurnIds.length]);
+    // The pending-approval surface lives at the end of the transcript. When
+    // it is taller than the viewport, scrolling to the very bottom would clip
+    // the primary decision footer above the fold — pull back just enough so
+    // the Approve / Decline actions stay visible without a manual scroll.
+    const actions = list.querySelector<HTMLElement>(
+      ".aui-transcript-tail .aui-approval-actions",
+    );
+    if (actions) {
+      const clippedAbove =
+        list.getBoundingClientRect().top - actions.getBoundingClientRect().top;
+      if (clippedAbove > 0) list.scrollTop -= clippedAbove + 12;
+    }
+  }, [thread.thread.id, thread.orderedTurnIds.length, scrollKey]);
   return (
     <ol className="aui-message-list" ref={listRef}>
       {hiddenItemCount > 0 ? (
@@ -76,6 +98,7 @@ export function AgentMessageList({
           />
         ) : null;
       })}
+      {footer ? <li className="aui-transcript-tail">{footer}</li> : null}
     </ol>
   );
 }

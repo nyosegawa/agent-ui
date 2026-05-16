@@ -105,13 +105,15 @@ overall layout — it lives in the parts themselves:
   refined segmented control with elevated pressed state. None of these read
   as browser defaults.
 - **Approvals**: `AgentApprovalQueue` is a compact pending-decision surface
-  directly above the composer, not a large independent scroll pane. The first
-  request is an expanded card (shield icon, humanized title and one-line
-  reason, `LOW / MED / HIGH` risk pill, command on a dark code surface,
-  compact inline metadata, and three explicit decisions on a divider footer —
-  green primary `Approve`, secondary `Approve for session`, danger
-  `Decline`). Any remaining requests collapse into compact picker rows; click
-  a row to expand it. The card colour rail switches with risk.
+  rendered as the final item of the transcript scroll area — not a separate
+  pane stacked between the transcript and the composer, and never an
+  independent scroll pane. The first request is an expanded card (shield
+  icon, humanized title and one-line reason, `LOW / MED / HIGH` risk pill,
+  command on a dark code surface, compact inline metadata that wraps instead
+  of overflowing, and three explicit decisions on a divider footer — green
+  primary `Approve`, secondary `Approve for session`, danger `Decline`). Any
+  remaining requests collapse into compact picker rows; click a row to expand
+  it. The card colour rail switches with risk.
 - **Timeline**: user messages are right-aligned bubbles tinted with the
   primary accent and a tail; assistant text flows as full-width markdown
   without a bubble; reasoning is a muted italic blockquote; plan blocks use
@@ -147,15 +149,21 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentThreadSidebar`: persisted Codex thread history browser. It follows
   `thread/list` cursors with an IntersectionObserver sentinel and keeps the
   visible fallback to a single Load more action.
-- `AgentThreadSurface`: unopinionated thread column surface for host-arranged
-  header, notices, timeline, approvals, and composer primitives.
-- `AgentThreadView`: one thread with header, timeline, approvals, and composer.
+- `AgentThreadSurface`: unopinionated thread column surface for a host-arranged
+  header, notices, timeline, and composer. Its grid rows are header, optional
+  critical notices, the transcript scroll area, then the composer — pending
+  approvals are not a row here.
+- `AgentThreadView`: one thread with header, transcript (with embedded
+  approvals), and composer.
 - `AgentThreadHeader`: title, cwd/session context, resume, stop, and new-thread actions.
-- `AgentThreadTimeline`: normalized turn and item renderer.
+- `AgentThreadTimeline`: normalized turn and item renderer. Pass `threadId` to
+  append that thread's pending approvals to the end of the transcript.
 - `AgentContentBlockView`: standalone renderer for normalized thinking, plan,
   command, file-change, tool, web search, image, and system-info blocks.
 - `AgentApprovalQueue`: compact pending-decision surface — one expanded
   approval card plus compact picker rows for any other pending requests.
+  `AgentThreadView` / `AgentChat` embed it at the end of the transcript;
+  hosts can also place it standalone.
 - `AgentComposerPanel`: turn composer with inline mode / model / effort menus.
 - `AgentRunSettingsPanel`: thread-start settings panel with model, effort,
   cwd, and execution-mode
@@ -206,14 +214,16 @@ Render a full workspace with a host-owned side panel:
 The side panel is a generic render slot. Host applications own any app runtime,
 panel state, storage, registry, or custom tool workflow they place inside it.
 
-Render a host-owned thread layout without the preset:
+Render a host-owned thread layout without the preset. `AgentThreadTimeline`
+receives `threadId`, so pending approvals are appended to the transcript scroll
+area as the final pending-decision item — there is no separate approval row
+between the transcript and the composer:
 
 ```tsx
 <AgentThreadSurface>
   <AgentThreadHeader thread={thread} threadId={threadId} />
   <AgentCriticalNoticeList />
-  <AgentThreadTimeline thread={thread} />
-  <AgentApprovalQueue threadId={threadId} />
+  <AgentThreadTimeline thread={thread} threadId={threadId} />
   <AgentComposerPanel thread={thread} threadId={threadId} />
 </AgentThreadSurface>
 ```
@@ -234,13 +244,17 @@ types while still preserving protocol-derived detail in adapters and reducers.
 
 `AgentApprovalQueue` reads pending server requests through
 `useAgentServerRequests()` / `useAgentApprovals()` and renders them as a
-compact pending-decision surface directly above the composer — one expanded
-card plus compact picker rows for any other pending requests, never a large
-independent scroll pane. The expanded card shows structured command, cwd,
-policy, file-change, patch, user-input, MCP elicitation, dynamic-tool,
-permissions, auth-refresh, and attestation context before sending stable
-approval or rejection responses, and its decision footer stays reachable on
-desktop and mobile.
+compact pending-decision surface. In `AgentThreadView` and `AgentChat` it is
+appended to the end of the transcript scroll area — it is a transcript item,
+not a row stacked between the transcript and the composer, and it has no
+`max-height` or `overflow` of its own (the transcript owns scrolling). One
+expanded card plus compact picker rows for any other pending requests. The
+expanded card shows structured command, cwd, policy, file-change, patch,
+user-input, MCP elicitation, dynamic-tool, permissions, auth-refresh, and
+attestation context before sending stable approval or rejection responses.
+When a pending approval is taller than the transcript viewport, the timeline
+scrolls so the decision footer stays visible on desktop and mobile without a
+manual scroll.
 
 Thread actions are exposed through the default header and
 `useAgentThreadActions()`: rename, fork, archive, unarchive, compact, and
@@ -299,8 +313,9 @@ a meaningful Codex operation.
 history is an off-canvas drawer opened from the `Threads` trigger in the
 status bar, not a permanently stacked panel. Mode / model / effort menus open
 as bottom sheets that stay inside the viewport, the approval surface stays
-directly above the composer, and the secondary rail (status, usage,
-diagnostics) is a compact horizontally-scrolling strip rather than hidden.
+inside the transcript scroll area (so it never crushes the message list), and
+the secondary rail (status, usage, diagnostics) is a compact
+horizontally-scrolling strip rather than hidden.
 
 ## Usage
 

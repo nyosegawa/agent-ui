@@ -349,6 +349,58 @@ for (const viewport of [
   });
 }
 
+for (const viewport of [
+  { height: 900, name: "desktop", width: 1280 },
+  { height: 900, name: "mobile", width: 390 },
+] as const) {
+  test(`kitchen approval renders inside the transcript, not a separate pane on ${viewport.name}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(viewport);
+    await page.goto("/?state=kitchen");
+    await expect(page.locator(".aui-thread-surface").first()).toBeVisible();
+    const layout = await page.evaluate(() => {
+      const round = (value: number) => Math.round(value);
+      const messageList = document.querySelector(".aui-message-list");
+      const approvals = document.querySelector(".aui-approvals");
+      const approval = document.querySelector(".aui-approval");
+      const composePanel = document.querySelector(".aui-compose-panel");
+      const messageRect = messageList?.getBoundingClientRect();
+      const approvalsRect = approvals?.getBoundingClientRect();
+      const composeRect = composePanel?.getBoundingClientRect();
+      const approvalsStyle = approvals ? getComputedStyle(approvals) : null;
+      return {
+        approvalAboveComposer:
+          approvalsRect && composeRect
+            ? round(approvalsRect.bottom) <= round(composeRect.top) + 1
+            : false,
+        approvalInsideTranscript: Boolean(
+          messageList && approvals && messageList.contains(approvals),
+        ),
+        approvalPresent: Boolean(approval),
+        approvalsIndependentScrollPane: approvals
+          ? ["auto", "scroll"].includes(approvalsStyle?.overflowY ?? "") &&
+            approvals.scrollHeight - approvals.clientHeight > 4
+          : true,
+        approvalsMaxHeight: approvalsStyle?.maxHeight ?? null,
+        documentNoOverflow:
+          document.documentElement.scrollWidth <=
+          document.documentElement.clientWidth,
+        messageListHeight: messageRect ? round(messageRect.height) : 0,
+      };
+    });
+    expect(layout.approvalPresent, JSON.stringify(layout)).toBe(true);
+    // Approval is a transcript item, not a row stacked above the composer.
+    expect(layout.approvalInsideTranscript, JSON.stringify(layout)).toBe(true);
+    expect(layout.approvalsIndependentScrollPane, JSON.stringify(layout)).toBe(false);
+    expect(layout.approvalsMaxHeight, JSON.stringify(layout)).toBe("none");
+    // The transcript is not crushed by the pending approval.
+    expect(layout.messageListHeight, JSON.stringify(layout)).toBeGreaterThanOrEqual(160);
+    expect(layout.approvalAboveComposer, JSON.stringify(layout)).toBe(true);
+    expect(layout.documentNoOverflow, JSON.stringify(layout)).toBe(true);
+  });
+}
+
 test("usage-only page demonstrates four host shells, not a blank page", async ({
   page,
 }) => {
