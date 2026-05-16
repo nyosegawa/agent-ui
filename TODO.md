@@ -630,7 +630,7 @@ details disclosure is opened.
       without changing public exports or App Server item-kind behavior.
 - [x] Organize transcript CSS so message, block, tool, command, and diff
       selectors are easier to audit without changing layout.
-- [ ] Split the local fixture example into route and fixture modules while
+- [x] Split the local fixture example into route and fixture modules while
       keeping it clearly separate from `examples/codex-local-web`.
 - [ ] Update README and docs for the refactored internal architecture and
       remove stale vocabulary.
