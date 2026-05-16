@@ -123,8 +123,15 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
   await expect(page.getByText("fixture@example.com")).toBeVisible();
   await expect(page.getByText("No threads found.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Start thread" })).toBeVisible();
-  // New threads expose cwd / project selection at thread start.
-  await expect(page.getByLabel("Working directory")).toBeVisible();
+  // New threads expose cwd / project selection at thread start, fully inside
+  // the narrow first-run card.
+  const cwdField = page.getByLabel("Working directory");
+  await expect(cwdField).toBeVisible();
+  const cwdFits = await cwdField.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return rect.left >= -1 && rect.right <= window.innerWidth + 1;
+  });
+  expect(cwdFits).toBe(true);
   await expect(page.getByLabel("Usage limits")).toContainText(
     "fixture-demo-model weekly",
   );
