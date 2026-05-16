@@ -1664,10 +1664,10 @@ function composerPlaceholder(status: ThreadState["status"], isPreviewOnly = fals
 }
 
 /**
- * Pending decision surface that sits directly above the composer. One
- * approval is expanded at a time; any remaining requests collapse into a
- * compact picker so the surface never grows into a large independent scroll
- * pane and the decision actions always stay reachable.
+ * Pending decision surface rendered as a transcript item by the default thread
+ * view. One approval is expanded at a time; any remaining requests collapse
+ * into a compact picker so the surface never grows into a large independent
+ * scroll pane and the decision actions always stay reachable.
  */
 export function AgentApprovalQueue({
   renderApproval,
