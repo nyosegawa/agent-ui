@@ -628,7 +628,7 @@ details disclosure is opened.
       scroll traps.
 - [x] Split `packages/react/src/timeline.tsx` into internal transcript modules
       without changing public exports or App Server item-kind behavior.
-- [ ] Organize transcript CSS so message, block, tool, command, and diff
+- [x] Organize transcript CSS so message, block, tool, command, and diff
       selectors are easier to audit without changing layout.
 - [ ] Split the local fixture example into route and fixture modules while
       keeping it clearly separate from `examples/codex-local-web`.
