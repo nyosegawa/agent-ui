@@ -689,16 +689,56 @@ desktop 1280x900 and mobile 390x900. Checked routes:
 
 The DOM audit checks both document scroll width and bounding rects for the
 message list, turns, messages, transcript cards, command output, diff viewer,
-thread header, sidebar rows, sidebar meta, composer, and run settings surface.
-It is intentionally a manual gate over an already-running port-5175
-`examples/codex-local-web` server; the script does not start that server.
-The audit fails if the thread surface, message list, compose panel, composer,
-sidebar, thread list, run-settings summary, or open run-settings sheet is
-outside the viewport. It also hit-tests the Send button center point, including
-the disabled waiting-for-input state, so an overlaid or offscreen composer is a
-hard failure. No horizontal overflow offenders were found on the checked
-desktop or mobile viewports. The audit also verified that legacy work/trace
-classes and labels are absent from the rendered DOM.
+thread header, thread rows, composer, composer toolbar, composer run-settings
+menu triggers, and approvals. It is intentionally a manual gate over an
+already-running port-5175 `examples/codex-local-web` server; the script does
+not start that server. The audit fails if the thread surface, message list,
+compose panel, composer, composer run-settings menu trigger, the desktop
+sidebar / thread list, the mobile `Threads` drawer trigger, or an open
+run-settings menu panel is outside the viewport. It also hit-tests the Send
+button center point in the closed phase, including the disabled
+waiting-for-input state, so an overlaid or offscreen composer is a hard
+failure. No horizontal overflow offenders were found on the checked desktop or
+mobile viewports. The audit also verified that legacy work/trace classes,
+labels, and a `Load all` control are absent from the rendered DOM.
+
+### Composer / approvals / history / mobile rebuild gate on 2026-05-16
+
+A follow-up review found the basic interaction surfaces still unfinished: the
+composer hid run settings behind a separate "Run settings" disclosure, the
+approval queue rendered every request as a full card inside a large scroll
+pane, working directory was editable mid-thread, history needed an explicit
+`Load` button, and the mobile layout stacked the whole thread sidebar under
+the chat. This pass rebuilt them:
+
+- The composer is the primary input surface. Mode and a combined model ·
+  effort selector are compact anchored menus in the composer toolbar
+  (`AuiMenu`) — anchored above the trigger on desktop, bottom sheets on
+  mobile, with `Esc` / outside-click / arrow-key support. The standalone
+  run-settings popover and `aui-run-settings-popover` / `aui-run-settings-sheet`
+  CSS were deleted.
+- `AgentApprovalQueue` is a compact pending-decision surface above the
+  composer: one expanded card plus compact picker rows for any other pending
+  requests, with inline (not three-column-card) metadata.
+- Working directory is a thread-start setting only. The composer toolbar on an
+  existing thread exposes no cwd editor; cwd shows read-only in the header.
+- The thread sidebar auto-loads page one and debounce-filters from the search
+  box; the standalone `Load` button is gone. On mobile it is an off-canvas
+  drawer opened from a `Threads` trigger.
+- Image / file attachments work through paste, drag-and-drop, and the toolbar
+  pickers; `examples/codex-local-web` adds a real `POST /agent-ui/upload`
+  host endpoint so a browser `File` becomes a real `localImage` path.
+
+New `packages/react` vitest specs cover pasted/dropped/removed attachments,
+sending image attachments as `localImage` input, the mode and model/effort
+menus, existing-thread cwd absence, multi-approval compact-picker expansion,
+and debounced history search. The Playwright suite checks the composer menus
+open inside the viewport, the mobile thread drawer, and the compact approval
+picker. `bun run test:e2e:real-local-web-layout` was re-run against a live
+port-5175 `examples/codex-local-web` server (real Codex, 25 stored threads):
+desktop and mobile, closed and run-settings-open phases, reported no overflow
+offenders and a hit-testable Send button, and the real composer accepted a
+pasted image that uploaded to the host endpoint and rendered as a chip.
 
 ## Visual Regression
 

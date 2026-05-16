@@ -75,16 +75,25 @@ The default style sheet is warm and typography-led, not card-heavy. The
 input, composer, approval) so the visual quality no longer depends on the
 overall layout — it lives in the parts themselves:
 
-- **Composer**: a single bordered rounded card containing attachment chips,
-  an auto-resizing textarea, and an inline icon-button toolbar. Attach file
-  and Attach image use a paperclip and a dedicated image icon. App and Plugin
-  appear as icon-text ghost buttons only when the host supplies the matching
-  `onRequestAppMention` / `onRequestPluginMention` resolver — the library
-  never opens a browser `prompt()` dialog. The Send button is
-  a circular primary icon button on the right with an `Enter to send` hint.
-  Run settings collapse behind a chip-shape `<details>` summary so the
-  composer stays the primary surface. Pending-approval and preview-only
-  states show a warm notice strip without hiding the field.
+- **Composer**: the primary input surface — a single bordered rounded card
+  containing attachment chips, an auto-resizing textarea, and an inline
+  toolbar. The toolbar carries attach/image icon buttons, optional App/Plugin
+  mention buttons, the **mode** and **model · effort** menus, and a circular
+  primary Send icon button with an `Enter to send` hint. Attach file and
+  Attach image use a paperclip and a dedicated image icon and appear only
+  when the host wires `resolveLocalAttachment`. App and Plugin appear only
+  when the host supplies `onRequestAppMention` / `onRequestPluginMention` —
+  the library never opens a browser `prompt()` dialog. There is no separate
+  "Run settings" disclosure: mode, model, and effort are compact toolbar
+  menus (see below). Pending-approval and preview-only states show a warm
+  notice strip without hiding the field.
+- **Mode / model / effort menus**: `AgentComposer` renders execution mode and
+  a combined model · effort selector as compact anchored menus in the toolbar.
+  Each trigger shows the current short value; clicking opens a menu of
+  `icon + label + selected check` items. The menu opens anchored above the
+  trigger on desktop and as a bottom sheet on mobile, and supports
+  `Esc`, outside-click, and arrow-key navigation. Working directory is **not**
+  in this menu — cwd is a thread-start setting (see below).
 - **Button system**: `aui-btn` plus `aui-btn-primary | -secondary | -ghost |
   -danger | -subtle` and `aui-btn-sm | -lg | -icon-only`. `Approve` is the
   highest-contrast affordance in the surface, `Decline` is a danger button,
@@ -95,20 +104,26 @@ overall layout — it lives in the parts themselves:
   optional leading icon, a unified `aui-select` with a custom chevron, and a
   refined segmented control with elevated pressed state. None of these read
   as browser defaults.
-- **Approval card**: a shield icon, a humanized title and one-line reason,
-  a `LOW / MED / HIGH` risk pill, the command on a dark code surface, key
-  metadata in a grid, and three explicit decisions on a divider footer
-  (green primary `Approve`, secondary `Approve for session`, danger
-  `Decline`). The card colour rail switches with risk.
+- **Approvals**: `AgentApprovalQueue` is a compact pending-decision surface
+  directly above the composer, not a large independent scroll pane. The first
+  request is an expanded card (shield icon, humanized title and one-line
+  reason, `LOW / MED / HIGH` risk pill, command on a dark code surface,
+  compact inline metadata, and three explicit decisions on a divider footer —
+  green primary `Approve`, secondary `Approve for session`, danger
+  `Decline`). Any remaining requests collapse into compact picker rows; click
+  a row to expand it. The card colour rail switches with risk.
 - **Timeline**: user messages are right-aligned bubbles tinted with the
   primary accent and a tail; assistant text flows as full-width markdown
   without a bubble; reasoning is a muted italic blockquote; plan blocks use
   a primary-tinted callout; command and diff blocks share a single dark
   code surface. `COMPLETED` status labels are suppressed on user/assistant
   bubbles so they stop competing with the content.
-- **Sidebar**: search input with a leading icon, refined thread list items
-  with a coloured status dot, and small icon-only toggles for collapse and
-  history navigation.
+- **Sidebar**: a leading-icon search input that auto-loads the first history
+  page and debounce-filters as you type — there is no standalone Load button;
+  pagination is an IntersectionObserver sentinel with a single subtle
+  `Load more` fallback. Refined thread list items with a coloured status dot.
+  On mobile the sidebar is an off-canvas drawer opened from the `Threads`
+  trigger in the status bar.
 - **Status / usage / status pills**: pill-shape summary chips in the rail
   with a pulsing dot for `running`; the details disclosure is a separately
   styled card so the two never read as a duplicate.
@@ -139,9 +154,11 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentThreadTimeline`: normalized turn and item renderer.
 - `AgentContentBlockView`: standalone renderer for normalized thinking, plan,
   command, file-change, tool, web search, image, and system-info blocks.
-- `AgentApprovalQueue`: pending server-request approval cards.
-- `AgentComposerPanel`: run settings and turn composer.
-- `AgentRunSettingsPanel`: compact model, effort, cwd, and execution-mode
+- `AgentApprovalQueue`: compact pending-decision surface — one expanded
+  approval card plus compact picker rows for any other pending requests.
+- `AgentComposerPanel`: turn composer with inline mode / model / effort menus.
+- `AgentRunSettingsPanel`: thread-start settings panel with model, effort,
+  cwd, and execution-mode
   settings primitive for popovers, sheets, or host-owned settings panels.
 - `AgentStatusSummary`, `AgentStatusDetails`, and `AgentCriticalNoticeList`:
   severity-normalized model reroute, deprecation, config, account, MCP OAuth,
@@ -216,10 +233,14 @@ core state, so hosts can keep visual components free of generated App Server
 types while still preserving protocol-derived detail in adapters and reducers.
 
 `AgentApprovalQueue` reads pending server requests through
-`useAgentServerRequests()` / `useAgentApprovals()`. Default approval cards show
-structured command, cwd, policy, file-change, patch, user-input, MCP
-elicitation, dynamic-tool, permissions, auth-refresh, and attestation context
-before sending stable approval or rejection responses.
+`useAgentServerRequests()` / `useAgentApprovals()` and renders them as a
+compact pending-decision surface directly above the composer — one expanded
+card plus compact picker rows for any other pending requests, never a large
+independent scroll pane. The expanded card shows structured command, cwd,
+policy, file-change, patch, user-input, MCP elicitation, dynamic-tool,
+permissions, auth-refresh, and attestation context before sending stable
+approval or rejection responses, and its decision footer stays reachable on
+desktop and mobile.
 
 Thread actions are exposed through the default header and
 `useAgentThreadActions()`: rename, fork, archive, unarchive, compact, and
@@ -249,12 +270,37 @@ an opinion about that picker's UI.
 />
 ```
 
-Local browser files are only enabled when the host supplies
-`resolveLocalAttachment`; that resolver must turn a `File` into a real Codex
-input such as a `localImage` path or uploaded image URL. The library does not
-treat browser-only `File.name` values as App Server-readable paths. The
-attach-image button and image attachment chip use a dedicated image icon, not
-the `@`-mention icon, so attachment kinds are visually distinguishable.
+Local image and file attachments are only enabled when the host supplies
+`resolveLocalAttachment`. The composer then accepts attachments through three
+paths — clipboard paste, drag and drop, and the toolbar attach/image file
+pickers — and shows each as a removable chip above the textarea. On send, each
+chip's resolved `CodexUserInput` is appended to the `turn/start` input items
+after the text. The resolver must turn a `File` into a real Codex input such
+as a `localImage` path or uploaded image URL; the library does not treat
+browser-only `File.name` values as App Server-readable paths, and a resolver
+returning `null` (or throwing) surfaces an inline "could not be attached"
+notice. `examples/codex-local-web` shows the full host responsibility: a
+`POST /agent-ui/upload` endpoint persists the browser `File` next to the App
+Server and returns an absolute path, which the resolver wraps with
+`localImageInput`. The attach-image button and image attachment chip use a
+dedicated image icon, not the `@`-mention icon.
+
+### Working directory is a thread-start setting
+
+cwd is chosen when a thread starts — the empty-state / first-run
+`AgentRunControls` panel exposes a working-directory field. An existing thread
+shows its cwd read-only in `AgentThreadHeader`; the composer toolbar never
+offers a cwd editor, because changing the working directory mid-thread is not
+a meaningful Codex operation.
+
+### Mobile shell policy
+
+`AgentChat` keeps chat and composer as the mobile primary surface. Thread
+history is an off-canvas drawer opened from the `Threads` trigger in the
+status bar, not a permanently stacked panel. Mode / model / effort menus open
+as bottom sheets that stay inside the viewport, the approval surface stays
+directly above the composer, and the secondary rail (status, usage,
+diagnostics) is a compact horizontally-scrolling strip rather than hidden.
 
 ## Usage
 

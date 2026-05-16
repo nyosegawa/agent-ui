@@ -12,16 +12,29 @@ The visual design system is intentionally typography-led, not card-heavy. User
 messages render as right-aligned chat bubbles, assistant output flows as
 markdown without a bubble, reasoning is a muted blockquote, plan blocks use a
 primary-tinted callout, and command/diff blocks share a dark code surface inline
-with the transcript. Approval
-cards are the highest-contrast affordance on the thread surface, with a strong
-primary `Approve` button and outline secondaries. `AgentChat` now defaults to
-the transcript plus optional sidebar; usage and diagnostics are opt-in
-secondary chrome for host composition, not preset defaults. The same primitives
-are exported individually so host apps can rebuild this layout, add their own
-usage/status rail, or use any other shell without the preset. The
-`/host-workflow-recipe` example is the
-canonical proof of that composition; `/fixture-gallery` is the visual QA
-surface for every state. Saved evidence lives under `docs/screenshots/`.
+with the transcript.
+
+The composer is the primary input surface: an auto-resizing textarea, removable
+attachment chips, and an inline toolbar that carries attach/image pickers,
+optional App/Plugin mention buttons, compact **mode** and **model · effort**
+menus, and a primary Send button. There is no separate "Run settings" panel.
+Working directory is chosen at thread start and shown read-only afterward.
+Image and file attachments work through paste, drag-and-drop, and the file
+pickers when the host wires `resolveLocalAttachment`.
+
+`AgentApprovalQueue` is a compact pending-decision surface directly above the
+composer — one expanded card plus compact picker rows — never a large
+independent scroll pane. Approval actions stay reachable on desktop and mobile.
+On mobile, chat and composer are the primary surface and thread history is an
+off-canvas drawer opened from a `Threads` trigger.
+
+`AgentChat` defaults to the transcript plus optional sidebar; usage and
+diagnostics are opt-in secondary chrome for host composition. The same
+primitives are exported individually so host apps can rebuild this layout, add
+their own usage/status rail, or use any other shell without the preset. The
+`/host-workflow-recipe` example is the canonical proof of that composition;
+`/fixture-gallery` is the visual QA surface for every state. Saved evidence
+lives under `docs/screenshots/`.
 
 ## Status
 

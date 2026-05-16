@@ -510,3 +510,50 @@ Acceptance:
 - [x] No `globalThis.prompt()` composer mention flow, `IconAt` image
       attachment, skill-with-app-specific API, or non-Apps/connectors framing
       for `app/list` has returned.
+
+## Milestone 13: Composer / Approvals / History / Mobile Completion
+
+Reopened on 2026-05-16 after a review found the basic experience still
+unfinished: run settings were an external disclosure, approvals were a large
+independent scroll pane, working directory was editable mid-thread, history
+needed an explicit Load button, and mobile stacked the whole sidebar under the
+chat.
+
+- [x] Make `AgentApprovalQueue` a compact pending-decision surface above the
+      composer: one expanded card plus compact picker rows, inline metadata,
+      no large independent scroll pane.
+- [x] Rebuild the composer as the primary input surface and remove the
+      standalone `Run settings` disclosure.
+- [x] Replace mode segmented control and model/effort selects with compact
+      anchored toolbar menus (`AuiMenu`) that open as bottom sheets on mobile
+      and support Esc / outside-click / arrow-key navigation.
+- [x] Make working directory a thread-start setting only; remove cwd editing
+      from existing-thread composer chrome.
+- [x] Support image/file attachments through paste, drag-and-drop, and the
+      toolbar pickers, with removable chips and send-payload wiring.
+- [x] Add a real host upload endpoint to `examples/codex-local-web` so a
+      browser `File` becomes a real `localImage` path.
+- [x] Auto-load thread history and debounce-filter it from the search box;
+      remove the standalone `Load` button.
+- [x] Rebuild the mobile layout: chat + composer first, thread history as an
+      off-canvas drawer opened from a `Threads` trigger.
+- [x] Add fixture-gallery close-ups for pasted image, multiple attachments,
+      mode menu, model/effort menu, and a mobile chat shell.
+- [x] Add component tests for attachments, menus, cwd absence, multi-approval
+      display, and debounced search; update Playwright and the real-local-web
+      layout audit.
+- [x] Refresh `docs/screenshots/*` and update README/docs for the new
+      composer toolbar, menus, cwd-at-thread-start, attachments, approval
+      surface, and mobile shell policy.
+
+Acceptance:
+
+- [x] `bun run typecheck`, `bun run lint`, `bun test`, `bun run test:protocol`,
+      `bun run test:fixtures`, `bun run build`, `bun run publint`,
+      `bun run attw`, `bun run test:node-compat`, and
+      `bun run test:e2e:playwright` all pass.
+- [x] `bun run test:e2e:real-local-web-layout` passes against a live port-5175
+      `examples/codex-local-web` server with no horizontal overflow.
+- [x] Real port-5175 verification: composer, mode/model/effort menus, history
+      search, mobile drawer, and pasted-image attachment all work; no
+      `Work trace` UI and no `Load all` control.
