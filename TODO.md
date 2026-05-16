@@ -626,7 +626,7 @@ details disclosure is opened.
       cards show readable previews, open tool cards expose arguments/result/
       error, thread rows keep title/meta, and markdown/code blocks avoid nested
       scroll traps.
-- [ ] Split `packages/react/src/timeline.tsx` into internal transcript modules
+- [x] Split `packages/react/src/timeline.tsx` into internal transcript modules
       without changing public exports or App Server item-kind behavior.
 - [ ] Organize transcript CSS so message, block, tool, command, and diff
       selectors are easier to audit without changing layout.
