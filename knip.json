@@ -1,0 +1,65 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "eslint.config.js",
+    "playwright.config.ts",
+    "vitest.config.ts",
+    "scripts/*.mjs"
+  ],
+  "project": [
+    "*.config.{js,ts,mjs}",
+    "scripts/*.mjs"
+  ],
+  "ignore": [
+    "**/dist/**",
+    "**/.next/**",
+    "docs/screenshots/**",
+    "packages/codex/src/generated/**"
+  ],
+  "ignoreDependencies": [
+    "@changesets/cli",
+    "prettier"
+  ],
+  "workspaces": {
+    "packages/codex": {
+      "entry": ["src/index.ts", "scripts/import-schema.ts", "test/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}", "scripts/**/*.ts", "test/**/*.{ts,tsx}", "tsup.config.ts"]
+    },
+    "packages/core": {
+      "entry": ["src/index.ts", "test/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}", "test/**/*.{ts,tsx}", "tsup.config.ts"]
+    },
+    "packages/react": {
+      "entry": ["src/index.ts", "test/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}", "test/**/*.{ts,tsx}", "tsup.config.ts"]
+    },
+    "packages/server": {
+      "entry": ["src/index.ts", "test/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}", "test/**/*.{ts,tsx}", "tsup.config.ts"]
+    },
+    "packages/web-components": {
+      "entry": ["src/index.tsx", "test/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}", "test/**/*.{ts,tsx}", "tsup.config.ts"]
+    },
+    "examples/codex-local-web": {
+      "entry": ["server.ts", "src/**/*.{ts,tsx}", "e2e/**/*.{ts,tsx}", "vite.config.ts"],
+      "project": ["server.ts", "src/**/*.{ts,tsx}", "e2e/**/*.{ts,tsx}", "vite.config.ts"]
+    },
+    "examples/docs-site": {
+      "entry": ["src/**/*.{ts,tsx}", "vite.config.ts"],
+      "project": ["src/**/*.{ts,tsx}", "vite.config.ts"]
+    },
+    "examples/local-react-vite": {
+      "entry": ["src/**/*.{ts,tsx}", "e2e/**/*.{ts,tsx}", "vite.config.ts"],
+      "project": ["src/**/*.{ts,tsx}", "e2e/**/*.{ts,tsx}", "vite.config.ts"]
+    },
+    "examples/next-local-bridge": {
+      "entry": ["app/**/*.{ts,tsx}", "next.config.mjs"],
+      "project": ["app/**/*.{ts,tsx}", "next.config.mjs", "next-env.d.ts"]
+    },
+    "examples/recipes": {
+      "entry": ["src/**/*.{ts,tsx}"],
+      "project": ["src/**/*.{ts,tsx}"]
+    }
+  }
+}

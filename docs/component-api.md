@@ -85,10 +85,9 @@ Transcript item primitives are exported for host composition and close-up QA:
 
 ### Visual design system
 
-The default style sheet is warm and typography-led, not card-heavy. The
-2026-05-15 craftsmanship pass rebuilt every interactive primitive (button,
-input, composer, approval) so the visual quality no longer depends on the
-overall layout — it lives in the parts themselves:
+The default style sheet is warm and typography-led, not card-heavy. Every
+interactive primitive (button, input, composer, approval) owns its visual
+quality directly instead of depending on a page-level shell:
 
 - **Composer**: the primary input surface — a single bordered rounded card
   containing attachment chips, an auto-resizing textarea, and an inline

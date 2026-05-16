@@ -99,7 +99,9 @@ Acceptance:
 - [x] Add generic fixed-thread composition with `AgentThreadView`.
 - [x] Add `AgentWorkspace` for chat plus optional host-owned side panel slot.
 - [x] Add headless hooks/controllers: `useAgentThreadController`, `useAgentTurnController`, `useAgentServerRequests`, `useAgentUsage`, `useAgentSkills`, and `useAgentApps`.
-- [x] Keep the old public API only where it remains naturally compatible with the new primitives; do not preserve awkward shapes for compatibility.
+- [x] Keep only public API shapes that fit the current primitive-first
+      architecture; remove awkward aliases instead of preserving them for
+      compatibility.
 
 Acceptance:
 
@@ -121,19 +123,19 @@ rate-limit normal status was treated too strongly, and the host workflow/gallery
 examples needed to prove real composition.
 
 Reopened a third time on 2026-05-15 because an external review still rejected
-the UI as "bordered card stacks on a fixed shell". The visual design system,
-preset hierarchy, and host workflow surface were rebuilt with a warm typography-
-led palette, primary-thread layout, condensed secondary rail, and host-recipe
+the UI as "bordered card stacks on a fixed shell". The current visual design
+system, preset hierarchy, and host workflow surface use a warm typography-led
+palette, primary-thread layout, condensed secondary rail, and host-recipe
 context blocks composed entirely from primitives. See the 2026-05-15 visual
-quality rebuild gate entry in `docs/testing.md`.
+quality gate entry in `docs/testing.md`.
 
 Reopened a fourth time on 2026-05-15 after a follow-up review found that the
 layout was fine but the *basic primitives themselves* (composer, button, input,
 approval, command/diff block, sidebar) were under-crafted: the composer read
 as a row of form controls, button hierarchy was unclear, App/Plugin chips
 looked careless, and the approval card lacked decision affordance. The
-interactive layer was rebuilt in place. See the 2026-05-15 primitive
-craftsmanship rebuild entry in `docs/testing.md`.
+interactive layer now lives in focused primitives. See the 2026-05-15
+primitive craftsmanship entry in `docs/testing.md`.
 
 Reopened a fifth time on 2026-05-15 because the default UI still treated
 command/file-change work as a UI-owned activity grouping instead of a Codex App
@@ -446,8 +448,8 @@ App / Plugin mentions, image attachments reused the `@`-mention icon,
       resolver so embedders never ship a button that does nothing.
 - [x] Add a dedicated `IconImage` and use it for the attach-image button and
       the image attachment chip; retire `IconAt` from those slots.
-- [x] Delete legacy composer / button / segmented / status-pill /
-      history-controls CSS blocks that were superseded by the rebuilt section
+- [x] Delete removed composer / button / segmented / status-pill /
+      history-controls CSS blocks that were superseded by the current section
       in `packages/react/src/styles.css`.
 - [x] Cover composer behaviour with new vitest specs (no `globalThis.prompt`
       ever, resolver-driven chips, hidden buttons without resolvers, image
@@ -473,7 +475,7 @@ Acceptance:
 - [x] `bun run typecheck`, `bun run lint`, `bun test`, `bunx vitest run`,
       `bun run test:protocol`, `bun run test:fixtures`, `bun run build`,
       `bun run publint`, `bun run attw`, and `bun run test:e2e:playwright`
-      all pass on the rebuilt branch.
+      all pass on the current branch.
 - [x] No `skill-with-app`-specific registry, panel, storage, or client-tool
       APIs reappeared in `packages/`, `docs/`, or `examples/`.
 - [x] `app/list` is still framed as Codex Apps/connectors, not as
@@ -637,8 +639,9 @@ details disclosure is opened.
       mixed with every primitive fixture.
 - [x] Add pure timeline helper tests for block synthesis, transcript-window
       retention, text/status formatting, and preview suppression.
-- [x] Move shared internal icons and button class construction out of
-      `packages/react/src/components-main.tsx` without changing public exports.
+- [x] Move shared internal icons and button class construction into focused
+      `packages/react/src/components/*` modules without changing public
+      exports.
 - [x] Update README and docs for the refactored internal architecture and
       remove stale vocabulary.
 - [x] Re-run the required validation ladder and browser QA for 5174 fixture

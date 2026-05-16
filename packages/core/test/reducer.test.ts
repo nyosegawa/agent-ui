@@ -280,7 +280,7 @@ describe("agentReducer", () => {
     expect(turns[0]?.streamingTextByItemId["item-agent"]).toContain("Approval UI");
     expect(turns[0]?.streamingTextByItemId["item-reasoning"]).toContain("reviewable");
     expect(turns[0]?.commandOutputByItemId["item-command"]).toContain("7 tests passed");
-    expect(turns[0]?.filePatchByItemId["item-file"]).toContain("AgentDiffPanel");
+    expect(turns[0]?.filePatchByItemId["item-file"]).toContain("AgentDiffViewer");
     expect(
       selectPendingApprovals(state, "thread-demo").map((request) => request.kind),
     ).toEqual(["commandApproval", "fileChangeApproval"]);

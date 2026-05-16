@@ -9,7 +9,7 @@ test("renders Agent UI chat", async ({ page }) => {
   await page.getByLabel("Command output").first().click();
   await expect(page.getByLabel("Command output")).toContainText("7 tests passed");
   await page.getByLabel("Diff preview").first().click();
-  await expect(page.getByLabel("Diff preview")).toContainText("AgentDiffPanel");
+  await expect(page.getByLabel("Diff preview")).toContainText("AgentDiffViewer");
   await expect(page.getByRole("button", { name: "Approve" }).first()).toBeVisible();
 
   // Mode / model / effort live in the composer toolbar as compact menus —

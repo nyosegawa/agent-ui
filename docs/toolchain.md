@@ -120,20 +120,20 @@ Decision:
 unit/integration: Vitest
 DOM tests: Testing Library + jsdom
 browser smoke: Playwright
-a11y: axe-core / jest-axe
+a11y: jest-axe
 ```
 
 Version snapshot:
 
 ```text
 vitest: 4.1.5
-playwright: 1.59.1
+@playwright/test: 1.59.1
 @testing-library/react: 16.3.2
 @testing-library/user-event: 14.6.1
 @testing-library/jest-dom: 6.9.1
 jsdom: 29.1.1
-axe-core: 4.11.4
 jest-axe: 10.0.0
+knip: 6.14.1
 ```
 
 ## Repo Tooling
@@ -145,6 +145,7 @@ monorepo orchestration: bun workspaces first, turbo optional
 versioning/release: changesets
 lint/format: eslint + prettier
 package validation: publint + arethetypeswrong
+dead-code audit: knip
 npm provenance: enabled in release workflow when publishing with NPM_TOKEN
 ```
 

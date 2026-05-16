@@ -480,12 +480,12 @@ Latest real Codex smoke on 2026-05-15:
   authenticated account, usage present, 5 stored threads, 6 models, and one
   command approval request observed and declined.
 
-### Visual quality rebuild gate on 2026-05-15
+### Visual quality gate on 2026-05-15
 
 After the primitive-first gate closed, an external review still rejected the UI
-as "low-quality bordered cards on a fixed shell". The visual design system,
-preset hierarchy, host workflow recipe, fixture gallery, and mobile rail were
-all rebuilt. Verification commands run from the repo root:
+as "low-quality bordered cards on a fixed shell". The current visual design
+system, preset hierarchy, host workflow recipe, fixture gallery, and mobile
+rail are validated together. Verification commands run from the repo root:
 
 - `bun run typecheck`
 - `bun run lint`
@@ -534,7 +534,7 @@ Visual-quality results:
 - Approval cards use a warm tinted card with a strong primary `Approve` button
   and outline secondary actions so the highest-stakes decision is always the
   most prominent affordance.
-- The `/host-workflow-recipe` route is rebuilt from primitives only — no
+- The `/host-workflow-recipe` route is composed from primitives only — no
   `AgentChat` preset — with a real product header ("Verify Codex local build"),
   a two-column composition, host-owned blocks for workflow stats, validation
   checklist, pending requests, plan/context preview, and host actions wired to
@@ -559,13 +559,14 @@ Residual risk:
   overflow) rather than per-pixel. Pixel-level diffs remain opt-in to avoid
   cross-OS font-rendering churn.
 
-### Primitive craftsmanship rebuild on 2026-05-15 (later pass)
+### Primitive Craftsmanship Gate On 2026-05-15
 
 The 2026-05-15 visual-quality gate above closed after layouts were fixed, but
 an external review still rejected the UI: **"layout を直しても composer / button
 / approval / input といった基本部品の作り込みが弱い限り、完成品には見えない"**. The
-problem was diagnosed as *primitive craftsmanship*, not layout. This pass
-rebuilt the interactive layer in place rather than re-arranging the screen.
+problem was diagnosed as *primitive craftsmanship*, not layout. The current
+interactive layer is organized around those primitives rather than a page-level
+layout patch.
 
 Specifically:
 
@@ -586,7 +587,7 @@ Specifically:
 - **Inputs**: added a shared `aui-input-shell` with optional leading icon
   and a unified `aui-select` with a custom chevron, so the cwd input, search
   input, and selects share one visual language and a single focus ring.
-- **Approval card**: rebuilt with a shield icon, humanized title, one-line
+- **Approval card**: uses a shield icon, humanized title, one-line
   reason, `LOW / MED / HIGH` risk pill driven by sandbox/command heuristics,
   command on a dark code surface, metadata grid for `Working directory /
   Sandbox / Approval policy`, and a divider footer with three explicit
@@ -701,7 +702,7 @@ run-settings menu panel is outside the viewport. It also hit-tests the Send
 button center point in the closed phase, including the disabled
 waiting-for-input state, so an overlaid or offscreen composer is a hard
 failure. No horizontal overflow offenders were found on the checked desktop or
-mobile viewports. The audit also verified that legacy work/trace classes,
+mobile viewports. The audit also verifies that removed work/trace classes,
 labels, and a `Load all` control are absent from the rendered DOM.
 
 ### Composer / approvals / history / mobile rebuild gate on 2026-05-16
@@ -711,7 +712,7 @@ composer hid run settings behind a separate "Run settings" disclosure, the
 approval queue rendered every request as a full card inside a large scroll
 pane, working directory was editable mid-thread, history needed an explicit
 `Load` button, and the mobile layout stacked the whole thread sidebar under
-the chat. This pass rebuilt them:
+the chat. The current interaction model fixes those issues:
 
 - The composer is the primary input surface. Mode and a combined model ·
   effort selector are compact anchored menus in the composer toolbar

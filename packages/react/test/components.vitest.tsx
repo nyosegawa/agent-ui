@@ -1773,7 +1773,7 @@ describe("AgentChat", () => {
     await user.click(screen.getByLabelText("Command output").querySelector("summary")!);
     expect(screen.getByLabelText("Command output")).toHaveTextContent("7 tests passed");
     await user.click(screen.getByLabelText("Diff preview").querySelector("summary")!);
-    expect(screen.getByLabelText("Diff preview")).toHaveTextContent("AgentDiffPanel");
+    expect(screen.getByLabelText("Diff preview")).toHaveTextContent("AgentDiffViewer");
     expect(
       screen
         .getByLabelText("Command output")

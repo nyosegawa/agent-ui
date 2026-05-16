@@ -147,8 +147,9 @@ Current strengths:
 - Generated Codex App Server schema is vendored under `packages/codex`.
 - Real and fake App Server paths already exist for deterministic tests and
   local smoke checks.
-- `useAgentThread(threadId?)`, `useAgentTurn(threadId?)`, `AgentUsage`, and
-  low-level components already make partial scoped embedding possible.
+- `useAgentThread(threadId?)`, `useAgentTurn(threadId?)`, `AgentUsagePanel`,
+  `AgentUsageSummary`, and low-level components already make partial scoped
+  embedding possible.
 
 Resolved vNext gaps:
 
@@ -295,7 +296,7 @@ agent-browser 0.27.0
 `@nyosegawa/agent-ui-react`
 
 - Provider, hooks, headless controllers, and UI components.
-- Rich Codex renderers rebuilt from generated-normalized state.
+- Rich Codex renderers are built from generated-normalized state.
 - Preset shells plus independently usable primitives.
 - No direct dependency on generated App Server types in visual components.
 

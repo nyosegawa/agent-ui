@@ -154,7 +154,7 @@
       "threadId": "thread-demo",
       "turnId": "turn-demo",
       "itemId": "item-file",
-      "patch": "diff --git a/packages/react/src/components.tsx b/packages/react/src/components.tsx\n+ <AgentApprovalPrompt />\n+ <AgentDiffPanel />"
+      "patch": "diff --git a/packages/react/src/components/approvals.tsx b/packages/react/src/components/approvals.tsx\n+ <AgentApprovalQueue />\n+ <AgentDiffViewer />"
     }
   },
   {
@@ -187,9 +187,9 @@
         "turnId": "turn-demo",
         "itemId": "item-file",
         "payload": {
-          "path": "packages/react/src/components.tsx",
-          "summary": "Render approval and diff panels in the main chat surface.",
-          "patch": "+ <AgentDiffPanel thread={thread} />"
+          "path": "packages/react/src/diff-viewer.tsx",
+          "summary": "Render file changes in the transcript surface.",
+          "patch": "+ <AgentDiffViewer patch={patch} />"
         }
       }
     }

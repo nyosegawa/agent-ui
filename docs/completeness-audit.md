@@ -156,13 +156,12 @@ button hierarchy was unclear, `App / Plugin` chips looked careless, the
 approval card lacked decision affordance, and the message timeline relied on
 labels rather than typography.
 
-This pass rebuilt the interactive layer in place rather than re-arranging
-the screen. The relevant rebuilds (composer, button system, inputs / selects
-/ segmented, approval card, timeline, sidebar, status / usage chips,
-command/diff surface, component close-up gallery, and the duplicate-status
-guard for the host workflow recipe) are captured in the new checklist items
-under Milestone 4 in `TODO.md` and in the 2026-05-15 "Primitive
-craftsmanship rebuild" entry in `docs/testing.md`.
+The current interactive layer is implemented through focused primitives rather
+than a page-level layout patch. The composer, button system, inputs / selects /
+segmented control, approval card, timeline, sidebar, status / usage chips,
+command/diff surface, component close-up gallery, and duplicate-status guard
+for the host workflow recipe are captured under Milestone 4 in `TODO.md` and
+in the 2026-05-15 "Primitive Craftsmanship Gate" entry in `docs/testing.md`.
 
 Verification: 67 vitest tests + 60 bun tests + 19 Playwright tests pass
 locally; all 14 `docs/screenshots/agent-ui-*-{desktop,mobile}.png` files
