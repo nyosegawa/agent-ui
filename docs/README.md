@@ -116,4 +116,7 @@ Additional typed recipes live in `examples/recipes` for custom component slots, 
 
 ## Next.js Note
 
-`examples/next-local-bridge` demonstrates `createAgentUiNextRpcRoute()`, a one-shot RPC Route Handler. It is not the real local chat bridge because plain Route Handlers do not keep a browser session connected for streaming notifications and approval round-trips. Use `examples/codex-local-web` or another Node WebSocket host for the full local Codex web experience.
+`examples/next-with-bridge-sidecar` demonstrates the full-chat Next.js shape:
+a custom Node server serves Next and attaches `attachAgentUiWebSocketBridge()`
+to the same origin. `examples/next-rpc-route` demonstrates
+`createAgentUiNextRpcRoute()` for one-shot requests only.

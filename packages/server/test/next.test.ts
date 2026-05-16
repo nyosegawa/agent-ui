@@ -1,6 +1,6 @@
 import { PassThrough } from "node:stream";
 import { describe, expect, it } from "vitest";
-import { createAgentUiNextRoute, createAgentUiNextRpcRoute, type CodexChildProcess } from "../src";
+import { createAgentUiNextRpcRoute, type CodexChildProcess } from "../src";
 
 describe("createAgentUiNextRpcRoute", () => {
   it("handles one request and closes the App Server process", async () => {
@@ -40,10 +40,6 @@ describe("createAgentUiNextRpcRoute", () => {
       result: { data: [] },
     });
     expect(killed).toBe(true);
-  });
-
-  it("keeps the deprecated route alias for one-shot RPC compatibility", () => {
-    expect(createAgentUiNextRoute).toBe(createAgentUiNextRpcRoute);
   });
 });
 

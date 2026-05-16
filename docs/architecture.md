@@ -24,7 +24,7 @@ codex app-server
 
 The chat-capable local bridge is `attachAgentUiWebSocketBridge()`. It keeps one App Server process alive for the browser session, streams App Server notifications, forwards server approval requests, and carries browser approval responses back to stdio.
 
-`createAgentUiNextRpcRoute()` is intentionally narrower: it starts an App Server process for one HTTP `POST`, sends one JSON-RPC-lite request, returns one response, and closes the process. It is useful for host-owned one-shot calls, but it cannot represent streaming turns, server approval requests, or browser approval responses. Next.js apps that need the full chat experience should host a WebSocket bridge in a Node server or use a separate same-origin bridge process.
+`createAgentUiNextRpcRoute()` is intentionally narrower: it starts an App Server process for one HTTP `POST`, sends one JSON-RPC-lite request, returns one response, and closes the process. It is useful for host-owned one-shot calls, but it cannot represent streaming turns, server approval requests, or browser approval responses. Next.js apps that need the full chat experience should host a WebSocket bridge in a custom Next server, Node sidecar, or another same-origin bridge process; `examples/next-with-bridge-sidecar` is the reference implementation.
 
 ## Codex Session Facade
 

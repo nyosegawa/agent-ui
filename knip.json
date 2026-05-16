@@ -53,9 +53,13 @@
       "entry": ["src/**/*.{ts,tsx}", "e2e/**/*.{ts,tsx}", "vite.config.ts"],
       "project": ["src/**/*.{ts,tsx}", "e2e/**/*.{ts,tsx}", "vite.config.ts"]
     },
-    "examples/next-local-bridge": {
+    "examples/next-rpc-route": {
       "entry": ["app/**/*.{ts,tsx}", "next.config.mjs"],
       "project": ["app/**/*.{ts,tsx}", "next.config.mjs", "next-env.d.ts"]
+    },
+    "examples/next-with-bridge-sidecar": {
+      "entry": ["app/**/*.{ts,tsx}", "server.ts", "next.config.mjs"],
+      "project": ["app/**/*.{ts,tsx}", "server.ts", "next.config.mjs", "next-env.d.ts"]
     },
     "examples/recipes": {
       "entry": ["src/**/*.{ts,tsx}"],

@@ -1,16 +1,20 @@
 {
-  "name": "@nyosegawa/agent-ui-example-next-local-bridge",
+  "name": "@nyosegawa/agent-ui-example-next-rpc-route",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "next build",
-    "dev": "next dev"
+    "dev": "next dev",
+    "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@nyosegawa/agent-ui-server": "workspace:*",
     "next": "16.2.6",
     "react": "19.2.6",
     "react-dom": "19.2.6"
+  },
+  "devDependencies": {
+    "typescript": "6.0.3"
   }
 }

@@ -74,14 +74,34 @@
         "typescript": "6.0.3",
       },
     },
-    "examples/next-local-bridge": {
-      "name": "@nyosegawa/agent-ui-example-next-local-bridge",
+    "examples/next-rpc-route": {
+      "name": "@nyosegawa/agent-ui-example-next-rpc-route",
       "version": "0.0.0",
       "dependencies": {
         "@nyosegawa/agent-ui-server": "workspace:*",
         "next": "16.2.6",
         "react": "19.2.6",
         "react-dom": "19.2.6",
+      },
+      "devDependencies": {
+        "typescript": "6.0.3",
+      },
+    },
+    "examples/next-with-bridge-sidecar": {
+      "name": "@nyosegawa/agent-ui-example-next-with-bridge-sidecar",
+      "version": "0.0.0",
+      "dependencies": {
+        "@nyosegawa/agent-ui-codex": "workspace:*",
+        "@nyosegawa/agent-ui-react": "workspace:*",
+        "@nyosegawa/agent-ui-server": "workspace:*",
+        "next": "16.2.6",
+        "react": "19.2.6",
+        "react-dom": "19.2.6",
+      },
+      "devDependencies": {
+        "@types/react": "19.2.14",
+        "@types/react-dom": "19.2.3",
+        "typescript": "6.0.3",
       },
     },
     "examples/recipes": {
@@ -459,7 +479,9 @@
 
     "@nyosegawa/agent-ui-example-local-react-vite": ["@nyosegawa/agent-ui-example-local-react-vite@workspace:examples/local-react-vite"],
 
-    "@nyosegawa/agent-ui-example-next-local-bridge": ["@nyosegawa/agent-ui-example-next-local-bridge@workspace:examples/next-local-bridge"],
+    "@nyosegawa/agent-ui-example-next-rpc-route": ["@nyosegawa/agent-ui-example-next-rpc-route@workspace:examples/next-rpc-route"],
+
+    "@nyosegawa/agent-ui-example-next-with-bridge-sidecar": ["@nyosegawa/agent-ui-example-next-with-bridge-sidecar@workspace:examples/next-with-bridge-sidecar"],
 
     "@nyosegawa/agent-ui-example-recipes": ["@nyosegawa/agent-ui-example-recipes@workspace:examples/recipes"],
 

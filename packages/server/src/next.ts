@@ -2,6 +2,13 @@ import { createCodexAppServerBridge, type CodexAppServerBridgeOptions } from "./
 
 export type AgentUiNextRpcRouteOptions = CodexAppServerBridgeOptions;
 
+/**
+ * Create a Next.js Route Handler for exactly one Codex App Server request.
+ *
+ * This helper intentionally does not power Agent UI chat. Chat needs a
+ * long-lived WebSocket bridge so App Server notifications, approval requests,
+ * and browser approval responses can flow in both directions.
+ */
 export function createAgentUiNextRpcRoute(options: AgentUiNextRpcRouteOptions = {}) {
   return async function POST(request: Request): Promise<Response> {
     const bridge = createCodexAppServerBridge(options);
@@ -20,11 +27,3 @@ export function createAgentUiNextRpcRoute(options: AgentUiNextRpcRouteOptions = 
     }
   };
 }
-
-/**
- * @deprecated This helper is a one-shot RPC route, not a streaming chat bridge.
- * Use `createAgentUiNextRpcRoute()` for one-shot server calls or
- * `attachAgentUiWebSocketBridge()` for chat, streaming, and approvals.
- */
-export const createAgentUiNextRoute = createAgentUiNextRpcRoute;
-export type AgentUiNextRouteOptions = AgentUiNextRpcRouteOptions;

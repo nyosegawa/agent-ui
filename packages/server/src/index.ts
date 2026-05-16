@@ -6,4 +6,5 @@ export * from "./host-events";
 export * from "./next";
 export * from "./redaction";
 export * from "./server-request-policy";
+export * from "./upload";
 export * from "./websocket";

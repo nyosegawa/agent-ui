@@ -646,3 +646,34 @@ details disclosure is opened.
       remove stale vocabulary.
 - [x] Re-run the required validation ladder and browser QA for 5174 fixture
       routes and 5175 real local web at desktop and mobile viewports.
+
+## Milestone 16: Next.js Bridge Boundary Cleanup
+
+Opened on 2026-05-17 after deciding that backwards compatibility is not worth
+keeping for confusing Next.js bridge APIs. The clean boundary is: Route
+Handlers are one-shot RPC only; full chat requires a same-origin WebSocket
+bridge hosted by a Node server, custom Next server, reverse proxy sidecar, or
+equivalent host-owned process.
+
+- [x] Remove the confusing legacy Next route alias and keep only the explicit
+      `createAgentUiNextRpcRoute` one-shot helper.
+- [x] Rename the old Next Route Handler example to `examples/next-rpc-route`
+      so its name cannot be mistaken for a chat bridge.
+- [x] Add `examples/next-with-bridge-sidecar`, a full-chat Next.js example
+      where a custom Node server serves Next, attaches
+      `attachAgentUiWebSocketBridge()` at `/agent-ui/ws`, and handles
+      `/agent-ui/upload` as host-owned local attachment persistence.
+- [x] Extract a shared `createAgentUiLocalUploadHandler()` helper so local web
+      and Next bridge examples use the same browser-File-to-local-path adapter.
+- [x] Update README, docs, package docs, remote deployment docs, and dead-code
+      audit config so the recommended Next path is the WebSocket bridge and
+      the RPC Route Handler is clearly non-chat.
+- [x] Add server tests for the local upload handler and remove compatibility
+      tests for the deleted alias.
+
+Acceptance:
+
+- [x] `bun run typecheck`, `bun run lint`, `bun run test`,
+      `bun run test:protocol`, `bun run test:fixtures`, `bun run build`,
+      `bun run check:exports`, `bun run check:dead-code`, and
+      `bun run test:e2e:playwright` pass.

@@ -1,9 +1,10 @@
-import { attachAgentUiWebSocketBridge } from "@nyosegawa/agent-ui-server";
+import {
+  attachAgentUiWebSocketBridge,
+  createAgentUiLocalUploadHandler,
+} from "@nyosegawa/agent-ui-server";
 import react from "@vitejs/plugin-react";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { mkdir, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer as createViteServer } from "vite";
 import { isSuppressedCodexDiagnostic } from "./src/diagnostics";
@@ -22,36 +23,10 @@ const root = dirname(fileURLToPath(import.meta.url));
 // `File`, so this host endpoint persists the upload next to the App Server's
 // machine and returns an absolute path the agent can actually open. This is a
 // host responsibility, not something the agent-ui library fakes with blob URLs.
-const uploadDir = join(tmpdir(), "agent-ui-uploads");
-const MAX_UPLOAD_BYTES = 16 * 1024 * 1024;
+const uploadHandler = createAgentUiLocalUploadHandler();
 
 async function handleUpload(request: IncomingMessage, response: ServerResponse) {
-  const chunks: Buffer[] = [];
-  let total = 0;
-  for await (const chunk of request) {
-    total += chunk.length;
-    if (total > MAX_UPLOAD_BYTES) {
-      response.statusCode = 413;
-      response.setHeader("content-type", "application/json");
-      response.end(JSON.stringify({ error: "Attachment exceeds 16 MB upload limit." }));
-      request.destroy();
-      return;
-    }
-    chunks.push(Buffer.from(chunk));
-  }
-  const rawName = decodeURIComponent(
-    String(request.headers["x-agent-ui-filename"] ?? "upload"),
-  );
-  const safeName = rawName.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80) || "upload";
-  await mkdir(uploadDir, { recursive: true });
-  const path = join(
-    uploadDir,
-    `${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${safeName}`,
-  );
-  await writeFile(path, Buffer.concat(chunks));
-  response.statusCode = 200;
-  response.setHeader("content-type", "application/json");
-  response.end(JSON.stringify({ path }));
+  await uploadHandler.handle(request, response);
 }
 
 const vite = await createViteServer({
@@ -90,5 +65,5 @@ attachAgentUiWebSocketBridge({
 server.listen(port, host, () => {
   console.log(`Agent UI Codex local web: http://${host}:${port}`);
   console.log(`Codex working directory: ${cwd}`);
-  console.log(`Attachment upload directory: ${uploadDir}`);
+  console.log(`Attachment upload directory: ${uploadHandler.directory}`);
 });

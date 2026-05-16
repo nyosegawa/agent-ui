@@ -120,6 +120,8 @@ Generic examples:
 - [examples/app-connectors](./examples/app-connectors/README.md): Codex Apps/connectors.
 - [examples/host-workflow-recipe](./examples/host-workflow-recipe/README.md): host-owned side panel slot.
 - [examples/fixture-gallery](./examples/fixture-gallery/README.md): deterministic browser QA states.
+- [examples/next-with-bridge-sidecar](./examples/next-with-bridge-sidecar/README.md): full Next.js chat integration with a same-origin WebSocket bridge.
+- [examples/next-rpc-route](./examples/next-rpc-route/README.md): one-shot Next.js RPC route for non-chat calls.
 
 ## Quickstart
 
@@ -162,4 +164,6 @@ so visual QA fixtures stay separate from the real Codex-backed
 `examples/docs-site` is documentation-oriented and is not the primary fixture
 QA surface.
 
-The Next.js example is a one-shot RPC Route Handler only. Use the local web app's WebSocket bridge for streaming chat, approvals, and live diagnostics.
+For Next.js, use `examples/next-with-bridge-sidecar` for streaming chat,
+approvals, attachments, and live diagnostics. `examples/next-rpc-route` is
+only for one-shot host calls such as reading account or model metadata.

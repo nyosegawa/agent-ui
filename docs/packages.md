@@ -26,7 +26,8 @@ agent-ui/
     codex-local-web/
     docs-site/
     local-react-vite/
-    next-local-bridge/
+    next-rpc-route/
+    next-with-bridge-sidecar/
     recipes/
   fixtures/
     app-server/
@@ -114,6 +115,7 @@ Responsibilities:
 - local bridge
 - Codex App Server process lifecycle
 - Next.js one-shot RPC Route Handler helper
+- same-origin WebSocket bridge helpers for full chat integrations
 - Express middleware
 - auth/token forwarding recipes
 - `detectAgentBrowser()` for repo skill path, CLI version, and core skill checks
@@ -136,7 +138,8 @@ The wrapper does not create transports, spawn Codex, or include CSS automaticall
 
 - `examples/local-react-vite`: fixture-backed local component smoke target.
 - `examples/codex-local-web`: real local Codex web app target using a same-origin WebSocket bridge to `codex app-server --listen stdio://`.
-- `examples/next-local-bridge`: Next.js one-shot RPC Route Handler example. It is not the chat-capable bridge.
+- `examples/next-rpc-route`: Next.js one-shot RPC Route Handler example. It is not the chat-capable bridge.
+- `examples/next-with-bridge-sidecar`: Next.js full-chat example using a custom Node server with `attachAgentUiWebSocketBridge()`.
 - `examples/recipes`: typed host integration recipes and remote deployment notes.
 - `examples/docs-site`: static documentation and hosted-demo build target.
 

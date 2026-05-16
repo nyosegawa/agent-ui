@@ -304,6 +304,9 @@ agent-browser 0.27.0
 
 - Node-only local bridge for `codex app-server --listen stdio://`.
 - Same-origin WebSocket bridge for browser apps.
+- Explicit Next.js boundary: `createAgentUiNextRpcRoute()` is one-shot RPC
+  only; full chat uses `attachAgentUiWebSocketBridge()` from a custom Next
+  server, sidecar, or same-origin bridge process.
 - Policy engine for approvals, dynamic tool bridge, host event sink, redaction,
   process lifecycle, and App Server retry/backpressure behavior.
 
@@ -465,6 +468,10 @@ The examples should become acceptance fixtures:
   generic slots without adding workflow-specific API to the library.
 - `examples/fixture-gallery`: kitchen-derived UI states for deterministic
   visual and reducer regression testing.
+- `examples/next-with-bridge-sidecar`: full-chat Next.js integration with a
+  same-origin WebSocket bridge and local attachment upload endpoint.
+- `examples/next-rpc-route`: one-shot Next.js Route Handler for non-chat
+  host calls.
 
 ## Verification Strategy
 
