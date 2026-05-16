@@ -634,5 +634,5 @@ details disclosure is opened.
       keeping it clearly separate from `examples/codex-local-web`.
 - [x] Update README and docs for the refactored internal architecture and
       remove stale vocabulary.
-- [ ] Re-run the required validation ladder and browser QA for 5174 fixture
+- [x] Re-run the required validation ladder and browser QA for 5174 fixture
       routes and 5175 real local web at desktop and mobile viewports.
