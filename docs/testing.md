@@ -810,3 +810,13 @@ stored turns ending in file changes retain tool context, closed tool cards show
 human-readable previews, opened tool cards expose Arguments / Result / Error,
 thread rows keep title and metadata, and markdown/code blocks avoid nested
 scroll traps.
+Pure helper tests in `packages/react/test/timeline-pure.vitest.ts` exercise the
+same contracts without React rendering: stored item block synthesis, transcript
+window retention for same-turn execution context, hydrated status formatting,
+and machine-output preview suppression.
+
+The local Vite fixture app is intentionally split so browser QA fixtures remain
+reviewable. `src/closeups/` owns direct primitive close-ups, `src/fixtures/`
+owns deterministic fake state and route metadata, and `src/main.tsx` owns route
+composition. The real Codex integration remains separate in
+`examples/codex-local-web`.

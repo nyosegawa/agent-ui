@@ -191,6 +191,18 @@ formatting, and `previews.ts` owns closed-card previews. This keeps App Server
 item-kind handling centralized instead of scattering it through visual
 components.
 
+The React package keeps zero-dependency visual primitives internal. Shared
+icons and the button class helper live in
+`packages/react/src/components-internal.tsx`; `components.tsx` remains the
+public component surface and should not grow another local icon/button system.
+
+The Vite fixture app is split by intent. Route composition stays in
+`examples/local-react-vite/src/main.tsx`, visual close-ups live under
+`examples/local-react-vite/src/closeups/`, and deterministic demo state /
+transport fixtures live under `examples/local-react-vite/src/fixtures/`. Keep
+this separation so fake visual QA data does not leak into the real
+`examples/codex-local-web` App Server integration.
+
 ## Fixed UI Decisions
 
 - Approval UX defaults to inline cards in the chat stream.

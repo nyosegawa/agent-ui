@@ -632,6 +632,13 @@ details disclosure is opened.
       selectors are easier to audit without changing layout.
 - [x] Split the local fixture example into route and fixture modules while
       keeping it clearly separate from `examples/codex-local-web`.
+- [x] Move visual close-ups and deterministic demo state out of
+      `examples/local-react-vite/src/main.tsx` so route composition is no longer
+      mixed with every primitive fixture.
+- [x] Add pure timeline helper tests for block synthesis, transcript-window
+      retention, text/status formatting, and preview suppression.
+- [x] Move shared internal icons and button class construction out of
+      `packages/react/src/components.tsx` without changing public exports.
 - [x] Update README and docs for the refactored internal architecture and
       remove stale vocabulary.
 - [x] Re-run the required validation ladder and browser QA for 5174 fixture
