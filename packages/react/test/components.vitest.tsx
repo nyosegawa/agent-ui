@@ -1384,7 +1384,7 @@ describe("AgentChat", () => {
     expect(screen.queryByText(/icon path must not contain/)).not.toBeInTheDocument();
   });
 
-  it("keeps long history messages readable behind a preview", () => {
+  it("keeps long history messages expanded without a preview disclosure", () => {
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-history";
     initialState.threads["thread-history"] = {

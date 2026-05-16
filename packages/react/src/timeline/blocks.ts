@@ -1,6 +1,5 @@
 import type {
   AgentItemBlock,
-  AgentItemState,
   TurnState,
 } from "@nyosegawa/agent-ui-core";
 import {
@@ -93,5 +92,3 @@ function activityKindForId(
   if (itemId in turn.filePatchByItemId) return "fileChange";
   return undefined;
 }
-
-export type TranscriptItemState = AgentItemState;
