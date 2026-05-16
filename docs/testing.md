@@ -655,9 +655,10 @@ is a compact popover so it cannot displace the composer.
 
 The 2026-05-15 follow-up completed the transcript-first gate: `AgentChat`
 defaults to `usage={false}` and `diagnostics={false}`, `AgentMessageList`
-renders large hydrated histories in batches with `Show earlier items`, and
-command output, long markdown, JSON/tool bodies, and CodeMirror diffs are not
-mounted until their disclosure is opened. `scripts/real-local-web-layout-audit.mjs`
+renders large hydrated histories in batches with `Show earlier items`, user and
+assistant messages remain expanded, and command output, JSON/tool bodies, and
+CodeMirror diffs are not mounted until their disclosure is opened.
+`scripts/real-local-web-layout-audit.mjs`
 is the manual real-local-web gate for an already-running
 `examples/codex-local-web` instance on port 5175.
 

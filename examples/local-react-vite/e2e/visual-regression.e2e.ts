@@ -459,6 +459,30 @@ test("mobile composer keeps tap targets above 32px and hides keyboard hint", asy
   expect(box!.height).toBeGreaterThanOrEqual(36);
 });
 
+test("thread list metadata keeps dot and text on one row", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/");
+  const layout = await page.locator(".aui-thread-list-item").first().evaluate((item) => {
+    const meta = item.querySelector(".aui-thread-list-meta");
+    const dot = item.querySelector(".aui-thread-list-dot");
+    const small = item.querySelector("small");
+    const metaRect = meta?.getBoundingClientRect();
+    const dotRect = dot?.getBoundingClientRect();
+    const smallRect = small?.getBoundingClientRect();
+    return {
+      dotDisplay: dot ? getComputedStyle(dot).display : null,
+      dotTop: dotRect ? Math.round(dotRect.top) : null,
+      metaDisplay: meta ? getComputedStyle(meta).display : null,
+      metaHeight: metaRect ? Math.round(metaRect.height) : 0,
+      smallTop: smallRect ? Math.round(smallRect.top) : null,
+    };
+  });
+  expect(layout.metaDisplay, JSON.stringify(layout)).toBe("flex");
+  expect(layout.dotDisplay, JSON.stringify(layout)).toBe("block");
+  expect(layout.metaHeight, JSON.stringify(layout)).toBeLessThanOrEqual(18);
+  expect(Math.abs(layout.dotTop! - layout.smallTop!), JSON.stringify(layout)).toBeLessThanOrEqual(4);
+});
+
 async function visualContractJson(page: Page) {
   return `${JSON.stringify(await visualContract(page), null, 2)}\n`;
 }

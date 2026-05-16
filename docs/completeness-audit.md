@@ -45,8 +45,8 @@ slots, Codex Apps/connectors metadata, and host-owned composition boundaries.
   `docs/agent-browser.md`, Playwright, and recorded `agent-browser` evidence in
   `docs/testing.md`.
 - Large history rendering: `AgentMessageList` reveals hydrated transcript
-  history in batches and lazy-mounts command output, long markdown, JSON/tool
-  bodies, and CodeMirror diffs.
+  history in batches, keeps user/assistant messages expanded, and lazy-mounts
+  command output, JSON/tool bodies, and CodeMirror diffs.
 
 ## Protocol Audit
 

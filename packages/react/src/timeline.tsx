@@ -459,19 +459,8 @@ function JsonSection({
 }
 
 export function AgentMessageItem({ text }: { text: string }) {
-  const [isOpen, setOpen] = useState(false);
   const trimmed = text.trim();
-  const isLong = trimmed.length > 1800 || trimmed.split(/\r?\n/).length > 18;
-  if (!isLong) return <MarkdownMessage className="aui-message-body" text={trimmed} />;
-  return (
-    <details
-      className="aui-message-body aui-message-body-collapsible"
-      onToggle={(event) => setOpen(event.currentTarget.open)}
-    >
-      <summary>{messagePreview(trimmed)}</summary>
-      {isOpen ? <MarkdownMessage text={trimmed} /> : null}
-    </details>
-  );
+  return <MarkdownMessage className="aui-message-body" text={trimmed} />;
 }
 
 export const AgentCommandOutputItem = AgentCommandItem;
@@ -598,12 +587,6 @@ function blockForTranscriptItem(
 function lineCount(value: string): number {
   if (!value) return 0;
   return value.split(/\r?\n/).length;
-}
-
-function messagePreview(text: string): string {
-  const firstLine = text.split(/\r?\n/).find((line) => line.trim()) ?? text;
-  const preview = firstLine.trim().replace(/\s+/g, " ");
-  return preview.length > 140 ? `${preview.slice(0, 137)}...` : preview;
 }
 
 function commandPreview(text: string): string {

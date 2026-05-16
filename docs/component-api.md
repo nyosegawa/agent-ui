@@ -53,9 +53,10 @@ diffs into UI-owned buckets.
 
 Large stored threads are rendered incrementally. The initial hydrated history
 mounts only the latest transcript items, keeps order intact, and exposes
-`Show earlier items` to reveal older items in batches. Heavy bodies such as
-command output, JSON/tool results, long markdown, and CodeMirror-backed diffs
-stay unmounted until their details disclosure is opened.
+`Show earlier items` to reveal older items in batches. User and assistant
+messages always render expanded. Heavy non-chat bodies such as command output,
+JSON/tool results, and CodeMirror-backed diffs stay unmounted until their
+details disclosure is opened.
 
 Transcript item primitives are exported for host composition and close-up QA:
 

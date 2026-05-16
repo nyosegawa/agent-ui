@@ -172,8 +172,9 @@ area is the only scroll container. The approval surface never carries its own
 
 Hydrated history is intentionally incremental. `AgentMessageList` starts from
 the newest transcript items, reveals older items through `Show earlier items`,
-and keeps expensive command output, JSON, long markdown, and CodeMirror diff
-bodies unmounted until the user opens the corresponding details disclosure.
+and always renders user and assistant message bodies expanded. Expensive
+non-chat bodies such as command output, JSON, and CodeMirror diff bodies stay
+unmounted until the user opens the corresponding details disclosure.
 
 ## Fixed UI Decisions
 

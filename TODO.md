@@ -165,8 +165,9 @@ a dedicated layout audit gate.
       and `diagnostics=false`.
 - [x] Render large hydrated transcripts incrementally with `Show earlier items`
       while preserving App Server turn/item order.
-- [x] Keep command output, long markdown, JSON/tool payloads, and CodeMirror
-      diffs unmounted until their details disclosure is opened.
+- [x] Keep user/assistant messages expanded; keep command output, JSON/tool
+      payloads, and CodeMirror diffs unmounted until their details disclosure is
+      opened.
 - [x] Add `AgentRunSettingsPanel` as a standalone compact primitive.
 - [x] Add `scripts/real-local-web-layout-audit.mjs` for the already-running
       real `examples/codex-local-web` port-5175 gate.

@@ -95,6 +95,15 @@ for (const result of results) {
     if (audit.messageOverlapsComposer) {
       failures.push(`${result.viewport}:${phase}: message list overlaps composer`);
     }
+    if (audit.hasCollapsedChatMessage) {
+      failures.push(`${result.viewport}:${phase}: user/assistant message collapsed`);
+    }
+    if (audit.hasMarkdownPreScrollTrap) {
+      failures.push(`${result.viewport}:${phase}: markdown code block captures vertical scroll`);
+    }
+    if (audit.threadListMetaBroken) {
+      failures.push(`${result.viewport}:${phase}: thread list metadata layout broken`);
+    }
     if (audit.approvalOutsideTranscript) {
       failures.push(
         `${result.viewport}:${phase}: approval surface is outside the transcript scroll area`,
@@ -235,8 +244,16 @@ async function auditPage(page, requiredViewportSelectors, viewportName) {
         approvalOutsideTranscript,
         approvalPresent: Boolean(approvalCardEl),
         approvalsIndependentScrollPane,
+        hasCollapsedChatMessage: Boolean(
+          document.querySelector(".aui-message-body-collapsible"),
+        ),
+        hasMarkdownPreScrollTrap: [...document.querySelectorAll(".aui-markdown pre")].some(
+          (pre) => ["auto", "scroll"].includes(getComputedStyle(pre).overflowY),
+        ),
         hasComposer: Boolean(document.querySelector(".aui-compose-panel .aui-composer")),
-        hasLoadAll: document.body.textContent?.includes("Load all") ?? false,
+        hasLoadAll: [...document.querySelectorAll("button")].some(
+          (button) => button.textContent?.trim() === "Load all",
+        ),
         messageListHeight: messageRect ? Math.round(messageRect.height) : 0,
         hasMainThread: Boolean(
           document.querySelector(".aui-thread-surface .aui-message-list"),
@@ -267,6 +284,23 @@ async function auditPage(page, requiredViewportSelectors, viewportName) {
           messageRect && composePanelRect
             ? Math.round(messageRect.bottom) <= Math.round(composePanelRect.top)
             : false,
+        threadListMetaBroken: (() => {
+          const item = document.querySelector(".aui-thread-list-item");
+          if (!item) return false;
+          const meta = item.querySelector(".aui-thread-list-meta");
+          const dot = item.querySelector(".aui-thread-list-dot");
+          const small = item.querySelector("small");
+          if (!meta || !dot || !small) return true;
+          const metaRect = meta.getBoundingClientRect();
+          const dotRect = dot.getBoundingClientRect();
+          const smallRect = small.getBoundingClientRect();
+          const metaStyle = getComputedStyle(meta);
+          return (
+            metaStyle.display !== "flex" ||
+            Math.round(metaRect.height) > 20 ||
+            Math.abs(Math.round(dotRect.top) - Math.round(smallRect.top)) > 4
+          );
+        })(),
       };
     },
     { checkedSelectors: selectors, requiredViewportSelectors, viewportName },

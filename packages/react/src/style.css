@@ -214,27 +214,6 @@
   box-shadow: var(--aui-shadow-card);
 }
 
-.aui-thread-list-item span {
-  color: var(--aui-fg);
-  display: -webkit-box;
-  font-size: 13px;
-  font-weight: 600;
-  letter-spacing: -0.005em;
-  line-height: 1.35;
-  overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
-.aui-thread-list-item small {
-  color: var(--aui-fg-muted);
-  font-size: 11px;
-  line-height: 1.35;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .aui-history-pagination {
   display: grid;
   gap: 6px;
@@ -653,28 +632,6 @@
   overflow-wrap: anywhere;
 }
 
-.aui-message-body-collapsible {
-  display: grid;
-  gap: 8px;
-}
-
-.aui-message-body-collapsible summary {
-  color: var(--aui-fg);
-  cursor: pointer;
-  display: block;
-  font-weight: 500;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.aui-message-body-collapsible > div {
-  border-top: 1px solid var(--aui-rule);
-  max-height: 460px;
-  overflow: auto;
-  padding-top: 10px;
-}
-
 .aui-block-message {
   display: grid;
   gap: 6px;
@@ -768,8 +725,7 @@
   border-radius: 8px;
   color: var(--aui-code-fg);
   max-width: 100%;
-  overflow: auto;
-  overscroll-behavior: contain;
+  overflow: visible;
   padding: 12px 14px;
 }
 
@@ -778,8 +734,9 @@
   border: 0;
   color: inherit;
   display: block;
+  overflow-wrap: anywhere;
   padding: 0;
-  white-space: pre;
+  white-space: pre-wrap;
 }
 
 .aui-markdown a {
@@ -3968,12 +3925,13 @@
 
 .aui-thread-list-name {
   color: var(--aui-fg);
-  display: -webkit-box;
+  display: block;
   font: 600 13px/1.35 var(--aui-font);
   letter-spacing: -0.005em;
+  min-height: 18px;
   overflow: hidden;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .aui-thread-list-meta {
