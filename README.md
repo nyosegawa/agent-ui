@@ -156,6 +156,9 @@ Then open `/`, `/?state=kitchen`, `/host-workflow-recipe`, and
 `/fixture-gallery` for deterministic visual QA states. The host-workflow route
 is built from primitives rather than the `AgentChat` preset, and the gallery
 loads desktop/mobile previews with reload controls for browser QA.
+The fixture route metadata lives under `examples/local-react-vite/src/fixtures`
+so visual QA fixtures stay separate from the real Codex-backed
+`examples/codex-local-web` app.
 `examples/docs-site` is documentation-oriented and is not the primary fixture
 QA surface.
 

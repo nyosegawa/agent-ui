@@ -183,6 +183,14 @@ returned execution-shaped item as first-class transcript context:
 items from that same turn remain visible with it even when they fall outside
 the raw item-count window.
 
+The transcript renderer keeps public primitives exported from
+`packages/react/src/timeline.tsx`, while pure internal logic lives under
+`packages/react/src/timeline/`: `blocks.ts` synthesizes normalized transcript
+blocks from stored App Server items, `formatters.ts` owns labels/status/text
+formatting, and `previews.ts` owns closed-card previews. This keeps App Server
+item-kind handling centralized instead of scattering it through visual
+components.
+
 ## Fixed UI Decisions
 
 - Approval UX defaults to inline cards in the chat stream.

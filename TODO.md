@@ -632,7 +632,7 @@ details disclosure is opened.
       selectors are easier to audit without changing layout.
 - [x] Split the local fixture example into route and fixture modules while
       keeping it clearly separate from `examples/codex-local-web`.
-- [ ] Update README and docs for the refactored internal architecture and
+- [x] Update README and docs for the refactored internal architecture and
       remove stale vocabulary.
 - [ ] Re-run the required validation ladder and browser QA for 5174 fixture
       routes and 5175 real local web at desktop and mobile viewports.

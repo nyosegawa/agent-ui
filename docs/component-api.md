@@ -67,6 +67,11 @@ turn ends with file changes, the transcript window keeps command/tool context
 from the same turn visible with the diff so restored sessions do not degrade
 into a stack of file-change cards.
 
+Internally, transcript block synthesis and closed-card preview text are pure
+helpers under `packages/react/src/timeline/`. Public imports should continue to
+come from `@nyosegawa/agent-ui-react`; the helper modules are implementation
+details for tests and maintenance, not new public API.
+
 Transcript item primitives are exported for host composition and close-up QA:
 
 - `AgentTurn`

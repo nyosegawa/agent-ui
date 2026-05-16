@@ -802,3 +802,11 @@ Playwright suite now checks selected thread, approval, composer, run-settings,
 and close-up gallery elements with `getBoundingClientRect()` so hidden
 horizontal clipping fails even when `documentElement.scrollWidth` remains equal
 to `clientWidth`.
+
+2026-05-17 refactor guard: the transcript renderer was split into internal
+normalizer/formatter/preview helpers without changing public exports. React
+regression tests now assert that user and assistant messages never collapse,
+stored turns ending in file changes retain tool context, closed tool cards show
+human-readable previews, opened tool cards expose Arguments / Result / Error,
+thread rows keep title and metadata, and markdown/code blocks avoid nested
+scroll traps.
