@@ -1,5 +1,12 @@
 import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
-import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
+import {
+  AgentChat,
+  AgentProvider,
+  localImageInput,
+  mentionInput,
+  type AgentLocalAttachmentKind,
+  type CodexUserInput,
+} from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/style.css";
 import { useMemo } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -8,6 +15,30 @@ declare global {
   interface Window {
     __agentUiCodexLocalWebRoot?: Root;
   }
+}
+
+/**
+ * Host-supplied attachment resolver. The browser only holds a `File`; the
+ * Codex App Server needs a real local path for `localImage` inputs. The file
+ * is uploaded to the local host process (see `server.ts`), which returns an
+ * absolute path the agent can read. Images become `localImage` inputs; other
+ * files are surfaced to the turn as a `mention` of their on-disk path.
+ */
+async function resolveLocalAttachment(
+  file: File,
+  kind: AgentLocalAttachmentKind,
+): Promise<CodexUserInput | null> {
+  const response = await fetch("/agent-ui/upload", {
+    body: await file.arrayBuffer(),
+    headers: { "x-agent-ui-filename": encodeURIComponent(file.name || "upload") },
+    method: "POST",
+  });
+  if (!response.ok) return null;
+  const result = (await response.json()) as { path?: unknown };
+  if (typeof result.path !== "string") return null;
+  return kind === "image"
+    ? localImageInput(result.path)
+    : mentionInput(file.name || result.path, result.path);
 }
 
 function App() {
@@ -34,7 +65,7 @@ function App() {
   return (
     <AgentProvider transport={transport}>
       <main className="agent-ui-local-app">
-        <AgentChat />
+        <AgentChat resolveLocalAttachment={resolveLocalAttachment} />
       </main>
     </AgentProvider>
   );

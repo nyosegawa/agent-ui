@@ -68,9 +68,6 @@
     "visible": true,
     "width": 280
   },
-  "runControls": {
-    "present": false
-  },
   "threadHeader": {
     "backgroundColor": "rgb(255, 255, 255)",
     "borderColor": "rgb(26, 25, 22) rgb(26, 25, 22) rgb(231, 228, 218)",
@@ -90,7 +87,7 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "617px",
-    "height": 135,
+    "height": 227,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
@@ -128,8 +125,8 @@
     "borderColor": "rgb(241, 214, 163) rgb(26, 25, 22) rgb(26, 25, 22)",
     "borderRadius": "0px",
     "display": "grid",
-    "gridTemplateColumns": "621px",
-    "height": 378,
+    "gridTemplateColumns": "625px",
+    "height": 325,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
@@ -148,5 +145,18 @@
     "present": true,
     "visible": true,
     "width": 625
+  },
+  "composerSettings": {
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "borderColor": "rgb(26, 25, 22)",
+    "borderRadius": "0px",
+    "display": "flex",
+    "gridTemplateColumns": "none",
+    "height": 30,
+    "overflowX": "visible",
+    "overflowY": "visible",
+    "present": true,
+    "visible": true,
+    "width": 337
   }
 }

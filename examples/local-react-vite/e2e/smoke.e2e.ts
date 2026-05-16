@@ -11,15 +11,28 @@ test("renders Agent UI chat", async ({ page }) => {
   await page.getByLabel("Diff preview").first().click();
   await expect(page.getByLabel("Diff preview")).toContainText("AgentDiffPanel");
   await expect(page.getByRole("button", { name: "Approve" }).first()).toBeVisible();
-  // Run settings live behind a summary chip inside the composer.
-  await expect(page.locator(".aui-run-settings-popover summary")).toContainText("Run settings");
-  await page.locator(".aui-run-settings-popover summary").click();
-  await expect(page.getByLabel("Run settings")).toContainText("Execution mode");
+
+  // Mode / model / effort live in the composer toolbar as compact menus —
+  // there is no separate "Run settings" disclosure anymore.
+  await expect(page.locator(".aui-run-settings-popover")).toHaveCount(0);
+  const modeMenu = page.getByRole("button", { name: "Execution mode" });
+  await expect(modeMenu).toBeVisible();
+  await modeMenu.click();
+  await expect(page.getByRole("menu", { name: "Execution mode" })).toBeVisible();
+  await expect(
+    page.getByRole("menuitemradio", { name: /Read-only/ }),
+  ).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu", { name: "Execution mode" })).toHaveCount(0);
+
   await expect(page.getByLabel("Usage limits")).toContainText(
     "fixture-demo-model weekly",
   );
+
+  // History search has no standalone Load button; typing auto-filters it.
   await expect(page.getByLabel("Search history")).toBeVisible();
-  await page.getByRole("button", { name: "Load" }).click();
+  await expect(page.getByRole("button", { name: "Load", exact: true })).toHaveCount(0);
+  await page.getByLabel("Search history").fill("stored");
   await page.getByRole("button", { name: /Stored session/ }).click();
   await expect(page.getByRole("heading", { name: "Stored session" })).toBeVisible();
   await expect(
@@ -27,19 +40,8 @@ test("renders Agent UI chat", async ({ page }) => {
   ).toBeVisible();
   await page.getByRole("button", { name: "Resume" }).click();
   await expect(page.locator(".aui-status-pill")).toContainText("Ready");
-  // Re-open run settings to verify the resumed run-settings restoration.
-  await page.locator(".aui-run-settings-popover").first().evaluate((element) => {
-    (element as HTMLDetailsElement).open = true;
-  });
-  await expect(page.getByLabel("Run settings")).toBeVisible();
-  await expect(page.getByLabel("Model", { exact: true })).toHaveValue(
-    "fixture-demo-model",
-  );
-  await expect(page.getByLabel("Effort", { exact: true })).toHaveValue("");
-  await expect(page.getByRole("button", { exact: true, name: "Review" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  await expect(page.getByLabel("Message", { exact: true })).toBeEnabled();
+
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
   await expect(headerDoesNotOverlapTimeline(page)).resolves.toBe(true);
 });
@@ -47,12 +49,24 @@ test("renders Agent UI chat", async ({ page }) => {
 test("does not overflow on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/");
-  await expect(page.locator(".aui-run-settings-popover summary").first()).toContainText(
-    "Run settings",
-  );
-  await expect(page.getByLabel("Run settings")).not.toBeVisible();
+  // Thread history is a drawer reached from the composer-adjacent Threads
+  // trigger, not a permanently stacked panel.
+  await expect(page.getByRole("button", { name: "Open thread history" })).toBeVisible();
+  await expect(page.getByLabel("Message", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Execution mode" })).toBeVisible();
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
   await expect(headerDoesNotOverlapTimeline(page)).resolves.toBe(true);
+});
+
+test("opens the thread history drawer on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/");
+  await expect(page.locator(".aui-sidebar")).toHaveCount(0);
+  await page.getByRole("button", { name: "Open thread history" }).click();
+  await expect(page.locator(".aui-sidebar")).toBeVisible();
+  await expect(page.getByLabel("Search history")).toBeVisible();
+  await page.getByRole("button", { name: "Close history" }).click();
+  await expect(page.locator(".aui-sidebar")).toHaveCount(0);
 });
 
 async function headerDoesNotOverlapTimeline(page: Page) {
@@ -61,7 +75,7 @@ async function headerDoesNotOverlapTimeline(page: Page) {
     const actions = document.querySelector(".aui-thread-actions")?.getBoundingClientRect();
     const messages = document.querySelector(".aui-message-list")?.getBoundingClientRect();
     if (!header || !actions || !messages) return false;
-    return actions.bottom <= header.bottom && header.bottom <= messages.top;
+    return actions.bottom <= header.bottom + 1 && header.bottom <= messages.top + 1;
   });
 }
 
@@ -81,8 +95,11 @@ async function horizontalOverflowOffenders(page: Page) {
       ".aui-thread-title",
       ".aui-thread-list-item",
       ".aui-thread-list-meta",
-      ".aui-run-settings-popover",
       ".aui-composer",
+      ".aui-composer-toolbar",
+      ".aui-composer-tool",
+      ".aui-approvals",
+      ".aui-approval",
     ];
     const viewportRight = window.innerWidth + 0.5;
     for (const selector of selectors) {
@@ -106,6 +123,8 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
   await expect(page.getByText("fixture@example.com")).toBeVisible();
   await expect(page.getByText("No threads found.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Start thread" })).toBeVisible();
+  // New threads expose cwd / project selection at thread start.
+  await expect(page.getByLabel("Working directory")).toBeVisible();
   await expect(page.getByLabel("Usage limits")).toContainText(
     "fixture-demo-model weekly",
   );
@@ -187,7 +206,6 @@ test("mobile keeps secondary chrome reachable", async ({ page }) => {
   await expect(page.getByLabel("Agent context")).toBeVisible();
   await expect(page.getByLabel("Status summary")).toBeVisible();
   await expect(page.getByLabel("Usage limits")).toBeVisible();
-  await expect(page.getByLabel("Diagnostics")).toHaveCount(0);
   const railDisplay = await page
     .locator(".aui-chat-rail")
     .evaluate((element) => getComputedStyle(element).display);

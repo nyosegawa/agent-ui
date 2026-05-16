@@ -71,13 +71,8 @@ test("refresh docs/screenshots", async ({ browser }) => {
       const page = await context.newPage();
       await page.goto(route.path, { waitUntil: "domcontentloaded" });
       await page.locator("body").waitFor({ state: "visible" });
-      // Trigger sidebar history load on routes that have a sidebar so the
-      // captured screenshot includes representative thread rows.
-      const loadButton = page.getByRole("button", { name: "Load" });
-      if ((await loadButton.count()) > 0) {
-        await loadButton.first().click({ trial: false }).catch(() => undefined);
-        await page.waitForTimeout(150);
-      }
+      // Thread history loads automatically; allow it to settle before capture.
+      await page.waitForTimeout(250);
       const filename = size === "desktop" ? route.desktopName : route.mobileName;
       const path = resolve(outputDir, filename);
       await page.screenshot({ fullPage: route.fullPage ?? false, path });

@@ -17,17 +17,7 @@
     "width": 390
   },
   "sidebar": {
-    "backgroundColor": "rgb(243, 241, 234)",
-    "borderColor": "rgb(26, 25, 22) rgb(26, 25, 22) rgb(231, 228, 218)",
-    "borderRadius": "0px",
-    "display": "grid",
-    "gridTemplateColumns": "366px",
-    "height": 255,
-    "overflowX": "hidden",
-    "overflowY": "hidden",
-    "present": true,
-    "visible": true,
-    "width": 390
+    "present": false
   },
   "chat": {
     "backgroundColor": "rgb(247, 246, 241)",
@@ -35,7 +25,7 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "390px",
-    "height": 621,
+    "height": 876,
     "overflowX": "hidden",
     "overflowY": "hidden",
     "present": true,
@@ -48,7 +38,7 @@
     "borderRadius": "0px",
     "display": "flex",
     "gridTemplateColumns": "none",
-    "height": 44,
+    "height": 49,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
@@ -66,10 +56,7 @@
     "overflowY": "hidden",
     "present": true,
     "visible": true,
-    "width": 328
-  },
-  "runControls": {
-    "present": false
+    "width": 304
   },
   "threadHeader": {
     "backgroundColor": "rgb(255, 255, 255)",
@@ -129,7 +116,7 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "366px",
-    "height": 191,
+    "height": 408,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
@@ -142,11 +129,24 @@
     "borderRadius": "14px",
     "display": "grid",
     "gridTemplateColumns": "344px",
-    "height": 158,
+    "height": 188,
     "overflowX": "hidden",
     "overflowY": "hidden",
     "present": true,
     "visible": true,
     "width": 366
+  },
+  "composerSettings": {
+    "backgroundColor": "rgba(0, 0, 0, 0)",
+    "borderColor": "rgb(26, 25, 22)",
+    "borderRadius": "0px",
+    "display": "flex",
+    "gridTemplateColumns": "none",
+    "height": 66,
+    "overflowX": "visible",
+    "overflowY": "visible",
+    "present": true,
+    "visible": true,
+    "width": 298
   }
 }

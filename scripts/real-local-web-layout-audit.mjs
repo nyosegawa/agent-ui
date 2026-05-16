@@ -10,8 +10,6 @@ const viewports = [
 
 const selectors = [
   ".aui-shell",
-  ".aui-sidebar",
-  ".aui-thread-list",
   ".aui-thread-surface",
   ".aui-thread-header",
   ".aui-message-list",
@@ -23,23 +21,19 @@ const selectors = [
   ".aui-thread-list-item",
   ".aui-compose-panel",
   ".aui-composer",
-  ".aui-run-settings-popover",
-  ".aui-run-settings-sheet",
+  ".aui-composer-toolbar",
+  ".aui-composer-tool",
+  ".aui-approvals",
+  ".aui-approval",
+  ".aui-menu-panel",
 ];
 
-const viewportSelectors = [
+const baseViewportSelectors = [
   [".aui-thread-surface", "thread surface"],
   [".aui-message-list", "message list"],
   [".aui-compose-panel", "compose panel"],
   [".aui-composer", "composer"],
-  [".aui-sidebar", "sidebar"],
-  [".aui-thread-list", "thread list"],
-  [".aui-run-settings-popover summary", "run settings summary"],
-];
-
-const openViewportSelectors = [
-  ...viewportSelectors,
-  [".aui-run-settings-sheet", "run settings sheet"],
+  [".aui-composer-tool", "composer run-settings menu trigger"],
 ];
 
 const browser = await chromium.launch();
@@ -54,12 +48,28 @@ try {
     await page.waitForSelector(".aui-compose-panel .aui-composer");
     const title = await page.evaluate(() => document.title);
     await page.waitForSelector("[data-testid='agent-chat']");
-    const closedAudit = await auditPage(page, viewportSelectors);
-    await page
-      .locator(".aui-run-settings-popover summary")
-      .first()
-      .click({ timeout: 10_000 });
-    const openAudit = await auditPage(page, openViewportSelectors);
+
+    // Desktop keeps the sidebar inline; mobile keeps it behind the Threads
+    // drawer trigger, so the required surfaces differ per viewport.
+    const closedViewportSelectors =
+      viewport.name === "desktop"
+        ? [
+            ...baseViewportSelectors,
+            [".aui-sidebar", "sidebar"],
+            [".aui-thread-list", "thread list"],
+          ]
+        : [
+            ...baseViewportSelectors,
+            [".aui-threads-trigger", "threads drawer trigger"],
+          ];
+
+    const closedAudit = await auditPage(page, closedViewportSelectors, viewport.name);
+    await page.locator(".aui-composer-tool").first().click({ timeout: 10_000 });
+    const openAudit = await auditPage(
+      page,
+      [...baseViewportSelectors, [".aui-menu-panel", "run-settings menu"]],
+      viewport.name,
+    );
     results.push({ closedAudit, openAudit, title, viewport: viewport.name });
     await page.close();
   }
@@ -78,7 +88,8 @@ for (const result of results) {
     if (audit.hasLoadAll) failures.push(`${result.viewport}:${phase}: Load all found`);
     if (!audit.hasMainThread)
       failures.push(`${result.viewport}:${phase}: main thread missing`);
-    if (!audit.hasSidebar) failures.push(`${result.viewport}:${phase}: sidebar missing`);
+    if (!audit.hasSidebar)
+      failures.push(`${result.viewport}:${phase}: thread history affordance missing`);
     if (!audit.hasComposer)
       failures.push(`${result.viewport}:${phase}: composer missing`);
     if (audit.messageOverlapsComposer) {
@@ -93,7 +104,9 @@ for (const result of results) {
     if (!audit.sendButton?.visibleInViewport) {
       failures.push(`${result.viewport}:${phase}: send button outside viewport`);
     }
-    if (!audit.sendButton?.hitTestable) {
+    // While a run-settings menu is open its backdrop intentionally covers the
+    // composer, so send hit-testing is only meaningful in the closed phase.
+    if (phase === "closed" && !audit.sendButton?.hitTestable) {
       failures.push(
         `${result.viewport}:${phase}: send button not hit-testable ${JSON.stringify(
           audit.sendButton,
@@ -109,9 +122,9 @@ if (failures.length > 0) {
   process.exit(1);
 }
 
-async function auditPage(page, requiredViewportSelectors) {
+async function auditPage(page, requiredViewportSelectors, viewportName) {
   return page.evaluate(
-    ({ checkedSelectors, requiredViewportSelectors }) => {
+    ({ checkedSelectors, requiredViewportSelectors, viewportName }) => {
       function isVisibleInViewport(rect) {
         return (
           rect.width > 0 &&
@@ -188,13 +201,17 @@ async function auditPage(page, requiredViewportSelectors) {
         sendCenter.y <= window.innerHeight
           ? document.elementFromPoint(sendCenter.x, sendCenter.y)
           : null;
+      const hasSidebar =
+        viewportName === "desktop"
+          ? Boolean(document.querySelector(".aui-sidebar .aui-thread-list"))
+          : Boolean(document.querySelector(".aui-threads-trigger"));
       return {
         hasComposer: Boolean(document.querySelector(".aui-compose-panel .aui-composer")),
         hasLoadAll: document.body.textContent?.includes("Load all") ?? false,
         hasMainThread: Boolean(
           document.querySelector(".aui-thread-surface .aui-message-list"),
         ),
-        hasSidebar: Boolean(document.querySelector(".aui-sidebar .aui-thread-list")),
+        hasSidebar,
         hasWorkTrace: Boolean(document.querySelector("[class*=work][class*=trace]")),
         messageOverlapsComposer:
           messageRect && composerRect
@@ -222,6 +239,6 @@ async function auditPage(page, requiredViewportSelectors) {
             : false,
       };
     },
-    { checkedSelectors: selectors, requiredViewportSelectors },
+    { checkedSelectors: selectors, requiredViewportSelectors, viewportName },
   );
 }

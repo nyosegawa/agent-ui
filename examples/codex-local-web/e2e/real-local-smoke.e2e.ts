@@ -45,7 +45,4 @@ async function openRealLocalApp(
   await expect(page.getByText(/real-smoke@example.com/)).toBeVisible({
     timeout: 30_000,
   });
-  await expect(
-    page.locator('select[aria-label="Model"] option[value="smoke-model"]'),
-  ).toHaveText("Smoke Model (smoke-model)", { timeout: 30_000 });
 }

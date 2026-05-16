@@ -9,6 +9,17 @@ Server process and browser WebSocket bridge. Usage and diagnostics are not
 assumed preset rails; hosts can compose those primitives around the thread when
 they want them.
 
+## Composer attachments
+
+The app wires `AgentChat`'s `resolveLocalAttachment` so pasted, dropped, and
+picked image/file attachments become real Codex inputs. Because the Codex App
+Server reads `localImage` inputs from disk and the browser only holds a `File`,
+`server.ts` exposes a `POST /agent-ui/upload` endpoint that persists the upload
+to a host temp directory and returns an absolute path. The resolver wraps that
+path with `localImageInput` for images and `mentionInput` for other files.
+This host-supplied resolver is the intended integration shape — the library
+never treats browser-only blob URLs or `File.name` values as App Server paths.
+
 Smoke path:
 
 ```bash

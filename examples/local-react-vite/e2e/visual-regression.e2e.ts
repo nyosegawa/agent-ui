@@ -6,13 +6,13 @@ const selectors = [
   ["chat", ".aui-chat"],
   ["status", ".aui-status"],
   ["usage", ".aui-usage"],
-  ["runControls", ".aui-run-controls"],
   ["threadHeader", ".aui-thread-header"],
   ["messageList", ".aui-message-list"],
   ["activity", ".aui-transcript-card"],
   ["diffActivity", ".aui-file-change-card"],
   ["approvals", ".aui-approvals"],
   ["composer", ".aui-composer"],
+  ["composerSettings", ".aui-composer-settings"],
 ] as const;
 
 test("matches desktop visual layout contract", async ({ page }) => {
@@ -29,23 +29,26 @@ test("matches mobile visual layout contract", async ({ page }) => {
   expect(await visualContractJson(page)).toMatchSnapshot("mobile-layout.json");
 });
 
+const surfaceSelectors = [
+  ".aui-thread-surface",
+  ".aui-approvals",
+  ".aui-approval",
+  ".aui-compose-panel",
+  ".aui-composer",
+  ".aui-composer-toolbar",
+  ".aui-composer-settings",
+  ".aui-composer-tool",
+  ".aui-approval-actions",
+  ".aui-approval-actions .aui-btn",
+];
+
 test("kitchen mobile keeps approval and composer surfaces inside the viewport", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/?state=kitchen");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
-  for (const selector of [
-    ".aui-thread-surface",
-    ".aui-approvals",
-    ".aui-approval",
-    ".aui-compose-panel",
-    ".aui-composer",
-    ".aui-approval-actions",
-    ".aui-approval-actions .aui-btn",
-    ".aui-run-settings-popover",
-    ".aui-run-settings-popover summary",
-  ]) {
+  for (const selector of surfaceSelectors) {
     await expectWithinViewport(page, selector);
   }
 });
@@ -55,28 +58,29 @@ for (const route of ["/", "/host-workflow-recipe"] as const) {
     await page.setViewportSize({ width: 390, height: 900 });
     await page.goto(route);
     await expect(page.locator(".aui-thread-surface").first()).toBeVisible();
-    for (const selector of [
-      ".aui-thread-surface",
-      ".aui-approvals",
-      ".aui-approval",
-      ".aui-compose-panel",
-      ".aui-composer",
-      ".aui-approval-actions",
-      ".aui-approval-actions .aui-btn",
-      ".aui-run-settings-popover",
-      ".aui-run-settings-popover summary",
-    ]) {
+    for (const selector of surfaceSelectors) {
       await expectWithinViewport(page, selector);
     }
   });
 }
+
+test("composer mode menu opens within the viewport on mobile", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/");
+  const modeMenu = page.getByRole("button", { name: "Execution mode" });
+  await modeMenu.scrollIntoViewIfNeeded();
+  await modeMenu.click();
+  const panel = page.getByRole("menu", { name: "Execution mode" });
+  await expect(panel).toBeVisible();
+  await expectWithinViewport(page, ".aui-menu-panel");
+});
 
 for (const route of ["/", "/host-workflow-recipe"] as const) {
   for (const viewport of [
     { height: 900, name: "desktop", width: 1280 },
     { height: 900, name: "mobile", width: 390 },
   ] as const) {
-    test(`${route} keeps transcript, composer, approval, and run settings reachable on ${viewport.name}`, async ({
+    test(`${route} keeps transcript, composer, and run-settings menus reachable on ${viewport.name}`, async ({
       page,
     }) => {
       await page.setViewportSize(viewport);
@@ -89,7 +93,7 @@ for (const route of ["/", "/host-workflow-recipe"] as const) {
         ".aui-composer",
         ".aui-approvals",
         ".aui-approval-actions .aui-btn",
-        ".aui-run-settings-popover summary",
+        ".aui-composer-tool",
       ]) {
         if (route === "/host-workflow-recipe") {
           await page.locator(selector).first().scrollIntoViewIfNeeded();
@@ -105,22 +109,11 @@ for (const route of ["/", "/host-workflow-recipe"] as const) {
       await expectActuallyHitTestable(
         page.locator(".aui-composer button[aria-label='Send']").first(),
       );
-      await page.locator(".aui-run-settings-popover summary").first().click();
-      if (route === "/host-workflow-recipe") {
-        await page.locator(".aui-run-settings-sheet").first().scrollIntoViewIfNeeded();
-      }
-      await expectVisibleInViewport(page, ".aui-run-settings-sheet");
-      if (route === "/host-workflow-recipe") {
-        await page.locator(".aui-composer").first().scrollIntoViewIfNeeded();
-      }
-      await expectVisibleInViewport(page, ".aui-composer");
-      if (route === "/host-workflow-recipe") {
-        await page
-          .locator(".aui-approval-actions .aui-btn")
-          .first()
-          .scrollIntoViewIfNeeded();
-      }
-      await expectVisibleInViewport(page, ".aui-approval-actions .aui-btn");
+      const modeMenu = page.getByRole("button", { name: "Execution mode" }).first();
+      await modeMenu.scrollIntoViewIfNeeded();
+      await modeMenu.click();
+      await expectVisibleInViewport(page, ".aui-menu-panel");
+      await page.keyboard.press("Escape");
     });
   }
 }
@@ -137,11 +130,10 @@ test("fixture gallery mobile close-up stage stays inside the viewport", async ({
     ".aui-closeup",
     ".aui-closeup-stage",
     ".aui-closeup-stage .aui-composer",
+    ".aui-closeup-stage .aui-composer-toolbar",
     ".aui-closeup-stage .aui-approval",
     ".aui-closeup-stage .aui-approval-actions",
     ".aui-closeup-stage .aui-approval-actions .aui-btn",
-    ".aui-closeup-stage .aui-run-settings-popover",
-    ".aui-closeup-stage .aui-run-settings-popover summary",
   ]) {
     await expectWithinViewport(page, selector);
   }
@@ -159,6 +151,10 @@ test("component close-up gallery renders direct primitives, not iframes", async 
     "Composer · focused",
     "Composer · approval pending",
     "Composer · mobile",
+    "Composer · pasted image",
+    "Composer · multiple attachments",
+    "Mode menu · open",
+    "Model / effort menu · open",
     "Approval · command",
     "Approval · user input",
     "Command block",
@@ -194,6 +190,9 @@ test("component close-up gallery renders direct primitives, not iframes", async 
   const commandBlock = closeups.getByTestId("closeup:Command block");
   await expect(commandBlock.locator(".aui-transcript-card")).toHaveCount(1);
   await expect(commandBlock.locator(".aui-message-list")).toHaveCount(0);
+  // Pasted-image close-up shows a real attachment chip.
+  const pastedImage = closeups.getByTestId("closeup:Composer · pasted image");
+  await expect(pastedImage.locator(".aui-composer-chip")).toHaveCount(1);
 });
 
 test("focused composer close-up renders the real AgentComposer, not hand-written DOM", async ({
@@ -203,12 +202,9 @@ test("focused composer close-up renders the real AgentComposer, not hand-written
   await page.goto("/fixture-gallery");
   const focused = page.getByTestId("closeup:Composer · focused");
   await expect(focused).toBeVisible();
-  // The focus-injection wrapper proves the real component is being targeted.
   await expect(focused.locator('[data-focus-first="true"]')).toBeAttached();
   const composer = focused.locator(".aui-composer");
-  // Real AgentComposer always has aria-label "Composer attachments" on its <form>.
   await expect(composer).toHaveAttribute("aria-label", "Composer attachments");
-  // Body got pre-populated by the focus effect.
   const textarea = focused.locator("textarea.aui-composer-input");
   await expect(textarea).toHaveValue(
     "Apply the renderer audit findings and verify the diff.",
@@ -230,8 +226,6 @@ test("fixture-gallery places component close-ups above any iframe preview", asyn
     .first()
     .evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
   expect(closeupTop).toBeLessThan(firstIframeTop);
-  // First close-up should be reachable within ~2 viewports from the top so QA
-  // does not require a long scroll past iframes.
   expect(closeupTop).toBeLessThan(900 * 2);
 });
 
@@ -244,7 +238,6 @@ test("fixture-gallery places component close-ups near the top of the mobile view
   const closeupTop = await page
     .getByTestId("component-closeups")
     .evaluate((el) => el.getBoundingClientRect().top + window.scrollY);
-  // Mobile gallery should not push close-ups past the third viewport.
   expect(closeupTop).toBeLessThan(900 * 3);
 });
 
@@ -253,18 +246,18 @@ test("composer is a single bordered card with inline icon toolbar and primary se
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/?state=kitchen");
-  const closeups = page.getByTestId("agent-chat");
-  await expect(closeups).toBeVisible();
-  // Composer disabled because the kitchen fixture is waitingForInput.
+  await expect(page.getByTestId("agent-chat")).toBeVisible();
   const composer = page.locator(".aui-composer").first();
   await expect(composer).toBeVisible();
   await expect(composer).toHaveAttribute("data-disabled", "true");
   await expect(composer.locator(".aui-composer-notice")).toContainText(
     "pending approval",
   );
-  // Send button is icon-only and currently disabled.
   const send = composer.getByRole("button", { name: "Send" });
   await expect(send).toBeDisabled();
+  // Mode / model menus stay reachable even while the textarea is disabled.
+  await expect(composer.getByRole("button", { name: "Execution mode" })).toBeEnabled();
+  await expect(composer.getByRole("button", { name: "Model and effort" })).toBeEnabled();
 });
 
 test("composer is the primary, bordered card with App / Plugin mention buttons", async ({
@@ -272,7 +265,6 @@ test("composer is the primary, bordered card with App / Plugin mention buttons",
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/fixture-gallery");
-  // The close-up "Composer · normal" stage renders a live, enabled composer.
   const closeup = page.getByTestId("closeup:Composer · normal");
   const composer = closeup.locator(".aui-composer");
   await expect(composer).toBeVisible();
@@ -289,14 +281,28 @@ test("approval card renders shield + risk + green Approve + danger Decline", asy
   await page.goto("/?state=kitchen");
   const approval = page.locator(".aui-approval").first();
   await expect(approval).toBeVisible();
-  // Risk badge present.
   await expect(approval.locator(".aui-approval-risk")).toBeVisible();
-  // Three explicit decisions: scope-aware Approve (primary), Approve for session, Decline.
   await expect(
     approval.getByRole("button", { name: /^Approve [a-z ]+request [a-z0-9-]+$/ }),
   ).toBeVisible();
   await expect(approval.getByRole("button", { name: /for session$/ })).toBeVisible();
   await expect(approval.getByRole("button", { name: /^Decline / })).toBeVisible();
+});
+
+test("approval queue keeps additional pending requests as compact picker rows", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/?state=kitchen");
+  await expect(page.locator(".aui-approvals")).toContainText(
+    "3 decisions need your review",
+  );
+  // One expanded card, the rest compact.
+  await expect(page.locator(".aui-approval")).toHaveCount(1);
+  const compactRows = page.locator(".aui-approval-compact");
+  expect(await compactRows.count()).toBe(2);
+  await compactRows.first().click();
+  await expect(page.locator(".aui-approval")).toHaveCount(1);
 });
 
 for (const viewport of [
@@ -311,6 +317,7 @@ for (const viewport of [
     const approval = page.locator(".aui-approval").first();
     await expect(approval).toBeVisible();
     for (const button of firstApprovalActionButtons(approval)) {
+      await button.scrollIntoViewIfNeeded();
       await expectActuallyClickable(button);
     }
   });
@@ -322,9 +329,9 @@ for (const viewport of [
     await page.goto("/");
     const approval = page.locator(".aui-approval").first();
     await expect(approval).toBeVisible();
-    await expectActuallyClickable(
-      approval.getByRole("button", { name: /^Approve / }).first(),
-    );
+    const approve = approval.getByRole("button", { name: /^Approve / }).first();
+    await approve.scrollIntoViewIfNeeded();
+    await expectActuallyClickable(approve);
   });
 
   test(`host workflow approval actions are actually clickable after natural scroll on ${viewport.name}`, async ({
@@ -356,10 +363,8 @@ test("usage-only page demonstrates four host shells, not a blank page", async ({
   ]) {
     await expect(page.getByRole("heading", { name: heading })).toBeVisible();
   }
-  // Multiple AgentUsagePanel renders prove the primitive composes.
   const usagePanels = page.locator(".aui-usage");
   expect(await usagePanels.count()).toBeGreaterThanOrEqual(3);
-  // No blank gap above the fold: at least the summary chip is visible early.
   const summary = page.locator('[aria-label="Usage summary"]').first();
   const summaryTop = await summary.evaluate(
     (el) => el.getBoundingClientRect().top + window.scrollY,
@@ -396,7 +401,6 @@ test("mobile composer keeps tap targets above 32px and hides keyboard hint", asy
   const composer = page.locator(".aui-composer").first();
   await expect(composer).toBeVisible();
   await expect(composer.locator(".aui-composer-hint")).toBeHidden();
-  // Send button stays large enough for thumb tap (~36 default tap target).
   const send = composer.getByRole("button", { name: "Send" });
   const box = await send.boundingBox();
   expect(box).not.toBeNull();

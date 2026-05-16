@@ -220,6 +220,10 @@ function ComponentCloseupGallery() {
         <CloseupComposerFocused />
         <CloseupComposerDisabled />
         <CloseupComposerMobile />
+        <CloseupComposerPastedImage />
+        <CloseupComposerAttachments />
+        <CloseupModeMenu />
+        <CloseupModelEffortMenu />
         <CloseupApprovalCommand />
         <CloseupApprovalUserInput />
         <CloseupCommandBlock />
@@ -249,6 +253,7 @@ function CriticalInteractionStates() {
       <div className="aui-closeup-grid">
         <CloseupApprovalQueue />
         <CloseupComposerWithMentions />
+        <CloseupMobileChatShell />
         <CloseupBannerStack />
       </div>
     </section>
@@ -437,6 +442,211 @@ function CloseupComposerMobile() {
           threadId="thread-closeup"
         />
       </CloseupComposerProvider>
+    </CloseupFrame>
+  );
+}
+
+/**
+ * Seeds composer attachment chips by dispatching a real paste event with a
+ * DataTransfer payload — the same path a user takes — so the close-up shows
+ * genuine attachment state instead of hand-written markup.
+ */
+function SeedComposerAttachments({
+  files,
+}: {
+  files: { name: string; type: string }[];
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const textarea = ref.current?.parentElement?.querySelector<HTMLTextAreaElement>(
+      "textarea.aui-composer-input",
+    );
+    if (!textarea || typeof DataTransfer === "undefined") return;
+    const transfer = new DataTransfer();
+    for (const file of files) {
+      transfer.items.add(new File(["fixture"], file.name, { type: file.type }));
+    }
+    textarea.dispatchEvent(
+      new ClipboardEvent("paste", {
+        bubbles: true,
+        cancelable: true,
+        clipboardData: transfer,
+      }),
+    );
+  }, [files]);
+  return <div ref={ref} style={{ height: 0, width: "100%" }} />;
+}
+
+function CloseupComposerPastedImage() {
+  return (
+    <CloseupFrame
+      title="Composer · pasted image"
+      caption="Clipboard image becomes a removable attachment chip."
+    >
+      <CloseupComposerProvider>
+        <div style={{ position: "relative" }}>
+          <SeedComposerAttachments
+            files={[{ name: "ui-review.png", type: "image/png" }]}
+          />
+          <AgentComposer
+            resolveLocalAttachment={(file) =>
+              localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
+            }
+            threadId="thread-closeup"
+          />
+        </div>
+      </CloseupComposerProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupComposerAttachments() {
+  return (
+    <CloseupFrame
+      title="Composer · multiple attachments"
+      caption="Image and file chips wrap above the textarea."
+    >
+      <CloseupComposerProvider>
+        <div style={{ position: "relative" }}>
+          <SeedComposerAttachments
+            files={[
+              { name: "screenshot.png", type: "image/png" },
+              { name: "diagram.png", type: "image/png" },
+              { name: "trace.log", type: "text/plain" },
+            ]}
+          />
+          <AgentComposer
+            resolveLocalAttachment={(file, kind) =>
+              kind === "image"
+                ? localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
+                : localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
+            }
+            threadId="thread-closeup"
+          />
+        </div>
+      </CloseupComposerProvider>
+    </CloseupFrame>
+  );
+}
+
+function StaticMenuPanel({
+  ariaLabel,
+  children,
+}: {
+  ariaLabel: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      aria-label={ariaLabel}
+      className="aui-menu-panel"
+      role="menu"
+      style={{ position: "static", width: "100%" }}
+    >
+      <header className="aui-menu-panel-header">
+        <strong>{ariaLabel}</strong>
+      </header>
+      <div className="aui-menu-panel-body">{children}</div>
+    </div>
+  );
+}
+
+function StaticMenuItem({
+  label,
+  description,
+  selected,
+}: {
+  label: string;
+  description?: string;
+  selected?: boolean;
+}) {
+  return (
+    <div
+      className="aui-menu-item"
+      data-selected={selected ? "true" : undefined}
+      role="menuitemradio"
+      aria-checked={selected ? "true" : "false"}
+    >
+      <span className="aui-menu-item-icon" aria-hidden="true">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l8 3v6c0 4.4-3.4 8-8 9-4.6-1-8-4.6-8-9V6l8-3z"/></svg>
+      </span>
+      <span className="aui-menu-item-body">
+        <span className="aui-menu-item-label">{label}</span>
+        {description ? <span className="aui-menu-item-desc">{description}</span> : null}
+      </span>
+      <span className="aui-menu-item-check" aria-hidden="true">
+        {selected ? (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+        ) : null}
+      </span>
+    </div>
+  );
+}
+
+function CloseupModeMenu() {
+  return (
+    <CloseupFrame
+      title="Mode menu · open"
+      caption="Execution mode picker with icon, label, and selected check."
+    >
+      <StaticMenuPanel ariaLabel="Execution mode">
+        <StaticMenuItem
+          label="Review"
+          description="Ask before commands or file changes that need review."
+          selected
+        />
+        <StaticMenuItem
+          label="Auto"
+          description="Run in the workspace and ask only after a command fails."
+        />
+        <StaticMenuItem
+          label="Read-only"
+          description="Read files and plan changes without writing to the workspace."
+        />
+        <StaticMenuItem
+          label="Full access"
+          description="Allow full local access for trusted one-off work."
+        />
+      </StaticMenuPanel>
+    </CloseupFrame>
+  );
+}
+
+function CloseupModelEffortMenu() {
+  return (
+    <CloseupFrame
+      title="Model / effort menu · open"
+      caption="Model and effort share one compact menu with sections."
+    >
+      <StaticMenuPanel ariaLabel="Model and effort">
+        <div className="aui-menu-section" role="group" aria-label="Model">
+          <span className="aui-menu-section-label">Model</span>
+          <StaticMenuItem label="Server default" />
+          <StaticMenuItem label="GPT-5.5 (gpt-5.5-codex)" selected />
+          <StaticMenuItem label="GPT-5.4 (gpt-5.4-codex)" />
+        </div>
+        <div className="aui-menu-section" role="group" aria-label="Effort">
+          <span className="aui-menu-section-label">Effort</span>
+          <StaticMenuItem label="Low" />
+          <StaticMenuItem label="Medium" selected />
+          <StaticMenuItem label="High" />
+          <StaticMenuItem label="Very high" />
+        </div>
+      </StaticMenuPanel>
+    </CloseupFrame>
+  );
+}
+
+function CloseupMobileChatShell() {
+  return (
+    <CloseupFrame
+      title="Mobile chat shell"
+      caption="Chat + composer first; history opens from the Threads drawer."
+      tone="mobile"
+    >
+      <div className="aui-closeup-mobile-shell">
+        <iframe src="/?state=kitchen" title="Mobile chat shell" />
+      </div>
     </CloseupFrame>
   );
 }
@@ -645,20 +855,22 @@ function CloseupSidebarSearch() {
       caption="Icon-prefix search, status dot, selected row."
     >
       <div style={{ display: "grid", gap: 12 }}>
-        <form className="aui-history-controls" onSubmit={(event) => event.preventDefault()}>
+        <form
+          className="aui-history-controls"
+          onSubmit={(event) => event.preventDefault()}
+          role="search"
+        >
           <div className="aui-input-shell aui-input-with-icon">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
             <input
               aria-label="Search history"
               className="aui-text-input"
               defaultValue="render"
-              placeholder="Search history"
+              placeholder="Search threads"
               type="search"
             />
+            <span aria-hidden="true" className="aui-history-spinner" />
           </div>
-          <button aria-label="Load" className="aui-btn aui-btn-secondary aui-btn-sm" type="submit">
-            Load
-          </button>
         </form>
         <nav aria-label="Threads" className="aui-thread-list">
           <button
