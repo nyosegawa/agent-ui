@@ -1,7 +1,13 @@
 import type { PendingServerRequest } from "@nyosegawa/agent-ui-core";
 import type React from "react";
 import { useState } from "react";
-import { IconBlock, IconCheck, IconPaperclip, IconShield, buttonClass } from "../components-internal";
+import {
+  IconBlock,
+  IconCheck,
+  IconPaperclip,
+  IconShield,
+  buttonClass,
+} from "../components-internal";
 import { AgentDiffViewer } from "../diff-viewer";
 import { useAgentApprovals } from "../hooks";
 import { deferAction, isRecord, stringField } from "./shared";
@@ -93,8 +99,6 @@ export function AgentApprovalQueue({
     </section>
   );
 }
-
-export const AgentApprovalPrompt = AgentApprovalQueue;
 
 function ApprovalCard({
   approval,
@@ -399,13 +403,11 @@ function MetadataGrid({ rows }: { rows: Array<[string, string | undefined]> }) {
   );
 }
 
-
 function approvalResult(approval: PendingServerRequest) {
   if (approval.kind === "fileChangeApproval") return { decision: "accept" };
   if (approval.kind === "commandApproval") return { decision: "accept" };
   return { decision: "accept" };
 }
-
 
 function approvalSessionResult(approval: PendingServerRequest) {
   if (approval.kind === "fileChangeApproval") return { decision: "acceptForSession" };
@@ -413,11 +415,8 @@ function approvalSessionResult(approval: PendingServerRequest) {
   return { decision: "acceptForSession" };
 }
 
-
 function declineApprovalResult(approval: PendingServerRequest) {
   if (approval.kind === "fileChangeApproval") return { decision: "decline" };
   if (approval.kind === "commandApproval") return { decision: "decline" };
   return { decision: "decline" };
 }
-
-

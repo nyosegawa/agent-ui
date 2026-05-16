@@ -282,7 +282,7 @@ function UsageOnlyExample() {
               <div>
                 <strong>verify-codex-local-build</strong>
                 <small>
-                  packages/react/src/components-main.tsx · running
+                  packages/react/src/components/composer.tsx · running
                 </small>
               </div>
               <AgentUsageSummary />

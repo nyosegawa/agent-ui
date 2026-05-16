@@ -1,0 +1,262 @@
+/* --- Fixture gallery ---------------------------------------------- */
+
+.aui-fixture-gallery {
+  background: var(--aui-bg);
+  color: var(--aui-fg);
+  font: 14px/1.55 var(--aui-font);
+  min-height: 100vh;
+  padding: 28px 24px 56px;
+}
+
+.aui-fixture-gallery-header {
+  align-items: end;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin: 0 auto 22px;
+  max-width: 1320px;
+}
+
+.aui-fixture-gallery-header h1 {
+  color: var(--aui-fg-strong);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+
+.aui-fixture-gallery-header p {
+  color: var(--aui-fg-muted);
+  margin: 0;
+  max-width: 720px;
+}
+
+.aui-fixture-gallery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: end;
+}
+
+.aui-fixture-gallery-actions a {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border-strong);
+  border-radius: 6px;
+  color: var(--aui-fg);
+  font-size: 12.5px;
+  font-weight: 600;
+  padding: 7px 12px;
+  text-decoration: none;
+}
+
+.aui-fixture-gallery-actions a:hover {
+  background: var(--aui-panel-alt);
+}
+
+.aui-fixture-gallery-group {
+  margin: 0 auto 26px;
+  max-width: 1320px;
+}
+
+.aui-fixture-gallery-group-header {
+  align-items: baseline;
+  display: flex;
+  gap: 14px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  padding: 0 2px;
+}
+
+.aui-fixture-gallery-group-header h2 {
+  color: var(--aui-fg-strong);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.aui-fixture-gallery-group-header span {
+  color: var(--aui-fg-faint);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.aui-fixture-gallery-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.aui-demo-main {
+  margin: 16px auto;
+  max-width: 1280px;
+  padding: 0 14px;
+}
+
+@media (max-width: 640px) {
+  .aui-demo-main {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+.aui-fixture-preview {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 12px;
+  box-shadow: var(--aui-shadow-card);
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px 18px;
+}
+
+.aui-fixture-preview header {
+  align-items: start;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.aui-fixture-preview header div {
+  display: grid;
+  gap: 4px;
+}
+
+.aui-fixture-preview header strong {
+  color: var(--aui-fg-strong);
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+}
+
+.aui-fixture-preview header span {
+  color: var(--aui-fg-muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.aui-fixture-preview-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: end;
+}
+
+.aui-fixture-preview-actions button,
+.aui-fixture-preview header a {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border-strong);
+  border-radius: 6px;
+  color: var(--aui-fg);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  text-decoration: none;
+}
+
+.aui-fixture-preview header a {
+  color: var(--aui-primary);
+  font-family: var(--aui-font-mono);
+  font-size: 11.5px;
+}
+
+.aui-fixture-preview-actions button:hover,
+.aui-fixture-preview header a:hover {
+  background: var(--aui-panel-alt);
+}
+
+.aui-fixture-preview-frames {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 420px;
+}
+
+.aui-fixture-preview figure {
+  background: linear-gradient(180deg, #1a1c20 0%, #14161a 100%);
+  border-radius: 10px;
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  min-width: 0;
+  padding: 12px 12px 14px;
+}
+
+.aui-fixture-preview figure[data-size="mobile"] {
+  background: linear-gradient(180deg, #14161a 0%, #0e1014 100%);
+}
+
+.aui-fixture-preview figcaption {
+  align-items: center;
+  color: #d4d8e0;
+  display: flex;
+  font-size: 10.5px;
+  font-weight: 700;
+  gap: 8px;
+  justify-content: space-between;
+  letter-spacing: 0.08em;
+  padding: 2px 4px;
+  text-transform: uppercase;
+}
+
+.aui-fixture-preview figcaption span {
+  color: #8a8f9a;
+  font-family: var(--aui-font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.aui-fixture-frame-shell {
+  background: var(--aui-panel);
+  border-radius: 6px;
+  display: grid;
+  min-height: 520px;
+  overflow: hidden;
+  position: relative;
+}
+
+.aui-fixture-frame-shell > .aui-fixture-frame-status {
+  align-items: center;
+  background: rgba(15, 17, 22, 0.84);
+  color: #cbd5e1;
+  display: flex;
+  font-size: 12px;
+  gap: 6px;
+  inset: 0;
+  justify-content: center;
+  pointer-events: none;
+  position: absolute;
+  z-index: 2;
+}
+
+.aui-fixture-frame-shell > .aui-fixture-frame-status::before {
+  animation: aui-spin 1.1s linear infinite;
+  border: 2px solid rgba(203, 213, 225, 0.32);
+  border-radius: 50%;
+  border-top-color: var(--aui-primary);
+  content: "";
+  display: block;
+  height: 12px;
+  width: 12px;
+}
+
+@keyframes aui-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.aui-fixture-preview iframe {
+  background: #ffffff;
+  border: 0;
+  grid-area: 1 / 1;
+  height: 520px;
+  width: 100%;
+}
+
+.aui-fixture-preview figure[data-size="mobile"] iframe {
+  height: 520px;
+}

@@ -1,6 +1,11 @@
 import type { AgentThread, ThreadState } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { IconClose, IconHistory, IconSearch, buttonClass } from "../components-internal";
+import {
+  IconClose,
+  IconHistory,
+  IconSearch,
+  buttonClass,
+} from "../components-internal";
 import { useAgentThreadHistory, useAgentThreadReader } from "../hooks";
 import { useAgentContext } from "../provider";
 import { rawThreadId } from "../thread-history";
@@ -128,7 +133,7 @@ export function isUserFacingPath(path: string): boolean {
   return true;
 }
 
-export function ThreadSidebar({
+export function AgentThreadSidebar({
   activeThreadId,
   collapsed = false,
   onCollapsedChange,
@@ -353,11 +358,7 @@ export function ThreadSidebar({
   );
 }
 
-export const AgentThreadSidebar = ThreadSidebar;
-
 function responseCursor(response: Record<string, unknown> | undefined): string | null {
   if (!response) return null;
   return stringField(response, "nextCursor") ?? stringField(response, "next_cursor") ?? null;
 }
-
-

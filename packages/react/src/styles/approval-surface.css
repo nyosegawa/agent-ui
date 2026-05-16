@@ -1,7 +1,7 @@
 /* --- Approval surface (in-transcript pending decision) ----------------- */
 
 /* The approval surface is a transcript item, never an independent scroll
- * pane. It carries no max-height and no overflow of its own — the transcript
+ * pane. It carries no max-height and no overflow of its own; the transcript
  * scroll area owns scrolling. */
 .aui-approvals {
   display: grid;
@@ -270,4 +270,31 @@
 .aui-approval-actions .aui-btn-primary:hover:not(:disabled) {
   background: #126331;
   border-color: #126331;
+}
+
+@media (max-width: 640px) {
+  .aui-approvals {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+  .aui-approval {
+    max-width: 100%;
+    min-width: 0;
+    width: 100%;
+  }
+  .aui-approval-actions {
+    display: grid;
+    gap: 8px;
+    grid-template-columns: 1fr 1fr;
+  }
+  .aui-approval-actions .aui-btn {
+    min-width: 0;
+    white-space: normal;
+    width: 100%;
+  }
+  .aui-approval-actions .aui-btn-primary {
+    grid-column: 1 / -1;
+    order: -1;
+  }
 }

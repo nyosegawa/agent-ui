@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { useAgentBootstrap } from "../hooks";
-import { useAgentApps, useAgentAuth, useAgentSkills, useAgentUsage } from "../hooks";
+import {
+  useAgentApps,
+  useAgentAuth,
+  useAgentSkills,
+  useAgentUsage,
+} from "../hooks";
 import { IconHistory, IconRefresh, buttonClass } from "../components-internal";
 import { useAgentContext } from "../provider";
 import { normalizeUsageWindows } from "../usage";
@@ -126,8 +131,6 @@ export function AgentDiagnosticsPanel({
   );
 }
 
-export const AgentDiagnostics = AgentDiagnosticsPanel;
-
 type AgentStatusSeverity = "info" | "warning" | "critical";
 
 interface AgentStatusNotice {
@@ -182,9 +185,6 @@ export function AgentStatusDetails({ includeCritical = false }: { includeCritica
     </section>
   );
 }
-
-export const AgentStatusDrawer = AgentStatusDetails;
-export const AgentStatusBanners = AgentStatusDetails;
 
 export function AgentCriticalNoticeList() {
   const { state } = useAgentContext();
@@ -344,8 +344,6 @@ export function AgentUsagePanel({ autoRefresh = true }: AgentUsageProps = {}) {
   );
 }
 
-export const AgentUsage = AgentUsagePanel;
-
 export function AgentUsageSummary() {
   const { rateLimits } = useAgentUsage();
   const windows = useMemo(() => normalizeUsageWindows(rateLimits), [rateLimits]);
@@ -493,7 +491,6 @@ export function AgentAppsPanel({ threadId }: { threadId?: string }) {
   );
 }
 
-
 function usageSummary(windows: ReturnType<typeof normalizeUsageWindows>): string {
   if (windows.length === 0) return "sync pending";
   return windows
@@ -501,7 +498,6 @@ function usageSummary(windows: ReturnType<typeof normalizeUsageWindows>): string
     .map((window) => `${window.label} ${window.valueLabel}`)
     .join(" · ");
 }
-
 
 function diagnosticsTitle(messages: string[]): string {
   const pluginWarnings = messages.filter((message) =>
@@ -511,7 +507,6 @@ function diagnosticsTitle(messages: string[]): string {
   if (pluginWarnings > 0) return "Diagnostics and plugin warnings";
   return "Diagnostics";
 }
-
 
 function statusBannerTitle(kind: string): string {
   switch (kind) {
@@ -532,7 +527,6 @@ function statusBannerTitle(kind: string): string {
   }
 }
 
-
 function isSuppressedDiagnostic(message: string): boolean {
   return (
     (message.includes("codex_core_plugins::manifest") &&
@@ -542,4 +536,3 @@ function isSuppressedDiagnostic(message: string): boolean {
         message.includes("ignoring interface.icon_large")))
   );
 }
-

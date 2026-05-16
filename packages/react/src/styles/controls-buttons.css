@@ -1,0 +1,132 @@
+/* --- Button system -------------------------------------------------------- */
+
+.aui-btn {
+  align-items: center;
+  background: var(--aui-panel);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--aui-fg);
+  cursor: pointer;
+  display: inline-flex;
+  font: 600 13px/1 var(--aui-font);
+  gap: 6px;
+  justify-content: center;
+  letter-spacing: -0.005em;
+  min-height: var(--aui-tap-target);
+  padding: 0 14px;
+  transition:
+    background-color 140ms var(--aui-easing),
+    border-color 140ms var(--aui-easing),
+    color 140ms var(--aui-easing),
+    box-shadow 140ms var(--aui-easing),
+    transform 80ms var(--aui-easing);
+  user-select: none;
+  white-space: nowrap;
+}
+
+.aui-btn:focus-visible {
+  box-shadow: var(--aui-focus-ring);
+  outline: none;
+}
+
+.aui-btn:disabled,
+.aui-btn[aria-disabled="true"] {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.aui-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.aui-btn > svg {
+  flex: 0 0 auto;
+}
+
+.aui-btn-sm {
+  font-size: 12px;
+  gap: 5px;
+  min-height: 28px;
+  padding: 0 10px;
+}
+
+.aui-btn-lg {
+  font-size: 14px;
+  min-height: 40px;
+  padding: 0 18px;
+}
+
+.aui-btn-icon-only {
+  padding: 0;
+  width: var(--aui-tap-target);
+}
+
+.aui-btn-icon-only.aui-btn-sm {
+  width: 28px;
+}
+
+.aui-btn-icon-only.aui-btn-lg {
+  width: 40px;
+}
+
+.aui-btn-primary {
+  background: var(--aui-primary);
+  border-color: var(--aui-primary);
+  color: var(--aui-primary-fg);
+}
+
+.aui-btn-primary:hover:not(:disabled) {
+  background: var(--aui-primary-strong);
+  border-color: var(--aui-primary-strong);
+}
+
+.aui-btn-secondary {
+  background: var(--aui-panel);
+  border-color: var(--aui-border-strong);
+  color: var(--aui-fg);
+}
+
+.aui-btn-secondary:hover:not(:disabled) {
+  background: var(--aui-panel-alt);
+  border-color: var(--aui-fg-muted);
+}
+
+.aui-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--aui-fg-muted);
+}
+
+.aui-btn-ghost:hover:not(:disabled) {
+  background: var(--aui-panel-alt);
+  color: var(--aui-fg);
+}
+
+.aui-btn-danger {
+  background: var(--aui-danger);
+  border-color: var(--aui-danger);
+  color: #ffffff;
+}
+
+.aui-btn-danger:hover:not(:disabled) {
+  background: #991b1b;
+  border-color: #991b1b;
+}
+
+.aui-btn-danger:focus-visible {
+  box-shadow: var(--aui-focus-ring-danger);
+}
+
+.aui-btn-subtle {
+  background: transparent;
+  border-color: transparent;
+  color: var(--aui-primary);
+  font-weight: 600;
+  padding: 0 6px;
+  min-height: 26px;
+}
+
+.aui-btn-subtle:hover:not(:disabled) {
+  color: var(--aui-primary-strong);
+  text-decoration: underline;
+}

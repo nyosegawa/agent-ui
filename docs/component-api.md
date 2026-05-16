@@ -197,10 +197,6 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentAppsPanel`: Codex Apps/connectors list from `app/list`.
 - `AgentWorkspace`: chat plus optional host-owned side panel slot.
 
-`ThreadSidebar`, `AgentUsage`, `AgentDiagnostics`, and `AgentApprovalPrompt`
-remain as compatible aliases where the names still map cleanly to the vNext
-primitives.
-
 ## Composition Examples
 
 Render a fixed thread without following the globally active thread:

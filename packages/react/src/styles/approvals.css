@@ -1,12 +1,6 @@
 /* --- Approvals ----------------------------------------------------- */
 
-.aui-file-path {
-  color: var(--aui-fg-faint);
-  font-family: var(--aui-font-mono);
-  font-size: 11px;
-}
-
-/* Command line — wraps long content so it can never push the viewport. */
+/* Command line wraps long content so it can never push the viewport. */
 .aui-command-line {
   background: var(--aui-code-bg);
   border-radius: 7px;
@@ -20,7 +14,7 @@
   white-space: pre-wrap;
 }
 
-/* Compact inline metadata — wraps key/value pairs onto 1–2 lines instead of
+/* Compact inline metadata wraps key/value pairs onto 1-2 lines instead of
  * stacking large three-column cards. No border so it reads as a metadata
  * row rather than a nested card. */
 .aui-metadata-grid {

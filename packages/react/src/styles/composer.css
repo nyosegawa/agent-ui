@@ -1,0 +1,285 @@
+/* --- Composer ------------------------------------------------------------ */
+
+.aui-compose-panel {
+  background: var(--aui-bg-soft);
+  border-top: 1px solid var(--aui-border);
+  display: grid;
+  gap: 10px;
+  min-height: 0;
+  min-width: 0;
+  overflow: visible;
+  padding: 14px 18px 18px;
+  width: 100%;
+}
+
+.aui-composer {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border-strong);
+  border-radius: 14px;
+  box-shadow: var(--aui-elevation-1);
+  display: grid;
+  gap: 0;
+  min-width: 0;
+  overflow: hidden;
+  padding: 10px 12px 8px;
+  transition:
+    border-color 160ms var(--aui-easing),
+    box-shadow 160ms var(--aui-easing);
+  width: 100%;
+}
+
+.aui-composer[data-focused="true"] {
+  border-color: var(--aui-primary);
+  box-shadow: var(--aui-focus-ring), var(--aui-elevation-2);
+}
+
+.aui-composer[data-disabled="true"] {
+  background: var(--aui-panel-quiet);
+}
+
+.aui-composer[data-drag="true"] {
+  background: var(--aui-primary-soft);
+  border-color: var(--aui-primary);
+}
+
+.aui-composer-notice {
+  align-items: center;
+  background: var(--aui-warn-soft);
+  border: 1px solid rgba(180, 83, 9, 0.28);
+  border-radius: 8px;
+  color: var(--aui-warn);
+  display: flex;
+  font-size: 12px;
+  font-weight: 600;
+  gap: 8px;
+  margin: 2px 2px 8px;
+  padding: 7px 10px;
+}
+
+.aui-composer-notice[data-tone="error"] {
+  background: var(--aui-danger-soft);
+  border-color: rgba(185, 28, 28, 0.28);
+  color: var(--aui-danger);
+}
+
+.aui-composer-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+  margin: 2px 2px 8px;
+  padding: 0;
+}
+
+.aui-composer-chip {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 999px;
+  display: inline-flex;
+  font-size: 12px;
+  gap: 6px;
+  max-width: 240px;
+  padding: 3px 4px 3px 10px;
+}
+
+.aui-composer-chip[data-kind="image"] {
+  background: var(--aui-info-soft);
+  border-color: rgba(37, 99, 235, 0.22);
+}
+
+.aui-composer-chip[data-kind="app"],
+.aui-composer-chip[data-kind="plugin"] {
+  background: var(--aui-primary-soft);
+  border-color: rgba(13, 148, 136, 0.32);
+}
+
+.aui-composer-chip-icon {
+  align-items: center;
+  color: var(--aui-fg-muted);
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.aui-composer-chip-label {
+  color: var(--aui-fg);
+  font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-composer .aui-composer-input {
+  background: transparent;
+  border: 0;
+  color: var(--aui-fg);
+  display: block;
+  font: 400 14px/1.55 var(--aui-font);
+  max-height: 220px;
+  min-height: 28px;
+  outline: none;
+  padding: 6px 4px 4px;
+  resize: none;
+  width: 100%;
+}
+
+.aui-composer .aui-composer-input::placeholder {
+  color: var(--aui-fg-faint);
+}
+
+.aui-composer .aui-composer-input:disabled {
+  color: var(--aui-fg-faint);
+  cursor: not-allowed;
+}
+
+.aui-composer-toolbar {
+  align-items: center;
+  border-top: 1px solid var(--aui-rule);
+  display: flex;
+  gap: 6px;
+  justify-content: space-between;
+  margin-top: 6px;
+  min-width: 0;
+  padding-top: 6px;
+}
+
+.aui-composer-toolbar-start,
+.aui-composer-toolbar-end {
+  align-items: center;
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+}
+
+.aui-composer-toolbar-start {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+}
+
+.aui-composer-toolbar-end {
+  flex: 0 0 auto;
+}
+
+.aui-composer-hint {
+  color: var(--aui-fg-faint);
+  font-size: 11px;
+  margin-right: 4px;
+}
+
+.aui-composer-hint kbd {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 4px;
+  color: var(--aui-fg-muted);
+  font: inherit;
+  font-family: var(--aui-font-mono);
+  font-size: 10.5px;
+  padding: 1px 5px;
+}
+
+.aui-composer .aui-btn-primary.aui-btn-icon-only {
+  border-radius: 999px;
+}
+
+/* --- Composer toolbar groups -------------------------------------------- */
+
+.aui-composer-toolbar-attach {
+  align-items: center;
+  display: flex;
+  gap: 2px;
+}
+
+.aui-composer-settings {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+/* --- Composer tool trigger (mode / model / effort) ---------------------- */
+
+.aui-composer-tool {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 999px;
+  color: var(--aui-fg);
+  cursor: pointer;
+  display: inline-flex;
+  font: 600 12px/1 var(--aui-font);
+  gap: 5px;
+  max-width: 232px;
+  min-height: 30px;
+  padding: 0 9px;
+  transition:
+    background-color 140ms var(--aui-easing),
+    border-color 140ms var(--aui-easing),
+    color 140ms var(--aui-easing);
+}
+
+.aui-composer-tool:hover {
+  background: var(--aui-panel);
+  border-color: var(--aui-border-strong);
+}
+
+.aui-composer-tool:focus-visible {
+  box-shadow: var(--aui-focus-ring);
+  outline: none;
+}
+
+.aui-composer-tool[data-active="true"] {
+  background: var(--aui-primary-soft);
+  border-color: rgba(13, 148, 136, 0.4);
+  color: var(--aui-primary-strong);
+}
+
+.aui-composer-tool-icon {
+  align-items: center;
+  color: var(--aui-fg-faint);
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.aui-composer-tool[data-active="true"] .aui-composer-tool-icon {
+  color: var(--aui-primary-strong);
+}
+
+.aui-composer-tool-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-composer-tool > svg:last-child {
+  color: var(--aui-fg-faint);
+  flex: 0 0 auto;
+}
+
+/* --- Mobile composer ----------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .aui-compose-panel {
+    max-width: 100%;
+    min-width: 0;
+    padding: 10px 12px 14px;
+    width: 100%;
+  }
+  .aui-composer {
+    max-width: 100%;
+    min-width: 0;
+    padding: 8px 10px 6px;
+    width: 100%;
+  }
+  .aui-composer .aui-composer-input {
+    font-size: 15px;
+  }
+  .aui-composer-hint {
+    display: none;
+  }
+  .aui-composer-tool {
+    max-width: 100%;
+  }
+}

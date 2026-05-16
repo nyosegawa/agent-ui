@@ -1,0 +1,54 @@
+/* --- Status pill (refined) ----------------------------------------------- */
+
+.aui-status-pill {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 999px;
+  color: var(--aui-fg-muted);
+  display: inline-flex;
+  font: 600 11.5px/1 var(--aui-font);
+  gap: 6px;
+  letter-spacing: 0.005em;
+  padding: 4px 10px;
+}
+
+.aui-status-pill-dot {
+  background: currentColor;
+  border-radius: 999px;
+  display: inline-block;
+  height: 6px;
+  width: 6px;
+}
+
+.aui-status-pill[data-status="running"] {
+  background: var(--aui-primary-soft);
+  border-color: rgba(13, 148, 136, 0.4);
+  color: var(--aui-primary-strong);
+}
+
+.aui-status-pill[data-status="waitingForInput"] {
+  background: var(--aui-warn-soft);
+  border-color: rgba(180, 83, 9, 0.32);
+  color: var(--aui-warn);
+}
+
+.aui-status-pill[data-status="error"] {
+  background: var(--aui-danger-soft);
+  border-color: rgba(185, 28, 28, 0.32);
+  color: var(--aui-danger);
+}
+
+.aui-status-pill[data-status="running"] .aui-status-pill-dot {
+  animation: aui-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes aui-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}

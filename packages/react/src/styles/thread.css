@@ -47,8 +47,8 @@
 }
 
 /* Header, optional critical notices, the transcript scroll area, then the
- * composer. Pending approvals are NOT a row here — they render inside the
- * transcript scroll area as a trailing pending-decision item. */
+ * composer. Pending approvals render inside the transcript scroll area as a
+ * trailing pending-decision item. */
 .aui-thread-surface {
   background: var(--aui-panel);
   display: grid;
@@ -329,8 +329,7 @@
   min-width: 0;
 }
 
-/* Trailing transcript slot — hosts the pending-approval surface inside the
- * scroll area so it reads as the last item of the thread, not a pane. */
+/* Trailing transcript slot for pending decisions inside the scroll area. */
 .aui-transcript-tail {
   display: grid;
   max-width: 100%;
@@ -411,4 +410,25 @@
 .aui-block-message {
   display: grid;
   gap: 6px;
+}
+
+/* --- Message metadata refinements -------------------------------------- */
+
+.aui-message[data-kind="userMessage"] .aui-message-meta span:last-child,
+.aui-message[data-kind="agentMessage"] .aui-message-meta span:last-child,
+.aui-message[data-kind="stream"] .aui-message-meta span:last-child {
+  display: none;
+}
+
+.aui-message[data-kind="commandExecution"] > .aui-message-meta,
+.aui-message[data-kind="dynamicTool"] > .aui-message-meta,
+.aui-message[data-kind="dynamicToolCall"] > .aui-message-meta,
+.aui-message[data-kind="fileChange"] > .aui-message-meta,
+.aui-message[data-kind="mcpToolCall"] > .aui-message-meta,
+.aui-message[data-kind="toolCall"] > .aui-message-meta {
+  display: none;
+}
+
+.aui-message[data-kind="reasoning"] .aui-message-meta {
+  letter-spacing: 0.02em;
 }

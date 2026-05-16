@@ -650,7 +650,7 @@ function CloseupDiffBlock() {
         </div>
         <ul className="aui-diff-files">
           <li>
-            <span>packages/react/src/components-main.tsx</span>
+            <span>packages/react/src/components/composer.tsx</span>
             <em>+34 / −5</em>
           </li>
           <li>

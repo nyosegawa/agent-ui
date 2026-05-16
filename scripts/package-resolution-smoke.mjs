@@ -20,13 +20,13 @@ try {
     [
       "const styles = import.meta.resolve('@nyosegawa/agent-ui-react/styles.css');",
       "const main = import.meta.resolve('@nyosegawa/agent-ui-react');",
-      "let legacyStyleFailed = false;",
+      "let removedStyleFailed = false;",
       "try { import.meta.resolve('@nyosegawa/agent-ui-react/style.css'); }",
-      "catch { legacyStyleFailed = true; }",
+      "catch { removedStyleFailed = true; }",
       "if (!styles.endsWith('/dist/styles.css')) throw new Error(`styles resolved to ${styles}`);",
       "if (!main.endsWith('/dist/index.js')) throw new Error(`main resolved to ${main}`);",
-      "if (!legacyStyleFailed) throw new Error('legacy style.css export unexpectedly resolved');",
-      "console.log(JSON.stringify({ main, styles, legacyStyleFailed }, null, 2));",
+      "if (!removedStyleFailed) throw new Error('removed style.css export unexpectedly resolved');",
+      "console.log(JSON.stringify({ main, styles, removedStyleFailed }, null, 2));",
     ].join("\n"),
   );
   const result = spawnSync(process.execPath, [smokePath], {

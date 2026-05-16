@@ -1,7 +1,7 @@
 /* Agent UI design system.
  *
  * Warm, low-noise palette. Typography-led hierarchy. Cards are used
- * sparingly — only where a strong boundary actually carries meaning
+ * sparingly, only where a strong boundary actually carries meaning
  * (approvals, code surfaces, diff). Everything else uses spacing and
  * type weight for grouping.
  */
@@ -40,9 +40,18 @@
   --aui-shadow-card: 0 1px 0 rgba(20, 18, 14, 0.04);
   --aui-shadow-lift: 0 10px 32px -16px rgba(20, 18, 14, 0.22);
   --aui-shadow-focus: 0 0 0 3px rgba(13, 148, 136, 0.22);
+  --aui-focus-ring: 0 0 0 3px rgba(13, 148, 136, 0.28);
+  --aui-focus-ring-danger: 0 0 0 3px rgba(185, 28, 28, 0.28);
+  --aui-elevation-1: 0 1px 0 rgba(20, 18, 14, 0.05);
+  --aui-elevation-2: 0 6px 22px -14px rgba(20, 18, 14, 0.22);
   --aui-radius: 10px;
   --aui-radius-sm: 6px;
+  --aui-radius-md: 8px;
+  --aui-radius-lg: 12px;
+  --aui-radius-xl: 16px;
   --aui-radius-pill: 999px;
+  --aui-easing: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --aui-tap-target: 36px;
   --aui-font:
     ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI",
     Roboto, sans-serif;

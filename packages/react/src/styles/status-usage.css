@@ -1,13 +1,5 @@
 /* --- Secondary chrome (rail) --------------------------------------- */
 
-.aui-rail-card {
-  background: var(--aui-panel);
-  border: 1px solid var(--aui-border);
-  border-radius: var(--aui-radius);
-  box-shadow: var(--aui-shadow-card);
-  overflow: hidden;
-}
-
 .aui-status-summary,
 .aui-usage-summary {
   align-items: center;
@@ -407,25 +399,6 @@
   border-color: var(--aui-primary);
   box-shadow: var(--aui-shadow-focus);
   outline: none;
-}
-
-.aui-cwd-input {
-  display: flex;
-  gap: 6px;
-  min-width: 0;
-}
-
-.aui-cwd-input input {
-  font-family: var(--aui-font-mono);
-  font-size: 12px;
-  min-width: 0;
-}
-
-.aui-cwd-input .aui-icon-button {
-  flex: 0 0 auto;
-  min-height: 34px;
-  min-width: 34px;
-  padding: 4px 8px;
 }
 
 /* --- Skills / Apps panels ----------------------------------------- */

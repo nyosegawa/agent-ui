@@ -90,85 +90,6 @@
   transform: rotate(180deg);
 }
 
-/* --- Status card (rail composition) ------------------------------------- */
-
-.aui-status-card {
-  background: var(--aui-panel);
-  border: 1px solid var(--aui-border);
-  border-radius: var(--aui-radius-md);
-  box-shadow: var(--aui-elevation-1);
-  display: grid;
-  gap: 0;
-  overflow: hidden;
-}
-
-.aui-status-card-header {
-  align-items: center;
-  display: flex;
-  gap: 10px;
-  justify-content: space-between;
-  padding: 10px 14px;
-}
-
-.aui-status-card-header strong {
-  color: var(--aui-fg-muted);
-  font: 700 10.5px/1 var(--aui-font);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.aui-status-card-header span {
-  color: var(--aui-fg);
-  font-size: 12.5px;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.aui-status-card-header span[data-severity="warning"] {
-  color: var(--aui-warn);
-}
-
-.aui-status-card-header span[data-severity="critical"] {
-  color: var(--aui-danger);
-}
-
-.aui-status-card-details {
-  border-top: 1px solid var(--aui-rule);
-}
-
-.aui-status-card-details summary {
-  align-items: center;
-  cursor: pointer;
-  display: flex;
-  gap: 8px;
-  list-style: none;
-  min-height: 34px;
-  padding: 7px 14px;
-}
-
-.aui-status-card-details summary::-webkit-details-marker {
-  display: none;
-}
-
-.aui-status-card-details summary span {
-  color: var(--aui-fg-muted);
-  font: 600 11.5px/1 var(--aui-font);
-}
-
-.aui-status-card-details summary small {
-  color: var(--aui-fg-faint);
-  font-size: 11px;
-  margin-left: auto;
-}
-
-.aui-status-card-list {
-  display: grid;
-  gap: 4px;
-  padding: 0 10px 10px;
-}
-
 .aui-thread-list-name {
   color: var(--aui-fg);
   display: block;
@@ -291,6 +212,12 @@
   outline: none;
 }
 
+@media (max-width: 640px) {
+  .aui-threads-trigger {
+    display: inline-flex;
+  }
+}
+
 .aui-sidebar-backdrop {
   background: rgba(15, 14, 12, 0.42);
   border: 0;
@@ -300,10 +227,6 @@
   padding: 0;
   position: fixed;
   z-index: 45;
-}
-
-.aui-sidebar-toggle.aui-btn-icon-only.aui-btn-ghost {
-  border-radius: 999px;
 }
 
 /* --- Thread action menu (icon trigger) ---------------------------------- */
@@ -362,11 +285,4 @@
 
 .aui-first-run .aui-btn {
   width: max-content;
-}
-
-/* --- Composer/run controls inside the legacy panel preserved ----------- */
-
-.aui-run-controls .aui-cwd-input,
-.aui-run-controls-compact .aui-cwd-input {
-  display: none;
 }

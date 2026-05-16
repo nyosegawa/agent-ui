@@ -246,24 +246,3 @@
     min-height: 480px;
   }
 }
-
-/* ===========================================================================
- *  Primitive craftsmanship overlay
- *
- *  Single source of truth for every interactive primitive (button, input,
- *  composer, approval, status pill). Earlier sections in this file only own
- *  the transcript, markdown, command, and diff surfaces — the interaction
- *  layer is owned by the declarations below.
- * ======================================================================== */
-
-:root {
-  --aui-focus-ring: 0 0 0 3px rgba(13, 148, 136, 0.28);
-  --aui-focus-ring-danger: 0 0 0 3px rgba(185, 28, 28, 0.28);
-  --aui-elevation-1: 0 1px 0 rgba(20, 18, 14, 0.05);
-  --aui-elevation-2: 0 6px 22px -14px rgba(20, 18, 14, 0.22);
-  --aui-radius-md: 8px;
-  --aui-radius-lg: 12px;
-  --aui-radius-xl: 16px;
-  --aui-easing: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --aui-tap-target: 36px;
-}
