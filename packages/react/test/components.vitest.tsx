@@ -20,6 +20,7 @@ import {
   AgentShell,
   AgentStatusDetails,
   AgentStatusSummary,
+  AgentThreadSidebar,
   AgentThreadView,
   AgentUsagePanel,
   AgentUsageSummary,
@@ -255,6 +256,165 @@ describe("AgentChat", () => {
 
     await user.click(screen.getByText("node_repl / js"));
     expect(screen.getByText(/Inspect Agent UI DOM/)).toBeInTheDocument();
+  });
+
+  it("keeps user and assistant messages expanded without disclosure chrome", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-chat"] = {
+      orderedTurnIds: ["turn-chat"],
+      status: "complete",
+      thread: { id: "thread-chat", name: "Plain chat" },
+      turns: {
+        "turn-chat": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["user-1", "assistant-1"],
+          items: {
+            "assistant-1": {
+              id: "assistant-1",
+              kind: "agentMessage",
+              status: "completed",
+              text: "The transcript remains readable without clicking.",
+              threadId: "thread-chat",
+              turnId: "turn-chat",
+            },
+            "user-1": {
+              id: "user-1",
+              kind: "userMessage",
+              status: "completed",
+              text: "Please summarize the refactor.",
+              threadId: "thread-chat",
+              turnId: "turn-chat",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-chat", threadId: "thread-chat" },
+        },
+      },
+    };
+
+    const { container } = render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList thread={initialState.threads["thread-chat"]!} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("Please summarize the refactor.")).toBeInTheDocument();
+    expect(
+      screen.getByText("The transcript remains readable without clicking."),
+    ).toBeInTheDocument();
+    expect(container.querySelectorAll("details")).toHaveLength(0);
+  });
+
+  it("keeps tool cards readable when closed and exposes details when opened", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-tool"] = {
+      orderedTurnIds: ["turn-tool"],
+      status: "loaded",
+      thread: { id: "thread-tool", name: "Tool detail boundary" },
+      turns: {
+        "turn-tool": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["tool-bool", "tool-error"],
+          items: {
+            "tool-bool": {
+              id: "tool-bool",
+              kind: "mcpToolCall",
+              raw: {
+                arguments: { expression: "Boolean(process.env.CI)" },
+                result: true,
+                server: "node_repl",
+                status: "completed",
+                tool: "js",
+              },
+              status: "completed",
+              threadId: "thread-tool",
+              turnId: "turn-tool",
+            },
+            "tool-error": {
+              id: "tool-error",
+              kind: "dynamicToolCall",
+              raw: {
+                arguments: { path: "/tmp/missing" },
+                error: "Error: ENOENT\n    at readFile (/tmp/tool.js:10:3)",
+                name: "read_file",
+                status: "failed",
+              },
+              status: "failed",
+              threadId: "thread-tool",
+              turnId: "turn-tool",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-tool", threadId: "thread-tool" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList thread={initialState.threads["thread-tool"]!} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("MCP tool")).toHaveTextContent("node_repl / js");
+    expect(screen.getByLabelText("MCP tool")).toHaveTextContent("Result captured");
+    expect(screen.queryByText("Boolean(process.env.CI)")).not.toBeInTheDocument();
+    expect(screen.queryByText(/ENOENT/)).not.toBeInTheDocument();
+    expect(screen.queryByText("true")).not.toBeInTheDocument();
+
+    await user.click(screen.getByText("node_repl / js"));
+    expect(screen.getByText("Arguments")).toBeInTheDocument();
+    expect(screen.getByText("Result")).toBeInTheDocument();
+    expect(screen.getByText(/Boolean\(process\.env\.CI\)/)).toBeInTheDocument();
+    expect(screen.getByText("true")).toBeInTheDocument();
+
+    await user.click(screen.getByText("read_file"));
+    expect(screen.getByText("Error")).toBeInTheDocument();
+    expect(screen.getByText(/ENOENT/)).toBeInTheDocument();
+  });
+
+  it("keeps thread list title and metadata visible for stored threads", () => {
+    const storedThread = {
+      orderedTurnIds: ["turn-stored"],
+      status: "loaded" as const,
+      thread: {
+        id: "thread-stored",
+        name: "Review stored transcript",
+        path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+        raw: { updatedAt: "2026-05-16T12:00:00.000Z" },
+      },
+      turns: {
+        "turn-stored": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: [],
+          items: {},
+          streamingTextByItemId: {},
+          turn: { id: "turn-stored", threadId: "thread-stored" },
+        },
+      },
+    };
+    const initialState = createInitialAgentState();
+    initialState.connection.status = "connected";
+    initialState.threads["thread-stored"] = storedThread;
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentThreadSidebar
+          activeThreadId="thread-stored"
+          threads={[storedThread]}
+        />
+      </AgentProvider>,
+    );
+
+    const row = screen.getByRole("button", { name: /Review stored transcript/ });
+    expect(row).toHaveTextContent("Review stored transcript");
+    expect(row).toHaveTextContent("Preview");
+    expect(row).toHaveTextContent("agent-ui");
+    expect(screen.queryByRole("button", { name: /Load all/i })).not.toBeInTheDocument();
   });
 
   it("renders usage as a standalone primitive without chat chrome", () => {

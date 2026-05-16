@@ -611,3 +611,28 @@ Acceptance:
       and port-5175 confirms the approval is a transcript item, the decision
       footer is hit-testable, and there is no horizontal overflow on desktop
       or mobile.
+
+## Milestone 15: Refactor Without Behavior Changes
+
+Opened on 2026-05-17 for a structure-only refactor. The user-facing port-5174
+fixture experience and port-5175 real Codex local web experience must stay
+unchanged. Stored transcripts remain loss-aware: regular user/assistant
+messages stay expanded, command/tool/diff/file-change items stay inline in the
+transcript, and heavy command/tool/diff bodies remain mounted only after their
+details disclosure is opened.
+
+- [x] Add behavior-lock regression tests before moving code: normal messages do
+      not collapse, stored file-change turns keep tool context, closed tool
+      cards show readable previews, open tool cards expose arguments/result/
+      error, thread rows keep title/meta, and markdown/code blocks avoid nested
+      scroll traps.
+- [ ] Split `packages/react/src/timeline.tsx` into internal transcript modules
+      without changing public exports or App Server item-kind behavior.
+- [ ] Organize transcript CSS so message, block, tool, command, and diff
+      selectors are easier to audit without changing layout.
+- [ ] Split the local fixture example into route and fixture modules while
+      keeping it clearly separate from `examples/codex-local-web`.
+- [ ] Update README and docs for the refactored internal architecture and
+      remove stale vocabulary.
+- [ ] Re-run the required validation ladder and browser QA for 5174 fixture
+      routes and 5175 real local web at desktop and mobile viewports.

@@ -83,4 +83,15 @@ describe("packages/react style.css", () => {
     expect(css).not.toMatch(/\.aui-run-settings-sheet\b/);
     expect(occurrences.get(".aui-composer-shell") ?? []).toHaveLength(0);
   });
+
+  it("keeps markdown code blocks wrapped instead of creating nested scroll traps", () => {
+    expect(css).toMatch(/\.aui-markdown pre\s*\{[^}]*overflow:\s*visible;/s);
+    expect(css).toMatch(/\.aui-markdown pre code\s*\{[^}]*white-space:\s*pre-wrap;/s);
+    expect(css).toMatch(/\.aui-markdown pre code\s*\{[^}]*overflow-wrap:\s*anywhere;/s);
+  });
+
+  it("keeps heavy transcript bodies scroll-contained only behind details", () => {
+    expect(css).toMatch(/\.aui-transcript-card \.aui-command-output\s*\{[^}]*max-height:\s*280px;/s);
+    expect(css).toMatch(/\.aui-thinking-block pre,\n\.aui-json-section pre\s*\{[^}]*max-height:\s*260px;/s);
+  });
 });
