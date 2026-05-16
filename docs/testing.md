@@ -122,7 +122,8 @@ Component tests:
 - render command output
 - keep command output and file-change diffs inline with the surrounding transcript items rather than detached panels
 - keep very large persisted command-output histories scroll-contained without reclassifying them into UI-owned activity groups
-- keep long persisted messages behind a preview/expand affordance
+- keep user and assistant messages expanded in restored history instead of hiding normal chat text behind a disclosure
+- keep command/tool execution context visible when a hydrated stored turn ends with file changes, even if the raw item-count window would otherwise show only the diff
 - render structured App Server message content arrays as readable text
 - show completed message status after real thread completion and hydrated history reads
 - normalize stale `inProgress` item labels to completed in loaded hydrated history

@@ -58,6 +58,15 @@ messages always render expanded. Heavy non-chat bodies such as command output,
 JSON/tool results, and CodeMirror-backed diffs stay unmounted until their
 details disclosure is opened.
 
+Live App Server streams and stored `thread/read` history are not identical
+surfaces. A live browser connection can receive per-item notifications such as
+command output deltas and approvals. A restored thread can only render the
+`ThreadItem`s returned by `thread/read`; some command-like activity may be
+absent or represented as `mcpToolCall` / dynamic tool items. When a hydrated
+turn ends with file changes, the transcript window keeps command/tool context
+from the same turn visible with the diff so restored sessions do not degrade
+into a stack of file-change cards.
+
 Transcript item primitives are exported for host composition and close-up QA:
 
 - `AgentTurn`

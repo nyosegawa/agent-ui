@@ -175,6 +175,13 @@ the newest transcript items, reveals older items through `Show earlier items`,
 and always renders user and assistant message bodies expanded. Expensive
 non-chat bodies such as command output, JSON, and CodeMirror diff bodies stay
 unmounted until the user opens the corresponding details disclosure.
+Because `thread/read` is a stored-history API, it can differ from the live
+WebSocket stream that originally drove a turn. Agent UI therefore treats every
+returned execution-shaped item as first-class transcript context:
+`commandExecution` when present, plus `mcpToolCall`, dynamic tool calls, and
+`fileChange`. If the newest window includes a file-change item, command/tool
+items from that same turn remain visible with it even when they fall outside
+the raw item-count window.
 
 ## Fixed UI Decisions
 

@@ -326,18 +326,30 @@ function PlanBlock({ block }: { block: AgentItemBlock }) {
 }
 
 export function AgentToolCallItem({ block }: { block: AgentItemBlock }) {
+  const [isOpen, setOpen] = useState(false);
+  const label = block.toolType === "mcp" ? "MCP tool" : "Tool call";
+  const preview = toolPreview(block);
+  const title = block.server ? `${block.server} / ${block.tool ?? "unknown tool"}` : block.tool ?? "unknown tool";
   return (
-    <details className="aui-content-block aui-tool-block">
+    <details
+      aria-label={label}
+      className="aui-content-block aui-tool-block"
+      onToggle={(event) => setOpen(event.currentTarget.open)}
+    >
       <summary>
-        <span>{block.toolType === "mcp" ? "MCP tool" : "Tool call"}</span>
-        <strong>{block.tool ?? "unknown tool"}</strong>
-        {block.server ? <small>{block.server}</small> : null}
+        <span>{label}</span>
+        <strong>{title}</strong>
         {block.status ? <small>{block.status}</small> : null}
         {block.durationMs !== undefined ? <small>{formatDuration(block.durationMs)}</small> : null}
+        {preview ? <em className="aui-tool-preview">{preview}</em> : null}
       </summary>
-      <JsonSection label="Arguments" value={block.arguments} />
-      <JsonSection label="Result" value={block.result} />
-      <JsonSection label="Error" value={block.error} tone="danger" />
+      {isOpen ? (
+        <>
+          <JsonSection label="Arguments" value={block.arguments} />
+          <JsonSection label="Result" value={block.result} />
+          <JsonSection label="Error" value={block.error} tone="danger" />
+        </>
+      ) : null}
     </details>
   );
 }
@@ -560,6 +572,7 @@ function blockForTranscriptItem(
 ): AgentItemBlock {
   if (block) return block;
   const item = turn.items[itemId];
+  const raw = isRecord(item?.raw) ? item.raw : {};
   const activityKind = activityKindForId(turn, itemId);
   if (activityKind === "commandExecution") {
     return {
@@ -571,10 +584,50 @@ function blockForTranscriptItem(
   }
   if (activityKind === "fileChange") {
     return {
+      changes: Array.isArray(raw.changes) ? raw.changes : undefined,
       id: itemId,
       kind: "fileChange",
       status: item?.status,
       text: displayText(item?.text),
+    };
+  }
+  if (item?.kind === "mcpToolCall") {
+    return {
+      arguments: raw.arguments ?? raw.args,
+      durationMs: numberValue(raw.durationMs ?? raw.duration_ms),
+      error: raw.error,
+      id: itemId,
+      kind: "mcpToolCall",
+      raw: item.raw,
+      result: raw.result ?? raw.contentItems ?? raw.content_items,
+      server: stringValue(raw.server),
+      status: item.status,
+      text: displayText(item.text),
+      tool: stringValue(raw.tool ?? raw.name) ?? displayText(item.text),
+      toolType: "mcp",
+    };
+  }
+  if (
+    item?.kind === "toolCall" ||
+    item?.kind === "dynamicTool" ||
+    item?.kind === "dynamicToolCall"
+  ) {
+    return {
+      arguments: raw.arguments ?? raw.args,
+      durationMs: numberValue(raw.durationMs ?? raw.duration_ms),
+      error: raw.error,
+      id: itemId,
+      kind: "toolCall",
+      raw: item.raw,
+      result: raw.result ?? raw.contentItems ?? raw.content_items,
+      server: stringValue(raw.server),
+      status: item.status,
+      text: displayText(item.text),
+      tool: stringValue(raw.tool ?? raw.name) ?? displayText(item.text),
+      toolType:
+        item.kind === "dynamicTool" || item.kind === "dynamicToolCall"
+          ? "dynamic"
+          : "generic",
     };
   }
   return {
@@ -587,6 +640,10 @@ function blockForTranscriptItem(
 function lineCount(value: string): number {
   if (!value) return 0;
   return value.split(/\r?\n/).length;
+}
+
+function numberValue(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
 }
 
 function commandPreview(text: string): string {
@@ -606,6 +663,55 @@ function formatDuration(durationMs: number): string {
 function formatJson(value: unknown): string {
   if (typeof value === "string") return value;
   return JSON.stringify(value, null, 2) ?? "";
+}
+
+function toolPreview(block: AgentItemBlock): string | undefined {
+  if (block.status === "failed") return undefined;
+  const resultPreview = toolResultPreview(block.result);
+  if (resultPreview) return resultPreview;
+  const argsPreview = block.status === "inProgress" ? compactJsonPreview(block.arguments) : undefined;
+  if (argsPreview) return `args ${argsPreview}`;
+  return undefined;
+}
+
+function toolResultPreview(value: unknown): string | undefined {
+  const record = isRecord(value) ? value : undefined;
+  const content = Array.isArray(record?.content) ? record.content : undefined;
+  if (content && content.length > 0) {
+    const textItem = content.find((item) => isRecord(item) && item.type === "text");
+    if (isRecord(textItem) && typeof textItem.text === "string") {
+      const preview = compactTextPreview(textItem.text);
+      return preview && looksLikeMachinePreview(preview) ? "Result captured" : preview;
+    }
+    return `${content.length} result ${content.length === 1 ? "item" : "items"}`;
+  }
+  return value === undefined || value === null ? undefined : "Result captured";
+}
+
+function compactJsonPreview(value: unknown): string | undefined {
+  if (value === undefined || value === null) return undefined;
+  return compactTextPreview(formatJson(value));
+}
+
+function compactTextPreview(value: string): string | undefined {
+  const text = value.replace(/\s+/g, " ").trim();
+  if (!text) return undefined;
+  return text.length > 140 ? `${text.slice(0, 137)}...` : text;
+}
+
+function looksLikeMachinePreview(value: string): boolean {
+  const text = value.trim();
+  return (
+    text.startsWith("{") ||
+    text.startsWith("[") ||
+    text.includes("\\n") ||
+    text === "true" ||
+    text === "false" ||
+    text === "null" ||
+    text === "undefined" ||
+    /^-?\d+(\.\d+)?$/.test(text) ||
+    /^[A-Z][A-Za-z]*Error:/.test(text)
+  );
 }
 
 function kindLabel(kind: string): string {

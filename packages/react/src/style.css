@@ -913,6 +913,7 @@
 .aui-web-search-block {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   list-style: none;
   min-width: 0;
@@ -951,7 +952,18 @@
 .aui-content-block-heading small {
   color: var(--aui-fg-faint);
   font-size: 11px;
-  margin-left: auto;
+}
+
+.aui-tool-preview {
+  color: var(--aui-fg-muted);
+  flex-basis: 100%;
+  font-size: 12px;
+  font-style: normal;
+  line-height: 1.45;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .aui-thinking-block pre,
@@ -4249,6 +4261,15 @@
 .aui-message[data-kind="agentMessage"] .aui-message-meta span:last-child,
 .aui-message[data-kind="stream"] .aui-message-meta span:last-child {
   display: none; /* "completed" status under flowing assistant text is noise */
+}
+
+.aui-message[data-kind="commandExecution"] > .aui-message-meta,
+.aui-message[data-kind="dynamicTool"] > .aui-message-meta,
+.aui-message[data-kind="dynamicToolCall"] > .aui-message-meta,
+.aui-message[data-kind="fileChange"] > .aui-message-meta,
+.aui-message[data-kind="mcpToolCall"] > .aui-message-meta,
+.aui-message[data-kind="toolCall"] > .aui-message-meta {
+  display: none;
 }
 
 .aui-message[data-kind="reasoning"] {

@@ -181,6 +181,82 @@ describe("AgentChat", () => {
     expect(screen.getByText("echo 80")).toBeInTheDocument();
   });
 
+  it("keeps execution context visible when a stored turn ends with file changes", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    const fillerItems = Array.from({ length: 78 }, (_, index) => `message-${index + 1}`);
+    const itemOrder = ["tool-node-repl", ...fillerItems, "file-change"];
+    initialState.threads["thread-context"] = {
+      orderedTurnIds: ["turn-context"],
+      status: "loaded",
+      thread: { id: "thread-context", name: "Stored tool context" },
+      turns: {
+        "turn-context": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder,
+          items: {
+            "tool-node-repl": {
+              id: "tool-node-repl",
+              kind: "mcpToolCall",
+              raw: {
+                arguments: { title: "Inspect Agent UI DOM" },
+                result: {
+                  content: [{ text: "DOM audit found no horizontal overflow.", type: "text" }],
+                  structuredContent: null,
+                },
+                server: "node_repl",
+                status: "completed",
+                tool: "js",
+              },
+              status: "completed",
+              threadId: "thread-context",
+              turnId: "turn-context",
+            },
+            ...Object.fromEntries(
+              fillerItems.map((id, index) => [
+                id,
+                {
+                  id,
+                  kind: "agentMessage",
+                  status: "completed",
+                  text: `filler ${index + 1}`,
+                  threadId: "thread-context",
+                  turnId: "turn-context",
+                },
+              ]),
+            ),
+            "file-change": {
+              id: "file-change",
+              kind: "fileChange",
+              raw: { changes: [{ kind: "update", path: "packages/react/src/timeline.tsx" }] },
+              status: "completed",
+              threadId: "thread-context",
+              turnId: "turn-context",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-context", threadId: "thread-context" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList thread={initialState.threads["thread-context"]!} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("32 earlier items hidden")).toBeInTheDocument();
+    expect(screen.getByLabelText("MCP tool")).toHaveTextContent("node_repl / js");
+    expect(screen.getByLabelText("MCP tool")).toHaveTextContent("DOM audit found");
+    expect(screen.getByLabelText("Diff preview")).toHaveTextContent("1 file changed");
+    expect(screen.queryByText("Inspect Agent UI DOM")).not.toBeInTheDocument();
+
+    await user.click(screen.getByText("node_repl / js"));
+    expect(screen.getByText(/Inspect Agent UI DOM/)).toBeInTheDocument();
+  });
+
   it("renders usage as a standalone primitive without chat chrome", () => {
     const initialState = createInitialAgentState();
     initialState.account.rateLimits = {
@@ -1182,11 +1258,8 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(
-      screen
-        .getAllByText(/Review this session/)
-        .some((element) => element.closest("summary")),
-    ).toBe(true);
+    expect(screen.getByText(/Review this session/)).toBeInTheDocument();
+    expect(document.querySelector(".aui-message-body-collapsible")).not.toBeInTheDocument();
   });
 
   it("renders structured App Server message content without crashing", () => {
@@ -1233,7 +1306,8 @@ describe("AgentChat", () => {
     expect(screen.getByText("Reply with exactly: agent-ui-ui-check")).toBeInTheDocument();
   });
 
-  it("renders kitchen-derived content blocks from normalized state", () => {
+  it("renders kitchen-derived content blocks from normalized state", async () => {
+    const user = userEvent.setup();
     const initialState = runEventFixture([
       { event: { thread: { id: "thread-blocks", name: "Block renderers" }, type: "thread/started" } },
       {
@@ -1333,7 +1407,11 @@ describe("AgentChat", () => {
     expect(screen.getByText("Reviewing renderer taxonomy")).toBeInTheDocument();
     expect(screen.getByLabelText("Plan")).toHaveTextContent("Render command");
     expect(screen.getByText("MCP tool")).toBeInTheDocument();
-    expect(screen.getByText("snapshot")).toBeInTheDocument();
+    expect(screen.getByText("agent-browser / snapshot")).toBeInTheDocument();
+    expect(screen.getByLabelText("MCP tool")).toHaveTextContent("agent-browser / snapshot");
+    expect(screen.getByLabelText("MCP tool")).toHaveTextContent("Result captured");
+    expect(screen.queryByText(/"selector": "#app"/)).not.toBeInTheDocument();
+    await user.click(screen.getByText("agent-browser / snapshot"));
     expect(screen.getByText(/"selector": "#app"/)).toBeInTheDocument();
     expect(screen.getByLabelText("Web search")).toHaveTextContent(
       "Codex App Server generated protocol",
