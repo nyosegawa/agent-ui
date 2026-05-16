@@ -32,8 +32,6 @@ describe("packages/react style.css", () => {
   const occurrences = topLevelSelectorOccurrences(css);
 
   it.each([
-    ".aui-run-settings-popover",
-    ".aui-run-settings-sheet",
     ".aui-run-controls-compact",
     ".aui-transcript-card",
     ".aui-message-list",
@@ -43,12 +41,19 @@ describe("packages/react style.css", () => {
     ".aui-chat-rail",
     ".aui-compose-panel",
     ".aui-composer",
-    ".aui-composer-shell",
     ".aui-composer-toolbar",
     ".aui-composer-chips",
     ".aui-composer-chip",
     ".aui-composer-hint",
     ".aui-composer-notice",
+    ".aui-composer-tool",
+    ".aui-composer-settings",
+    ".aui-menu",
+    ".aui-menu-panel",
+    ".aui-menu-item",
+    ".aui-approvals",
+    ".aui-approval",
+    ".aui-approval-compact",
   ])("declares %s exactly once at the document root", (selector) => {
     const lines = occurrences.get(selector) ?? [];
     expect(lines, `${selector} appears at lines: ${lines.join(", ")}`).toHaveLength(1);
@@ -71,5 +76,11 @@ describe("packages/react style.css", () => {
   it("does not declare the retired plain .aui-button shell", () => {
     expect(occurrences.get(".aui-button") ?? []).toHaveLength(0);
     expect(occurrences.get(".aui-button-secondary") ?? []).toHaveLength(0);
+  });
+
+  it("does not contain the retired composer run-settings popover", () => {
+    expect(css).not.toMatch(/\.aui-run-settings-popover\b/);
+    expect(css).not.toMatch(/\.aui-run-settings-sheet\b/);
+    expect(occurrences.get(".aui-composer-shell") ?? []).toHaveLength(0);
   });
 });

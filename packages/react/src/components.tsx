@@ -187,6 +187,26 @@ const IconRefresh = (props: { size?: number }) => (
   </Icon>
 );
 
+const IconCpu = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <rect x="6" y="6" width="12" height="12" rx="2" />
+    <path d="M9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3" />
+  </Icon>
+);
+
+const IconGauge = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M12 13l4-4M4 18a9 9 0 1116 0" />
+    <circle cx="12" cy="13" r="1.4" fill="currentColor" stroke="none" />
+  </Icon>
+);
+
+const IconAlert = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M12 9v4M12 17h.01M10.3 3.9L2.4 17.5A1.9 1.9 0 004 20.4h16a1.9 1.9 0 001.6-2.9L13.7 3.9a1.9 1.9 0 00-3.4 0z" />
+  </Icon>
+);
+
 // --- Button helper ----------------------------------------------------------
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "danger" | "subtle";
@@ -230,14 +250,29 @@ export function AgentChat({
   usage = false,
 }: AgentChatProps = {}) {
   const bootstrap = useAgentBootstrap();
+  const compact = useCompactLayout();
   const { thread, threadId, startThread } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
-  const [isSidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Desktop keeps an expand/collapse rail; mobile keeps an off-canvas drawer.
+  // Tracking them separately means a viewport change never strands the user
+  // with the wrong default.
+  const [sidebarOpenDesktop, setSidebarOpenDesktop] = useState(true);
+  const [sidebarOpenMobile, setSidebarOpenMobile] = useState(false);
+  const isSidebarCollapsed = compact ? !sidebarOpenMobile : !sidebarOpenDesktop;
+  const setSidebarCollapsed = useCallback(
+    (next: boolean) => {
+      if (compact) setSidebarOpenMobile(!next);
+      else setSidebarOpenDesktop(!next);
+    },
+    [compact],
+  );
   const hasRail = usage || diagnostics;
+  const drawerOpen = compact && sidebar && !isSidebarCollapsed;
   return (
     <AgentShell
       className={className}
       data-sidebar-collapsed={isSidebarCollapsed ? "true" : "false"}
+      data-sidebar-drawer={drawerOpen ? "open" : "closed"}
       sidebar={
         sidebar ? (
           <ThreadSidebar
@@ -250,8 +285,20 @@ export function AgentChat({
         ) : undefined
       }
     >
+      {drawerOpen ? (
+        <button
+          aria-label="Dismiss thread history"
+          className="aui-sidebar-backdrop"
+          onClick={() => setSidebarCollapsed(true)}
+          type="button"
+        />
+      ) : null}
       <div className="aui-chat">
-        <AgentStatusBar />
+        <AgentStatusBar
+          onOpenThreads={
+            sidebar ? () => setSidebarCollapsed(false) : undefined
+          }
+        />
         <div className="aui-chat-body" data-rail={hasRail ? "visible" : "hidden"}>
           <div className="aui-thread-column">
             {thread ? (
@@ -772,6 +819,373 @@ function formatModelOption(model: { id: string; name?: string }): string {
   return `${model.name} (${model.id})`;
 }
 
+// --- Compact anchored menu --------------------------------------------------
+// Used by the composer toolbar for mode / model / effort selection. Opens
+// anchored above the trigger on desktop and as a bottom sheet on mobile so the
+// menu always lands inside the viewport. Esc, outside click, and arrow-key
+// navigation are handled here so each consumer stays declarative.
+
+interface AuiMenuProps {
+  ariaLabel: string;
+  children: (close: () => void) => React.ReactNode;
+  compact: boolean;
+  icon?: React.ReactNode;
+  label: string;
+}
+
+interface MenuAnchor {
+  left: number;
+  top: number;
+}
+
+function AuiMenu({ ariaLabel, children, compact, icon, label }: AuiMenuProps) {
+  const [open, setOpen] = useState(false);
+  const [anchor, setAnchor] = useState<MenuAnchor | null>(null);
+  const rootRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const close = useCallback(() => setOpen(false), []);
+  const toggle = useCallback(() => {
+    setOpen((current) => {
+      if (current) return false;
+      const rect = triggerRef.current?.getBoundingClientRect();
+      // Anchor in viewport space so the panel can use fixed positioning and
+      // escape the composer's clipped scroll ancestors.
+      setAnchor(rect ? { left: rect.left, top: rect.top } : null);
+      return true;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) close();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        close();
+        triggerRef.current?.focus();
+      }
+    };
+    const onReflow = () => close();
+    document.addEventListener("mousedown", onPointerDown, true);
+    document.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("resize", onReflow);
+    window.addEventListener("scroll", onReflow, true);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown, true);
+      document.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("resize", onReflow);
+      window.removeEventListener("scroll", onReflow, true);
+    };
+  }, [close, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    panelRef.current
+      ?.querySelector<HTMLElement>('[role^="menuitem"]:not([disabled])')
+      ?.focus();
+  }, [open]);
+
+  const onPanelKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (event) => {
+    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+    event.preventDefault();
+    const items = Array.from(
+      panelRef.current?.querySelectorAll<HTMLElement>(
+        '[role^="menuitem"]:not([disabled])',
+      ) ?? [],
+    );
+    if (items.length === 0) return;
+    const index = items.indexOf(document.activeElement as HTMLElement);
+    const delta = event.key === "ArrowDown" ? 1 : -1;
+    items[(index + delta + items.length) % items.length]?.focus();
+  };
+
+  const panelStyle: React.CSSProperties | undefined =
+    compact || !anchor
+      ? undefined
+      : {
+          bottom: `${Math.max(8, (typeof window === "undefined" ? 0 : window.innerHeight) - anchor.top + 8)}px`,
+          left: `${Math.max(8, Math.min(anchor.left, (typeof window === "undefined" ? 360 : window.innerWidth) - 296))}px`,
+        };
+
+  return (
+    <div className="aui-menu" ref={rootRef}>
+      <button
+        aria-expanded={open}
+        aria-haspopup="menu"
+        aria-label={ariaLabel}
+        className="aui-composer-tool"
+        data-active={open ? "true" : undefined}
+        onClick={toggle}
+        ref={triggerRef}
+        type="button"
+      >
+        {icon ? (
+          <span className="aui-composer-tool-icon" aria-hidden="true">
+            {icon}
+          </span>
+        ) : null}
+        <span className="aui-composer-tool-label">{label}</span>
+        <IconChevronDown size={13} />
+      </button>
+      {open ? (
+        <>
+          <div
+            className="aui-menu-backdrop"
+            data-compact={compact ? "true" : undefined}
+            onClick={close}
+          />
+          <div
+            aria-label={ariaLabel}
+            className="aui-menu-panel"
+            data-compact={compact ? "true" : undefined}
+            onKeyDown={onPanelKeyDown}
+            ref={panelRef}
+            role="menu"
+            style={panelStyle}
+          >
+            <header className="aui-menu-panel-header">
+              <strong>{ariaLabel}</strong>
+              <button
+                aria-label="Close menu"
+                className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
+                onClick={close}
+                type="button"
+              >
+                <IconClose size={14} />
+              </button>
+            </header>
+            <div className="aui-menu-panel-body">{children(close)}</div>
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function MenuSection({
+  children,
+  label,
+}: {
+  children: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <div aria-label={label} className="aui-menu-section" role="group">
+      <span className="aui-menu-section-label">{label}</span>
+      {children}
+    </div>
+  );
+}
+
+function MenuOption({
+  description,
+  icon,
+  label,
+  onSelect,
+  selected,
+}: {
+  description?: string;
+  icon?: React.ReactNode;
+  label: string;
+  onSelect: () => void;
+  selected: boolean;
+}) {
+  return (
+    <button
+      aria-checked={selected}
+      className="aui-menu-item"
+      data-selected={selected ? "true" : undefined}
+      onClick={onSelect}
+      role="menuitemradio"
+      type="button"
+    >
+      {icon ? (
+        <span className="aui-menu-item-icon" aria-hidden="true">
+          {icon}
+        </span>
+      ) : null}
+      <span className="aui-menu-item-body">
+        <span className="aui-menu-item-label">{label}</span>
+        {description ? (
+          <span className="aui-menu-item-desc">{description}</span>
+        ) : null}
+      </span>
+      <span className="aui-menu-item-check" aria-hidden="true">
+        {selected ? <IconCheck size={14} /> : null}
+      </span>
+    </button>
+  );
+}
+
+function effortOptionLabel(effort: string): string {
+  switch (effort) {
+    case "minimal":
+      return "Minimal";
+    case "low":
+      return "Low";
+    case "medium":
+      return "Medium";
+    case "high":
+      return "High";
+    case "xhigh":
+      return "Very high";
+    default:
+      return effort.charAt(0).toUpperCase() + effort.slice(1);
+  }
+}
+
+function composerModelLabel(
+  selectedModel: { id: string; name?: string } | undefined,
+  modelId: string | undefined,
+): string {
+  if (!modelId && !selectedModel) return "Default model";
+  return selectedModel?.name ?? selectedModel?.id ?? modelId ?? "Model";
+}
+
+function composerEffortLabel(
+  effort: string | undefined,
+  hasEfforts: boolean,
+): string {
+  if (effort) return effortOptionLabel(effort);
+  return hasEfforts ? "Auto effort" : "Default effort";
+}
+
+/**
+ * Mode / model / effort selectors that live directly inside the composer
+ * toolbar. Working directory is intentionally absent here — cwd is a
+ * thread-start setting and is shown read-only in the thread header for an
+ * existing thread.
+ */
+function ComposerRunSettings() {
+  const compact = useCompactLayout();
+  const { state } = useAgentContext();
+  const { models, refreshModels } = useAgentModels();
+  const {
+    executionModes,
+    runSettings,
+    selectedModel,
+    setEffort,
+    setExecutionMode,
+    setModelId,
+    supportedEfforts,
+  } = useAgentRunSettings();
+  const didRefresh = useRef(false);
+
+  useEffect(() => {
+    if (
+      !didRefresh.current &&
+      state.connection.status === "connected" &&
+      models.length === 0
+    ) {
+      didRefresh.current = true;
+      void refreshModels().catch(() => undefined);
+    }
+  }, [models.length, refreshModels, state.connection.status]);
+
+  const currentMode =
+    executionModes.find((mode) => mode.id === runSettings.executionMode) ??
+    executionModes[0];
+  const hasEfforts = supportedEfforts.length > 0;
+
+  return (
+    <div className="aui-composer-settings">
+      <AuiMenu
+        ariaLabel="Execution mode"
+        compact={compact}
+        icon={<IconShield size={14} />}
+        label={currentMode?.label ?? "Mode"}
+      >
+        {(close) =>
+          executionModes.map((mode) => (
+            <MenuOption
+              description={mode.description}
+              icon={<IconShield size={14} />}
+              key={mode.id}
+              label={mode.label}
+              onSelect={() => {
+                setExecutionMode(mode.id);
+                close();
+              }}
+              selected={currentMode?.id === mode.id}
+            />
+          ))
+        }
+      </AuiMenu>
+      <AuiMenu
+        ariaLabel="Model and effort"
+        compact={compact}
+        icon={<IconCpu size={14} />}
+        label={`${composerModelLabel(selectedModel, runSettings.modelId)} · ${composerEffortLabel(
+          runSettings.effort,
+          hasEfforts,
+        )}`}
+      >
+        {(close) => (
+          <>
+            <MenuSection label="Model">
+              <MenuOption
+                icon={<IconCpu size={14} />}
+                label="Server default"
+                onSelect={() => {
+                  setModelId("");
+                  close();
+                }}
+                selected={!runSettings.modelId}
+              />
+              {models.map((model) => (
+                <MenuOption
+                  icon={<IconCpu size={14} />}
+                  key={model.id}
+                  label={formatModelOption(model)}
+                  onSelect={() => {
+                    setModelId(model.id);
+                    close();
+                  }}
+                  selected={runSettings.modelId === model.id}
+                />
+              ))}
+            </MenuSection>
+            <MenuSection label="Effort">
+              {hasEfforts ? (
+                <>
+                  <MenuOption
+                    icon={<IconGauge size={14} />}
+                    label={selectedModel ? "Model default" : "Server default"}
+                    onSelect={() => {
+                      setEffort("");
+                      close();
+                    }}
+                    selected={!runSettings.effort}
+                  />
+                  {supportedEfforts.map((effort) => (
+                    <MenuOption
+                      icon={<IconGauge size={14} />}
+                      key={effort}
+                      label={effortOptionLabel(effort)}
+                      onSelect={() => {
+                        setEffort(effort);
+                        close();
+                      }}
+                      selected={runSettings.effort === effort}
+                    />
+                  ))}
+                </>
+              ) : (
+                <p className="aui-menu-empty">
+                  This model exposes no selectable effort.
+                </p>
+              )}
+            </MenuSection>
+          </>
+        )}
+      </AuiMenu>
+    </div>
+  );
+}
+
 export function AgentComposer({
   disabled = false,
   disabledReason,
@@ -783,6 +1197,7 @@ export function AgentComposer({
 }: AgentComposerProps) {
   const composer = useAgentComposer(threadId);
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
+  const [attachmentError, setAttachmentError] = useState<string | undefined>();
   const [isFocused, setFocused] = useState(false);
   const [isDragOver, setDragOver] = useState(false);
   const dragCounter = useRef(0);
@@ -799,18 +1214,39 @@ export function AgentComposer({
   const addLocalFiles = useCallback(
     async (files: FileList | File[]) => {
       if (!resolveLocalAttachment) return;
-      for (const file of Array.from(files)) {
-        const kind = file.type.startsWith("image/") ? "image" : "file";
-        const input = await resolveLocalAttachment(file, kind);
-        if (!input) continue;
+      const list = Array.from(files);
+      if (list.length === 0) return;
+      let rejected = 0;
+      for (const file of list) {
+        const kind: AgentLocalAttachmentKind = file.type.startsWith("image/")
+          ? "image"
+          : "file";
+        let input: CodexUserInput | null | undefined;
+        try {
+          input = await resolveLocalAttachment(file, kind);
+        } catch (error) {
+          console.warn("AgentComposer attachment resolver failed", error);
+          input = null;
+        }
+        if (!input) {
+          rejected += 1;
+          continue;
+        }
         addAttachment({
-          id: `${kind}:${file.name}:${file.size}:${Date.now()}`,
+          id: `${kind}:${file.name}:${file.size}:${Date.now()}:${Math.random()
+            .toString(36)
+            .slice(2, 7)}`,
           input,
           kind,
           label: file.name || kind,
           value: file.name,
         });
       }
+      setAttachmentError(
+        rejected > 0
+          ? `${rejected} file${rejected === 1 ? "" : "s"} could not be attached for this Codex thread.`
+          : undefined,
+      );
     },
     [addAttachment, resolveLocalAttachment],
   );
@@ -913,6 +1349,12 @@ export function AgentComposer({
           <span>{disabledReason}</span>
         </div>
       ) : null}
+      {attachmentError ? (
+        <div className="aui-composer-notice" data-tone="error" role="alert">
+          <IconAlert size={14} />
+          <span>{attachmentError}</span>
+        </div>
+      ) : null}
       {attachments.length > 0 ? (
         <ul className="aui-composer-chips" aria-label="Pending attachments">
           {attachments.map((attachment) => (
@@ -963,6 +1405,7 @@ export function AgentComposer({
       />
       <div className="aui-composer-toolbar">
         <div className="aui-composer-toolbar-start">
+          <div className="aui-composer-toolbar-attach">
           {resolveLocalAttachment ? (
             <>
               <button
@@ -1035,6 +1478,8 @@ export function AgentComposer({
               <span>Plugin</span>
             </button>
           ) : null}
+          </div>
+          <ComposerRunSettings />
         </div>
         <div className="aui-composer-toolbar-end">
           <span className="aui-composer-hint" aria-hidden="true">
@@ -1122,27 +1567,15 @@ export function AgentComposerPanel({
   const isBlocked = isRunning || thread.status === "waitingForInput" || isPreviewOnly;
   return (
     <section className="aui-compose-panel" aria-label="Message composer">
-      <details className="aui-run-settings-popover">
-        <summary>
-          <IconSpark size={14} />
-          <span>Run settings</span>
-          <IconChevronDown size={14} />
-        </summary>
-        <div className="aui-run-settings-sheet">
-          <AgentRunSettingsPanel />
-        </div>
-      </details>
-      <div className="aui-composer-shell">
-        <AgentComposer
-          disabled={isBlocked}
-          disabledReason={composerDisabledReason(thread.status, isPreviewOnly)}
-          onRequestAppMention={onRequestAppMention}
-          onRequestPluginMention={onRequestPluginMention}
-          placeholder={composerPlaceholder(thread.status, isPreviewOnly)}
-          resolveLocalAttachment={resolveLocalAttachment}
-          threadId={threadId}
-        />
-      </div>
+      <AgentComposer
+        disabled={isBlocked}
+        disabledReason={composerDisabledReason(thread.status, isPreviewOnly)}
+        onRequestAppMention={onRequestAppMention}
+        onRequestPluginMention={onRequestPluginMention}
+        placeholder={composerPlaceholder(thread.status, isPreviewOnly)}
+        resolveLocalAttachment={resolveLocalAttachment}
+        threadId={threadId}
+      />
     </section>
   );
 }
@@ -1200,6 +1633,12 @@ function composerPlaceholder(status: ThreadState["status"], isPreviewOnly = fals
   return "Ask Codex to work in this thread";
 }
 
+/**
+ * Pending decision surface that sits directly above the composer. One
+ * approval is expanded at a time; any remaining requests collapse into a
+ * compact picker so the surface never grows into a large independent scroll
+ * pane and the decision actions always stay reachable.
+ */
 export function AgentApprovalQueue({
   renderApproval,
   threadId,
@@ -1208,33 +1647,82 @@ export function AgentApprovalQueue({
   threadId?: string;
 }) {
   const { approvals, approve } = useAgentApprovals(threadId);
+  const [expandedId, setExpandedId] = useState<string | undefined>();
   if (approvals.length === 0) return null;
+  if (renderApproval) {
+    return (
+      <section className="aui-approvals" aria-label="Pending approvals">
+        {approvals.map((approval) => (
+          <div key={String(approval.id)}>{renderApproval(approval)}</div>
+        ))}
+      </section>
+    );
+  }
+  const expanded =
+    approvals.find((approval) => String(approval.id) === expandedId) ?? approvals[0]!;
+  const others = approvals.filter((approval) => approval.id !== expanded.id);
   return (
-    <section className="aui-approvals" aria-label="Pending approvals">
-      {approvals.map((approval) => (
-        <div key={String(approval.id)}>
-          {renderApproval ? (
-            renderApproval(approval)
-          ) : (
-            <ApprovalCard
-              approval={approval}
-              onApprove={() =>
-                deferAction(() => void approve(approval.id, approvalResult(approval)))
-              }
-              onApproveForSession={() =>
-                deferAction(() =>
-                  void approve(approval.id, approvalSessionResult(approval)),
-                )
-              }
-              onReject={() =>
-                deferAction(() =>
-                  void approve(approval.id, declineApprovalResult(approval)),
-                )
-              }
-            />
-          )}
-        </div>
-      ))}
+    <section
+      className="aui-approvals"
+      aria-label="Pending approvals"
+      data-count={approvals.length}
+    >
+      {approvals.length > 1 ? (
+        <p className="aui-approvals-count" role="status">
+          {approvals.length} decisions need your review
+        </p>
+      ) : null}
+      <ApprovalCard
+        approval={expanded}
+        onApprove={() =>
+          deferAction(() => void approve(expanded.id, approvalResult(expanded)))
+        }
+        onApproveForSession={() =>
+          deferAction(() =>
+            void approve(expanded.id, approvalSessionResult(expanded)),
+          )
+        }
+        onReject={() =>
+          deferAction(() =>
+            void approve(expanded.id, declineApprovalResult(expanded)),
+          )
+        }
+      />
+      {others.length > 0 ? (
+        <ul className="aui-approval-more" aria-label="Other pending approvals">
+          {others.map((approval) => {
+            const payload = isRecord(approval.payload) ? approval.payload : {};
+            const risk = approvalRisk(approval.kind, payload);
+            return (
+              <li key={String(approval.id)}>
+                <button
+                  aria-label={`Review ${approvalRequestLabel(approval.kind)} ${String(
+                    approval.id,
+                  )}`}
+                  className="aui-approval-compact"
+                  data-risk={risk}
+                  onClick={() => setExpandedId(String(approval.id))}
+                  type="button"
+                >
+                  <span className="aui-approval-compact-icon" aria-hidden="true">
+                    <IconShield size={14} />
+                  </span>
+                  <span className="aui-approval-compact-body">
+                    <strong>{approvalTitle(approval.kind)}</strong>
+                    <small>{approvalSubtitle(approval.kind, payload)}</small>
+                  </span>
+                  <span className="aui-approval-risk" data-risk={risk}>
+                    {riskLabel(risk)}
+                  </span>
+                  <span className="aui-approval-compact-cta" aria-hidden="true">
+                    Review
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      ) : null}
     </section>
   );
 }
@@ -1553,7 +2041,11 @@ function stringField(record: Record<string, unknown>, key: string): string | und
   return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
-export function AgentStatusBar() {
+export function AgentStatusBar({
+  onOpenThreads,
+}: {
+  onOpenThreads?: () => void;
+} = {}) {
   const { state } = useAgentContext();
   const { account, cancelLogin, login } = useAgentAuth();
   const accountLabel = accountLabelText(account.account);
@@ -1565,6 +2057,18 @@ export function AgentStatusBar() {
       : account.status;
   return (
     <header className="aui-status">
+      {onOpenThreads ? (
+        <button
+          aria-label="Open thread history"
+          className="aui-threads-trigger"
+          onClick={onOpenThreads}
+          title="Threads"
+          type="button"
+        >
+          <IconHistory size={16} />
+          <span>Threads</span>
+        </button>
+      ) : null}
       <div className="aui-brand">
         <strong>Agent UI</strong>
         <span>{accountLabel ? `${statusText} · ${accountLabel}` : statusText}</span>
@@ -2185,6 +2689,7 @@ export function ThreadSidebar({
   onSelectThread?: (threadId: string) => void;
   threads: ThreadState[];
 }) {
+  const compact = useCompactLayout();
   const { cursor, error, isLoading, listThreads } = useAgentThreadHistory();
   const { state } = useAgentContext();
   const { readThread } = useAgentThreadReader();
@@ -2193,6 +2698,7 @@ export function ThreadSidebar({
   const [nextCursor, setNextCursor] = useState<string | null>();
   const [visibleThreadIds, setVisibleThreadIds] = useState<string[] | undefined>();
   const didAutoLoad = useRef(false);
+  const searchTouched = useRef(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const visibleThreads = useMemo(() => {
     if (!visibleThreadIds) return threads;
@@ -2276,6 +2782,30 @@ export function ThreadSidebar({
       });
     }
   }, [isLoading, loadThreadPage, state.connection.status, threads.length]);
+  // Debounced search: typing auto-filters history without a separate Load
+  // button. The leading render and the initial auto-load are skipped so the
+  // first page is fetched exactly once.
+  useEffect(() => {
+    if (!searchTouched.current) return;
+    const handle = setTimeout(() => {
+      void loadThreadPage({ searchTerm }).catch(() => undefined);
+    }, 320);
+    return () => clearTimeout(handle);
+  }, [loadThreadPage, searchTerm]);
+
+  const selectThread = useCallback(
+    (threadId: string) => {
+      if (compact) onCollapsedChange?.(true);
+      void readThread(threadId, { activate: true, includeTurns: true }).catch(() => {
+        onSelectThread?.(threadId);
+      });
+    },
+    [compact, onCollapsedChange, onSelectThread, readThread],
+  );
+
+  // On mobile a collapsed sidebar is a closed drawer with no inline chrome —
+  // the open trigger lives in the chat header instead.
+  if (collapsed && compact) return null;
   if (collapsed) {
     return (
       <aside className="aui-sidebar aui-sidebar-collapsed" data-collapsed="true">
@@ -2296,10 +2826,10 @@ export function ThreadSidebar({
       <div className="aui-sidebar-header">
         <div className="aui-sidebar-title">Threads</div>
         <button
-          aria-label="Collapse history"
+          aria-label={compact ? "Close history" : "Collapse history"}
           className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
           onClick={() => onCollapsedChange?.(true)}
-          title="Collapse history"
+          title={compact ? "Close history" : "Collapse history"}
           type="button"
         >
           <IconClose size={14} />
@@ -2311,34 +2841,32 @@ export function ThreadSidebar({
           event.preventDefault();
           void loadThreadPage({ searchTerm }).catch(() => undefined);
         }}
+        role="search"
       >
         <div className="aui-input-shell aui-input-with-icon">
           <IconSearch size={14} />
           <input
             aria-label="Search history"
             className="aui-text-input"
-            onChange={(event) => setSearchTerm(event.currentTarget.value)}
-            placeholder="Search history"
+            onChange={(event) => {
+              searchTouched.current = true;
+              setSearchTerm(event.currentTarget.value);
+            }}
+            placeholder="Search threads"
             type="search"
             value={searchTerm}
           />
+          {isLoading ? (
+            <span
+              aria-hidden="true"
+              className="aui-history-spinner"
+              data-testid="history-loading"
+            />
+          ) : null}
         </div>
-        <button
-          aria-label="Load"
-          className={buttonClass("secondary", { size: "sm" })}
-          disabled={isLoading}
-          type="submit"
-        >
-          {isLoading ? "Loading" : "Load"}
-        </button>
       </form>
       <div className="aui-history-feedback" aria-live="polite">
         {error ? <p className="aui-sidebar-error">{error.message}</p> : null}
-        {isLoading ? (
-          <p className="aui-sidebar-status">
-            Loading threads...
-          </p>
-        ) : null}
         {!isLoading && hasLoaded && visibleThreads.length === 0 ? (
           <p className="aui-sidebar-status">No threads found.</p>
         ) : null}
@@ -2366,11 +2894,7 @@ export function ThreadSidebar({
             </div>
           ) : null
         }
-        onSelectThread={(threadId) => {
-          void readThread(threadId, { activate: true, includeTurns: true }).catch(() => {
-            onSelectThread?.(threadId);
-          });
-        }}
+        onSelectThread={selectThread}
         threads={visibleThreads}
       />
     </aside>
