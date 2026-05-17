@@ -48,6 +48,11 @@ export interface AgentThreadUrlRoutingOptions {
   basePath?: string;
 }
 
+interface ThreadUrlRoutingControls {
+  cancelThreadAutoActivation: () => void;
+  markThreadAutoActivation: (threadId: string) => void;
+}
+
 export function AgentChat({
   className,
   diagnostics = false,
@@ -63,7 +68,7 @@ export function AgentChat({
   const compact = useCompactLayout();
   const { thread, threadId, startThread } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
-  const markThreadAutoActivation = useThreadUrlRouting(threadUrlRouting, activeThreadId);
+  const threadUrlRoutingControls = useThreadUrlRouting(threadUrlRouting, activeThreadId);
   // Desktop keeps an expand/collapse rail; mobile keeps an off-canvas drawer.
   // Tracking them separately means a viewport change never strands the user
   // with the wrong default.
@@ -90,7 +95,10 @@ export function AgentChat({
             activeThreadId={activeThreadId}
             collapsed={isSidebarCollapsed}
             onCollapsedChange={setSidebarCollapsed}
-            onAutoActivateThread={markThreadAutoActivation}
+            onAutoActivateThread={threadUrlRoutingControls.markThreadAutoActivation}
+            onCancelAutoActivateThread={
+              threadUrlRoutingControls.cancelThreadAutoActivation
+            }
             onSelectThread={setActiveThread}
             threads={threads}
           />
@@ -145,7 +153,7 @@ export function AgentChat({
 function useThreadUrlRouting(
   options: AgentChatProps["threadUrlRouting"],
   activeThreadId?: string,
-) {
+): ThreadUrlRoutingControls {
   const { readThread } = useAgentThreadReader();
   const { setActiveThread, threads } = useAgentThreads();
   const lastPathRef = useRef<string | undefined>(undefined);
@@ -164,6 +172,11 @@ function useThreadUrlRouting(
     },
     [basePath, enabled],
   );
+
+  const cancelThreadAutoActivation = useCallback(() => {
+    initialAutoThreadIdRef.current = undefined;
+    hasSyncedInitialAutoThreadRef.current = true;
+  }, []);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
@@ -215,7 +228,7 @@ function useThreadUrlRouting(
     return () => window.removeEventListener("popstate", onPopState);
   }, [basePath, enabled, readThread, setActiveThread, threads]);
 
-  return markThreadAutoActivation;
+  return { cancelThreadAutoActivation, markThreadAutoActivation };
 }
 
 function threadPath(threadId: string, basePath: string): string {

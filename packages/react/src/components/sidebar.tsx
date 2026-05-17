@@ -138,6 +138,7 @@ export function AgentThreadSidebar({
   collapsed = false,
   onCollapsedChange,
   onAutoActivateThread,
+  onCancelAutoActivateThread,
   onSelectThread,
   threads,
 }: {
@@ -145,6 +146,7 @@ export function AgentThreadSidebar({
   collapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
   onAutoActivateThread?: (threadId: string) => void;
+  onCancelAutoActivateThread?: () => void;
   onSelectThread?: (threadId: string) => void;
   threads: ThreadState[];
 }) {
@@ -159,6 +161,11 @@ export function AgentThreadSidebar({
   const didAutoLoad = useRef(false);
   const searchTouched = useRef(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const activeThreadIdRef = useRef(activeThreadId);
+  const autoActivationTokenRef = useRef(0);
+  useEffect(() => {
+    activeThreadIdRef.current = activeThreadId;
+  }, [activeThreadId]);
   const visibleThreads = useMemo(() => {
     if (!visibleThreadIds) return threads;
     const byId = new Map(threads.map((thread) => [thread.thread.id, thread]));
@@ -198,10 +205,20 @@ export function AgentThreadSidebar({
       setHasLoaded(true);
       const firstThreadId = threadIds[0];
       if (params.activateFirst && firstThreadId && !state.activeThreadId) {
+        const token = autoActivationTokenRef.current + 1;
+        autoActivationTokenRef.current = token;
         onAutoActivateThread?.(firstThreadId);
-        readThread(firstThreadId, { activate: true, includeTurns: true }).catch(() => {
-          onSelectThread?.(firstThreadId);
-        });
+        readThread(firstThreadId, { activate: false, includeTurns: true })
+          .then(() => {
+            if (autoActivationTokenRef.current !== token) return;
+            if (activeThreadIdRef.current) return;
+            onSelectThread?.(firstThreadId);
+          })
+          .catch(() => {
+            if (autoActivationTokenRef.current !== token) return;
+            if (activeThreadIdRef.current) return;
+            onSelectThread?.(firstThreadId);
+          });
       }
       return response;
     },
@@ -255,12 +272,14 @@ export function AgentThreadSidebar({
 
   const selectThread = useCallback(
     (threadId: string) => {
+      autoActivationTokenRef.current += 1;
+      onCancelAutoActivateThread?.();
       if (compact) onCollapsedChange?.(true);
       void readThread(threadId, { activate: true, includeTurns: true }).catch(() => {
         onSelectThread?.(threadId);
       });
     },
-    [compact, onCollapsedChange, onSelectThread, readThread],
+    [compact, onCancelAutoActivateThread, onCollapsedChange, onSelectThread, readThread],
   );
 
   // On mobile a collapsed sidebar is a closed drawer with no inline chrome —

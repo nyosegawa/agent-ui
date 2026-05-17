@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -2636,6 +2636,87 @@ describe("AgentChat", () => {
     window.history.pushState(null, "", "/threads/thread-one");
     window.dispatchEvent(new PopStateEvent("popstate"));
     expect(await screen.findByRole("heading", { name: "Thread one" })).toBeInTheDocument();
+  });
+
+  it("keeps manual thread selection when an initial auto activation resolves late", async () => {
+    const user = userEvent.setup();
+    window.history.replaceState(null, "", "/");
+    let resolveThreadOne: (response: unknown) => void = () => undefined;
+    const threadOneRead = new Promise((resolve) => {
+      resolveThreadOne = resolve;
+    });
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              { id: "thread-one", name: "Thread one", status: { type: "notLoaded" } },
+              { id: "thread-two", name: "Thread two", status: { type: "notLoaded" } },
+            ],
+          };
+        }
+        if (request.method === "thread/read") {
+          const id = String((request.params as { threadId?: string }).threadId);
+          if (id === "thread-one") return threadOneRead;
+          return {
+            thread: {
+              id,
+              name: "Thread two",
+              status: { type: "notLoaded" },
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat threadUrlRouting />
+      </AgentProvider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        transport.requests.some(
+          (request) =>
+            request.method === "thread/read" &&
+            (request.params as { threadId?: string }).threadId === "thread-one",
+        ),
+      ).toBe(true),
+    );
+
+    await user.click(await screen.findByRole("button", { name: /Thread two/ }));
+    await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
+    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
+
+    await act(async () => {
+      resolveThreadOne({
+        thread: {
+          id: "thread-one",
+          name: "Thread one",
+          status: { type: "notLoaded" },
+          turns: [],
+        },
+      });
+      await threadOneRead;
+    });
+
+    expect(window.location.pathname).toBe("/threads/thread-two");
+    expect(screen.getByRole("heading", { name: "Thread two" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Thread one" })).not.toBeInTheDocument();
+
+    window.history.back();
+    await waitFor(() => expect(window.location.pathname).toBe("/"));
+    await waitFor(() =>
+      expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("Connect Codex")).toBeInTheDocument();
+
+    window.history.forward();
+    await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
+    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
   });
 
   it("passes real thread/list search params and shows empty history state", async () => {
