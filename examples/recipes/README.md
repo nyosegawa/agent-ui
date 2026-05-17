@@ -14,5 +14,5 @@ The WebSocket recipe assumes the host application owns `/agent-ui/ws` authentica
 External product workflows should compose Agent UI primitives rather than add
 workflow-specific APIs to the library. Use `AgentThreadView` and headless hooks
 for fixed-thread flows, `AgentUsagePanel` for usage-only chrome, `AgentAppsPanel`
-for Codex Apps/connectors metadata, and `AgentWorkspace` slots for host-owned
-panels.
+for Codex Apps/connectors metadata, and `AgentWorkspace`'s `panel` /
+`panelClassName` props for host-owned panels.

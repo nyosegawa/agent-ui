@@ -261,7 +261,8 @@ not a row stacked between the transcript and the composer, and it has no
 expanded card plus compact picker rows for any other pending requests. The
 expanded card shows structured command, cwd, policy, file-change, patch,
 user-input, MCP elicitation, dynamic-tool, permissions, auth-refresh, and
-attestation context before sending stable approval or rejection responses.
+attestation context before sending the normalized accept / accept-for-session /
+decline response used by the App Server adapter.
 When a pending approval is taller than the transcript viewport, the timeline
 scrolls so the decision footer stays visible on desktop and mobile without a
 manual scroll.
@@ -341,16 +342,19 @@ remain background status, near-threshold messages are warnings, and only
 reached/exceeded/blocked limit messages become critical.
 
 `AgentTokenUsageBar` renders per-thread token usage as an embeddable primitive
-for full-shell, worker-pane, or usage-only host chrome.
+for full-shell, fixed-thread, or usage-only host chrome.
 
 `normalizeUsageWindows()` is exported for hosts that need the same window model
 inside custom UI.
 
 ## Web Components
 
-`@nyosegawa/agent-ui-web-components` exports `defineAgentChatElement()`. The
-custom element accepts `transport`, `initialState`, and `slots` as JavaScript
-properties and renders the standard preset chat.
+`@nyosegawa/agent-ui-web-components` exports `defineAgentChatElement()`,
+`AgentChatElement`, and the related element option/instance types. The custom
+element accepts `transport`, `initialState`, `slots`, or the combined
+`agentOptions` object as JavaScript properties and renders the standard preset
+chat. Use the `chat-class` attribute or `agentOptions.className` to pass a class
+name to the rendered `AgentChat`.
 
 ```ts
 import "@nyosegawa/agent-ui-react/styles.css";

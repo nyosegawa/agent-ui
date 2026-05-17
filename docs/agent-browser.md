@@ -30,8 +30,10 @@ agent-browser close
 For the real local Codex app:
 
 ```bash
-bun run --filter @nyosegawa/agent-ui-example-codex-local-web dev
-agent-browser open http://127.0.0.1:4173
+AGENT_UI_PORT=5175 AGENT_UI_HOST=127.0.0.1 \
+AGENT_UI_CODEX_CWD=/Users/sakasegawa/src/github.com/nyosegawa/agent-ui \
+bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
+agent-browser open http://127.0.0.1:5175/
 agent-browser snapshot -i
 agent-browser screenshot /tmp/agent-ui-codex-local-web.png
 agent-browser close

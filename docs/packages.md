@@ -49,6 +49,10 @@ Responsibilities:
 - fixture utilities
 - optional OpenAI Agents SDK runner adapter for simple text streaming demos
 
+The package root exports these building blocks directly: state/event/transport
+types, reducer and selector helpers, JSON-RPC helpers, `FakeAgentTransport`,
+fixture utilities, and `createOpenAIAgentsSdkTransportAdapter()`.
+
 Must not include:
 
 - React
@@ -74,6 +78,13 @@ Responsibilities:
 - generated-schema-backed input helpers for text, images, mentions, skills, and
   agent-browser verification turns
 
+The package root exports JSON-RPC helpers, protocol capability metadata,
+normalizers, request builders, session helpers, stdio transport, WebSocket
+transport, SDK adapter, auth helpers, and `CodexStable` generated types. Browser
+code should import the WebSocket transport from
+`@nyosegawa/agent-ui-codex/websocket` so Node stdio code stays out of the browser
+bundle.
+
 Default support is stable App Server API only. Experimental API requires explicit opt-in.
 
 The SDK adapter is not the primary integration path and does not add an `@openai/codex` runtime dependency.
@@ -92,6 +103,13 @@ Responsibilities:
 - drop-in components
 - headless customization API
 - CSS variables and plain CSS theme
+
+The package root also exports lower-level surfaces for advanced hosts:
+`AgentStatusBar`, `AgentFirstRun`, `AgentRunControls`, `ComposerRunSettings`,
+`AgentDiffViewer`, thread-history helpers, transcript-window helpers, and
+sidebar/status formatting utilities. The documented components below are the
+recommended host-facing primitives; these helpers remain public because they are
+re-exported by the package barrel.
 
 The default UI is transcript-first. Usage, diagnostics, status summaries, run
 settings, and side panels are exported as host-composition primitives instead
@@ -116,7 +134,10 @@ Responsibilities:
 - Codex App Server process lifecycle
 - Next.js one-shot RPC Route Handler helper
 - same-origin WebSocket bridge helpers for full chat integrations
+- local upload helper for browser `File` to App Server-readable path adapters
 - Express middleware
+- dynamic tool helper thread utilities, server-request policy helpers,
+  host-event sinks, and redaction utilities
 - auth/token forwarding recipes
 - `detectAgentBrowser()` for repo skill path, CLI version, and core skill checks
 
@@ -143,19 +164,20 @@ The wrapper does not create transports, spawn Codex, or include CSS automaticall
 - `examples/recipes`: typed host integration recipes and remote deployment notes.
 - `examples/docs-site`: static documentation and hosted-demo build target.
 
-## Initial Public API
+## Browser Public API
 
 ```tsx
 import { AgentProvider, AgentChat } from "@nyosegawa/agent-ui-react";
-import { createCodexStdioTransport } from "@nyosegawa/agent-ui-codex";
+import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
 
-const transport = createCodexStdioTransport({
-  command: "codex",
-  args: ["app-server", "--listen", "stdio://"],
-  clientInfo: {
-    name: "agent_ui_example",
-    title: "Agent UI Example",
-    version: "0.1.0",
+const transport = createCodexWebSocketTransport({
+  url: "ws://127.0.0.1:5175/agent-ui/ws",
+  initialize: {
+    clientInfo: {
+      name: "agent_ui_example",
+      title: "Agent UI Example",
+      version: "0.1.0",
+    },
   },
 });
 
@@ -168,7 +190,8 @@ export function App() {
 }
 ```
 
-Current local-process usage keeps spawning in the server package:
+Browser hosts connect to a host-owned WebSocket endpoint. Node hosts that own
+the local process use the server package:
 
 ```ts
 import { createCodexAppServerBridge } from "@nyosegawa/agent-ui-server";

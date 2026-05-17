@@ -225,7 +225,7 @@ Important App Server surfaces for vNext:
 
 ### External Host Apps
 
-Host apps such as scoped worker panes or app workspaces are consumers of
+Host apps such as fixed-thread panes or custom workspaces are consumers of
 `agent-ui`, not part of its core design surface. They can compose Codex App
 Server workflows from generic primitives:
 
@@ -290,8 +290,8 @@ agent-browser 0.27.0
 - App Server client/session facade.
 - Stable/experimental capability registry derived from generated schema.
 - Skills, apps, plugins, account, model, and thread helper methods.
-- Stdio, bridge, WebSocket, and Unix-socket transport adapters with each
-  adapter explicitly classified as supported, experimental, or host-only.
+- Stdio transport for Node callers and WebSocket transport for browser callers.
+  Bridge process ownership stays in `@nyosegawa/agent-ui-server`.
 
 `@nyosegawa/agent-ui-react`
 
@@ -484,9 +484,12 @@ bun test
 bun run build
 bun run test:protocol
 bun run test:fixtures
+bun run check:dead-code
 bun run publint
 bun run attw
 bun run check:exports
+bun run test:package-resolution
+bun run test:e2e:real-local-web-layout
 bun run test:e2e:playwright
 bun run test:node-compat
 ```

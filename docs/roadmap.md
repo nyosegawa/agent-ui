@@ -44,21 +44,15 @@ The real local app release is complete when:
 - package exports pass validation
 - browser smoke test passes
 
-## Future Work
+## Possible Future Work
 
-Add after the real local release:
+This list is historical and non-authoritative. Use `PLAN.md` and `TODO.md` for
+current implementation scope. Remaining future work should be revalidated
+against the current code before being scheduled.
 
-- remote WebSocket deployment guide
 - websocket reconnection hardening
-- custom component examples
-- headless hooks examples
-- themed examples
-- SDK adapter
-- OpenAI Agents SDK adapter
-- Web Components wrapper
 - richer thread sidebar
 - Monaco/CodeMirror diff integration
-- multi-user deployment recipes
 - hosted demo app
 
 ## Explicitly Deferred

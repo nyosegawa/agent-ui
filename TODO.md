@@ -677,3 +677,34 @@ Acceptance:
       `bun run test:protocol`, `bun run test:fixtures`, `bun run build`,
       `bun run check:exports`, `bun run check:dead-code`, and
       `bun run test:e2e:playwright` pass.
+
+## Milestone 17: Documentation Freshness Audit
+
+Opened on 2026-05-17 after a full documentation audit across root docs,
+`docs/*.md`, example READMEs, package exports, scripts, examples, workflows,
+and public API barrels.
+
+- [x] Re-audit root docs so README, PLAN, TODO, AGENTS, and the CLAUDE symlink
+      describe the current vNext state rather than earlier reopened milestones
+      only.
+- [x] Re-audit package/API docs against current `packages/*/src/index.*`
+      barrels, package subpath exports, and server bridge/upload helpers.
+- [x] Re-audit protocol docs against `packages/codex/src/protocol.ts` so
+      stable productized, host-only, and experimental method lists match the
+      source exactly.
+- [x] Re-audit example READMEs against the actual example directories,
+      package names, commands, routes, and Next.js bridge split.
+- [x] Refresh toolchain docs against current Node release metadata and npm
+      package versions while keeping the repo-pinned Bun version distinct from
+      upstream latest.
+- [x] Remove or correct stale docs for old ports, nonexistent scripts,
+      host-specific terminology, old bridge ownership claims, and overbroad
+      approval/Web Component API descriptions.
+
+Acceptance:
+
+- [x] Subagent audits for root docs, docs, examples, and public API exports
+      have no unhandled findings.
+- [x] Stale-term searches for old Next example names, removed aliases,
+      nonexistent scripts, and old real-local URLs return only intentional
+      historical audit mentions.

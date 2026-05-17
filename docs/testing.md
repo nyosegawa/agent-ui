@@ -207,8 +207,10 @@ bun run test:e2e:real-codex
 bun run test:e2e:real-codex:approval
 bun run test:e2e:playwright
 bun run test:node-compat
-bun run test:pnpm-compat
 ```
+
+The pnpm compatibility smoke lives in `.github/workflows/compatibility.yml`,
+not as a root package script.
 
 ## Current Validation
 

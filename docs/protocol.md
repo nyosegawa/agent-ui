@@ -22,11 +22,14 @@ export interface AgentTransport {
   notify(method: string, params?: unknown): void;
   events: AsyncIterable<AgentTransportEvent>;
   respond(requestId: RequestId, result: unknown): Promise<void>;
-  reject(
-    requestId: RequestId,
-    error: { code: number; message: string; data?: unknown },
-  ): Promise<void>;
+  reject(requestId: RequestId, error: AgentError): Promise<void>;
 }
+
+type AgentError = {
+  code?: number;
+  message: string;
+  data?: unknown;
+};
 ```
 
 ## Stdio Transport
@@ -47,7 +50,8 @@ Implementation status:
 
 - `@nyosegawa/agent-ui-codex` owns JSON-RPC-lite framing over existing stdio streams.
 - `@nyosegawa/agent-ui-server` owns local process spawning for `codex app-server --listen stdio://`.
-- `createCodexAppServerBridge()` returns an `AgentTransport` and redacts stderr before forwarding logs.
+- `createCodexAppServerBridge()` returns a `CodexAppServerBridge` with a
+  `transport` property and redacts stderr before forwarding logs.
 - The generated stable and experimental TypeScript schemas are vendored under `packages/codex/src/generated`.
 - `request-builders.ts` is the product request boundary. Builders return
   params that satisfy generated stable App Server types; React re-exports those
@@ -177,7 +181,6 @@ Host-only or advanced local tooling:
 
 - `thread/shellCommand`
 - `thread/approveGuardianDeniedAction`
-- `thread/compact/start`
 - `command/exec`
 - `command/exec/write`
 - `command/exec/terminate`
@@ -236,6 +239,7 @@ Experimental available methods:
 - `fuzzyFileSearch/sessionUpdate`
 - `fuzzyFileSearch/sessionStop`
 - `memory/reset`
+- `mock/experimentalMethod`
 - `process/spawn`
 - `process/writeStdin`
 - `process/resizePty`
@@ -243,6 +247,8 @@ Experimental available methods:
 - `remoteControl/enable`
 - `remoteControl/disable`
 - `thread/backgroundTerminals/clean`
+- `thread/increment_elicitation`
+- `thread/decrement_elicitation`
 - `thread/goal/set`
 - `thread/goal/get`
 - `thread/goal/clear`

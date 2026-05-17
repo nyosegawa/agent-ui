@@ -1,4 +1,4 @@
-# AGENTS.md
+# Agent UI Repository Instructions
 
 ## Rules
 

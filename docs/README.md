@@ -6,11 +6,10 @@ The docs are organized as implementation-facing specifications. They intentional
 
 ## vNext Status
 
-`PLAN.md` and `TODO.md` are the source of truth while Agent UI vNext is being
-implemented. The May 14 UI-quality review reopened Milestones 4, 7, 8, and 10
-even though earlier checklist entries were marked complete; current completion
-depends on the reopened quality gate, browser evidence, and audit notes in
-those files.
+`PLAN.md` and `TODO.md` are the source of truth for Agent UI vNext scope,
+completed milestones, and quality gates. The current docs reflect the later
+UI-quality, refactor, real-local, and Next.js bridge cleanup gates recorded in
+`TODO.md`.
 
 ## Documents
 
@@ -81,6 +80,7 @@ stable App Server API only
 @nyosegawa/agent-ui-codex
 @nyosegawa/agent-ui-react
 @nyosegawa/agent-ui-server
+@nyosegawa/agent-ui-web-components
 ```
 
 ## Primary Design Rule

@@ -17,7 +17,7 @@ Do not expose a personal Codex App Server directly to the open network.
 `@nyosegawa/agent-ui-codex` includes `createCodexWebSocketTransport()` for hosts that already provide an authenticated WebSocket endpoint that speaks the same JSON-RPC-lite App Server message shape.
 
 ```ts
-import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex";
+import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
 
 const transport = createCodexWebSocketTransport({
   reconnect: {

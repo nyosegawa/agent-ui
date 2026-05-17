@@ -4,7 +4,8 @@ Embeddable UI for Codex-powered coding agents.
 
 Active planning and quality gates live in [`PLAN.md`](./PLAN.md) and
 [`TODO.md`](./TODO.md). Those files are the source of truth for Agent UI vNext,
-including the reopened UI-quality review for Milestones 4, 7, 8, and 10.
+including later reopened UI-quality, refactor, real-local, and Next.js bridge
+cleanup gates.
 
 Agent UI provides React components, headless hooks, state management, and transport adapters for applications built on OpenAI Codex App Server. `AgentChat` is a convenience preset; the core value is the primitive set that lets host apps place thread, status, usage, approvals, composer, apps, skills, and diagnostics surfaces in their own product shell.
 
@@ -83,8 +84,9 @@ Primary React surfaces:
 - `AgentAppsPanel`
 
 Headless hooks include `useAgentThreadController`,
-`useAgentTurnController`, `useAgentServerRequests`, `useAgentUsage`,
-`useAgentSkills`, and `useAgentApps`.
+`useAgentTurnController`, `useAgentServerRequests`, `useAgentComposer`,
+`useAgentRunSettings`, `useAgentUsage`, `useAgentSkills`, `useAgentHooks`,
+and `useAgentApps`.
 
 ## Local Release Scope
 

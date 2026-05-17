@@ -1,6 +1,6 @@
 # Toolchain
 
-Checked on 2026-05-09 JST against npm registry, Node.js release index, and Bun GitHub releases.
+Checked on 2026-05-17 JST against npm registry and the Node.js release index.
 
 Adoption decisions must use upstream latest/LTS data. Local installed versions are diagnostic only and are not evidence of latest availability.
 
@@ -20,8 +20,8 @@ Upstream version snapshot:
 ```text
 Node.js current: v26.1.0
 Node.js latest LTS: v24.15.0 Krypton
-pnpm latest: 11.0.8
-Bun latest: 1.3.13
+pnpm latest: 11.1.2
+Bun latest: 1.3.14
 ```
 
 Local environment snapshot:
@@ -39,7 +39,10 @@ Bun is the primary package manager and development runner.
 
 Rules:
 
-- use `packageManager: bun@<latest checked version>`
+- keep `packageManager`, CI `bun-version`, local Bun guidance, and
+  `@types/bun` aligned to the same repo-pinned Bun version
+- when bumping the Bun pin, check the upstream latest version first and update
+  the lockfile in the same change
 - use package.json `workspaces`
 - use `bun install` and `bun test` for the default local workflow
 - isolate Node-specific APIs in `@nyosegawa/agent-ui-server`
@@ -91,7 +94,7 @@ react-dom: 19.2.6
 @types/react: 19.2.14
 @types/react-dom: 19.2.3
 next: 16.2.6
-vite: 8.0.11
+vite: 8.0.13
 ```
 
 ## TypeScript and Build
@@ -126,8 +129,8 @@ a11y: jest-axe
 Version snapshot:
 
 ```text
-vitest: 4.1.5
-@playwright/test: 1.59.1
+vitest: 4.1.6
+@playwright/test: 1.60.0
 @testing-library/react: 16.3.2
 @testing-library/user-event: 14.6.1
 @testing-library/jest-dom: 6.9.1
