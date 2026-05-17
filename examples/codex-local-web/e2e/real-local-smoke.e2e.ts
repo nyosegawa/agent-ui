@@ -46,6 +46,13 @@ test("resumes stored threads, sends follow-up turns, and syncs browser history",
   await expect(page.getByRole("heading", { name: "Stored real smoke" })).toBeVisible();
   await page.evaluate(() => window.history.forward());
   await page.waitForFunction(() => /\/threads\/thread-live-\d+$/.test(window.location.pathname));
+  await page.evaluate(() => {
+    window.history.pushState(null, "", "/");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("heading", { name: "Stored real smoke" })).toHaveCount(0);
+  await expect(page.getByText("Start a Codex thread")).toBeVisible();
 });
 
 test("opens a thread by URL and accepts image plus arbitrary file attachments", async ({

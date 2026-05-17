@@ -137,10 +137,9 @@ export function agentReducer(
     case "thread/started": {
       const threadState = upsertThread(state, event.thread);
       const stalePreviewStatus =
-        event.type === "thread/upserted" &&
         state.threads[event.thread.id] &&
-        event.status === "notLoaded" &&
-        threadState.status !== "notLoaded";
+        isPreviewThreadStatus(event.status) &&
+        preservesAgainstPreviewSnapshot(threadState.status);
       const status = stalePreviewStatus
         ? threadState.status
         : (event.status ?? threadState.status);
@@ -172,23 +171,31 @@ export function agentReducer(
         },
       };
     }
-    case "thread/status/changed":
+    case "thread/status/changed": {
+      const currentStatus = state.threads[event.threadId]?.status;
+      const status =
+        currentStatus &&
+        isPreviewThreadStatus(event.status) &&
+        preservesAgainstPreviewSnapshot(currentStatus)
+          ? currentStatus
+          : event.status;
       return updateThread(
         {
           ...state,
           threadRegistry: updateThreadRegistry(
             state.threadRegistry,
             event.threadId,
-            classifyThreadRegistryStatus(event.status),
+            classifyThreadRegistryStatus(status),
           ),
         },
         event.threadId,
         (thread) => ({
           ...thread,
-          registryStatus: classifyThreadRegistryStatus(event.status),
-          status: event.status,
+          registryStatus: classifyThreadRegistryStatus(status),
+          status,
         }),
       );
+    }
     case "thread/name/updated":
       return updateThread(state, event.threadId, (thread) => ({
         ...thread,
@@ -211,7 +218,12 @@ export function agentReducer(
       );
     case "turn/completed":
       return updateThread(state, event.threadId, (thread) => {
-        const next = upsertTurn(thread, event.turn, event.turn.status ?? "complete");
+        const completedStatus =
+          (thread.status === "ready" || isPreviewThreadStatus(thread.status)) &&
+          isCompletedTurnStatus(event.turn.status)
+            ? thread.status
+            : (event.turn.status ?? "complete");
+        const next = upsertTurn(thread, event.turn, completedStatus);
         const turn =
           next.turns[event.turn.id] ?? createTurnState(event.turn, event.threadId);
         const items = { ...turn.items };
@@ -698,6 +710,18 @@ function classifyThreadRegistryStatus(
   if (status === "notLoaded") return turns?.length ? "preview" : "cold";
   if (status === "running" || status === "waitingForInput") return "live";
   return "loaded";
+}
+
+function isPreviewThreadStatus(status?: string): boolean {
+  return status === "notLoaded" || status === "loaded";
+}
+
+function preservesAgainstPreviewSnapshot(status?: string): boolean {
+  return Boolean(status) && !isPreviewThreadStatus(status);
+}
+
+function isCompletedTurnStatus(status?: string): boolean {
+  return status === "complete" || status === "completed";
 }
 
 function updateThreadRegistry(

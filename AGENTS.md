@@ -74,6 +74,16 @@
 
 - Use targeted validation while iterating, then run the full relevant ladder
   before claiming broad work complete.
+- Do not run `bun run build` in parallel with `bun run publint` or
+  `bun run attw`. The build scripts clean package `dist/` directories, so
+  package validation can race against missing build artifacts. Run build to
+  completion first, then run package validation.
+- Treat commands that read package build output as dependent on `bun run build`.
+  This includes package validation and any browser check against examples that
+  resolve workspace packages through package exports. Do not start those checks
+  while build is still running.
+- Prefer `bun run validate:packages` when validating package build output; it
+  runs `build`, `publint`, and `attw` in the required order.
 - Standard validation commands:
   - `bun run typecheck`
   - `bun run lint`
@@ -89,6 +99,14 @@
 - For real Codex local web layout or App Server bridge changes, run
   `bun run test:e2e:real-local-web-layout` against the real local web example
   when that server is available.
+- When browser-checking examples that import workspace packages through built
+  package exports, rerun `bun run build` after core/package changes and restart
+  the example servers before judging the UI. Otherwise Vite may keep serving
+  stale `dist/` artifacts.
+- Keep ad-hoc browser checks aligned with the real DOM and public accessibility
+  surface. Prefer roles, labels, and classes that exist in the component over
+  invented `data-testid` selectors; if a manual check fails, first verify the
+  selector and page state before treating it as an app regression.
 - Before claiming clean-workspace typecheck or CI compatibility after package
   boundary, TypeScript config, declaration, build-output, or example import
   changes, remove ignored build artifacts and typecheck from a clean state:

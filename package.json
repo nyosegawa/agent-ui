@@ -13,6 +13,7 @@
   "scripts": {
     "build": "bun run --workspaces --if-present build",
     "check:exports": "bun run publint && bun run attw",
+    "validate:packages": "bun run build && bun run publint && bun run attw",
     "format": "prettier --write .",
     "typecheck": "bun run --workspaces --if-present typecheck",
     "lint": "eslint .",

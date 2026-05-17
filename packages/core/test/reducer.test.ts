@@ -176,6 +176,62 @@ describe("agentReducer", () => {
     ]);
   });
 
+  it("does not downgrade a live thread when a preview snapshot is activated", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          status: "ready",
+          thread: { id: "thread-resumed" },
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          status: "loaded",
+          thread: { id: "thread-resumed" },
+          turns: [{ id: "turn-preview", threadId: "thread-resumed" }],
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          status: "loaded",
+          threadId: "thread-resumed",
+          type: "thread/status/changed",
+        },
+      },
+    ]);
+    expect(state.threads["thread-resumed"]?.status).toBe("ready");
+    expect(selectThreadRegistry(state).loadedThreadIds).toContain("thread-resumed");
+
+    const preview = runEventFixture([
+      {
+        event: {
+          status: "loaded",
+          thread: { id: "thread-preview" },
+          turns: [{ id: "turn-preview", threadId: "thread-preview", status: "completed" }],
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          items: [],
+          threadId: "thread-preview",
+          turn: { id: "turn-preview", threadId: "thread-preview", status: "completed" },
+          type: "turn/completed",
+        },
+      },
+      {
+        event: {
+          status: "loaded",
+          threadId: "thread-preview",
+          type: "thread/status/changed",
+        },
+      },
+    ]);
+    expect(preview.threads["thread-preview"]?.status).toBe("loaded");
+  });
+
   it("normalizes skills, apps, hooks, diagnostics, and split usage state", () => {
     const state = runEventFixture([
       {

@@ -60,9 +60,7 @@ export function AgentComposer({
       if (list.length === 0) return;
       let rejected = 0;
       for (const file of list) {
-        const kind: AgentLocalAttachmentKind = file.type.startsWith("image/")
-          ? "image"
-          : "file";
+        const kind: AgentLocalAttachmentKind = isImageFile(file) ? "image" : "file";
         let input: CodexUserInput | CodexUserInput[] | null | undefined;
         try {
           input = await resolveLocalAttachment(file, kind);
@@ -218,7 +216,7 @@ export function AgentComposer({
       {attachments.length > 0 ? (
         <ul className="aui-composer-chips" aria-label="Pending attachments">
           {attachments.map((attachment) => (
-          <li className="aui-composer-chip" data-kind={attachment.kind} key={attachment.id}>
+            <li className="aui-composer-chip" data-kind={attachment.kind} key={attachment.id}>
               {attachment.previewUrl ? (
                 <img
                   alt=""
@@ -420,6 +418,25 @@ function formatFileSize(size: number): string {
 function fileExtension(name: string): string | undefined {
   const match = /\.([^.]+)$/.exec(name);
   return match ? `.${match[1]}` : undefined;
+}
+
+const IMAGE_ATTACHMENT_EXTENSIONS = new Set([
+  ".bmp",
+  ".gif",
+  ".heic",
+  ".heif",
+  ".jpeg",
+  ".jpg",
+  ".png",
+  ".svg",
+  ".webp",
+]);
+
+function isImageFile(file: File): boolean {
+  if (file.type.startsWith("image/")) return true;
+  if (file.type) return false;
+  const extension = fileExtension(file.name)?.toLowerCase();
+  return extension ? IMAGE_ATTACHMENT_EXTENSIONS.has(extension) : false;
 }
 
 export interface AgentComposerPanelProps {

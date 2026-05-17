@@ -282,7 +282,7 @@ export function useAgentThreads() {
   const { dispatch, state } = useAgentContext();
   const threads = useMemo(() => selectOrderedThreads(state), [state]);
   const setActiveThread = useCallback(
-    (threadId: ThreadId) => dispatch({ threadId, type: "thread/active/set" }),
+    (threadId?: ThreadId) => dispatch({ threadId, type: "thread/active/set" }),
     [dispatch],
   );
   return { activeThreadId: state.activeThreadId, setActiveThread, threads };

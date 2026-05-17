@@ -91,13 +91,14 @@ quality directly instead of depending on a page-level shell:
 
 - **Composer**: the primary input surface — a single bordered rounded card
   containing attachment chips, an auto-resizing textarea, and an inline
-  toolbar. The toolbar carries attach/image icon buttons, optional App/Plugin
+  toolbar. The toolbar carries a single attach button, optional App/Plugin
   mention buttons, the **mode** and **model · effort** menus, and a circular
-  primary Send icon button with an `Enter to send` hint. Attach file and
-  Attach image use a paperclip and a dedicated image icon and appear only
-  when the host wires `resolveLocalAttachment`. App and Plugin appear only
-  when the host supplies `onRequestAppMention` / `onRequestPluginMention` —
-  the composer mention flow never opens a browser `prompt()` dialog. There is no separate
+  primary Send icon button with an `Enter to send` hint. The attach control
+  appears only when the host wires `resolveLocalAttachment`; image and
+  non-image files differ after selection through chip previews and the
+  resolved Codex payload. App and Plugin appear only when the host supplies
+  `onRequestAppMention` / `onRequestPluginMention` — the composer mention
+  flow never opens a browser `prompt()` dialog. There is no separate
   "Run settings" disclosure: mode, model, and effort are compact toolbar
   menus (see below). Pending-approval and preview-only states show a warm
   notice strip without hiding the field.

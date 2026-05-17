@@ -992,6 +992,7 @@ describe("AgentChat", () => {
 
   it("renders image attachments with a thumbnail behind the single attach control", async () => {
     const user = userEvent.setup();
+    const resolvedKinds: string[] = [];
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-image";
     initialState.threads["thread-image"] = {
@@ -1004,9 +1005,12 @@ describe("AgentChat", () => {
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <AgentChat
-          resolveLocalAttachment={(file) =>
-            localImageInput(`/tmp/agent-ui-image-test/${file.name}`)
-          }
+          resolveLocalAttachment={(file, kind) => {
+            resolvedKinds.push(kind);
+            return kind === "image"
+              ? localImageInput(`/tmp/agent-ui-image-test/${file.name}`)
+              : textInput(`Attached file: /tmp/agent-ui-image-test/${file.name}`);
+          }}
           sidebar={false}
           usage={false}
         />
@@ -1015,19 +1019,23 @@ describe("AgentChat", () => {
 
     const attachFile = screen.getByRole("button", { name: "Attach file" });
     expect(attachFile).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Attach image" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: /^Attach/ })).toHaveLength(1);
 
     const imageInput = document.querySelector(
       'input[type="file"]',
     ) as HTMLInputElement;
-    const file = new File(["binary"], "shot.png", { type: "image/png" });
-    await user.upload(imageInput, file);
+    await user.upload(imageInput, [
+      new File(["binary"], "shot.png", { type: "" }),
+      new File(["model"], "part.3mf", { type: "" }),
+    ]);
 
     const chip = screen.getByLabelText("Pending attachments").querySelector(
       '.aui-composer-chip[data-kind="image"]',
     );
     expect(chip).not.toBeNull();
     expect(chip?.querySelector("img.aui-composer-chip-thumbnail")).not.toBeNull();
+    expect(screen.getByText("part.3mf")).toBeInTheDocument();
+    expect(resolvedKinds).toEqual(["image", "file"]);
   });
 
   it("requires a host resolver before local files become Codex inputs", async () => {
@@ -2579,14 +2587,20 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
+    await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-one"));
+    expect(await screen.findByRole("heading", { name: "Thread one" })).toBeInTheDocument();
+
     await user.click(await screen.findByRole("button", { name: /Thread two/ }));
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
+    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: /Thread one/ }));
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-one"));
+    expect(await screen.findByRole("heading", { name: "Thread one" })).toBeInTheDocument();
 
     window.history.back();
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
+    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
     await waitFor(() =>
       expect(
         transport.requests.some(
@@ -2596,6 +2610,16 @@ describe("AgentChat", () => {
         ),
       ).toBe(true),
     );
+
+    window.history.pushState(null, "", "/");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    await waitFor(() =>
+      expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument(),
+    );
+
+    window.history.pushState(null, "", "/threads/thread-one");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+    expect(await screen.findByRole("heading", { name: "Thread one" })).toBeInTheDocument();
   });
 
   it("passes real thread/list search params and shows empty history state", async () => {
@@ -2988,8 +3012,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
     await screen.findByLabelText("Message");
-    expect(screen.queryByRole("button", { name: "Attach image" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Attach file" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^Attach/ })).not.toBeInTheDocument();
   });
 
   it("expands additional pending approvals from the compact picker", async () => {

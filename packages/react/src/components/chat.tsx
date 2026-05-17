@@ -146,6 +146,7 @@ function useThreadUrlRouting(
   activeThreadId?: string,
 ) {
   const { readThread } = useAgentThreadReader();
+  const { setActiveThread, threads } = useAgentThreads();
   const lastPathRef = useRef<string | undefined>(undefined);
   const enabled = Boolean(options);
   const basePath =
@@ -166,21 +167,34 @@ function useThreadUrlRouting(
     const path = threadPath(activeThreadId, basePath);
     if (window.location.pathname === path || lastPathRef.current === path) return;
     lastPathRef.current = path;
-    window.history.pushState({ agentUiThreadId: activeThreadId }, "", path);
+    const method = threadIdFromPath(window.location.pathname, basePath)
+      ? "pushState"
+      : "replaceState";
+    window.history[method]({ agentUiThreadId: activeThreadId }, "", path);
   }, [activeThreadId, basePath, enabled]);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
     const onPopState = () => {
       const threadId = threadIdFromPath(window.location.pathname, basePath);
-      if (!threadId) return;
-      void readThread(threadId, { activate: true, includeTurns: true }).catch(
-        () => undefined,
-      );
+      lastPathRef.current = threadId ? threadPath(threadId, basePath) : window.location.pathname;
+      if (!threadId) {
+        setActiveThread(undefined);
+        return;
+      }
+      const existingThread = threads.find((thread) => thread.thread.id === threadId);
+      if (existingThread && !isPreviewUrlThread(existingThread.status)) {
+        setActiveThread(threadId);
+        return;
+      }
+      void readThread(threadId, { activate: true, includeTurns: true }).catch(() => {
+        if (existingThread) setActiveThread(threadId);
+        else setActiveThread(undefined);
+      });
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, [basePath, enabled, readThread]);
+  }, [basePath, enabled, readThread, setActiveThread, threads]);
 }
 
 function threadPath(threadId: string, basePath: string): string {
@@ -193,6 +207,10 @@ function threadIdFromPath(pathname: string, basePath: string): string | undefine
   if (!pathname.startsWith(`${prefix}/`)) return undefined;
   const encoded = pathname.slice(prefix.length + 1).split("/")[0];
   return encoded ? decodeURIComponent(encoded) : undefined;
+}
+
+function isPreviewUrlThread(status?: string): boolean {
+  return status === "notLoaded" || status === "loaded";
 }
 
 export interface AgentShellProps extends React.HTMLAttributes<HTMLElement> {
