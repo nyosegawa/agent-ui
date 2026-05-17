@@ -39,7 +39,7 @@ bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 ```
 
 Open the printed local URL. By default this example uses
-`http://127.0.0.1:5174`.
+`http://127.0.0.1:5175`.
 
 Run the deterministic fixture app:
 
@@ -89,8 +89,9 @@ The browser transport expects a host-owned WebSocket endpoint. Use
   pane.
 - Usage, diagnostics, skills, apps, and status are composable primitives, not
   mandatory side rails.
-- Attachments are host-resolved; browser `File` objects must become an App
-  Server-readable path or URL before sending.
+- Attachments are host-resolved. Images use `localImage` paths; arbitrary
+  files are uploaded by the host and sent as explicit `Attached file:
+  /absolute/path` text because App Server has no generic local-file input type.
 
 ## Documentation
 

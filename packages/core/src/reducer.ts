@@ -136,6 +136,14 @@ export function agentReducer(
     case "thread/upserted":
     case "thread/started": {
       const threadState = upsertThread(state, event.thread);
+      const stalePreviewStatus =
+        event.type === "thread/upserted" &&
+        state.threads[event.thread.id] &&
+        event.status === "notLoaded" &&
+        threadState.status !== "notLoaded";
+      const status = stalePreviewStatus
+        ? threadState.status
+        : (event.status ?? threadState.status);
       const turns = { ...threadState.turns };
       const orderedTurnIds = [...threadState.orderedTurnIds];
       for (const turn of event.turns ?? []) {
@@ -149,7 +157,7 @@ export function agentReducer(
         threadRegistry: updateThreadRegistry(
           state.threadRegistry,
           event.thread.id,
-          classifyThreadRegistryStatus(event.status ?? threadState.status, event.turns),
+          classifyThreadRegistryStatus(status, event.turns),
           event.type === "thread/started" ? event.thread.id : state.threadRegistry.activeThreadId,
         ),
         threads: {
@@ -157,11 +165,8 @@ export function agentReducer(
           [event.thread.id]: {
             ...threadState,
             orderedTurnIds,
-            registryStatus: classifyThreadRegistryStatus(
-              event.status ?? threadState.status,
-              event.turns,
-            ),
-            status: event.status ?? threadState.status,
+            registryStatus: classifyThreadRegistryStatus(status, event.turns),
+            status,
             turns,
           },
         },

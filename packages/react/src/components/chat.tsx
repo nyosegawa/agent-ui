@@ -4,8 +4,13 @@ import type {
   PendingServerRequest,
   TurnState,
 } from "@nyosegawa/agent-ui-core";
-import { useCallback, useState } from "react";
-import { useAgentBootstrap, useAgentThread, useAgentThreads } from "../hooks";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useAgentBootstrap,
+  useAgentThread,
+  useAgentThreadReader,
+  useAgentThreads,
+} from "../hooks";
 import { AgentThreadView } from "./thread";
 import type {
   AgentComposerMentionResolver,
@@ -35,7 +40,12 @@ export interface AgentChatProps {
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   sidebar?: boolean;
   slots?: AgentChatSlots;
+  threadUrlRouting?: boolean | AgentThreadUrlRoutingOptions;
   usage?: boolean;
+}
+
+export interface AgentThreadUrlRoutingOptions {
+  basePath?: string;
 }
 
 export function AgentChat({
@@ -46,12 +56,14 @@ export function AgentChat({
   resolveLocalAttachment,
   sidebar = true,
   slots,
+  threadUrlRouting = false,
   usage = false,
 }: AgentChatProps = {}) {
   const bootstrap = useAgentBootstrap();
   const compact = useCompactLayout();
   const { thread, threadId, startThread } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
+  useThreadUrlRouting(threadUrlRouting, activeThreadId);
   // Desktop keeps an expand/collapse rail; mobile keeps an off-canvas drawer.
   // Tracking them separately means a viewport change never strands the user
   // with the wrong default.
@@ -127,6 +139,60 @@ export function AgentChat({
       </div>
     </AgentShell>
   );
+}
+
+function useThreadUrlRouting(
+  options: AgentChatProps["threadUrlRouting"],
+  activeThreadId?: string,
+) {
+  const { readThread } = useAgentThreadReader();
+  const lastPathRef = useRef<string | undefined>(undefined);
+  const enabled = Boolean(options);
+  const basePath =
+    typeof options === "object" && options.basePath ? options.basePath : "/threads";
+
+  useEffect(() => {
+    if (!enabled || typeof window === "undefined") return;
+    const initialThreadId = threadIdFromPath(window.location.pathname, basePath);
+    if (initialThreadId) {
+      void readThread(initialThreadId, { activate: true, includeTurns: true }).catch(
+        () => undefined,
+      );
+    }
+  }, [basePath, enabled, readThread]);
+
+  useEffect(() => {
+    if (!enabled || typeof window === "undefined" || !activeThreadId) return;
+    const path = threadPath(activeThreadId, basePath);
+    if (window.location.pathname === path || lastPathRef.current === path) return;
+    lastPathRef.current = path;
+    window.history.pushState({ agentUiThreadId: activeThreadId }, "", path);
+  }, [activeThreadId, basePath, enabled]);
+
+  useEffect(() => {
+    if (!enabled || typeof window === "undefined") return;
+    const onPopState = () => {
+      const threadId = threadIdFromPath(window.location.pathname, basePath);
+      if (!threadId) return;
+      void readThread(threadId, { activate: true, includeTurns: true }).catch(
+        () => undefined,
+      );
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, [basePath, enabled, readThread]);
+}
+
+function threadPath(threadId: string, basePath: string): string {
+  const prefix = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
+  return `${prefix}/${encodeURIComponent(threadId)}`;
+}
+
+function threadIdFromPath(pathname: string, basePath: string): string | undefined {
+  const prefix = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
+  if (!pathname.startsWith(`${prefix}/`)) return undefined;
+  const encoded = pathname.slice(prefix.length + 1).split("/")[0];
+  return encoded ? decodeURIComponent(encoded) : undefined;
 }
 
 export interface AgentShellProps extends React.HTMLAttributes<HTMLElement> {

@@ -5,7 +5,7 @@ import {
   AgentChat,
   AgentProvider,
   localImageInput,
-  mentionInput,
+  textInput,
   type AgentLocalAttachmentKind,
   type CodexUserInput,
 } from "@nyosegawa/agent-ui-react";
@@ -26,12 +26,14 @@ async function resolveLocalAttachment(
     headers: { "x-agent-ui-filename": encodeURIComponent(file.name || "upload") },
     method: "POST",
   });
-  if (!response.ok) return null;
-  const result = (await response.json()) as { path?: unknown };
+  const result = (await response.json()) as { error?: unknown; path?: unknown };
+  if (!response.ok) {
+    throw new Error(typeof result.error === "string" ? result.error : "Upload failed.");
+  }
   if (typeof result.path !== "string") return null;
   return kind === "image"
     ? localImageInput(result.path)
-    : mentionInput(file.name || result.path, result.path);
+    : textInput(`Attached file: ${result.path}`);
 }
 
 export default function Page() {

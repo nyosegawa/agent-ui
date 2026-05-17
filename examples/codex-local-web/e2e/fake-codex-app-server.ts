@@ -2,6 +2,7 @@ import { createInterface } from "node:readline";
 
 const lines = createInterface({ input: process.stdin });
 let nextRequestId = 10_000;
+let nextThreadOrdinal = 1;
 let nextTurnOrdinal = 1;
 const approvalIds = new Set<string>();
 
@@ -113,7 +114,8 @@ function handleRequest(message: JsonRpcLine) {
         }),
       });
       return;
-    case "thread/start":
+    case "thread/start": {
+      const threadId = `thread-live-${nextThreadOrdinal++}`;
       respond(message.id, {
         approvalPolicy: "on-request",
         approvalsReviewer: { type: "auto" },
@@ -125,7 +127,7 @@ function handleRequest(message: JsonRpcLine) {
         sandbox: { type: "readOnly", networkAccess: false },
         serviceTier: null,
         thread: thread({
-          id: "thread-live",
+          id: threadId,
           name: "Live real smoke",
           status: { type: "idle" },
         }),
@@ -133,15 +135,17 @@ function handleRequest(message: JsonRpcLine) {
       notify("thread/started", {
         status: { type: "idle" },
         thread: thread({
-          id: "thread-live",
+          id: threadId,
           name: "Live real smoke",
           status: { type: "idle" },
         }),
       });
       return;
+    }
     case "turn/start": {
       const turnId = `turn-live-${nextTurnOrdinal++}`;
       const prompt = inputText(message.params);
+      const threadId = stringParam(message.params, "threadId") ?? "thread-live";
       const requiresApproval = prompt === "run smoke";
       respond(message.id, {
         turn: {
@@ -157,6 +161,7 @@ function handleRequest(message: JsonRpcLine) {
       streamTurn({
         responseText: requiresApproval ? "Streaming smoke response." : `Echo: ${prompt}`,
         requiresApproval,
+        threadId,
         turnId,
       });
       return;
@@ -169,10 +174,12 @@ function handleRequest(message: JsonRpcLine) {
 function streamTurn({
   requiresApproval,
   responseText,
+  threadId,
   turnId,
 }: {
   requiresApproval: boolean;
   responseText: string;
+  threadId: string;
   turnId: string;
 }) {
   const agentItemId = `item-${turnId}`;
@@ -180,7 +187,7 @@ function streamTurn({
   const diffItemId = `diff-${turnId}`;
   schedule(0, () =>
     notify("turn/started", {
-      threadId: "thread-live",
+      threadId,
       turn: {
         completedAt: null,
         durationMs: null,
@@ -196,7 +203,7 @@ function streamTurn({
     notify("item/agentMessage/delta", {
       delta: responseText,
       itemId: agentItemId,
-      threadId: "thread-live",
+      threadId,
       turnId,
     }),
   );
@@ -204,7 +211,7 @@ function streamTurn({
     notify("item/commandExecution/outputDelta", {
       delta: "fake command output\n",
       itemId: commandItemId,
-      threadId: "thread-live",
+      threadId,
       turnId,
     }),
   );
@@ -212,7 +219,7 @@ function streamTurn({
     notify("item/fileChange/patchUpdated", {
       itemId: diffItemId,
       patch: "diff --git a/README.md b/README.md\n+smoke\n",
-      threadId: "thread-live",
+      threadId,
       turnId,
     }),
   );
@@ -226,7 +233,7 @@ function streamTurn({
             type: "agentMessage",
           },
         ],
-        threadId: "thread-live",
+        threadId,
         turn: {
           completedAt: 1778000003,
           durationMs: 1000,
@@ -250,7 +257,7 @@ function streamTurn({
         command: "echo smoke",
         cwd: "/tmp/agent-ui",
         itemId: commandItemId,
-        threadId: "thread-live",
+        threadId,
         turnId,
       },
     });

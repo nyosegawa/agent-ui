@@ -3,7 +3,7 @@ import {
   AgentChat,
   AgentProvider,
   localImageInput,
-  mentionInput,
+  textInput,
   type AgentLocalAttachmentKind,
   type CodexUserInput,
 } from "@nyosegawa/agent-ui-react";
@@ -22,7 +22,7 @@ declare global {
  * Codex App Server needs a real local path for `localImage` inputs. The file
  * is uploaded to the local host process (see `server.ts`), which returns an
  * absolute path the agent can read. Images become `localImage` inputs; other
- * files are surfaced to the turn as a `mention` of their on-disk path.
+ * files become explicit text so the model can see the saved local path.
  */
 async function resolveLocalAttachment(
   file: File,
@@ -33,12 +33,13 @@ async function resolveLocalAttachment(
     headers: { "x-agent-ui-filename": encodeURIComponent(file.name || "upload") },
     method: "POST",
   });
-  if (!response.ok) return null;
-  const result = (await response.json()) as { path?: unknown };
+  const result = (await response.json()) as { error?: unknown; path?: unknown };
+  if (!response.ok) {
+    throw new Error(typeof result.error === "string" ? result.error : "Upload failed.");
+  }
   if (typeof result.path !== "string") return null;
-  return kind === "image"
-    ? localImageInput(result.path)
-    : mentionInput(file.name || result.path, result.path);
+  if (kind === "image") return localImageInput(result.path);
+  return textInput(`Attached file: ${result.path}`);
 }
 
 function App() {
@@ -65,7 +66,7 @@ function App() {
   return (
     <AgentProvider transport={transport}>
       <main className="agent-ui-local-app">
-        <AgentChat resolveLocalAttachment={resolveLocalAttachment} />
+        <AgentChat resolveLocalAttachment={resolveLocalAttachment} threadUrlRouting />
       </main>
     </AgentProvider>
   );

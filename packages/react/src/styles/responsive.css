@@ -157,6 +157,11 @@
     width: 100%;
   }
 
+  .aui-thread-action-error {
+    min-width: 100%;
+    text-align: left;
+  }
+
   .aui-thread-title,
   .aui-thread-title .aui-token-usage {
     max-width: 100%;
@@ -170,6 +175,31 @@
   .aui-message-list {
     gap: 14px;
     padding: 14px 14px 22px;
+  }
+
+  .aui-compose-panel {
+    padding: 10px 12px 12px;
+  }
+
+  .aui-composer-toolbar {
+    align-items: stretch;
+  }
+
+  .aui-composer-toolbar-start,
+  .aui-composer-toolbar-end {
+    width: 100%;
+  }
+
+  .aui-composer-toolbar-end {
+    justify-content: space-between;
+  }
+
+  .aui-composer-hint {
+    display: none;
+  }
+
+  .aui-composer-chip {
+    max-width: 100%;
   }
 
   .aui-message[data-kind="userMessage"] {

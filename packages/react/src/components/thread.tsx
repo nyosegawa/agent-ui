@@ -5,12 +5,14 @@ import type {
   ThreadState,
   TurnState,
 } from "@nyosegawa/agent-ui-core";
+import { useState } from "react";
 import {
   useAgentApprovals,
   useAgentThread,
   useAgentThreadActions,
   useAgentTurn,
 } from "../hooks";
+import { useAgentContext } from "../provider";
 import {
   IconAdd,
   IconMoreVertical,
@@ -145,6 +147,8 @@ function AgentThreadActions({
   threadId?: string;
 }) {
   const { resumeThread, startThread } = useAgentThread(threadId);
+  const { dispatch } = useAgentContext();
+  const [resumeError, setResumeError] = useState<string | undefined>();
   const {
     archiveThread,
     compactThread,
@@ -167,9 +171,22 @@ function AgentThreadActions({
       {canResume ? (
         <button
           className={buttonClass("secondary", { size: "sm" })}
-          onClick={() =>
-            deferAction(() => void resumeThread(threadId, { excludeTurns: true }))
-          }
+          onClick={() => {
+            setResumeError(undefined);
+            deferAction(async () => {
+              try {
+                await resumeThread(threadId);
+              } catch (error) {
+                const message =
+                  error instanceof Error ? error.message : String(error);
+                setResumeError(message);
+                dispatch({
+                  error: { message: `Resume failed: ${message}` },
+                  type: "error/added",
+                });
+              }
+            });
+          }}
           type="button"
         >
           Resume
@@ -247,6 +264,11 @@ function AgentThreadActions({
           </button>
         </div>
       </details>
+      {resumeError ? (
+        <div className="aui-thread-action-error" role="alert">
+          Resume failed: {resumeError}
+        </div>
+      ) : null}
     </div>
   );
 }

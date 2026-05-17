@@ -142,7 +142,12 @@ bun run test:e2e:real-local-web-layout
 
 This gate inspects the real local web page, including the thread surface,
 sidebar, composer, run settings menu/sheet, approval placement when present,
-and document-level overflow. It does not start or stop the server.
+document-level overflow, and fixed composer placement. It does not start or
+stop the server. Browser smoke coverage also exercises stored-thread resume,
+`/threads/<threadId>` URL restoration, browser back/forward, image thumbnails,
+and arbitrary file upload chips. Non-image uploads are expected to reach Codex
+as explicit `Attached file: /absolute/path` text, not as a generic App Server
+file input.
 
 ## Real Codex Smoke
 

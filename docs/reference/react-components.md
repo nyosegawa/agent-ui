@@ -300,19 +300,24 @@ does not affect composer mentions or attachment resolution.
 ```
 
 Local image and file attachments are only enabled when the host supplies
-`resolveLocalAttachment`. The composer then accepts attachments through three
-paths — clipboard paste, drag and drop, and the toolbar attach/image file
-pickers — and shows each as a removable chip above the textarea. On send, each
-chip's resolved `CodexUserInput` is appended to the `turn/start` input items
-after the text. The resolver must turn a `File` into a real Codex input such
-as a `localImage` path or uploaded image URL; the library does not treat
-browser-only `File.name` values as App Server-readable paths, and a resolver
-returning `null` (or throwing) surfaces an inline "could not be attached"
-notice. `examples/codex-local-web` shows the full host responsibility: a
-`POST /agent-ui/upload` endpoint persists the browser `File` next to the App
-Server and returns an absolute path, which the resolver wraps with
-`localImageInput`. The attach-image button and image attachment chip use a
-dedicated image icon, not the `@`-mention icon.
+`resolveLocalAttachment`. The composer accepts attachments through clipboard
+paste, drag and drop, and one toolbar attach file picker, then shows each as a
+removable chip above the textarea. Image chips render a local thumbnail. File
+chips render an attachment icon, filename, extension, and size. The resolver
+may return one `CodexUserInput` or multiple input items for each browser
+`File`.
+
+Codex App Server stable v2 has `text`, `image`, `localImage`, `skill`, and
+`mention` user inputs; it does not have a generic local-file input type.
+Hosts must therefore persist arbitrary files themselves. Images should become
+`localImageInput(path)`. Non-image files should include explicit text such as
+`textInput("Attached file: /absolute/path")` so the model can see the saved
+path; do not rely only on `mentionInput`. A resolver returning `null` or
+throwing surfaces an inline composer error.
+
+`examples/codex-local-web` shows the full host responsibility: a
+`POST /agent-ui/upload` endpoint persists any extension, including unknown
+extensions such as `.3mf`, next to the App Server and returns an absolute path.
 
 ### Working directory is a thread-start setting
 

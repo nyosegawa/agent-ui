@@ -68,9 +68,13 @@ paths. The library therefore requires a host resolver for attachments.
 - returns JSON `{ "path": "/absolute/local/path" }`
 
 The React composer calls the host's `resolveLocalAttachment(file)` resolver.
-The resolver may upload the file, then return a Codex input such as
-`localImageInput(path)` or another host-supported input item. The React package
-never treats a browser blob URL or `File.name` as an App Server-readable path.
+The resolver may upload the file, then return one Codex input or an array of
+Codex inputs. Images should return `localImageInput(path)`. For arbitrary
+non-image files, App Server has no generic `localFile` user input, so the host
+should return explicit text such as `textInput("Attached file:
+/absolute/local/path")`. The React package never treats a browser blob URL or
+`File.name` as an App Server-readable path, and non-image files should not rely
+only on `mentionInput`.
 
 ## Dynamic Tool Bridge
 

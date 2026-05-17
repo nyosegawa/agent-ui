@@ -77,7 +77,7 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "362px",
-    "height": 444,
+    "height": 398,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
@@ -129,7 +129,7 @@
     "borderRadius": "14px",
     "display": "grid",
     "gridTemplateColumns": "344px",
-    "height": 188,
+    "height": 234,
     "overflowX": "hidden",
     "overflowY": "hidden",
     "present": true,
@@ -147,6 +147,6 @@
     "overflowY": "visible",
     "present": true,
     "visible": true,
-    "width": 298
+    "width": 344
   }
 }

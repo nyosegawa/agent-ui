@@ -202,6 +202,14 @@
   min-width: 0;
 }
 
+.aui-thread-action-error {
+  color: var(--aui-danger);
+  flex: 1 1 100%;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: right;
+}
+
 .aui-thread-action-menu {
   position: relative;
 }
@@ -235,6 +243,10 @@
   right: 0;
   top: calc(100% + 6px);
   z-index: 10;
+}
+
+.aui-thread-action-menu:not([open]) > div {
+  display: none;
 }
 
 .aui-thread-action-menu button {

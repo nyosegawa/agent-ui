@@ -11,6 +11,7 @@ import {
   AgentStatusSummary,
   AgentUsagePanel,
   localImageInput,
+  textInput,
 } from "@nyosegawa/agent-ui-react";
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import {
@@ -335,7 +336,7 @@ function CloseupComposerAttachments() {
             resolveLocalAttachment={(file, kind) =>
               kind === "image"
                 ? localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
-                : localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
+                : textInput(`Attached file: /tmp/agent-ui-closeup/${file.name}`)
             }
             threadId="thread-closeup"
           />

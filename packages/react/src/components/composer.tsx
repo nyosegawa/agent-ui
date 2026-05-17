@@ -31,17 +31,28 @@ export function AgentComposer({
   const [attachmentError, setAttachmentError] = useState<string | undefined>();
   const [isFocused, setFocused] = useState(false);
   const [isDragOver, setDragOver] = useState(false);
+  const attachmentsRef = useRef<ComposerAttachment[]>([]);
   const dragCounter = useRef(0);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const imageInputRef = useRef<HTMLInputElement | null>(null);
+
+  const revokePreview = useCallback((attachment: ComposerAttachment) => {
+    if (attachment.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
+  }, []);
 
   const addAttachment = useCallback((attachment: ComposerAttachment) => {
     setAttachments((current) => [...current, attachment]);
   }, []);
-  const removeAttachment = useCallback((id: string) => {
-    setAttachments((current) => current.filter((attachment) => attachment.id !== id));
-  }, []);
+  const removeAttachment = useCallback(
+    (id: string) => {
+      setAttachments((current) => {
+        const removed = current.find((attachment) => attachment.id === id);
+        if (removed) revokePreview(removed);
+        return current.filter((attachment) => attachment.id !== id);
+      });
+    },
+    [revokePreview],
+  );
   const addLocalFiles = useCallback(
     async (files: FileList | File[]) => {
       if (!resolveLocalAttachment) return;
@@ -52,24 +63,29 @@ export function AgentComposer({
         const kind: AgentLocalAttachmentKind = file.type.startsWith("image/")
           ? "image"
           : "file";
-        let input: CodexUserInput | null | undefined;
+        let input: CodexUserInput | CodexUserInput[] | null | undefined;
         try {
           input = await resolveLocalAttachment(file, kind);
         } catch (error) {
           console.warn("AgentComposer attachment resolver failed", error);
+          setAttachmentError(error instanceof Error ? error.message : String(error));
           input = null;
         }
         if (!input) {
           rejected += 1;
           continue;
         }
+        const previewUrl = kind === "image" ? URL.createObjectURL(file) : undefined;
         addAttachment({
+          extension: fileExtension(file.name),
           id: `${kind}:${file.name}:${file.size}:${Date.now()}:${Math.random()
             .toString(36)
             .slice(2, 7)}`,
           input,
           kind,
           label: file.name || kind,
+          previewUrl,
+          sizeLabel: formatFileSize(file.size),
           value: file.name,
         });
       }
@@ -80,6 +96,17 @@ export function AgentComposer({
       );
     },
     [addAttachment, resolveLocalAttachment],
+  );
+
+  useEffect(() => {
+    attachmentsRef.current = attachments;
+  }, [attachments]);
+
+  useEffect(
+    () => () => {
+      for (const attachment of attachmentsRef.current) revokePreview(attachment);
+    },
+    [revokePreview],
   );
 
   // Auto-resize textarea up to a max height.
@@ -93,7 +120,9 @@ export function AgentComposer({
   const submit = () => {
     if (disabled) return;
     if (!composer.value.trim() && attachments.length === 0) return;
-    deferAction(() => composer.submit(attachments.map(composerAttachmentInput)));
+    const pendingAttachments = attachments;
+    deferAction(() => composer.submit(pendingAttachments.flatMap(composerAttachmentInput)));
+    for (const attachment of pendingAttachments) revokePreview(attachment);
     setAttachments([]);
   };
 
@@ -189,14 +218,29 @@ export function AgentComposer({
       {attachments.length > 0 ? (
         <ul className="aui-composer-chips" aria-label="Pending attachments">
           {attachments.map((attachment) => (
-            <li className="aui-composer-chip" data-kind={attachment.kind} key={attachment.id}>
-              <span className="aui-composer-chip-icon" aria-hidden="true">
-                {attachment.kind === "image" ? <IconImage size={14} /> : null}
-                {attachment.kind === "file" ? <IconPaperclip size={14} /> : null}
-                {attachment.kind === "app" ? <IconApp size={14} /> : null}
-                {attachment.kind === "plugin" ? <IconPlugin size={14} /> : null}
+          <li className="aui-composer-chip" data-kind={attachment.kind} key={attachment.id}>
+              {attachment.previewUrl ? (
+                <img
+                  alt=""
+                  className="aui-composer-chip-thumbnail"
+                  src={attachment.previewUrl}
+                />
+              ) : (
+                <span className="aui-composer-chip-icon" aria-hidden="true">
+                  {attachment.kind === "image" ? <IconImage size={14} /> : null}
+                  {attachment.kind === "file" ? <IconPaperclip size={14} /> : null}
+                  {attachment.kind === "app" ? <IconApp size={14} /> : null}
+                  {attachment.kind === "plugin" ? <IconPlugin size={14} /> : null}
+                </span>
+              )}
+              <span className="aui-composer-chip-copy">
+                <span className="aui-composer-chip-label">{attachment.label}</span>
+                {attachment.kind === "file" ? (
+                  <span className="aui-composer-chip-meta">
+                    {[attachment.extension, attachment.sizeLabel].filter(Boolean).join(" · ")}
+                  </span>
+                ) : null}
               </span>
-              <span className="aui-composer-chip-label">{attachment.label}</span>
               <button
                 aria-label={`Remove ${attachment.label}`}
                 className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
@@ -244,41 +288,20 @@ export function AgentComposer({
                   className={buttonClass("ghost", { iconOnly: true })}
                   disabled={disabled}
                   onClick={() => fileInputRef.current?.click()}
-                  title="Attach file"
+                  title="Attach files"
                   type="button"
                 >
                   <IconPaperclip size={16} />
                 </button>
                 <input
-                  accept="*"
                   hidden
+                  multiple
                   onChange={(event) => {
                     const files = event.currentTarget.files;
                     if (files) void addLocalFiles(files);
                     event.currentTarget.value = "";
                   }}
                   ref={fileInputRef}
-                  type="file"
-                />
-                <button
-                  aria-label="Attach image"
-                  className={buttonClass("ghost", { iconOnly: true })}
-                  disabled={disabled}
-                  onClick={() => imageInputRef.current?.click()}
-                  title="Attach image"
-                  type="button"
-                >
-                  <IconImage size={16} />
-                </button>
-                <input
-                  accept="image/*"
-                  hidden
-                  onChange={(event) => {
-                    const files = event.currentTarget.files;
-                    if (files) void addLocalFiles(files);
-                    event.currentTarget.value = "";
-                  }}
-                  ref={imageInputRef}
                   type="file"
                 />
               </>
@@ -338,7 +361,12 @@ export type AgentLocalAttachmentKind = Extract<ComposerAttachmentKind, "image" |
 export type AgentLocalAttachmentResolver = (
   file: File,
   kind: AgentLocalAttachmentKind,
-) => CodexUserInput | null | undefined | Promise<CodexUserInput | null | undefined>;
+) =>
+  | CodexUserInput
+  | CodexUserInput[]
+  | null
+  | undefined
+  | Promise<CodexUserInput | CodexUserInput[] | null | undefined>;
 
 export type AgentMentionAttachmentKind = Extract<ComposerAttachmentKind, "app" | "plugin">;
 
@@ -366,16 +394,32 @@ export interface AgentComposerProps {
 }
 
 interface ComposerAttachment {
+  extension?: string;
   id: string;
-  input?: CodexUserInput;
+  input?: CodexUserInput | CodexUserInput[];
   kind: ComposerAttachmentKind;
   label: string;
+  previewUrl?: string;
+  sizeLabel?: string;
   value: string;
 }
 
-function composerAttachmentInput(attachment: ComposerAttachment): CodexUserInput {
-  if (attachment.input) return attachment.input;
-  return mentionInput(attachment.label, attachment.value);
+function composerAttachmentInput(attachment: ComposerAttachment): CodexUserInput[] {
+  if (Array.isArray(attachment.input)) return attachment.input;
+  if (attachment.input) return [attachment.input];
+  return [mentionInput(attachment.label, attachment.value)];
+}
+
+function formatFileSize(size: number): string {
+  if (!Number.isFinite(size) || size < 0) return "";
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${Math.round(size / 102.4) / 10} KB`;
+  return `${Math.round(size / 1024 / 102.4) / 10} MB`;
+}
+
+function fileExtension(name: string): string | undefined {
+  const match = /\.([^.]+)$/.exec(name);
+  return match ? `.${match[1]}` : undefined;
 }
 
 export interface AgentComposerPanelProps {

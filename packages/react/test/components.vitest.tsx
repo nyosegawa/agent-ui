@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -33,7 +33,7 @@ import {
   useAgentContext,
   useAgentTurn,
   localImageInput,
-  mentionInput,
+  textInput,
 } from "../src";
 
 expect.extend(toHaveNoViolations);
@@ -990,7 +990,7 @@ describe("AgentChat", () => {
     warn.mockRestore();
   });
 
-  it("renders image attachments with the image icon, not the @ icon", async () => {
+  it("renders image attachments with a thumbnail behind the single attach control", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-image";
@@ -1013,11 +1013,12 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    const attachImage = screen.getByRole("button", { name: "Attach image" });
-    expect(attachImage.querySelector("rect")).not.toBeNull();
+    const attachFile = screen.getByRole("button", { name: "Attach file" });
+    expect(attachFile).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Attach image" })).not.toBeInTheDocument();
 
     const imageInput = document.querySelector(
-      'input[type="file"][accept="image/*"]',
+      'input[type="file"]',
     ) as HTMLInputElement;
     const file = new File(["binary"], "shot.png", { type: "image/png" });
     await user.upload(imageInput, file);
@@ -1026,7 +1027,7 @@ describe("AgentChat", () => {
       '.aui-composer-chip[data-kind="image"]',
     );
     expect(chip).not.toBeNull();
-    expect(chip?.querySelector("rect")).not.toBeNull();
+    expect(chip?.querySelector("img.aui-composer-chip-thumbnail")).not.toBeNull();
   });
 
   it("requires a host resolver before local files become Codex inputs", async () => {
@@ -1052,9 +1053,9 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    const input = screen.getByLabelText("Composer attachments").querySelector(
-      'input[accept="image/*"]',
-    ) as HTMLInputElement;
+    const input = screen
+      .getByLabelText("Composer attachments")
+      .querySelector('input[type="file"]') as HTMLInputElement;
     await user.upload(input, new File(["image"], "fixture.png", { type: "image/png" }));
     await user.type(screen.getByLabelText("Message"), "inspect this");
     await user.click(screen.getByRole("button", { name: "Send" }));
@@ -2498,10 +2499,103 @@ describe("AgentChat", () => {
     );
     expect(
       transport.requests.find((request) => request.method === "thread/resume")?.params,
-    ).toEqual({
-      excludeTurns: true,
-      threadId: "thread-history",
+    ).toEqual({ threadId: "thread-history" });
+  });
+
+  it("surfaces resume failures inline and keeps the stable resume request shape", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [{ id: "thread-fail-resume", name: "Needs resume", status: { type: "notLoaded" } }],
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-fail-resume",
+              name: "Needs resume",
+              status: { type: "notLoaded" },
+              turns: [],
+            },
+          };
+        }
+        if (request.method === "thread/resume") {
+          throw new Error("resume unavailable");
+        }
+        return {};
+      },
     });
+
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /Needs resume/ }));
+    await user.click(await screen.findByRole("button", { name: "Resume" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Resume failed: resume unavailable",
+    );
+    expect(
+      transport.requests.find((request) => request.method === "thread/resume")?.params,
+    ).toEqual({ threadId: "thread-fail-resume" });
+  });
+
+  it("syncs active thread selection to explicit thread URLs", async () => {
+    const user = userEvent.setup();
+    window.history.replaceState(null, "", "/");
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              { id: "thread-one", name: "Thread one", status: { type: "notLoaded" } },
+              { id: "thread-two", name: "Thread two", status: { type: "notLoaded" } },
+            ],
+          };
+        }
+        if (request.method === "thread/read") {
+          const id = String((request.params as { threadId?: string }).threadId);
+          return {
+            thread: {
+              id,
+              name: id === "thread-two" ? "Thread two" : "Thread one",
+              status: { type: "notLoaded" },
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat threadUrlRouting />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /Thread two/ }));
+    await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
+
+    await user.click(await screen.findByRole("button", { name: /Thread one/ }));
+    await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-one"));
+
+    window.history.back();
+    await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
+    await waitFor(() =>
+      expect(
+        transport.requests.some(
+          (request) =>
+            request.method === "thread/read" &&
+            (request.params as { threadId?: string }).threadId === "thread-two",
+        ),
+      ).toBe(true),
+    );
   });
 
   it("passes real thread/list search params and shows empty history state", async () => {
@@ -2791,7 +2885,7 @@ describe("AgentChat", () => {
           resolveLocalAttachment={(file, kind) =>
             kind === "image"
               ? localImageInput(`/tmp/${file.name}`)
-              : mentionInput(file.name, `/tmp/${file.name}`)
+              : textInput(`Attached file: /tmp/${file.name}`)
           }
         />
       </AgentProvider>,
@@ -2835,7 +2929,7 @@ describe("AgentChat", () => {
           resolveLocalAttachment={(file, kind) =>
             kind === "image"
               ? localImageInput(`/uploads/${file.name}`)
-              : mentionInput(file.name, `/uploads/${file.name}`)
+              : textInput(`Attached file: /uploads/${file.name}`)
           }
         />
       </AgentProvider>,
@@ -2855,6 +2949,35 @@ describe("AgentChat", () => {
         { text: "review this", text_elements: [], type: "text" },
         { path: "/uploads/diagram.png", type: "localImage" },
       ],
+    });
+  });
+
+  it("sends arbitrary file attachments as explicit local path text inputs", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={existingThreadState()} transport={transport}>
+        <AgentChat
+          resolveLocalAttachment={(file, kind) =>
+            kind === "image"
+              ? localImageInput(`/uploads/${file.name}`)
+              : textInput(`Attached file: /uploads/${file.name}`)
+          }
+        />
+      </AgentProvider>,
+    );
+    const fileInput = await screen.findByLabelText("Message");
+    fireEvent.paste(fileInput, {
+      clipboardData: {
+        files: [new File(["model"], "part.3mf", { type: "" })],
+      },
+    });
+    await screen.findByText("part.3mf");
+    expect(screen.getByText(".3mf · 5 B")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(transport.requests.at(-1)?.params).toMatchObject({
+      input: [{ text: "Attached file: /uploads/part.3mf", type: "text" }],
     });
   });
 

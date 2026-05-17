@@ -10,7 +10,7 @@ import { createServer as createViteServer } from "vite";
 import { isSuppressedCodexDiagnostic } from "./src/diagnostics";
 
 const host = process.env.AGENT_UI_HOST ?? "127.0.0.1";
-const port = Number(process.env.AGENT_UI_PORT ?? 5174);
+const port = Number(process.env.AGENT_UI_PORT ?? 5175);
 const cwd = process.env.AGENT_UI_CODEX_CWD ?? process.cwd();
 const codexCommand = process.env.AGENT_UI_CODEX_COMMAND;
 const codexArgs = process.env.AGENT_UI_CODEX_ARGS

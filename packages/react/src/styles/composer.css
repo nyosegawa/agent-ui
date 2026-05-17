@@ -75,12 +75,13 @@
   align-items: center;
   background: var(--aui-panel-alt);
   border: 1px solid var(--aui-border);
-  border-radius: 999px;
+  border-radius: 8px;
   display: inline-flex;
   font-size: 12px;
   gap: 6px;
-  max-width: 240px;
-  padding: 3px 4px 3px 10px;
+  max-width: min(280px, 100%);
+  min-width: 0;
+  padding: 4px;
 }
 
 .aui-composer-chip[data-kind="image"] {
@@ -99,11 +100,37 @@
   color: var(--aui-fg-muted);
   display: inline-flex;
   flex: 0 0 auto;
+  padding-left: 5px;
+}
+
+.aui-composer-chip-thumbnail {
+  aspect-ratio: 1;
+  border-radius: 6px;
+  flex: 0 0 auto;
+  height: 32px;
+  object-fit: cover;
+  width: 32px;
+}
+
+.aui-composer-chip-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
 }
 
 .aui-composer-chip-label {
   color: var(--aui-fg);
   font-weight: 500;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-composer-chip-meta {
+  color: var(--aui-fg-faint);
+  font-family: var(--aui-font-mono);
+  font-size: 10.5px;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -137,6 +164,7 @@
   align-items: center;
   border-top: 1px solid var(--aui-rule);
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   justify-content: space-between;
   margin-top: 6px;
