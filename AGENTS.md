@@ -1,208 +1,113 @@
 # Agent UI Repository Instructions
 
-## Rules
+## Non-Negotiables
 
-- When writing a name in a license file, use `{year} Sakasegawa`. Confirm the current year using `date +%Y`.
+- When writing a name in a license file, use `{year} Sakasegawa`; confirm the year with `date +%Y`.
 - Unless explicitly instructed otherwise, create repositories under `nyosegawa/{reponame}`.
-- Keep docs implementation-facing. Do not include competitor-research background in product docs.
-- Use the Codex App Server protocol as the primary integration surface.
-- Treat `README.md` and `docs/README.md` as the documentation entry points.
-- Do not implement MVP shortcuts. The target is a complete Codex App Server UI
-  component system with composable thread, usage, skills, apps, and browser
-  verification surfaces.
-- Keep external app workflows outside the core library. Proposal/session
-  orchestration, app-specific panel runtimes, storage, and sidecar behavior
-  belong in host applications that compose Agent UI primitives.
-- Keep the default runtime local-first, single-user, stdio-first, and
-  stable-API-first unless the active docs explicitly mark a surface as
-  experimental or host-only.
-- Use Bun as the primary package manager and development runner.
-- Keep Node.js LTS compatibility for published packages and server integrations.
+- Use Bun as the package manager and day-to-day runner.
+- Keep published packages and server integrations compatible with Node.js LTS.
+- Use the Codex App Server protocol as the primary integration surface. When protocol behavior, generated schema, stable versus experimental status, or runtime semantics are unclear, inspect `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server`.
+- Do not modify the upstream Codex checkout unless the user explicitly asks for that repository to be changed.
 
-## Product Boundary
+## Product Shape
 
-- Agent UI is a reusable Codex App Server UI component library, not a host
-  application runtime. Watcher, skill-with-app, workflow orchestration, app
-  panels, persistence policies, and sidecar lifecycle belong in host apps that
-  compose this library.
-- Do not add APIs only because one host app currently needs them. Add
-  primitives, hooks, adapters, and documented extension points that make the
-  general Codex App Server UI surface more complete.
-- Treat `app/list` as Codex Apps/connectors protocol, not as a skill-with-app
-  registry. Do not introduce skill-with-app-specific naming, stores, worker
-  panes, or tool names into packages, examples, or public docs.
-- Keep usage/status/diagnostics composable. They may appear in an `AgentChat`
-  preset, but hosts must also be able to render usage-only, scoped-thread, and
-  custom primitive compositions without adopting a full shell.
+Agent UI is a reusable Codex App Server UI component library, not a host application runtime.
 
-## UX Principles
+- Build general primitives, hooks, adapters, and documented extension points for the Codex App Server UI surface.
+- Keep watcher, skill-with-app, workflow orchestration, app panels, persistence policies, and sidecar lifecycle outside the core library. Host apps compose Agent UI primitives to implement those workflows.
+- Do not add APIs only because one host app currently needs them.
+- Treat `app/list` as Codex Apps/connectors protocol, not as a skill-with-app registry.
+- Do not introduce skill-with-app-specific stores, worker panes, tool names, examples, or public docs into this repo.
+- Keep usage, status, diagnostics, thread, composer, approvals, apps, and browser-verification surfaces independently composable. `AgentChat` may wire them together, but hosts must be able to render usage-only, scoped-thread, and custom primitive layouts.
+- Default to local-first, single-user, stdio-first, and stable-API-first unless docs explicitly mark a surface as experimental or host-only.
 
-- Default UI is transcript-first. User messages, assistant messages, tool
-  calls, command output, file changes, approvals, and usage context should
-  appear in the conversation flow without a separate "work trace" concept.
-- Do not collapse normal user or assistant messages behind details. Reserve
-  disclosure for genuinely heavy tool bodies, command output, diffs, or verbose
-  diagnostics while keeping readable previews inline.
-- Keep the composer as the primary bottom-anchored interaction surface. Running
-  state should turn the send affordance into stop/steer behavior rather than
-  moving primary controls elsewhere.
-- Pending approvals belong at the relevant point in the transcript, not in a
-  separate scroll pane that hides the thread. Approval actions must remain
-  reachable and hit-testable on desktop and mobile.
-- Avoid nested vertical scroll traps in markdown, code blocks, command output,
-  and diff previews. The transcript should own normal reading scroll unless a
-  component is intentionally disclosed as a heavy body.
-- Thread history must preserve readable titles and metadata. Clipped titles,
-  broken metadata rows, horizontal page overflow, and manual "Load all" style
-  history UX are regressions.
-- Attachments are host-resolved local inputs. Browser `File` objects should be
-  persisted by the host when Codex needs an absolute local path; images should
-  show thumbnails, and arbitrary non-image files should be represented in a
-  way the App Server can actually consume.
-- Token usage belongs near the active conversation/composer context and should
-  be inspectable without dominating the thread header or replacing transcript
-  content.
+## UX Contract
 
-## Documentation Operations
+The default product experience is transcript-first.
 
-- If a decision changes scope, public API, package boundary, validation,
-  security, or host integration behavior, update the relevant file under
-  `docs/` in the same change.
-- Keep public docs current-state oriented. Do not add planning logs,
-  migration diaries, or dated validation transcripts to the public docs.
-- Do not leave stale README, docs, examples, or AGENTS instructions behind a
-  code change. If the implementation changes public API, package boundaries,
-  validation, or host integration behavior, update the corresponding docs in
-  the same change.
-- For broad documentation updates, do not rely on `rg` alone. Read the
-  affected docs and compare them with the current implementation, examples,
-  scripts, and tests before deciding what to update, merge, or delete.
-- Use purpose-based names for fixtures, routes, screenshots, and tests. Do not
-  preserve legacy or source-of-inspiration names once they no longer describe
-  the current product surface.
+- User messages, assistant messages, tool calls, command output, file changes, approvals, and usage context belong in the conversation flow. Do not reintroduce a separate "work trace" concept.
+- Do not collapse normal user or assistant messages behind details. Use disclosure for heavy tool bodies, command output, diffs, or verbose diagnostics while keeping readable previews inline.
+- Keep the composer as the primary bottom-anchored interaction surface. Running state should turn the send affordance into stop/steer behavior, not move the primary action elsewhere.
+- Pending approvals belong at the relevant point in the transcript, not in a separate scroll pane. Approval actions must remain reachable and hit-testable on desktop and mobile.
+- Avoid nested vertical scroll traps in markdown, code blocks, command output, and diff previews. The transcript should own normal reading scroll unless a component is intentionally disclosed as a heavy body.
+- Thread history must preserve readable titles and metadata. Clipped titles, broken metadata rows, horizontal page overflow, and manual "Load all" style history UX are regressions.
+- Attachments are host-resolved local inputs. Browser `File` objects should be persisted by the host when Codex needs an absolute local path; images should show thumbnails, and arbitrary non-image files should be represented in a way the App Server can consume.
+- Token usage belongs near the active conversation/composer context and should be inspectable without dominating the thread header or replacing transcript content.
 
-## Default Work Loop
+## Implementation Practice
 
-- Start by reading the relevant implementation, tests, examples, and docs.
-  Do not rely on memory, generated summaries, or names alone when changing a
-  public surface.
-- Implement the complete requested behavior. Do not leave placeholder logic,
-  temporary compatibility shims, or MVP-only surfaces unless the user
-  explicitly asks for a temporary step.
-- Add or update focused tests with the behavior change. A public API, reducer
-  path, protocol normalizer, bridge behavior, or visible UI state is not
-  complete without test coverage.
-- For browser-visible changes, verify the running UI in a browser in addition
-  to automated tests. Check desktop and mobile viewports when layout,
-  interaction, overflow, scrolling, or responsive behavior changes.
-- Update README, docs, examples, screenshots, and public API references in the
-  same slice when behavior, package boundaries, setup, validation, or host
-  integration changes.
-- After each coherent slice, run the relevant validation, commit, push, verify
-  the branch is clean, and follow CI to a concrete success or failure.
+- Start by reading the relevant implementation, tests, examples, and docs. Do not rely on memory, generated summaries, or names alone when changing a public surface.
+- Implement the complete requested behavior. Do not leave placeholder logic, temporary compatibility shims, or MVP-only surfaces unless the user explicitly asks for a temporary step.
+- Work in small, reviewable slices. Prefer commits that map to one protocol surface, component boundary, example, or validation gate.
+- Add or update focused tests with the behavior change. A public API, reducer path, protocol normalizer, bridge behavior, or visible UI state is not complete without coverage.
+- Refactor when implementation complexity hides protocol, state, UI, or bridge behavior. Do not preserve awkward old shapes for compatibility when the active docs call for a cleaner API.
+- Do not perform purely mechanical file splits as a substitute for design. Read the owning files, identify stale code and old concepts, move behavior into intentional modules, and delete unused pieces.
+- Use purpose-based names for fixtures, routes, screenshots, and tests. Do not preserve legacy or source-of-inspiration names once they no longer describe the current product surface.
+- After each coherent slice, update docs as needed, run relevant validation, commit, push, verify the branch is clean, and follow CI to a concrete success or failure.
 
-## Implementation Discipline
+## Documentation Practice
 
-- Work in small, reviewable implementation slices. After each coherent slice,
-  update the relevant docs, run the relevant tests, commit, push, and verify
-  the branch is clean.
-- Do not batch many unrelated changes into one commit. Prefer commits that
-  map to one protocol surface, component boundary, example, or validation gate.
-- Add or update tests with the behavior change. A public API, reducer path,
-  protocol normalizer, bridge behavior, or visible UI state is not complete
-  without focused test coverage.
-- Run targeted validation after each slice and the full validation ladder before
-  marking broad work complete.
-- Refactor when implementation complexity starts hiding protocol, state, UI, or
-  bridge behavior. Do not preserve awkward old shapes for compatibility when
-  the active docs call for a cleaner API.
-- Do not perform purely mechanical file splits as a substitute for design.
-  When refactoring, read the owning files, identify stale code and old
-  concepts, move behavior into intentional modules, and delete unused pieces.
-- Use `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server` as
-  the local App Server source of truth whenever protocol behavior, generated
-  schema, stable versus experimental status, or runtime semantics are unclear.
+`README.md` and `docs/README.md` are the documentation entry points.
 
-## Validation Expectations
+- Keep docs implementation-facing and current-state oriented. Do not include competitor-research background, planning logs, migration diaries, or dated validation transcripts in product docs.
+- If a decision changes scope, public API, package boundary, validation, security, host integration behavior, examples, or screenshots, update the relevant docs in the same change.
+- Do not leave stale README, docs, examples, or AGENTS instructions behind a code change.
+- For broad documentation work, do not rely on `rg` alone. Read the affected docs and compare them with the current implementation, examples, scripts, and tests before deciding what to update, merge, or delete.
 
-- Use targeted validation while iterating, then run the full relevant ladder
-  before claiming broad work complete.
-- Do not run `bun run build` in parallel with `bun run publint` or
-  `bun run attw`. The build scripts clean package `dist/` directories, so
-  package validation can race against missing build artifacts. Run build to
-  completion first, then run package validation.
-- Treat commands that read package build output as dependent on `bun run build`.
-  This includes package validation and any browser check against examples that
-  resolve workspace packages through package exports. Do not start those checks
-  while build is still running.
-- Prefer `bun run validate:packages` when validating package build output; it
-  runs `build`, `publint`, and `attw` in the required order.
-- Standard validation commands:
-  - `bun run typecheck`
-  - `bun run lint`
-  - `bun run test`
-  - `bun run test:protocol`
-  - `bun run test:fixtures`
-  - `bun run build`
-  - `bun run publint`
-  - `bun run attw`
-- For React component, transcript, bridge, or UI behavior changes, also run the
-  focused Vitest or Playwright suites that cover the changed surface.
+## Test And Validation
+
+Use targeted validation while iterating, then run the full relevant ladder before claiming broad work complete.
+
+Standard commands:
+
+```sh
+bun run typecheck
+bun run lint
+bun run test
+bun run test:protocol
+bun run test:fixtures
+bun run build
+bun run publint
+bun run attw
+```
+
+Package validation:
+
+- Do not run `bun run build` in parallel with `bun run publint` or `bun run attw`; build cleans package `dist/` directories.
+- Prefer `bun run validate:packages` when validating package build output. It runs `build`, `publint`, and `attw` in the required order.
+- Any browser check that resolves workspace packages through package exports depends on a completed `bun run build`. Rebuild and restart example servers after core/package changes.
+
+Focused validation:
+
+- For React component, transcript, bridge, or UI behavior changes, run the focused Vitest or Playwright suites that cover the changed surface.
 - For browser-visible changes, run `bun run test:e2e:playwright`.
-- `bun run test:e2e:playwright` cleans the Playwright-owned preview ports
-  `4173` and `4174` before starting web servers. If a targeted Playwright
-  command is run manually after an interrupted test, run
-  `bun run test:e2e:clean-ports` first so a stale preview or fake Codex bridge
-  cannot satisfy the port check with old state.
-- Do not fix flaky e2e by simply increasing test timeouts. First identify
-  whether the failure is server readiness, stale port state, an incorrect
-  selector, or a real UI contract failure. Add short readiness retry only at
-  the app-open boundary, then keep interaction assertions fail-fast with
-  explicit low timeouts so regressions surface quickly.
-- For real Codex local web layout or App Server bridge changes, run
-  `bun run test:e2e:real-local-web-layout` against the real local web example
-  when that server is available.
-- When browser-checking examples that import workspace packages through built
-  package exports, rerun `bun run build` after core/package changes and restart
-  the example servers before judging the UI. Otherwise Vite may keep serving
-  stale `dist/` artifacts.
-- Keep ad-hoc browser checks aligned with the real DOM and public accessibility
-  surface. Prefer roles, labels, and classes that exist in the component over
-  invented `data-testid` selectors; if a manual check fails, first verify the
-  selector and page state before treating it as an app regression.
-- Before claiming clean-workspace typecheck or CI compatibility after package
-  boundary, TypeScript config, declaration, build-output, or example import
-  changes, remove ignored build artifacts and typecheck from a clean state:
+- `bun run test:e2e:playwright` owns preview ports `4173` and `4174` and cleans them before starting web servers.
+- If running targeted Playwright after an interrupted test, run `bun run test:e2e:clean-ports` first so a stale preview or fake Codex bridge cannot satisfy the port check with old state.
+- Do not fix flaky e2e by simply increasing timeouts. First classify the failure as server readiness, stale port state, selector drift, or a real UI contract failure. Add short readiness retry only at the app-open boundary; keep interaction assertions fail-fast with explicit low timeouts.
+- For real Codex local web layout or App Server bridge changes, run `bun run test:e2e:real-local-web-layout` against an available `examples/codex-local-web` server.
 
-  ```sh
-  find packages examples -name dist -type d -prune -exec rm -rf {} +
-  find examples -name .next -type d -prune -exec rm -rf {} +
-  bun run typecheck
-  ```
+Clean-state validation:
 
-## Browser and UI Checks
+```sh
+find packages examples -name dist -type d -prune -exec rm -rf {} +
+find examples -name .next -type d -prune -exec rm -rf {} +
+bun run typecheck
+```
 
-- Use the fixture Vite app for component and layout review. Relevant routes
-  include `/`, `/rich-transcript`, `/fixture-gallery`,
-  `/host-workflow-recipe`, `/usage-only`, `/scoped-thread-pane`, and
-  `/app-connectors`.
-- Use `examples/codex-local-web` for real Codex App Server integration,
-  history, bridge, upload, and transcript behavior.
-- Keep fixture coverage and real-local coverage conceptually separate. Fixture
-  routes are for deterministic component/stress states; `examples/codex-local-web`
-  is for App Server-backed behavior such as history, resume, routing, uploads,
-  streaming, steer, interrupt, and token usage.
-- When interaction matters, do not rely only on screenshots. Verify hit tests,
-  actual clicks, keyboard behavior, focus, scrolling, and overflow as
-  appropriate.
-- For layout changes, check at least a desktop viewport and a mobile viewport.
-  Horizontal page overflow, clipped thread titles, nested scroll traps, hidden
-  composer controls, and unreachable approval actions are regressions.
+Use this before claiming clean-workspace typecheck or CI compatibility after package boundary, TypeScript config, declaration, build-output, or example import changes.
 
-## CI/CD Follow-through
+## Browser And UI Checks
+
+- Use the fixture Vite app for deterministic component and layout review. Routes: `/`, `/rich-transcript`, `/fixture-gallery`, `/host-workflow-recipe`, `/usage-only`, `/scoped-thread-pane`, and `/app-connectors`.
+- Use `examples/codex-local-web` for App Server-backed behavior: history, resume, routing, uploads, streaming, steer, interrupt, and token usage.
+- Keep fixture coverage and real-local coverage conceptually separate. Fixtures are deterministic component/stress states; real-local is protocol integration.
+- For browser-visible changes, verify the running UI in a browser in addition to automated tests. Check desktop and mobile viewports when layout, interaction, overflow, scrolling, or responsive behavior changes.
+- When interaction matters, do not rely only on screenshots. Verify hit tests, actual clicks, keyboard behavior, focus, scrolling, and overflow.
+- Keep ad-hoc browser checks aligned with the real DOM and accessibility surface. Prefer real roles, labels, and classes over invented selectors. If a manual check fails, verify the selector and page state before treating it as an app regression.
+- Horizontal page overflow, clipped thread titles, nested scroll traps, hidden composer controls, and unreachable approval actions are regressions.
+
+## CI/CD Follow-Through
 
 - After pushing, inspect GitHub Actions with `gh run list` or the GitHub app.
-- If checks are running, wait for the final result. Do not report success from
-  a pushed commit until the relevant workflows have passed.
-- If a workflow fails, inspect the logs, reproduce locally when possible, fix
-  the root cause, commit, push, and watch the replacement run.
+- If checks are running, wait for the final result. Do not report success from a pushed commit until the relevant workflows pass.
+- If a workflow fails, inspect logs, reproduce locally when possible, fix the root cause, commit, push, and watch the replacement run.
