@@ -136,6 +136,7 @@ export function isUserFacingPath(path: string): boolean {
 export function AgentThreadSidebar({
   activeThreadId,
   collapsed = false,
+  disableInitialAutoActivation = false,
   onCollapsedChange,
   onAutoActivateThread,
   onCancelAutoActivateThread,
@@ -144,6 +145,7 @@ export function AgentThreadSidebar({
 }: {
   activeThreadId?: string;
   collapsed?: boolean;
+  disableInitialAutoActivation?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
   onAutoActivateThread?: (threadId: string) => void;
   onCancelAutoActivateThread?: () => void;
@@ -204,7 +206,12 @@ export function AgentThreadSidebar({
       setNextCursor(responseCursor(response));
       setHasLoaded(true);
       const firstThreadId = threadIds[0];
-      if (params.activateFirst && firstThreadId && !state.activeThreadId) {
+      if (
+        params.activateFirst &&
+        !disableInitialAutoActivation &&
+        firstThreadId &&
+        !state.activeThreadId
+      ) {
         const token = autoActivationTokenRef.current + 1;
         autoActivationTokenRef.current = token;
         onAutoActivateThread?.(firstThreadId);
@@ -222,7 +229,14 @@ export function AgentThreadSidebar({
       }
       return response;
     },
-    [listThreads, onAutoActivateThread, onSelectThread, readThread, state.activeThreadId],
+    [
+      disableInitialAutoActivation,
+      listThreads,
+      onAutoActivateThread,
+      onSelectThread,
+      readThread,
+      state.activeThreadId,
+    ],
   );
   const loadNextThreadPage = useCallback(() => {
     const pageCursor = nextCursor ?? cursor ?? null;

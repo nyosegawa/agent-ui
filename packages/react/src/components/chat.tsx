@@ -11,6 +11,7 @@ import {
   useAgentThreadReader,
   useAgentThreads,
 } from "../hooks";
+import { useAgentContext } from "../provider";
 import { AgentThreadView } from "./thread";
 import type {
   AgentComposerMentionResolver,
@@ -69,6 +70,15 @@ export function AgentChat({
   const { thread, threadId, startThread } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
   const threadUrlRoutingControls = useThreadUrlRouting(threadUrlRouting, activeThreadId);
+  const hasInitialUrlThread =
+    Boolean(threadUrlRouting) &&
+    typeof window !== "undefined" &&
+    Boolean(
+      threadIdFromPath(
+        window.location.pathname,
+        threadUrlRoutingBasePath(threadUrlRouting),
+      ),
+    );
   // Desktop keeps an expand/collapse rail; mobile keeps an off-canvas drawer.
   // Tracking them separately means a viewport change never strands the user
   // with the wrong default.
@@ -99,6 +109,7 @@ export function AgentChat({
             onCancelAutoActivateThread={
               threadUrlRoutingControls.cancelThreadAutoActivation
             }
+            disableInitialAutoActivation={hasInitialUrlThread}
             onSelectThread={setActiveThread}
             threads={threads}
           />
@@ -154,14 +165,15 @@ function useThreadUrlRouting(
   options: AgentChatProps["threadUrlRouting"],
   activeThreadId?: string,
 ): ThreadUrlRoutingControls {
+  const { state } = useAgentContext();
   const { readThread } = useAgentThreadReader();
   const { setActiveThread, threads } = useAgentThreads();
   const lastPathRef = useRef<string | undefined>(undefined);
+  const initialUrlThreadReadRef = useRef<string | undefined>(undefined);
   const initialAutoThreadIdRef = useRef<string | undefined>(undefined);
   const hasSyncedInitialAutoThreadRef = useRef(false);
   const enabled = Boolean(options);
-  const basePath =
-    typeof options === "object" && options.basePath ? options.basePath : "/threads";
+  const basePath = threadUrlRoutingBasePath(options);
 
   const markThreadAutoActivation = useCallback(
     (threadId: string) => {
@@ -180,13 +192,16 @@ function useThreadUrlRouting(
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
+    if (state.connection.status !== "connected") return;
     const initialThreadId = threadIdFromPath(window.location.pathname, basePath);
-    if (initialThreadId) {
-      void readThread(initialThreadId, { activate: true, includeTurns: true }).catch(
-        () => undefined,
-      );
-    }
-  }, [basePath, enabled, readThread]);
+    if (!initialThreadId || initialUrlThreadReadRef.current === initialThreadId) return;
+    initialUrlThreadReadRef.current = initialThreadId;
+    void readThread(initialThreadId, { activate: true, includeTurns: true }).catch(() => {
+      if (initialUrlThreadReadRef.current === initialThreadId) {
+        initialUrlThreadReadRef.current = undefined;
+      }
+    });
+  }, [basePath, enabled, readThread, state.connection.status]);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined" || !activeThreadId) return;
@@ -234,6 +249,10 @@ function useThreadUrlRouting(
 function threadPath(threadId: string, basePath: string): string {
   const prefix = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
   return `${prefix}/${encodeURIComponent(threadId)}`;
+}
+
+function threadUrlRoutingBasePath(options: AgentChatProps["threadUrlRouting"]): string {
+  return typeof options === "object" && options.basePath ? options.basePath : "/threads";
 }
 
 function threadIdFromPath(pathname: string, basePath: string): string | undefined {

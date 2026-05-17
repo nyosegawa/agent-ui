@@ -2719,6 +2719,77 @@ describe("AgentChat", () => {
     expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
   });
 
+  it("keeps direct URL thread when sidebar history auto load resolves first", async () => {
+    window.history.replaceState(null, "", "/threads/thread-target");
+    let resolveThreadTarget: (response: unknown) => void = () => undefined;
+    const threadTargetRead = new Promise((resolve) => {
+      resolveThreadTarget = resolve;
+    });
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              { id: "thread-other", name: "Thread other", status: { type: "notLoaded" } },
+              { id: "thread-target", name: "Thread target", status: { type: "notLoaded" } },
+            ],
+          };
+        }
+        if (request.method === "thread/read") {
+          const id = String((request.params as { threadId?: string }).threadId);
+          if (id === "thread-target") return threadTargetRead;
+          return {
+            thread: {
+              id,
+              name: "Thread other",
+              status: { type: "notLoaded" },
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat threadUrlRouting />
+      </AgentProvider>,
+    );
+
+    await waitFor(() =>
+      expect(
+        transport.requests.some((request) => request.method === "thread/list"),
+      ).toBe(true),
+    );
+    expect(await screen.findByRole("button", { name: /Thread other/ })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Thread other" })).not.toBeInTheDocument();
+    expect(window.location.pathname).toBe("/threads/thread-target");
+    expect(
+      transport.requests.some(
+        (request) =>
+          request.method === "thread/read" &&
+          (request.params as { threadId?: string }).threadId === "thread-other",
+      ),
+    ).toBe(false);
+
+    await act(async () => {
+      resolveThreadTarget({
+        thread: {
+          id: "thread-target",
+          name: "Thread target",
+          status: { type: "notLoaded" },
+          turns: [],
+        },
+      });
+      await threadTargetRead;
+    });
+
+    expect(await screen.findByRole("heading", { name: "Thread target" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Thread other" })).not.toBeInTheDocument();
+    expect(window.location.pathname).toBe("/threads/thread-target");
+  });
+
   it("passes real thread/list search params and shows empty history state", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
