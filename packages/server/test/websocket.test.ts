@@ -45,7 +45,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     const { socket, writes } = await createBridgeBackedSocket();
 
     socket.send(JSON.stringify({ id: 1, method: "fs/readFile", params: { path: "/tmp/secret" } }));
-    await expect(nextMessage(socket)).resolves.toMatchObject({
+    await expect(nextResponseMessage(socket, 1)).resolves.toMatchObject({
       error: {
         code: -32601,
         data: { method: "fs/readFile" },
@@ -885,6 +885,19 @@ function onceClose(socket: WebSocket): Promise<void> {
 function nextMessage(socket: WebSocket): Promise<unknown> {
   return new Promise((resolve) => {
     socket.once("message", (data) => resolve(JSON.parse(data.toString())));
+  });
+}
+
+function nextResponseMessage(socket: WebSocket, id: string | number): Promise<unknown> {
+  return new Promise((resolve) => {
+    const onMessage = (data: { toString(): string }) => {
+      const parsed = JSON.parse(data.toString());
+      if (parsed && typeof parsed === "object" && "id" in parsed && parsed.id === id) {
+        socket.off("message", onMessage);
+        resolve(parsed);
+      }
+    };
+    socket.on("message", onMessage);
   });
 }
 
