@@ -27,7 +27,7 @@ bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 ```
 
 Open the printed local URL. By default the app uses
-`http://127.0.0.1:5174`.
+`http://127.0.0.1:5175`.
 
 The path is:
 
@@ -49,7 +49,7 @@ bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 Useful routes:
 
 - `/`: default transcript-first surface
-- `/?state=kitchen`: dense approval and renderer state
+- `/rich-transcript`: intentionally dense transcript and approval stress fixture
 - `/fixture-gallery`: visual QA gallery and component close-ups
 - `/host-workflow-recipe`: host-composed primitive layout
 - `/usage-only`: usage primitives without chat chrome

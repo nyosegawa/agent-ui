@@ -42,11 +42,11 @@ const surfaceSelectors = [
   ".aui-approval-actions .aui-btn",
 ];
 
-test("kitchen mobile keeps approval and composer surfaces inside the viewport", async ({
+test("rich transcript mobile keeps approval and composer surfaces inside the viewport", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await page.goto("/?state=kitchen");
+  await page.goto("/rich-transcript");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   for (const selector of surfaceSelectors) {
     await expectWithinViewport(page, selector);
@@ -173,7 +173,7 @@ test("component close-up gallery renders direct primitives, not iframes", async 
   const commandCloseup = closeups.getByTestId("closeup:Approval · command");
   await expect(
     commandCloseup.getByRole("button", {
-      name: /^Approve command request approval-command-kitchen$/,
+      name: /^Approve command request approval-command-rich-transcript$/,
     }),
   ).toBeVisible();
   await expect(commandCloseup.locator(".aui-approval")).toHaveCount(1);
@@ -245,7 +245,7 @@ test("composer is a single bordered card with inline icon toolbar and primary se
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/?state=kitchen");
+  await page.goto("/rich-transcript");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   const composer = page.locator(".aui-composer").first();
   await expect(composer).toBeVisible();
@@ -278,7 +278,7 @@ test("approval card renders shield + risk + green Approve + danger Decline", asy
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/?state=kitchen");
+  await page.goto("/rich-transcript");
   const approval = page.locator(".aui-approval").first();
   await expect(approval).toBeVisible();
   await expect(approval.locator(".aui-approval-risk")).toBeVisible();
@@ -293,7 +293,7 @@ test("approval queue keeps additional pending requests as compact picker rows", 
   page,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/?state=kitchen");
+  await page.goto("/rich-transcript");
   await expect(page.locator(".aui-approvals")).toContainText(
     "3 decisions need your review",
   );
@@ -309,11 +309,11 @@ for (const viewport of [
   { height: 900, name: "desktop", width: 1280 },
   { height: 900, name: "mobile", width: 390 },
 ] as const) {
-  test(`kitchen approval actions are actually clickable on ${viewport.name}`, async ({
+  test(`rich transcript approval actions are actually clickable on ${viewport.name}`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/?state=kitchen");
+    await page.goto("/rich-transcript");
     const approval = page.locator(".aui-approval").first();
     await expect(approval).toBeVisible();
     for (const button of firstApprovalActionButtons(approval)) {
@@ -353,11 +353,11 @@ for (const viewport of [
   { height: 900, name: "desktop", width: 1280 },
   { height: 900, name: "mobile", width: 390 },
 ] as const) {
-  test(`kitchen approval renders inside the transcript, not a separate pane on ${viewport.name}`, async ({
+  test(`rich transcript approval renders inside the transcript, not a separate pane on ${viewport.name}`, async ({
     page,
   }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/?state=kitchen");
+    await page.goto("/rich-transcript");
     await expect(page.locator(".aui-thread-surface").first()).toBeVisible();
     const layout = await page.evaluate(() => {
       const round = (value: number) => Math.round(value);

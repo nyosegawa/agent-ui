@@ -34,14 +34,14 @@ import { FixturePreview } from "./closeups/FixturePreview";
 import {
   createDemoInitialState,
   createDemoTransport,
-  createKitchenInitialState,
+  createRichTranscriptInitialState,
   demoRateLimits,
 } from "./fixtures/demo-state";
 import {
   fixtureGroupLabels,
   groupFixtures,
   visualQaStates,
-  type KitchenDemoState,
+  type DemoScenario,
 } from "./fixtures/gallery";
 
 declare global {
@@ -61,7 +61,7 @@ function DemoApp() {
 }
 
 function AgentDemo() {
-  const demoState = useMemo(() => demoStateFromUrl(), []);
+  const demoState = useMemo(() => demoScenarioFromLocation(), []);
   const initialState = useMemo(() => createDemoInitialState(demoState), [demoState]);
   const transport = useMemo(() => createDemoTransport(demoState), [demoState]);
 
@@ -356,8 +356,8 @@ function AppConnectorsExample() {
 }
 
 function HostWorkflowRecipe() {
-  const initialState = useMemo(() => createKitchenInitialState(), []);
-  const transport = useMemo(() => createDemoTransport("kitchen"), []);
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  const transport = useMemo(() => createDemoTransport("rich-transcript"), []);
   return (
     <AgentProvider initialState={initialState} transport={transport}>
       <HostWorkflowComposition />
@@ -599,13 +599,13 @@ function ExampleFrame({
   );
 }
 
-function demoStateFromUrl(): KitchenDemoState {
+function demoScenarioFromLocation(): DemoScenario {
+  if (window.location.pathname === "/rich-transcript") return "rich-transcript";
   const state = new URLSearchParams(window.location.search).get("state");
   if (
     state === "empty" ||
     state === "unauth" ||
-    state === "bridge-error" ||
-    state === "kitchen"
+    state === "bridge-error"
   ) {
     return state;
   }

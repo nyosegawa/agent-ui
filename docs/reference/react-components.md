@@ -152,7 +152,7 @@ quality directly instead of depending on a page-level shell:
   primitive. Pill-shape summary chips in the rail
   with a pulsing dot for `running`; the details disclosure is a separately
   styled card so the two never read as a duplicate.
-- **Component close-ups**: `/fixture-gallery` now ends with a
+- **Component close-ups**: `/fixture-gallery` starts with a
   `Component close-ups` section that renders the composer, approval cards,
   command/diff surfaces, sidebar, chips, buttons, and inputs as live
   primitives (no iframes) so reviewers can inspect part quality, not just

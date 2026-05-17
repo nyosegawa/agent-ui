@@ -22,9 +22,9 @@ const routes: ReadonlyArray<{
     path: "/",
   },
   {
-    desktopName: "agent-ui-kitchen-desktop.png",
-    mobileName: "agent-ui-kitchen-mobile.png",
-    path: "/?state=kitchen",
+    desktopName: "agent-ui-rich-transcript-desktop.png",
+    mobileName: "agent-ui-rich-transcript-mobile.png",
+    path: "/rich-transcript",
   },
   {
     desktopName: "agent-ui-host-workflow-desktop.png",

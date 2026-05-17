@@ -370,7 +370,7 @@ describe("agentReducer", () => {
     ).toEqual(["commandApproval", "fileChangeApproval"]);
   });
 
-  it("ports the kitchen block taxonomy into normalized item blocks", () => {
+  it("normalizes rich transcript block taxonomy into item blocks", () => {
     const state = runEventFixture([
       { event: { thread: { id: "thread-blocks" }, type: "thread/started" } },
       {

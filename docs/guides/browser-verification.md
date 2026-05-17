@@ -20,6 +20,8 @@ bun run --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 agent-browser open http://127.0.0.1:5174/fixture-gallery
 agent-browser snapshot -i
 agent-browser screenshot /tmp/agent-ui-fixture-gallery-desktop.png
+agent-browser open http://127.0.0.1:5174/rich-transcript
+agent-browser snapshot -i
 agent-browser set viewport 390 900
 agent-browser open http://127.0.0.1:5174/usage-only
 agent-browser snapshot -i

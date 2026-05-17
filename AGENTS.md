@@ -125,7 +125,7 @@
 ## Browser and UI Checks
 
 - Use the fixture Vite app for component and layout review. Relevant routes
-  include `/`, `/?state=kitchen`, `/fixture-gallery`,
+  include `/`, `/rich-transcript`, `/fixture-gallery`,
   `/host-workflow-recipe`, `/usage-only`, `/scoped-thread-pane`, and
   `/app-connectors`.
 - Use `examples/codex-local-web` for real Codex App Server integration,

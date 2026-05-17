@@ -1,5 +1,5 @@
 export type DemoState = "default" | "empty" | "unauth" | "bridge-error";
-export type KitchenDemoState = DemoState | "kitchen";
+export type DemoScenario = DemoState | "rich-transcript";
 
 export type FixtureGroup = "core" | "states" | "primitives";
 
@@ -22,11 +22,11 @@ export const visualQaStates: FixtureState[] = [
   },
   {
     description:
-      "Kitchen-derived block taxonomy, severity-normalized status, rich approvals, plan and tool call.",
+      "Dense approvals, status banners, rich renderer blocks, plan, tool call, image, web search, and system events.",
     group: "core",
-    href: "/?state=kitchen",
-    meta: "preset · kitchen fixture",
-    title: "Kitchen-quality Codex UX",
+    href: "/rich-transcript",
+    meta: "preset · rich transcript fixture",
+    title: "Rich transcript fixture",
   },
   {
     description:

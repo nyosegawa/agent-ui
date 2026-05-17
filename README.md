@@ -50,7 +50,7 @@ bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 Useful fixture routes:
 
 - `/`
-- `/?state=kitchen`
+- `/rich-transcript`
 - `/fixture-gallery`
 - `/host-workflow-recipe`
 - `/usage-only`

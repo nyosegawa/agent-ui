@@ -182,7 +182,7 @@ function handleRequest(message: JsonRpcLine) {
         },
       });
       streamTurn({
-        completeDelayMs: isSlow ? 8_000 : 40,
+        completeDelayMs: isSlow ? 30_000 : 40,
         responseText: requiresApproval
           ? "Streaming smoke response."
           : isSlow

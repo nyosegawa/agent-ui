@@ -152,9 +152,9 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
   await expect(page.getByText("Codex bridge unavailable")).toBeVisible();
   await expect(page.getByRole("button", { name: "Start thread" })).toHaveCount(0);
 
-  await page.goto("/?state=kitchen");
+  await page.goto("/rich-transcript");
   await expect(
-    page.getByRole("heading", { name: "Kitchen-quality Codex UX" }),
+    page.getByRole("heading", { name: "Rich transcript fixture" }),
   ).toBeVisible();
   await expect(page.getByLabel("Status summary")).toContainText("2 warning");
   await expect(page.getByLabel("Status details")).toContainText("Model rerouted");
@@ -175,7 +175,7 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
   expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
 });
 
-test("renders generic vNext composition examples", async ({ page }) => {
+test("renders primitive composition examples", async ({ page }) => {
   await page.goto("/scoped-thread-pane");
   await expect(page.getByRole("heading", { name: "Scoped thread pane" }).first()).toBeVisible();
   await expect(page.getByText("This pane stays locked to thread-fixed.")).toBeVisible();
@@ -206,12 +206,12 @@ test("renders generic vNext composition examples", async ({ page }) => {
   await expect(page.getByLabel("Host-owned panel")).toContainText("Validation status");
   await expect(page.getByLabel("Host-owned panel")).toContainText("Pending requests");
   await expect(page.getByLabel("Host-owned panel")).toContainText("Usage windows");
-  await expect(page.getByRole("heading", { name: "Kitchen-quality Codex UX" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Rich transcript fixture" })).toBeVisible();
 });
 
 test("mobile keeps secondary chrome reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await page.goto("/?state=kitchen");
+  await page.goto("/rich-transcript");
   await expect(page.getByLabel("Agent context")).toBeVisible();
   await expect(page.getByLabel("Status summary")).toBeVisible();
   await expect(page.getByLabel("Usage limits")).toBeVisible();
@@ -230,9 +230,11 @@ test("fixture gallery previews load meaningful content", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto("/fixture-gallery");
   await expect(page.getByRole("heading", { name: "Agent UI visual QA" })).toBeVisible();
-  const kitchenFrame = page.frameLocator('iframe[title="Kitchen-quality Codex UX desktop"]');
+  const richTranscriptFrame = page.frameLocator(
+    'iframe[title="Rich transcript fixture desktop"]',
+  );
   await expect(
-    kitchenFrame.getByRole("heading", { name: "Kitchen-quality Codex UX" }),
+    richTranscriptFrame.getByRole("heading", { name: "Rich transcript fixture" }),
   ).toBeVisible();
   const hostFrame = page.frameLocator('iframe[title="Host workflow recipe desktop"]');
   await expect(hostFrame.getByLabel("Host primitive composition")).toBeVisible();
@@ -242,7 +244,7 @@ test("fixture gallery previews load meaningful content", async ({ page }) => {
 
 test("desktop and mobile screenshot buffers are not blank", async ({ page }) => {
   for (const target of [
-    { height: 900, url: "/?state=kitchen", width: 1280 },
+    { height: 900, url: "/rich-transcript", width: 1280 },
     { height: 900, url: "/host-workflow-recipe", width: 390 },
   ]) {
     await page.setViewportSize({ width: target.width, height: target.height });

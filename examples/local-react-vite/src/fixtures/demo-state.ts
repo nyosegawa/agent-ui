@@ -9,11 +9,11 @@ import {
   type FixtureStep,
 } from "@nyosegawa/agent-ui-core";
 import demoFixture from "../../../../fixtures/app-server/demo-session.json";
-import type { KitchenDemoState } from "./gallery";
+import type { DemoScenario } from "./gallery";
 
-export function createDemoInitialState(demoState: KitchenDemoState): AgentSessionState {
+export function createDemoInitialState(demoState: DemoScenario): AgentSessionState {
   if (demoState === "default") return runEventFixture(demoFixture as FixtureStep[]);
-  if (demoState === "kitchen") return createKitchenInitialState();
+  if (demoState === "rich-transcript") return createRichTranscriptInitialState();
   const state = createInitialAgentState();
   if (demoState === "unauth") {
     state.account = { status: "unauthenticated" };
@@ -31,7 +31,7 @@ export function createDemoInitialState(demoState: KitchenDemoState): AgentSessio
   return state;
 }
 
-export function createDemoTransport(demoState: KitchenDemoState): AgentTransport {
+export function createDemoTransport(demoState: DemoScenario): AgentTransport {
   if (demoState === "bridge-error") return new FailingTransport();
   return new FakeAgentTransport({
     onRequest(request) {
@@ -40,7 +40,7 @@ export function createDemoTransport(demoState: KitchenDemoState): AgentTransport
   });
 }
 
-function handleDemoRequest(request: FakeTransportRequest, demoState: KitchenDemoState) {
+function handleDemoRequest(request: FakeTransportRequest, demoState: DemoScenario) {
   if (request.method === "account/read") {
     return demoState === "unauth"
       ? {}
@@ -121,7 +121,7 @@ function handleDemoRequest(request: FakeTransportRequest, demoState: KitchenDemo
   return {};
 }
 
-export function createKitchenInitialState(): AgentSessionState {
+export function createRichTranscriptInitialState(): AgentSessionState {
   const state = createInitialAgentState();
   state.account = {
     account: { email: "fixture@example.com", planType: "pro" },
@@ -129,9 +129,9 @@ export function createKitchenInitialState(): AgentSessionState {
     status: "authenticated",
   };
   state.models = { models: demoModels(), selectedModelId: "fixture-demo-model" };
-  state.activeThreadId = "thread-kitchen";
-  state.threadRegistry.activeThreadId = "thread-kitchen";
-  state.threadRegistry.liveThreadIds = ["thread-kitchen"];
+  state.activeThreadId = "thread-rich-transcript";
+  state.threadRegistry.activeThreadId = "thread-rich-transcript";
+  state.threadRegistry.liveThreadIds = ["thread-rich-transcript"];
   state.diagnostics.banners = [
     {
       id: "banner-model-reroute",
@@ -165,49 +165,49 @@ export function createKitchenInitialState(): AgentSessionState {
     },
   ];
   state.pendingServerRequests = {
-    "approval-command-kitchen": {
-      id: "approval-command-kitchen",
+    "approval-command-rich-transcript": {
+      id: "approval-command-rich-transcript",
       kind: "commandApproval",
       payload: {
         command: "bun run test:e2e:playwright",
         cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
         reason: "Verify responsive Codex UI layout.",
       },
-      threadId: "thread-kitchen",
+      threadId: "thread-rich-transcript",
     },
-    "approval-input-kitchen": {
-      id: "approval-input-kitchen",
+    "approval-input-rich-transcript": {
+      id: "approval-input-rich-transcript",
       kind: "userInput",
       payload: {
         prompt: "Choose the verification target for this thread.",
       },
-      threadId: "thread-kitchen",
+      threadId: "thread-rich-transcript",
     },
-    "approval-tool-kitchen": {
-      id: "approval-tool-kitchen",
+    "approval-tool-rich-transcript": {
+      id: "approval-tool-rich-transcript",
       kind: "dynamicTool",
       payload: {
         tool: "browser_verification_snapshot",
-        arguments: { url: "http://127.0.0.1:5174/?state=kitchen" },
+        arguments: { url: "http://127.0.0.1:5174/rich-transcript" },
       },
-      threadId: "thread-kitchen",
+      threadId: "thread-rich-transcript",
     },
   };
   state.serverRequestQueue = {
     byId: state.pendingServerRequests,
     order: [
-      "approval-command-kitchen",
-      "approval-input-kitchen",
-      "approval-tool-kitchen",
+      "approval-command-rich-transcript",
+      "approval-input-rich-transcript",
+      "approval-tool-rich-transcript",
     ],
   };
-  state.threads["thread-kitchen"] = {
-    orderedTurnIds: ["turn-kitchen"],
+  state.threads["thread-rich-transcript"] = {
+    orderedTurnIds: ["turn-rich-transcript"],
     registryStatus: "live",
     status: "waitingForInput",
     thread: {
-      id: "thread-kitchen",
-      name: "Kitchen-quality Codex UX",
+      id: "thread-rich-transcript",
+      name: "Rich transcript fixture",
       path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
     },
     tokenUsage: {
@@ -217,7 +217,7 @@ export function createKitchenInitialState(): AgentSessionState {
       totalTokens: 5800,
     },
     turns: {
-      "turn-kitchen": {
+      "turn-rich-transcript": {
         blocksByItemId: {
           "item-thinking": {
             id: "item-thinking",
@@ -270,7 +270,7 @@ export function createKitchenInitialState(): AgentSessionState {
           "item-image": {
             id: "item-image",
             kind: "image",
-            path: "/tmp/agent-ui-kitchen-check.png",
+            path: "/tmp/agent-ui-rich-transcript-check.png",
             status: "completed",
           },
           "item-system": {
@@ -278,7 +278,7 @@ export function createKitchenInitialState(): AgentSessionState {
             kind: "systemInfo",
             status: "completed",
             subtype: "compaction",
-            text: "Context compaction preserved active vNext milestone state.",
+            text: "Context compaction preserved active transcript state.",
           },
         },
         commandOutputByItemId: {
@@ -302,82 +302,82 @@ export function createKitchenInitialState(): AgentSessionState {
             id: "item-agent",
             kind: "agentMessage",
             status: "completed",
-            text: "Kitchen-derived renderers are visible in one deterministic fixture.",
-            threadId: "thread-kitchen",
-            turnId: "turn-kitchen",
+            text: "Rich transcript renderers are visible in one deterministic fixture.",
+            threadId: "thread-rich-transcript",
+            turnId: "turn-rich-transcript",
           },
           "item-command": {
             id: "item-command",
             kind: "commandExecution",
             status: "completed",
             text: "bun run test:e2e:playwright",
-            threadId: "thread-kitchen",
-            turnId: "turn-kitchen",
+            threadId: "thread-rich-transcript",
+            turnId: "turn-rich-transcript",
           },
           "item-file": {
             id: "item-file",
             kind: "fileChange",
             status: "completed",
             text: "Renderer and verification docs updated.",
-            threadId: "thread-kitchen",
-            turnId: "turn-kitchen",
+            threadId: "thread-rich-transcript",
+            turnId: "turn-rich-transcript",
           },
           "item-image": {
             id: "item-image",
             kind: "imageView",
             status: "completed",
-            threadId: "thread-kitchen",
-            turnId: "turn-kitchen",
+            threadId: "thread-rich-transcript",
+            turnId: "turn-rich-transcript",
           },
           "item-plan": {
             id: "item-plan",
             kind: "plan",
             status: "completed",
             text: "- Normalize state\n- Render rich blocks\n- Verify browser layout",
-            threadId: "thread-kitchen",
-            turnId: "turn-kitchen",
+            threadId: "thread-rich-transcript",
+            turnId: "turn-rich-transcript",
           },
           "item-system": {
             id: "item-system",
             kind: "contextCompaction",
             status: "completed",
-            text: "Context compaction preserved active vNext milestone state.",
-            threadId: "thread-kitchen",
-            turnId: "turn-kitchen",
+            text: "Context compaction preserved active transcript state.",
+            threadId: "thread-rich-transcript",
+            turnId: "turn-rich-transcript",
           },
           "item-thinking": {
             id: "item-thinking",
             kind: "reasoning",
             status: "completed",
             text: "Reviewing protocol-shaped UI surfaces before rendering.",
-            threadId: "thread-kitchen",
-            turnId: "turn-kitchen",
+            threadId: "thread-rich-transcript",
+            turnId: "turn-rich-transcript",
           },
           "item-tool": {
             id: "item-tool",
             kind: "mcpToolCall",
             status: "completed",
-            threadId: "thread-kitchen",
-            turnId: "turn-kitchen",
+            threadId: "thread-rich-transcript",
+            turnId: "turn-rich-transcript",
           },
           "item-user": {
             id: "item-user",
             kind: "userMessage",
             status: "completed",
-            text: "Port the agent-kitchen UX ideas into Agent UI vNext.",
-            threadId: "thread-kitchen",
-            turnId: "turn-kitchen",
+            text: "Exercise the rich transcript fixture with approvals, tools, and media.",
+            threadId: "thread-rich-transcript",
+            turnId: "turn-rich-transcript",
           },
           "item-web": {
             id: "item-web",
             kind: "webSearch",
             status: "completed",
-            threadId: "thread-kitchen",
-            turnId: "turn-kitchen",
+            threadId: "thread-rich-transcript",
+            turnId: "turn-rich-transcript",
           },
         },
         streamingTextByItemId: {},
-        turn: { id: "turn-kitchen", status: "completed", threadId: "thread-kitchen" },
+        turn: { id: "turn-rich-transcript", status: "completed", threadId: "thread-rich-transcript" },
       },
     },
   };

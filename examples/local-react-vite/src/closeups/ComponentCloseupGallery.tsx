@@ -15,7 +15,7 @@ import {
 } from "@nyosegawa/agent-ui-react";
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import {
-  createKitchenInitialState,
+  createRichTranscriptInitialState,
   demoModels,
   demoRateLimits,
 } from "../fixtures/demo-state";
@@ -220,7 +220,7 @@ function CloseupComposerFocused() {
 
 function CloseupComposerDisabled() {
   const initialState = useMemo(() => {
-    const state = createKitchenInitialState();
+    const state = createRichTranscriptInitialState();
     return state;
   }, []);
   return (
@@ -235,7 +235,7 @@ function CloseupComposerDisabled() {
           onRequestAppMention={sampleAppMention}
           onRequestPluginMention={samplePluginMention}
           placeholder="Waiting on approval"
-          threadId="thread-kitchen"
+          threadId="thread-rich-transcript"
         />
       </AgentProvider>
     </CloseupFrame>
@@ -462,7 +462,7 @@ function CloseupMobileChatShell() {
       tone="mobile"
     >
       <div className="aui-closeup-mobile-shell">
-        <iframe src="/?state=kitchen" title="Mobile chat shell" />
+        <iframe src="/rich-transcript" title="Mobile chat shell" />
       </div>
     </CloseupFrame>
   );
@@ -507,21 +507,21 @@ function CloseupComposerWithMentions() {
 }
 
 function CloseupApprovalQueue() {
-  const initialState = useMemo(() => createKitchenInitialState(), []);
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
   return (
     <CloseupFrame
       title="Approval queue · 3 pending"
       caption="Command, user input, and dynamic tool requests stacked."
     >
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentApprovalQueue threadId="thread-kitchen" />
+        <AgentApprovalQueue threadId="thread-rich-transcript" />
       </AgentProvider>
     </CloseupFrame>
   );
 }
 
 function CloseupBannerStack() {
-  const initialState = useMemo(() => createKitchenInitialState(), []);
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
   return (
     <CloseupFrame
       title="Status banners · severity stack"
@@ -561,7 +561,7 @@ function CloseupUsagePanel() {
 
 function CloseupApprovalCommand() {
   const initialState = useMemo(
-    () => createSingleApprovalState("approval-command-kitchen"),
+    () => createSingleApprovalState("approval-command-rich-transcript"),
     [],
   );
   return (
@@ -570,7 +570,7 @@ function CloseupApprovalCommand() {
       caption="High-contrast Approve, danger Decline, scope outline."
     >
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentApprovalQueue threadId="thread-kitchen" />
+        <AgentApprovalQueue threadId="thread-rich-transcript" />
       </AgentProvider>
     </CloseupFrame>
   );
@@ -578,7 +578,7 @@ function CloseupApprovalCommand() {
 
 function CloseupApprovalUserInput() {
   const initialState = useMemo(
-    () => createSingleApprovalState("approval-input-kitchen"),
+    () => createSingleApprovalState("approval-input-rich-transcript"),
     [],
   );
   return (
@@ -587,14 +587,14 @@ function CloseupApprovalUserInput() {
       caption="Low risk, neutral framing, three explicit decisions."
     >
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentApprovalQueue threadId="thread-kitchen" />
+        <AgentApprovalQueue threadId="thread-rich-transcript" />
       </AgentProvider>
     </CloseupFrame>
   );
 }
 
 function CloseupCommandBlock() {
-  const initialState = useMemo(() => createKitchenInitialState(), []);
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
   return (
     <CloseupFrame
       title="Command block"
@@ -625,7 +625,7 @@ function CloseupCommandStage() {
 }
 
 function createSingleApprovalState(id: string): AgentSessionState {
-  const state = createKitchenInitialState();
+  const state = createRichTranscriptInitialState();
   const request = state.pendingServerRequests[id];
   if (!request) return state;
   state.pendingServerRequests = { [id]: request };

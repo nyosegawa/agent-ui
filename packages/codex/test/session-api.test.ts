@@ -157,7 +157,7 @@ describe("Codex request builders", () => {
 });
 
 describe("Codex session facade", () => {
-  it("routes vNext thread and turn helpers through stable methods", async () => {
+  it("routes thread and turn helpers through stable methods", async () => {
     const transport = new FakeTransport();
     const session = createCodexSession(transport);
 

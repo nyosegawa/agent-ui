@@ -112,7 +112,7 @@ The fixture routes are:
 
 - `/`: default transcript-first surface with approvals, command output, diff,
   composer, usage primitives, and thread history
-- `/?state=kitchen`: dense approval and rich renderer state
+- `/rich-transcript`: intentionally dense transcript and approval stress fixture
 - `/?state=empty`: authenticated account with no stored threads
 - `/?state=unauth`: first-run device-code login state
 - `/?state=bridge-error`: connection diagnostics

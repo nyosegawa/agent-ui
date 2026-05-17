@@ -1475,7 +1475,7 @@ describe("AgentChat", () => {
     expect(screen.getByText("Reply with exactly: agent-ui-ui-check")).toBeInTheDocument();
   });
 
-  it("renders kitchen-derived content blocks from normalized state", async () => {
+  it("renders rich transcript content blocks from normalized state", async () => {
     const user = userEvent.setup();
     const initialState = runEventFixture([
       { event: { thread: { id: "thread-blocks", name: "Block renderers" }, type: "thread/started" } },
