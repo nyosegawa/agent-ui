@@ -19,6 +19,50 @@
 - Use Bun as the primary package manager and development runner.
 - Keep Node.js LTS compatibility for published packages and server integrations.
 
+## Product Boundary
+
+- Agent UI is a reusable Codex App Server UI component library, not a host
+  application runtime. Watcher, skill-with-app, workflow orchestration, app
+  panels, persistence policies, and sidecar lifecycle belong in host apps that
+  compose this library.
+- Do not add APIs only because one host app currently needs them. Add
+  primitives, hooks, adapters, and documented extension points that make the
+  general Codex App Server UI surface more complete.
+- Treat `app/list` as Codex Apps/connectors protocol, not as a skill-with-app
+  registry. Do not introduce skill-with-app-specific naming, stores, worker
+  panes, or tool names into packages, examples, or public docs.
+- Keep usage/status/diagnostics composable. They may appear in an `AgentChat`
+  preset, but hosts must also be able to render usage-only, scoped-thread, and
+  custom primitive compositions without adopting a full shell.
+
+## UX Principles
+
+- Default UI is transcript-first. User messages, assistant messages, tool
+  calls, command output, file changes, approvals, and usage context should
+  appear in the conversation flow without a separate "work trace" concept.
+- Do not collapse normal user or assistant messages behind details. Reserve
+  disclosure for genuinely heavy tool bodies, command output, diffs, or verbose
+  diagnostics while keeping readable previews inline.
+- Keep the composer as the primary bottom-anchored interaction surface. Running
+  state should turn the send affordance into stop/steer behavior rather than
+  moving primary controls elsewhere.
+- Pending approvals belong at the relevant point in the transcript, not in a
+  separate scroll pane that hides the thread. Approval actions must remain
+  reachable and hit-testable on desktop and mobile.
+- Avoid nested vertical scroll traps in markdown, code blocks, command output,
+  and diff previews. The transcript should own normal reading scroll unless a
+  component is intentionally disclosed as a heavy body.
+- Thread history must preserve readable titles and metadata. Clipped titles,
+  broken metadata rows, horizontal page overflow, and manual "Load all" style
+  history UX are regressions.
+- Attachments are host-resolved local inputs. Browser `File` objects should be
+  persisted by the host when Codex needs an absolute local path; images should
+  show thumbnails, and arbitrary non-image files should be represented in a
+  way the App Server can actually consume.
+- Token usage belongs near the active conversation/composer context and should
+  be inspectable without dominating the thread header or replacing transcript
+  content.
+
 ## Documentation Operations
 
 - If a decision changes scope, public API, package boundary, validation,
