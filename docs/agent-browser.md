@@ -48,5 +48,6 @@ agent-browser close
 - Host-owned panels render through generic `AgentWorkspace` slots.
 - Approval cards are reachable from the accessibility snapshot.
 
-Record the checked URL, commands, and screenshot path in `docs/testing.md` when
-layout or browser-visible behavior changes.
+Record durable browser evidence in the relevant PR/session note or archive it
+under `docs/archive/` when it is long-lived validation history. Keep
+`docs/testing.md` focused on the current validation matrix.

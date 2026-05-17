@@ -12,11 +12,11 @@ const thread = useAgentThreadController(threadId);
 const turns = useAgentTurnController(threadId);
 ```
 
-`useAgentThreadController()` is the vNext name for `useAgentThread()`. It can
+`useAgentThreadController()` is the preferred name for `useAgentThread()`. It can
 follow the active thread or lock to a supplied `threadId`. Use `startThread()`
 for a new Codex thread and `resumeThread(threadId)` for a stored session.
 
-`useAgentTurnController()` is the vNext name for `useAgentTurn()`. It sends
+`useAgentTurnController()` is the preferred name for `useAgentTurn()`. It sends
 `turn/start` with normalized run settings, `turn/steer` for continuing an active
 turn, and `turn/interrupt` for the visible stop action.
 

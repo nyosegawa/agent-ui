@@ -1,6 +1,6 @@
 # Component API
 
-The React package exposes composable Agent UI vNext primitives backed by
+The React package exposes composable Agent UI primitives backed by
 headless hooks and normalized core state. Generated Codex App Server protocol
 types stay behind adapters, request builders, and normalizers; visual
 components consume stable Agent UI state.
@@ -245,7 +245,7 @@ commands, file changes, diffs, and structured App Server items from normalized
 state. Host renderers receive normalized `AgentItemState` and `TurnState`
 values through `renderItem`; they do not need generated protocol payloads.
 
-The default timeline uses `AgentContentBlockView` for the vNext block taxonomy:
+The default timeline uses `AgentContentBlockView` for the normalized block taxonomy:
 thinking summaries, plans, command execution with cwd/output/exit status,
 file-change summaries, MCP/dynamic/collab tool calls, web search queries,
 images, and system info. This renderer consumes `AgentItemBlock` values from

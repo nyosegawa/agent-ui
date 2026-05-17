@@ -1,12 +1,12 @@
 # Agent UI Progress
 
-This file is the current progress ledger. The completed vNext milestone log is
+This file is the current progress ledger. The completed migration milestone log is
 archived at
 [`docs/archive/2026-vnext-completion-log.md`](./docs/archive/2026-vnext-completion-log.md).
 
 ## Current Status
 
-- Core vNext package architecture is implemented.
+- Core package architecture is implemented.
 - React UI is transcript-first and primitive-composable.
 - Real local Codex web app and deterministic fixture app exist.
 - Next.js integration is split between full-chat WebSocket sidecar and

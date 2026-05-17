@@ -328,7 +328,7 @@ turns through `thread/read`.
 
 Latest real Codex verification against `codex app-server --listen stdio://` on
 2026-05-14 confirmed the same protocol path; details and environment-specific
-timeouts are recorded in `docs/testing.md`. The verified surfaces are:
+timeouts are archived in `docs/archive/testing-history-2026-05.md`. The verified surfaces are:
 
 - `model/list` currently returns models under `data`, including `gpt-5.5` as the first/default entry in this environment.
 - `account/rateLimits/read` returns 5-hour and weekly windows through `primary` and `secondary`.
