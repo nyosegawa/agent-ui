@@ -2,10 +2,10 @@
 
 Embeddable UI for Codex-powered coding agents.
 
-Active planning and quality gates live in [`PLAN.md`](./PLAN.md) and
-[`TODO.md`](./TODO.md). Those files are the source of truth for Agent UI vNext,
-including later reopened UI-quality, refactor, real-local, and Next.js bridge
-cleanup gates.
+Start with [docs/README.md](./docs/README.md) for the full documentation map.
+Current direction lives in [PLAN.md](./PLAN.md), current progress lives in
+[TODO.md](./TODO.md), and historical vNext plans/audits live under
+[docs/archive](./docs/archive/).
 
 Agent UI provides React components, headless hooks, state management, and transport adapters for applications built on OpenAI Codex App Server. `AgentChat` is a convenience preset; the core value is the primitive set that lets host apps place thread, status, usage, approvals, composer, apps, skills, and diagnostics surfaces in their own product shell.
 
@@ -134,7 +134,9 @@ bun install
 bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 ```
 
-Then open the printed `http://127.0.0.1:5174` URL. The app starts a local Codex App Server through `@nyosegawa/agent-ui-server`.
+Then open the printed local URL. By default this example uses
+`http://127.0.0.1:5174`; set `AGENT_UI_PORT` when you need another port. The
+app starts a local Codex App Server through `@nyosegawa/agent-ui-server`.
 
 For the real local layout gate used during release work, start the app on the
 canonical audit port and run the browser audit against the already-running
@@ -153,7 +155,7 @@ bun run test:e2e:real-local-web-layout
 Run the fixture-backed package smoke demo separately:
 
 ```sh
-bun run --cwd examples/local-react-vite dev
+bun run --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 ```
 
 Then open `/`, `/?state=kitchen`, `/host-workflow-recipe`, and

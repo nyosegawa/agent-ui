@@ -50,7 +50,7 @@ If the local Codex App Server build does not support API-key auth for the requir
 Browser code should connect only to a host-owned same-origin bridge:
 
 ```ts
-import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex";
+import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
 
 const transport = createCodexWebSocketTransport({
   reconnect: {

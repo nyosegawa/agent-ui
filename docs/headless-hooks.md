@@ -46,8 +46,10 @@ const run = useAgentRunSettings();
 ```
 
 `useAgentComposer()` owns input text and submits turns through the turn
-controller. It disables submission while the target thread is running, waiting
-for approval, or displaying a stored read-only preview.
+controller. The hook exposes state and actions; UI components decide whether a
+specific submit button should be disabled. The default `AgentComposerPanel`
+blocks submission while the target thread is running, waiting for approval, or
+displaying a stored read-only preview.
 
 `useAgentRunSettings()` exposes execution modes, available models, supported
 efforts, cwd, current selections, and setters. Execution modes map to stable App

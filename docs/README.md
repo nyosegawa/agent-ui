@@ -4,12 +4,11 @@ Agent UI is an embeddable UI library for applications built on OpenAI Codex App 
 
 The docs are organized as implementation-facing specifications. They intentionally avoid market/competitor background and focus on the decisions needed to build the library.
 
-## vNext Status
+## Status
 
-`PLAN.md` and `TODO.md` are the source of truth for Agent UI vNext scope,
-completed milestones, and quality gates. The current docs reflect the later
-UI-quality, refactor, real-local, and Next.js bridge cleanup gates recorded in
-`TODO.md`.
+Active docs describe the current library. Historical vNext planning, old
+milestone logs, long validation evidence, and one-off audits live under
+[`archive/`](./archive/).
 
 ## Documents
 
@@ -19,16 +18,16 @@ UI-quality, refactor, real-local, and Next.js bridge cleanup gates recorded in
 - [Protocol](./protocol.md): Codex App Server integration contract.
 - [Authentication](./authentication.md): local device-code login and remote constraints.
 - [Toolchain](./toolchain.md): runtime, package manager, build, test, and dependency baseline.
-- [Testing](./testing.md): protocol, reducer, transport, component, and e2e strategy.
+- [Testing](./testing.md): current validation matrix and local verification commands.
 - [Security](./security.md): filesystem, shell, auth, remote, and multi-user constraints.
-- [Roadmap](./roadmap.md): implementation order and future expansion.
 - [Remote Deployment](./remote-deployment.md): advanced remote/WebSocket constraints.
+- [Server Bridge](./server-bridge.md): local bridge, upload helper, dynamic-tool helper, and HTTP RPC boundaries.
 - [Protocol Drift](./protocol-drift.md): schema update and snapshot review workflow.
 - [agent-browser Verification](./agent-browser.md): local browser verification workflow.
-- [Completeness Audit](./completeness-audit.md): final vNext capability and boundary audit.
 - [Theming](./theming.md): CSS variable customization.
 - [Component API](./component-api.md): drop-in component reference.
 - [Headless Hooks](./headless-hooks.md): hook reference for custom layouts.
+- [Archive](./archive/README.md): historical plans, audit logs, and dated validation evidence.
 
 ## Real Local App
 
@@ -58,7 +57,7 @@ output, diff, host-slot, and Apps surfaces can be checked without starting
 Codex.
 
 ```sh
-bun run --cwd examples/local-react-vite dev
+bun run --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 ```
 
 ## Current Release Scope
@@ -107,7 +106,7 @@ bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 Run the fixture-backed Vite smoke example:
 
 ```sh
-bun run --cwd examples/local-react-vite dev
+bun run --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 ```
 
 The fixture example uses a `FakeAgentTransport` for browser-only smoke testing of thread navigation, streaming text, command output, diff preview, and approval cards. It is not the real local app release gate.

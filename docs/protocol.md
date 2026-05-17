@@ -90,6 +90,8 @@ Implementation status:
 - The same-origin bridge closes the App Server process when the browser socket closes and also has an idle timeout for abandoned browser sessions.
 - The same-origin bridge closes slow browser consumers with WebSocket code
   `1013` when the outbound buffer exceeds its configured backpressure limit.
+- Uploads, dynamic-tool handling, one-shot HTTP RPC, and bridge security
+  boundaries are documented in [server-bridge.md](server-bridge.md).
 - `examples/codex-local-web` is the primary real local web app path.
 - The transport accepts `url`, optional `protocols`, optional initialize metadata, and optional reconnect settings.
 - Authentication belongs to the host endpoint, for example same-origin cookies or a reverse proxy session.
@@ -319,6 +321,10 @@ stream item/agentMessage/delta
 turn/completed
 thread/resume after a completed turn is persisted
 ```
+
+The direct real smoke script resumes with `{ threadId }`. The browser UI may
+use `thread/resume` with `excludeTurns: true` when it already hydrated stored
+turns through `thread/read`.
 
 Latest real Codex verification against `codex app-server --listen stdio://` on
 2026-05-14 confirmed the same protocol path; details and environment-specific

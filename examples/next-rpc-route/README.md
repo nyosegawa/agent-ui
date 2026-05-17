@@ -14,5 +14,14 @@ browser UI -> same-origin WebSocket bridge -> codex app-server --listen stdio://
 Run:
 
 ```sh
-bun run dev
+bun --filter @nyosegawa/agent-ui-example-next-rpc-route dev
 ```
+
+Endpoint:
+
+```text
+POST /api/agent-ui
+```
+
+For full chat, streaming turns, approvals, or attachments, use
+`examples/next-with-bridge-sidecar` instead.

@@ -1,194 +1,117 @@
 # Toolchain
 
-Checked on 2026-05-17 JST against npm registry and the Node.js release index.
+Checked on 2026-05-17 JST against the repository and public package/version
+indexes. Upstream latest versions are useful for upgrade planning; repository
+pins are the source of truth for day-to-day work.
 
-Adoption decisions must use upstream latest/LTS data. Local installed versions are diagnostic only and are not evidence of latest availability.
+## Repository Pins
 
-## Runtime and Package Manager
-
-Decision:
+Current repo-pinned baseline:
 
 ```text
-primary CI/runtime target: Node.js LTS
-primary package manager: Bun
-Bun: primary development runner
-Node.js: published package and server compatibility baseline
+package manager: bun@1.3.13
+Node compatibility target: Node 20 / 22 / 24
+TypeScript: 6.0.3
+Vite: 8.0.11
+Vitest: 4.1.5
+Playwright: 1.59.1
+React peer range: >=18.3.0 || >=19.0.0
+React dev/example version: 19.2.6
 ```
 
-Upstream version snapshot:
+Keep `packageManager`, CI setup-bun versions, `@types/bun`, and `bun.lock`
+aligned when changing the Bun pin.
+
+## Local Environment Snapshot
+
+Observed local tools:
+
+```text
+Node.js: v22.19.0
+Bun: 1.3.13
+npm: 11.11.0
+pnpm: 10.15.0
+```
+
+Local installed versions are diagnostics only. They do not define latest
+availability or repository policy.
+
+## Upstream Snapshot
+
+Observed upstream availability on 2026-05-17:
 
 ```text
 Node.js current: v26.1.0
 Node.js latest LTS: v24.15.0 Krypton
-pnpm latest: 11.1.2
 Bun latest: 1.3.14
+pnpm latest: 11.1.2
+Vite latest: 8.0.13
+Vitest latest: 4.1.6
+Playwright latest: 1.60.0
 ```
 
-Local environment snapshot:
+Upgrade by changing pins deliberately, updating the lockfile in the same
+change, and running the local release gate in [testing.md](testing.md).
 
-```text
-local Node.js: v22.19.0
-local pnpm: 10.15.0
-local Bun: 1.3.13
-local npm: 11.11.0
+## Runtime Policy
+
+- Bun is the primary package manager and development runner.
+- Published packages must remain Node-compatible.
+- Browser packages must not depend on Node-only APIs.
+- Node process, filesystem, upload, and WebSocket bridge code belongs in
+  `@nyosegawa/agent-ui-server`.
+- Stdio transport and Codex protocol framing belong in
+  `@nyosegawa/agent-ui-codex`.
+
+## Workspace Policy
+
+Use package.json workspaces and Bun workspace filters:
+
+```sh
+bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
+bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 ```
 
-## Bun Policy
+Do not introduce monorepo orchestration just to paper over unclear package
+boundaries. `turbo` is not installed today; evaluate it only if task graph
+caching becomes a real bottleneck.
 
-Bun is the primary package manager and development runner.
+## Build And Package Validation
 
-Rules:
+The package build uses `tsup`; declarations and ESM/CJS export shape are
+validated with:
 
-- keep `packageManager`, CI `bun-version`, local Bun guidance, and
-  `@types/bun` aligned to the same repo-pinned Bun version
-- when bumping the Bun pin, check the upstream latest version first and update
-  the lockfile in the same change
-- use package.json `workspaces`
-- use `bun install` and `bun test` for the default local workflow
-- isolate Node-specific APIs in `@nyosegawa/agent-ui-server`
-- avoid Bun-specific APIs in browser/core/react packages
-- keep Node.js LTS compatibility for published packages
-- run Node.js compatibility smoke tests in CI
-- keep pnpm compatibility as optional smoke only
-- use `bun.lock` as the primary lockfile
-
-Implemented CI:
-
-- `CI`: Bun install, typecheck, lint, tests, build, protocol/fixture tests, package validation
-- `Package Validation`: build, `publint`, `arethetypeswrong`
-- `Compatibility`: Node.js 20/22/24 import/require smoke against built packages, plus optional pnpm workspace install/build smoke
-
-## Core Dependencies
-
-Decision:
-
-```text
-core has minimal dependencies
-zod is allowed at runtime validation boundaries
-execa is allowed only in server/process code
+```sh
+bun run build
+bun run publint
+bun run attw
+bun run test:package-resolution
+bun run test:node-compat
 ```
 
-Version snapshot:
-
-```text
-zod: 4.4.3
-execa: 9.6.1
-```
-
-## React and App Examples
-
-Decision:
-
-```text
-React 19 peer dependency
-Vite example
-Next.js example
-Next.js Node runtime Route Handlers first-class
-```
-
-Version snapshot:
-
-```text
-react: 19.2.6
-react-dom: 19.2.6
-@types/react: 19.2.14
-@types/react-dom: 19.2.3
-next: 16.2.6
-vite: 8.0.13
-```
-
-## TypeScript and Build
-
-Decision:
-
-```text
-TypeScript 6 baseline
-tsup first build candidate
-```
-
-Version snapshot:
-
-```text
-typescript: 6.0.3
-tsup: 8.5.1
-```
-
-If package exports, declaration maps, or ESM/CJS output become awkward, evaluate `tsdown`, `unbuild`, or raw `tsc`.
-
-## Tests
-
-Decision:
-
-```text
-unit/integration: Vitest
-DOM tests: Testing Library + jsdom
-browser smoke: Playwright
-a11y: jest-axe
-```
-
-Version snapshot:
-
-```text
-vitest: 4.1.6
-@playwright/test: 1.60.0
-@testing-library/react: 16.3.2
-@testing-library/user-event: 14.6.1
-@testing-library/jest-dom: 6.9.1
-jsdom: 29.1.1
-jest-axe: 10.0.0
-knip: 6.14.1
-```
-
-## Repo Tooling
-
-Decision:
-
-```text
-monorepo orchestration: bun workspaces first, turbo optional
-versioning/release: changesets
-lint/format: eslint + prettier
-package validation: publint + arethetypeswrong
-dead-code audit: knip
-npm provenance: enabled in release workflow when publishing with NPM_TOKEN
-```
-
-Version snapshot:
-
-```text
-turbo: 2.9.10
-changesets: 1.0.2
-@changesets/cli: 2.31.0
-eslint: 10.3.0
-prettier: 3.8.3
-publint: 0.3.20
-attw: 1.0.0
-```
-
-Use Bun workspace scripts first. Add `turbo` when task graph caching is useful.
+If package exports or declaration output become hard to maintain, evaluate
+`tsdown`, `unbuild`, or raw `tsc`, but do not switch without evidence.
 
 ## Release Automation
 
-Changesets is configured under `.changeset/config.json`. The `Release` workflow runs on pushes to `main` and manual dispatch:
+Changesets configuration lives in `.changeset/config.json`. The release
+workflow validates the repo, then creates or updates a Changesets version PR
+when unpublished changesets exist. Publishing requires `NPM_TOKEN`; creating
+the version PR requires `CHANGESETS_GITHUB_TOKEN` when the default
+`GITHUB_TOKEN` cannot open pull requests.
 
-1. install with Bun
-2. run typecheck, lint, unit tests, build, protocol tests, fixture tests, `publint`, and `attw`
-3. create or update a Changesets version PR when unpublished changesets exist
-4. publish packages with `bunx changeset publish --provenance` when a version commit lands on `main`
+The release workflow grants `id-token: write` and sets
+`NPM_CONFIG_PROVENANCE=true` so npm provenance can be attached when the registry
+and token support it.
 
-Publishing requires `NPM_TOKEN`. Creating the Changesets version PR requires `CHANGESETS_GITHUB_TOKEN`, a repository secret containing a GitHub token with pull request write access. This avoids failing repositories where the default `GITHUB_TOKEN` is not allowed to create pull requests. If `CHANGESETS_GITHUB_TOKEN` is not configured, the workflow still runs validation and then skips the PR/publish step.
+## Codex Reference
 
-The workflow grants `id-token: write` and sets `NPM_CONFIG_PROVENANCE=true` so npm package provenance is attached when the registry and token support it.
-
-## Codex-Related Packages
-
-Version snapshot:
+`@openai/codex` and the local OpenAI Codex checkout are references for the App
+Server protocol. Agent UI's primary integration is:
 
 ```text
-@openai/codex: 0.129.0
-codex: 0.2.3
-@ai-sdk/react: 3.0.178
+codex app-server --listen stdio://
 ```
 
-`@openai/codex` is a CLI/App Server reference. The primary integration is `codex app-server --listen stdio://`, not an npm package API.
-
-`@ai-sdk/react` is not a direct dependency for the local release. Agent UI needs Codex-specific approval, diff, shell output, and thread item semantics.
+Do not treat an npm Codex package API as the primary product boundary unless a
+future design explicitly changes that.

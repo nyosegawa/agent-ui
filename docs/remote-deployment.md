@@ -2,6 +2,8 @@
 
 Remote deployment is advanced and outside the default local release runtime. The local release remains local-first: a host process starts `codex app-server --listen stdio://` and exposes only the UI surface it owns.
 
+The canonical bridge contract is documented in [server-bridge.md](server-bridge.md).
+
 ## Recommended Local Release Shape
 
 Use one of these before exposing a network listener:

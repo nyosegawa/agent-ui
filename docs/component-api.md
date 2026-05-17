@@ -97,7 +97,7 @@ quality directly instead of depending on a page-level shell:
   Attach image use a paperclip and a dedicated image icon and appear only
   when the host wires `resolveLocalAttachment`. App and Plugin appear only
   when the host supplies `onRequestAppMention` / `onRequestPluginMention` —
-  the library never opens a browser `prompt()` dialog. There is no separate
+  the composer mention flow never opens a browser `prompt()` dialog. There is no separate
   "Run settings" disclosure: mode, model, and effort are compact toolbar
   menus (see below). Pending-approval and preview-only states show a warm
   notice strip without hiding the field.
@@ -274,8 +274,8 @@ rollback call generated-method request builders. Resume remains part of
 session lifecycle.
 
 Composer attachments are represented as visible chips for `app://` and
-`plugin://` mentions. The library does not invoke `globalThis.prompt` for any
-mention flow — instead, hosts supply `onRequestAppMention` and
+`plugin://` mentions. The composer does not invoke `globalThis.prompt` for any
+mention flow; hosts supply `onRequestAppMention` and
 `onRequestPluginMention` resolvers (`AgentComposerProps`,
 `AgentChatProps`, `AgentThreadViewProps`). Each resolver is called when the
 user clicks the matching toolbar button and may return (or asynchronously
@@ -284,6 +284,10 @@ matching toolbar button is hidden so an embedder cannot end up with a button
 that does nothing. This lets a host wire the flow into a command palette,
 picker dialog, MCP tool, or workspace registry without the library shipping
 an opinion about that picker's UI.
+
+Thread rename is a separate header action and may use a minimal browser
+prompt in the default component until a host overrides that interaction. That
+does not affect composer mentions or attachment resolution.
 
 ```tsx
 <AgentChat

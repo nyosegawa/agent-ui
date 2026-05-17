@@ -1,4 +1,4 @@
-import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex";
+import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
 import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
 

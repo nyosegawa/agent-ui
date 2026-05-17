@@ -14,6 +14,9 @@ codex app-server --listen stdio://
 
 This keeps the initial integration local, process-bound, and single-user.
 
+Bridge lifecycle and upload/dynamic-tool boundaries are documented in
+[server-bridge.md](server-bridge.md).
+
 ## Shell Commands
 
 `thread/shellCommand` is host-only in the local release.
@@ -25,6 +28,11 @@ Reasons:
 - shell command execution is high risk
 - command behavior may not inherit thread sandbox assumptions
 - host applications need their own authorization rules
+
+Dynamic-tool bridge helpers are also privileged. The default helper may create
+a helper thread with no approval prompts and full filesystem access; hosts that
+do not explicitly want that behavior should override or disable the dynamic tool
+handler.
 
 ## Approvals
 

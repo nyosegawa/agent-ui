@@ -29,8 +29,6 @@ agent-ui/
     next-rpc-route/
     next-with-bridge-sidecar/
     recipes/
-  fixtures/
-    app-server/
   docs/
 ```
 
@@ -50,8 +48,9 @@ Responsibilities:
 - optional OpenAI Agents SDK runner adapter for simple text streaming demos
 
 The package root exports these building blocks directly: state/event/transport
-types, reducer and selector helpers, JSON-RPC helpers, `FakeAgentTransport`,
-fixture utilities, and `createOpenAIAgentsSdkTransportAdapter()`.
+types, reducer and selector helpers, `FakeAgentTransport`, fixture utilities,
+and `createOpenAIAgentsSdkTransportAdapter()`. JSON-RPC framing is Codex
+adapter responsibility, not core responsibility.
 
 Must not include:
 
@@ -162,7 +161,12 @@ The wrapper does not create transports, spawn Codex, or include CSS automaticall
 - `examples/next-rpc-route`: Next.js one-shot RPC Route Handler example. It is not the chat-capable bridge.
 - `examples/next-with-bridge-sidecar`: Next.js full-chat example using a custom Node server with `attachAgentUiWebSocketBridge()`.
 - `examples/recipes`: typed host integration recipes and remote deployment notes.
-- `examples/docs-site`: static documentation and hosted-demo build target.
+- `examples/docs-site`: small package-overview/demo landing page. It is not a markdown documentation renderer.
+
+The route-focused example directories `examples/app-connectors`,
+`examples/fixture-gallery`, `examples/host-workflow-recipe`,
+`examples/scoped-thread-pane`, and `examples/usage-only` contain README
+handoffs for routes implemented by `examples/local-react-vite`.
 
 ## Browser Public API
 
