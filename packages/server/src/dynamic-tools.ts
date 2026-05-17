@@ -138,13 +138,11 @@ export function dynamicToolFailure(error: unknown): DynamicToolCallResponse {
 
 function dynamicToolRequestFromPending(request: PendingServerRequest | undefined): DynamicToolRequest {
   const payload = isRecord(request?.payload) ? request.payload : {};
+  const namespace = payload.namespace;
   return {
     arguments: payload.arguments,
     callId: String(payload.callId ?? payload.call_id ?? ""),
-    namespace:
-      typeof payload.namespace === "string" || payload.namespace === null
-        ? payload.namespace
-        : null,
+    namespace: typeof namespace === "string" ? namespace : null,
     threadId: String(payload.threadId ?? payload.thread_id ?? ""),
     tool: String(payload.tool ?? ""),
     turnId: String(payload.turnId ?? payload.turn_id ?? ""),

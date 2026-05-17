@@ -38,7 +38,7 @@ attachAgentUiWebSocketBridge({
   cwd,
   path: "/agent-ui/ws",
   server,
-  stderr(line) {
+  stderr(line: string) {
     process.stderr.write(line);
   },
 });

@@ -11,6 +11,17 @@
     "strict": false,
     "noEmit": true,
     "incremental": true,
+    "paths": {
+      "@nyosegawa/agent-ui-codex": [
+        "../../packages/codex/src/index.ts"
+      ],
+      "@nyosegawa/agent-ui-core": [
+        "../../packages/core/src/index.ts"
+      ],
+      "@nyosegawa/agent-ui-server": [
+        "../../packages/server/src/index.ts"
+      ]
+    },
     "module": "esnext",
     "esModuleInterop": true,
     "moduleResolution": "bundler",
