@@ -63,7 +63,7 @@ export function AgentChat({
   const compact = useCompactLayout();
   const { thread, threadId, startThread } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
-  useThreadUrlRouting(threadUrlRouting, activeThreadId);
+  const markThreadAutoActivation = useThreadUrlRouting(threadUrlRouting, activeThreadId);
   // Desktop keeps an expand/collapse rail; mobile keeps an off-canvas drawer.
   // Tracking them separately means a viewport change never strands the user
   // with the wrong default.
@@ -90,6 +90,7 @@ export function AgentChat({
             activeThreadId={activeThreadId}
             collapsed={isSidebarCollapsed}
             onCollapsedChange={setSidebarCollapsed}
+            onAutoActivateThread={markThreadAutoActivation}
             onSelectThread={setActiveThread}
             threads={threads}
           />
@@ -148,9 +149,21 @@ function useThreadUrlRouting(
   const { readThread } = useAgentThreadReader();
   const { setActiveThread, threads } = useAgentThreads();
   const lastPathRef = useRef<string | undefined>(undefined);
+  const initialAutoThreadIdRef = useRef<string | undefined>(undefined);
+  const hasSyncedInitialAutoThreadRef = useRef(false);
   const enabled = Boolean(options);
   const basePath =
     typeof options === "object" && options.basePath ? options.basePath : "/threads";
+
+  const markThreadAutoActivation = useCallback(
+    (threadId: string) => {
+      if (!enabled || typeof window === "undefined") return;
+      if (hasSyncedInitialAutoThreadRef.current) return;
+      if (threadIdFromPath(window.location.pathname, basePath)) return;
+      initialAutoThreadIdRef.current = threadId;
+    },
+    [basePath, enabled],
+  );
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
@@ -167,9 +180,15 @@ function useThreadUrlRouting(
     const path = threadPath(activeThreadId, basePath);
     if (window.location.pathname === path || lastPathRef.current === path) return;
     lastPathRef.current = path;
-    const method = threadIdFromPath(window.location.pathname, basePath)
-      ? "pushState"
-      : "replaceState";
+    const method =
+      !hasSyncedInitialAutoThreadRef.current &&
+      initialAutoThreadIdRef.current === activeThreadId
+        ? "replaceState"
+        : "pushState";
+    if (initialAutoThreadIdRef.current === activeThreadId) {
+      hasSyncedInitialAutoThreadRef.current = true;
+      initialAutoThreadIdRef.current = undefined;
+    }
     window.history[method]({ agentUiThreadId: activeThreadId }, "", path);
   }, [activeThreadId, basePath, enabled]);
 
@@ -195,6 +214,8 @@ function useThreadUrlRouting(
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   }, [basePath, enabled, readThread, setActiveThread, threads]);
+
+  return markThreadAutoActivation;
 }
 
 function threadPath(threadId: string, basePath: string): string {

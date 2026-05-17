@@ -137,12 +137,14 @@ export function AgentThreadSidebar({
   activeThreadId,
   collapsed = false,
   onCollapsedChange,
+  onAutoActivateThread,
   onSelectThread,
   threads,
 }: {
   activeThreadId?: string;
   collapsed?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
+  onAutoActivateThread?: (threadId: string) => void;
   onSelectThread?: (threadId: string) => void;
   threads: ThreadState[];
 }) {
@@ -196,13 +198,14 @@ export function AgentThreadSidebar({
       setHasLoaded(true);
       const firstThreadId = threadIds[0];
       if (params.activateFirst && firstThreadId && !state.activeThreadId) {
+        onAutoActivateThread?.(firstThreadId);
         readThread(firstThreadId, { activate: true, includeTurns: true }).catch(() => {
           onSelectThread?.(firstThreadId);
         });
       }
       return response;
     },
-    [listThreads, onSelectThread, readThread, state.activeThreadId],
+    [listThreads, onAutoActivateThread, onSelectThread, readThread, state.activeThreadId],
   );
   const loadNextThreadPage = useCallback(() => {
     const pageCursor = nextCursor ?? cursor ?? null;

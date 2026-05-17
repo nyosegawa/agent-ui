@@ -96,6 +96,11 @@
 - For React component, transcript, bridge, or UI behavior changes, also run the
   focused Vitest or Playwright suites that cover the changed surface.
 - For browser-visible changes, run `bun run test:e2e:playwright`.
+- `bun run test:e2e:playwright` cleans the Playwright-owned preview ports
+  `4173` and `4174` before starting web servers. If a targeted Playwright
+  command is run manually after an interrupted test, run
+  `bun run test:e2e:clean-ports` first so a stale preview or fake Codex bridge
+  cannot satisfy the port check with old state.
 - For real Codex local web layout or App Server bridge changes, run
   `bun run test:e2e:real-local-web-layout` against the real local web example
   when that server is available.

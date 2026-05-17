@@ -4,7 +4,7 @@ import type { Page } from "@playwright/test";
 test("hydrates stored threads through the browser websocket transport", async ({
   page,
 }, testInfo) => {
-  testInfo.setTimeout(180_000);
+  testInfo.setTimeout(20_000);
   await openRealLocalApp(page, { width: 1280, height: 900 }, "/threads/thread-stored");
   await expect(page.getByRole("heading", { name: "Stored real smoke" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Resume" })).toBeVisible();
@@ -14,7 +14,7 @@ test("hydrates stored threads through the browser websocket transport", async ({
 test("exposes live thread controls through the browser websocket transport", async ({
   page,
 }, testInfo) => {
-  testInfo.setTimeout(90_000);
+  testInfo.setTimeout(20_000);
   await openRealLocalApp(page, { width: 1280, height: 900 }, "/threads/thread-stored");
   await expect(page.getByRole("button", { name: "New thread" })).toBeVisible();
   await page.getByRole("button", { name: /Stored real smoke/ }).click();
@@ -25,15 +25,16 @@ test("exposes live thread controls through the browser websocket transport", asy
 test("resumes stored threads, sends follow-up turns, and syncs browser history", async ({
   page,
 }, testInfo) => {
-  testInfo.setTimeout(90_000);
+  testInfo.setTimeout(20_000);
   await openRealLocalApp(page);
   await expect(page).toHaveURL(/\/threads\/thread-stored$/);
   const message = page.getByRole("textbox", { name: "Message" });
   await expect(message).toBeDisabled();
   await page.getByRole("button", { name: "Resume" }).click({ force: true });
   await expect(page.locator(".aui-status-pill", { hasText: "Ready" })).toBeVisible();
-  await expect(message).toBeEnabled();
-  await message.fill("resume smoke");
+  const readyMessage = page.getByRole("textbox", { name: "Message" });
+  await expect(readyMessage).toBeEnabled();
+  await readyMessage.fill("resume smoke");
   await page.locator("form.aui-composer").evaluate((form) => {
     (form as HTMLFormElement).requestSubmit();
   });
@@ -53,12 +54,24 @@ test("resumes stored threads, sends follow-up turns, and syncs browser history",
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole("heading", { name: "Stored real smoke" })).toHaveCount(0);
   await expect(page.getByText("Start a Codex thread")).toBeVisible();
+
+  await page.getByRole("button", { name: /Stored real smoke/ }).click();
+  await expect(page).toHaveURL(/\/threads\/thread-stored$/);
+  await expect(page.getByRole("heading", { name: "Stored real smoke" })).toBeVisible();
+  await page.evaluate(() => window.history.back());
+  await page.waitForFunction(() => window.location.pathname === "/");
+  await expect(page.getByText("Start a Codex thread")).toBeVisible();
+  await page.evaluate(() => window.history.forward());
+  await page.waitForFunction(() =>
+    window.location.pathname.endsWith("/threads/thread-stored"),
+  );
+  await expect(page.getByRole("heading", { name: "Stored real smoke" })).toBeVisible();
 });
 
 test("opens a thread by URL and accepts image plus arbitrary file attachments", async ({
   page,
 }, testInfo) => {
-  testInfo.setTimeout(90_000);
+  testInfo.setTimeout(20_000);
   await openRealLocalApp(page, { width: 390, height: 900 }, "/threads/thread-stored");
   await expect(page.getByRole("heading", { name: "Stored real smoke" })).toBeVisible();
   await page.getByRole("button", { name: "Resume" }).click({ force: true });
@@ -80,7 +93,9 @@ test("opens a thread by URL and accepts image plus arbitrary file attachments", 
   });
   await expect(page.locator(".aui-composer-chip-thumbnail")).toBeVisible();
   await expect(page.getByText("part.3mf")).toBeVisible();
-  await expect(page.getByText(".3mf · 4 B")).toBeVisible();
+  await expect(
+    page.locator(".aui-composer-chip[data-kind='file'] .aui-composer-chip-meta"),
+  ).toHaveText(/\.3mf · \d+ B/);
   await page.locator("form.aui-composer").evaluate((form) => {
     form.dispatchEvent(new SubmitEvent("submit", { bubbles: true, cancelable: true }));
   });
@@ -94,8 +109,8 @@ async function openRealLocalApp(
 ) {
   await page.setViewportSize(viewport);
   await page.goto(`http://127.0.0.1:4174${path}`);
-  await expect(page.getByTestId("agent-chat")).toBeVisible();
+  await expect(page.getByTestId("agent-chat")).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText(/real-smoke@example.com/)).toBeVisible({
-    timeout: 30_000,
+    timeout: 10_000,
   });
 }

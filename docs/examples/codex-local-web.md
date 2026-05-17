@@ -24,6 +24,13 @@ bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 
 The default URL is `http://127.0.0.1:5175/`.
 
+Thread URL routing keeps browser history aligned with the visible thread. The
+initial history auto-selection from `/` replaces the root entry with
+`/threads/<threadId>` so first load does not create a dead back step. Explicit
+user selections, resumed threads, and new threads push history entries, so
+browser back/forward returns to the previous thread or to `/` when the previous
+state was the no-thread view.
+
 For the real layout audit:
 
 ```sh

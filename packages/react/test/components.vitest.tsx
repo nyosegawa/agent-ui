@@ -2616,6 +2616,22 @@ describe("AgentChat", () => {
     await waitFor(() =>
       expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument(),
     );
+    expect(screen.getByText("Connect Codex")).toBeInTheDocument();
+
+    await user.click(await screen.findByRole("button", { name: /Thread two/ }));
+    await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
+    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
+
+    window.history.back();
+    await waitFor(() => expect(window.location.pathname).toBe("/"));
+    await waitFor(() =>
+      expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("Connect Codex")).toBeInTheDocument();
+
+    window.history.forward();
+    await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
+    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
 
     window.history.pushState(null, "", "/threads/thread-one");
     window.dispatchEvent(new PopStateEvent("popstate"));
