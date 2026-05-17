@@ -31,6 +31,26 @@
   validation, or host integration behavior, update the corresponding docs in
   the same change.
 
+## Default Work Loop
+
+- Start by reading the relevant implementation, tests, examples, and docs.
+  Do not rely on memory, generated summaries, or names alone when changing a
+  public surface.
+- Implement the complete requested behavior. Do not leave placeholder logic,
+  temporary compatibility shims, or MVP-only surfaces unless the user
+  explicitly asks for a temporary step.
+- Add or update focused tests with the behavior change. A public API, reducer
+  path, protocol normalizer, bridge behavior, or visible UI state is not
+  complete without test coverage.
+- For browser-visible changes, verify the running UI in a browser in addition
+  to automated tests. Check desktop and mobile viewports when layout,
+  interaction, overflow, scrolling, or responsive behavior changes.
+- Update README, docs, examples, screenshots, and public API references in the
+  same slice when behavior, package boundaries, setup, validation, or host
+  integration changes.
+- After each coherent slice, run the relevant validation, commit, push, verify
+  the branch is clean, and follow CI to a concrete success or failure.
+
 ## Implementation Discipline
 
 - Work in small, reviewable implementation slices. After each coherent slice,
@@ -49,3 +69,55 @@
 - Use `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server` as
   the local App Server source of truth whenever protocol behavior, generated
   schema, stable versus experimental status, or runtime semantics are unclear.
+
+## Validation Expectations
+
+- Use targeted validation while iterating, then run the full relevant ladder
+  before claiming broad work complete.
+- Standard validation commands:
+  - `bun run typecheck`
+  - `bun run lint`
+  - `bun run test`
+  - `bun run test:protocol`
+  - `bun run test:fixtures`
+  - `bun run build`
+  - `bun run publint`
+  - `bun run attw`
+- For React component, transcript, bridge, or UI behavior changes, also run the
+  focused Vitest or Playwright suites that cover the changed surface.
+- For browser-visible changes, run `bun run test:e2e:playwright`.
+- For real Codex local web layout or App Server bridge changes, run
+  `bun run test:e2e:real-local-web-layout` against the real local web example
+  when that server is available.
+- Before claiming clean-workspace typecheck or CI compatibility after package
+  boundary, TypeScript config, declaration, build-output, or example import
+  changes, remove ignored build artifacts and typecheck from a clean state:
+
+  ```sh
+  find packages examples -name dist -type d -prune -exec rm -rf {} +
+  find examples -name .next -type d -prune -exec rm -rf {} +
+  bun run typecheck
+  ```
+
+## Browser and UI Checks
+
+- Use the fixture Vite app for component and layout review. Relevant routes
+  include `/`, `/?state=kitchen`, `/fixture-gallery`,
+  `/host-workflow-recipe`, `/usage-only`, `/scoped-thread-pane`, and
+  `/app-connectors`.
+- Use `examples/codex-local-web` for real Codex App Server integration,
+  history, bridge, upload, and transcript behavior.
+- When interaction matters, do not rely only on screenshots. Verify hit tests,
+  actual clicks, keyboard behavior, focus, scrolling, and overflow as
+  appropriate.
+- For layout changes, check at least a desktop viewport and a mobile viewport.
+  Horizontal page overflow, clipped thread titles, nested scroll traps, hidden
+  composer controls, and unreachable approval actions are regressions.
+
+## CI/CD Follow-through
+
+- After pushing, inspect GitHub Actions with `gh run list` or the GitHub app.
+- If checks are running, wait for the final result. Do not report success from
+  a pushed commit until the relevant workflows have passed.
+- If a workflow fails, inspect the logs, reproduce locally when possible, fix
+  the root cause, commit, push, and watch the replacement run.
