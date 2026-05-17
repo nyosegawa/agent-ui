@@ -30,6 +30,12 @@
   code change. If the implementation changes public API, package boundaries,
   validation, or host integration behavior, update the corresponding docs in
   the same change.
+- For broad documentation updates, do not rely on `rg` alone. Read the
+  affected docs and compare them with the current implementation, examples,
+  scripts, and tests before deciding what to update, merge, or delete.
+- Use purpose-based names for fixtures, routes, screenshots, and tests. Do not
+  preserve legacy or source-of-inspiration names once they no longer describe
+  the current product surface.
 
 ## Default Work Loop
 
@@ -66,6 +72,9 @@
 - Refactor when implementation complexity starts hiding protocol, state, UI, or
   bridge behavior. Do not preserve awkward old shapes for compatibility when
   the active docs call for a cleaner API.
+- Do not perform purely mechanical file splits as a substitute for design.
+  When refactoring, read the owning files, identify stale code and old
+  concepts, move behavior into intentional modules, and delete unused pieces.
 - Use `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server` as
   the local App Server source of truth whenever protocol behavior, generated
   schema, stable versus experimental status, or runtime semantics are unclear.
@@ -135,6 +144,10 @@
   `/app-connectors`.
 - Use `examples/codex-local-web` for real Codex App Server integration,
   history, bridge, upload, and transcript behavior.
+- Keep fixture coverage and real-local coverage conceptually separate. Fixture
+  routes are for deterministic component/stress states; `examples/codex-local-web`
+  is for App Server-backed behavior such as history, resume, routing, uploads,
+  streaming, steer, interrupt, and token usage.
 - When interaction matters, do not rely only on screenshots. Verify hit tests,
   actual clicks, keyboard behavior, focus, scrolling, and overflow as
   appropriate.
