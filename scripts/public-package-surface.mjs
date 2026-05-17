@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
-export const workspacePackageDirs = ["core", "codex", "react", "server", "web-components"];
+const workspacePackageDirs = ["core", "codex", "react", "server", "web-components"];
 
 export async function readWorkspacePackageSurfaces(repoRoot) {
   const surfaces = [];
@@ -13,7 +13,7 @@ export async function readWorkspacePackageSurfaces(repoRoot) {
   return surfaces.sort((left, right) => left.specifier.localeCompare(right.specifier));
 }
 
-export function publicSubpathsFromPackageJson({ dir, packageJson, packageRoot }) {
+function publicSubpathsFromPackageJson({ dir, packageJson, packageRoot }) {
   const exportsMap = packageJson.exports;
   if (!exportsMap || typeof exportsMap !== "object") {
     throw new Error(`${packageJson.name} must declare an exports map`);

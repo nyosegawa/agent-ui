@@ -57,7 +57,7 @@ export async function collectPublicDeclarations(repoRoot) {
     .sort((left, right) => left.snapshotName.localeCompare(right.snapshotName));
 }
 
-export function formatSnapshotFailure({ changed, missing, stale }) {
+function formatSnapshotFailure({ changed, missing, stale }) {
   const parts = [];
   if (missing.length > 0) parts.push(`missing: ${missing.join(", ")}`);
   if (changed.length > 0) parts.push(`changed: ${changed.join(", ")}`);
