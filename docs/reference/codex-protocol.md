@@ -40,6 +40,10 @@ The default transport:
 - writes one JSON object per line
 - reads one JSON object per line
 - correlates request id to response promise
+- emits `connection/connected` only after `initialize` resolves when initialize
+  metadata is configured; the readiness signal is the initialize response, not
+  the fire-and-forget `initialized` notification
+- preserves JSON-RPC error `code` and `data` on rejected requests
 - retries App Server overload `-32001` responses for idempotent read methods
   only, with bounded backoff
 - exposes stderr logs separately
@@ -96,6 +100,8 @@ Implementation status:
 - The transport accepts `url`, optional `protocols`, optional initialize metadata, and optional reconnect settings.
 - Authentication belongs to the host endpoint, for example same-origin cookies or a reverse proxy session.
 - Reconnect is opt-in with bounded exponential backoff. On close, pending requests are rejected so callers do not hang across a broken socket.
+- Like stdio, WebSocket transport reports protocol readiness after initialize
+  resolves and preserves JSON-RPC error `code` and `data`.
 
 ## Stable and Experimental API
 

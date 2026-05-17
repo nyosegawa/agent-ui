@@ -84,9 +84,9 @@ export async function createDynamicToolHelperThread(
   cwd?: string,
 ): Promise<string> {
   const response = await transport.request("thread/start", threadStartParams({
-    approvalPolicy: "never",
+    approvalPolicy: "on-request",
     ...(cwd ? { cwd } : {}),
-    sandbox: "danger-full-access",
+    sandbox: "workspace-write",
   }));
   const threadId = extractThreadId(response);
   if (!threadId) throw new Error("Could not create dynamic tool helper thread");

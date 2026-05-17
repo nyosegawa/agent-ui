@@ -460,7 +460,7 @@ export function useAgentTurn(threadId?: ThreadId) {
 export const useAgentTurnController = useAgentTurn;
 
 export function useAgentApprovals(threadId?: ThreadId) {
-  const { dispatch, state, transport } = useAgentContext();
+  const { state, transport } = useAgentContext();
   const approvals = useMemo(
     () => selectPendingApprovals(state, threadId),
     [state, threadId],
@@ -469,18 +469,16 @@ export function useAgentApprovals(threadId?: ThreadId) {
   const approve = useCallback(
     async (requestId: RequestId, result: unknown = { decision: "accept" }) => {
       await transport.respond(requestId, result);
-      dispatch({ requestId, type: "serverRequest/resolved" });
     },
-    [dispatch, transport],
+    [transport],
   );
 
   const reject = useCallback(
     async (requestId: RequestId, message = "Rejected by user") => {
       const error = { code: -32000, message };
       await transport.reject(requestId, error);
-      dispatch({ error, requestId, type: "serverRequest/rejected" });
     },
-    [dispatch, transport],
+    [transport],
   );
 
   return { approvals, approve, reject };

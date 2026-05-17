@@ -23,24 +23,6 @@
     border-right: 0;
   }
 
-  .aui-host-composition {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
-    min-height: auto;
-  }
-
-  .aui-host-thread {
-    border-bottom: 1px solid var(--aui-border);
-    border-right: 0;
-    min-height: 520px;
-  }
-
-  .aui-fixture-gallery-header,
-  .aui-fixture-preview header,
-  .aui-fixture-preview-frames {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
   .aui-run-controls {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
@@ -83,40 +65,6 @@
     grid-template-columns: minmax(0, 1fr);
     overflow: visible;
     padding: 0;
-  }
-
-  .aui-host-recipe {
-    padding: 12px 12px 24px;
-  }
-
-  .aui-host-recipe-shell {
-    border-radius: 10px;
-  }
-
-  .aui-host-recipe-header {
-    grid-template-columns: minmax(0, 1fr);
-    padding: 18px 18px 16px;
-  }
-
-  .aui-host-recipe-meta {
-    justify-items: start;
-  }
-
-  .aui-host-composition {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(520px, 1fr) auto;
-    min-height: auto;
-  }
-
-  .aui-host-thread {
-    border-bottom: 1px solid var(--aui-border);
-    border-right: 0;
-    min-height: 520px;
-  }
-
-  .aui-host-context {
-    max-height: 320px;
-    padding: 12px 14px 18px;
   }
 
   .aui-chat-rail {
@@ -256,25 +204,4 @@
     max-height: none;
   }
 
-  .aui-fixture-gallery {
-    padding: 18px 12px;
-  }
-
-  .aui-fixture-gallery-header,
-  .aui-fixture-preview header,
-  .aui-fixture-preview-frames {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .aui-fixture-gallery-actions {
-    justify-content: start;
-  }
-
-  .aui-fixture-preview iframe {
-    height: 480px;
-  }
-
-  .aui-fixture-frame-shell {
-    min-height: 480px;
-  }
 }

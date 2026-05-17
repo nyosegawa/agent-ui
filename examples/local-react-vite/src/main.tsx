@@ -26,6 +26,10 @@ import {
 import "@nyosegawa/agent-ui-react/styles.css";
 import { useMemo, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import "./styles/closeups.css";
+import "./styles/fixture-gallery.css";
+import "./styles/host-recipe.css";
+import "./styles/usage-only.css";
 import {
   ComponentCloseupGallery,
   CriticalInteractionStates,

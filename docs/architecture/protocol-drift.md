@@ -41,6 +41,8 @@ Protocol drift is guarded by:
 - generated method inline snapshots
 - capability metadata equality checks against generated `ClientRequest`,
   `ServerNotification`, and `ServerRequest` files
+- raw readiness/error tests for stdio and WebSocket initialize behavior
+- built declaration snapshots for public package API review
 - package export validation
 
 Use:
@@ -48,7 +50,8 @@ Use:
 ```sh
 bun run test:protocol
 bun run typecheck
-bun run build
+bun run validate:packages
+bun run test:api-snapshots
 ```
 
 If the upstream schema adds methods outside the release surface, keep them generated but do not expose them through high-level React APIs unless the current product plan says so.

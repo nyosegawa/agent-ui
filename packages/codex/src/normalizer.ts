@@ -116,7 +116,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
       return [
         {
           type: "thread/name/updated",
-          name: String(params.name ?? ""),
+          name: String(params.threadName ?? params.thread_name ?? params.name ?? ""),
           threadId: String(params.threadId ?? params.thread_id),
         },
       ];
@@ -172,6 +172,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
               numberValue(totalUsage?.totalTokens) ??
               numberValue(totalUsage?.total_tokens) ??
               numberValue(params.totalTokens),
+            turnId: optionalStringValue(params.turnId ?? params.turn_id),
             raw: params,
           },
         },

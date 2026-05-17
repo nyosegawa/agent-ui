@@ -24,16 +24,17 @@ bun run lint
 bun run test
 bun run test:protocol
 bun run test:fixtures
-bun run build
-bun run check:exports
+bun run validate:packages
 bun run check:dead-code
+bun run test:api-snapshots
 bun run test:package-resolution
 bun run test:node-compat
 bun run test:e2e:playwright
 ```
 
-`bun run check:exports` is a shorthand for `publint` and
-`arethetypeswrong`. Keep both passing for every package under `packages/*`.
+`bun run validate:packages` is the ordered package path: build, `publint`, then
+`arethetypeswrong`. Do not run those three in parallel because build cleans
+package `dist/` directories.
 
 ## CI Coverage
 
@@ -43,11 +44,13 @@ The main CI workflow validates the normal development path:
 - `bun run typecheck`
 - `bun run lint`
 - `bun run test`
-- `bun run build`
 - `bun run test:protocol`
 - `bun run test:fixtures`
-- `bun run publint`
-- `bun run attw`
+- `bun run validate:packages`
+- `bun run check:dead-code`
+- `bun run test:api-snapshots`
+- `bun run test:package-resolution`
+- `bun run test:node-compat`
 
 Package validation repeats build/package checks for publish confidence.
 Compatibility CI covers Node 20, 22, and 24 import/require smoke plus the
@@ -77,6 +80,8 @@ Reducer tests assert that normalized events keep Codex session data structured:
 - command output and file patch updates
 - command/file/user-input/MCP/dynamic-tool approval requests
 - token usage, account, skills, hooks, apps, diagnostics, and warnings
+- upstream `threadName`, token usage `turnId`, decoded command output
+  deltas, and idempotent `serverRequest/resolved` notifications
 - stale/hydrated history state from `thread/read`
 - pending server-request queue cleanup on resolve, reject, or disconnect
 
@@ -94,6 +99,8 @@ Component tests cover:
 - heavy command output and diff bodies mounted only when opened
 - no nested vertical scroll traps in normal Markdown/code blocks
 - approvals embedded at the end of the transcript, not as a separate pane
+- approval actions send responses but keep pending state until upstream
+  `serverRequest/resolved`
 - composer visibility, attachment chips, resolver errors, and disabled states
 - thread history search, infinite scroll sentinel, and fallback Load more
 - usage/status/diagnostic primitives as optional host chrome
@@ -125,6 +132,8 @@ The fixture routes are:
 The browser gate checks desktop and mobile layout contracts, horizontal
 overflow, composer reachability, approval hit testing, sidebar behavior, and
 that old UI concepts such as Work trace and Load all do not return.
+It also protects CSS ownership: fixture, route, close-up, and usage-only styles
+live in `examples/local-react-vite`, not in the distributed React stylesheet.
 
 Keep Playwright failures fast and diagnostic. If a browser test is flaky,
 do not increase the test timeout as the first fix. Separate the problem into

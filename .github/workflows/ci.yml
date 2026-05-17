@@ -17,8 +17,10 @@ jobs:
       - run: bun run typecheck
       - run: bun run lint
       - run: bun test
-      - run: bun run build
       - run: bun run test:protocol
       - run: bun run test:fixtures
-      - run: bun run publint
-      - run: bun run attw
+      - run: bun run validate:packages
+      - run: bun run check:dead-code
+      - run: bun run test:api-snapshots
+      - run: bun run test:package-resolution
+      - run: bun run test:node-compat

@@ -14,7 +14,8 @@
     "**/dist/**",
     "**/.next/**",
     "docs/screenshots/**",
-    "packages/codex/src/generated/**"
+    "packages/codex/src/generated/**",
+    "test/api-snapshots/**"
   ],
   "ignoreDependencies": [
     "@changesets/cli",

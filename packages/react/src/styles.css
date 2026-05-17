@@ -8,8 +8,6 @@
 @import "./styles/status-usage.css";
 @import "./styles/diff-utilities.css";
 @import "./styles/workspace.css";
-@import "./styles/host-recipe.css";
-@import "./styles/fixture-gallery.css";
 @import "./styles/responsive.css";
 @import "./styles/controls-buttons.css";
 @import "./styles/controls-forms.css";
@@ -19,5 +17,3 @@
 @import "./styles/run-settings.css";
 @import "./styles/approval-surface.css";
 @import "./styles/status-sidebar.css";
-@import "./styles/closeups.css";
-@import "./styles/usage-only.css";

@@ -6,6 +6,36 @@ import {
 } from "../src/stdio-transport";
 
 describe("Codex stdio transport backpressure", () => {
+  it("emits connected only after initialize resolves", async () => {
+    const stdin = new PassThrough();
+    const stdout = new PassThrough();
+    const transport = createCodexStdioTransport({
+      initialize: { clientInfo: { name: "agent_ui_test", version: "0.0.0" } },
+      stdin,
+      stdout,
+    });
+    const written: string[] = [];
+    stdin.on("data", (chunk) => written.push(String(chunk)));
+    const iterator = transport.events[Symbol.asyncIterator]();
+
+    const connected = transport.connect();
+    await waitFor(() => written.length === 1);
+    const init = JSON.parse(written[0] ?? "{}") as { id: number; method: string };
+    expect(init.method).toBe("initialize");
+
+    const early = Promise.race([
+      iterator.next(),
+      new Promise<"no-event">((resolve) => setTimeout(() => resolve("no-event"), 10)),
+    ]);
+    await expect(early).resolves.toBe("no-event");
+
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+    await expect(iterator.next()).resolves.toMatchObject({
+      value: { event: { type: "connection/connected" }, type: "event" },
+    });
+  });
+
   it("classifies only idempotent read requests as retry-safe", () => {
     expect(isBackpressureRetrySafeMethod("thread/read")).toBe(true);
     expect(isBackpressureRetrySafeMethod("skills/list")).toBe(true);

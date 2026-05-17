@@ -70,3 +70,17 @@ need exact contracts.
 Agent UI is not a hosted Codex service. The host application starts or connects
 to Codex App Server using the user's own authentication, then composes Agent UI
 components around that session.
+
+## Release Gates
+
+Use the ordered package path for publish checks:
+
+```sh
+bun run validate:packages
+bun run test:api-snapshots
+bun run test:package-resolution
+bun run test:node-compat
+```
+
+The React package exposes only `styles.css`; fixture and route CSS belongs to
+the examples.

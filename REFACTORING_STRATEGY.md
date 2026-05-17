@@ -4,6 +4,11 @@ This document is the result of a broad read-only audit across Agent UI, the
 local Codex App Server checkout, tests, examples, package metadata, docs, and
 CI. It is a refactoring execution plan, not a historical log.
 
+Current implementation status: the first slices for Phases 0 through 7 are now
+represented in code, tests, CI gates, and public docs. Keep this document as a
+strategy/reference for any remaining deeper slices; do not treat historical
+claims below as stronger than the current test suite and docs.
+
 ## Executive Summary
 
 The most important refactor is not a React component split. The first problem is

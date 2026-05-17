@@ -11,6 +11,8 @@ Purpose:
 - deterministic UI review without a real Codex process
 - fixture-backed transcript, approval, command, diff, usage, and status states
 - visual QA routes for component close-ups and full-page layouts
+- owner of fixture-gallery, host-workflow, close-up, and usage-only route CSS
+  that should not ship through `@nyosegawa/agent-ui-react/styles.css`
 
 Run:
 

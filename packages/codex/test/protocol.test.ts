@@ -131,8 +131,24 @@ describe("Codex protocol metadata", () => {
           },
           reasoningOutputTokens: 10,
           totalTokens: 150,
+          turnId: "turn-usage",
         },
         type: "thread/tokenUsage/updated",
+      },
+    ]);
+  });
+
+  it("normalizes upstream threadName updates", () => {
+    expect(
+      normalizeCodexServerMessage({
+        method: "thread/name/updated",
+        params: { threadId: "thread-name", threadName: "Readable title" },
+      }),
+    ).toEqual([
+      {
+        name: "Readable title",
+        threadId: "thread-name",
+        type: "thread/name/updated",
       },
     ]);
   });

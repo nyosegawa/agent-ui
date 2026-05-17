@@ -23,6 +23,8 @@
     "test:fixtures": "bun test packages/core/test",
     "test:node-compat": "node scripts/node-compat-smoke.mjs",
     "test:package-resolution": "node scripts/package-resolution-smoke.mjs",
+    "test:api-snapshots": "node scripts/check-api-snapshots.mjs",
+    "test:api-snapshots:update": "node scripts/check-api-snapshots.mjs --update",
     "test:e2e:real-codex": "node scripts/real-codex-smoke.mjs",
     "test:e2e:real-codex:approval": "node scripts/real-codex-smoke.mjs --approval",
     "test:e2e:clean-ports": "node scripts/clean-e2e-ports.mjs",

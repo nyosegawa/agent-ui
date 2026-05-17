@@ -15,6 +15,9 @@ Purpose:
 - persist browser uploads so attachments become App Server-readable inputs
 - mirror the active thread in `/threads/<threadId>` URLs so direct links and
   browser back/forward restore thread selection
+- exercise the same bridge security defaults as host apps: admission before
+  process spawn, browser method filtering, and no dynamic-tool execution unless
+  a host handler is configured
 
 Run:
 

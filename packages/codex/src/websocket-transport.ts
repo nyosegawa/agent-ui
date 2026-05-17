@@ -135,8 +135,6 @@ class CodexWebSocketTransport implements AgentTransport {
       });
       this.#scheduleReconnect();
     });
-    this.#reconnectAttempts = 0;
-    this.#push({ event: { type: "connection/connected" }, type: "event" });
     if (this.#options.initialize) {
       await this.request("initialize", {
         capabilities: {
@@ -147,6 +145,8 @@ class CodexWebSocketTransport implements AgentTransport {
       });
       this.notify("initialized");
     }
+    this.#reconnectAttempts = 0;
+    this.#push({ event: { type: "connection/connected" }, type: "event" });
   }
 
   #scheduleReconnect(): void {
@@ -201,7 +201,7 @@ class CodexWebSocketTransport implements AgentTransport {
       const pending = this.#pending.get(String(message.id));
       if (!pending) return;
       this.#pending.delete(String(message.id));
-      if ("error" in message) pending.reject(new Error(message.error.message));
+      if ("error" in message) pending.reject(jsonRpcError(message.error));
       else pending.resolve(message.result);
       this.#push({ payload: message, requestId: message.id, type: "response" });
       return;
@@ -260,4 +260,11 @@ function envelopeEvent(value: {
   type: "agent-ui/transport-event";
 }): AgentTransportEvent {
   return value.event;
+}
+
+function jsonRpcError(error: { code?: number; message: string; data?: unknown }): Error {
+  const next = new Error(error.message) as Error & { code?: number; data?: unknown };
+  next.code = error.code;
+  next.data = error.data;
+  return next;
 }

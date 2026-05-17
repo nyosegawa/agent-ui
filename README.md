@@ -86,7 +86,7 @@ The browser transport expects a host-owned WebSocket endpoint. Use
 - Tool, command, output, and file-change items render inline with the
   surrounding conversation.
 - Pending approvals render as the final transcript item, not as a detached
-  pane.
+  pane, and stay pending until App Server sends `serverRequest/resolved`.
 - Usage, diagnostics, skills, apps, and status are composable primitives, not
   mandatory side rails.
 - Attachments are host-resolved. Images use `localImage` paths; arbitrary
@@ -96,6 +96,20 @@ The browser transport expects a host-owned WebSocket endpoint. Use
 ## Documentation
 
 Start with [docs/README.md](./docs/README.md).
+
+## Validation
+
+Package and API boundaries are checked with:
+
+```sh
+bun run validate:packages
+bun run test:api-snapshots
+bun run test:package-resolution
+bun run test:node-compat
+```
+
+`validate:packages` is intentionally ordered: build, `publint`, then
+`arethetypeswrong`.
 
 Key pages:
 

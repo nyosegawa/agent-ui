@@ -82,6 +82,43 @@ describe("agentReducer", () => {
     expect(selectServerRequestQueue(resolved, "thread-approval")).toEqual([]);
   });
 
+  it("keeps duplicate server request resolution idempotent", () => {
+    const once = runEventFixture([
+      { event: { thread: { id: "thread-approval" }, type: "thread/started" } },
+      {
+        event: {
+          request: {
+            id: "approval-1",
+            kind: "commandApproval",
+            payload: {},
+            threadId: "thread-approval",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
+    ]);
+    const twice = runEventFixture([
+      { event: { thread: { id: "thread-approval" }, type: "thread/started" } },
+      {
+        event: {
+          request: {
+            id: "approval-1",
+            kind: "commandApproval",
+            payload: {},
+            threadId: "thread-approval",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
+      { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
+    ]);
+    expect(twice.pendingServerRequests).toEqual(once.pendingServerRequests);
+    expect(twice.serverRequestQueue).toEqual(once.serverRequestQueue);
+    expect(twice.threads["thread-approval"]?.status).toBe("running");
+  });
+
   it("orders live deltas even when item start arrives late or is omitted", () => {
     const state = runEventFixture([
       {

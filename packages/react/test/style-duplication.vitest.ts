@@ -89,6 +89,18 @@ describe("packages/react styles.css", () => {
     expect(existsSync(join(__dirname, "..", "src", "style.css"))).toBe(false);
   });
 
+  it("does not publish fixture or route-specific CSS through the React package entry", () => {
+    const entry = readFileSync(STYLE_PATH, "utf8");
+    expect(entry).not.toMatch(/host-recipe\.css/);
+    expect(entry).not.toMatch(/fixture-gallery\.css/);
+    expect(entry).not.toMatch(/closeups\.css/);
+    expect(entry).not.toMatch(/usage-only\.css/);
+    expect(css).not.toMatch(/\.aui-host-recipe\b/);
+    expect(css).not.toMatch(/\.aui-fixture-gallery\b/);
+    expect(css).not.toMatch(/\.aui-closeup\b/);
+    expect(css).not.toMatch(/\.aui-usage-only\b/);
+  });
+
   it.each([
     ".aui-run-controls-compact",
     ".aui-transcript-card",

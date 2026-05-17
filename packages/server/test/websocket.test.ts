@@ -6,6 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createCodexWebSocketTransport } from "../../codex/src/websocket";
 import {
   attachAgentUiWebSocketBridge,
+  defaultDynamicToolHandler,
   type AgentUiWebSocketBridgeOptions,
   type CodexChildProcess,
 } from "../src";
@@ -17,6 +18,44 @@ afterEach(() => {
 });
 
 describe("attachAgentUiWebSocketBridge", () => {
+  it("runs admission before spawning the Codex process", async () => {
+    let spawnCount = 0;
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      admission: () => false,
+      server: httpServer,
+      spawn: () => {
+        spawnCount += 1;
+        throw new Error("spawn should not run");
+      },
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
+    await onceClose(client);
+    expect(spawnCount).toBe(0);
+  });
+
+  it("rejects host-only browser methods before forwarding to App Server", async () => {
+    const { socket, writes } = await createBridgeBackedSocket();
+
+    socket.send(JSON.stringify({ id: 1, method: "fs/readFile", params: { path: "/tmp/secret" } }));
+    await expect(nextMessage(socket)).resolves.toMatchObject({
+      error: {
+        code: -32601,
+        data: { method: "fs/readFile" },
+      },
+      id: 1,
+    });
+    expect(writes.map((line) => JSON.parse(line)).some((message) => message.method === "fs/readFile")).toBe(false);
+    socket.close();
+  });
+
   it("keeps a stdio bridge alive for browser requests and server events", async () => {
     const stdin = new PassThrough();
     const stdout = new PassThrough();
@@ -220,7 +259,9 @@ describe("attachAgentUiWebSocketBridge", () => {
   });
 
   it("handles dynamic MCP tool calls through the app-server bridge", async () => {
-    const { stdout, transport, writes } = await createBridgeBackedTransport();
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      dynamicToolHandler: defaultDynamicToolHandler,
+    });
 
     const connected = transport.connect();
     await waitFor(() => writes.length === 1);
@@ -250,8 +291,8 @@ describe("attachAgentUiWebSocketBridge", () => {
     expect(helperThreadStart).toMatchObject({
       method: "thread/start",
       params: {
-        approvalPolicy: "never",
-        sandbox: "danger-full-access",
+        approvalPolicy: "on-request",
+        sandbox: "workspace-write",
       },
     });
     stdout.write(
@@ -308,7 +349,9 @@ describe("attachAgentUiWebSocketBridge", () => {
   });
 
   it("auto-resolves MCP approvals for dynamic tool helper calls", async () => {
-    const { stdout, transport, writes } = await createBridgeBackedTransport();
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      dynamicToolHandler: defaultDynamicToolHandler,
+    });
 
     const connected = transport.connect();
     await waitFor(() => writes.length === 1);
@@ -445,7 +488,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     await transport.close();
   });
 
-  it("can auto-accept MCP elicitations without approval metadata", async () => {
+  it("does not auto-accept MCP elicitations without approval metadata", async () => {
     const { stdout, transport, writes } = await createBridgeBackedTransport({
       serverRequestPolicy: { mcpToolApproval: "accept" },
     });
@@ -473,15 +516,21 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "mcp-active-elicitation-1"));
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "mcp-active-elicitation-1")).toEqual({
-      id: "mcp-active-elicitation-1",
-      result: {
-        _meta: null,
-        action: "accept",
-        content: null,
+    await expect(
+      nextTransportEvent(transport, (candidate) => {
+        return candidate.event?.type === "serverRequest/created";
+      }),
+    ).resolves.toMatchObject({
+      event: {
+        request: {
+          id: "mcp-active-elicitation-1",
+          kind: "mcpElicitation",
+        },
+        type: "serverRequest/created",
       },
+      type: "event",
     });
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "mcp-active-elicitation-1" && "result" in message)).toBeUndefined();
     await transport.close();
   });
 
@@ -502,6 +551,9 @@ describe("attachAgentUiWebSocketBridge", () => {
         method: "mcpServer/elicitation/request",
         params: {
           message: "Allow computer-use?",
+          _meta: {
+            codex_approval_kind: "mcp_tool_call",
+          },
           requestedSchema: {
             properties: {},
             type: "object",
@@ -742,7 +794,7 @@ describe("attachAgentUiWebSocketBridge", () => {
 });
 
 async function createBridgeBackedTransport(
-  options: Pick<AgentUiWebSocketBridgeOptions, "hostEvents" | "serverRequestPolicy"> = {},
+  options: Pick<AgentUiWebSocketBridgeOptions, "dynamicToolHandler" | "hostEvents" | "serverRequestPolicy"> = {},
 ) {
   const stdin = new PassThrough();
   const stdout = new PassThrough();
@@ -783,9 +835,49 @@ async function createBridgeBackedTransport(
   return { stderr, stdout, transport, writes };
 }
 
+async function createBridgeBackedSocket(
+  options: Pick<AgentUiWebSocketBridgeOptions, "browserMethodPolicy" | "dynamicToolHandler" | "hostEvents" | "serverRequestPolicy"> = {},
+) {
+  const stdin = new PassThrough();
+  const stdout = new PassThrough();
+  const stderr = new PassThrough();
+  const writes: string[] = [];
+  stdin.on("data", (chunk) => writes.push(String(chunk)));
+
+  const process: CodexChildProcess = {
+    kill: () => true,
+    stderr,
+    stdin,
+    stdout,
+  };
+
+  const httpServer = createServer();
+  servers.push(httpServer);
+  const webSocketServer = attachAgentUiWebSocketBridge({
+    ...options,
+    server: httpServer,
+    spawn: () => process,
+  });
+  servers.push(webSocketServer);
+
+  await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+  const address = httpServer.address();
+  if (!address || typeof address === "string") throw new Error("missing server address");
+  const socket = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
+  await onceOpen(socket);
+  return { socket, stderr, stdout, writes };
+}
+
 function onceOpen(socket: WebSocket): Promise<void> {
   return new Promise((resolve, reject) => {
     socket.once("open", () => resolve());
+    socket.once("error", reject);
+  });
+}
+
+function onceClose(socket: WebSocket): Promise<void> {
+  return new Promise((resolve, reject) => {
+    socket.once("close", () => resolve());
     socket.once("error", reject);
   });
 }

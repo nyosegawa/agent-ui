@@ -87,6 +87,7 @@ export interface ThreadTokenUsage {
   outputTokens?: number;
   reasoningOutputTokens?: number;
   totalTokens?: number;
+  turnId?: TurnId;
   raw?: unknown;
 }
 

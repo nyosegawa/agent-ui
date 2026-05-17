@@ -263,3 +263,35 @@
 .aui-fixture-preview figure[data-size="mobile"] iframe {
   height: 520px;
 }
+
+@media (max-width: 980px) and (min-width: 641px) {
+  .aui-fixture-gallery-header,
+  .aui-fixture-preview header,
+  .aui-fixture-preview-frames {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .aui-fixture-gallery {
+    padding: 18px 12px;
+  }
+
+  .aui-fixture-gallery-header,
+  .aui-fixture-preview header,
+  .aui-fixture-preview-frames {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aui-fixture-gallery-actions {
+    justify-content: start;
+  }
+
+  .aui-fixture-preview iframe {
+    height: 480px;
+  }
+
+  .aui-fixture-frame-shell {
+    min-height: 480px;
+  }
+}

@@ -50,7 +50,6 @@ class CodexStdioTransport implements AgentTransport {
   async connect(): Promise<void> {
     this.#readStdout();
     this.#readStderr();
-    this.#push({ event: { type: "connection/connected" }, type: "event" });
     if (this.#options.initialize) {
       await this.request("initialize", {
         capabilities: {
@@ -61,6 +60,7 @@ class CodexStdioTransport implements AgentTransport {
       });
       this.notify("initialized");
     }
+    this.#push({ event: { type: "connection/connected" }, type: "event" });
   }
 
   async close(): Promise<void> {

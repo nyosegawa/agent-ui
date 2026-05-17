@@ -28,6 +28,9 @@ attachAgentUiWebSocketBridge({
   server,
   path: "/agent-ui/ws",
   cwd: process.cwd(),
+  admission(request) {
+    return request.headers.origin === "http://127.0.0.1:5175";
+  },
   initialize: {
     clientInfo: {
       name: "agent_ui_host",
@@ -53,6 +56,14 @@ events to the browser, forwards browser responses for App Server requests, and
 closes the process when the socket closes or the idle timeout expires. Slow
 browser consumers are closed with WebSocket code `1013` when the outbound
 buffer exceeds the configured backpressure limit.
+
+`admission` runs before the Codex child process is spawned. Use it for
+same-origin, session, or explicit local-token checks on any bridge that is not a
+private loopback-only development endpoint. Browser JSON-RPC requests are
+filtered by `browserMethodPolicy`; the default allows only productized UI
+methods such as account/model/thread/turn/skills/hooks/apps calls. Host-only
+methods such as `fs/readFile`, `command/exec`, `mcpServer/tool/call`, and
+configuration writes require an explicit host policy.
 
 Running-turn UX should map directly to App Server methods. Additional
 instructions for an active regular turn call `turn/steer` with `threadId`,
@@ -92,13 +103,14 @@ only on `mentionInput`.
 
 ## Dynamic Tool Bridge
 
-`attachAgentUiWebSocketBridge()` defaults to
-`defaultDynamicToolHandler` for App Server dynamic-tool requests. That helper
-may create a helper thread and run with:
+`attachAgentUiWebSocketBridge()` does not execute dynamic tool requests unless
+the host passes a `dynamicToolHandler`. The exported
+`defaultDynamicToolHandler` is an opt-in local helper for App Server
+dynamic-tool requests. It may create a helper thread with:
 
 ```text
-approvalPolicy: "never"
-sandbox: "danger-full-access"
+approvalPolicy: "on-request"
+sandbox: "workspace-write"
 ```
 
 This is a host boundary, not a UI convenience. Hosts that do not understand the
@@ -107,7 +119,9 @@ should provide explicit authorization, logging, and workspace isolation.
 
 Server request auto-resolution is controlled separately by
 `serverRequestPolicy`. The default policy forwards approval-like requests to
-the browser UI so the user can decide.
+the browser UI so the user can decide. The MCP tool approval shortcut only
+accepts elicitations that carry `_meta.codex_approval_kind ===
+"mcp_tool_call"`; generic MCP elicitations stay visible to the host/UI.
 
 ## One-Shot HTTP RPC
 

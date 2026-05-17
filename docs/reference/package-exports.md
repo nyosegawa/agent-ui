@@ -220,3 +220,29 @@ const thread = useAgentThread(threadId);
 const approvals = useAgentApprovals(threadId);
 const composer = useAgentComposer(threadId);
 ```
+
+## Export Boundary Gates
+
+The package boundary is mechanically checked after `bun run build`:
+
+- `bun run test:api-snapshots` compares built `.d.ts` files with
+  `test/api-snapshots/*`.
+- `bun run test:package-resolution` verifies each documented root/subpath and
+  rejects undocumented deep imports such as package `dist/*`, `src/*`, and
+  private CSS chunks.
+- `bun run test:node-compat` imports and requires important named exports from
+  every package on Node.js LTS.
+
+Only these subpaths are public today:
+
+- `@nyosegawa/agent-ui-core`
+- `@nyosegawa/agent-ui-codex`
+- `@nyosegawa/agent-ui-codex/request-builders`
+- `@nyosegawa/agent-ui-codex/websocket`
+- `@nyosegawa/agent-ui-react`
+- `@nyosegawa/agent-ui-react/styles.css`
+- `@nyosegawa/agent-ui-server`
+- `@nyosegawa/agent-ui-web-components`
+
+React style chunks under `dist/styles/*` are copied package internals used by
+`styles.css`, not documented host imports.

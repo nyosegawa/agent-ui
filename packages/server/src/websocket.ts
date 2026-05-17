@@ -5,7 +5,7 @@ import {
   parseJsonRpcLine,
 } from "@nyosegawa/agent-ui-codex";
 import type { AgentTransportEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
-import type { Server } from "node:http";
+import type { IncomingMessage, Server } from "node:http";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { createCodexAppServerBridge, type CodexAppServerBridgeOptions } from "./bridge";
 import * as dynamicTools from "./dynamic-tools";
@@ -19,6 +19,7 @@ import {
 } from "./websocket-backpressure";
 
 export interface AgentUiWebSocketBridgeOptions extends CodexAppServerBridgeOptions {
+  admission?: AgentUiBridgeAdmissionHook;
   dynamicToolHandler?: DynamicToolHandler;
   hostEvents?: AgentUiHostEventSink;
   idleTimeoutMs?: number | false;
@@ -33,6 +34,7 @@ export interface AgentUiWebSocketBridgeOptions extends CodexAppServerBridgeOptio
    */
   serverRequestPolicy?: ServerRequestPolicy;
   path?: string;
+  browserMethodPolicy?: BrowserMethodPolicy;
 }
 
 export interface AgentUiWebSocketServerOptions extends AgentUiWebSocketBridgeOptions {
@@ -41,33 +43,85 @@ export interface AgentUiWebSocketServerOptions extends AgentUiWebSocketBridgeOpt
 
 type ServerRequestPolicy = requestPolicy.ServerRequestPolicy;
 type DynamicToolHandler = dynamicTools.DynamicToolHandler;
+export type AgentUiBridgeAdmissionHook = (
+  request: IncomingMessage,
+) => boolean | Promise<boolean>;
+export type BrowserMethodPolicy =
+  | "productized"
+  | "all"
+  | {
+      allowedMethods?: readonly string[];
+      allowedNotifications?: readonly string[];
+    };
 
 const DEFAULT_PATH = "/agent-ui/ws";
 const DEFAULT_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const DEFAULT_BROWSER_REQUEST_METHODS = new Set([
+  "initialize",
+  "account/read",
+  "account/login/start",
+  "account/login/cancel",
+  "account/logout",
+  "account/rateLimits/read",
+  "model/list",
+  "thread/start",
+  "thread/resume",
+  "thread/fork",
+  "thread/list",
+  "thread/loaded/list",
+  "thread/read",
+  "thread/archive",
+  "thread/unarchive",
+  "thread/name/set",
+  "thread/metadata/update",
+  "thread/compact/start",
+  "thread/rollback",
+  "thread/inject_items",
+  "thread/unsubscribe",
+  "turn/start",
+  "turn/steer",
+  "turn/interrupt",
+  "skills/list",
+  "skills/config/write",
+  "hooks/list",
+  "app/list",
+]);
+const DEFAULT_BROWSER_NOTIFICATION_METHODS = new Set(["initialized"]);
 
 export function attachAgentUiWebSocketBridge(
   options: AgentUiWebSocketServerOptions,
 ): WebSocketServer {
   const { path = DEFAULT_PATH, server, ...bridgeOptions } = options;
   const webSocketServer = new WebSocketServer({ path, server });
-  webSocketServer.on("connection", (socket) => {
-    handleAgentUiWebSocketConnection(socket, bridgeOptions);
+  webSocketServer.on("connection", (socket, request) => {
+    void handleAgentUiWebSocketConnection(socket, bridgeOptions, request);
   });
   return webSocketServer;
 }
 
-export function handleAgentUiWebSocketConnection(
+export async function handleAgentUiWebSocketConnection(
   socket: WebSocket,
   options: AgentUiWebSocketBridgeOptions = {},
-): void {
+  request?: IncomingMessage,
+): Promise<void> {
   const {
-    dynamicToolHandler = dynamicTools.defaultDynamicToolHandler,
+    admission,
+    browserMethodPolicy,
+    dynamicToolHandler,
     hostEvents,
     idleTimeoutMs = DEFAULT_IDLE_TIMEOUT_MS,
     maxBufferedBytes,
     serverRequestPolicy,
     ...bridgeOptions
   } = options;
+  if (admission && request) {
+    const accepted = await admission(request);
+    if (!accepted) {
+      socket.close(1008, "Agent UI bridge admission rejected");
+      return;
+    }
+  }
+  const methodPolicy = resolveBrowserMethodPolicy(browserMethodPolicy);
   const bridge = createCodexAppServerBridge(bridgeOptions);
   const backpressure = createWebSocketBackpressureGuard({ maxBufferedBytes });
   const effectiveServerRequestPolicy =
@@ -151,6 +205,13 @@ export function handleAgentUiWebSocketConnection(
           log(
             `handling dynamic tool id=${event.requestId} thread=${threadIdFromRequest(event.request) ?? "(none)"}`,
           );
+          if (!dynamicToolHandler) {
+            await bridge.transport.respond(
+              event.requestId,
+              dynamicTools.dynamicToolFailure("Dynamic tool handling is disabled by host policy"),
+            );
+            continue;
+          }
           void dynamicTools.handleDynamicToolRequest(
             event,
             bridge.transport,
@@ -179,7 +240,7 @@ export function handleAgentUiWebSocketConnection(
 
   socket.on("message", (data) => {
     resetIdleTimer();
-    void handleClientMessage(socket, bridge.transport, backpressure, data).catch((error: unknown) => {
+    void handleClientMessage(socket, bridge.transport, backpressure, data, methodPolicy).catch((error: unknown) => {
       sendEnvelope(socket, backpressure, {
         error: { message: error instanceof Error ? error.message : String(error) },
         type: "error",
@@ -216,9 +277,21 @@ async function handleClientMessage(
   transport: ReturnType<typeof createCodexAppServerBridge>["transport"],
   backpressure: ReturnType<typeof createWebSocketBackpressureGuard>,
   data: RawData,
+  methodPolicy: ResolvedBrowserMethodPolicy,
 ): Promise<void> {
   const message = parseJsonRpcLine(data.toString());
   if (isJsonRpcRequest(message)) {
+    if (!methodPolicy.requests.has("*") && !methodPolicy.requests.has(message.method)) {
+      sendJson(socket, backpressure, {
+        error: {
+          code: -32601,
+          data: { method: message.method },
+          message: `Browser method is not allowed: ${message.method}`,
+        },
+        id: message.id,
+      });
+      return;
+    }
     try {
       const result = await transport.request(message.method, message.params);
       sendJson(socket, backpressure, { id: message.id, result });
@@ -232,6 +305,7 @@ async function handleClientMessage(
   }
 
   if (isJsonRpcNotification(message)) {
+    if (!methodPolicy.notifications.has(message.method)) return;
     transport.notify(message.method, message.params);
     return;
   }
@@ -240,6 +314,30 @@ async function handleClientMessage(
     if ("error" in message) await transport.reject(message.id, message.error);
     else await transport.respond(message.id, message.result);
   }
+}
+
+interface ResolvedBrowserMethodPolicy {
+  notifications: Set<string>;
+  requests: Set<string>;
+}
+
+function resolveBrowserMethodPolicy(policy?: BrowserMethodPolicy): ResolvedBrowserMethodPolicy {
+  if (policy === "all") {
+    return {
+      notifications: new Set(["initialized"]),
+      requests: new Set(["*"]),
+    };
+  }
+  if (policy && typeof policy === "object") {
+    return {
+      notifications: new Set(policy.allowedNotifications ?? ["initialized"]),
+      requests: new Set(policy.allowedMethods ?? DEFAULT_BROWSER_REQUEST_METHODS),
+    };
+  }
+  return {
+    notifications: DEFAULT_BROWSER_NOTIFICATION_METHODS,
+    requests: DEFAULT_BROWSER_REQUEST_METHODS,
+  };
 }
 
 function sendEnvelope(

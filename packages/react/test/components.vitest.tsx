@@ -1943,6 +1943,11 @@ describe("AgentChat", () => {
     );
 
     expect(transport.responses.get("approval-command")).toEqual({ decision: "decline" });
+    expect(
+      screen.getByRole("button", {
+        name: "Decline command request approval-command",
+      }),
+    ).toBeInTheDocument();
   });
 
   it("renders non-command server requests with specific approval context", async () => {
@@ -1992,6 +1997,11 @@ describe("AgentChat", () => {
     await user.click(
       await screen.findByRole("button", {
         name: "Approve command request approval-command for session",
+      }),
+    );
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Review file-change request approval-file",
       }),
     );
     await user.click(

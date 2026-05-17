@@ -6,37 +6,88 @@ import { fileURLToPath } from "node:url";
 
 const require = createRequire(import.meta.url);
 
-const packages = ["core", "codex", "react", "server", "web-components"];
+const packages = [
+  {
+    dir: "core",
+    name: "core",
+    namedExports: [
+      "agentReducer",
+      "FakeAgentTransport",
+      "createInitialAgentState",
+      "selectServerRequestQueue",
+    ],
+  },
+  {
+    dir: "codex",
+    name: "codex",
+    namedExports: [
+      "createCodexSession",
+      "createCodexStdioTransport",
+      "createCodexWebSocketTransport",
+      "normalizeCodexServerMessage",
+      "threadStartParams",
+    ],
+  },
+  {
+    dir: "react",
+    name: "react",
+    namedExports: [
+      "AgentChat",
+      "AgentComposer",
+      "AgentProvider",
+      "AgentThreadTimeline",
+      "useAgentApprovals",
+      "useAgentContext",
+    ],
+  },
+  {
+    dir: "server",
+    name: "server",
+    namedExports: [
+      "attachAgentUiWebSocketBridge",
+      "createCodexAppServerBridge",
+      "createAgentUiLocalUploadHandler",
+      "resolveServerRequestPolicy",
+    ],
+  },
+  {
+    dir: "web-components",
+    name: "web-components",
+    namedExports: ["AgentChatElement", "defineAgentChatElement"],
+  },
+];
 
-for (const name of packages) {
-  const root = new globalThis.URL(`../packages/${name}/`, import.meta.url);
+for (const pkg of packages) {
+  const root = new globalThis.URL(`../packages/${pkg.dir}/`, import.meta.url);
   const esm = new globalThis.URL("dist/index.js", root);
   const cjs = new globalThis.URL("dist/index.cjs", root);
   if (!existsSync(esm) || !existsSync(cjs)) {
-    throw new Error(`Package ${name} must be built before compatibility smoke`);
+    throw new Error(`Package ${pkg.name} must be built before compatibility smoke`);
   }
-  await import(esm);
-  require(fileURLToPath(cjs));
+  const esmModule = await import(esm);
+  const cjsModule = require(fileURLToPath(cjs));
+  for (const exportName of pkg.namedExports) {
+    if (!(exportName in esmModule)) {
+      throw new Error(`${pkg.name} ESM export missing ${exportName}`);
+    }
+    if (!(exportName in cjsModule)) {
+      throw new Error(`${pkg.name} CJS export missing ${exportName}`);
+    }
+  }
 }
 
-const core = await import(new globalThis.URL("../packages/core/dist/index.js", import.meta.url));
-const codex = await import(new globalThis.URL("../packages/codex/dist/index.js", import.meta.url));
-const server = await import(new globalThis.URL("../packages/server/dist/index.js", import.meta.url));
-const webComponents = await import(
-  new globalThis.URL("../packages/web-components/dist/index.js", import.meta.url)
+const codexRequestBuilders = await import(
+  new globalThis.URL("../packages/codex/dist/request-builders.js", import.meta.url)
 );
+if (typeof codexRequestBuilders.turnStartParams !== "function") {
+  throw new Error("codex/request-builders ESM export missing turnStartParams");
+}
 
-if (typeof core.createInitialAgentState !== "function") {
-  throw new Error("core ESM export missing createInitialAgentState");
-}
-if (typeof codex.createCodexStdioTransport !== "function") {
-  throw new Error("codex ESM export missing createCodexStdioTransport");
-}
-if (typeof server.createCodexAppServerBridge !== "function") {
-  throw new Error("server ESM export missing createCodexAppServerBridge");
-}
-if (typeof webComponents.defineAgentChatElement !== "function") {
-  throw new Error("web-components ESM export missing defineAgentChatElement");
+const codexWebsocket = await import(
+  new globalThis.URL("../packages/codex/dist/websocket.js", import.meta.url)
+);
+if (typeof codexWebsocket.createCodexWebSocketTransport !== "function") {
+  throw new Error("codex/websocket ESM export missing createCodexWebSocketTransport");
 }
 
 log(`Node compatibility smoke passed on ${process.version}`);

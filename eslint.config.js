@@ -10,6 +10,7 @@ export default tseslint.config(
       "**/.next/**",
       "**/node_modules/**",
       "packages/codex/src/generated/**",
+      "test/api-snapshots/**",
       "coverage/**",
       "test-results/**",
     ],

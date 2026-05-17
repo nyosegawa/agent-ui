@@ -35,7 +35,11 @@ export function responseForServerRequest(
     return undefined;
   }
 
-  if (event.request.kind === "mcpElicitation" && policy.mcpToolApproval === "accept") {
+  if (
+    event.request.kind === "mcpElicitation" &&
+    policy.mcpToolApproval === "accept" &&
+    isMcpToolApprovalElicitation(event.request.payload)
+  ) {
     return {
       action: "accept",
       kind: event.request.kind,
@@ -100,4 +104,10 @@ function grantedPermissionsFromRequest(permissions: Record<string, unknown>): Re
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+function isMcpToolApprovalElicitation(payload: unknown): boolean {
+  if (!isRecord(payload)) return false;
+  const meta = isRecord(payload._meta) ? payload._meta : undefined;
+  return meta?.codex_approval_kind === "mcp_tool_call";
 }

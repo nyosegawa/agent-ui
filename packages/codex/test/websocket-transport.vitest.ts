@@ -41,6 +41,33 @@ describe("CodexWebSocketTransport", () => {
     await expect(request).rejects.toThrow("disconnected");
   });
 
+  it("preserves JSON-RPC error code and data", async () => {
+    const sockets: FakeWebSocket[] = [];
+    const transport = createCodexWebSocketTransport({
+      reconnect: false,
+      url: "ws://localhost/agent-ui",
+      webSocketImpl: fakeWebSocketFactory(sockets) as any,
+    });
+    await transport.connect();
+
+    const request = transport.request("thread/read", { threadId: "thread-1" });
+    const parsed = JSON.parse(sockets[0]!.sent.at(-1) ?? "{}") as { id: number };
+    sockets[0]!.emitMessage({
+      error: {
+        code: -32042,
+        data: { retryAfterMs: 250, threadId: "thread-1" },
+        message: "busy",
+      },
+      id: parsed.id,
+    });
+
+    await expect(request).rejects.toMatchObject({
+      code: -32042,
+      data: { retryAfterMs: 250, threadId: "thread-1" },
+      message: "busy",
+    });
+  });
+
   it("emits raw JSON-RPC server requests as request events", async () => {
     const sockets: FakeWebSocket[] = [];
     const transport = createCodexWebSocketTransport({
