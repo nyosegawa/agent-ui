@@ -32,6 +32,10 @@ attachAgentUiWebSocketBridge({
     return request.headers.origin === "http://127.0.0.1:5175";
   },
   initialize: {
+    capabilities: {
+      experimentalApi: false,
+      requestAttestation: false,
+    },
     clientInfo: {
       name: "agent_ui_host",
       title: "Agent UI Host",
@@ -63,7 +67,10 @@ private loopback-only development endpoint. Browser JSON-RPC requests are
 filtered by `browserMethodPolicy`; the default allows only productized UI
 methods such as account/model/thread/turn/skills/hooks/apps calls. Host-only
 methods such as `fs/readFile`, `command/exec`, `mcpServer/tool/call`, and
-configuration writes require an explicit host policy.
+configuration writes require an explicit host policy. Rejected methods return a
+JSON-RPC error with `code: -32601` and `data.method`. When an allowed App
+Server request fails, the bridge preserves the App Server error `code` and
+`data` in the browser response instead of collapsing it to a message string.
 
 Running-turn UX should map directly to App Server methods. Additional
 instructions for an active regular turn call `turn/steer` with `threadId`,
@@ -122,6 +129,37 @@ Server request auto-resolution is controlled separately by
 the browser UI so the user can decide. The MCP tool approval shortcut only
 accepts elicitations that carry `_meta.codex_approval_kind ===
 "mcp_tool_call"`; generic MCP elicitations stay visible to the host/UI.
+
+Permission approvals are never blanket-granted. To auto-resolve a permissions
+request, the host must provide a callback:
+
+```ts
+attachAgentUiWebSocketBridge({
+  server,
+  serverRequestPolicy: {
+    permissions(context) {
+      if (
+        context.cwd === "/Users/me/project" &&
+        context.requested.fileSystem === "read-only"
+      ) {
+        return {
+          action: "grant",
+          permissions: {
+            fileSystem: { mode: "read-only", paths: [context.cwd] },
+          },
+          scope: "turn",
+        };
+      }
+      return { action: "manual" };
+    },
+  },
+});
+```
+
+The callback receives `requestId`, `threadId`, `turnId`, `cwd`, requested
+filesystem/network permissions, and the raw App Server request payload. Only
+the bounded permissions returned by the callback are granted; `undefined`,
+`null`, or `{ action: "manual" }` leaves the request pending for the UI.
 
 ## One-Shot HTTP RPC
 

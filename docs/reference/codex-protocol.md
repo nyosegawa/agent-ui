@@ -111,10 +111,24 @@ Experimental protocol support:
 
 ```ts
 await transport.request("initialize", {
-  clientInfo: { name: "agent_ui_host" },
-  capabilities: { experimentalApi: true },
+  capabilities: {
+    experimentalApi: true,
+    requestAttestation: false,
+  },
+  clientInfo: {
+    name: "agent_ui_host",
+    title: null,
+    version: "0.1.0",
+  },
 });
 ```
+
+`initialize` uses the generated stable `InitializeParams` shape. `clientInfo`
+requires `name`, nullable `title`, and `version`; `capabilities` is either
+`null` or an object with required `experimentalApi` and `requestAttestation`
+booleans plus optional nullable `optOutNotificationMethods`. Agent UI sends the
+`initialized` client notification only after the initialize response; readiness
+is the response, not the notification.
 
 Generated experimental types may exist internally, but they must not appear in default public component props or normalized core state.
 

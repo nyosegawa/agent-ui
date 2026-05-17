@@ -7,11 +7,12 @@ import {
   isJsonRpcNotification,
   isJsonRpcRequest,
   isJsonRpcResponse,
+  jsonRpcErrorObject,
   parseJsonRpcLine,
   type JsonRpcMessage,
 } from "./json-rpc";
 import { normalizeCodexServerMessage } from "./normalizer";
-import type { CodexInitializeOptions } from "./protocol";
+import { codexInitializeParams, type CodexInitializeOptions } from "./protocol";
 
 export interface CodexWebSocketTransportOptions {
   initialize?: CodexInitializeOptions;
@@ -136,13 +137,7 @@ class CodexWebSocketTransport implements AgentTransport {
       this.#scheduleReconnect();
     });
     if (this.#options.initialize) {
-      await this.request("initialize", {
-        capabilities: {
-          experimentalApi: this.#options.initialize.experimentalApi,
-          optOutNotificationMethods: this.#options.initialize.optOutNotificationMethods,
-        },
-        clientInfo: this.#options.initialize.clientInfo,
-      });
+      await this.request("initialize", codexInitializeParams(this.#options.initialize));
       this.notify("initialized");
     }
     this.#reconnectAttempts = 0;
@@ -201,7 +196,7 @@ class CodexWebSocketTransport implements AgentTransport {
       const pending = this.#pending.get(String(message.id));
       if (!pending) return;
       this.#pending.delete(String(message.id));
-      if ("error" in message) pending.reject(jsonRpcError(message.error));
+      if ("error" in message) pending.reject(jsonRpcErrorObject(message.error));
       else pending.resolve(message.result);
       this.#push({ payload: message, requestId: message.id, type: "response" });
       return;
@@ -260,11 +255,4 @@ function envelopeEvent(value: {
   type: "agent-ui/transport-event";
 }): AgentTransportEvent {
   return value.event;
-}
-
-function jsonRpcError(error: { code?: number; message: string; data?: unknown }): Error {
-  const next = new Error(error.message) as Error & { code?: number; data?: unknown };
-  next.code = error.code;
-  next.data = error.data;
-  return next;
 }

@@ -2,6 +2,7 @@ import {
   isJsonRpcNotification,
   isJsonRpcRequest,
   isJsonRpcResponse,
+  jsonRpcErrorPayload,
   parseJsonRpcLine,
 } from "@nyosegawa/agent-ui-codex";
 import type { AgentTransportEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
@@ -279,7 +280,7 @@ async function handleClientMessage(
   data: RawData,
   methodPolicy: ResolvedBrowserMethodPolicy,
 ): Promise<void> {
-  const message = parseJsonRpcLine(data.toString());
+  const message = parseJsonRpcLine(data.toString()) as unknown;
   if (isJsonRpcRequest(message)) {
     if (!methodPolicy.requests.has("*") && !methodPolicy.requests.has(message.method)) {
       sendJson(socket, backpressure, {
@@ -297,7 +298,7 @@ async function handleClientMessage(
       sendJson(socket, backpressure, { id: message.id, result });
     } catch (error) {
       sendJson(socket, backpressure, {
-        error: { message: error instanceof Error ? error.message : String(error) },
+        error: jsonRpcErrorPayload(error),
         id: message.id,
       });
     }
@@ -313,6 +314,18 @@ async function handleClientMessage(
   if (isJsonRpcResponse(message)) {
     if ("error" in message) await transport.reject(message.id, message.error);
     else await transport.respond(message.id, message.result);
+    return;
+  }
+
+  if (isRecord(message) && "id" in message) {
+    sendJson(socket, backpressure, {
+      error: {
+        code: -32600,
+        data: { message },
+        message: "Invalid JSON-RPC message",
+      },
+      id: message.id,
+    });
   }
 }
 

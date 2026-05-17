@@ -24,6 +24,10 @@ const child = spawn("codex", ["app-server", "--listen", "stdio://"], {
 });
 const transport = createCodexStdioTransport({
   initialize: {
+    capabilities: {
+      experimentalApi: false,
+      requestAttestation: false,
+    },
     clientInfo: {
       name: "agent_ui_real_codex_smoke",
       title: "Agent UI Real Codex Smoke",

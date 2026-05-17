@@ -4,6 +4,10 @@ export const runtime = "nodejs";
 
 export const POST = createAgentUiNextRpcRoute({
   initialize: {
+    capabilities: {
+      experimentalApi: false,
+      requestAttestation: false,
+    },
     clientInfo: {
       name: "agent_ui_next_example",
       title: "Agent UI Next RPC Route Example",

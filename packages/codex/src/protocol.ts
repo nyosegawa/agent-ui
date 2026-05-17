@@ -1,3 +1,9 @@
+import type {
+  ClientInfo as StableClientInfo,
+  InitializeCapabilities as StableInitializeCapabilities,
+  InitializeParams,
+} from "./generated/stable";
+
 export const CODEX_PROTOCOL_COMMIT = "6a225e4005209f2325ab3c681c7c6beba2907d4d";
 export const CODEX_PROTOCOL_GENERATED_AT = "2026-05-14T15:21:25+09:00";
 
@@ -317,14 +323,30 @@ export const codexCapabilityMetadata: readonly CodexCapabilityMetadata[] = [
   })),
 ];
 
-export interface CodexClientInfo {
-  name: string;
-  title?: string;
-  version?: string;
+export type CodexClientInfo = StableClientInfo;
+export type CodexInitializeCapabilities = StableInitializeCapabilities;
+export type CodexInitializeOptions = InitializeParams;
+
+export function codexInitializeParams(options: CodexInitializeOptions): InitializeParams {
+  return {
+    capabilities: normalizeInitializeCapabilities(options.capabilities),
+    clientInfo: {
+      name: options.clientInfo.name,
+      title: options.clientInfo.title,
+      version: options.clientInfo.version,
+    },
+  };
 }
 
-export interface CodexInitializeOptions {
-  clientInfo: CodexClientInfo;
-  experimentalApi?: boolean;
-  optOutNotificationMethods?: string[];
+function normalizeInitializeCapabilities(
+  capabilities: InitializeParams["capabilities"],
+): InitializeParams["capabilities"] {
+  if (capabilities === null) return null;
+  return {
+    experimentalApi: capabilities?.experimentalApi ?? false,
+    requestAttestation: capabilities?.requestAttestation ?? false,
+    ...(capabilities?.optOutNotificationMethods !== undefined
+      ? { optOutNotificationMethods: capabilities.optOutNotificationMethods }
+      : {}),
+  };
 }

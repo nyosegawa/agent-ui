@@ -123,10 +123,38 @@ interface ServerRequestPolicy$1 {
     commandExecution?: "accept" | "acceptForSession" | "manual";
     fileChange?: "accept" | "acceptForSession" | "manual";
     mcpToolApproval?: "accept" | "manual";
-    permissions?: "grant" | "manual";
+    permissions?: PermissionApprovalPolicy | "manual";
     userInput?: "manual";
 }
-type ResolvedServerRequestPolicy = Required<ServerRequestPolicy$1>;
+interface PermissionApprovalContext {
+    cwd?: string;
+    payload: unknown;
+    requestId: NonNullable<AgentTransportEvent["requestId"]>;
+    requested: {
+        fileSystem?: unknown;
+        network?: unknown;
+    };
+    threadId?: string;
+    turnId?: string;
+}
+type PermissionApprovalDecision = {
+    action: "grant";
+    permissions: {
+        fileSystem?: unknown;
+        network?: unknown;
+    };
+    scope?: "session" | "turn";
+} | {
+    action: "manual";
+} | null | undefined;
+type PermissionApprovalPolicy = (context: PermissionApprovalContext) => PermissionApprovalDecision;
+type ResolvedServerRequestPolicy = {
+    commandExecution: NonNullable<ServerRequestPolicy$1["commandExecution"]>;
+    fileChange: NonNullable<ServerRequestPolicy$1["fileChange"]>;
+    mcpToolApproval: NonNullable<ServerRequestPolicy$1["mcpToolApproval"]>;
+    permissions: PermissionApprovalPolicy | "manual";
+    userInput: NonNullable<ServerRequestPolicy$1["userInput"]>;
+};
 declare function resolveServerRequestPolicy(policy?: ServerRequestPolicy$1): ResolvedServerRequestPolicy;
 declare function responseForServerRequest(event: AgentTransportEvent, policy: ResolvedServerRequestPolicy): {
     action: string;
@@ -180,4 +208,4 @@ type BrowserMethodPolicy = "productized" | "all" | {
 declare function attachAgentUiWebSocketBridge(options: AgentUiWebSocketServerOptions): WebSocketServer;
 declare function handleAgentUiWebSocketConnection(socket: WebSocket, options?: AgentUiWebSocketBridgeOptions, request?: IncomingMessage): Promise<void>;
 
-export { type AgentBrowserDetection, type AgentBrowserRunner, type AgentUiBridgeAdmissionHook, type AgentUiHostEventSink, type AgentUiNextRpcRouteOptions, type AgentUiUploadHandler, type AgentUiUploadHandlerOptions, type AgentUiWebSocketBridgeOptions, type AgentUiWebSocketServerOptions, type BrowserMethodPolicy, type CodexAppServerBridge, type CodexAppServerBridgeOptions, type CodexChildProcess, type CodexSpawnOptions, type DynamicToolCallOutputContentItem, type DynamicToolCallResponse, type DynamicToolHandler$1 as DynamicToolHandler, type DynamicToolHandlerContext, type DynamicToolRequest, type MinimalExpressRequest, type MinimalExpressResponse, type ResolvedServerRequestPolicy, type ServerRequestPolicy$1 as ServerRequestPolicy, attachAgentUiWebSocketBridge, createAgentUiExpressMiddleware, createAgentUiLocalUploadHandler, createAgentUiNextRpcRoute, createCodexAppServerBridge, createDynamicToolHelperThread, defaultDynamicToolHandler, detectAgentBrowser, dynamicToolFailure, emitHostEvent, handleAgentUiWebSocketConnection, handleDynamicToolRequest, maybeResolveHelperThreadRequest, redactSecrets, resolveServerRequestPolicy, responseForServerRequest };
+export { type AgentBrowserDetection, type AgentBrowserRunner, type AgentUiBridgeAdmissionHook, type AgentUiHostEventSink, type AgentUiNextRpcRouteOptions, type AgentUiUploadHandler, type AgentUiUploadHandlerOptions, type AgentUiWebSocketBridgeOptions, type AgentUiWebSocketServerOptions, type BrowserMethodPolicy, type CodexAppServerBridge, type CodexAppServerBridgeOptions, type CodexChildProcess, type CodexSpawnOptions, type DynamicToolCallOutputContentItem, type DynamicToolCallResponse, type DynamicToolHandler$1 as DynamicToolHandler, type DynamicToolHandlerContext, type DynamicToolRequest, type MinimalExpressRequest, type MinimalExpressResponse, type PermissionApprovalContext, type PermissionApprovalDecision, type PermissionApprovalPolicy, type ResolvedServerRequestPolicy, type ServerRequestPolicy$1 as ServerRequestPolicy, attachAgentUiWebSocketBridge, createAgentUiExpressMiddleware, createAgentUiLocalUploadHandler, createAgentUiNextRpcRoute, createCodexAppServerBridge, createDynamicToolHelperThread, defaultDynamicToolHandler, detectAgentBrowser, dynamicToolFailure, emitHostEvent, handleAgentUiWebSocketConnection, handleDynamicToolRequest, maybeResolveHelperThreadRequest, redactSecrets, resolveServerRequestPolicy, responseForServerRequest };

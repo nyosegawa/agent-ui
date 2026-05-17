@@ -6,11 +6,12 @@ import {
   isJsonRpcNotification,
   isJsonRpcRequest,
   isJsonRpcResponse,
+  jsonRpcErrorObject,
   parseJsonRpcLine,
   type JsonRpcMessage,
 } from "./json-rpc";
 import { normalizeCodexServerMessage } from "./normalizer";
-import type { CodexInitializeOptions } from "./protocol";
+import { codexInitializeParams, type CodexInitializeOptions } from "./protocol";
 
 export interface CodexStdioTransportOptions {
   stdin: Writable;
@@ -51,13 +52,7 @@ class CodexStdioTransport implements AgentTransport {
     this.#readStdout();
     this.#readStderr();
     if (this.#options.initialize) {
-      await this.request("initialize", {
-        capabilities: {
-          experimentalApi: this.#options.initialize.experimentalApi,
-          optOutNotificationMethods: this.#options.initialize.optOutNotificationMethods,
-        },
-        clientInfo: this.#options.initialize.clientInfo,
-      });
+      await this.request("initialize", codexInitializeParams(this.#options.initialize));
       this.notify("initialized");
     }
     this.#push({ event: { type: "connection/connected" }, type: "event" });
@@ -160,7 +155,7 @@ class CodexStdioTransport implements AgentTransport {
       const pending = this.#pending.get(String(message.id));
       if (!pending) return;
       this.#pending.delete(String(message.id));
-      if ("error" in message) pending.reject(jsonRpcError(message.error));
+      if ("error" in message) pending.reject(jsonRpcErrorObject(message.error));
       else pending.resolve(message.result);
       this.#push({ payload: message, requestId: message.id, type: "response" });
       return;
@@ -216,13 +211,6 @@ const BACKPRESSURE_RETRY_SAFE_METHODS = new Set([
   "thread/read",
 ]);
 
-function jsonRpcError(error: { code?: number; message: string; data?: unknown }): Error {
-  const next = new Error(error.message) as Error & { code?: number; data?: unknown };
-  next.code = error.code;
-  next.data = error.data;
-  return next;
-}
-
 function isBackpressureError(error: unknown): boolean {
   return (
     typeof error === "object" &&
@@ -231,6 +219,7 @@ function isBackpressureError(error: unknown): boolean {
     (error as { code?: unknown }).code === -32001
   );
 }
+
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));

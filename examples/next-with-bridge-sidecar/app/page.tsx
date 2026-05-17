@@ -41,6 +41,10 @@ export default function Page() {
     () =>
       createCodexWebSocketTransport({
         initialize: {
+          capabilities: {
+            experimentalApi: false,
+            requestAttestation: false,
+          },
           clientInfo: {
             name: "agent_ui_next_bridge_example",
             title: "Agent UI Next Bridge Example",

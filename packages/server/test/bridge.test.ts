@@ -26,6 +26,10 @@ describe("createCodexAppServerBridge", () => {
 
     const bridge = createCodexAppServerBridge({
       initialize: {
+        capabilities: {
+          experimentalApi: false,
+          requestAttestation: false,
+        },
         clientInfo: {
           name: "agent_ui_test",
           title: "Agent UI Test",

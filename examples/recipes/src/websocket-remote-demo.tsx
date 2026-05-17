@@ -7,8 +7,13 @@ export function createRemoteTransport(origin = window.location.origin) {
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";
   return createCodexWebSocketTransport({
     initialize: {
+      capabilities: {
+        experimentalApi: false,
+        requestAttestation: false,
+      },
       clientInfo: {
         name: "agent-ui-websocket-demo",
+        title: null,
         version: "0.0.0",
       },
     },

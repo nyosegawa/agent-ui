@@ -10,7 +10,10 @@ describe("Codex stdio transport backpressure", () => {
     const stdin = new PassThrough();
     const stdout = new PassThrough();
     const transport = createCodexStdioTransport({
-      initialize: { clientInfo: { name: "agent_ui_test", version: "0.0.0" } },
+      initialize: {
+        capabilities: null,
+        clientInfo: { name: "agent_ui_test", title: null, version: "0.0.0" },
+      },
       stdin,
       stdout,
     });
@@ -33,6 +36,52 @@ describe("Codex stdio transport backpressure", () => {
     await connected;
     await expect(iterator.next()).resolves.toMatchObject({
       value: { event: { type: "connection/connected" }, type: "event" },
+    });
+  });
+
+  it("sends initialize params in the generated stable shape before initialized notification", async () => {
+    const stdin = new PassThrough();
+    const stdout = new PassThrough();
+    const transport = createCodexStdioTransport({
+      initialize: {
+        capabilities: {
+          experimentalApi: true,
+          requestAttestation: true,
+          optOutNotificationMethods: null,
+        },
+        clientInfo: { name: "agent_ui_test", title: null, version: "0.0.0" },
+      },
+      stdin,
+      stdout,
+    });
+    const written: string[] = [];
+    stdin.on("data", (chunk) => written.push(String(chunk)));
+
+    const connected = transport.connect();
+    await waitFor(() => written.length === 1);
+    const init = JSON.parse(written[0] ?? "{}");
+    expect(init).toEqual({
+      id: 0,
+      method: "initialize",
+      params: {
+        capabilities: {
+          experimentalApi: true,
+          optOutNotificationMethods: null,
+          requestAttestation: true,
+        },
+        clientInfo: {
+          name: "agent_ui_test",
+          title: null,
+          version: "0.0.0",
+        },
+      },
+    });
+    expect(written.some((line) => JSON.parse(line).method === "initialized")).toBe(false);
+
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+    expect(written.map((line) => JSON.parse(line)).at(-1)).toEqual({
+      method: "initialized",
     });
   });
 

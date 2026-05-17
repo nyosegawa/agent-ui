@@ -5,7 +5,13 @@ describe("CodexWebSocketTransport", () => {
   it("reconnects when explicitly configured", async () => {
     const sockets: FakeWebSocket[] = [];
     const transport = createCodexWebSocketTransport({
-      initialize: { clientInfo: { name: "test", version: "0.0.0" } },
+      initialize: {
+        capabilities: {
+          experimentalApi: false,
+          requestAttestation: false,
+        },
+        clientInfo: { name: "test", title: null, version: "0.0.0" },
+      },
       reconnect: { initialDelayMs: 1, maxAttempts: 1 },
       url: "ws://localhost/agent-ui",
       webSocketImpl: fakeWebSocketFactory(sockets) as any,
@@ -23,6 +29,39 @@ describe("CodexWebSocketTransport", () => {
     expect(sockets).toHaveLength(2);
     expect(sockets[1]!.sent.some((message) => message.includes('"method":"initialize"'))).toBe(true);
 
+    await transport.close();
+  });
+
+  it("sends initialize params in the generated stable shape", async () => {
+    const sockets: FakeWebSocket[] = [];
+    const transport = createCodexWebSocketTransport({
+      initialize: {
+        capabilities: {
+          experimentalApi: false,
+          optOutNotificationMethods: ["thread/started"],
+          requestAttestation: true,
+        },
+        clientInfo: { name: "test", title: null, version: "0.0.0" },
+      },
+      reconnect: false,
+      url: "ws://localhost/agent-ui",
+      webSocketImpl: fakeWebSocketFactory(sockets) as any,
+    });
+    await transport.connect();
+
+    expect(JSON.parse(sockets[0]!.sent[0] ?? "{}")).toEqual({
+      id: 0,
+      method: "initialize",
+      params: {
+        capabilities: {
+          experimentalApi: false,
+          optOutNotificationMethods: ["thread/started"],
+          requestAttestation: true,
+        },
+        clientInfo: { name: "test", title: null, version: "0.0.0" },
+      },
+    });
+    expect(JSON.parse(sockets[0]!.sent[1] ?? "{}")).toEqual({ method: "initialized" });
     await transport.close();
   });
 

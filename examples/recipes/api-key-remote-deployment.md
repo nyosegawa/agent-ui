@@ -34,6 +34,10 @@ const bridge = createCodexAppServerBridge({
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
   },
   initialize: {
+    capabilities: {
+      experimentalApi: false,
+      requestAttestation: false,
+    },
     clientInfo: {
       name: "agent_ui_api_key_host",
       title: "Agent UI API Key Host",

@@ -56,6 +56,54 @@ describe("attachAgentUiWebSocketBridge", () => {
     socket.close();
   });
 
+  it("preserves App Server JSON-RPC error code and data for browser requests", async () => {
+    const { socket, stdout, writes } = await createBridgeBackedSocket();
+
+    socket.send(JSON.stringify({ id: 11, method: "model/list", params: {} }));
+    await waitFor(() => writes.some((line) => JSON.parse(line).method === "model/list"));
+    const forwarded = writes
+      .map((line) => JSON.parse(line))
+      .find((message) => message.method === "model/list");
+    stdout.write(
+      `${JSON.stringify({
+        error: {
+          code: -32042,
+          data: { retryAfterMs: 250, reason: "busy" },
+          message: "App Server is busy",
+        },
+        id: forwarded.id,
+      })}\n`,
+    );
+
+    await expect(nextResponseMessage(socket, 11)).resolves.toEqual({
+      error: {
+        code: -32042,
+        data: { retryAfterMs: 250, reason: "busy" },
+        message: "App Server is busy",
+      },
+      id: 11,
+    });
+    socket.close();
+  });
+
+  it("returns JSON-RPC validation error metadata for invalid browser messages", async () => {
+    const { socket } = await createBridgeBackedSocket();
+
+    socket.send(JSON.stringify({ id: 12, params: {} }));
+
+    await expect(nextResponseMessage(socket, 12)).resolves.toMatchObject({
+      error: {
+        code: -32600,
+        data: {
+          message: { id: 12, params: {} },
+        },
+        message: "Invalid JSON-RPC message",
+      },
+      id: 12,
+    });
+    socket.close();
+  });
+
   it("keeps a stdio bridge alive for browser requests and server events", async () => {
     const stdin = new PassThrough();
     const stdout = new PassThrough();
@@ -577,9 +625,61 @@ describe("attachAgentUiWebSocketBridge", () => {
     await transport.close();
   });
 
-  it("can auto-grant permission approvals for the active browser session", async () => {
+  it("keeps permission approvals manual by default", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport();
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "permissions-manual-1",
+        method: "item/permissions/requestApproval",
+        params: {
+          cwd: "/tmp/project",
+          permissions: { fileSystem: "read-only", network: true },
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await expect(
+      nextTransportEvent(transport, (candidate) => {
+        return candidate.event?.type === "serverRequest/created";
+      }),
+    ).resolves.toMatchObject({
+      event: {
+        request: {
+          id: "permissions-manual-1",
+          kind: "permissionsApproval",
+        },
+        type: "serverRequest/created",
+      },
+      type: "event",
+    });
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-manual-1" && "result" in message)).toBeUndefined();
+    await transport.close();
+  });
+
+  it("can auto-grant bounded permission approvals through a host callback", async () => {
+    const contexts: unknown[] = [];
     const { stdout, transport, writes } = await createBridgeBackedTransport({
-      serverRequestPolicy: { permissions: "grant" },
+      serverRequestPolicy: {
+        permissions: (context) => {
+          contexts.push(context);
+          return {
+            action: "grant",
+            permissions: {
+              fileSystem: { paths: ["/tmp/project"], mode: "read-only" },
+            },
+            scope: "turn",
+          };
+        },
+      },
     });
 
     const connected = transport.connect();
@@ -607,16 +707,70 @@ describe("attachAgentUiWebSocketBridge", () => {
     );
 
     await waitFor(() => writes.some((line) => JSON.parse(line).id === "permissions-active-1"));
+    expect(contexts).toEqual([
+      expect.objectContaining({
+        cwd: "/tmp/project",
+        requestId: "permissions-active-1",
+        requested: {
+          fileSystem: "read-only",
+          network: true,
+        },
+        threadId: "active-thread-1",
+        turnId: "turn-1",
+      }),
+    ]);
     expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-active-1")).toEqual({
       id: "permissions-active-1",
       result: {
         permissions: {
-          fileSystem: "read-only",
-          network: true,
+          fileSystem: { paths: ["/tmp/project"], mode: "read-only" },
         },
         scope: "turn",
       },
     });
+    await transport.close();
+  });
+
+  it("keeps permission approvals manual when the host callback declines", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: {
+        permissions: () => undefined,
+      },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "permissions-declined-1",
+        method: "item/permissions/requestApproval",
+        params: {
+          cwd: "/tmp/project",
+          permissions: { fileSystem: "read-only", network: true },
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await expect(
+      nextTransportEvent(transport, (candidate) => {
+        return candidate.event?.type === "serverRequest/created";
+      }),
+    ).resolves.toMatchObject({
+      event: {
+        request: {
+          id: "permissions-declined-1",
+          kind: "permissionsApproval",
+        },
+        type: "serverRequest/created",
+      },
+    });
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-declined-1" && "result" in message)).toBeUndefined();
     await transport.close();
   });
 
@@ -823,6 +977,10 @@ async function createBridgeBackedTransport(
   if (!address || typeof address === "string") throw new Error("missing server address");
   const transport = createCodexWebSocketTransport({
     initialize: {
+      capabilities: {
+        experimentalApi: false,
+        requestAttestation: false,
+      },
       clientInfo: {
         name: "agent_ui_websocket_test",
         title: "Agent UI WebSocket Test",

@@ -47,6 +47,10 @@ function App() {
     () =>
       createCodexWebSocketTransport({
         initialize: {
+          capabilities: {
+            experimentalApi: false,
+            requestAttestation: false,
+          },
           clientInfo: {
             name: "agent_ui_codex_local_web",
             title: "Agent UI Codex Local Web",
