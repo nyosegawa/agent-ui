@@ -7,9 +7,6 @@
 - Keep docs implementation-facing. Do not include competitor-research background in product docs.
 - Use the Codex App Server protocol as the primary integration surface.
 - Treat `README.md` and `docs/README.md` as the documentation entry points.
-- Treat `PLAN.md` as the current direction document and `TODO.md` as the
-  current progress ledger. Historical vNext plans, milestone logs, audits, and
-  validation evidence live under `docs/archive/`.
 - Do not implement MVP shortcuts. The target is a complete Codex App Server UI
   component system with composable thread, usage, skills, apps, and browser
   verification surfaces.
@@ -24,13 +21,11 @@
 
 ## Documentation Operations
 
-- Keep `TODO.md` short. Use it for current open work and major completed
-  themes, not for long historical logs.
 - If a decision changes scope, public API, package boundary, validation,
   security, or host integration behavior, update the relevant file under
   `docs/` in the same change.
-- Move dated audit logs, old plans, and verbose validation evidence to
-  `docs/archive/` instead of mixing them into active runbooks.
+- Keep public docs current-state oriented. Do not add planning logs,
+  migration diaries, or dated validation transcripts to the public docs.
 - Do not leave stale README, docs, examples, or AGENTS instructions behind a
   code change. If the implementation changes public API, package boundaries,
   validation, or host integration behavior, update the corresponding docs in
@@ -39,15 +34,15 @@
 ## Implementation Discipline
 
 - Work in small, reviewable implementation slices. After each coherent slice,
-  update the relevant docs or `TODO.md`, run the relevant tests, commit, push,
-  and verify the branch is clean.
-- Do not batch many unrelated milestones into one commit. Prefer commits that
+  update the relevant docs, run the relevant tests, commit, push, and verify
+  the branch is clean.
+- Do not batch many unrelated changes into one commit. Prefer commits that
   map to one protocol surface, component boundary, example, or validation gate.
 - Add or update tests with the behavior change. A public API, reducer path,
   protocol normalizer, bridge behavior, or visible UI state is not complete
   without focused test coverage.
 - Run targeted validation after each slice and the full validation ladder before
-  marking a milestone complete.
+  marking broad work complete.
 - Refactor when implementation complexity starts hiding protocol, state, UI, or
   bridge behavior. Do not preserve awkward old shapes for compatibility when
   the active docs call for a cleaner API.

@@ -15,7 +15,7 @@ codex app-server --listen stdio://
 This keeps the initial integration local, process-bound, and single-user.
 
 Bridge lifecycle and upload/dynamic-tool boundaries are documented in
-[server-bridge.md](server-bridge.md).
+[Server Bridge](../reference/server-bridge.md).
 
 ## Shell Commands
 

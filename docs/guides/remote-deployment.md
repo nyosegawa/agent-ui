@@ -2,7 +2,8 @@
 
 Remote deployment is advanced and outside the default local release runtime. The local release remains local-first: a host process starts `codex app-server --listen stdio://` and exposes only the UI surface it owns.
 
-The canonical bridge contract is documented in [server-bridge.md](server-bridge.md).
+The canonical bridge contract is documented in
+[Server Bridge](../reference/server-bridge.md).
 
 ## Recommended Local Release Shape
 
@@ -56,7 +57,9 @@ For any remote recipe:
 - do not share a personal OAuth session across users
 - keep workspace filesystem access explicit
 
-See `examples/recipes/multi-user-deployment.md` for the concrete multi-user bridge checklist.
+See
+[`examples/recipes/multi-user-deployment.md`](../../examples/recipes/multi-user-deployment.md)
+for the concrete multi-user bridge checklist.
 
 ## API-Key Remote Pattern
 
@@ -70,7 +73,9 @@ Rules:
 - fall back to device-code login when API-key auth is not supported by the target App Server
 - keep the same process/workspace isolation required for multi-user use
 
-See `examples/recipes/api-key-remote-deployment.md` for the concrete API-key bridge checklist.
+See
+[`examples/recipes/api-key-remote-deployment.md`](../../examples/recipes/api-key-remote-deployment.md)
+for the concrete API-key bridge checklist.
 
 ## Non-Goals
 

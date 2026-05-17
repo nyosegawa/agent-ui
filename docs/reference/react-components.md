@@ -1,4 +1,4 @@
-# Component API
+# React Components
 
 The React package exposes composable Agent UI primitives backed by
 headless hooks and normalized core state. Generated Codex App Server protocol

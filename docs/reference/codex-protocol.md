@@ -1,4 +1,4 @@
-# Protocol
+# Codex Protocol
 
 ## Primary Backend
 
@@ -91,7 +91,7 @@ Implementation status:
 - The same-origin bridge closes slow browser consumers with WebSocket code
   `1013` when the outbound buffer exceeds its configured backpressure limit.
 - Uploads, dynamic-tool handling, one-shot HTTP RPC, and bridge security
-  boundaries are documented in [server-bridge.md](server-bridge.md).
+  boundaries are documented in [Server Bridge](./server-bridge.md).
 - `examples/codex-local-web` is the primary real local web app path.
 - The transport accepts `url`, optional `protocols`, optional initialize metadata, and optional reconnect settings.
 - Authentication belongs to the host endpoint, for example same-origin cookies or a reverse proxy session.
@@ -326,9 +326,7 @@ The direct real smoke script resumes with `{ threadId }`. The browser UI may
 use `thread/resume` with `excludeTurns: true` when it already hydrated stored
 turns through `thread/read`.
 
-Latest real Codex verification against `codex app-server --listen stdio://` on
-2026-05-14 confirmed the same protocol path; details and environment-specific
-timeouts are archived in `docs/archive/testing-history-2026-05.md`. The verified surfaces are:
+Real Codex smoke checks exercise the same protocol path. The verified surfaces are:
 
 - `model/list` currently returns models under `data`, including `gpt-5.5` as the first/default entry in this environment.
 - `account/rateLimits/read` returns 5-hour and weekly windows through `primary` and `secondary`.

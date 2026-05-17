@@ -51,7 +51,7 @@ Playwright latest: 1.60.0
 ```
 
 Upgrade by changing pins deliberately, updating the lockfile in the same
-change, and running the local release gate in [testing.md](testing.md).
+change, and running the local release gate in [Testing](./testing.md).
 
 ## Runtime Policy
 

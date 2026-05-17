@@ -5,6 +5,7 @@ coverage/
 test-results/
 playwright-report/
 *.tsbuildinfo
+.DS_Store
 
 packages/*/dist/
 examples/*/dist/

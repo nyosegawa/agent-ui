@@ -4,6 +4,8 @@ This is the recommended Next.js integration for the full Agent UI chat
 experience. It uses a custom Node server that serves Next.js and attaches
 `/agent-ui/ws` to the same HTTP server with `attachAgentUiWebSocketBridge()`.
 
+Detailed docs: [docs/examples/next-with-bridge-sidecar.md](../../docs/examples/next-with-bridge-sidecar.md).
+
 The browser stays same-origin:
 
 ```text

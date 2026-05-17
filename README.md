@@ -1,104 +1,18 @@
 # Agent UI
 
-Embeddable UI for Codex-powered coding agents.
+Embeddable UI components for applications built on OpenAI Codex App Server.
 
-Start with [docs/README.md](./docs/README.md) for the full documentation map.
-Current direction lives in [PLAN.md](./PLAN.md), current progress lives in
-[TODO.md](./TODO.md), and historical vNext plans/audits live under
-[docs/archive](./docs/archive/).
-
-Agent UI provides React components, headless hooks, state management, and transport adapters for applications built on OpenAI Codex App Server. `AgentChat` is a convenience preset; the core value is the primitive set that lets host apps place thread, status, usage, approvals, composer, apps, skills, and diagnostics surfaces in their own product shell.
-
-The visual design system is intentionally typography-led, not card-heavy. User
-messages render as right-aligned chat bubbles, assistant output flows as
-markdown without a bubble, reasoning is a muted blockquote, plan blocks use a
-primary-tinted callout, and command/diff blocks share a dark code surface inline
-with the transcript.
-
-The composer is the primary input surface: an auto-resizing textarea, removable
-attachment chips, and an inline toolbar that carries attach/image pickers,
-optional App/Plugin mention buttons, compact **mode** and **model · effort**
-menus, and a primary Send button. There is no separate "Run settings" panel.
-Working directory is chosen at thread start and shown read-only afterward.
-Image and file attachments work through paste, drag-and-drop, and the file
-pickers when the host wires `resolveLocalAttachment`.
-
-`AgentApprovalQueue` is a compact pending-decision surface rendered as the
-final item of the transcript scroll area — one expanded card plus compact
-picker rows. It is a transcript item, not a pane wedged between the transcript
-and the composer, and it has no scroll pane of its own. The transcript scrolls
-so the decision footer stays reachable on desktop and mobile. On mobile, chat
-and composer are the primary surface and thread history is an off-canvas drawer
-opened from a `Threads` trigger.
-
-`AgentChat` defaults to the transcript plus optional sidebar; usage and
-diagnostics are opt-in secondary chrome for host composition. The same
-primitives are exported individually so host apps can rebuild this layout, add
-their own usage/status rail, or use any other shell without the preset. The
-`/host-workflow-recipe` example is the canonical proof of that composition;
-`/fixture-gallery` is the visual QA surface for every state. Saved evidence
-lives under `docs/screenshots/`.
-
-## Status
-
-The real local app path is the primary release target: browser UI -> same-origin host bridge -> `codex app-server --listen stdio://` -> real Codex account, usage, model, thread, turn, approval, and diff events.
-
-The core library is a Codex App Server UI component system. External host
-applications compose their own workflows from generic primitives; app-specific
-proposal flows, panel runtimes, storage, and sidecars do not live in the core
-packages.
-
-## Public API Shape
-
-Primary React surfaces:
-
-- `AgentProvider`
-- `AgentShell`
-- `AgentChat`
-- `AgentWorkspace`
-- `AgentThreadSurface`
-- `AgentThreadView`
-- `AgentThreadHeader`
-- `AgentThreadTimeline`
-- `AgentTranscript`
-- `AgentTurn`
-- `AgentMessageItem`
-- `AgentReasoningItem`
-- `AgentToolCallItem`
-- `AgentCommandItem`
-- `AgentCommandOutputItem`
-- `AgentFileChangeItem`
-- `AgentDiffItem`
-- `AgentThreadSidebar`
-- `AgentComposerPanel`
-- `AgentRunSettingsPanel`
-- `AgentApprovalQueue`
-- `AgentStatusSummary`
-- `AgentStatusDetails`
-- `AgentCriticalNoticeList`
-- `AgentUsagePanel`
-- `AgentUsageSummary`
-- `AgentTokenUsageBar`
-- `AgentDiagnosticsPanel`
-- `AgentSkillsPanel`
-- `AgentAppsPanel`
-
-Headless hooks include `useAgentThreadController`,
-`useAgentTurnController`, `useAgentServerRequests`, `useAgentComposer`,
-`useAgentRunSettings`, `useAgentUsage`, `useAgentSkills`, `useAgentHooks`,
-and `useAgentApps`.
-
-## Local Release Scope
+Agent UI provides React components, headless hooks, normalized state,
+transports, and local bridge helpers for building Codex-powered coding-agent
+interfaces inside a host web application.
 
 ```text
-local-only
-single-user
-stdio Codex App Server
-ChatGPT managed auth
-device-code login UI
-React components and hooks
-stable App Server API only
+browser UI -> host bridge -> codex app-server --listen stdio://
 ```
+
+`AgentChat` is a convenience preset. The main API is the primitive set that lets
+host apps place thread, status, usage, approvals, composer, apps, skills, and
+diagnostics surfaces inside their own product shell.
 
 ## Packages
 
@@ -110,64 +24,99 @@ stable App Server API only
 @nyosegawa/agent-ui-web-components
 ```
 
-## Docs
-
-Start with [docs/README.md](./docs/README.md).
-
-Generic examples:
-
-- [examples/codex-local-web](./examples/codex-local-web/README.md): real local Codex web app.
-- [examples/scoped-thread-pane](./examples/scoped-thread-pane/README.md): fixed-thread composition.
-- [examples/usage-only](./examples/usage-only/README.md): standalone usage panel.
-- [examples/app-connectors](./examples/app-connectors/README.md): Codex Apps/connectors.
-- [examples/host-workflow-recipe](./examples/host-workflow-recipe/README.md): host-owned side panel slot.
-- [examples/fixture-gallery](./examples/fixture-gallery/README.md): deterministic browser QA states.
-- [examples/next-with-bridge-sidecar](./examples/next-with-bridge-sidecar/README.md): full Next.js chat integration with a same-origin WebSocket bridge.
-- [examples/next-rpc-route](./examples/next-rpc-route/README.md): one-shot Next.js RPC route for non-chat calls.
-
 ## Quickstart
+
+Install dependencies:
+
+```sh
+bun install
+```
 
 Run the real local Codex web app:
 
 ```sh
-bun install
 bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 ```
 
-Then open the printed local URL. By default this example uses
-`http://127.0.0.1:5174`; set `AGENT_UI_PORT` when you need another port. The
-app starts a local Codex App Server through `@nyosegawa/agent-ui-server`.
+Open the printed local URL. By default this example uses
+`http://127.0.0.1:5174`.
 
-For the real local layout gate used during release work, start the app on the
-canonical audit port and run the browser audit against the already-running
-server. `bun run test:e2e:real-local-web-layout` only audits the running page;
-it does not start `examples/codex-local-web`.
+Run the deterministic fixture app:
 
 ```sh
-AGENT_UI_PORT=5175 \
-AGENT_UI_HOST=127.0.0.1 \
-AGENT_UI_CODEX_CWD=/Users/sakasegawa/src/github.com/nyosegawa/agent-ui \
-bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
-
-bun run test:e2e:real-local-web-layout
+bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 ```
 
-Run the fixture-backed package smoke demo separately:
+Useful fixture routes:
 
-```sh
-bun run --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
+- `/`
+- `/?state=kitchen`
+- `/fixture-gallery`
+- `/host-workflow-recipe`
+- `/usage-only`
+- `/scoped-thread-pane`
+- `/app-connectors`
+
+## React
+
+```tsx
+import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
+import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
+import "@nyosegawa/agent-ui-react/styles.css";
+
+const transport = createCodexWebSocketTransport({
+  url: new URL("/agent-ui/ws", window.location.origin.replace(/^http/, "ws")),
+});
+
+export function App() {
+  return (
+    <AgentProvider transport={transport}>
+      <AgentChat />
+    </AgentProvider>
+  );
+}
 ```
 
-Then open `/`, `/?state=kitchen`, `/host-workflow-recipe`, and
-`/fixture-gallery` for deterministic visual QA states. The host-workflow route
-is built from primitives rather than the `AgentChat` preset, and the gallery
-loads desktop/mobile previews with reload controls for browser QA.
-The fixture route metadata lives under `examples/local-react-vite/src/fixtures`
-so visual QA fixtures stay separate from the real Codex-backed
-`examples/codex-local-web` app.
-`examples/docs-site` is documentation-oriented and is not the primary fixture
-QA surface.
+The browser transport expects a host-owned WebSocket endpoint. Use
+`@nyosegawa/agent-ui-server` to attach a local bridge to a Node HTTP server.
 
-For Next.js, use `examples/next-with-bridge-sidecar` for streaming chat,
-approvals, attachments, and live diagnostics. `examples/next-rpc-route` is
-only for one-shot host calls such as reading account or model metadata.
+## Design
+
+- User and assistant messages stay in transcript order.
+- Tool, command, output, and file-change items render inline with the
+  surrounding conversation.
+- Pending approvals render as the final transcript item, not as a detached
+  pane.
+- Usage, diagnostics, skills, apps, and status are composable primitives, not
+  mandatory side rails.
+- Attachments are host-resolved; browser `File` objects must become an App
+  Server-readable path or URL before sending.
+
+## Documentation
+
+Start with [docs/README.md](./docs/README.md).
+
+Key pages:
+
+- [Getting Started](./docs/getting-started.md)
+- [React Guide](./docs/guides/react.md)
+- [Server Bridge](./docs/reference/server-bridge.md)
+- [React Components](./docs/reference/react-components.md)
+- [Hooks](./docs/reference/hooks.md)
+- [Testing](./docs/architecture/testing.md)
+- [Security](./docs/architecture/security.md)
+
+## Examples
+
+- [Real Codex Local Web](./docs/examples/codex-local-web.md)
+- [Fixture Gallery and Local Vite](./docs/examples/local-react-vite.md)
+- [Next RPC Route](./docs/examples/next-rpc-route.md)
+- [Next WebSocket Sidecar](./docs/examples/next-with-bridge-sidecar.md)
+- [Recipes](./docs/examples/recipes.md)
+
+## Scope
+
+Agent UI is a local-first Codex App Server UI library. It is not a hosted Codex
+service, credential provider, billing layer, IDE, or generic chatbot library.
+The host application owns authentication, deployment, workspace access, and any
+product-specific workflow state.

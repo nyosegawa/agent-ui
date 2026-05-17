@@ -2,6 +2,8 @@
 
 Typed implementation recipes for host applications.
 
+Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
+
 - `custom-components.tsx`: `AgentChat` slots for custom approval and item rendering.
 - `headless-hooks.tsx`: custom layout built from hooks only.
 - `themed.tsx` and `themed.css`: CSS variable theme override.

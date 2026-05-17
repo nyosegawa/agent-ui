@@ -11,7 +11,8 @@ Browser UI
       -> ChatGPT managed auth
 ```
 
-For the server boundary around this bridge, see [server-bridge.md](server-bridge.md).
+For the server boundary around this bridge, see
+[Server Bridge](../reference/server-bridge.md).
 
 Login sequence:
 

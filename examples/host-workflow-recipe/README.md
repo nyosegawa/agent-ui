@@ -3,17 +3,13 @@
 Host-owned workflow composition using generic Agent UI primitives.
 
 Implementation lives in `examples/local-react-vite` at `/host-workflow-recipe`
-and builds the thread column from `AgentThreadSurface`, `AgentThreadHeader`,
-`AgentThreadTimeline`, `AgentComposerPanel`, and status and usage primitives.
-`AgentThreadTimeline` receives `threadId`, so pending approvals render inside
-the transcript scroll area as the final pending-decision item rather than as a
-separate pane. The host-owned context panel renders current thread summary,
-validation status, pending requests, plan/context files, usage, and
-non-interactive demo action state from generic Agent UI hooks.
+and builds the thread column from primitives instead of the `AgentChat` preset.
 
 Workflow-specific panel state, storage, registries, and app tools stay in the
 host application. This route intentionally does not introduce app-specific core
 APIs.
+
+Detailed docs: [docs/examples/local-react-vite.md](../../docs/examples/local-react-vite.md).
 
 Smoke path:
 
@@ -23,4 +19,4 @@ open http://127.0.0.1:5174/host-workflow-recipe
 ```
 
 Central automated checks are documented in
-[`docs/testing.md`](../../docs/testing.md).
+[`docs/architecture/testing.md`](../../docs/architecture/testing.md).

@@ -1,7 +1,8 @@
 # Testing
 
-This page is the current validation matrix. Historical dated validation logs
-live in [archive/testing-history-2026-05.md](archive/testing-history-2026-05.md).
+This page is the current validation matrix. Keep dated validation logs out of
+the public docs; they belong in pull requests, release notes, or local session
+records.
 
 ## Test Layers
 

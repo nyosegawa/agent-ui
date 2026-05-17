@@ -1,4 +1,4 @@
-# Headless Hooks
+# Hooks
 
 Headless hooks are the stable customization surface for hosts that need custom
 layout, product chrome, fixed thread views, or host-owned panels. Hooks return

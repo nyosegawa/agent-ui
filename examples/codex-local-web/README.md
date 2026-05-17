@@ -1,24 +1,9 @@
 # Codex Local Web
 
-Full local Agent UI shell backed by a same-origin Node WebSocket bridge to
+Primary real local example: browser Agent UI, same-origin WebSocket bridge, and
 `codex app-server --listen stdio://`.
 
-This is the primary real local example. The React app uses the transcript-first
-`AgentChat` preset through `AgentProvider`, while `server.ts` owns the Codex App
-Server process and browser WebSocket bridge. Usage and diagnostics are not
-assumed preset rails; hosts can compose those primitives around the thread when
-they want them.
-
-## Composer attachments
-
-The app wires `AgentChat`'s `resolveLocalAttachment` so pasted, dropped, and
-picked image/file attachments become real Codex inputs. Because the Codex App
-Server reads `localImage` inputs from disk and the browser only holds a `File`,
-`server.ts` exposes a `POST /agent-ui/upload` endpoint that persists the upload
-to a host temp directory and returns an absolute path. The resolver wraps that
-path with `localImageInput` for images and `mentionInput` for other files.
-This host-supplied resolver is the intended integration shape — the library
-never treats browser-only blob URLs or `File.name` values as App Server paths.
+Detailed docs: [docs/examples/codex-local-web.md](../../docs/examples/codex-local-web.md).
 
 Smoke path:
 

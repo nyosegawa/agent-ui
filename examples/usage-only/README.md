@@ -6,6 +6,8 @@ thread sidebar.
 Implementation lives in `examples/local-react-vite` at `/usage-only` and uses
 `AgentProvider` plus `AgentUsagePanel`.
 
+Detailed docs: [docs/examples/local-react-vite.md](../../docs/examples/local-react-vite.md).
+
 Smoke path:
 
 ```bash
@@ -14,4 +16,4 @@ open http://127.0.0.1:5174/usage-only
 ```
 
 Central automated checks are documented in
-[`docs/testing.md`](../../docs/testing.md).
+[`docs/architecture/testing.md`](../../docs/architecture/testing.md).
