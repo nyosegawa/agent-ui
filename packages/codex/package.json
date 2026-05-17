@@ -52,7 +52,7 @@
     "build": "tsup",
     "generate:schema": "bun run scripts/import-schema.ts",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run --config ../../vitest.config.ts packages/codex/test"
+    "test": "vitest run --config ../../vitest.config.ts test"
   },
   "dependencies": {
     "@nyosegawa/agent-ui-core": "workspace:*"

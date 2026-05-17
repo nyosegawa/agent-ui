@@ -54,8 +54,12 @@ The main CI workflow validates the normal development path:
 
 Package validation repeats build/package checks for publish confidence.
 Compatibility CI covers Node 20, 22, and 24 import/require smoke plus the
-package-resolution smoke. pnpm compatibility is a smoke target only; Bun remains
-the package manager and lockfile owner.
+package-resolution smoke. The API snapshot gate is driven by package export
+maps: missing, changed, and stale public declaration snapshots fail unless
+`bun run test:api-snapshots:update` is run intentionally after reviewing the
+public API change. Bundler implementation chunks are not snapshots unless an
+export map points to them. pnpm compatibility is a smoke target only; Bun
+remains the package manager and lockfile owner.
 
 ## Protocol Tests
 

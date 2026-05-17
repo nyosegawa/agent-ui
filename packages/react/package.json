@@ -36,7 +36,7 @@
   "scripts": {
     "build": "tsup && cp src/styles.css dist/styles.css && cp src/styles.css.d.ts dist/styles.css.d.ts && rm -rf dist/styles && cp -R src/styles dist/styles",
     "typecheck": "tsc -p tsconfig.json",
-    "test": "vitest run --config ../../vitest.config.ts --environment jsdom packages/react/test"
+    "test": "vitest run --config ../../vitest.config.ts --environment jsdom test"
   },
   "dependencies": {
     "@codemirror/state": "^6.6.0",

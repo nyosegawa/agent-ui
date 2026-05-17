@@ -4,57 +4,33 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import process from "node:process";
+import { readWorkspacePackageSurfaces } from "./public-package-surface.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const tempRoot = await mkdir(join(tmpdir(), `agent-ui-package-resolution-${process.pid}`), {
   recursive: true,
 }).then(() => join(tmpdir(), `agent-ui-package-resolution-${process.pid}`));
 
-const packages = [
-  {
-    dir: "core",
-    name: "@nyosegawa/agent-ui-core",
-    expected: {
-      ".": "/dist/index.js",
-    },
-    blocked: ["./dist/index.js", "./src/index.ts", "./reducer"],
-  },
-  {
-    dir: "codex",
-    name: "@nyosegawa/agent-ui-codex",
-    expected: {
-      ".": "/dist/index.js",
-      "./request-builders": "/dist/request-builders.js",
-      "./websocket": "/dist/websocket.js",
-    },
-    blocked: ["./dist/index.js", "./src/protocol.ts", "./generated/stable"],
-  },
-  {
-    dir: "react",
-    name: "@nyosegawa/agent-ui-react",
-    expected: {
-      ".": "/dist/index.js",
-      "./styles.css": "/dist/styles.css",
-    },
-    blocked: ["./dist/index.js", "./src/index.ts", "./style.css", "./styles/tokens.css"],
-  },
-  {
-    dir: "server",
-    name: "@nyosegawa/agent-ui-server",
-    expected: {
-      ".": "/dist/index.js",
-    },
-    blocked: ["./dist/index.js", "./src/websocket.ts", "./dynamic-tools"],
-  },
-  {
-    dir: "web-components",
-    name: "@nyosegawa/agent-ui-web-components",
-    expected: {
-      ".": "/dist/index.js",
-    },
-    blocked: ["./dist/index.js", "./src/index.tsx"],
-  },
-];
+const packageSurfaces = await readWorkspacePackageSurfaces(repoRoot);
+const groupedSurfaces = new Map();
+for (const surface of packageSurfaces) {
+  groupedSurfaces.set(surface.packageName, [...(groupedSurfaces.get(surface.packageName) ?? []), surface]);
+}
+const packages = [...groupedSurfaces.values()].map((surfaces) => {
+  const first = surfaces[0];
+  return {
+    blocked: blockedSubpathsForPackage(first.dir),
+    dir: first.dir,
+    name: first.packageName,
+    publicSubpaths: surfaces.map((surface) => ({
+      importTarget: surface.importTarget,
+      isAsset: surface.isAsset,
+      requireTarget: surface.requireTarget,
+      specifier: surface.specifier,
+      subpath: surface.subpath,
+    })),
+  };
+});
 
 try {
   const scopeDir = join(tempRoot, "node_modules", "@nyosegawa");
@@ -68,16 +44,22 @@ try {
   await writeFile(
     smokePath,
     [
-      `const packages = ${JSON.stringify(packages.map(({ name, expected, blocked }) => ({ name, expected, blocked })))};`,
+      "import { createRequire } from 'node:module';",
+      "const require = createRequire(import.meta.url);",
+      `const packages = ${JSON.stringify(packages.map(({ name, publicSubpaths, blocked }) => ({ name, publicSubpaths, blocked })))};`,
       "const resolved = {};",
       "for (const pkg of packages) {",
       "  resolved[pkg.name] = {};",
-      "  for (const [subpath, suffix] of Object.entries(pkg.expected)) {",
-      "    const specifier = subpath === '.' ? pkg.name : `${pkg.name}/${subpath.slice(2)}`;",
-      "    const target = import.meta.resolve(specifier);",
-      "    if (!target.endsWith(suffix)) throw new Error(`${specifier} resolved to ${target}, expected ${suffix}`);",
-      "    if (!suffix.endsWith('.css')) await import(specifier);",
-      "    resolved[pkg.name][subpath] = target;",
+      "  for (const entry of pkg.publicSubpaths) {",
+      "    const target = import.meta.resolve(entry.specifier);",
+      "    if (!target.endsWith(entry.importTarget.replace(/^\\./, ''))) throw new Error(`${entry.specifier} resolved to ${target}, expected ${entry.importTarget}`);",
+      "    const cjsTarget = require.resolve(entry.specifier);",
+      "    if (!cjsTarget.endsWith((entry.requireTarget ?? entry.importTarget).replace(/^\\./, ''))) throw new Error(`${entry.specifier} require.resolve returned ${cjsTarget}, expected ${entry.requireTarget ?? entry.importTarget}`);",
+      "    if (!entry.isAsset) {",
+      "      await import(entry.specifier);",
+      "      require(entry.specifier);",
+      "    }",
+      "    resolved[pkg.name][entry.subpath] = { esm: target, cjs: cjsTarget };",
       "  }",
       "  for (const subpath of pkg.blocked) {",
       "    const specifier = `${pkg.name}/${subpath.slice(2)}`;",
@@ -108,4 +90,17 @@ try {
   process.stdout.write(result.stdout);
 } finally {
   await rm(tempRoot, { force: true, recursive: true });
+}
+
+function blockedSubpathsForPackage(dir) {
+  const common = ["./dist/index.js", "./dist/index.cjs", "./src/index.ts"];
+  if (dir === "codex") {
+    return [...common, "./src/protocol.ts", "./generated/stable", "./dist/request-builders-bJCKxvYC.js"];
+  }
+  if (dir === "react") {
+    return [...common, "./style.css", "./styles/tokens.css", "./dist/styles/tokens.css"];
+  }
+  if (dir === "server") return [...common, "./src/websocket.ts", "./dynamic-tools"];
+  if (dir === "web-components") return ["./dist/index.js", "./dist/index.cjs", "./src/index.tsx"];
+  return [...common, "./reducer"];
 }
