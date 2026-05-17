@@ -24,12 +24,27 @@ bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 
 The default URL is `http://127.0.0.1:5175/`.
 
+The host page treats 5175 as a full-height app. `.agent-ui-local-app` owns
+`height: 100dvh`, `AgentChat` consumes that height, and only
+`.aui-message-list` scrolls. The composer is anchored at the viewport bottom on
+desktop and mobile, including mobile safe-area padding, so long transcripts,
+approvals, command output, and diffs do not push it below the visible page.
+
 Thread URL routing keeps browser history aligned with the visible thread. The
 initial history auto-selection from `/` replaces the root entry with
 `/threads/<threadId>` so first load does not create a dead back step. Explicit
 user selections, resumed threads, and new threads push history entries, so
 browser back/forward returns to the previous thread or to `/` when the previous
 state was the no-thread view.
+
+Running turns follow Codex App Server semantics: additional composer text sends
+`turn/steer` with the active turn as `expectedTurnId`, and the empty running
+primary button sends `turn/interrupt`. Preview-only stored threads and
+approval-waiting turns remain blocked until resumed or resolved.
+
+Resume can replay restored token usage via `thread/tokenUsage/updated`. The
+example shows nonzero context usage beside the composer and hides the indicator
+when usage is absent or zero.
 
 For the real layout audit:
 

@@ -3,7 +3,7 @@
 .aui-chat {
   background: var(--aui-bg);
   display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
   min-width: 0;
   overflow: hidden;
@@ -79,7 +79,7 @@
   grid-row: 2;
 }
 
-.aui-thread-surface > .aui-message-list {
+.aui-thread-surface > .aui-message-list-wrap {
   grid-row: 3;
 }
 
@@ -320,6 +320,21 @@
   overscroll-behavior: contain;
   padding: 18px 22px 28px;
   scroll-behavior: auto;
+  position: relative;
+}
+
+.aui-message-list-wrap {
+  display: grid;
+  min-height: 0;
+  min-width: 0;
+  position: relative;
+}
+
+.aui-jump-latest {
+  bottom: 14px;
+  justify-self: center;
+  position: absolute;
+  z-index: 12;
 }
 
 .aui-turn {

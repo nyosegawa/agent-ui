@@ -1,5 +1,5 @@
 import type React from "react";
-import type { ThreadState } from "@nyosegawa/agent-ui-core";
+import type { ThreadState, ThreadTokenUsage } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAgentComposer } from "../hooks";
 import { mentionInput, type CodexUserInput } from "../codex-request-params";
@@ -12,10 +12,12 @@ import {
   IconPlugin,
   IconSend,
   IconShield,
+  IconStop,
   buttonClass,
 } from "../components-internal";
 import { ComposerRunSettings } from "./run-settings";
 import { deferAction } from "./shared";
+import { AgentContextUsageIndicator } from "./context-usage";
 
 export function AgentComposer({
   disabled = false,
@@ -24,6 +26,7 @@ export function AgentComposer({
   onRequestPluginMention,
   placeholder = "Ask Codex to work in this thread",
   resolveLocalAttachment,
+  tokenUsage,
   threadId,
 }: AgentComposerProps) {
   const composer = useAgentComposer(threadId);
@@ -117,11 +120,22 @@ export function AgentComposer({
 
   const submit = () => {
     if (disabled) return;
-    if (!composer.value.trim() && attachments.length === 0) return;
+    if (!composer.value.trim() && attachments.length === 0) {
+      if (composer.isRunning) deferAction(() => composer.stop());
+      return;
+    }
     const pendingAttachments = attachments;
-    deferAction(() => composer.submit(pendingAttachments.flatMap(composerAttachmentInput)));
-    for (const attachment of pendingAttachments) revokePreview(attachment);
-    setAttachments([]);
+    deferAction(async () => {
+      try {
+        await composer.submit(pendingAttachments.flatMap(composerAttachmentInput));
+      } catch {
+        return;
+      }
+      for (const attachment of pendingAttachments) revokePreview(attachment);
+      setAttachments((current) =>
+        current.filter((attachment) => !pendingAttachments.includes(attachment)),
+      );
+    });
   };
 
   const isComposing = useRef(false);
@@ -132,7 +146,13 @@ export function AgentComposer({
     }
   };
 
-  const canSubmit = !disabled && (composer.value.trim().length > 0 || attachments.length > 0);
+  const hasInput = composer.value.trim().length > 0 || attachments.length > 0;
+  const isStopAction = composer.isRunning && !hasInput;
+  const canSubmit =
+    !disabled &&
+    (hasInput || composer.isRunning) &&
+    !composer.isSubmitting &&
+    !composer.isInterrupting;
 
   const handleMention = useCallback(
     async (kind: "app" | "plugin") => {
@@ -211,6 +231,12 @@ export function AgentComposer({
         <div className="aui-composer-notice" data-tone="error" role="alert">
           <IconAlert size={14} />
           <span>{attachmentError}</span>
+        </div>
+      ) : null}
+      {composer.error ? (
+        <div className="aui-composer-notice" data-tone="error" role="alert">
+          <IconAlert size={14} />
+          <span>{composer.error}</span>
         </div>
       ) : null}
       {attachments.length > 0 ? (
@@ -334,17 +360,21 @@ export function AgentComposer({
           <ComposerRunSettings />
         </div>
         <div className="aui-composer-toolbar-end">
+          <AgentContextUsageIndicator tokenUsage={tokenUsage} />
           <span className="aui-composer-hint" aria-hidden="true">
             <kbd>Enter</kbd> to send
           </span>
           <button
-            aria-label="Send"
-            className={buttonClass("primary", { iconOnly: true, size: "lg" })}
+            aria-label={isStopAction ? "Stop" : composer.isRunning ? "Send additional instructions" : "Send"}
+            className={buttonClass(isStopAction ? "danger" : "primary", {
+              iconOnly: true,
+              size: "lg",
+            })}
             disabled={!canSubmit}
-            title="Send message"
+            title={isStopAction ? "Stop running turn" : composer.isRunning ? "Send additional instructions" : "Send message"}
             type="submit"
           >
-            <IconSend size={18} />
+            {isStopAction ? <IconStop size={18} /> : <IconSend size={18} />}
           </button>
         </div>
       </div>
@@ -388,6 +418,7 @@ export interface AgentComposerProps {
   onRequestPluginMention?: AgentComposerMentionResolver;
   placeholder?: string;
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
+  tokenUsage?: ThreadTokenUsage;
   threadId?: string;
 }
 
@@ -454,9 +485,8 @@ export function AgentComposerPanel({
   thread,
   threadId,
 }: AgentComposerPanelProps) {
-  const isRunning = thread.status === "running";
   const isPreviewOnly = isPreviewOnlyThread(thread);
-  const isBlocked = isRunning || thread.status === "waitingForInput" || isPreviewOnly;
+  const isBlocked = thread.status === "waitingForInput" || isPreviewOnly;
   return (
     <section className="aui-compose-panel" aria-label="Message composer">
       <AgentComposer
@@ -466,6 +496,7 @@ export function AgentComposerPanel({
         onRequestPluginMention={onRequestPluginMention}
         placeholder={composerPlaceholder(thread.status, isPreviewOnly)}
         resolveLocalAttachment={resolveLocalAttachment}
+        tokenUsage={thread.tokenUsage}
         threadId={threadId}
       />
     </section>
@@ -477,7 +508,6 @@ function composerDisabledReason(
   isPreviewOnly: boolean,
 ): string | undefined {
   if (isPreviewOnly) return "Resume this stored thread before sending a new message.";
-  if (status === "running") return "Codex is working — send is available after the turn.";
   if (status === "waitingForInput") {
     return "Resolve the pending approval before sending another message.";
   }
@@ -493,7 +523,7 @@ function isPreviewOnlyThread(thread: ThreadState): boolean {
 
 function composerPlaceholder(status: ThreadState["status"], isPreviewOnly = false): string {
   if (isPreviewOnly) return "Stored thread";
-  if (status === "running") return "Codex is working";
+  if (status === "running") return "Add instructions while Codex is working";
   if (status === "waitingForInput") return "Waiting on approval";
   return "Ask Codex to work in this thread";
 }

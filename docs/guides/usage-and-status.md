@@ -12,8 +12,9 @@ rails in `AgentChat`.
 <AgentUsagePanel />
 ```
 
-Use `AgentUsageSummary` for compact host chrome and `AgentTokenUsageBar` for
-per-thread token usage.
+Use `AgentUsageSummary` for compact host chrome and
+`AgentContextUsageIndicator` for nonzero per-thread context usage restored from
+`thread/tokenUsage/updated`.
 
 ## Status
 

@@ -5,7 +5,7 @@ import type {
   TurnState,
 } from "@nyosegawa/agent-ui-core";
 import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AgentDiffViewer } from "./diff-viewer";
 import { MarkdownMessage } from "./markdown";
 import {
@@ -49,6 +49,9 @@ export function AgentMessageList({
   thread: ThreadState;
 }) {
   const listRef = useRef<HTMLOListElement | null>(null);
+  const followModeRef = useRef(true);
+  const rafRef = useRef<number | undefined>(undefined);
+  const [showJumpLatest, setShowJumpLatest] = useState(false);
   const [visibleItemState, setVisibleItemState] = useState({
     limit: DEFAULT_TRANSCRIPT_ITEM_LIMIT,
     threadId: thread.thread.id,
@@ -62,10 +65,14 @@ export function AgentMessageList({
     [thread, visibleItemLimit],
   );
   const hiddenItemCount = Math.max(0, visibleTurnItems.totalItemCount - visibleTurnItems.visibleItemCount);
-  useEffect(() => {
+  const scrollToLatest = useCallback((behavior: ScrollBehavior = "auto") => {
     const list = listRef.current;
-    if (!list) return;
-    list.scrollTop = list.scrollHeight;
+    if (!list) return false;
+    if (typeof list.scrollTo === "function") {
+      list.scrollTo({ behavior, top: list.scrollHeight });
+    } else {
+      list.scrollTop = list.scrollHeight;
+    }
     // The pending-approval surface lives at the end of the transcript. When
     // it is taller than the viewport, scrolling to the very bottom would clip
     // the primary decision footer above the fold — pull back just enough so
@@ -78,44 +85,98 @@ export function AgentMessageList({
         list.getBoundingClientRect().top - actions.getBoundingClientRect().top;
       if (clippedAbove > 0) list.scrollTop -= clippedAbove + 12;
     }
-  }, [thread.thread.id, thread.orderedTurnIds.length, scrollKey]);
+    return true;
+  }, []);
+  const scheduleFollowScroll = useCallback((behavior: ScrollBehavior = "smooth") => {
+    if (!followModeRef.current) {
+      setShowJumpLatest(true);
+      return;
+    }
+    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = undefined;
+      scrollToLatest(behavior);
+      setShowJumpLatest(false);
+    });
+  }, [scrollToLatest]);
+  useEffect(() => {
+    scheduleFollowScroll("auto");
+    return () => {
+      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
+    };
+  }, [scheduleFollowScroll, thread.thread.id, thread.orderedTurnIds.length, scrollKey]);
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const observer = new MutationObserver(() => scheduleFollowScroll("smooth"));
+    observer.observe(list, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+    return () => observer.disconnect();
+  }, [scheduleFollowScroll, thread.thread.id]);
+  const handleScroll = () => {
+    const list = listRef.current;
+    if (!list) return;
+    const distanceFromBottom = list.scrollHeight - list.scrollTop - list.clientHeight;
+    const shouldFollow = distanceFromBottom <= 80;
+    followModeRef.current = shouldFollow;
+    if (shouldFollow) setShowJumpLatest(false);
+  };
   return (
-    <ol className="aui-message-list" ref={listRef}>
-      {hiddenItemCount > 0 ? (
-        <li className="aui-transcript-pagination">
-          <button
-            className="aui-btn aui-btn-subtle aui-btn-sm"
-            onClick={() =>
-              setVisibleItemState({
-                limit: visibleItemLimit + TRANSCRIPT_ITEM_INCREMENT,
-                threadId: thread.thread.id,
-              })
-            }
-            type="button"
-          >
-            Show earlier items
-          </button>
-          <span>
-            {hiddenItemCount} earlier {hiddenItemCount === 1 ? "item" : "items"} hidden
-          </span>
-        </li>
+    <div className="aui-message-list-wrap">
+      <ol className="aui-message-list" onScroll={handleScroll} ref={listRef}>
+        {hiddenItemCount > 0 ? (
+          <li className="aui-transcript-pagination">
+            <button
+              className="aui-btn aui-btn-subtle aui-btn-sm"
+              onClick={() =>
+                setVisibleItemState({
+                  limit: visibleItemLimit + TRANSCRIPT_ITEM_INCREMENT,
+                  threadId: thread.thread.id,
+                })
+              }
+              type="button"
+            >
+              Show earlier items
+            </button>
+            <span>
+              {hiddenItemCount} earlier {hiddenItemCount === 1 ? "item" : "items"} hidden
+            </span>
+          </li>
+        ) : null}
+        {thread.orderedTurnIds.map((turnId) => {
+          const turn = thread.turns[turnId];
+          const visibleItemIds = visibleTurnItems.itemIdsByTurnId.get(turnId);
+          if (!visibleItemIds || visibleItemIds.length === 0) return null;
+          return turn ? (
+            <AgentTurn
+              key={turnId}
+              renderItem={renderItem}
+              threadStatus={thread.status}
+              turn={turn}
+              visibleItemIds={visibleItemIds}
+            />
+          ) : null;
+        })}
+        {footer ? <li className="aui-transcript-tail">{footer}</li> : null}
+      </ol>
+      {showJumpLatest ? (
+        <button
+          className="aui-btn aui-btn-secondary aui-btn-sm aui-jump-latest"
+          onClick={() => {
+            followModeRef.current = true;
+            setShowJumpLatest(false);
+            scrollToLatest("smooth");
+          }}
+          type="button"
+        >
+          Jump to latest
+        </button>
       ) : null}
-      {thread.orderedTurnIds.map((turnId) => {
-        const turn = thread.turns[turnId];
-        const visibleItemIds = visibleTurnItems.itemIdsByTurnId.get(turnId);
-        if (!visibleItemIds || visibleItemIds.length === 0) return null;
-        return turn ? (
-          <AgentTurn
-            key={turnId}
-            renderItem={renderItem}
-            threadStatus={thread.status}
-            turn={turn}
-            visibleItemIds={visibleItemIds}
-          />
-        ) : null;
-      })}
-      {footer ? <li className="aui-transcript-tail">{footer}</li> : null}
-    </ol>
+    </div>
   );
 }
 

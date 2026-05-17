@@ -54,6 +54,20 @@ closes the process when the socket closes or the idle timeout expires. Slow
 browser consumers are closed with WebSocket code `1013` when the outbound
 buffer exceeds the configured backpressure limit.
 
+Running-turn UX should map directly to App Server methods. Additional
+instructions for an active regular turn call `turn/steer` with `threadId`,
+`expectedTurnId`, and structured `input`. Stop calls `turn/interrupt` with the
+active `threadId` and `turnId`; the server may only respond after the
+interrupted `turn/completed`/`TurnAborted` path finishes. A generic
+queue-after-completion feature is host-owned behaviour, not an App Server
+primitive.
+
+Token usage is streamed independently through `thread/tokenUsage/updated`.
+Current App Server payloads are nested under `tokenUsage.total.*`,
+`tokenUsage.last.*`, and `tokenUsage.modelContextWindow`. `thread/resume`,
+`thread/read`-style hydration, and `thread/fork` can replay restored usage so
+the UI can show context usage before the next turn starts.
+
 ## Upload Handler
 
 Browsers hold `File` objects; Codex App Server reads local image inputs from

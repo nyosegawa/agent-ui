@@ -120,25 +120,63 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
           threadId: String(params.threadId ?? params.thread_id),
         },
       ];
-    case "thread/tokenUsage/updated":
+    case "thread/tokenUsage/updated": {
+      const tokenUsage = asRecord(params.tokenUsage);
+      const totalUsage = asRecord(tokenUsage?.total) ?? tokenUsage;
+      const lastUsage = asRecord(tokenUsage?.last);
       return [
         {
           type: "thread/tokenUsage/updated",
           threadId: String(params.threadId ?? params.thread_id),
           tokenUsage: {
+            cachedInputTokens:
+              numberValue(totalUsage?.cachedInputTokens) ??
+              numberValue(totalUsage?.cached_input_tokens) ??
+              numberValue(params.cachedInputTokens),
             inputTokens:
-              numberValue(asRecord(params.tokenUsage)?.inputTokens) ??
+              numberValue(totalUsage?.inputTokens) ??
+              numberValue(totalUsage?.input_tokens) ??
               numberValue(params.inputTokens),
+            last: lastUsage
+              ? {
+                  cachedInputTokens:
+                    numberValue(lastUsage.cachedInputTokens) ??
+                    numberValue(lastUsage.cached_input_tokens),
+                  inputTokens:
+                    numberValue(lastUsage.inputTokens) ??
+                    numberValue(lastUsage.input_tokens),
+                  outputTokens:
+                    numberValue(lastUsage.outputTokens) ??
+                    numberValue(lastUsage.output_tokens),
+                  reasoningOutputTokens:
+                    numberValue(lastUsage.reasoningOutputTokens) ??
+                    numberValue(lastUsage.reasoning_output_tokens),
+                  totalTokens:
+                    numberValue(lastUsage.totalTokens) ??
+                    numberValue(lastUsage.total_tokens),
+                }
+              : undefined,
+            modelContextWindow:
+              numberValue(tokenUsage?.modelContextWindow) ??
+              numberValue(tokenUsage?.model_context_window) ??
+              numberValue(params.modelContextWindow),
             outputTokens:
-              numberValue(asRecord(params.tokenUsage)?.outputTokens) ??
+              numberValue(totalUsage?.outputTokens) ??
+              numberValue(totalUsage?.output_tokens) ??
               numberValue(params.outputTokens),
+            reasoningOutputTokens:
+              numberValue(totalUsage?.reasoningOutputTokens) ??
+              numberValue(totalUsage?.reasoning_output_tokens) ??
+              numberValue(params.reasoningOutputTokens),
             totalTokens:
-              numberValue(asRecord(params.tokenUsage)?.totalTokens) ??
+              numberValue(totalUsage?.totalTokens) ??
+              numberValue(totalUsage?.total_tokens) ??
               numberValue(params.totalTokens),
             raw: params,
           },
         },
       ];
+    }
     case "turn/started":
       return [
         {

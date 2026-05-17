@@ -210,7 +210,12 @@ export function createKitchenInitialState(): AgentSessionState {
       name: "Kitchen-quality Codex UX",
       path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
     },
-    tokenUsage: { inputTokens: 4200, outputTokens: 1600, totalTokens: 5800 },
+    tokenUsage: {
+      inputTokens: 4200,
+      modelContextWindow: 10000,
+      outputTokens: 1600,
+      totalTokens: 5800,
+    },
     turns: {
       "turn-kitchen": {
         blocksByItemId: {

@@ -1588,7 +1588,7 @@ describe("AgentChat", () => {
     expect(screen.getByRole("img", { name: "/tmp/agent-ui.png" })).toBeInTheDocument();
   });
 
-  it("disables the composer and interrupts the active turn while running", async () => {
+  it("keeps the running composer editable and stops the active turn from the primary button", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();
     initialState.activeThreadId = "thread-running";
@@ -1619,12 +1619,88 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(screen.getByRole("textbox", { name: "Message" })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: "Message" })).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "Stop", hidden: false })).toBeInTheDocument();
+    expect(screen.queryAllByRole("button", { name: "Stop" })).toHaveLength(1);
     await user.click(screen.getByRole("button", { name: "Stop" }));
 
-    expect(
-      transport.requests.find((request) => request.method === "turn/interrupt")?.params,
-    ).toEqual({ threadId: "thread-running", turnId: "turn-running" });
+    await waitFor(() =>
+      expect(
+        transport.requests.find((request) => request.method === "turn/interrupt")?.params,
+      ).toEqual({ threadId: "thread-running", turnId: "turn-running" }),
+    );
+  });
+
+  it("sends running composer input with turn/steer and preserves failed input", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-running";
+    initialState.threads["thread-running"] = {
+      orderedTurnIds: ["turn-running"],
+      status: "running",
+      thread: { id: "thread-running", name: "Running thread" },
+      turns: {
+        "turn-running": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: [],
+          items: {},
+          streamingTextByItemId: {},
+          turn: { id: "turn-running", status: "running", threadId: "thread-running" },
+        },
+      },
+    };
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/steer") {
+          return { turnId: "turn-running" };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "focus on tests");
+    await user.click(screen.getByRole("button", { name: "Send additional instructions" }));
+
+    await waitFor(() =>
+      expect(transport.requests.at(-1)).toMatchObject({
+        method: "turn/steer",
+        params: {
+          expectedTurnId: "turn-running",
+          input: [{ text: "focus on tests", type: "text" }],
+          threadId: "thread-running",
+        },
+      }),
+    );
+    expect(message).toHaveValue("");
+
+    const failingTransport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/steer") {
+          throw new Error("ActiveTurnNotSteerable review");
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={initialState} transport={failingTransport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+    const failingMessage = screen.getAllByRole("textbox", { name: "Message" }).at(-1)!;
+    await user.type(failingMessage, "do not lose this");
+    await user.click(
+      screen.getAllByRole("button", { name: "Send additional instructions" }).at(-1)!,
+    );
+
+    await screen.findByText(/cannot accept additional instructions/i);
+    expect(failingMessage).toHaveValue("do not lose this");
   });
 
   it("does not leave messages marked in progress after the thread completes", () => {
@@ -1965,6 +2041,58 @@ describe("AgentChat", () => {
         threadId: "thread-demo",
       },
     });
+  });
+
+  it("shows compact context usage near the composer only for nonzero usage", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-usage";
+    initialState.threads["thread-usage"] = {
+      orderedTurnIds: [],
+      status: "complete",
+      thread: { id: "thread-usage", name: "Usage thread" },
+      tokenUsage: {
+        cachedInputTokens: 100,
+        inputTokens: 700,
+        last: { inputTokens: 300, outputTokens: 100, totalTokens: 400 },
+        modelContextWindow: 1000,
+        outputTokens: 90,
+        reasoningOutputTokens: 10,
+        totalTokens: 800,
+      },
+      turns: {},
+    };
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    expect(screen.queryByLabelText("Token usage")).not.toBeInTheDocument();
+    await user.click(screen.getByLabelText("Context usage"));
+    expect(screen.getByLabelText("Context usage details")).toHaveTextContent("80%");
+    expect(screen.getByLabelText("Context usage details")).toHaveTextContent(
+      "800 / 1,000",
+    );
+    expect(screen.getByLabelText("Context usage details")).toHaveTextContent(
+      "Cached input",
+    );
+
+    const zeroState = createInitialAgentState();
+    zeroState.activeThreadId = "thread-zero";
+    zeroState.threads["thread-zero"] = {
+      orderedTurnIds: [],
+      status: "complete",
+      thread: { id: "thread-zero", name: "Zero usage thread" },
+      tokenUsage: { modelContextWindow: 1000, totalTokens: 0 },
+      turns: {},
+    };
+    render(
+      <AgentProvider initialState={zeroState} transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+    expect(screen.getAllByLabelText("Context usage")).toHaveLength(1);
   });
 
   it("sends composer attachments as structured turn input items", async () => {

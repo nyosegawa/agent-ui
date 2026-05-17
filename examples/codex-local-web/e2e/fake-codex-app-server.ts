@@ -5,6 +5,7 @@ let nextRequestId = 10_000;
 let nextThreadOrdinal = 1;
 let nextTurnOrdinal = 1;
 const approvalIds = new Set<string>();
+const activeTurns = new Map<string, string>();
 
 lines.on("line", (line) => {
   const message = JSON.parse(line) as JsonRpcLine;
@@ -113,6 +114,27 @@ function handleRequest(message: JsonRpcLine) {
           status: { type: "idle" },
         }),
       });
+      notify("thread/tokenUsage/updated", {
+        threadId: stringParam(message.params, "threadId") ?? "thread-stored",
+        tokenUsage: {
+          last: {
+            cachedInputTokens: 25,
+            inputTokens: 500,
+            outputTokens: 100,
+            reasoningOutputTokens: 50,
+            totalTokens: 600,
+          },
+          modelContextWindow: 1000,
+          total: {
+            cachedInputTokens: 100,
+            inputTokens: 700,
+            outputTokens: 90,
+            reasoningOutputTokens: 10,
+            totalTokens: 800,
+          },
+        },
+        turnId: "turn-stored",
+      });
       return;
     case "thread/start": {
       const threadId = `thread-live-${nextThreadOrdinal++}`;
@@ -147,6 +169,7 @@ function handleRequest(message: JsonRpcLine) {
       const prompt = inputText(message.params);
       const threadId = stringParam(message.params, "threadId") ?? "thread-live";
       const requiresApproval = prompt === "run smoke";
+      const isSlow = prompt === "slow smoke";
       respond(message.id, {
         turn: {
           completedAt: null,
@@ -159,10 +182,53 @@ function handleRequest(message: JsonRpcLine) {
         },
       });
       streamTurn({
-        responseText: requiresApproval ? "Streaming smoke response." : `Echo: ${prompt}`,
+        completeDelayMs: isSlow ? 8_000 : 40,
+        responseText: requiresApproval
+          ? "Streaming smoke response."
+          : isSlow
+            ? `Echo: ${prompt}\n${Array.from({ length: 80 }, (_, index) => `stream line ${index + 1}`).join("\n")}`
+            : `Echo: ${prompt}`,
         requiresApproval,
         threadId,
         turnId,
+      });
+      return;
+    }
+    case "turn/steer": {
+      const threadId = stringParam(message.params, "threadId") ?? "thread-live";
+      const expectedTurnId = stringParam(message.params, "expectedTurnId");
+      if (!expectedTurnId || activeTurns.get(threadId) !== expectedTurnId) {
+        respond(message.id, { error: "expected turn mismatch" });
+        return;
+      }
+      respond(message.id, { turnId: expectedTurnId });
+      notify("item/agentMessage/delta", {
+        delta: `\nSteered: ${inputText(message.params)}`,
+        itemId: `item-${expectedTurnId}`,
+        threadId,
+        turnId: expectedTurnId,
+      });
+      return;
+    }
+    case "turn/interrupt": {
+      const threadId = stringParam(message.params, "threadId") ?? "thread-live";
+      const turnId = stringParam(message.params, "turnId") ?? "";
+      activeTurns.delete(threadId);
+      schedule(20, () => {
+        notify("turn/completed", {
+          items: [],
+          threadId,
+          turn: {
+            completedAt: 1778000004,
+            durationMs: 100,
+            error: null,
+            id: turnId,
+            items: [],
+            startedAt: 1778000002,
+            status: "interrupted",
+          },
+        });
+        respond(message.id, {});
       });
       return;
     }
@@ -172,11 +238,13 @@ function handleRequest(message: JsonRpcLine) {
 }
 
 function streamTurn({
+  completeDelayMs = 40,
   requiresApproval,
   responseText,
   threadId,
   turnId,
 }: {
+  completeDelayMs?: number;
   requiresApproval: boolean;
   responseText: string;
   threadId: string;
@@ -185,6 +253,7 @@ function streamTurn({
   const agentItemId = `item-${turnId}`;
   const commandItemId = `cmd-${turnId}`;
   const diffItemId = `diff-${turnId}`;
+  activeTurns.set(threadId, turnId);
   schedule(0, () =>
     notify("turn/started", {
       threadId,
@@ -224,7 +293,9 @@ function streamTurn({
     }),
   );
   if (!requiresApproval) {
-    schedule(40, () =>
+    schedule(completeDelayMs, () => {
+      if (activeTurns.get(threadId) !== turnId) return;
+      activeTurns.delete(threadId);
       notify("turn/completed", {
         items: [
           {
@@ -243,8 +314,8 @@ function streamTurn({
           startedAt: 1778000002,
           status: "completed",
         },
-      }),
-    );
+      });
+    });
     return;
   }
   schedule(40, () => {

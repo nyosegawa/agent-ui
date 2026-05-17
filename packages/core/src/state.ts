@@ -80,10 +80,22 @@ export type ThreadStatus =
   | string;
 
 export interface ThreadTokenUsage {
+  cachedInputTokens?: number;
   inputTokens?: number;
+  last?: TokenUsageBreakdown;
+  modelContextWindow?: number;
   outputTokens?: number;
+  reasoningOutputTokens?: number;
   totalTokens?: number;
   raw?: unknown;
+}
+
+export interface TokenUsageBreakdown {
+  cachedInputTokens?: number;
+  inputTokens?: number;
+  outputTokens?: number;
+  reasoningOutputTokens?: number;
+  totalTokens?: number;
 }
 
 export interface ThreadState {

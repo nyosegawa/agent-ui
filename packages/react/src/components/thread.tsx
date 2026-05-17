@@ -10,13 +10,11 @@ import {
   useAgentApprovals,
   useAgentThread,
   useAgentThreadActions,
-  useAgentTurn,
 } from "../hooks";
 import { useAgentContext } from "../provider";
 import {
   IconAdd,
   IconMoreVertical,
-  IconStop,
   buttonClass,
 } from "../components-internal";
 import { AgentMessageList } from "../timeline";
@@ -26,7 +24,7 @@ import {
   type AgentComposerMentionResolver,
   type AgentLocalAttachmentResolver,
 } from "./composer";
-import { AgentCriticalNoticeList, AgentTokenUsageBar } from "./status";
+import { AgentCriticalNoticeList } from "./status";
 import { deferAction } from "./shared";
 import { formatThreadStatus, threadSubtitle } from "./sidebar";
 
@@ -96,7 +94,6 @@ export function AgentThreadHeader({
       <div className="aui-thread-title">
         <h1>{thread.thread.name ?? "Untitled thread"}</h1>
         <p>{threadSubtitle(thread.thread)}</p>
-        {thread.tokenUsage ? <AgentTokenUsageBar {...thread.tokenUsage} /> : null}
       </div>
       <AgentThreadActions thread={thread} threadId={threadId} />
     </div>
@@ -157,9 +154,7 @@ function AgentThreadActions({
     rollbackThread,
     unarchiveThread,
   } = useAgentThreadActions(threadId);
-  const { interruptTurn } = useAgentTurn(threadId);
   const status = thread.status;
-  const latestTurnId = thread.orderedTurnIds.at(-1);
   const hasTurns = thread.orderedTurnIds.length > 0;
   const canResume = threadId && (status === "notLoaded" || status === "loaded");
   return (
@@ -190,16 +185,6 @@ function AgentThreadActions({
           type="button"
         >
           Resume
-        </button>
-      ) : null}
-      {status === "running" && latestTurnId ? (
-        <button
-          className={buttonClass("danger", { size: "sm" })}
-          onClick={() => deferAction(() => void interruptTurn(latestTurnId))}
-          type="button"
-        >
-          <IconStop size={12} />
-          <span>Stop</span>
         </button>
       ) : null}
       <button

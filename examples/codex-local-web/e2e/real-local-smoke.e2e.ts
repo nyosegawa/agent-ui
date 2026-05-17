@@ -102,6 +102,65 @@ test("opens a thread by URL and accepts image plus arbitrary file attachments", 
   await expect(page.getByText(/Attached file: .*part\.3mf/)).toBeVisible();
 });
 
+test("anchors composer to the viewport and uses steer/interrupt while running", async ({
+  page,
+}, testInfo) => {
+  testInfo.setTimeout(45_000);
+  await openRealLocalApp(page, { width: 1280, height: 900 }, "/threads/thread-stored");
+  await page.getByRole("button", { name: "Resume" }).click({ force: true });
+  await expect(page.getByRole("textbox", { name: "Message" })).toBeEnabled();
+  await expect(page.getByLabel("Context usage", { exact: true })).toContainText("80%");
+  await page.getByLabel("Context usage", { exact: true }).click();
+  await expect(page.getByLabel("Context usage details")).toContainText("800 / 1,000");
+  await page.getByLabel("Context usage", { exact: true }).click();
+
+  await assertComposerAnchored(page);
+  const message = page.getByRole("textbox", { name: "Message" });
+  await message.fill("slow smoke");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.getByRole("button", { name: "Stop" })).toBeVisible();
+  await expect(message).toBeEnabled();
+  await message.fill("while running");
+  await page.getByRole("button", { name: "Send additional instructions" }).click();
+  await expect(page.getByText("Steered: while running")).toBeVisible();
+  await expect(message).toHaveValue("");
+  await page.getByRole("button", { name: "Stop" }).click();
+  await expect(page.locator(".aui-status-pill")).not.toContainText("Running");
+  await assertComposerAnchored(page);
+
+  await page.setViewportSize({ width: 390, height: 900 });
+  await assertComposerAnchored(page);
+});
+
+test("follows streaming content only while the transcript is near the bottom", async ({
+  page,
+}, testInfo) => {
+  testInfo.setTimeout(45_000);
+  await openRealLocalApp(page, { width: 390, height: 900 }, "/threads/thread-stored");
+  await page.getByRole("button", { name: "Resume" }).click({ force: true });
+  const message = page.getByRole("textbox", { name: "Message" });
+  await message.fill("slow smoke");
+  await page.getByRole("button", { name: "Send" }).click();
+  const nearBottomBefore = await messageListScroll(page);
+  await expect(page.getByText("Echo: slow smoke")).toBeVisible();
+  const nearBottomAfter = await messageListScroll(page);
+  expect(nearBottomAfter.top).toBeGreaterThanOrEqual(nearBottomBefore.top);
+
+  await page.locator(".aui-message-list").evaluate((element) => {
+    element.scrollTop = 0;
+    element.dispatchEvent(new Event("scroll", { bubbles: true }));
+  });
+  await message.fill("while scrolled up");
+  const pausedBefore = await messageListScroll(page);
+  await page.getByRole("button", { name: "Send additional instructions" }).click();
+  await expect(page.getByRole("button", { name: "Jump to latest" })).toBeVisible();
+  const pausedAfter = await messageListScroll(page);
+  expect(pausedAfter.top).toBe(pausedBefore.top);
+  await page.getByRole("button", { name: "Jump to latest" }).click({ force: true });
+  const latestAfter = await messageListScroll(page);
+  expect(latestAfter.top).toBeGreaterThanOrEqual(pausedAfter.top);
+});
+
 async function openRealLocalApp(
   page: Page,
   viewport: { height: number; width: number } = { width: 1280, height: 900 },
@@ -113,4 +172,38 @@ async function openRealLocalApp(
   await expect(page.getByText(/real-smoke@example.com/)).toBeVisible({
     timeout: 10_000,
   });
+}
+
+async function assertComposerAnchored(page: Page) {
+  const metrics = await page.evaluate(() => {
+    const composer = document.querySelector(".aui-compose-panel")?.getBoundingClientRect();
+    const messageList = document.querySelector(".aui-message-list")?.getBoundingClientRect();
+    const send = document
+      .querySelector(".aui-composer button[aria-label='Send'], .aui-composer button[aria-label='Stop']")
+      ?.getBoundingClientRect();
+    const hitTarget = send
+      ? document.elementFromPoint(send.left + send.width / 2, send.top + send.height / 2)
+      : null;
+    return {
+      bottomGap: composer ? window.innerHeight - composer.bottom : Number.POSITIVE_INFINITY,
+      horizontalOverflow:
+        document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      hitTestable: Boolean(hitTarget?.closest(".aui-composer button")),
+      overlap: Boolean(
+        composer && messageList && messageList.bottom > composer.top + 1,
+      ),
+    };
+  });
+  expect(metrics.bottomGap).toBeGreaterThanOrEqual(0);
+  expect(metrics.bottomGap).toBeLessThanOrEqual(12);
+  expect(metrics.horizontalOverflow).toBeLessThanOrEqual(0);
+  expect(metrics.overlap).toBe(false);
+  expect(metrics.hitTestable).toBe(true);
+}
+
+async function messageListScroll(page: Page) {
+  return page.locator(".aui-message-list").evaluate((element) => ({
+    height: element.scrollHeight,
+    top: element.scrollTop,
+  }));
 }

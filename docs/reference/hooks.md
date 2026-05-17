@@ -20,6 +20,12 @@ for a new Codex thread and `resumeThread(threadId)` for a stored session.
 `turn/start` with normalized run settings, `turn/steer` for continuing an active
 turn, and `turn/interrupt` for the visible stop action.
 
+`turn/steer` is the Codex App Server same-turn continuation path. It requires
+an active regular turn and the matching `expectedTurnId`; review and manual
+compact turns reject steering. Hosts that want generic "queue this after the
+current turn finishes" behaviour must own that queue themselves because App
+Server does not provide it.
+
 ## Thread Collection And History
 
 ```tsx
@@ -46,10 +52,12 @@ const run = useAgentRunSettings();
 ```
 
 `useAgentComposer()` owns input text and submits turns through the turn
-controller. The hook exposes state and actions; UI components decide whether a
-specific submit button should be disabled. The default `AgentComposerPanel`
-blocks submission while the target thread is running, waiting for approval, or
-displaying a stored read-only preview.
+controller. Idle threads submit `turn/start`. Running threads keep the textarea
+editable: text submit sends `turn/steer` with the latest active turn id as
+`expectedTurnId`, while an empty primary click calls `turn/interrupt`. The hook
+keeps failed steering input intact and surfaces an inline error. The default
+`AgentComposerPanel` still blocks submission for approval-waiting threads and
+stored read-only previews.
 
 `useAgentRunSettings()` exposes execution modes, available models, supported
 efforts, cwd, current selections, and setters. Execution modes map to stable App

@@ -286,6 +286,34 @@ describe("agentReducer", () => {
     expect(state.diagnostics.banners[0]?.kind).toBe("rateLimit");
   });
 
+  it("stores restored thread token usage with context-window breakdown", () => {
+    const state = runEventFixture([
+      { event: { thread: { id: "thread-usage" }, type: "thread/started" } },
+      {
+        event: {
+          threadId: "thread-usage",
+          tokenUsage: {
+            cachedInputTokens: 20,
+            inputTokens: 120,
+            last: { inputTokens: 80, outputTokens: 10, totalTokens: 90 },
+            modelContextWindow: 200_000,
+            outputTokens: 30,
+            reasoningOutputTokens: 10,
+            totalTokens: 150,
+          },
+          type: "thread/tokenUsage/updated",
+        },
+      },
+    ]);
+
+    expect(state.threads["thread-usage"]?.tokenUsage).toMatchObject({
+      inputTokens: 120,
+      modelContextWindow: 200_000,
+      outputTokens: 30,
+      totalTokens: 150,
+    });
+  });
+
   it("keeps app connector lists scoped by thread id", () => {
     const state = runEventFixture([
       {

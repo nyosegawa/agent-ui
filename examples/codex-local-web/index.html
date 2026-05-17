@@ -19,10 +19,17 @@
 
       .agent-ui-local-app {
         box-sizing: border-box;
-        height: 100%;
+        height: 100dvh;
         margin: 0 auto;
         max-width: 1440px;
-        padding: 16px;
+        padding: 16px 16px 0;
+        width: 100%;
+      }
+
+      @media (max-width: 720px) {
+        .agent-ui-local-app {
+          padding: 0;
+        }
       }
     </style>
   </head>

@@ -3,6 +3,12 @@
 Primary real local example: browser Agent UI, same-origin WebSocket bridge, and
 `codex app-server --listen stdio://`.
 
+The app shell is full-height at `http://127.0.0.1:5175/`: the transcript is the
+only scroll container, and the composer stays anchored to the viewport bottom.
+Running-turn composer text uses `turn/steer`; the empty running primary button
+uses `turn/interrupt`. Restored context usage from
+`thread/tokenUsage/updated` appears beside the composer when nonzero.
+
 Detailed docs: [docs/examples/codex-local-web.md](../../docs/examples/codex-local-web.md).
 
 Smoke path:

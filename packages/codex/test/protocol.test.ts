@@ -67,6 +67,76 @@ describe("Codex protocol metadata", () => {
     ]);
   });
 
+  it("normalizes nested token usage notifications", () => {
+    expect(
+      normalizeCodexServerMessage({
+        method: "thread/tokenUsage/updated",
+        params: {
+          threadId: "thread-usage",
+          tokenUsage: {
+            last: {
+              cachedInputTokens: 3,
+              inputTokens: 20,
+              outputTokens: 10,
+              reasoningOutputTokens: 4,
+              totalTokens: 30,
+            },
+            modelContextWindow: 200,
+            total: {
+              cachedInputTokens: 11,
+              inputTokens: 120,
+              outputTokens: 30,
+              reasoningOutputTokens: 10,
+              totalTokens: 150,
+            },
+          },
+          turnId: "turn-usage",
+        },
+      }),
+    ).toEqual([
+      {
+        threadId: "thread-usage",
+        tokenUsage: {
+          cachedInputTokens: 11,
+          inputTokens: 120,
+          last: {
+            cachedInputTokens: 3,
+            inputTokens: 20,
+            outputTokens: 10,
+            reasoningOutputTokens: 4,
+            totalTokens: 30,
+          },
+          modelContextWindow: 200,
+          outputTokens: 30,
+          raw: {
+            threadId: "thread-usage",
+            tokenUsage: {
+              last: {
+                cachedInputTokens: 3,
+                inputTokens: 20,
+                outputTokens: 10,
+                reasoningOutputTokens: 4,
+                totalTokens: 30,
+              },
+              modelContextWindow: 200,
+              total: {
+                cachedInputTokens: 11,
+                inputTokens: 120,
+                outputTokens: 30,
+                reasoningOutputTokens: 10,
+                totalTokens: 150,
+              },
+            },
+            turnId: "turn-usage",
+          },
+          reasoningOutputTokens: 10,
+          totalTokens: 150,
+        },
+        type: "thread/tokenUsage/updated",
+      },
+    ]);
+  });
+
   it("normalizes dynamic tool call requests", () => {
     expect(
       normalizeCodexServerMessage({

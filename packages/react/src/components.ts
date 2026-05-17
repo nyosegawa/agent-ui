@@ -3,6 +3,7 @@ export * from "./components/thread";
 export * from "./components/first-run";
 export * from "./components/run-settings";
 export * from "./components/composer";
+export * from "./components/context-usage";
 export * from "./components/approvals";
 export * from "./components/status";
 export * from "./components/sidebar";

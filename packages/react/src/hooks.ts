@@ -12,6 +12,7 @@ import {
   type ReasoningEffort,
   type RequestId,
   type ThreadId,
+  type ThreadState,
 } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -494,14 +495,105 @@ export function useAgentServerRequests(threadId?: ThreadId) {
 
 export function useAgentComposer(threadId?: ThreadId) {
   const [value, setValue] = useState("");
-  const { startTurn } = useAgentTurn(threadId);
-  const submit = useCallback(async (items: CodexUserInput[] = []) => {
-    const input = value.trim();
-    if (!input && items.length === 0) return;
-    setValue("");
-    await startTurn(input ? [textInput(input), ...items] : items);
-  }, [startTurn, value]);
-  return { setValue, submit, value };
+  const [error, setError] = useState<string | undefined>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isInterrupting, setIsInterrupting] = useState(false);
+  const { dispatch, state } = useAgentContext();
+  const resolvedThreadId = threadId ?? state.activeThreadId;
+  const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;
+  const { interruptTurn, startTurn, steerTurn } = useAgentTurn(threadId);
+  const activeTurnId = latestRunningTurnId(thread);
+  const isRunning = thread?.status === "running";
+  const submit = useCallback(
+    async (items: CodexUserInput[] = []) => {
+      const input = value.trim();
+      if (!input && items.length === 0) return;
+      const userInput = input ? [textInput(input), ...items] : items;
+      setError(undefined);
+      setIsSubmitting(true);
+      try {
+        if (isRunning) {
+          if (!activeTurnId) throw new Error("No active turn to steer.");
+          await steerTurn(activeTurnId, userInput);
+        } else {
+          await startTurn(userInput);
+        }
+        setValue("");
+      } catch (caught) {
+        setError(composerActionError(caught, isRunning ? "steer" : "start"));
+        throw caught;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [activeTurnId, isRunning, startTurn, steerTurn, value],
+  );
+  const stop = useCallback(async () => {
+    if (!activeTurnId || !resolvedThreadId) return;
+    setError(undefined);
+    setIsInterrupting(true);
+    try {
+      await interruptTurn(activeTurnId);
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : String(caught);
+      if (/no active turn/i.test(message)) {
+        dispatch({
+          status: "complete",
+          threadId: resolvedThreadId,
+          type: "thread/status/changed",
+        });
+      } else {
+        setError(composerActionError(caught, "interrupt"));
+        throw caught;
+      }
+    } finally {
+      setIsInterrupting(false);
+    }
+  }, [activeTurnId, dispatch, interruptTurn, resolvedThreadId]);
+  return {
+    activeTurnId,
+    error,
+    isInterrupting,
+    isRunning,
+    isSubmitting,
+    setError,
+    setValue,
+    stop,
+    submit,
+    value,
+  };
+}
+
+function latestRunningTurnId(thread?: ThreadState): string | undefined {
+  if (!thread) return undefined;
+  return [...thread.orderedTurnIds]
+    .reverse()
+    .find((turnId) => {
+      const status = thread.turns[turnId]?.turn.status;
+      return (
+        status === "running" ||
+        status === "inProgress" ||
+        (thread.status === "running" && status !== "completed" && status !== "interrupted")
+      );
+    });
+}
+
+function composerActionError(caught: unknown, action: "interrupt" | "start" | "steer") {
+  const message = caught instanceof Error ? caught.message : String(caught);
+  if (action === "steer") {
+    if (/not steerable|non.?steerable|review|compact/i.test(message)) {
+      return "This active turn cannot accept additional instructions. Wait for it to finish, then send a new message.";
+    }
+    if (/expected.*turn|mismatch/i.test(message)) {
+      return "The active turn changed before this instruction was sent. The thread state was refreshed; try again.";
+    }
+    if (/no active turn/i.test(message)) {
+      return "There is no active turn to steer. Wait for the thread state to refresh, then send a new message.";
+    }
+    return `Could not send additional instructions: ${message}`;
+  }
+  if (action === "interrupt") return `Could not stop the turn: ${message}`;
+  return `Could not start the turn: ${message}`;
 }
 
 export function useAgentRunSettings() {

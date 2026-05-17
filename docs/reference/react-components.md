@@ -93,7 +93,10 @@ quality directly instead of depending on a page-level shell:
   containing attachment chips, an auto-resizing textarea, and an inline
   toolbar. The toolbar carries a single attach button, optional App/Plugin
   mention buttons, the **mode** and **model · effort** menus, and a circular
-  primary Send icon button with an `Enter to send` hint. The attach control
+  primary Send icon button with an `Enter to send` hint. While a regular turn
+  is running, the textarea remains editable; non-empty submit sends
+  `turn/steer`, and the empty primary button becomes Stop and calls
+  `turn/interrupt`. The attach control
   appears only when the host wires `resolveLocalAttachment`; image and
   non-image files differ after selection through chip previews and the
   resolved Codex payload. App and Plugin appear only when the host supplies
@@ -141,7 +144,12 @@ quality directly instead of depending on a page-level shell:
   `Load more` fallback. Refined thread list items with a coloured status dot.
   On mobile the sidebar is an off-canvas drawer opened from the `Threads`
   trigger in the status bar.
-- **Status / usage / status pills**: pill-shape summary chips in the rail
+- **Context / status / usage / status pills**: per-thread context usage appears
+  as a compact percent indicator beside the composer controls when
+  `thread/tokenUsage/updated` has nonzero restored or live usage. Opening it
+  shows used/context window, input/output/cached/reasoning breakdown, and a
+  compaction note. Account rate-limit usage remains a separate host rail
+  primitive. Pill-shape summary chips in the rail
   with a pulsing dot for `running`; the details disclosure is a separately
   styled card so the two never read as a duplicate.
 - **Component close-ups**: `/fixture-gallery` now ends with a
@@ -167,10 +175,12 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentThreadSurface`: unopinionated thread column surface for a host-arranged
   header, notices, timeline, and composer. Its grid rows are header, optional
   critical notices, the transcript scroll area, then the composer — pending
-  approvals are not a row here.
+  approvals are not a row here. Full-height hosts should give the shell a real
+  height; the transcript scroll container is `.aui-message-list`, while the
+  composer stays bottom anchored.
 - `AgentThreadView`: one thread with header, transcript (with embedded
   approvals), and composer.
-- `AgentThreadHeader`: title, cwd/session context, resume, stop, and new-thread actions.
+- `AgentThreadHeader`: title, cwd/session context, resume, and new-thread actions.
 - `AgentThreadTimeline`: normalized turn and item renderer. Pass `threadId` to
   append that thread's pending approvals to the end of the transcript.
 - `AgentContentBlockView`: standalone renderer for normalized thinking, plan,
@@ -179,7 +189,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
   approval card plus compact picker rows for any other pending requests.
   `AgentThreadView` / `AgentChat` embed it at the end of the transcript;
   hosts can also place it standalone.
-- `AgentComposerPanel`: turn composer with inline mode / model / effort menus.
+- `AgentComposerPanel`: turn composer with inline mode / model / effort menus,
+  running-turn steering, composer-local Stop, and compact context usage.
 - `AgentRunSettingsPanel`: thread-start settings panel with model, effort,
   cwd, and execution-mode
   settings primitive for popovers, sheets, or host-owned settings panels.
@@ -191,7 +202,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentUsagePanel`: account rate-limit windows, renderable inside or outside a shell.
 - `AgentUsageSummary`: compact usage primitive for host chrome.
 - `AgentRateLimitBar`: one normalized rate-limit window.
-- `AgentTokenUsageBar`: per-thread input/output token usage.
+- `AgentContextUsageIndicator`: compact per-thread context usage popover for
+  App Server `thread/tokenUsage/updated` totals.
 - `AgentDiagnosticsPanel`: bridge/account/model startup diagnostics.
 - `AgentSkillsPanel`: skill list and enable/disable controls.
 - `AgentAppsPanel`: Codex Apps/connectors list from `app/list`.
@@ -351,8 +363,9 @@ because its protocol kind is `rateLimit`; normal and below-threshold messages
 remain background status, near-threshold messages are warnings, and only
 reached/exceeded/blocked limit messages become critical.
 
-`AgentTokenUsageBar` renders per-thread token usage as an embeddable primitive
-for full-shell, fixed-thread, or usage-only host chrome.
+`AgentContextUsageIndicator` renders nonzero per-thread context usage from
+`thread/tokenUsage/updated`. The default composer places it next to the primary
+button instead of in the thread header.
 
 `normalizeUsageWindows()` is exported for hosts that need the same window model
 inside custom UI.

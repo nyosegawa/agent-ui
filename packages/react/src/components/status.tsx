@@ -404,6 +404,7 @@ export function AgentTokenUsageBar({
   );
 }
 
+
 export function AgentSkillsPanel({ cwd }: { cwd?: string }) {
   const { refreshSkills, setSkillEnabled, skills } = useAgentSkills(cwd);
   return (

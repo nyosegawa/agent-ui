@@ -88,13 +88,16 @@
 }
 
 .aui-demo-main {
-  margin: 16px auto;
+  box-sizing: border-box;
+  height: 100dvh;
+  margin: 0 auto;
   max-width: 1280px;
-  padding: 0 14px;
+  padding: 16px 14px 0;
 }
 
 @media (max-width: 640px) {
   .aui-demo-main {
+    height: 100dvh;
     margin: 0;
     padding: 0;
   }
