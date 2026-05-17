@@ -101,6 +101,11 @@
   command is run manually after an interrupted test, run
   `bun run test:e2e:clean-ports` first so a stale preview or fake Codex bridge
   cannot satisfy the port check with old state.
+- Do not fix flaky e2e by simply increasing test timeouts. First identify
+  whether the failure is server readiness, stale port state, an incorrect
+  selector, or a real UI contract failure. Add short readiness retry only at
+  the app-open boundary, then keep interaction assertions fail-fast with
+  explicit low timeouts so regressions surface quickly.
 - For real Codex local web layout or App Server bridge changes, run
   `bun run test:e2e:real-local-web-layout` against the real local web example
   when that server is available.

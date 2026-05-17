@@ -126,6 +126,14 @@ The browser gate checks desktop and mobile layout contracts, horizontal
 overflow, composer reachability, approval hit testing, sidebar behavior, and
 that old UI concepts such as Work trace and Load all do not return.
 
+Keep Playwright failures fast and diagnostic. If a browser test is flaky,
+do not increase the test timeout as the first fix. Separate the problem into
+server readiness, stale ports, selector drift, and the actual UI contract.
+Use a short retry only around opening an app whose preview server may still be
+warming up, then keep clicks and visible/enabled assertions on explicit low
+timeouts so a broken composer, resume button, or transcript state fails in a
+few seconds instead of waiting for the suite-level timeout.
+
 ## Real Local Web Gate
 
 `bun run test:e2e:real-local-web-layout` audits an already-running
