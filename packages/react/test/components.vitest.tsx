@@ -31,6 +31,7 @@ import {
   useAgentServerRequests,
   useAgentSkills,
   useAgentContext,
+  useAgentThreads,
   useAgentTurn,
   localImageInput,
   textInput,
@@ -61,6 +62,47 @@ function runningComposerState() {
     },
   };
   return initialState;
+}
+
+function twoRunningThreadsState() {
+  const initialState = runningComposerState();
+  initialState.threads["thread-running"].thread.name = "Thread A";
+  initialState.threads["thread-b"] = {
+    orderedTurnIds: ["turn-b"],
+    status: "running",
+    thread: { id: "thread-b", name: "Thread B" },
+    turns: {
+      "turn-b": {
+        commandOutputByItemId: {},
+        filePatchByItemId: {},
+        itemOrder: [],
+        items: {},
+        streamingTextByItemId: {},
+        turn: { id: "turn-b", status: "running", threadId: "thread-b" },
+      },
+    },
+  };
+  return initialState;
+}
+
+function ActiveThreadHarness(props: React.ComponentProps<typeof AgentChat>) {
+  const { activeThreadId, setActiveThread } = useAgentThreads();
+  return (
+    <>
+      <button type="button" onClick={() => setActiveThread("thread-running")}>
+        Show thread A
+      </button>
+      <button type="button" onClick={() => setActiveThread("thread-b")}>
+        Show thread B
+      </button>
+      <span data-testid="active-thread">{activeThreadId}</span>
+      <AgentThreadView
+        onRequestAppMention={props.onRequestAppMention}
+        onRequestPluginMention={props.onRequestPluginMention}
+        resolveLocalAttachment={props.resolveLocalAttachment}
+      />
+    </>
+  );
 }
 
 describe("AgentChat", () => {
@@ -1798,6 +1840,111 @@ describe("AgentChat", () => {
     );
   });
 
+  it("keeps queued follow-ups scoped to their active thread", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/steer") return { turnId: "turn-running" };
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={twoRunningThreadsState()} transport={transport}>
+        <ActiveThreadHarness />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "thread A queued");
+    await user.keyboard("{Enter}");
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "thread A queued",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Show thread B" }));
+    expect(screen.getByTestId("active-thread")).toHaveTextContent("thread-b");
+    expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
+    await user.type(screen.getByRole("textbox", { name: "Message" }), "thread B queued");
+    await user.keyboard("{Enter}");
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "thread B queued",
+    );
+    expect(screen.getByLabelText("Queued follow-ups")).not.toHaveTextContent(
+      "thread A queued",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Show thread A" }));
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "thread A queued",
+    );
+    expect(screen.getByLabelText("Queued follow-ups")).not.toHaveTextContent(
+      "thread B queued",
+    );
+    await user.click(screen.getByRole("button", { name: "Show thread B" }));
+    await user.click(screen.getByRole("button", { name: "Send now" }));
+
+    await waitFor(() =>
+      expect(transport.requests.at(-1)).toMatchObject({
+        method: "turn/steer",
+        params: {
+          expectedTurnId: "turn-b",
+          input: [{ text: "thread B queued", type: "text" }],
+          threadId: "thread-b",
+        },
+      }),
+    );
+    expect(
+      transport.requests.some(
+        (request) =>
+          request.method === "turn/steer" &&
+          (request.params as any).threadId === "thread-b" &&
+          (request.params as any).input?.[0]?.text === "thread A queued",
+      ),
+    ).toBe(false);
+  });
+
+  it("keeps a queued follow-up when the active turn changes before Send now", async () => {
+    const user = userEvent.setup();
+    function TurnChanger() {
+      const { dispatch } = useAgentContext();
+      return (
+        <button
+          type="button"
+          onClick={() =>
+            dispatch({
+              threadId: "thread-running",
+              turn: { id: "turn-new", status: "running", threadId: "thread-running" },
+              type: "turn/started",
+            })
+          }
+        >
+          Start replacement turn
+        </button>
+      );
+    }
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={transport}>
+        <TurnChanger />
+        <AgentThreadView />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "old turn queued");
+    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Start replacement turn" }));
+    await user.click(screen.getByRole("button", { name: "Send now" }));
+
+    await screen.findByText(/active turn changed before this instruction was sent/i);
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "old turn queued",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/steer",
+    );
+  });
+
   it("keeps a queued follow-up and shows item error when Send now fails", async () => {
     const user = userEvent.setup();
     const initialState = runningComposerState();
@@ -1871,6 +2018,139 @@ describe("AgentChat", () => {
     await user.keyboard("{Enter}");
     await user.click(screen.getByRole("button", { name: "Remove" }));
     expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
+  });
+
+  it("restores queued image attachments on Edit and sends them with Cmd+Enter", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/steer") return { turnId: "turn-running" };
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={transport}>
+        <AgentChat
+          resolveLocalAttachment={(file, kind) =>
+            kind === "image"
+              ? localImageInput(`/uploads/${file.name}`)
+              : textInput(`Attached file: /uploads/${file.name}`)
+          }
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(fileInput, new File(["png"], "queued-shot.png", { type: "image/png" }));
+    await user.type(screen.getByLabelText("Message"), "review queued image");
+    await user.keyboard("{Enter}");
+
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "review queued image",
+    );
+    expect(screen.getByLabelText("Queued attachments")).toHaveTextContent(
+      "queued-shot.png",
+    );
+    expect(screen.queryByLabelText("Pending attachments")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.getByLabelText("Message")).toHaveValue("review queued image");
+    expect(screen.getByLabelText("Pending attachments")).toHaveTextContent(
+      "queued-shot.png",
+    );
+    await user.click(screen.getByLabelText("Message"));
+    await user.keyboard("{Meta>}{Enter}{/Meta}");
+
+    await waitFor(() =>
+      expect(transport.requests.at(-1)).toMatchObject({
+        method: "turn/steer",
+        params: {
+          expectedTurnId: "turn-running",
+          input: [
+            { text: "review queued image", type: "text" },
+            { path: "/uploads/queued-shot.png", type: "localImage" },
+          ],
+          threadId: "thread-running",
+        },
+      }),
+    );
+    expect(screen.queryByText("queued-shot.png")).not.toBeInTheDocument();
+  });
+
+  it("keeps arbitrary file attachment payloads for queued Send now", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/steer") return { turnId: "turn-running" };
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={transport}>
+        <AgentChat
+          resolveLocalAttachment={(file, kind) =>
+            kind === "image"
+              ? localImageInput(`/uploads/${file.name}`)
+              : textInput(`Attached file: /uploads/${file.name}`)
+          }
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const textarea = screen.getByLabelText("Message");
+    fireEvent.paste(textarea, {
+      clipboardData: {
+        files: [new File(["model"], "queued-part.3mf", { type: "" })],
+      },
+    });
+    await screen.findByText("queued-part.3mf");
+    await user.type(textarea, "review queued file");
+    await user.keyboard("{Enter}");
+    expect(screen.getByLabelText("Queued attachments")).toHaveTextContent(
+      "queued-part.3mf",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send now" }));
+    await waitFor(() =>
+      expect(transport.requests.at(-1)).toMatchObject({
+        method: "turn/steer",
+        params: {
+          expectedTurnId: "turn-running",
+          input: [
+            { text: "review queued file", type: "text" },
+            { text: "Attached file: /uploads/queued-part.3mf", type: "text" },
+          ],
+          threadId: "thread-running",
+        },
+      }),
+    );
+  });
+
+  it("revokes queued image previews on Remove without clearing unrelated attachments", async () => {
+    const user = userEvent.setup();
+    const revoke = vi.spyOn(URL, "revokeObjectURL");
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+        <AgentChat
+          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(fileInput, new File(["png"], "remove-queued.png", { type: "image/png" }));
+    await user.type(screen.getByLabelText("Message"), "remove queued image");
+    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Remove" }));
+
+    expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
+    expect(revoke).toHaveBeenCalled();
   });
 
   it("keeps queued follow-ups after Stop", async () => {

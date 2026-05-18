@@ -38,10 +38,17 @@
   gap: 8px;
   list-style: none;
   margin: 0;
-  max-height: min(32vh, 220px);
   min-width: 0;
-  overflow: auto;
   padding: 0;
+}
+
+.aui-follow-up-summary {
+  color: var(--aui-fg-muted);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+  margin-bottom: 6px;
+  min-width: 0;
 }
 
 .aui-follow-up-card {
@@ -64,6 +71,66 @@
   margin: 0;
   overflow-wrap: anywhere;
   white-space: pre-wrap;
+}
+
+.aui-follow-up-attachments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  grid-column: 1 / -1;
+  list-style: none;
+  margin: -2px 0 0;
+  min-width: 0;
+  padding: 0;
+}
+
+.aui-follow-up-attachment {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 7px;
+  display: inline-flex;
+  gap: 5px;
+  max-width: min(220px, 100%);
+  min-width: 0;
+  padding: 3px 6px 3px 4px;
+}
+
+.aui-follow-up-attachment[data-kind="image"] {
+  background: var(--aui-info-soft);
+  border-color: rgba(37, 99, 235, 0.22);
+}
+
+.aui-follow-up-attachment[data-kind="app"],
+.aui-follow-up-attachment[data-kind="plugin"] {
+  background: var(--aui-primary-soft);
+  border-color: rgba(13, 148, 136, 0.32);
+}
+
+.aui-follow-up-attachment-icon {
+  align-items: center;
+  color: var(--aui-fg-muted);
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.aui-follow-up-attachment-thumbnail {
+  aspect-ratio: 1;
+  border-radius: 5px;
+  flex: 0 0 auto;
+  height: 22px;
+  object-fit: cover;
+  width: 22px;
+}
+
+.aui-follow-up-attachment-label {
+  color: var(--aui-fg-muted);
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .aui-follow-up-actions {

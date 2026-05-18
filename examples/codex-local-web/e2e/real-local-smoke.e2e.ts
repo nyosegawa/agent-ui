@@ -148,6 +148,78 @@ test("opens a thread by URL and accepts image plus arbitrary file attachments", 
   });
 });
 
+test("queues attachment follow-ups, restores them for edit, and sends payloads", async ({
+  page,
+}, testInfo) => {
+  testInfo.setTimeout(FLOW_TEST_TIMEOUT);
+  await openRealLocalApp(page, { width: 1280, height: 900 }, "/threads/thread-stored");
+  await resumeStoredThread(page);
+  const message = await readyMessageInput(page);
+  await message.fill("slow smoke");
+  await sendButton(page).click({ force: true, timeout: FAST_EXPECT_TIMEOUT });
+  await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
+
+  const fileInput = page.locator('input[type="file"]');
+  await fileInput.setInputFiles({
+    buffer: Buffer.from("png fixture"),
+    mimeType: "image/png",
+    name: "queued-image.png",
+  });
+  await expect(page.getByText("queued-image.png")).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await message.fill("queued image edit");
+  await message.press("Enter");
+  await expect(page.getByLabel("Queued attachments")).toContainText("queued-image.png", {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(page.getByLabel("Pending attachments")).toHaveCount(0, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+
+  await page.getByRole("button", { name: "Edit" }).click({ timeout: FAST_EXPECT_TIMEOUT });
+  await expect(page.getByLabel("Pending attachments")).toContainText("queued-image.png", {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await message.press(process.platform === "darwin" ? "Meta+Enter" : "Control+Enter");
+  await expect(page.getByText("Steered: queued image edit")).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+
+  await fileInput.setInputFiles({
+    buffer: Buffer.from("mesh"),
+    mimeType: "application/octet-stream",
+    name: "queued-file.3mf",
+  });
+  await expect(page.getByText("queued-file.3mf")).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await message.fill("queued file send now");
+  await message.press("Enter");
+  await expect(page.getByLabel("Queued attachments")).toContainText("queued-file.3mf", {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await sendNowButton(page).click({ timeout: FAST_EXPECT_TIMEOUT });
+  await expect(page.getByText("Steered: queued file send now")).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+
+  await fileInput.setInputFiles({
+    buffer: Buffer.from("remove"),
+    mimeType: "image/png",
+    name: "remove-queued.png",
+  });
+  await expect(page.getByText("remove-queued.png")).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await message.fill("remove queued image");
+  await message.press("Enter");
+  await page.getByRole("button", { name: "Remove" }).click({ timeout: FAST_EXPECT_TIMEOUT });
+  await expect(page.getByLabel("Queued follow-ups")).toHaveCount(0, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+});
+
 test("anchors composer to the viewport and uses queued follow-ups, steer, and interrupt while running", async ({
   page,
 }, testInfo) => {
@@ -210,6 +282,53 @@ test("anchors composer to the viewport and uses queued follow-ups, steer, and in
 
   await page.setViewportSize({ width: 390, height: 900 });
   await assertComposerAnchored(page);
+});
+
+test("keeps a compact non-scrolling follow-up queue above the composer", async ({
+  page,
+}, testInfo) => {
+  testInfo.setTimeout(FLOW_TEST_TIMEOUT);
+  await openRealLocalApp(page, { width: 1280, height: 900 }, "/threads/thread-stored");
+  await resumeStoredThread(page);
+  const message = await readyMessageInput(page);
+  await message.fill("slow smoke");
+  await sendButton(page).click({ force: true, timeout: FAST_EXPECT_TIMEOUT });
+  await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
+
+  for (let index = 1; index <= 5; index += 1) {
+    await message.fill(`queued ${index}`);
+    await message.press("Enter");
+    await expect(page.getByLabel("Queued follow-ups")).toContainText(`queued ${index}`, {
+      timeout: FAST_EXPECT_TIMEOUT,
+    });
+  }
+
+  await expect(page.getByLabel("Queued follow-ups")).toContainText(
+    "2 earlier follow-ups kept for this thread",
+    { timeout: FAST_EXPECT_TIMEOUT },
+  );
+  await expect(page.getByLabel("Queued follow-ups")).toContainText("queued 5", {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(page.getByText("queued 1")).toHaveCount(0, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await assertComposerAnchored(page);
+  await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
+
+  await page.getByLabel("Queued follow-ups").hover({ timeout: FAST_EXPECT_TIMEOUT });
+  await page.mouse.wheel(0, 480);
+  await assertNoHorizontalOverflow(page);
+  const queueMetrics = await page.locator(".aui-follow-up-queue").evaluate((element) => ({
+    overflowY: getComputedStyle(element).overflowY,
+    ulOverflowY: getComputedStyle(element.querySelector("ul")!).overflowY,
+  }));
+  expect(queueMetrics).toEqual({ overflowY: "visible", ulOverflowY: "visible" });
+
+  await page.setViewportSize({ width: 390, height: 900 });
+  await assertComposerAnchored(page);
+  await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
+  await assertNoHorizontalOverflow(page);
 });
 
 test("follows streaming content only while the transcript is near the bottom", async ({
@@ -334,6 +453,13 @@ async function assertComposerAnchored(page: Page) {
   expect(metrics.horizontalOverflow).toBeLessThanOrEqual(0);
   expect(metrics.overlap).toBe(false);
   expect(metrics.hitTestable).toBe(true);
+}
+
+async function assertNoHorizontalOverflow(page: Page) {
+  const horizontalOverflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+  );
+  expect(horizontalOverflow).toBeLessThanOrEqual(0);
 }
 
 async function messageListScroll(page: Page) {

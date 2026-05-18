@@ -56,11 +56,14 @@ const run = useAgentRunSettings();
 controller. Idle threads submit `turn/start`. Running threads keep the textarea
 editable: Enter adds to `queuedFollowUps`, Cmd/Ctrl+Enter calls `turn/steer`
 immediately, and `sendQueuedFollowUp(id)` calls `turn/steer` for that item with
-its stored `expectedTurnId`. `Stop` calls only `turn/interrupt` and does not
-clear unsent queued follow-ups. The hook keeps queue state separate from App
-Server pending input with `queuedFollowUps`, `sendingFollowUpIds`,
-`followUpErrors`, and `activeTurnId`. The default `AgentComposerPanel` still
-blocks submission for approval-waiting threads and stored read-only previews.
+its stored `expectedTurnId`. Queued items are scoped by thread, retain
+structured attachment metadata for Edit, and remain queued with an item error
+if the active turn no longer matches their stored `expectedTurnId`. `Stop`
+calls only `turn/interrupt` and does not clear unsent queued follow-ups. The
+hook keeps queue state separate from App Server pending input with
+`queuedFollowUps`, `sendingFollowUpIds`, `followUpErrors`, and `activeTurnId`.
+The default `AgentComposerPanel` still blocks submission for approval-waiting
+threads and stored read-only previews.
 
 `useAgentRunSettings()` exposes execution modes, available models, supported
 efforts, cwd, current selections, and setters. Execution modes map to stable App

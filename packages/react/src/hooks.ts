@@ -518,24 +518,27 @@ export function useAgentComposer(threadId?: ThreadId) {
     [value],
   );
   const queueFollowUp = useCallback(
-    (items: CodexUserInput[] = []) => {
+    (items: CodexUserInput[] = [], attachments: QueuedFollowUpAttachment[] = []) => {
       const built = buildInput(items);
-      if (!built) return;
+      if (!built || !resolvedThreadId) return;
       const id = `follow-up-${Date.now()}-${followUpOrdinalRef.current++}`;
       const expectedTurnId = activeTurnId;
       setFollowUpErrors((current) => withoutRecordKey(current, id));
       setQueuedFollowUps((current) => [
         ...current,
         {
+          attachments,
           expectedTurnId,
           id,
           input: built.input,
           text: built.text || summarizeUserInput(built.input),
+          threadId: resolvedThreadId,
         },
       ]);
       setValue("");
+      return id;
     },
-    [activeTurnId, buildInput],
+    [activeTurnId, buildInput, resolvedThreadId],
   );
   const steerNow = useCallback(
     async (items: CodexUserInput[] = []) => {
@@ -557,18 +560,21 @@ export function useAgentComposer(threadId?: ThreadId) {
     [activeTurnId, buildInput, steerTurn],
   );
   const submit = useCallback(
-    async (items: CodexUserInput[] = []) => {
+    async (
+      items: CodexUserInput[] = [],
+      options: { attachments?: QueuedFollowUpAttachment[] } = {},
+    ) => {
       const built = buildInput(items);
       if (!built) return;
       if (isRunning) {
-        queueFollowUp(items);
-        return;
+        return queueFollowUp(items, options.attachments);
       }
       setError(undefined);
       setIsSubmitting(true);
       try {
         await startTurn(built.input);
         setValue("");
+        return "sent";
       } catch (caught) {
         setError(composerActionError(caught, "start"));
         throw caught;
@@ -578,9 +584,18 @@ export function useAgentComposer(threadId?: ThreadId) {
     },
     [buildInput, isRunning, queueFollowUp, startTurn],
   );
+  const scopedQueuedFollowUps = useMemo(
+    () =>
+      resolvedThreadId
+        ? queuedFollowUps.filter((followUp) => followUp.threadId === resolvedThreadId)
+        : [],
+    [queuedFollowUps, resolvedThreadId],
+  );
   const sendQueuedFollowUp = useCallback(
     async (id: string) => {
-      const item = queuedFollowUps.find((followUp) => followUp.id === id);
+      const item = queuedFollowUps.find(
+        (followUp) => followUp.id === id && followUp.threadId === resolvedThreadId,
+      );
       if (!item) return;
       const error = followUpSendPreflightError(activeTurnId, item.expectedTurnId);
       if (error) {
@@ -595,6 +610,7 @@ export function useAgentComposer(threadId?: ThreadId) {
       );
       try {
         await steerTurn(expectedTurnId, item.input);
+        revokeQueuedFollowUpPreviews(item);
         setQueuedFollowUps((current) => current.filter((followUp) => followUp.id !== id));
       } catch (caught) {
         setFollowUpErrors((current) => ({
@@ -605,22 +621,36 @@ export function useAgentComposer(threadId?: ThreadId) {
         setSendingFollowUpIds((current) => current.filter((followUpId) => followUpId !== id));
       }
     },
-    [activeTurnId, queuedFollowUps, steerTurn],
+    [activeTurnId, queuedFollowUps, resolvedThreadId, steerTurn],
   );
   const editQueuedFollowUp = useCallback(
     (id: string) => {
-      const item = queuedFollowUps.find((followUp) => followUp.id === id);
-      if (!item) return;
+      const item = queuedFollowUps.find(
+        (followUp) => followUp.id === id && followUp.threadId === resolvedThreadId,
+      );
+      if (!item) return undefined;
       setValue(item.text);
       setQueuedFollowUps((current) => current.filter((followUp) => followUp.id !== id));
       setFollowUpErrors((current) => withoutRecordKey(current, id));
+      return item;
     },
-    [queuedFollowUps],
+    [queuedFollowUps, resolvedThreadId],
   );
-  const removeQueuedFollowUp = useCallback((id: string) => {
-    setQueuedFollowUps((current) => current.filter((followUp) => followUp.id !== id));
-    setFollowUpErrors((current) => withoutRecordKey(current, id));
-  }, []);
+  const removeQueuedFollowUp = useCallback(
+    (id: string) => {
+      const item = queuedFollowUps.find(
+        (followUp) => followUp.id === id && followUp.threadId === resolvedThreadId,
+      );
+      if (item) revokeQueuedFollowUpPreviews(item);
+      setQueuedFollowUps((current) =>
+        current.filter(
+          (followUp) => followUp.id !== id || followUp.threadId !== resolvedThreadId,
+        ),
+      );
+      setFollowUpErrors((current) => withoutRecordKey(current, id));
+    },
+    [queuedFollowUps, resolvedThreadId],
+  );
   const stop = useCallback(async () => {
     if (!activeTurnId || !resolvedThreadId) return;
     setError(undefined);
@@ -651,7 +681,7 @@ export function useAgentComposer(threadId?: ThreadId) {
     isInterrupting,
     isRunning,
     isSubmitting,
-    queuedFollowUps,
+    queuedFollowUps: scopedQueuedFollowUps,
     removeQueuedFollowUp,
     sendQueuedFollowUp,
     sendingFollowUpIds,
@@ -665,10 +695,23 @@ export function useAgentComposer(threadId?: ThreadId) {
 }
 
 export interface QueuedFollowUp {
+  attachments: QueuedFollowUpAttachment[];
   expectedTurnId?: string;
   id: string;
   input: CodexUserInput[];
   text: string;
+  threadId: ThreadId;
+}
+
+export interface QueuedFollowUpAttachment {
+  extension?: string;
+  id: string;
+  input?: CodexUserInput | CodexUserInput[];
+  kind: "image" | "file" | "app" | "plugin";
+  label: string;
+  previewUrl?: string;
+  sizeLabel?: string;
+  value: string;
 }
 
 export type AgentComposerController = ReturnType<typeof useAgentComposer>;
@@ -723,6 +766,12 @@ function withoutRecordKey<T>(record: Record<string, T>, key: string): Record<str
   const next = { ...record };
   delete next[key];
   return next;
+}
+
+function revokeQueuedFollowUpPreviews(item: QueuedFollowUp) {
+  for (const attachment of item.attachments) {
+    if (attachment.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
+  }
 }
 
 function summarizeUserInput(input: CodexUserInput[]): string {

@@ -127,7 +127,9 @@ and thread sidebar whenever their interaction model changes.
 
 Running composer tests must keep the UI-local follow-up queue distinct from App
 Server pending input: Enter queues locally, `Send now` and Cmd/Ctrl+Enter call
-`turn/steer`, Stop calls `turn/interrupt`, and unsent queued items survive Stop.
+`turn/steer`, Stop calls `turn/interrupt`, unsent queued items survive Stop,
+thread switching never mixes queues, active-turn mismatches keep the item, and
+Edit restores queued attachment chips.
 
 ## Fixture Browser Tests
 

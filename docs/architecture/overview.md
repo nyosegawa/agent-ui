@@ -123,9 +123,9 @@ but new code should use the normalized stores: `threadRegistry`,
 `item/completed` and `turn/completed` are authoritative.
 
 The running follow-up queue is deliberately not App Server state. React keeps
-unsent `queuedFollowUps` locally until `Send now` or Cmd/Ctrl+Enter calls
-`turn/steer` with the active `expectedTurnId`; Stop calls only
-`turn/interrupt`.
+unsent `queuedFollowUps` locally and scoped to their thread until `Send now` or
+Cmd/Ctrl+Enter calls `turn/steer` with the active `expectedTurnId`; Stop calls
+only `turn/interrupt`.
 
 ## UI Model
 

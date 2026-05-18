@@ -90,13 +90,14 @@ lifecycle; stderr is redacted before host callbacks or browser events see it.
 
 Running-turn UX should map directly to App Server methods. App Server has no
 dedicated `queue/message` API. Agent UI's default pending follow-up cards are
-UI-local state until the user chooses `Send now`; `Send now` and Cmd/Ctrl+Enter
-call `turn/steer` with `threadId`, the active `expectedTurnId`, and structured
-`input`. Stop calls only `turn/interrupt` with the active `threadId` and
-`turnId`; the server may only respond after the interrupted
-`turn/completed`/`TurnAborted` path finishes. `turn/steer` is not an interrupt,
-and generic queue-after-completion behavior is host-owned, not an App Server
-primitive.
+UI-local, thread-scoped state until the user chooses `Send now`; `Send now` and
+Cmd/Ctrl+Enter call `turn/steer` with `threadId`, the active `expectedTurnId`,
+and structured `input`. A queued item is not sent if its stored
+`expectedTurnId` differs from the current active turn. Stop calls only
+`turn/interrupt` with the active `threadId` and `turnId`; the server may only
+respond after the interrupted `turn/completed`/`TurnAborted` path finishes.
+`turn/steer` is not an interrupt, and generic queue-after-completion behavior
+is host-owned, not an App Server primitive.
 
 Token usage is streamed independently through `thread/tokenUsage/updated`.
 Current App Server payloads are nested under `tokenUsage.total.*`,

@@ -1,8 +1,11 @@
 import type React from "react";
 import type { ThreadState, ThreadTokenUsage } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAgentComposer, type AgentComposerController } from "../hooks";
-import { mentionInput, type CodexUserInput } from "../codex-request-params";
+import {
+  useAgentComposer,
+  type AgentComposerController,
+} from "../hooks";
+import type { CodexUserInput } from "../codex-request-params";
 import {
   IconAlert,
   IconApp,
@@ -19,13 +22,44 @@ import { ComposerRunSettings } from "./run-settings";
 import { deferAction } from "./shared";
 import { AgentContextUsageIndicator } from "./context-usage";
 import { QueuedFollowUpList } from "./follow-up-queue";
+import {
+  composerAttachmentInput,
+  fileExtension,
+  formatFileSize,
+  isImageFile,
+  type AgentComposerMentionAttachment,
+  type AgentComposerMentionResolver,
+  type AgentLocalAttachmentKind,
+  type AgentLocalAttachmentResolver,
+  type ComposerAttachment,
+} from "./composer-attachments";
+
+export type {
+  AgentComposerMentionAttachment,
+  AgentComposerMentionResolver,
+  AgentLocalAttachmentKind,
+  AgentLocalAttachmentResolver,
+  AgentMentionAttachmentKind,
+} from "./composer-attachments";
 
 export function AgentComposer(props: AgentComposerProps) {
   const composer = useAgentComposer(props.threadId);
+  const attachmentRestoreRef = useRef<((attachments: ComposerAttachment[]) => void) | null>(
+    null,
+  );
   return (
     <>
-      <QueuedFollowUpList composer={composer} />
-      <AgentComposerForm {...props} composer={composer} />
+      <QueuedFollowUpList
+        composer={composer}
+        onRestoreAttachments={(attachments) => attachmentRestoreRef.current?.(attachments)}
+      />
+      <AgentComposerForm
+        {...props}
+        composer={composer}
+        onRegisterAttachmentRestore={(restore) => {
+          attachmentRestoreRef.current = restore;
+        }}
+      />
     </>
   );
 }
@@ -39,7 +73,11 @@ function AgentComposerForm({
   placeholder = "Ask Codex to work in this thread",
   resolveLocalAttachment,
   tokenUsage,
-}: AgentComposerProps & { composer: AgentComposerController }) {
+  onRegisterAttachmentRestore,
+}: AgentComposerProps & {
+  composer: AgentComposerController;
+  onRegisterAttachmentRestore?: (restore: (attachments: ComposerAttachment[]) => void) => void;
+}) {
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | undefined>();
   const [isFocused, setFocused] = useState(false);
@@ -62,6 +100,15 @@ function AgentComposerForm({
         const removed = current.find((attachment) => attachment.id === id);
         if (removed) revokePreview(removed);
         return current.filter((attachment) => attachment.id !== id);
+      });
+    },
+    [revokePreview],
+  );
+  const restoreAttachments = useCallback(
+    (restoredAttachments: ComposerAttachment[]) => {
+      setAttachments((current) => {
+        for (const attachment of current) revokePreview(attachment);
+        return restoredAttachments;
       });
     },
     [revokePreview],
@@ -113,6 +160,10 @@ function AgentComposerForm({
     attachmentsRef.current = attachments;
   }, [attachments]);
 
+  useEffect(() => {
+    onRegisterAttachmentRestore?.(restoreAttachments);
+  }, [onRegisterAttachmentRestore, restoreAttachments]);
+
   useEffect(
     () => () => {
       for (const attachment of attachmentsRef.current) revokePreview(attachment);
@@ -138,8 +189,16 @@ function AgentComposerForm({
     deferAction(async () => {
       try {
         const input = pendingAttachments.flatMap(composerAttachmentInput);
-        if (mode === "steer") await composer.steerNow(input);
-        else await composer.submit(input);
+        const result =
+          mode === "steer"
+            ? await composer.steerNow(input)
+            : await composer.submit(input, { attachments: pendingAttachments });
+        if (result !== "sent" && mode !== "steer") {
+          setAttachments((current) =>
+            current.filter((attachment) => !pendingAttachments.includes(attachment)),
+          );
+          return;
+        }
       } catch {
         return;
       }
@@ -395,35 +454,6 @@ function AgentComposerForm({
   );
 }
 
-type ComposerAttachmentKind = "image" | "file" | "app" | "plugin";
-
-export type AgentLocalAttachmentKind = Extract<ComposerAttachmentKind, "image" | "file">;
-
-export type AgentLocalAttachmentResolver = (
-  file: File,
-  kind: AgentLocalAttachmentKind,
-) =>
-  | CodexUserInput
-  | CodexUserInput[]
-  | null
-  | undefined
-  | Promise<CodexUserInput | CodexUserInput[] | null | undefined>;
-
-export type AgentMentionAttachmentKind = Extract<ComposerAttachmentKind, "app" | "plugin">;
-
-export interface AgentComposerMentionAttachment {
-  id?: string;
-  input?: CodexUserInput;
-  label: string;
-  value: string;
-}
-
-export type AgentComposerMentionResolver = () =>
-  | AgentComposerMentionAttachment
-  | null
-  | undefined
-  | Promise<AgentComposerMentionAttachment | null | undefined>;
-
 export interface AgentComposerProps {
   disabled?: boolean;
   disabledReason?: string;
@@ -433,54 +463,6 @@ export interface AgentComposerProps {
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   tokenUsage?: ThreadTokenUsage;
   threadId?: string;
-}
-
-interface ComposerAttachment {
-  extension?: string;
-  id: string;
-  input?: CodexUserInput | CodexUserInput[];
-  kind: ComposerAttachmentKind;
-  label: string;
-  previewUrl?: string;
-  sizeLabel?: string;
-  value: string;
-}
-
-function composerAttachmentInput(attachment: ComposerAttachment): CodexUserInput[] {
-  if (Array.isArray(attachment.input)) return attachment.input;
-  if (attachment.input) return [attachment.input];
-  return [mentionInput(attachment.label, attachment.value)];
-}
-
-function formatFileSize(size: number): string {
-  if (!Number.isFinite(size) || size < 0) return "";
-  if (size < 1024) return `${size} B`;
-  if (size < 1024 * 1024) return `${Math.round(size / 102.4) / 10} KB`;
-  return `${Math.round(size / 1024 / 102.4) / 10} MB`;
-}
-
-function fileExtension(name: string): string | undefined {
-  const match = /\.([^.]+)$/.exec(name);
-  return match ? `.${match[1]}` : undefined;
-}
-
-const IMAGE_ATTACHMENT_EXTENSIONS = new Set([
-  ".bmp",
-  ".gif",
-  ".heic",
-  ".heif",
-  ".jpeg",
-  ".jpg",
-  ".png",
-  ".svg",
-  ".webp",
-]);
-
-function isImageFile(file: File): boolean {
-  if (file.type.startsWith("image/")) return true;
-  if (file.type) return false;
-  const extension = fileExtension(file.name)?.toLowerCase();
-  return extension ? IMAGE_ATTACHMENT_EXTENSIONS.has(extension) : false;
 }
 
 export interface AgentComposerPanelProps {
@@ -501,13 +483,22 @@ export function AgentComposerPanel({
   const isPreviewOnly = isPreviewOnlyThread(thread);
   const isBlocked = thread.status === "waitingForInput" || isPreviewOnly;
   const composer = useAgentComposer(threadId);
+  const attachmentRestoreRef = useRef<((attachments: ComposerAttachment[]) => void) | null>(
+    null,
+  );
   return (
     <section className="aui-compose-panel" aria-label="Message composer">
-      <QueuedFollowUpList composer={composer} />
+      <QueuedFollowUpList
+        composer={composer}
+        onRestoreAttachments={(attachments) => attachmentRestoreRef.current?.(attachments)}
+      />
       <AgentComposerForm
         composer={composer}
         disabled={isBlocked}
         disabledReason={composerDisabledReason(thread.status, isPreviewOnly)}
+        onRegisterAttachmentRestore={(restore) => {
+          attachmentRestoreRef.current = restore;
+        }}
         onRequestAppMention={onRequestAppMention}
         onRequestPluginMention={onRequestPluginMention}
         placeholder={composerPlaceholder(thread.status, isPreviewOnly)}

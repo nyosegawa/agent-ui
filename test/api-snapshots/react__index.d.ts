@@ -643,7 +643,7 @@ declare function useAgentServerRequests(threadId?: ThreadId): {
 };
 declare function useAgentComposer(threadId?: ThreadId): {
     activeTurnId: string | undefined;
-    editQueuedFollowUp: (id: string) => void;
+    editQueuedFollowUp: (id: string) => QueuedFollowUp | undefined;
     error: string | undefined;
     followUpErrors: Record<string, string>;
     isInterrupting: boolean;
@@ -657,14 +657,28 @@ declare function useAgentComposer(threadId?: ThreadId): {
     setValue: React$1.Dispatch<React$1.SetStateAction<string>>;
     steerNow: (items?: CodexUserInput[]) => Promise<void>;
     stop: () => Promise<void>;
-    submit: (items?: CodexUserInput[]) => Promise<void>;
+    submit: (items?: CodexUserInput[], options?: {
+        attachments?: QueuedFollowUpAttachment[];
+    }) => Promise<string | undefined>;
     value: string;
 };
 interface QueuedFollowUp {
+    attachments: QueuedFollowUpAttachment[];
     expectedTurnId?: string;
     id: string;
     input: CodexUserInput[];
     text: string;
+    threadId: ThreadId;
+}
+interface QueuedFollowUpAttachment {
+    extension?: string;
+    id: string;
+    input?: CodexUserInput | CodexUserInput[];
+    kind: "image" | "file" | "app" | "plugin";
+    label: string;
+    previewUrl?: string;
+    sizeLabel?: string;
+    value: string;
 }
 type AgentComposerController = ReturnType<typeof useAgentComposer>;
 declare function useAgentRunSettings(): {
@@ -741,7 +755,6 @@ declare function useAgentModels(): {
     refreshModels: () => Promise<AgentModel[]>;
 };
 
-declare function AgentComposer(props: AgentComposerProps): react_jsx_runtime.JSX.Element;
 type ComposerAttachmentKind = "image" | "file" | "app" | "plugin";
 type AgentLocalAttachmentKind = Extract<ComposerAttachmentKind, "image" | "file">;
 type AgentLocalAttachmentResolver = (file: File, kind: AgentLocalAttachmentKind) => CodexUserInput | CodexUserInput[] | null | undefined | Promise<CodexUserInput | CodexUserInput[] | null | undefined>;
@@ -753,6 +766,8 @@ interface AgentComposerMentionAttachment {
     value: string;
 }
 type AgentComposerMentionResolver = () => AgentComposerMentionAttachment | null | undefined | Promise<AgentComposerMentionAttachment | null | undefined>;
+
+declare function AgentComposer(props: AgentComposerProps): react_jsx_runtime.JSX.Element;
 interface AgentComposerProps {
     disabled?: boolean;
     disabledReason?: string;
@@ -1021,4 +1036,4 @@ interface UsageWindow {
 }
 declare function normalizeUsageWindows(rateLimits: unknown): UsageWindow[];
 
-export { AGENT_EXECUTION_MODES, AgentApprovalQueue, AgentAppsPanel, type AgentBootstrapState, AgentChat, type AgentChatProps, type AgentChatSlots, AgentCommandItem, AgentCommandOutputItem, AgentComposer, type AgentComposerController, type AgentComposerMentionAttachment, type AgentComposerMentionResolver, AgentComposerPanel, type AgentComposerPanelProps, type AgentComposerProps, AgentContentBlockView, AgentContextUsageIndicator, type AgentContextValue, AgentCriticalNoticeList, AgentDiagnosticsPanel, AgentDiffItem, AgentDiffViewer, type AgentExecutionMode, AgentFileChangeItem, AgentFirstRun, type AgentLocalAttachmentKind, type AgentLocalAttachmentResolver, type AgentMentionAttachmentKind, AgentMessageItem, AgentMessageList, AgentProvider, type AgentProviderProps, AgentRateLimitBar, AgentReasoningItem, AgentRunControls, type AgentRunControlsProps, AgentRunSettingsPanel, type AgentRunSettingsPanelProps, AgentShell, type AgentShellProps, AgentSkillsPanel, AgentStatusBar, AgentStatusDetails, AgentStatusSummary, AgentThreadHeader, AgentThreadSidebar, AgentThreadSurface, AgentThreadTimeline, type AgentThreadUrlRoutingOptions, AgentThreadView, type AgentThreadViewProps, AgentTokenUsageBar, AgentToolCallItem, AgentTranscript, AgentTurn, AgentUsagePanel, type AgentUsageProps, AgentUsageSummary, AgentWorkspace, type AgentWorkspaceProps, type AppsListParams, type CancelLoginAccountParams, type CodexUserInput, ComposerRunSettings, DEFAULT_TRANSCRIPT_ITEM_LIMIT, type GetAccountParams, type HooksListParams, type LoginAccountParams, type ModelListParams, type QueuedFollowUp, type SkillsConfigWriteParams, type SkillsListParams, TRANSCRIPT_ITEM_INCREMENT, type ThreadArchiveParams, type ThreadCompactStartParams, type ThreadForkParams, type ThreadHistoryParams, type ThreadInjectItemsParams, ThreadList, type ThreadListParams, type ThreadLoadedListParams, type ThreadMetadataUpdateParams, type ThreadReadParams, type ThreadResumeParams, type ThreadRollbackParams, type ThreadSetNameParams, type ThreadStartParams, type ThreadUnarchiveParams, type ThreadUnsubscribeParams, type TranscriptApprovalAnchors, type TurnInterruptParams, type TurnStartParams, type TurnSteerParams, type UsageWindow, accountReadParams, agentBrowserSkillInput, agentBrowserVerificationInput, apiKeyLoginParams, appsListParams, authTokensLoginParams, cancelLoginParams, chatgptLoginParams, deviceCodeLoginParams, disabledProductMethods, formatThreadStatus, hooksListParams, imageInput, isUserFacingPath, localImageInput, mentionInput, modelListParams, normalizeUsageWindows, normalizedStatusNotices, rawThreadId, skillInput, skillsConfigWriteParams, skillsListParams, statusSummary, textInput, threadArchiveParams, threadCompactStartParams, threadForkParams, threadInjectItemsParams, threadListParams, threadLoadedListParams, threadMetadataUpdateParams, threadProjectPath, threadReadParams, threadResumeParams, threadRollbackParams, threadSetNameParams, threadSnapshotEvents, threadStartParams, threadSubtitle, threadUnarchiveParams, threadUnsubscribeParams, threadUpsertEvent, transcriptItemIds, turnInterruptParams, turnStartParams, turnSteerParams, useAgentAction, useAgentApprovals, useAgentApps, useAgentAuth, useAgentBootstrap, useAgentComposer, useAgentContext, useAgentHooks, useAgentModels, useAgentRunSettings, useAgentServerRequests, useAgentSkills, useAgentThread, useAgentThreadActions, useAgentThreadController, useAgentThreadHistory, useAgentThreadReader, useAgentThreads, useAgentTurn, useAgentTurnController, useAgentUsage, visibleTranscriptWindow };
+export { AGENT_EXECUTION_MODES, AgentApprovalQueue, AgentAppsPanel, type AgentBootstrapState, AgentChat, type AgentChatProps, type AgentChatSlots, AgentCommandItem, AgentCommandOutputItem, AgentComposer, type AgentComposerController, type AgentComposerMentionAttachment, type AgentComposerMentionResolver, AgentComposerPanel, type AgentComposerPanelProps, type AgentComposerProps, AgentContentBlockView, AgentContextUsageIndicator, type AgentContextValue, AgentCriticalNoticeList, AgentDiagnosticsPanel, AgentDiffItem, AgentDiffViewer, type AgentExecutionMode, AgentFileChangeItem, AgentFirstRun, type AgentLocalAttachmentKind, type AgentLocalAttachmentResolver, type AgentMentionAttachmentKind, AgentMessageItem, AgentMessageList, AgentProvider, type AgentProviderProps, AgentRateLimitBar, AgentReasoningItem, AgentRunControls, type AgentRunControlsProps, AgentRunSettingsPanel, type AgentRunSettingsPanelProps, AgentShell, type AgentShellProps, AgentSkillsPanel, AgentStatusBar, AgentStatusDetails, AgentStatusSummary, AgentThreadHeader, AgentThreadSidebar, AgentThreadSurface, AgentThreadTimeline, type AgentThreadUrlRoutingOptions, AgentThreadView, type AgentThreadViewProps, AgentTokenUsageBar, AgentToolCallItem, AgentTranscript, AgentTurn, AgentUsagePanel, type AgentUsageProps, AgentUsageSummary, AgentWorkspace, type AgentWorkspaceProps, type AppsListParams, type CancelLoginAccountParams, type CodexUserInput, ComposerRunSettings, DEFAULT_TRANSCRIPT_ITEM_LIMIT, type GetAccountParams, type HooksListParams, type LoginAccountParams, type ModelListParams, type QueuedFollowUp, type QueuedFollowUpAttachment, type SkillsConfigWriteParams, type SkillsListParams, TRANSCRIPT_ITEM_INCREMENT, type ThreadArchiveParams, type ThreadCompactStartParams, type ThreadForkParams, type ThreadHistoryParams, type ThreadInjectItemsParams, ThreadList, type ThreadListParams, type ThreadLoadedListParams, type ThreadMetadataUpdateParams, type ThreadReadParams, type ThreadResumeParams, type ThreadRollbackParams, type ThreadSetNameParams, type ThreadStartParams, type ThreadUnarchiveParams, type ThreadUnsubscribeParams, type TranscriptApprovalAnchors, type TurnInterruptParams, type TurnStartParams, type TurnSteerParams, type UsageWindow, accountReadParams, agentBrowserSkillInput, agentBrowserVerificationInput, apiKeyLoginParams, appsListParams, authTokensLoginParams, cancelLoginParams, chatgptLoginParams, deviceCodeLoginParams, disabledProductMethods, formatThreadStatus, hooksListParams, imageInput, isUserFacingPath, localImageInput, mentionInput, modelListParams, normalizeUsageWindows, normalizedStatusNotices, rawThreadId, skillInput, skillsConfigWriteParams, skillsListParams, statusSummary, textInput, threadArchiveParams, threadCompactStartParams, threadForkParams, threadInjectItemsParams, threadListParams, threadLoadedListParams, threadMetadataUpdateParams, threadProjectPath, threadReadParams, threadResumeParams, threadRollbackParams, threadSetNameParams, threadSnapshotEvents, threadStartParams, threadSubtitle, threadUnarchiveParams, threadUnsubscribeParams, threadUpsertEvent, transcriptItemIds, turnInterruptParams, turnStartParams, turnSteerParams, useAgentAction, useAgentApprovals, useAgentApps, useAgentAuth, useAgentBootstrap, useAgentComposer, useAgentContext, useAgentHooks, useAgentModels, useAgentRunSettings, useAgentServerRequests, useAgentSkills, useAgentThread, useAgentThreadActions, useAgentThreadController, useAgentThreadHistory, useAgentThreadReader, useAgentThreads, useAgentTurn, useAgentTurnController, useAgentUsage, visibleTranscriptWindow };
