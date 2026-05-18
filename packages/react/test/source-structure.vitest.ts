@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const reactSrc = join(__dirname, "..", "src");
 const componentDir = join(reactSrc, "components");
 const styleDir = join(reactSrc, "styles");
+const maxResponsibilitySizedLines = 560;
 
 function sourceTextUnder(...dirs: string[]): string {
   const files: string[] = [];
@@ -33,7 +34,10 @@ describe("React package source structure", () => {
     for (const name of readdirSync(componentDir)) {
       if (!name.endsWith(".tsx")) continue;
       const lineCount = readFileSync(join(componentDir, name), "utf8").split("\n").length;
-      expect(lineCount, `${name} has ${lineCount} lines`).toBeLessThanOrEqual(560);
+      expect(
+        lineCount,
+        responsibilitySizeFailure(name, lineCount, "component"),
+      ).toBeLessThanOrEqual(maxResponsibilitySizedLines);
     }
   });
 
@@ -41,7 +45,9 @@ describe("React package source structure", () => {
     for (const name of readdirSync(styleDir)) {
       if (!name.endsWith(".css")) continue;
       const lineCount = readFileSync(join(styleDir, name), "utf8").split("\n").length;
-      expect(lineCount, `${name} has ${lineCount} lines`).toBeLessThanOrEqual(560);
+      expect(lineCount, responsibilitySizeFailure(name, lineCount, "style")).toBeLessThanOrEqual(
+        maxResponsibilitySizedLines,
+      );
     }
   });
 
@@ -62,3 +68,18 @@ describe("React package source structure", () => {
     expect(text).not.toContain("AgentStatusCard");
   });
 });
+
+function responsibilitySizeFailure(
+  name: string,
+  lineCount: number,
+  kind: "component" | "style",
+): string {
+  return [
+    `${name} has ${lineCount} lines; source modules must stay at or below ${maxResponsibilitySizedLines} lines.`,
+    "Do not satisfy this gate by minifying, one-line CSS rules, inlining unrelated logic, or doing a mechanical split.",
+    kind === "style"
+      ? "Read the CSS chunk, identify the visual ownership boundaries, delete stale selectors, and move coherent surfaces into purpose-named style chunks."
+      : "Read the component, identify the UI/state ownership boundaries, delete stale paths, and move coherent behavior into purpose-named component modules.",
+    "If the file is still large after real cleanup, add a focused module with tests/docs that explain the new responsibility boundary.",
+  ].join("\n");
+}
