@@ -2450,6 +2450,54 @@ describe("AgentChat", () => {
     expect(revoke).toHaveBeenCalledTimes(1);
   });
 
+  it("clears queued previews when a server status notification closes the thread", async () => {
+    const user = userEvent.setup();
+    const revoke = vi.spyOn(URL, "revokeObjectURL");
+    function CloseNotification() {
+      const { dispatch } = useAgentContext();
+      return (
+        <button
+          type="button"
+          onClick={() =>
+            dispatch({
+              status: "closed",
+              threadId: "thread-running",
+              type: "thread/status/changed",
+            })
+          }
+        >
+          Server closes thread
+        </button>
+      );
+    }
+    const { unmount } = render(
+      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+        <CloseNotification />
+        <AgentChat
+          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(fileInput, new File(["png"], "server-closed.png", { type: "image/png" }));
+    await user.type(screen.getByLabelText("Message"), "server closed queue");
+    await user.keyboard("{Enter}");
+    expect(screen.getByLabelText("Queued attachments")).toHaveTextContent(
+      "server-closed.png",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Server closes thread" }));
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument(),
+    );
+    expect(revoke).toHaveBeenCalledTimes(1);
+    unmount();
+    expect(revoke).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps queued follow-ups after Stop", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
