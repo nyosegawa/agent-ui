@@ -74,7 +74,9 @@ export function AgentProvider({ children, initialState, transport }: AgentProvid
   const value = useMemo(() => ({ dispatch, state, transport }), [state, transport]);
   return (
     <AgentContext.Provider value={value}>
-      <AgentComposerQueueProvider>{children}</AgentComposerQueueProvider>
+      <AgentComposerQueueProvider sessionState={state}>
+        {children}
+      </AgentComposerQueueProvider>
     </AgentContext.Provider>
   );
 }

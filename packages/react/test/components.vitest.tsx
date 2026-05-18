@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -110,6 +110,22 @@ function ActiveThreadHarness(props: React.ComponentProps<typeof AgentChat>) {
       )}
     </>
   );
+}
+
+async function queueAcrossThreadViewRemount(
+  user: ReturnType<typeof userEvent.setup>,
+  first: string,
+  second: string,
+) {
+  await user.type(screen.getByRole("textbox", { name: "Message" }), first);
+  await user.keyboard("{Enter}");
+  await user.click(screen.getByRole("button", { name: "Show no thread" }));
+  expect(screen.queryByRole("textbox", { name: "Message" })).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Show thread A" }));
+  await user.type(screen.getByRole("textbox", { name: "Message" }), second);
+  await user.keyboard("{Enter}");
+  expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(first);
+  expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(second);
 }
 
 describe("AgentChat", () => {
@@ -1952,6 +1968,79 @@ describe("AgentChat", () => {
     );
   });
 
+  it("keeps remounted same-timestamp queued follow-ups independently sendable", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(Date, "now").mockReturnValue(1_234);
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/steer") return { turnId: "turn-running" };
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={twoRunningThreadsState()} transport={transport}>
+        <ActiveThreadHarness />
+      </AgentProvider>,
+    );
+    await queueAcrossThreadViewRemount(user, "same ms send A", "same ms send B");
+
+    const firstItem = screen.getByText("same ms send A").closest("li");
+    expect(firstItem).not.toBeNull();
+    await user.click(within(firstItem!).getByRole("button", { name: "Send now" }));
+
+    await waitFor(() =>
+      expect(transport.requests.at(-1)).toMatchObject({
+        method: "turn/steer",
+        params: {
+          expectedTurnId: "turn-running",
+          input: [{ text: "same ms send A", type: "text" }],
+          threadId: "thread-running",
+        },
+      }),
+    );
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent("same ms send B");
+    expect(screen.queryByText("same ms send A")).not.toBeInTheDocument();
+  });
+
+  it("keeps remounted same-timestamp queued follow-ups independently editable", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(Date, "now").mockReturnValue(1_234);
+    render(
+      <AgentProvider initialState={twoRunningThreadsState()} transport={new FakeAgentTransport()}>
+        <ActiveThreadHarness />
+      </AgentProvider>,
+    );
+    await queueAcrossThreadViewRemount(user, "same ms edit A", "same ms edit B");
+
+    const firstItem = screen.getByText("same ms edit A").closest("li");
+    expect(firstItem).not.toBeNull();
+    await user.click(within(firstItem!).getByRole("button", { name: "Edit" }));
+
+    expect(screen.getByRole("textbox", { name: "Message" })).toHaveValue("same ms edit A");
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent("same ms edit B");
+    expect(screen.getByLabelText("Queued follow-ups")).not.toHaveTextContent("same ms edit A");
+  });
+
+  it("keeps remounted same-timestamp queued follow-ups independently removable", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(Date, "now").mockReturnValue(1_234);
+    render(
+      <AgentProvider initialState={twoRunningThreadsState()} transport={new FakeAgentTransport()}>
+        <ActiveThreadHarness />
+      </AgentProvider>,
+    );
+    await queueAcrossThreadViewRemount(user, "same ms remove A", "same ms remove B");
+
+    const firstItem = screen.getByText("same ms remove A").closest("li");
+    expect(firstItem).not.toBeNull();
+    await user.click(within(firstItem!).getByRole("button", { name: "Remove" }));
+
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "same ms remove B",
+    );
+    expect(screen.queryByText("same ms remove A")).not.toBeInTheDocument();
+  });
+
   it("keeps a queued follow-up when the active turn changes before Send now", async () => {
     const user = userEvent.setup();
     function TurnChanger() {
@@ -2309,6 +2398,54 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("Pending attachments")).toHaveTextContent(
       "edit-preview.png",
     );
+    unmount();
+    expect(revoke).toHaveBeenCalledTimes(1);
+  });
+
+  it("clears queued previews when a server status notification archives the thread", async () => {
+    const user = userEvent.setup();
+    const revoke = vi.spyOn(URL, "revokeObjectURL");
+    function ArchiveNotification() {
+      const { dispatch } = useAgentContext();
+      return (
+        <button
+          type="button"
+          onClick={() =>
+            dispatch({
+              status: "archived",
+              threadId: "thread-running",
+              type: "thread/status/changed",
+            })
+          }
+        >
+          Server archives thread
+        </button>
+      );
+    }
+    const { unmount } = render(
+      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+        <ArchiveNotification />
+        <AgentChat
+          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(fileInput, new File(["png"], "server-archived.png", { type: "image/png" }));
+    await user.type(screen.getByLabelText("Message"), "server archived queue");
+    await user.keyboard("{Enter}");
+    expect(screen.getByLabelText("Queued attachments")).toHaveTextContent(
+      "server-archived.png",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Server archives thread" }));
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument(),
+    );
+    expect(revoke).toHaveBeenCalledTimes(1);
     unmount();
     expect(revoke).toHaveBeenCalledTimes(1);
   });

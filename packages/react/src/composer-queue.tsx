@@ -1,4 +1,8 @@
-import type { ThreadId } from "@nyosegawa/agent-ui-core";
+import type {
+  AgentSessionState,
+  ThreadId,
+  ThreadStatus,
+} from "@nyosegawa/agent-ui-core";
 import {
   createContext,
   useCallback,
@@ -33,7 +37,7 @@ export interface QueuedFollowUpAttachment {
 
 export interface AgentComposerQueueStore {
   clearThreadFollowUps: (threadId: ThreadId) => void;
-  enqueueFollowUp: (item: QueuedFollowUp) => void;
+  enqueueFollowUp: (item: Omit<QueuedFollowUp, "id">) => string;
   followUpErrors: Record<string, string>;
   markFollowUpIdle: (id: string) => void;
   markFollowUpSending: (id: string) => void;
@@ -50,12 +54,23 @@ export interface AgentComposerQueueStore {
 
 const AgentComposerQueueContext = createContext<AgentComposerQueueStore | null>(null);
 
-export function AgentComposerQueueProvider({ children }: PropsWithChildren) {
+export function AgentComposerQueueProvider({
+  children,
+  sessionState,
+}: PropsWithChildren<{ sessionState?: AgentSessionState }>) {
   const [queuedFollowUps, setQueuedFollowUps] = useState<QueuedFollowUp[]>([]);
   const [sendingFollowUpIds, setSendingFollowUpIds] = useState<string[]>([]);
   const [followUpErrors, setFollowUpErrors] = useState<Record<string, string>>({});
   const queuedFollowUpsRef = useRef<QueuedFollowUp[]>([]);
   const revokedPreviewUrlsRef = useRef(new Set<string>());
+  const fallbackIdCounter = useRef(0);
+
+  const createFollowUpId = useCallback((threadId: ThreadId) => {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return `follow-up-${crypto.randomUUID()}`;
+    }
+    return `follow-up-${threadId}-${fallbackIdCounter.current++}`;
+  }, []);
 
   const revokeFollowUpPreviews = useCallback((item: QueuedFollowUp) => {
     for (const attachment of item.attachments) {
@@ -77,14 +92,17 @@ export function AgentComposerQueueProvider({ children }: PropsWithChildren) {
     [revokeFollowUpPreviews],
   );
 
-  const enqueueFollowUp = useCallback((item: QueuedFollowUp) => {
-    setFollowUpErrors((current) => withoutRecordKey(current, item.id));
+  const enqueueFollowUp = useCallback((item: Omit<QueuedFollowUp, "id">) => {
+    const id = createFollowUpId(item.threadId);
+    const queuedItem = { ...item, id };
+    setFollowUpErrors((current) => withoutRecordKey(current, id));
     setQueuedFollowUps((current) => {
-      const next = [...current, item];
+      const next = [...current, queuedItem];
       queuedFollowUpsRef.current = next;
       return next;
     });
-  }, []);
+    return id;
+  }, [createFollowUpId]);
 
   const setFollowUpError = useCallback((id: string, error: string | undefined) => {
     setFollowUpErrors((current) =>
@@ -162,6 +180,19 @@ export function AgentComposerQueueProvider({ children }: PropsWithChildren) {
     [revokeFollowUpPreviews],
   );
 
+  useEffect(() => {
+    if (!sessionState) return;
+    const queuedThreadIds = new Set(
+      queuedFollowUps.map((followUp) => followUp.threadId),
+    );
+    for (const threadId of queuedThreadIds) {
+      const status = sessionState.threads[threadId]?.status;
+      if (status && shouldClearQueuedFollowUpsForStatus(status)) {
+        clearThreadFollowUps(threadId);
+      }
+    }
+  }, [clearThreadFollowUps, queuedFollowUps, sessionState]);
+
   const value = useMemo(
     () => ({
       clearThreadFollowUps,
@@ -207,4 +238,8 @@ function withoutRecordKey<T>(record: Record<string, T>, key: string): Record<str
   const next = { ...record };
   delete next[key];
   return next;
+}
+
+function shouldClearQueuedFollowUpsForStatus(status: ThreadStatus): boolean {
+  return status === "archived" || status === "closed";
 }

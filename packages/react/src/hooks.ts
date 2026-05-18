@@ -502,7 +502,6 @@ export function useAgentComposer(threadId?: ThreadId) {
   const [error, setError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInterrupting, setIsInterrupting] = useState(false);
-  const followUpOrdinalRef = useRef(0);
   const { dispatch, state } = useAgentContext();
   const composerQueue = useAgentComposerQueueStore();
   const resolvedThreadId = threadId ?? state.activeThreadId;
@@ -525,12 +524,10 @@ export function useAgentComposer(threadId?: ThreadId) {
     (items: CodexUserInput[] = [], attachments: QueuedFollowUpAttachment[] = []) => {
       const built = buildInput(items);
       if (!built || !resolvedThreadId) return;
-      const id = `follow-up-${Date.now()}-${followUpOrdinalRef.current++}`;
       const expectedTurnId = activeTurnId;
-      composerQueue.enqueueFollowUp({
+      const id = composerQueue.enqueueFollowUp({
         attachments,
         expectedTurnId,
-        id,
         input: built.input,
         text: built.text || summarizeUserInput(built.input),
         threadId: resolvedThreadId,
