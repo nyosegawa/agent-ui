@@ -197,8 +197,13 @@ function handleRequest(message: JsonRpcLine) {
     case "turn/steer": {
       const threadId = stringParam(message.params, "threadId") ?? "thread-live";
       const expectedTurnId = stringParam(message.params, "expectedTurnId");
+      const prompt = inputText(message.params);
+      if (/non-steerable/i.test(prompt)) {
+        respondError(message.id, "Active turn is not steerable");
+        return;
+      }
       if (!expectedTurnId || activeTurns.get(threadId) !== expectedTurnId) {
-        respond(message.id, { error: "expected turn mismatch" });
+        respondError(message.id, "expected turn mismatch");
         return;
       }
       respond(message.id, { turnId: expectedTurnId });
@@ -365,6 +370,11 @@ function notify(method: string, params: unknown) {
 function respond(id: string | number | undefined, result: unknown) {
   if (id == null) return;
   write({ id, result });
+}
+
+function respondError(id: string | number | undefined, message: string) {
+  if (id == null) return;
+  write({ error: { code: -32000, message }, id });
 }
 
 function write(message: unknown) {

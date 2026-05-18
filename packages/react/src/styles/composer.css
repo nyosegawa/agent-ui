@@ -28,6 +28,65 @@
   width: 100%;
 }
 
+.aui-follow-up-queue {
+  display: grid;
+  min-width: 0;
+}
+
+.aui-follow-up-queue ul {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  max-height: min(32vh, 220px);
+  min-width: 0;
+  overflow: auto;
+  padding: 0;
+}
+
+.aui-follow-up-card {
+  align-items: start;
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 8px;
+  box-shadow: var(--aui-elevation-1);
+  display: grid;
+  gap: 8px 10px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  min-width: 0;
+  padding: 8px 8px 8px 10px;
+}
+
+.aui-follow-up-card p {
+  color: var(--aui-fg);
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.aui-follow-up-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.aui-follow-up-error {
+  background: var(--aui-danger-soft);
+  border: 1px solid rgba(185, 28, 28, 0.28);
+  border-radius: 7px;
+  color: var(--aui-danger);
+  font-size: 12px;
+  font-weight: 600;
+  grid-column: 1 / -1;
+  line-height: 1.4;
+  padding: 7px 9px;
+}
+
 .aui-composer[data-focused="true"] {
   border-color: var(--aui-primary);
   box-shadow: var(--aui-focus-ring), var(--aui-elevation-2);

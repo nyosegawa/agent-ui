@@ -24,7 +24,8 @@ turn, and `turn/interrupt` for the visible stop action.
 an active regular turn and the matching `expectedTurnId`; review and manual
 compact turns reject steering. Hosts that want generic "queue this after the
 current turn finishes" behaviour must own that queue themselves because App
-Server does not provide it.
+Server does not provide it. Agent UI's default follow-up queue is exactly that:
+UI-local state, not an App Server queue API.
 
 ## Thread Collection And History
 
@@ -53,11 +54,13 @@ const run = useAgentRunSettings();
 
 `useAgentComposer()` owns input text and submits turns through the turn
 controller. Idle threads submit `turn/start`. Running threads keep the textarea
-editable: text submit sends `turn/steer` with the latest active turn id as
-`expectedTurnId`, while an empty primary click calls `turn/interrupt`. The hook
-keeps failed steering input intact and surfaces an inline error. The default
-`AgentComposerPanel` still blocks submission for approval-waiting threads and
-stored read-only previews.
+editable: Enter adds to `queuedFollowUps`, Cmd/Ctrl+Enter calls `turn/steer`
+immediately, and `sendQueuedFollowUp(id)` calls `turn/steer` for that item with
+its stored `expectedTurnId`. `Stop` calls only `turn/interrupt` and does not
+clear unsent queued follow-ups. The hook keeps queue state separate from App
+Server pending input with `queuedFollowUps`, `sendingFollowUpIds`,
+`followUpErrors`, and `activeTurnId`. The default `AgentComposerPanel` still
+blocks submission for approval-waiting threads and stored read-only previews.
 
 `useAgentRunSettings()` exposes execution modes, available models, supported
 efforts, cwd, current selections, and setters. Execution modes map to stable App

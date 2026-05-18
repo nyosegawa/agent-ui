@@ -70,6 +70,22 @@ export const IconSend = (props: { size?: number }) => (
   </Icon>
 );
 
+export const IconEdit = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M12 20h9" />
+    <path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z" />
+  </Icon>
+);
+
+export const IconTrash = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M3 6h18" />
+    <path d="M8 6V4h8v2" />
+    <path d="M6 6l1 15h10l1-15" />
+    <path d="M10 11v6M14 11v6" />
+  </Icon>
+);
+
 export const IconStop = (props: { size?: number }) => (
   <Icon size={props.size} strokeWidth={0}>
     <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" />

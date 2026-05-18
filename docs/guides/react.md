@@ -42,6 +42,11 @@ Use primitives when the host owns layout:
 the transcript, anchored after source metadata when available and at the
 transcript tail otherwise, not as a separate pane.
 
+`AgentComposerPanel` owns the default running-turn follow-up UX. App Server has
+no `queue/message` method, so queued follow-ups are UI-local until `Send now`.
+`Send now` and Cmd/Ctrl+Enter use `turn/steer`; Stop uses only
+`turn/interrupt`.
+
 ## Fixed Thread
 
 Render a specific thread without following global active selection:

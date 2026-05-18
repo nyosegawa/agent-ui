@@ -125,6 +125,10 @@ Component tests cover:
 Accessibility smoke should cover the composer, approval queue, dialogs/sheets,
 and thread sidebar whenever their interaction model changes.
 
+Running composer tests must keep the UI-local follow-up queue distinct from App
+Server pending input: Enter queues locally, `Send now` and Cmd/Ctrl+Enter call
+`turn/steer`, Stop calls `turn/interrupt`, and unsent queued items survive Stop.
+
 ## Fixture Browser Tests
 
 `bun run test:e2e:playwright` starts its own fixture preview servers. Do not

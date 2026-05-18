@@ -496,36 +496,131 @@ export function useAgentComposer(threadId?: ThreadId) {
   const [error, setError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInterrupting, setIsInterrupting] = useState(false);
+  const [queuedFollowUps, setQueuedFollowUps] = useState<QueuedFollowUp[]>([]);
+  const [sendingFollowUpIds, setSendingFollowUpIds] = useState<string[]>([]);
+  const [followUpErrors, setFollowUpErrors] = useState<Record<string, string>>({});
+  const followUpOrdinalRef = useRef(0);
   const { dispatch, state } = useAgentContext();
   const resolvedThreadId = threadId ?? state.activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;
   const { interruptTurn, startTurn, steerTurn } = useAgentTurn(threadId);
   const activeTurnId = latestRunningTurnId(thread);
   const isRunning = thread?.status === "running";
-  const submit = useCallback(
-    async (items: CodexUserInput[] = []) => {
+  const buildInput = useCallback(
+    (items: CodexUserInput[] = []) => {
       const input = value.trim();
-      if (!input && items.length === 0) return;
-      const userInput = input ? [textInput(input), ...items] : items;
+      if (!input && items.length === 0) return undefined;
+      return {
+        input: input ? [textInput(input), ...items] : items,
+        text: input,
+      };
+    },
+    [value],
+  );
+  const queueFollowUp = useCallback(
+    (items: CodexUserInput[] = []) => {
+      const built = buildInput(items);
+      if (!built) return;
+      const id = `follow-up-${Date.now()}-${followUpOrdinalRef.current++}`;
+      const expectedTurnId = activeTurnId;
+      setFollowUpErrors((current) => withoutRecordKey(current, id));
+      setQueuedFollowUps((current) => [
+        ...current,
+        {
+          expectedTurnId,
+          id,
+          input: built.input,
+          text: built.text || summarizeUserInput(built.input),
+        },
+      ]);
+      setValue("");
+    },
+    [activeTurnId, buildInput],
+  );
+  const steerNow = useCallback(
+    async (items: CodexUserInput[] = []) => {
+      const built = buildInput(items);
+      if (!built) return;
       setError(undefined);
       setIsSubmitting(true);
       try {
-        if (isRunning) {
-          if (!activeTurnId) throw new Error("No active turn to steer.");
-          await steerTurn(activeTurnId, userInput);
-        } else {
-          await startTurn(userInput);
-        }
+        if (!activeTurnId) throw new Error("No active turn to steer.");
+        await steerTurn(activeTurnId, built.input);
         setValue("");
       } catch (caught) {
-        setError(composerActionError(caught, isRunning ? "steer" : "start"));
+        setError(composerActionError(caught, "steer"));
         throw caught;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [activeTurnId, isRunning, startTurn, steerTurn, value],
+    [activeTurnId, buildInput, steerTurn],
   );
+  const submit = useCallback(
+    async (items: CodexUserInput[] = []) => {
+      const built = buildInput(items);
+      if (!built) return;
+      if (isRunning) {
+        queueFollowUp(items);
+        return;
+      }
+      setError(undefined);
+      setIsSubmitting(true);
+      try {
+        await startTurn(built.input);
+        setValue("");
+      } catch (caught) {
+        setError(composerActionError(caught, "start"));
+        throw caught;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [buildInput, isRunning, queueFollowUp, startTurn],
+  );
+  const sendQueuedFollowUp = useCallback(
+    async (id: string) => {
+      const item = queuedFollowUps.find((followUp) => followUp.id === id);
+      if (!item) return;
+      const error = followUpSendPreflightError(activeTurnId, item.expectedTurnId);
+      if (error) {
+        setFollowUpErrors((current) => ({ ...current, [id]: error }));
+        return;
+      }
+      const expectedTurnId = item.expectedTurnId;
+      if (!expectedTurnId) return;
+      setFollowUpErrors((current) => withoutRecordKey(current, id));
+      setSendingFollowUpIds((current) =>
+        current.includes(id) ? current : [...current, id],
+      );
+      try {
+        await steerTurn(expectedTurnId, item.input);
+        setQueuedFollowUps((current) => current.filter((followUp) => followUp.id !== id));
+      } catch (caught) {
+        setFollowUpErrors((current) => ({
+          ...current,
+          [id]: composerActionError(caught, "steer"),
+        }));
+      } finally {
+        setSendingFollowUpIds((current) => current.filter((followUpId) => followUpId !== id));
+      }
+    },
+    [activeTurnId, queuedFollowUps, steerTurn],
+  );
+  const editQueuedFollowUp = useCallback(
+    (id: string) => {
+      const item = queuedFollowUps.find((followUp) => followUp.id === id);
+      if (!item) return;
+      setValue(item.text);
+      setQueuedFollowUps((current) => current.filter((followUp) => followUp.id !== id));
+      setFollowUpErrors((current) => withoutRecordKey(current, id));
+    },
+    [queuedFollowUps],
+  );
+  const removeQueuedFollowUp = useCallback((id: string) => {
+    setQueuedFollowUps((current) => current.filter((followUp) => followUp.id !== id));
+    setFollowUpErrors((current) => withoutRecordKey(current, id));
+  }, []);
   const stop = useCallback(async () => {
     if (!activeTurnId || !resolvedThreadId) return;
     setError(undefined);
@@ -550,17 +645,33 @@ export function useAgentComposer(threadId?: ThreadId) {
   }, [activeTurnId, dispatch, interruptTurn, resolvedThreadId]);
   return {
     activeTurnId,
+    editQueuedFollowUp,
     error,
+    followUpErrors,
     isInterrupting,
     isRunning,
     isSubmitting,
+    queuedFollowUps,
+    removeQueuedFollowUp,
+    sendQueuedFollowUp,
+    sendingFollowUpIds,
     setError,
     setValue,
+    steerNow,
     stop,
     submit,
     value,
   };
 }
+
+export interface QueuedFollowUp {
+  expectedTurnId?: string;
+  id: string;
+  input: CodexUserInput[];
+  text: string;
+}
+
+export type AgentComposerController = ReturnType<typeof useAgentComposer>;
 
 function latestRunningTurnId(thread?: ThreadState): string | undefined {
   if (!thread) return undefined;
@@ -592,6 +703,35 @@ function composerActionError(caught: unknown, action: "interrupt" | "start" | "s
   }
   if (action === "interrupt") return `Could not stop the turn: ${message}`;
   return `Could not start the turn: ${message}`;
+}
+
+function followUpSendPreflightError(
+  activeTurnId: string | undefined,
+  expectedTurnId: string | undefined,
+): string | undefined {
+  if (!activeTurnId || !expectedTurnId) {
+    return "There is no active turn to steer. Wait for the thread state to refresh, then send a new message.";
+  }
+  if (activeTurnId !== expectedTurnId) {
+    return "The active turn changed before this instruction was sent. The queued follow-up was not sent.";
+  }
+  return undefined;
+}
+
+function withoutRecordKey<T>(record: Record<string, T>, key: string): Record<string, T> {
+  if (!(key in record)) return record;
+  const next = { ...record };
+  delete next[key];
+  return next;
+}
+
+function summarizeUserInput(input: CodexUserInput[]): string {
+  const text = input
+    .map((item) => (typeof item === "object" && "text" in item ? item.text : ""))
+    .filter(Boolean)
+    .join("\n")
+    .trim();
+  return text || "Attached follow-up";
 }
 
 export function useAgentRunSettings() {

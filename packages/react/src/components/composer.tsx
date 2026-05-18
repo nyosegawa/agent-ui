@@ -1,7 +1,7 @@
 import type React from "react";
 import type { ThreadState, ThreadTokenUsage } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAgentComposer } from "../hooks";
+import { useAgentComposer, type AgentComposerController } from "../hooks";
 import { mentionInput, type CodexUserInput } from "../codex-request-params";
 import {
   IconAlert,
@@ -18,8 +18,20 @@ import {
 import { ComposerRunSettings } from "./run-settings";
 import { deferAction } from "./shared";
 import { AgentContextUsageIndicator } from "./context-usage";
+import { QueuedFollowUpList } from "./follow-up-queue";
 
-export function AgentComposer({
+export function AgentComposer(props: AgentComposerProps) {
+  const composer = useAgentComposer(props.threadId);
+  return (
+    <>
+      <QueuedFollowUpList composer={composer} />
+      <AgentComposerForm {...props} composer={composer} />
+    </>
+  );
+}
+
+function AgentComposerForm({
+  composer,
   disabled = false,
   disabledReason,
   onRequestAppMention,
@@ -27,9 +39,7 @@ export function AgentComposer({
   placeholder = "Ask Codex to work in this thread",
   resolveLocalAttachment,
   tokenUsage,
-  threadId,
-}: AgentComposerProps) {
-  const composer = useAgentComposer(threadId);
+}: AgentComposerProps & { composer: AgentComposerController }) {
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | undefined>();
   const [isFocused, setFocused] = useState(false);
@@ -118,7 +128,7 @@ export function AgentComposer({
     el.style.height = `${Math.min(el.scrollHeight, 220)}px`;
   }, [composer.value]);
 
-  const submit = () => {
+  const submit = (mode: "normal" | "steer" = "normal") => {
     if (disabled) return;
     if (!composer.value.trim() && attachments.length === 0) {
       if (composer.isRunning) deferAction(() => composer.stop());
@@ -127,7 +137,9 @@ export function AgentComposer({
     const pendingAttachments = attachments;
     deferAction(async () => {
       try {
-        await composer.submit(pendingAttachments.flatMap(composerAttachmentInput));
+        const input = pendingAttachments.flatMap(composerAttachmentInput);
+        if (mode === "steer") await composer.steerNow(input);
+        else await composer.submit(input);
       } catch {
         return;
       }
@@ -142,15 +154,15 @@ export function AgentComposer({
   const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
     if (event.key === "Enter" && !event.shiftKey && !isComposing.current) {
       event.preventDefault();
-      submit();
+      submit(event.metaKey || event.ctrlKey ? "steer" : "normal");
     }
   };
 
   const hasInput = composer.value.trim().length > 0 || attachments.length > 0;
-  const isStopAction = composer.isRunning && !hasInput;
+  const isStopAction = composer.isRunning;
   const canSubmit =
     !disabled &&
-    (hasInput || composer.isRunning) &&
+    (composer.isRunning || hasInput) &&
     !composer.isSubmitting &&
     !composer.isInterrupting;
 
@@ -218,7 +230,8 @@ export function AgentComposer({
       }}
       onSubmit={(event) => {
         event.preventDefault();
-        submit();
+        if (composer.isRunning) deferAction(() => composer.stop());
+        else submit();
       }}
     >
       {disabled && disabledReason ? (
@@ -297,7 +310,7 @@ export function AgentComposer({
           event.preventDefault();
           void addLocalFiles(event.clipboardData.files);
         }}
-        placeholder={placeholder}
+        placeholder={composer.isRunning ? "Add a follow-up..." : placeholder}
         ref={textareaRef}
         rows={1}
         value={composer.value}
@@ -365,13 +378,13 @@ export function AgentComposer({
             <kbd>Enter</kbd> to send
           </span>
           <button
-            aria-label={isStopAction ? "Stop" : composer.isRunning ? "Send additional instructions" : "Send"}
+            aria-label={isStopAction ? "Stop current turn" : "Send"}
             className={buttonClass(isStopAction ? "danger" : "primary", {
               iconOnly: true,
               size: "lg",
             })}
             disabled={!canSubmit}
-            title={isStopAction ? "Stop running turn" : composer.isRunning ? "Send additional instructions" : "Send message"}
+            title={isStopAction ? "Stop current turn" : "Send message"}
             type="submit"
           >
             {isStopAction ? <IconStop size={18} /> : <IconSend size={18} />}
@@ -487,9 +500,12 @@ export function AgentComposerPanel({
 }: AgentComposerPanelProps) {
   const isPreviewOnly = isPreviewOnlyThread(thread);
   const isBlocked = thread.status === "waitingForInput" || isPreviewOnly;
+  const composer = useAgentComposer(threadId);
   return (
     <section className="aui-compose-panel" aria-label="Message composer">
-      <AgentComposer
+      <QueuedFollowUpList composer={composer} />
+      <AgentComposerForm
+        composer={composer}
         disabled={isBlocked}
         disabledReason={composerDisabledReason(thread.status, isPreviewOnly)}
         onRequestAppMention={onRequestAppMention}
@@ -523,7 +539,7 @@ function isPreviewOnlyThread(thread: ThreadState): boolean {
 
 function composerPlaceholder(status: ThreadState["status"], isPreviewOnly = false): string {
   if (isPreviewOnly) return "Stored thread";
-  if (status === "running") return "Add instructions while Codex is working";
+  if (status === "running") return "Add a follow-up...";
   if (status === "waitingForInput") return "Waiting on approval";
   return "Ask Codex to work in this thread";
 }

@@ -88,12 +88,14 @@ child process, waits for the grace period, and escalates to `SIGKILL` if the
 child does not exit. Child stdout and stderr stay bound to the transport
 lifecycle; stderr is redacted before host callbacks or browser events see it.
 
-Running-turn UX should map directly to App Server methods. Additional
-instructions for an active regular turn call `turn/steer` with `threadId`,
-`expectedTurnId`, and structured `input`. Stop calls `turn/interrupt` with the
-active `threadId` and `turnId`; the server may only respond after the
-interrupted `turn/completed`/`TurnAborted` path finishes. A generic
-queue-after-completion feature is host-owned behaviour, not an App Server
+Running-turn UX should map directly to App Server methods. App Server has no
+dedicated `queue/message` API. Agent UI's default pending follow-up cards are
+UI-local state until the user chooses `Send now`; `Send now` and Cmd/Ctrl+Enter
+call `turn/steer` with `threadId`, the active `expectedTurnId`, and structured
+`input`. Stop calls only `turn/interrupt` with the active `threadId` and
+`turnId`; the server may only respond after the interrupted
+`turn/completed`/`TurnAborted` path finishes. `turn/steer` is not an interrupt,
+and generic queue-after-completion behavior is host-owned, not an App Server
 primitive.
 
 Token usage is streamed independently through `thread/tokenUsage/updated`.

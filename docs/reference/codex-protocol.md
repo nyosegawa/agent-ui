@@ -392,3 +392,6 @@ Real Codex smoke checks exercise the same protocol path. The verified surfaces a
 - `thread/resume` succeeds from a stored history id with `excludeTurns: true`.
 - `thread/start` can create an ephemeral thread for smoke verification.
 - `turn/start` streams `item/agentMessage/delta` and emits `turn/completed`.
+- App Server has no `queue/message` method. Agent UI's follow-up queue is local
+  React state; queued `Send now` and Cmd/Ctrl+Enter use `turn/steer`, while Stop
+  uses `turn/interrupt`.

@@ -57,6 +57,12 @@ Useful fixture routes:
 - `/scoped-thread-pane`
 - `/app-connectors`
 
+Running-turn follow-ups follow Codex Desktop semantics. App Server has no
+`queue/message` API; Agent UI keeps `queuedFollowUps` as UI-local state. Enter
+while a turn is running adds a pending follow-up card above the composer,
+`Send now` and Cmd/Ctrl+Enter call `turn/steer` with the active
+`expectedTurnId`, and Stop calls only `turn/interrupt`.
+
 ## React
 
 ```tsx

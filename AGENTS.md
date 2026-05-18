@@ -27,7 +27,7 @@ The default product experience is transcript-first.
 
 - User messages, assistant messages, tool calls, command output, file changes, approvals, and usage context belong in the conversation flow. Do not reintroduce a separate "work trace" concept.
 - Do not collapse normal user or assistant messages behind details. Use disclosure for heavy tool bodies, command output, diffs, or verbose diagnostics while keeping readable previews inline.
-- Keep the composer as the primary bottom-anchored interaction surface. Running state should turn the send affordance into stop/steer behavior, not move the primary action elsewhere.
+- Keep the composer as the primary bottom-anchored interaction surface. Running state should turn the send affordance into Stop, keep normal Enter as a UI-local follow-up queue, and reserve `turn/steer` for Cmd/Ctrl+Enter or queued `Send now`.
 - Pending approvals belong at the relevant point in the transcript, not in a separate scroll pane. Approval actions must remain reachable and hit-testable on desktop and mobile.
 - Avoid nested vertical scroll traps in markdown, code blocks, command output, and diff previews. The transcript should own normal reading scroll unless a component is intentionally disclosed as a heavy body.
 - Thread history must preserve readable titles and metadata. Clipped titles, broken metadata rows, horizontal page overflow, and manual "Load all" style history UX are regressions.

@@ -34,6 +34,9 @@ live in `AGENTS.md` and the current docs under `docs/`.
 - Approval rendering anchors pending decisions immediately after the source
   item or turn when App Server metadata is available, with transcript-tail
   fallback only for metadata-free requests.
+- Running-turn follow-ups now match Codex Desktop semantics: Agent UI keeps
+  queued follow-ups as local React composer state, `Send now` and Cmd/Ctrl+Enter
+  call `turn/steer`, and Stop calls only `turn/interrupt`.
 - Shared menu behavior closes on Escape and outside click, keeps focus return,
   supports arrow/Home/End navigation, and does not close due to internal scroll.
 - Execution mode controls use radiogroup semantics consistently.

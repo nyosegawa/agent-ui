@@ -148,7 +148,7 @@ test("opens a thread by URL and accepts image plus arbitrary file attachments", 
   });
 });
 
-test("anchors composer to the viewport and uses steer/interrupt while running", async ({
+test("anchors composer to the viewport and uses queued follow-ups, steer, and interrupt while running", async ({
   page,
 }, testInfo) => {
   testInfo.setTimeout(FLOW_TEST_TIMEOUT);
@@ -172,13 +172,38 @@ test("anchors composer to the viewport and uses steer/interrupt while running", 
   await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
   await expect(message).toBeEnabled({ timeout: FAST_EXPECT_TIMEOUT });
   await message.fill("while running");
-  await sendAdditionalInstructionsButton(page).click({ timeout: FAST_EXPECT_TIMEOUT });
+  await message.press("Enter");
+  await expect(page.getByLabel("Queued follow-ups")).toContainText("while running", {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await sendNowButton(page).click({ timeout: FAST_EXPECT_TIMEOUT });
   await expect(page.getByText("Steered: while running")).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
+  await expect(page.getByLabel("Queued follow-ups")).toHaveCount(0, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
   await expect(message).toHaveValue("", { timeout: FAST_EXPECT_TIMEOUT });
+
+  await message.fill("cmd steer");
+  await message.press(process.platform === "darwin" ? "Meta+Enter" : "Control+Enter");
+  await expect(page.getByText("Steered: cmd steer")).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(page.getByLabel("Queued follow-ups")).toHaveCount(0, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+
+  await message.fill("keep queued after stop");
+  await message.press("Enter");
+  await expect(page.getByLabel("Queued follow-ups")).toContainText("keep queued after stop", {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
   await stopButton(page).click({ timeout: FAST_EXPECT_TIMEOUT });
   await expect(page.locator(".aui-status-pill")).not.toContainText("Running", {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(page.getByLabel("Queued follow-ups")).toContainText("keep queued after stop", {
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await assertComposerAnchored(page);
@@ -213,7 +238,8 @@ test("follows streaming content only while the transcript is near the bottom", a
   await message.fill("while scrolled up");
   const pausedBefore = await messageListScroll(page);
   expect(pausedBefore.distanceFromBottom).toBeGreaterThan(80);
-  await sendAdditionalInstructionsButton(page).click({ timeout: FAST_EXPECT_TIMEOUT });
+  await message.press("Enter");
+  await sendNowButton(page).click({ timeout: FAST_EXPECT_TIMEOUT });
   await expect(page.getByRole("button", { name: "Jump to latest" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
@@ -275,12 +301,12 @@ function sendButton(page: Page) {
   return page.locator(".aui-composer button[aria-label='Send']");
 }
 
-function sendAdditionalInstructionsButton(page: Page) {
-  return page.locator(".aui-composer button[aria-label='Send additional instructions']");
+function sendNowButton(page: Page) {
+  return page.getByRole("button", { name: "Send now" });
 }
 
 function stopButton(page: Page) {
-  return page.locator(".aui-composer button[aria-label='Stop']");
+  return page.locator(".aui-composer button[aria-label='Stop current turn']");
 }
 
 async function assertComposerAnchored(page: Page) {
@@ -288,7 +314,7 @@ async function assertComposerAnchored(page: Page) {
     const composer = document.querySelector(".aui-compose-panel")?.getBoundingClientRect();
     const messageList = document.querySelector(".aui-message-list")?.getBoundingClientRect();
     const send = document
-      .querySelector(".aui-composer button[aria-label='Send'], .aui-composer button[aria-label='Stop']")
+      .querySelector(".aui-composer button[aria-label='Send'], .aui-composer button[aria-label='Stop current turn']")
       ?.getBoundingClientRect();
     const hitTarget = send
       ? document.elementFromPoint(send.left + send.width / 2, send.top + send.height / 2)

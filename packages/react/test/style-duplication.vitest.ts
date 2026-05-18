@@ -121,6 +121,8 @@ describe("packages/react styles.css", () => {
     ".aui-composer-notice",
     ".aui-composer-tool",
     ".aui-composer-settings",
+    ".aui-follow-up-queue",
+    ".aui-follow-up-card",
     ".aui-menu",
     ".aui-menu-panel",
     ".aui-menu-item",

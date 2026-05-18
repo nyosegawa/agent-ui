@@ -42,6 +42,27 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+function runningComposerState() {
+  const initialState = createInitialAgentState();
+  initialState.activeThreadId = "thread-running";
+  initialState.threads["thread-running"] = {
+    orderedTurnIds: ["turn-running"],
+    status: "running",
+    thread: { id: "thread-running", name: "Running thread" },
+    turns: {
+      "turn-running": {
+        commandOutputByItemId: {},
+        filePatchByItemId: {},
+        itemOrder: [],
+        items: {},
+        streamingTextByItemId: {},
+        turn: { id: "turn-running", status: "running", threadId: "thread-running" },
+      },
+    },
+  };
+  return initialState;
+}
+
 describe("AgentChat", () => {
   it("keeps fixture model ids visibly non-production", () => {
     const modelEvents = (demoFixture as FixtureStep[])
@@ -1662,23 +1683,7 @@ describe("AgentChat", () => {
 
   it("keeps the running composer editable and stops the active turn from the primary button", async () => {
     const user = userEvent.setup();
-    const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-running";
-    initialState.threads["thread-running"] = {
-      orderedTurnIds: ["turn-running"],
-      status: "running",
-      thread: { id: "thread-running", name: "Running thread" },
-      turns: {
-        "turn-running": {
-          commandOutputByItemId: {},
-          filePatchByItemId: {},
-          itemOrder: [],
-          items: {},
-          streamingTextByItemId: {},
-          turn: { id: "turn-running", status: "running", threadId: "thread-running" },
-        },
-      },
-    };
+    const initialState = runningComposerState();
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method === "turn/interrupt") return {};
@@ -1692,9 +1697,9 @@ describe("AgentChat", () => {
     );
 
     expect(screen.getByRole("textbox", { name: "Message" })).toBeEnabled();
-    expect(screen.queryByRole("button", { name: "Stop", hidden: false })).toBeInTheDocument();
-    expect(screen.queryAllByRole("button", { name: "Stop" })).toHaveLength(1);
-    await user.click(screen.getByRole("button", { name: "Stop" }));
+    expect(screen.queryByRole("button", { name: "Stop current turn", hidden: false })).toBeInTheDocument();
+    expect(screen.queryAllByRole("button", { name: "Stop current turn" })).toHaveLength(1);
+    await user.click(screen.getByRole("button", { name: "Stop current turn" }));
 
     await waitFor(() =>
       expect(
@@ -1703,25 +1708,29 @@ describe("AgentChat", () => {
     );
   });
 
-  it("sends running composer input with turn/steer and preserves failed input", async () => {
+  it("queues running Enter submits locally instead of starting or steering", async () => {
     const user = userEvent.setup();
-    const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-running";
-    initialState.threads["thread-running"] = {
-      orderedTurnIds: ["turn-running"],
-      status: "running",
-      thread: { id: "thread-running", name: "Running thread" },
-      turns: {
-        "turn-running": {
-          commandOutputByItemId: {},
-          filePatchByItemId: {},
-          itemOrder: [],
-          items: {},
-          streamingTextByItemId: {},
-          turn: { id: "turn-running", status: "running", threadId: "thread-running" },
-        },
-      },
-    };
+    const initialState = runningComposerState();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "focus on tests");
+    await user.keyboard("{Enter}");
+
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent("focus on tests");
+    expect(message).toHaveValue("");
+    expect(transport.requests.map((request) => request.method)).not.toContain("turn/start");
+    expect(transport.requests.map((request) => request.method)).not.toContain("turn/steer");
+  });
+
+  it("sends running Cmd+Enter immediately with turn/steer", async () => {
+    const user = userEvent.setup();
+    const initialState = runningComposerState();
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method === "turn/steer") {
@@ -1738,7 +1747,7 @@ describe("AgentChat", () => {
 
     const message = screen.getByRole("textbox", { name: "Message" });
     await user.type(message, "focus on tests");
-    await user.click(screen.getByRole("button", { name: "Send additional instructions" }));
+    await user.keyboard("{Meta>}{Enter}{/Meta}");
 
     await waitFor(() =>
       expect(transport.requests.at(-1)).toMatchObject({
@@ -1751,7 +1760,47 @@ describe("AgentChat", () => {
       }),
     );
     expect(message).toHaveValue("");
+    expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
+  });
 
+  it("sends queued follow-ups with turn/steer and removes them after success", async () => {
+    const user = userEvent.setup();
+    const initialState = runningComposerState();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/steer") return { turnId: "turn-running" };
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "send queued now");
+    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Send now" }));
+
+    await waitFor(() =>
+      expect(transport.requests.at(-1)).toMatchObject({
+        method: "turn/steer",
+        params: {
+          expectedTurnId: "turn-running",
+          input: [{ text: "send queued now", type: "text" }],
+          threadId: "thread-running",
+        },
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("keeps a queued follow-up and shows item error when Send now fails", async () => {
+    const user = userEvent.setup();
+    const initialState = runningComposerState();
     const failingTransport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method === "turn/steer") {
@@ -1765,14 +1814,106 @@ describe("AgentChat", () => {
         <AgentChat />
       </AgentProvider>,
     );
-    const failingMessage = screen.getAllByRole("textbox", { name: "Message" }).at(-1)!;
+    const failingMessage = screen.getByRole("textbox", { name: "Message" });
     await user.type(failingMessage, "do not lose this");
-    await user.click(
-      screen.getAllByRole("button", { name: "Send additional instructions" }).at(-1)!,
-    );
+    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Send now" }));
 
     await screen.findByText(/cannot accept additional instructions/i);
-    expect(failingMessage).toHaveValue("do not lose this");
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent("do not lose this");
+    expect(failingMessage).toHaveValue("");
+  });
+
+  it("keeps a queued follow-up when the server reports expected turn mismatch", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/steer") {
+          throw new Error("expected turn mismatch");
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "mismatch stays queued");
+    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Send now" }));
+
+    await screen.findByText(/active turn changed/i);
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "mismatch stays queued",
+    );
+  });
+
+  it("edits and removes queued follow-ups", async () => {
+    const user = userEvent.setup();
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "first follow-up");
+    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    expect(message).toHaveValue("first follow-up");
+    expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
+
+    await user.clear(message);
+    await user.type(message, "remove follow-up");
+    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Remove" }));
+    expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
+  });
+
+  it("keeps queued follow-ups after Stop", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/interrupt") return {};
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "keep after stop");
+    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Stop current turn" }));
+
+    await waitFor(() =>
+      expect(transport.requests.some((request) => request.method === "turn/interrupt")).toBe(true),
+    );
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent("keep after stop");
+  });
+
+  it("does not submit while IME composition is active", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "composition text");
+    fireEvent.compositionStart(message);
+    fireEvent.keyDown(message, { key: "Enter" });
+
+    expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
+    expect(transport.requests.map((request) => request.method)).not.toContain("turn/steer");
   });
 
   it("does not leave messages marked in progress after the thread completes", () => {
@@ -2092,10 +2233,11 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    await user.type(await screen.findByLabelText("Message"), "hello codex");
-    await user.click(screen.getByRole("button", { name: "Send" }));
+    const message = await screen.findByLabelText("Message");
+    await user.type(message, "hello codex");
+    await user.keyboard("{Enter}");
 
-    expect(transport.requests.at(-1)).toMatchObject({
+    await waitFor(() => expect(transport.requests.at(-1)).toMatchObject({
       method: "turn/start",
       params: {
         approvalPolicy: "on-request",
@@ -2110,7 +2252,7 @@ describe("AgentChat", () => {
         },
         threadId: "thread-demo",
       },
-    });
+    }));
   });
 
   it("shows compact context usage near the composer only for nonzero usage", async () => {
