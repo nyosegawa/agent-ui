@@ -1,0 +1,210 @@
+import type { ThreadId } from "@nyosegawa/agent-ui-core";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PropsWithChildren,
+} from "react";
+import type { CodexUserInput } from "./codex-request-params";
+
+export interface QueuedFollowUp {
+  attachments: QueuedFollowUpAttachment[];
+  expectedTurnId?: string;
+  id: string;
+  input: CodexUserInput[];
+  text: string;
+  threadId: ThreadId;
+}
+
+export interface QueuedFollowUpAttachment {
+  extension?: string;
+  id: string;
+  input?: CodexUserInput | CodexUserInput[];
+  kind: "image" | "file" | "app" | "plugin";
+  label: string;
+  previewUrl?: string;
+  sizeLabel?: string;
+  value: string;
+}
+
+export interface AgentComposerQueueStore {
+  clearThreadFollowUps: (threadId: ThreadId) => void;
+  enqueueFollowUp: (item: QueuedFollowUp) => void;
+  followUpErrors: Record<string, string>;
+  markFollowUpIdle: (id: string) => void;
+  markFollowUpSending: (id: string) => void;
+  queuedFollowUps: QueuedFollowUp[];
+  removeFollowUp: (
+    id: string,
+    threadId: ThreadId,
+    options?: { revokePreviewUrls?: boolean },
+  ) => void;
+  sendingFollowUpIds: string[];
+  setFollowUpError: (id: string, error: string | undefined) => void;
+  takeFollowUpForEdit: (id: string, threadId: ThreadId) => QueuedFollowUp | undefined;
+}
+
+const AgentComposerQueueContext = createContext<AgentComposerQueueStore | null>(null);
+
+export function AgentComposerQueueProvider({ children }: PropsWithChildren) {
+  const [queuedFollowUps, setQueuedFollowUps] = useState<QueuedFollowUp[]>([]);
+  const [sendingFollowUpIds, setSendingFollowUpIds] = useState<string[]>([]);
+  const [followUpErrors, setFollowUpErrors] = useState<Record<string, string>>({});
+  const queuedFollowUpsRef = useRef<QueuedFollowUp[]>([]);
+  const revokedPreviewUrlsRef = useRef(new Set<string>());
+
+  const revokeFollowUpPreviews = useCallback((item: QueuedFollowUp) => {
+    for (const attachment of item.attachments) {
+      if (!attachment.previewUrl) continue;
+      if (revokedPreviewUrlsRef.current.has(attachment.previewUrl)) continue;
+      revokedPreviewUrlsRef.current.add(attachment.previewUrl);
+      URL.revokeObjectURL(attachment.previewUrl);
+    }
+  }, []);
+
+  useEffect(() => {
+    queuedFollowUpsRef.current = queuedFollowUps;
+  }, [queuedFollowUps]);
+
+  useEffect(
+    () => () => {
+      for (const item of queuedFollowUpsRef.current) revokeFollowUpPreviews(item);
+    },
+    [revokeFollowUpPreviews],
+  );
+
+  const enqueueFollowUp = useCallback((item: QueuedFollowUp) => {
+    setFollowUpErrors((current) => withoutRecordKey(current, item.id));
+    setQueuedFollowUps((current) => {
+      const next = [...current, item];
+      queuedFollowUpsRef.current = next;
+      return next;
+    });
+  }, []);
+
+  const setFollowUpError = useCallback((id: string, error: string | undefined) => {
+    setFollowUpErrors((current) =>
+      error ? { ...current, [id]: error } : withoutRecordKey(current, id),
+    );
+  }, []);
+
+  const markFollowUpSending = useCallback((id: string) => {
+    setSendingFollowUpIds((current) => (current.includes(id) ? current : [...current, id]));
+  }, []);
+
+  const markFollowUpIdle = useCallback((id: string) => {
+    setSendingFollowUpIds((current) => current.filter((followUpId) => followUpId !== id));
+  }, []);
+
+  const removeFollowUp = useCallback(
+    (
+      id: string,
+      threadId: ThreadId,
+      { revokePreviewUrls = true }: { revokePreviewUrls?: boolean } = {},
+    ) => {
+      const removed = queuedFollowUpsRef.current.find(
+        (followUp) => followUp.id === id && followUp.threadId === threadId,
+      );
+      setQueuedFollowUps((current) => {
+        const next = current.filter(
+          (followUp) => followUp.id !== id || followUp.threadId !== threadId,
+        );
+        queuedFollowUpsRef.current = next;
+        return next;
+      });
+      if (removed && revokePreviewUrls) revokeFollowUpPreviews(removed);
+      setFollowUpErrors((current) => withoutRecordKey(current, id));
+      setSendingFollowUpIds((current) => current.filter((followUpId) => followUpId !== id));
+    },
+    [revokeFollowUpPreviews],
+  );
+
+  const takeFollowUpForEdit = useCallback((id: string, threadId: ThreadId) => {
+    const removed = queuedFollowUpsRef.current.find(
+      (followUp) => followUp.id === id && followUp.threadId === threadId,
+    );
+    setQueuedFollowUps((current) => {
+      const next = current.filter(
+        (followUp) => followUp.id !== id || followUp.threadId !== threadId,
+      );
+      queuedFollowUpsRef.current = next;
+      return next;
+    });
+    setFollowUpErrors((current) => withoutRecordKey(current, id));
+    setSendingFollowUpIds((current) => current.filter((followUpId) => followUpId !== id));
+    return removed;
+  }, []);
+
+  const clearThreadFollowUps = useCallback(
+    (threadId: ThreadId) => {
+      const removed = queuedFollowUpsRef.current.filter(
+        (followUp) => followUp.threadId === threadId,
+      );
+      for (const item of removed) revokeFollowUpPreviews(item);
+      setQueuedFollowUps((current) => {
+        const next = current.filter((followUp) => followUp.threadId !== threadId);
+        queuedFollowUpsRef.current = next;
+        return next;
+      });
+      setFollowUpErrors((current) => {
+        let next = current;
+        for (const item of removed) next = withoutRecordKey(next, item.id);
+        return next;
+      });
+      setSendingFollowUpIds((current) =>
+        current.filter((id) => !removed.some((item) => item.id === id)),
+      );
+    },
+    [revokeFollowUpPreviews],
+  );
+
+  const value = useMemo(
+    () => ({
+      clearThreadFollowUps,
+      enqueueFollowUp,
+      followUpErrors,
+      markFollowUpIdle,
+      markFollowUpSending,
+      queuedFollowUps,
+      removeFollowUp,
+      sendingFollowUpIds,
+      setFollowUpError,
+      takeFollowUpForEdit,
+    }),
+    [
+      clearThreadFollowUps,
+      enqueueFollowUp,
+      followUpErrors,
+      markFollowUpIdle,
+      markFollowUpSending,
+      queuedFollowUps,
+      removeFollowUp,
+      sendingFollowUpIds,
+      setFollowUpError,
+      takeFollowUpForEdit,
+    ],
+  );
+
+  return (
+    <AgentComposerQueueContext.Provider value={value}>
+      {children}
+    </AgentComposerQueueContext.Provider>
+  );
+}
+
+export function useAgentComposerQueueStore(): AgentComposerQueueStore {
+  const context = useContext(AgentComposerQueueContext);
+  if (!context) throw new Error("Agent hooks must be used inside AgentProvider");
+  return context;
+}
+
+function withoutRecordKey<T>(record: Record<string, T>, key: string): Record<string, T> {
+  if (!(key in record)) return record;
+  const next = { ...record };
+  delete next[key];
+  return next;
+}

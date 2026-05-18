@@ -215,7 +215,47 @@ test("queues attachment follow-ups, restores them for edit, and sends payloads",
   await message.fill("remove queued image");
   await message.press("Enter");
   await page.getByRole("button", { name: "Remove" }).click({ timeout: FAST_EXPECT_TIMEOUT });
-  await expect(page.getByLabel("Queued follow-ups")).toHaveCount(0, {
+  await expect(queuedFollowUps(page)).toHaveCount(0, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+});
+
+test("keeps queued follow-ups across the no-thread route", async ({ page }, testInfo) => {
+  testInfo.setTimeout(FLOW_TEST_TIMEOUT);
+  await openRealLocalApp(page, { width: 1280, height: 900 }, "/threads/thread-stored");
+  await resumeStoredThread(page);
+  const message = await readyMessageInput(page);
+  await message.fill("slow smoke");
+  await sendButton(page).click({ force: true, timeout: FAST_EXPECT_TIMEOUT });
+  await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
+
+  await message.fill("queued across no thread");
+  await message.press("Enter");
+  await expect(queuedFollowUps(page)).toContainText(
+    "queued across no thread",
+    { timeout: FAST_EXPECT_TIMEOUT },
+  );
+  await page.evaluate(() => {
+    window.history.pushState(null, "", "/");
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  await expect(page).toHaveURL(/\/$/, { timeout: FAST_EXPECT_TIMEOUT });
+  await expect(page.getByText("Start a Codex thread")).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+
+  await page.getByRole("button", { name: /Stored real smoke/ }).click({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(page).toHaveURL(/\/threads\/thread-stored$/, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(queuedFollowUps(page)).toContainText(
+    "queued across no thread",
+    { timeout: FAST_EXPECT_TIMEOUT },
+  );
+  await sendNowButton(page).click({ timeout: FAST_EXPECT_TIMEOUT });
+  await expect(page.getByText("Steered: queued across no thread")).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
 });
@@ -245,14 +285,14 @@ test("anchors composer to the viewport and uses queued follow-ups, steer, and in
   await expect(message).toBeEnabled({ timeout: FAST_EXPECT_TIMEOUT });
   await message.fill("while running");
   await message.press("Enter");
-  await expect(page.getByLabel("Queued follow-ups")).toContainText("while running", {
+  await expect(queuedFollowUps(page)).toContainText("while running", {
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await sendNowButton(page).click({ timeout: FAST_EXPECT_TIMEOUT });
   await expect(page.getByText("Steered: while running")).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
-  await expect(page.getByLabel("Queued follow-ups")).toHaveCount(0, {
+  await expect(queuedFollowUps(page)).toHaveCount(0, {
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await expect(message).toHaveValue("", { timeout: FAST_EXPECT_TIMEOUT });
@@ -262,20 +302,20 @@ test("anchors composer to the viewport and uses queued follow-ups, steer, and in
   await expect(page.getByText("Steered: cmd steer")).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
-  await expect(page.getByLabel("Queued follow-ups")).toHaveCount(0, {
+  await expect(queuedFollowUps(page)).toHaveCount(0, {
     timeout: FAST_EXPECT_TIMEOUT,
   });
 
   await message.fill("keep queued after stop");
   await message.press("Enter");
-  await expect(page.getByLabel("Queued follow-ups")).toContainText("keep queued after stop", {
+  await expect(queuedFollowUps(page)).toContainText("keep queued after stop", {
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await stopButton(page).click({ timeout: FAST_EXPECT_TIMEOUT });
   await expect(page.locator(".aui-status-pill")).not.toContainText("Running", {
     timeout: FAST_EXPECT_TIMEOUT,
   });
-  await expect(page.getByLabel("Queued follow-ups")).toContainText("keep queued after stop", {
+  await expect(queuedFollowUps(page)).toContainText("keep queued after stop", {
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await assertComposerAnchored(page);
@@ -284,7 +324,7 @@ test("anchors composer to the viewport and uses queued follow-ups, steer, and in
   await assertComposerAnchored(page);
 });
 
-test("keeps a compact non-scrolling follow-up queue above the composer", async ({
+test("keeps a compact non-scrolling follow-up queue with actionable older items", async ({
   page,
 }, testInfo) => {
   testInfo.setTimeout(FLOW_TEST_TIMEOUT);
@@ -298,25 +338,51 @@ test("keeps a compact non-scrolling follow-up queue above the composer", async (
   for (let index = 1; index <= 5; index += 1) {
     await message.fill(`queued ${index}`);
     await message.press("Enter");
-    await expect(page.getByLabel("Queued follow-ups")).toContainText(`queued ${index}`, {
+    await expect(queuedFollowUps(page)).toContainText(`queued ${index}`, {
       timeout: FAST_EXPECT_TIMEOUT,
     });
   }
 
-  await expect(page.getByLabel("Queued follow-ups")).toContainText(
+  await expect(queuedFollowUps(page)).toContainText(
     "2 earlier follow-ups kept for this thread",
     { timeout: FAST_EXPECT_TIMEOUT },
   );
-  await expect(page.getByLabel("Queued follow-ups")).toContainText("queued 5", {
+  await expect(queuedFollowUps(page)).toContainText("queued 5", {
     timeout: FAST_EXPECT_TIMEOUT,
   });
-  await expect(page.getByText("queued 1")).toHaveCount(0, {
+  await expect(page.getByRole("button", { name: "Send now queued 1" })).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await page.getByRole("button", { name: "Send now queued 1" }).click({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(page.getByText("Steered: queued 1")).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await page.getByRole("button", { name: "Edit queued 2" }).click({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(message).toHaveValue("queued 2", { timeout: FAST_EXPECT_TIMEOUT });
+  await message.fill("");
+  if (!(await stopButton(page).isVisible().catch(() => false))) {
+    await message.fill("slow smoke");
+    await sendButton(page).click({ force: true, timeout: FAST_EXPECT_TIMEOUT });
+    await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
+  }
+  for (const label of ["queued 6", "queued 7"]) {
+    await message.fill(label);
+    await message.press("Enter");
+  }
+  await page.getByRole("button", { name: "Remove queued 3" }).click({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(queuedFollowUps(page)).not.toContainText("queued 3", {
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await assertComposerAnchored(page);
   await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
 
-  await page.getByLabel("Queued follow-ups").hover({ timeout: FAST_EXPECT_TIMEOUT });
+  await queuedFollowUps(page).hover({ timeout: FAST_EXPECT_TIMEOUT });
   await page.mouse.wheel(0, 480);
   await assertNoHorizontalOverflow(page);
   const queueMetrics = await page.locator(".aui-follow-up-queue").evaluate((element) => ({
@@ -325,9 +391,21 @@ test("keeps a compact non-scrolling follow-up queue above the composer", async (
   }));
   expect(queueMetrics).toEqual({ overflowY: "visible", ulOverflowY: "visible" });
 
+  if (!(await stopButton(page).isVisible().catch(() => false))) {
+    await message.fill("slow smoke");
+    await sendButton(page).click({ force: true, timeout: FAST_EXPECT_TIMEOUT });
+    await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
+  }
   await page.setViewportSize({ width: 390, height: 900 });
   await assertComposerAnchored(page);
   await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
+  await queuedFollowUps(page)
+    .locator("li", { hasText: "queued 4" })
+    .getByRole("button", { name: "Remove" })
+    .click({ timeout: FAST_EXPECT_TIMEOUT });
+  await expect(queuedFollowUps(page)).not.toContainText("queued 4", {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
   await assertNoHorizontalOverflow(page);
 });
 
@@ -422,6 +500,10 @@ function sendButton(page: Page) {
 
 function sendNowButton(page: Page) {
   return page.getByRole("button", { name: "Send now" });
+}
+
+function queuedFollowUps(page: Page) {
+  return page.getByRole("region", { name: "Queued follow-ups" });
 }
 
 function stopButton(page: Page) {

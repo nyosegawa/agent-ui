@@ -95,12 +95,19 @@ function ActiveThreadHarness(props: React.ComponentProps<typeof AgentChat>) {
       <button type="button" onClick={() => setActiveThread("thread-b")}>
         Show thread B
       </button>
+      <button type="button" onClick={() => setActiveThread(undefined)}>
+        Show no thread
+      </button>
       <span data-testid="active-thread">{activeThreadId}</span>
-      <AgentThreadView
-        onRequestAppMention={props.onRequestAppMention}
-        onRequestPluginMention={props.onRequestPluginMention}
-        resolveLocalAttachment={props.resolveLocalAttachment}
-      />
+      {activeThreadId ? (
+        <AgentThreadView
+          onRequestAppMention={props.onRequestAppMention}
+          onRequestPluginMention={props.onRequestPluginMention}
+          resolveLocalAttachment={props.resolveLocalAttachment}
+        />
+      ) : (
+        <div>No active thread</div>
+      )}
     </>
   );
 }
@@ -1903,6 +1910,48 @@ describe("AgentChat", () => {
     ).toBe(false);
   });
 
+  it("keeps queued follow-ups when the thread view unmounts for a no-thread route", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/steer") return { turnId: "turn-running" };
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={twoRunningThreadsState()} transport={transport}>
+        <ActiveThreadHarness />
+      </AgentProvider>,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: "Message" }), "survives unmount");
+    await user.keyboard("{Enter}");
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "survives unmount",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Show no thread" }));
+    expect(screen.getByText("No active thread")).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: "Message" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Show thread A" }));
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "survives unmount",
+    );
+    await user.click(screen.getByRole("button", { name: "Send now" }));
+
+    await waitFor(() =>
+      expect(transport.requests.at(-1)).toMatchObject({
+        method: "turn/steer",
+        params: {
+          expectedTurnId: "turn-running",
+          input: [{ text: "survives unmount", type: "text" }],
+          threadId: "thread-running",
+        },
+      }),
+    );
+  });
+
   it("keeps a queued follow-up when the active turn changes before Send now", async () => {
     const user = userEvent.setup();
     function TurnChanger() {
@@ -2018,6 +2067,44 @@ describe("AgentChat", () => {
     await user.keyboard("{Enter}");
     await user.click(screen.getByRole("button", { name: "Remove" }));
     expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
+  });
+
+  it("keeps older compact queued follow-ups actionable", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/steer") return { turnId: "turn-running" };
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    for (let index = 1; index <= 6; index += 1) {
+      await user.type(message, `queued ${index}`);
+      await user.keyboard("{Enter}");
+    }
+
+    await user.click(screen.getByRole("button", { name: "Send now queued 1" }));
+    await waitFor(() =>
+      expect(transport.requests.at(-1)).toMatchObject({
+        method: "turn/steer",
+        params: {
+          expectedTurnId: "turn-running",
+          input: [{ text: "queued 1", type: "text" }],
+          threadId: "thread-running",
+        },
+      }),
+    );
+    await user.click(screen.getByRole("button", { name: "Edit queued 2" }));
+    expect(message).toHaveValue("queued 2");
+    await user.clear(message);
+    await user.click(screen.getByRole("button", { name: "Remove queued 3" }));
+    expect(screen.getByLabelText("Queued follow-ups")).not.toHaveTextContent("queued 3");
   });
 
   it("restores queued image attachments on Edit and sends them with Cmd+Enter", async () => {
@@ -2151,6 +2238,79 @@ describe("AgentChat", () => {
 
     expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
     expect(revoke).toHaveBeenCalled();
+  });
+
+  it("keeps queued preview ownership across thread view unmount and revokes on provider cleanup", async () => {
+    const user = userEvent.setup();
+    const revoke = vi.spyOn(URL, "revokeObjectURL");
+    const { unmount } = render(
+      <AgentProvider initialState={twoRunningThreadsState()} transport={new FakeAgentTransport()}>
+        <ActiveThreadHarness
+          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+        />
+      </AgentProvider>,
+    );
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(fileInput, new File(["png"], "persist-preview.png", { type: "image/png" }));
+    await user.type(screen.getByLabelText("Message"), "preview survives view unmount");
+    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Show no thread" }));
+
+    expect(revoke).not.toHaveBeenCalled();
+    unmount();
+    expect(revoke).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not double revoke queued previews after Remove", async () => {
+    const user = userEvent.setup();
+    const revoke = vi.spyOn(URL, "revokeObjectURL");
+    const { unmount } = render(
+      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+        <AgentChat
+          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(fileInput, new File(["png"], "remove-once.png", { type: "image/png" }));
+    await user.type(screen.getByLabelText("Message"), "remove once");
+    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Remove" }));
+
+    expect(revoke).toHaveBeenCalledTimes(1);
+    unmount();
+    expect(revoke).toHaveBeenCalledTimes(1);
+  });
+
+  it("transfers queued preview ownership to the composer on Edit", async () => {
+    const user = userEvent.setup();
+    const revoke = vi.spyOn(URL, "revokeObjectURL");
+    const { unmount } = render(
+      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+        <AgentChat
+          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(fileInput, new File(["png"], "edit-preview.png", { type: "image/png" }));
+    await user.type(screen.getByLabelText("Message"), "edit preview");
+    await user.keyboard("{Enter}");
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+
+    expect(revoke).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Pending attachments")).toHaveTextContent(
+      "edit-preview.png",
+    );
+    unmount();
+    expect(revoke).toHaveBeenCalledTimes(1);
   });
 
   it("keeps queued follow-ups after Stop", async () => {

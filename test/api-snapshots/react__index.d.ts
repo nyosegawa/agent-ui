@@ -1,6 +1,6 @@
 import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as _nyosegawa_agent_ui_core from '@nyosegawa/agent-ui-core';
-import { AgentEvent, AgentSessionState, AgentTransport, ExecutionModeId, ThreadId, RequestId, AgentApp, AgentModel, ReasoningEffort as ReasoningEffort$1, ThreadState, ThreadTokenUsage, PendingServerRequest, AgentItemState, TurnState, AgentThread, AgentItemBlock } from '@nyosegawa/agent-ui-core';
+import { AgentEvent, AgentSessionState, AgentTransport, ThreadId, ExecutionModeId, RequestId, AgentApp, AgentModel, ReasoningEffort as ReasoningEffort$1, ThreadState, ThreadTokenUsage, PendingServerRequest, AgentItemState, TurnState, AgentThread, AgentItemBlock } from '@nyosegawa/agent-ui-core';
 import * as React$1 from 'react';
 import React__default, { PropsWithChildren } from 'react';
 
@@ -577,6 +577,25 @@ declare function skillsConfigWriteParams(params: SkillsConfigWriteParams): Skill
 declare function hooksListParams(params?: HooksListParams): HooksListParams;
 declare function appsListParams(params?: AppsListParams): AppsListParams;
 
+interface QueuedFollowUp {
+    attachments: QueuedFollowUpAttachment[];
+    expectedTurnId?: string;
+    id: string;
+    input: CodexUserInput[];
+    text: string;
+    threadId: ThreadId;
+}
+interface QueuedFollowUpAttachment {
+    extension?: string;
+    id: string;
+    input?: CodexUserInput | CodexUserInput[];
+    kind: "image" | "file" | "app" | "plugin";
+    label: string;
+    previewUrl?: string;
+    sizeLabel?: string;
+    value: string;
+}
+
 interface AgentExecutionMode {
     id: ExecutionModeId;
     label: string;
@@ -662,24 +681,7 @@ declare function useAgentComposer(threadId?: ThreadId): {
     }) => Promise<string | undefined>;
     value: string;
 };
-interface QueuedFollowUp {
-    attachments: QueuedFollowUpAttachment[];
-    expectedTurnId?: string;
-    id: string;
-    input: CodexUserInput[];
-    text: string;
-    threadId: ThreadId;
-}
-interface QueuedFollowUpAttachment {
-    extension?: string;
-    id: string;
-    input?: CodexUserInput | CodexUserInput[];
-    kind: "image" | "file" | "app" | "plugin";
-    label: string;
-    previewUrl?: string;
-    sizeLabel?: string;
-    value: string;
-}
+
 type AgentComposerController = ReturnType<typeof useAgentComposer>;
 declare function useAgentRunSettings(): {
     executionModes: AgentExecutionMode[];

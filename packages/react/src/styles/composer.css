@@ -30,10 +30,13 @@
 
 .aui-follow-up-queue {
   display: grid;
+  gap: 8px;
   min-width: 0;
+  overflow: visible;
 }
 
-.aui-follow-up-queue ul {
+.aui-follow-up-list,
+.aui-follow-up-compact-list {
   display: grid;
   gap: 8px;
   list-style: none;
@@ -42,13 +45,44 @@
   padding: 0;
 }
 
+.aui-follow-up-compact-group { display: grid; gap: 6px; min-width: 0; }
+
 .aui-follow-up-summary {
   color: var(--aui-fg-muted);
   font-size: 12px;
   font-weight: 600;
   line-height: 1.35;
-  margin-bottom: 6px;
   min-width: 0;
+}
+
+.aui-follow-up-compact-row {
+  align-items: center;
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: 8px;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  min-width: 0;
+  padding: 5px 6px 5px 9px;
+}
+
+.aui-follow-up-compact-text {
+  color: var(--aui-fg);
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-follow-up-compact-attachments {
+  color: var(--aui-fg-muted);
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .aui-follow-up-card {
@@ -141,6 +175,8 @@
   justify-content: flex-end;
   min-width: 0;
 }
+
+.aui-follow-up-compact-row .aui-follow-up-actions { flex-wrap: nowrap; }
 
 .aui-follow-up-error {
   background: var(--aui-danger-soft);

@@ -5,6 +5,7 @@ import {
   type AgentSessionState,
   type AgentTransport,
 } from "@nyosegawa/agent-ui-core";
+import { AgentComposerQueueProvider } from "./composer-queue";
 import {
   createContext,
   useCallback,
@@ -71,7 +72,11 @@ export function AgentProvider({ children, initialState, transport }: AgentProvid
   }, [transport]);
 
   const value = useMemo(() => ({ dispatch, state, transport }), [state, transport]);
-  return <AgentContext.Provider value={value}>{children}</AgentContext.Provider>;
+  return (
+    <AgentContext.Provider value={value}>
+      <AgentComposerQueueProvider>{children}</AgentComposerQueueProvider>
+    </AgentContext.Provider>
+  );
 }
 
 function normalizeTransportMessages(message: string): string[] {
