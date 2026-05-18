@@ -40,6 +40,7 @@ The default product experience is transcript-first.
 - Implement the complete requested behavior. Do not leave placeholder logic, temporary compatibility shims, or MVP-only surfaces unless the user explicitly asks for a temporary step.
 - Work in small, reviewable slices. Prefer commits that map to one protocol surface, component boundary, example, or validation gate.
 - Add or update focused tests with the behavior change. A public API, reducer path, protocol normalizer, bridge behavior, or visible UI state is not complete without coverage.
+- When implementing or documenting bounded state retention, verify both the index/list and the backing entity store. If docs use words like "bounded", "retention", or "cannot grow indefinitely", add a test that proves the real backing map/entity data is bounded too.
 - Refactor when implementation complexity hides protocol, state, UI, or bridge behavior. Do not preserve awkward old shapes for compatibility when the active docs call for a cleaner API.
 - Do not perform purely mechanical file splits as a substitute for design. Read the owning files, identify stale code and old concepts, move behavior into intentional modules, and delete unused pieces.
 - Use purpose-based names for fixtures, routes, screenshots, and tests. Do not preserve legacy or source-of-inspiration names once they no longer describe the current product surface.

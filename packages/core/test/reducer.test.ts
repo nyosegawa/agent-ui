@@ -21,7 +21,7 @@ import {
 import type { FixtureStep } from "../src/fixtures";
 
 describe("agentReducer", () => {
-  it("bounds raw diagnostics, command output, file patches, and stale thread snapshots", () => {
+  it("bounds raw diagnostics, command output, file patches, and stale thread snapshot entities", () => {
     let state = createInitialAgentState();
     state = agentReducer(state, {
       status: "running",
@@ -70,6 +70,90 @@ describe("agentReducer", () => {
     }
     expect(state.threadRegistry.coldThreadIds).toHaveLength(
       AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax,
+    );
+    expect(Object.keys(state.threads)).toHaveLength(
+      AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax + 1,
+    );
+    expect(state.threads["thread-retention"]).toBeDefined();
+    expect(state.threads["thread-0"]).toBeUndefined();
+  });
+
+  it("prunes evicted cold, preview, and loaded thread entities while retaining active, live, and pending request threads", () => {
+    let state = createInitialAgentState();
+    state = agentReducer(state, {
+      status: "running",
+      thread: { id: "thread-active" },
+      type: "thread/started",
+    });
+    state = agentReducer(state, {
+      status: "running",
+      thread: { id: "thread-live" },
+      type: "thread/upserted",
+    });
+    state = agentReducer(state, {
+      status: "notLoaded",
+      thread: { id: "thread-pending", raw: { retained: "pending" } },
+      type: "thread/upserted",
+    });
+    state = agentReducer(state, {
+      request: {
+        id: "approval-pending",
+        itemId: "item-pending",
+        kind: "commandApproval",
+        payload: {},
+        threadId: "thread-pending",
+        turnId: "turn-pending",
+      },
+      type: "serverRequest/created",
+    });
+
+    for (let index = 0; index < AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax + 5; index += 1) {
+      state = agentReducer(state, {
+        status: "notLoaded",
+        thread: { id: `thread-cold-${index}`, raw: { index } },
+        type: "thread/upserted",
+      });
+      state = agentReducer(state, {
+        status: "notLoaded",
+        thread: { id: `thread-preview-${index}`, raw: { index } },
+        turns: [{ id: `turn-preview-${index}` }],
+        type: "thread/upserted",
+      });
+      state = agentReducer(state, {
+        status: "loaded",
+        thread: { id: `thread-loaded-${index}`, raw: { index } },
+        type: "thread/upserted",
+      });
+    }
+
+    expect(state.threadRegistry.coldThreadIds).toHaveLength(
+      AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax,
+    );
+    expect(state.threadRegistry.previewThreadIds).toHaveLength(
+      AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax,
+    );
+    expect(state.threadRegistry.loadedThreadIds).toHaveLength(
+      AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax,
+    );
+    expect(state.threads["thread-cold-0"]).toBeUndefined();
+    expect(state.threads["thread-preview-0"]).toBeUndefined();
+    expect(state.threads["thread-loaded-0"]).toBeUndefined();
+    expect(state.threads["thread-active"]).toBeDefined();
+    expect(state.threads["thread-live"]).toBeDefined();
+    expect(state.threads["thread-pending"]).toBeDefined();
+    expect(state.threads["thread-cold-204"]).toBeDefined();
+    expect(state.threads["thread-preview-204"]).toBeDefined();
+    expect(state.threads["thread-loaded-204"]).toBeDefined();
+
+    const orderedThreadIds = selectOrderedThreads(state).map((thread) => thread.thread.id);
+    expect(orderedThreadIds).toContain("thread-active");
+    expect(orderedThreadIds).toContain("thread-live");
+    expect(orderedThreadIds).toContain("thread-pending");
+    expect(orderedThreadIds).not.toContain("thread-cold-0");
+    expect(orderedThreadIds).not.toContain("thread-preview-0");
+    expect(orderedThreadIds).not.toContain("thread-loaded-0");
+    expect(Object.keys(state.threads)).toHaveLength(
+      AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax * 3 + 3,
     );
   });
 

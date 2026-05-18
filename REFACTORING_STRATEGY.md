@@ -16,6 +16,8 @@ live in `AGENTS.md` and the current docs under `docs/`.
   so fixture coverage no longer depends only on normalized `AgentEvent` files.
 - Core state has an explicit retention policy for diagnostics, warnings, raw
   notifications, command output, file patches, and thread registry snapshots.
+  Thread snapshot retention bounds both registry ID arrays and the backing
+  `state.threads` entity map.
 - `AgentTransport.request()` accepts optional `trace`, `AbortSignal`, and
   timeout options. Stdio, WebSocket, and browser bridge paths preserve
   top-level JSON-RPC trace data and clean pending requests on abort, timeout,

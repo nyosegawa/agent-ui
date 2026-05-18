@@ -91,7 +91,10 @@ Reducer tests assert that normalized events keep Codex session data structured:
 - raw App Server JSON-RPC fixture lines from
   `fixtures/app-server/v2-jsonrpc/`, parsed and normalized before reduction
 - bounded retention for diagnostics, warnings, raw notifications, command
-  output, file patches, and thread registry snapshots
+  output, file patches, and thread registry snapshots. Thread snapshot tests
+  must assert both the registry ID arrays and the backing `state.threads`
+  entity map, including eviction of stale cold/preview snapshots and retention
+  of active, live, and pending-request threads.
 
 Important invariant: `item/completed` and `turn/completed` are authoritative.
 Transient streaming state must not override completed App Server state.

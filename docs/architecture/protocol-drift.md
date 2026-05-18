@@ -68,8 +68,13 @@ inspection, docs examples, or host extension points:
   payloads for diagnostics but are bounded by the reducer retention policy.
 - Command output is retained per item with a maximum character window.
 - File patch payloads are retained per turn with a maximum item count.
-- Thread registry snapshot arrays are bounded so hydrated history cannot grow
-  indefinitely during long sessions.
+- Thread registry snapshot retention bounds both the registry ID arrays and the
+  backing `state.threads` entity map, so hydrated history cannot grow
+  indefinitely during long sessions. Cold, preview, and stale loaded snapshots
+  that fall out of the bounded registry windows are evicted from `state.threads`.
+  Active threads, live threads, and threads referenced by pending server
+  requests are retained because they may still be visible, resumable, or needed
+  for approval anchoring.
 
 The policy is implemented in `packages/core/src/retention.ts` and covered by
-reducer tests.
+reducer tests that assert both registry lengths and backing map size.

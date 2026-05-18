@@ -156,7 +156,7 @@ export function agentReducer(
         if (!orderedTurnIds.includes(turn.id)) orderedTurnIds.push(turn.id);
         turns[turn.id] = turns[turn.id] ?? createTurnState(turn, event.thread.id);
       }
-      return {
+      return pruneThreadSnapshots({
         ...state,
         activeThreadId:
           event.type === "thread/started" ? event.thread.id : state.activeThreadId,
@@ -176,7 +176,7 @@ export function agentReducer(
             turns,
           },
         },
-      };
+      });
     }
     case "thread/status/changed": {
       const currentStatus = state.threads[event.threadId]?.status;
@@ -186,7 +186,7 @@ export function agentReducer(
         preservesAgainstPreviewSnapshot(currentStatus)
           ? currentStatus
           : event.status;
-      return updateThread(
+      return pruneThreadSnapshots(updateThread(
         {
           ...state,
           threadRegistry: updateThreadRegistry(
@@ -201,7 +201,7 @@ export function agentReducer(
           registryStatus: classifyThreadRegistryStatus(status),
           status,
         }),
-      );
+      ));
     }
     case "thread/name/updated":
       return updateThread(state, event.threadId, (thread) => ({
@@ -340,11 +340,11 @@ export function agentReducer(
         !request?.threadId ||
         hasPendingThreadRequest(pendingServerRequests, request.threadId)
       ) {
-        return nextState;
+        return pruneThreadSnapshots(nextState);
       }
-      return updateThread(nextState, request.threadId, (thread) =>
+      return pruneThreadSnapshots(updateThread(nextState, request.threadId, (thread) =>
         thread.status === "waitingForInput" ? { ...thread, status: "running" } : thread,
-      );
+      ));
     }
     case "serverRequest/rejected": {
       const requestId = String(event.requestId);
@@ -373,11 +373,11 @@ export function agentReducer(
         !request?.threadId ||
         hasPendingThreadRequest(pendingServerRequests, request.threadId)
       ) {
-        return nextState;
+        return pruneThreadSnapshots(nextState);
       }
-      return updateThread(nextState, request.threadId, (thread) =>
+      return pruneThreadSnapshots(updateThread(nextState, request.threadId, (thread) =>
         thread.status === "waitingForInput" ? { ...thread, status: "running" } : thread,
-      );
+      ));
     }
     case "status/banner/added":
       return {
@@ -498,6 +498,38 @@ function updateThread(
       [threadId]: updater(thread),
     },
   };
+}
+
+function pruneThreadSnapshots(state: AgentSessionState): AgentSessionState {
+  const retainedThreadIds = new Set<ThreadId>([
+    ...state.threadRegistry.coldThreadIds,
+    ...state.threadRegistry.previewThreadIds,
+    ...state.threadRegistry.liveThreadIds,
+    ...state.threadRegistry.loadedThreadIds,
+  ]);
+  if (state.activeThreadId) retainedThreadIds.add(state.activeThreadId);
+  if (state.threadRegistry.activeThreadId) {
+    retainedThreadIds.add(state.threadRegistry.activeThreadId);
+  }
+  for (const request of Object.values(state.pendingServerRequests)) {
+    if (request.threadId) retainedThreadIds.add(request.threadId);
+  }
+
+  let changed = false;
+  const threads: AgentSessionState["threads"] = {};
+  for (const [threadId, thread] of Object.entries(state.threads)) {
+    if (retainedThreadIds.has(threadId)) {
+      threads[threadId] = thread;
+      continue;
+    }
+    if (thread.registryStatus === "live") {
+      threads[threadId] = thread;
+      retainedThreadIds.add(threadId);
+      continue;
+    }
+    changed = true;
+  }
+  return changed ? { ...state, threads } : state;
 }
 
 function hasPendingThreadRequest(
