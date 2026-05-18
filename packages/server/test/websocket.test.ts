@@ -56,6 +56,37 @@ describe("attachAgentUiWebSocketBridge", () => {
     socket.close();
   });
 
+  it("closes oversized browser messages before parsing or forwarding", async () => {
+    const { socket, writes } = await createBridgeBackedSocket({
+      inbound: { maxMessageBytes: 32 },
+    });
+    socket.send(`{"id":1,"method":"model/list","params":{"pad":"${"x".repeat(80)}"}}`);
+    const close = await onceCloseWithInfo(socket);
+    expect(close.code).toBe(1009);
+    expect(writes).toHaveLength(0);
+  });
+
+  it("rate limits abusive browser message bursts", async () => {
+    const { socket } = await createBridgeBackedSocket({
+      inbound: { rateLimitIntervalMs: 10_000, rateLimitMessages: 1 },
+    });
+    socket.send(JSON.stringify({ id: 1, method: "model/list", params: {} }));
+    socket.send(JSON.stringify({ id: 2, method: "model/list", params: {} }));
+    const close = await onceCloseWithInfo(socket);
+    expect(close.code).toBe(1008);
+  });
+
+  it("forwards browser request trace to the stdio transport", async () => {
+    const { socket, stdout, writes } = await createBridgeBackedSocket();
+    socket.send(JSON.stringify({ id: 41, method: "model/list", params: {}, trace: { span: "browser" } }));
+    await waitFor(() => writes.some((line) => JSON.parse(line).method === "model/list"));
+    const forwarded = writes.map((line) => JSON.parse(line)).find((message) => message.method === "model/list");
+    expect(forwarded.trace).toEqual({ span: "browser" });
+    stdout.write(`${JSON.stringify({ id: forwarded.id, result: { data: [] } })}\n`);
+    await expect(nextResponseMessage(socket, 41)).resolves.toEqual({ id: 41, result: { data: [] } });
+    socket.close();
+  });
+
   it("preserves App Server JSON-RPC error code and data for browser requests", async () => {
     const { socket, stdout, writes } = await createBridgeBackedSocket();
 
@@ -994,7 +1025,7 @@ async function createBridgeBackedTransport(
 }
 
 async function createBridgeBackedSocket(
-  options: Pick<AgentUiWebSocketBridgeOptions, "browserMethodPolicy" | "dynamicToolHandler" | "hostEvents" | "serverRequestPolicy"> = {},
+  options: Pick<AgentUiWebSocketBridgeOptions, "browserMethodPolicy" | "dynamicToolHandler" | "hostEvents" | "inbound" | "serverRequestPolicy"> = {},
 ) {
   const stdin = new PassThrough();
   const stdout = new PassThrough();
@@ -1036,6 +1067,15 @@ function onceOpen(socket: WebSocket): Promise<void> {
 function onceClose(socket: WebSocket): Promise<void> {
   return new Promise((resolve, reject) => {
     socket.once("close", () => resolve());
+    socket.once("error", reject);
+  });
+}
+
+function onceCloseWithInfo(socket: WebSocket): Promise<{ code: number; reason: string }> {
+  return new Promise((resolve, reject) => {
+    socket.once("close", (code, reason) =>
+      resolve({ code, reason: reason.toString() }),
+    );
     socket.once("error", reject);
   });
 }

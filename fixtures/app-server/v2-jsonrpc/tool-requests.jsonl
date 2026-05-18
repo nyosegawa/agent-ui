@@ -1,0 +1,3 @@
+{"id":"tool-raw","method":"item/tool/call","params":{"threadId":"thread-basic","turnId":"turn-text","itemId":"item-tool","namespace":"mcp__browser__","tool":"click","arguments":{"selector":"button"}}}
+{"id":"mcp-elicit-raw","method":"mcpServer/elicitation/request","params":{"threadId":"thread-basic","turnId":"turn-text","_meta":{"codex_approval_kind":"mcp_tool_call"},"mode":"form","message":"Allow tool call?"}}
+{"id":"user-input-raw","method":"item/tool/requestUserInput","params":{"threadId":"thread-basic","turnId":"turn-text","itemId":"item-question","prompt":"Which file should I inspect?"}}

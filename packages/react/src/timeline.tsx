@@ -1,6 +1,7 @@
 import type {
   AgentItemBlock,
   AgentItemState,
+  PendingServerRequest,
   ThreadState,
   TurnState,
 } from "@nyosegawa/agent-ui-core";
@@ -33,6 +34,7 @@ import { commandPreview, toolPreview } from "./timeline/previews";
 
 export function AgentMessageList({
   footer,
+  approvalAnchors,
   renderItem,
   scrollKey,
   thread,
@@ -43,6 +45,7 @@ export function AgentMessageList({
    * inside the transcript instead of in a separate scroll pane.
    */
   footer?: React.ReactNode;
+  approvalAnchors?: TranscriptApprovalAnchors;
   renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
   /** Changing this value scrolls the transcript to its end (e.g. a new approval). */
   scrollKey?: string | number;
@@ -73,10 +76,10 @@ export function AgentMessageList({
     } else {
       list.scrollTop = list.scrollHeight;
     }
-    // The pending-approval surface lives at the end of the transcript. When
-    // it is taller than the viewport, scrolling to the very bottom would clip
-    // the primary decision footer above the fold — pull back just enough so
-    // the Approve / Decline actions stay visible without a manual scroll.
+    // Metadata-free approvals live at the transcript tail. When one is taller
+    // than the viewport, scrolling to the very bottom would clip the primary
+    // decision footer above the fold; pull back just enough so the actions
+    // stay visible without a manual scroll.
     const actions = list.querySelector<HTMLElement>(
       ".aui-transcript-tail .aui-approval-actions",
     );
@@ -154,6 +157,7 @@ export function AgentMessageList({
           return turn ? (
             <AgentTurn
               key={turnId}
+              approvals={approvalAnchorsForTurn(turn, approvalAnchors)}
               renderItem={renderItem}
               threadStatus={thread.status}
               turn={turn}
@@ -183,11 +187,13 @@ export function AgentMessageList({
 export const AgentTranscript = AgentMessageList;
 
 export function AgentTurn({
+  approvals,
   renderItem,
   threadStatus,
   turn,
   visibleItemIds,
 }: {
+  approvals?: ApprovalAnchors;
   renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
   threadStatus: ThreadState["status"];
   turn: TurnState;
@@ -196,13 +202,13 @@ export function AgentTurn({
   const timelineItemIds = visibleItemIds ?? transcriptItemIds(turn);
   return (
     <li className="aui-turn">
-      {timelineItemIds.map((id) => {
+      {timelineItemIds.flatMap((id) => {
         const item = turn.items[id];
         const block = turn.blocksByItemId?.[id];
         const text = displayText(item?.text ?? turn.streamingTextByItemId[id]);
         if (item && renderItem) {
           const rendered = renderItem(item, turn);
-          if (rendered !== undefined) return <div key={id}>{rendered}</div>;
+          if (rendered !== undefined) return [<div key={id}>{rendered}</div>, ...anchoredApprovalNodes(approvals?.byItemId[id], approvals)];
         }
         const messageItem = turn.items[id] as AgentItemState | undefined;
         const kind = messageItem?.kind ?? "stream";
@@ -211,7 +217,7 @@ export function AgentTurn({
           threadStatus,
         );
         if (block && block.kind !== "text") {
-          return (
+          return [
             <article className="aui-message aui-block-message" data-kind={kind} key={id}>
               <div className="aui-message-meta">
                 <span>{itemLabel(kind)}</span>
@@ -222,12 +228,13 @@ export function AgentTurn({
                 output={turn.commandOutputByItemId[id]}
                 patch={turn.filePatchByItemId[id]}
               />
-            </article>
-          );
+            </article>,
+            ...anchoredApprovalNodes(approvals?.byItemId[id], approvals),
+          ];
         }
         const synthesizedBlock = blockForTranscriptItem(turn, id, block);
         if (synthesizedBlock.kind !== "text") {
-          return (
+          return [
             <article
               className="aui-message aui-block-message"
               data-kind={synthesizedBlock.kind}
@@ -242,22 +249,65 @@ export function AgentTurn({
                 output={turn.commandOutputByItemId[id]}
                 patch={turn.filePatchByItemId[id]}
               />
-            </article>
-          );
+            </article>,
+            ...anchoredApprovalNodes(approvals?.byItemId[id], approvals),
+          ];
         }
-        if (!text?.trim()) return null;
-        return (
+        if (!text?.trim()) return anchoredApprovalNodes(approvals?.byItemId[id], approvals);
+        return [
           <article className="aui-message" data-kind={kind} key={id}>
             <div className="aui-message-meta">
               <span>{itemLabel(kind)}</span>
               <span>{status}</span>
             </div>
             <MessageBody text={text} />
-          </article>
-        );
+          </article>,
+          ...anchoredApprovalNodes(approvals?.byItemId[id], approvals),
+        ];
       })}
+      {anchoredApprovalNodes(approvals?.afterTurn, approvals)}
     </li>
   );
+}
+
+interface ApprovalAnchors {
+  afterTurn: PendingServerRequest[];
+  byItemId: Record<string, PendingServerRequest[]>;
+  renderApprovalAnchor: (approval: PendingServerRequest) => React.ReactNode;
+}
+
+export interface TranscriptApprovalAnchors {
+  requests: PendingServerRequest[];
+  renderApprovalAnchor: (approval: PendingServerRequest) => React.ReactNode;
+}
+
+function approvalAnchorsForTurn(
+  turn: TurnState,
+  anchors?: TranscriptApprovalAnchors,
+): ApprovalAnchors | undefined {
+  if (!anchors) return undefined;
+  const byItemId: Record<string, PendingServerRequest[]> = {};
+  const afterTurn: PendingServerRequest[] = [];
+  for (const request of anchors.requests) {
+    if (request.turnId !== turn.turn.id) continue;
+    if (request.itemId && turn.itemOrder.includes(request.itemId)) {
+      byItemId[request.itemId] = [...(byItemId[request.itemId] ?? []), request];
+    } else {
+      afterTurn.push(request);
+    }
+  }
+  return { afterTurn, byItemId, renderApprovalAnchor: anchors.renderApprovalAnchor };
+}
+
+function anchoredApprovalNodes(
+  requests: PendingServerRequest[] | undefined,
+  anchors?: ApprovalAnchors,
+): React.ReactNode[] {
+  return (requests ?? []).map((approval) => (
+    <div className="aui-transcript-approval-anchor" key={`approval-${String(approval.id)}`}>
+      {anchors?.renderApprovalAnchor(approval)}
+    </div>
+  ));
 }
 
 export function AgentContentBlockView({

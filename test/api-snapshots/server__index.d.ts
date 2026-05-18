@@ -32,8 +32,14 @@ interface CodexAppServerBridgeOptions {
     cwd?: string;
     env?: NodeJS.ProcessEnv;
     initialize?: CodexInitializeOptions;
+    shutdown?: CodexBridgeShutdownOptions;
     spawn?: (command: string, args: string[], options: CodexSpawnOptions) => CodexChildProcess;
     stderr?: (line: string) => void;
+}
+interface CodexBridgeShutdownOptions {
+    graceMs?: number;
+    killSignal?: NodeJS.Signals | string;
+    terminateSignal?: NodeJS.Signals | string;
 }
 interface CodexSpawnOptions {
     cwd?: string;
@@ -45,6 +51,7 @@ interface CodexChildProcess {
     stdin?: Writable | null;
     stdout?: Readable | null;
     kill(signal?: NodeJS.Signals | string | number, error?: Error): boolean;
+    once?: (event: "exit" | "close", listener: () => void) => unknown;
 }
 interface CodexAppServerBridge {
     close(): Promise<void>;
@@ -118,6 +125,8 @@ type AgentUiNextRpcRouteOptions = CodexAppServerBridgeOptions;
 declare function createAgentUiNextRpcRoute(options?: AgentUiNextRpcRouteOptions): (request: Request) => Promise<Response>;
 
 declare function redactSecrets(input: string): string;
+declare function redactStructuredValue<T>(value: T): T;
+declare function redactTransportEvent(event: AgentTransportEvent): AgentTransportEvent;
 
 interface ServerRequestPolicy$1 {
     commandExecution?: "accept" | "acceptForSession" | "manual";
@@ -166,9 +175,13 @@ declare function responseForServerRequest(event: AgentTransportEvent, policy: Re
 interface AgentUiUploadHandlerOptions {
     directory?: string;
     maxBytes?: number;
+    now?: () => number;
+    sessionId?: string;
+    ttlMs?: number;
 }
 interface AgentUiUploadHandler {
     directory: string;
+    cleanup(): Promise<void>;
     handle(request: IncomingMessage, response: ServerResponse): Promise<void>;
 }
 declare function createAgentUiLocalUploadHandler(options?: AgentUiUploadHandlerOptions): AgentUiUploadHandler;
@@ -187,6 +200,7 @@ interface AgentUiWebSocketBridgeOptions extends CodexAppServerBridgeOptions {
      * with 1013. Set to false only for host-owned experiments.
      */
     maxBufferedBytes?: WebSocketBackpressureOptions["maxBufferedBytes"];
+    inbound?: AgentUiWebSocketInboundLimits;
     /**
      * Policy for server requests that can block a turn. Defaults to manual forwarding
      * so application UIs stay in control unless they explicitly opt in.
@@ -194,6 +208,11 @@ interface AgentUiWebSocketBridgeOptions extends CodexAppServerBridgeOptions {
     serverRequestPolicy?: ServerRequestPolicy;
     path?: string;
     browserMethodPolicy?: BrowserMethodPolicy;
+}
+interface AgentUiWebSocketInboundLimits {
+    maxMessageBytes?: number;
+    rateLimitIntervalMs?: number;
+    rateLimitMessages?: number;
 }
 interface AgentUiWebSocketServerOptions extends AgentUiWebSocketBridgeOptions {
     server: Server;
@@ -208,4 +227,4 @@ type BrowserMethodPolicy = "productized" | "all" | {
 declare function attachAgentUiWebSocketBridge(options: AgentUiWebSocketServerOptions): WebSocketServer;
 declare function handleAgentUiWebSocketConnection(socket: WebSocket, options?: AgentUiWebSocketBridgeOptions, request?: IncomingMessage): Promise<void>;
 
-export { type AgentBrowserDetection, type AgentBrowserRunner, type AgentUiBridgeAdmissionHook, type AgentUiHostEventSink, type AgentUiNextRpcRouteOptions, type AgentUiUploadHandler, type AgentUiUploadHandlerOptions, type AgentUiWebSocketBridgeOptions, type AgentUiWebSocketServerOptions, type BrowserMethodPolicy, type CodexAppServerBridge, type CodexAppServerBridgeOptions, type CodexChildProcess, type CodexSpawnOptions, type DynamicToolCallOutputContentItem, type DynamicToolCallResponse, type DynamicToolHandler$1 as DynamicToolHandler, type DynamicToolHandlerContext, type DynamicToolRequest, type MinimalExpressRequest, type MinimalExpressResponse, type PermissionApprovalContext, type PermissionApprovalDecision, type PermissionApprovalPolicy, type ResolvedServerRequestPolicy, type ServerRequestPolicy$1 as ServerRequestPolicy, attachAgentUiWebSocketBridge, createAgentUiExpressMiddleware, createAgentUiLocalUploadHandler, createAgentUiNextRpcRoute, createCodexAppServerBridge, createDynamicToolHelperThread, defaultDynamicToolHandler, detectAgentBrowser, dynamicToolFailure, emitHostEvent, handleAgentUiWebSocketConnection, handleDynamicToolRequest, maybeResolveHelperThreadRequest, redactSecrets, resolveServerRequestPolicy, responseForServerRequest };
+export { type AgentBrowserDetection, type AgentBrowserRunner, type AgentUiBridgeAdmissionHook, type AgentUiHostEventSink, type AgentUiNextRpcRouteOptions, type AgentUiUploadHandler, type AgentUiUploadHandlerOptions, type AgentUiWebSocketBridgeOptions, type AgentUiWebSocketInboundLimits, type AgentUiWebSocketServerOptions, type BrowserMethodPolicy, type CodexAppServerBridge, type CodexAppServerBridgeOptions, type CodexBridgeShutdownOptions, type CodexChildProcess, type CodexSpawnOptions, type DynamicToolCallOutputContentItem, type DynamicToolCallResponse, type DynamicToolHandler$1 as DynamicToolHandler, type DynamicToolHandlerContext, type DynamicToolRequest, type MinimalExpressRequest, type MinimalExpressResponse, type PermissionApprovalContext, type PermissionApprovalDecision, type PermissionApprovalPolicy, type ResolvedServerRequestPolicy, type ServerRequestPolicy$1 as ServerRequestPolicy, attachAgentUiWebSocketBridge, createAgentUiExpressMiddleware, createAgentUiLocalUploadHandler, createAgentUiNextRpcRoute, createCodexAppServerBridge, createDynamicToolHelperThread, defaultDynamicToolHandler, detectAgentBrowser, dynamicToolFailure, emitHostEvent, handleAgentUiWebSocketConnection, handleDynamicToolRequest, maybeResolveHelperThreadRequest, redactSecrets, redactStructuredValue, redactTransportEvent, resolveServerRequestPolicy, responseForServerRequest };

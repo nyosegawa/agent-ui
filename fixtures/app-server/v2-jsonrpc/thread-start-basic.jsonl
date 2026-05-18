@@ -1,0 +1,1 @@
+{"method":"thread/started","params":{"thread":{"id":"thread-basic","name":null,"path":"/tmp/agent-ui","ephemeral":false,"origin":{"kind":"local"}},"status":"ready","turns":[]}}

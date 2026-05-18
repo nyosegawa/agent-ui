@@ -17,10 +17,11 @@ Supported request families include:
 
 ## Default Placement
 
-The default thread view appends approvals to the end of the transcript scroll
-area. The approval reads as the last pending decision in the conversation,
-keeps command/file context near the assistant output, and avoids creating a
-second competing scroll pane.
+The default thread view anchors approvals inside the transcript. When upstream
+metadata includes `itemId` or `turnId`, the approval renders directly after the
+matching item or turn. Requests without source metadata fall back to the
+transcript tail. Both paths keep command/file context near the assistant output
+and avoid creating a second competing scroll pane.
 
 ## Decision Surface
 

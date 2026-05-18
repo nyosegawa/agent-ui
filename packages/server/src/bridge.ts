@@ -10,8 +10,15 @@ export interface CodexAppServerBridgeOptions {
   cwd?: string;
   env?: NodeJS.ProcessEnv;
   initialize?: CodexInitializeOptions;
+  shutdown?: CodexBridgeShutdownOptions;
   spawn?: (command: string, args: string[], options: CodexSpawnOptions) => CodexChildProcess;
   stderr?: (line: string) => void;
+}
+
+export interface CodexBridgeShutdownOptions {
+  graceMs?: number;
+  killSignal?: NodeJS.Signals | string;
+  terminateSignal?: NodeJS.Signals | string;
 }
 
 export interface CodexSpawnOptions {
@@ -25,6 +32,7 @@ export interface CodexChildProcess {
   stdin?: Writable | null;
   stdout?: Readable | null;
   kill(signal?: NodeJS.Signals | string | number, error?: Error): boolean;
+  once?: (event: "exit" | "close", listener: () => void) => unknown;
 }
 
 export interface CodexAppServerBridge {
@@ -67,11 +75,52 @@ export function createCodexAppServerBridge(
   return {
     async close() {
       await transport.close();
-      if (!child.killed) child.kill("SIGTERM");
+      await shutdownChild(child, options.shutdown);
     },
     process: child,
     transport,
   };
+}
+
+async function shutdownChild(
+  child: CodexChildProcess,
+  options: CodexBridgeShutdownOptions = {},
+): Promise<void> {
+  if (child.killed) return;
+  const terminateSignal = options.terminateSignal ?? "SIGTERM";
+  const killSignal = options.killSignal ?? "SIGKILL";
+  const graceMs = options.graceMs ?? 2_000;
+  const exited = waitForChildExit(child);
+  child.kill(terminateSignal);
+  const finished = await Promise.race([
+    exited.then(() => true),
+    delay(graceMs).then(() => false),
+  ]);
+  if (!finished && !child.killed) {
+    child.kill(killSignal);
+    await Promise.race([exited, delay(250)]);
+  }
+}
+
+function waitForChildExit(child: CodexChildProcess): Promise<void> {
+  const thenable = child as unknown as PromiseLike<unknown>;
+  if (typeof thenable.then === "function") {
+    return Promise.resolve(thenable).then(
+      () => undefined,
+      () => undefined,
+    );
+  }
+  if (typeof child.once === "function") {
+    return new Promise((resolve) => {
+      child.once?.("exit", resolve);
+      child.once?.("close", resolve);
+    });
+  }
+  return Promise.resolve();
+}
+
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function createRedactedStderr(

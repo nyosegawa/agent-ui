@@ -1,4 +1,4 @@
-import type { AgentTransport, AgentTransportEvent, RequestId } from "@nyosegawa/agent-ui-core";
+import type { AgentRequestOptions, AgentTransport, AgentTransportEvent, RequestId } from "@nyosegawa/agent-ui-core";
 import type { Readable, Writable } from "node:stream";
 import { createInterface } from "node:readline";
 import {
@@ -30,7 +30,7 @@ export function createCodexStdioTransport(options: CodexStdioTransportOptions): 
 
 class CodexStdioTransport implements AgentTransport {
   readonly #options: CodexStdioTransportOptions;
-  readonly #pending = new Map<string, { reject: (error: Error) => void; resolve: (value: unknown) => void }>();
+  readonly #pending = new Map<string, PendingRequest>();
   #closed = false;
   #events: AgentTransportEvent[] = [];
   #waiters: Array<(value: IteratorResult<AgentTransportEvent>) => void> = [];
@@ -71,13 +71,14 @@ class CodexStdioTransport implements AgentTransport {
   async request<TParams = unknown, TResult = unknown>(
     method: string,
     params?: TParams,
+    options?: AgentRequestOptions,
   ): Promise<TResult> {
     const maxRetries = this.#options.backpressure?.maxRetries ?? 2;
     const baseDelayMs = this.#options.backpressure?.baseDelayMs ?? 100;
     let attempt = 0;
     for (;;) {
       try {
-        return await this.#sendRequest<TParams, TResult>(method, params);
+        return await this.#sendRequest<TParams, TResult>(method, params, options);
       } catch (error) {
         if (
           !isBackpressureError(error) ||
@@ -95,15 +96,46 @@ class CodexStdioTransport implements AgentTransport {
   async #sendRequest<TParams = unknown, TResult = unknown>(
     method: string,
     params?: TParams,
+    options?: AgentRequestOptions,
   ): Promise<TResult> {
+    if (options?.signal?.aborted) throw abortError();
     const id = this.#nextId++;
-    const payload = params === undefined ? { id, method } : { id, method, params };
-    this.#write(payload);
     return new Promise<TResult>((resolve, reject) => {
+      let settled = false;
+      const cleanup = () => {
+        this.#pending.delete(String(id));
+        if (timeout) clearTimeout(timeout);
+        options?.signal?.removeEventListener("abort", onAbort);
+      };
+      const fail = (error: Error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(error);
+      };
+      const pass = (value: unknown) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(value as TResult);
+      };
+      const onAbort = () => fail(abortError());
+      const timeout =
+        options?.timeoutMs && options.timeoutMs > 0
+          ? setTimeout(() => fail(timeoutError(options.timeoutMs!)), options.timeoutMs)
+          : undefined;
+      timeout?.unref?.();
+      options?.signal?.addEventListener("abort", onAbort, { once: true });
       this.#pending.set(String(id), {
-        reject,
-        resolve: (value) => resolve(value as TResult),
+        reject: fail,
+        resolve: pass,
       });
+      const payload = requestPayload(id, method, params, options);
+      try {
+        this.#write(payload);
+      } catch (error) {
+        fail(error instanceof Error ? error : new Error(String(error)));
+      }
     });
   }
 
@@ -154,7 +186,6 @@ class CodexStdioTransport implements AgentTransport {
     if (isJsonRpcResponse(message)) {
       const pending = this.#pending.get(String(message.id));
       if (!pending) return;
-      this.#pending.delete(String(message.id));
       if ("error" in message) pending.reject(jsonRpcErrorObject(message.error));
       else pending.resolve(message.result);
       this.#push({ payload: message, requestId: message.id, type: "response" });
@@ -195,6 +226,25 @@ class CodexStdioTransport implements AgentTransport {
   }
 }
 
+interface PendingRequest {
+  reject: (error: Error) => void;
+  resolve: (value: unknown) => void;
+}
+
+function requestPayload(
+  id: RequestId,
+  method: string,
+  params: unknown,
+  options?: AgentRequestOptions,
+): JsonRpcMessage {
+  return {
+    id,
+    method,
+    ...(params === undefined ? {} : { params }),
+    ...(options?.trace === undefined ? {} : { trace: options.trace }),
+  };
+}
+
 export function isBackpressureRetrySafeMethod(method: string): boolean {
   return BACKPRESSURE_RETRY_SAFE_METHODS.has(method);
 }
@@ -223,4 +273,16 @@ function isBackpressureError(error: unknown): boolean {
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function abortError(): Error {
+  const error = new Error("Codex stdio request aborted");
+  error.name = "AbortError";
+  return error;
+}
+
+function timeoutError(timeoutMs: number): Error {
+  const error = new Error(`Codex stdio request timed out after ${timeoutMs}ms`);
+  error.name = "TimeoutError";
+  return error;
 }

@@ -85,6 +85,31 @@ describe("createCodexAppServerBridge", () => {
     expect(event.message).not.toContain("ABCD-EFGH");
     await bridge.close();
   });
+
+  it("waits after SIGTERM and escalates child shutdown after the grace period", async () => {
+    const stdin = new PassThrough();
+    const stdout = new PassThrough();
+    const signals: Array<NodeJS.Signals | string | number | undefined> = [];
+    const fakeProcess: CodexChildProcess = {
+      kill(signal) {
+        signals.push(signal);
+        return true;
+      },
+      once: () => undefined,
+      stderr: new PassThrough(),
+      stdin,
+      stdout,
+    };
+
+    const bridge = createCodexAppServerBridge({
+      shutdown: { graceMs: 1 },
+      spawn: () => fakeProcess,
+    });
+    await bridge.transport.connect();
+    await bridge.close();
+
+    expect(signals).toEqual(["SIGTERM", "SIGKILL"]);
+  });
 });
 
 async function waitFor(predicate: () => boolean): Promise<void> {

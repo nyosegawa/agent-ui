@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { redactSecrets } from "../src/redaction";
+import { redactSecrets, redactTransportEvent } from "../src/redaction";
 
 describe("redactSecrets", () => {
   it("redacts bearer tokens, keys, passwords, secrets, and labeled device codes", () => {
@@ -26,5 +26,28 @@ describe("redactSecrets", () => {
         "{\"userCode\":\"[REDACTED]\",\"accessToken\":\"[REDACTED]\"}",
       ].join(" "),
     );
+  });
+});
+
+describe("structured redaction", () => {
+  it("redacts host/browser event payloads recursively", () => {
+    const redacted = redactTransportEvent({
+      event: {
+        error: {
+          data: {
+            Authorization: "Bearer raw.token",
+            nested: { apiKey: "sk-raw", refreshToken: "refresh-raw" },
+          },
+          message: "failed with Bearer raw.token",
+        },
+        type: "error/added",
+      },
+      type: "event",
+    } as any);
+
+    expect(JSON.stringify(redacted)).not.toContain("raw.token");
+    expect(JSON.stringify(redacted)).not.toContain("sk-raw");
+    expect(JSON.stringify(redacted)).not.toContain("refresh-raw");
+    expect(JSON.stringify(redacted)).toContain("[REDACTED]");
   });
 });

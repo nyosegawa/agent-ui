@@ -61,6 +61,13 @@ closes the process when the socket closes or the idle timeout expires. Slow
 browser consumers are closed with WebSocket code `1013` when the outbound
 buffer exceeds the configured backpressure limit.
 
+Inbound browser messages are checked before JSON parsing. The default maximum
+message size is 256 KB; oversized input closes the browser socket with code
+`1009`. Each connection also has a default rate limit of 60 messages per
+second; exceeding it closes the socket with code `1008`. Hosts may tune these
+limits through `inbound.maxMessageBytes`, `inbound.rateLimitMessages`, and
+`inbound.rateLimitIntervalMs`.
+
 `admission` runs before the Codex child process is spawned. Use it for
 same-origin, session, or explicit local-token checks on any bridge that is not a
 private loopback-only development endpoint. Browser JSON-RPC requests are
@@ -71,6 +78,15 @@ configuration writes require an explicit host policy. Rejected methods return a
 JSON-RPC error with `code: -32601` and `data.method`. When an allowed App
 Server request fails, the bridge preserves the App Server error `code` and
 `data` in the browser response instead of collapsing it to a message string.
+Browser request `trace` is forwarded as JSON-RPC-lite top-level `trace` to the
+underlying transport.
+
+Bridge shutdown is deterministic. Browser socket close, browser socket error,
+idle timeout, App Server transport EOF, or bridge close first closes the
+transport, which rejects pending requests, then sends `SIGTERM` to the Codex
+child process, waits for the grace period, and escalates to `SIGKILL` if the
+child does not exit. Child stdout and stderr stay bound to the transport
+lifecycle; stderr is redacted before host callbacks or browser events see it.
 
 Running-turn UX should map directly to App Server methods. Additional
 instructions for an active regular turn call `turn/steer` with `threadId`,
@@ -93,10 +109,16 @@ paths. The library therefore requires a host resolver for attachments.
 
 `createAgentUiLocalUploadHandler()` is the local development helper:
 
-- accepts a request body containing the file bytes
-- uses `x-agent-ui-filename` for a sanitized filename suffix
-- writes into a host temp directory, defaulting to the OS temp dir
+- accepts `POST` with `application/octet-stream`, `image/*`, or `text/plain`
+- uses `x-agent-ui-filename` for a sanitized filename suffix and rejects
+  malformed percent-encoding or control characters
+- writes into a per-session temp directory under a host temp root, defaulting
+  to the OS temp dir
 - enforces a 16 MB default limit
+- preserves arbitrary sanitized extensions; images and non-images differ only
+  in the host's resolver return value
+- exposes `cleanup()` for explicit per-session cleanup and runs best-effort TTL
+  cleanup for expired session directories before writes
 - returns JSON `{ "path": "/absolute/local/path" }`
 
 The React composer calls the host's `resolveLocalAttachment(file)` resolver.
@@ -183,6 +205,8 @@ Use `examples/next-rpc-route` for one-shot RPC. Use
 - Keep unauthenticated bridges bound to loopback.
 - Add explicit auth before exposing non-loopback WebSocket endpoints.
 - Do not put bearer tokens in query strings.
-- Redact stderr and structured logs before browser forwarding.
+- Redact stderr, structured host events, and browser-forwarded transport
+  envelopes before forwarding. The redaction policy covers bearer strings, API
+  keys, token fields, passwords, secrets, and device/user codes.
 - Use one process/session/workspace boundary per user for multi-user hosts.
 - Keep API keys server-side only.

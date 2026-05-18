@@ -18,7 +18,15 @@ The integration is protocol-based. Agent UI does not rely on a JavaScript SDK AP
 export interface AgentTransport {
   connect(): Promise<void>;
   close(): Promise<void>;
-  request<TParams, TResult>(method: string, params?: TParams): Promise<TResult>;
+  request<TParams, TResult>(
+    method: string,
+    params?: TParams,
+    options?: {
+      signal?: AbortSignal;
+      timeoutMs?: number;
+      trace?: unknown;
+    },
+  ): Promise<TResult>;
   notify(method: string, params?: unknown): void;
   events: AsyncIterable<AgentTransportEvent>;
   respond(requestId: RequestId, result: unknown): Promise<void>;
@@ -40,6 +48,9 @@ The default transport:
 - writes one JSON object per line
 - reads one JSON object per line
 - correlates request id to response promise
+- preserves optional JSON-RPC-lite top-level `trace` on requests
+- supports per-request abort and timeout, removing the pending entry before the
+  promise rejects so late App Server responses cannot leak request state
 - emits `connection/connected` only after `initialize` resolves when initialize
   metadata is configured; the readiness signal is the initialize response, not
   the fire-and-forget `initialized` notification
@@ -48,6 +59,7 @@ The default transport:
   only, with bounded backoff
 - exposes stderr logs separately
 - fails fast on process exit
+- rejects pending requests on close
 - supports server requests that require client responses
 
 Implementation status:
@@ -102,6 +114,31 @@ Implementation status:
 - Reconnect is opt-in with bounded exponential backoff. On close, pending requests are rejected so callers do not hang across a broken socket.
 - Like stdio, WebSocket transport reports protocol readiness after initialize
   resolves and preserves JSON-RPC error `code` and `data`.
+- Like stdio, WebSocket requests support optional `trace`, abort signals, and
+  timeouts. Socket close rejects all pending requests.
+
+## Raw JSON-RPC Fixtures
+
+Raw App Server conformance fixtures live in
+`fixtures/app-server/v2-jsonrpc/`. They are JSONL files containing the raw
+JSON-RPC-lite lines emitted by the App Server shape, not normalized
+`AgentEvent` fixtures.
+
+The manifest records upstream commit, source reference, method list, and
+purpose for:
+
+- `thread-start-basic.jsonl`
+- `turn-text-stream.jsonl`
+- `approvals-command-file.jsonl`
+- `tool-requests.jsonl`
+- `patch-streaming.jsonl`
+- `thread-resume-usage.jsonl`
+- `thread-history-state.jsonl`
+- `apps-list-updates.jsonl`
+- `account-login-rate-limit.jsonl`
+
+`bun run test:fixtures` parses those lines with the JSON-RPC parser, normalizes
+them through the Codex adapter, and reduces them into core state.
 
 ## Stable and Experimental API
 

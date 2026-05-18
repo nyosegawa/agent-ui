@@ -67,3 +67,8 @@ inputs with the saved absolute path. Non-image uploads, including unknown
 extensions such as `.3mf`, are saved to the same upload directory and sent as
 explicit `Attached file: /absolute/path` text because App Server has no generic
 local-file user input.
+
+The local upload helper writes into a per-session temp directory, validates
+method/content type/filename headers, enforces size limits, preserves arbitrary
+sanitized extensions, exposes a cleanup hook, and runs TTL cleanup for expired
+upload sessions before new writes.

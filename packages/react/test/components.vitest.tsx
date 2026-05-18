@@ -306,6 +306,78 @@ describe("AgentChat", () => {
     expect(container.querySelectorAll("details")).toHaveLength(0);
   });
 
+  it("anchors approvals after source item metadata and falls back to transcript tail without metadata", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-anchor"] = {
+      orderedTurnIds: ["turn-anchor"],
+      status: "waitingForInput",
+      thread: { id: "thread-anchor", name: "Anchored approvals" },
+      turns: {
+        "turn-anchor": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-command", "item-after"],
+          items: {
+            "item-after": {
+              id: "item-after",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Assistant text after command.",
+              threadId: "thread-anchor",
+              turnId: "turn-anchor",
+            },
+            "item-command": {
+              id: "item-command",
+              kind: "commandExecution",
+              raw: { command: "bun test" },
+              status: "completed",
+              threadId: "thread-anchor",
+              turnId: "turn-anchor",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-anchor", threadId: "thread-anchor" },
+        },
+      },
+    };
+    initialState.pendingServerRequests = {
+      "approval-anchored": {
+        id: "approval-anchored",
+        itemId: "item-command",
+        kind: "commandApproval",
+        payload: { command: "bun test" },
+        threadId: "thread-anchor",
+        turnId: "turn-anchor",
+      },
+      "approval-tail": {
+        id: "approval-tail",
+        kind: "userInput",
+        payload: { prompt: "Tail fallback" },
+        threadId: "thread-anchor",
+      },
+    };
+    initialState.serverRequestQueue = {
+      byId: initialState.pendingServerRequests,
+      order: ["approval-anchored", "approval-tail"],
+    };
+
+    const { container } = render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentThreadView threadId="thread-anchor" />
+      </AgentProvider>,
+    );
+
+    const command = container.querySelector('[data-kind="commandExecution"]');
+    const anchored = screen.getByRole("button", {
+      name: "Approve command request approval-anchored",
+    }).closest(".aui-transcript-approval-anchor");
+    expect(command?.nextElementSibling).toBe(anchored);
+    expect(screen.getByText("Tail fallback")).toBeInTheDocument();
+    expect(container.querySelector(".aui-transcript-tail .aui-approval")).toHaveTextContent(
+      "Tail fallback",
+    );
+  });
+
   it("keeps tool cards readable when closed and exposes details when opened", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();
@@ -1880,13 +1952,6 @@ describe("AgentChat", () => {
     expect(screen.getByText("workspace-write")).toBeInTheDocument();
     expect(screen.queryByText(/"approvalPolicy"/)).not.toBeInTheDocument();
 
-    // Only one approval is expanded at a time; the file-change request starts
-    // as a compact picker row and must be opened before it can be resolved.
-    await user.click(
-      screen.getByRole("button", {
-        name: "Review file-change request approval-file",
-      }),
-    );
     await user.click(
       screen.getByRole("button", { name: "Approve file-change request approval-file" }),
     );
@@ -1997,11 +2062,6 @@ describe("AgentChat", () => {
     await user.click(
       await screen.findByRole("button", {
         name: "Approve command request approval-command for session",
-      }),
-    );
-    await user.click(
-      await screen.findByRole("button", {
-        name: "Review file-change request approval-file",
       }),
     );
     await user.click(

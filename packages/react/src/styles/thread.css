@@ -47,8 +47,8 @@
 }
 
 /* Header, optional critical notices, the transcript scroll area, then the
- * composer. Pending approvals render inside the transcript scroll area as a
- * trailing pending-decision item. */
+ * composer. Pending approvals render inside the transcript scroll area, either
+ * anchored after source metadata or at the tail fallback. */
 .aui-thread-surface {
   background: var(--aui-panel);
   display: grid;

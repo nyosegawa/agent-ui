@@ -1,0 +1,2 @@
+{"method":"app/list/updated","params":{"data":[{"id":"gmail","name":"Gmail","uri":"app://gmail","installed":true},{"id":"drive","name":"Drive","uri":"app://drive","installed":false,"needsAuth":true}],"nextCursor":"cursor-1"}}
+{"method":"app/list/updated","params":{"threadId":"thread-basic","data":[{"id":"calendar","name":"Calendar","uri":"app://calendar","installed":true}],"nextCursor":null}}

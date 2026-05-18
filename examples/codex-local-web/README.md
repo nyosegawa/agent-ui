@@ -8,6 +8,9 @@ only scroll container, and the composer stays anchored to the viewport bottom.
 Running-turn composer text uses `turn/steer`; the empty running primary button
 uses `turn/interrupt`. Restored context usage from
 `thread/tokenUsage/updated` appears beside the composer when nonzero.
+Uploads use the local helper's per-session temp directory, validation, size
+limit, TTL cleanup, and explicit cleanup hook. Images become `localImage`
+inputs; non-images become explicit `Attached file: /absolute/path` text.
 
 Detailed docs: [docs/examples/codex-local-web.md](../../docs/examples/codex-local-web.md).
 

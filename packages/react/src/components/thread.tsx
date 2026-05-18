@@ -102,9 +102,9 @@ export function AgentThreadHeader({
 
 /**
  * Renders the thread transcript. When a `threadId` is supplied, pending
- * approvals for that thread are appended to the end of the transcript as a
- * pending-decision item — they are part of the scroll area, not a separate
- * pane stacked above the composer.
+ * approvals with upstream item or turn metadata are anchored immediately after
+ * that transcript context. Metadata-free approvals fall back to the transcript
+ * tail so they stay in the scroll area, not a separate pane above the composer.
  */
 export function AgentThreadTimeline({
   renderApproval,
@@ -119,11 +119,28 @@ export function AgentThreadTimeline({
 }) {
   const approvalThreadId = threadId ?? thread.thread.id;
   const { approvals } = useAgentApprovals(approvalThreadId);
+  const anchoredApprovals = approvals.filter((approval) => approval.itemId || approval.turnId);
+  const tailApprovals = approvals.filter((approval) => !approval.itemId && !approval.turnId);
   return (
     <AgentMessageList
+      approvalAnchors={
+        anchoredApprovals.length > 0
+          ? {
+              requests: anchoredApprovals,
+              renderApprovalAnchor: (approval) => (
+                <AgentApprovalQueue
+                  approvals={[approval]}
+                  renderApproval={renderApproval}
+                  threadId={approvalThreadId}
+                />
+              ),
+            }
+          : undefined
+      }
       footer={
-        approvals.length > 0 ? (
+        tailApprovals.length > 0 ? (
           <AgentApprovalQueue
+            approvals={tailApprovals}
             renderApproval={renderApproval}
             threadId={approvalThreadId}
           />

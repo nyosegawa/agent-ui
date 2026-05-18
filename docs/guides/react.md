@@ -38,8 +38,9 @@ Use primitives when the host owns layout:
 </AgentThreadSurface>
 ```
 
-`AgentThreadTimeline` receives `threadId` so pending approvals render as the
-final item in the transcript, not as a separate pane.
+`AgentThreadTimeline` receives `threadId` so pending approvals render inside
+the transcript, anchored after source metadata when available and at the
+transcript tail otherwise, not as a separate pane.
 
 ## Fixed Thread
 

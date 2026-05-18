@@ -85,8 +85,10 @@ The browser transport expects a host-owned WebSocket endpoint. Use
 - User and assistant messages stay in transcript order.
 - Tool, command, output, and file-change items render inline with the
   surrounding conversation.
-- Pending approvals render as the final transcript item, not as a detached
-  pane, and stay pending until App Server sends `serverRequest/resolved`.
+- Pending approvals render inside the transcript, anchored after source
+  item/turn metadata when present and at the transcript tail only when source
+  metadata is absent. They stay pending until App Server sends
+  `serverRequest/resolved`.
 - Usage, diagnostics, skills, apps, and status are composable primitives, not
   mandatory side rails.
 - Attachments are host-resolved. Images use `localImage` paths; arbitrary

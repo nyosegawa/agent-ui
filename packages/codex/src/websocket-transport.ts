@@ -1,4 +1,5 @@
 import type {
+  AgentRequestOptions,
   AgentTransport,
   AgentTransportEvent,
   RequestId,
@@ -37,10 +38,7 @@ export function createCodexWebSocketTransport(
 
 class CodexWebSocketTransport implements AgentTransport {
   readonly #options: CodexWebSocketTransportOptions;
-  readonly #pending = new Map<
-    string,
-    { reject: (error: Error) => void; resolve: (value: unknown) => void }
-  >();
+  readonly #pending = new Map<string, PendingRequest>();
   #events: AgentTransportEvent[] = [];
   #waiters: Array<(value: IteratorResult<AgentTransportEvent>) => void> = [];
   #manualClose = false;
@@ -77,14 +75,45 @@ class CodexWebSocketTransport implements AgentTransport {
   async request<TParams = unknown, TResult = unknown>(
     method: string,
     params?: TParams,
+    options?: AgentRequestOptions,
   ): Promise<TResult> {
+    if (options?.signal?.aborted) throw abortError();
     const id = this.#nextId++;
-    this.#send(params === undefined ? { id, method } : { id, method, params });
     return new Promise<TResult>((resolve, reject) => {
+      let settled = false;
+      const cleanup = () => {
+        this.#pending.delete(String(id));
+        if (timeout) clearTimeout(timeout);
+        options?.signal?.removeEventListener("abort", onAbort);
+      };
+      const fail = (error: Error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(error);
+      };
+      const pass = (value: unknown) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(value as TResult);
+      };
+      const onAbort = () => fail(abortError());
+      const timeout =
+        options?.timeoutMs && options.timeoutMs > 0
+          ? setTimeout(() => fail(timeoutError(options.timeoutMs!)), options.timeoutMs)
+          : undefined;
+      timeout?.unref?.();
+      options?.signal?.addEventListener("abort", onAbort, { once: true });
       this.#pending.set(String(id), {
-        reject,
-        resolve: (value) => resolve(value as TResult),
+        reject: fail,
+        resolve: pass,
       });
+      try {
+        this.#send(requestPayload(id, method, params, options));
+      } catch (error) {
+        fail(error instanceof Error ? error : new Error(String(error)));
+      }
     });
   }
 
@@ -195,7 +224,6 @@ class CodexWebSocketTransport implements AgentTransport {
     if (isJsonRpcResponse(message)) {
       const pending = this.#pending.get(String(message.id));
       if (!pending) return;
-      this.#pending.delete(String(message.id));
       if ("error" in message) pending.reject(jsonRpcErrorObject(message.error));
       else pending.resolve(message.result);
       this.#push({ payload: message, requestId: message.id, type: "response" });
@@ -237,6 +265,37 @@ class CodexWebSocketTransport implements AgentTransport {
     if (event) return Promise.resolve({ done: false, value: event });
     return new Promise((resolve) => this.#waiters.push(resolve));
   }
+}
+
+interface PendingRequest {
+  reject: (error: Error) => void;
+  resolve: (value: unknown) => void;
+}
+
+function requestPayload(
+  id: RequestId,
+  method: string,
+  params: unknown,
+  options?: AgentRequestOptions,
+): JsonRpcMessage {
+  return {
+    id,
+    method,
+    ...(params === undefined ? {} : { params }),
+    ...(options?.trace === undefined ? {} : { trace: options.trace }),
+  };
+}
+
+function abortError(): Error {
+  const error = new Error("Codex websocket request aborted");
+  error.name = "AbortError";
+  return error;
+}
+
+function timeoutError(timeoutMs: number): Error {
+  const error = new Error(`Codex websocket request timed out after ${timeoutMs}ms`);
+  error.name = "TimeoutError";
+  return error;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

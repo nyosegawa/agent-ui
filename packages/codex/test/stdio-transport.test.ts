@@ -135,6 +135,35 @@ describe("Codex stdio transport backpressure", () => {
 
     await expect(resultPromise).rejects.toMatchObject({ code: -32001 });
   });
+
+  it("preserves top-level trace and rejects aborted or timed-out requests without leaking pending state", async () => {
+    const stdin = new PassThrough();
+    const stdout = new PassThrough();
+    const transport = createCodexStdioTransport({ stdin, stdout });
+    const written: string[] = [];
+    stdin.on("data", (chunk) => written.push(String(chunk)));
+    await transport.connect();
+
+    const traced = transport.request("thread/read", { threadId: "thread-1" }, { trace: { span: "abc" } });
+    await waitFor(() => written.length === 1);
+    expect(JSON.parse(written[0] ?? "{}")).toMatchObject({
+      method: "thread/read",
+      params: { threadId: "thread-1" },
+      trace: { span: "abc" },
+    });
+    stdout.write(`${JSON.stringify({ id: 0, result: { ok: true } })}\n`);
+    await expect(traced).resolves.toEqual({ ok: true });
+
+    const controller = new AbortController();
+    const aborted = transport.request("thread/read", {}, { signal: controller.signal });
+    controller.abort();
+    await expect(aborted).rejects.toMatchObject({ name: "AbortError" });
+
+    const timedOut = transport.request("thread/read", {}, { timeoutMs: 1 });
+    await expect(timedOut).rejects.toMatchObject({ name: "TimeoutError" });
+    stdout.write(`${JSON.stringify({ id: 2, result: { stale: true } })}\n`);
+    await transport.close();
+  });
 });
 
 async function waitFor(predicate: () => boolean): Promise<void> {

@@ -1,9 +1,8 @@
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useAgentModels, useAgentRunSettings } from "../hooks";
 import {
   IconCheck,
-  IconChevronDown,
   IconClose,
   IconCpu,
   IconFolder,
@@ -12,6 +11,7 @@ import {
   buttonClass,
 } from "../components-internal";
 import { useAgentContext } from "../provider";
+import { AuiMenu } from "./disclosure";
 import { isUserFacingPath } from "./sidebar";
 import { useCompactLayout } from "./shared";
 
@@ -67,19 +67,44 @@ export function AgentRunControls({
     >
       <fieldset className="aui-mode-group">
         <legend>Execution mode</legend>
-        <div className="aui-segmented" role="tablist">
-          {executionModes.map((mode) => (
-            <button
-              aria-pressed={runSettings.executionMode === mode.id}
-              className="aui-segment"
-              key={mode.id}
-              onClick={() => setExecutionMode(mode.id)}
-              title={mode.description}
-              type="button"
-            >
-              {mode.label}
-            </button>
-          ))}
+        <div
+          aria-label="Execution mode"
+          className="aui-segmented"
+          onKeyDown={(event) => {
+            if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+            event.preventDefault();
+            const currentIndex = executionModes.findIndex(
+              (mode) => mode.id === runSettings.executionMode,
+            );
+            const nextIndex =
+              event.key === "Home"
+                ? 0
+                : event.key === "End"
+                  ? executionModes.length - 1
+                  : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + executionModes.length) %
+                    executionModes.length;
+            const next = executionModes[nextIndex];
+            if (next) setExecutionMode(next.id);
+          }}
+          role="radiogroup"
+        >
+          {executionModes.map((mode) => {
+            const selected = runSettings.executionMode === mode.id;
+            return (
+              <button
+                aria-checked={selected}
+                className="aui-segment"
+                key={mode.id}
+                onClick={() => setExecutionMode(mode.id)}
+                role="radio"
+                tabIndex={selected ? 0 : -1}
+                title={mode.description}
+                type="button"
+              >
+                {mode.label}
+              </button>
+            );
+          })}
         </div>
       </fieldset>
       <label className="aui-field">
@@ -167,163 +192,6 @@ export function AgentRunSettingsPanel({
 function formatModelOption(model: { id: string; name?: string }): string {
   if (!model.name || model.name === model.id) return model.id;
   return `${model.name} (${model.id})`;
-}
-
-// --- Compact anchored menu --------------------------------------------------
-// Used by the composer toolbar for mode / model / effort selection. Opens
-// anchored above the trigger on desktop and as a bottom sheet on mobile so the
-// menu always lands inside the viewport. Esc, outside click, and arrow-key
-// navigation are handled here so each consumer stays declarative.
-
-interface AuiMenuProps {
-  ariaLabel: string;
-  children: (close: () => void) => React.ReactNode;
-  compact: boolean;
-  icon?: React.ReactNode;
-  label: string;
-}
-
-interface MenuAnchor {
-  left: number;
-  top: number;
-}
-
-function AuiMenu({ ariaLabel, children, compact, icon, label }: AuiMenuProps) {
-  const [open, setOpen] = useState(false);
-  const [anchor, setAnchor] = useState<MenuAnchor | null>(null);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const panelRef = useRef<HTMLDivElement | null>(null);
-  const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const close = useCallback(() => setOpen(false), []);
-  const toggle = useCallback(() => {
-    setOpen((current) => {
-      if (current) return false;
-      const rect = triggerRef.current?.getBoundingClientRect();
-      // Anchor in viewport space so the panel can use fixed positioning and
-      // escape the composer's clipped scroll ancestors.
-      setAnchor(rect ? { left: rect.left, top: rect.top } : null);
-      return true;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) close();
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.stopPropagation();
-        close();
-        triggerRef.current?.focus();
-      }
-    };
-    const onReflow = () => close();
-    document.addEventListener("mousedown", onPointerDown, true);
-    document.addEventListener("keydown", onKeyDown, true);
-    window.addEventListener("resize", onReflow);
-    window.addEventListener("scroll", onReflow, true);
-    return () => {
-      document.removeEventListener("mousedown", onPointerDown, true);
-      document.removeEventListener("keydown", onKeyDown, true);
-      window.removeEventListener("resize", onReflow);
-      window.removeEventListener("scroll", onReflow, true);
-    };
-  }, [close, open]);
-
-  useEffect(() => {
-    if (!open) return;
-    panelRef.current
-      ?.querySelector<HTMLElement>('[role^="menuitem"]:not([disabled])')
-      ?.focus();
-  }, [open]);
-
-  const onPanelKeyDown: React.KeyboardEventHandler<HTMLDivElement> = (event) => {
-    if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-    event.preventDefault();
-    const items = Array.from(
-      panelRef.current?.querySelectorAll<HTMLElement>(
-        '[role^="menuitem"]:not([disabled])',
-      ) ?? [],
-    );
-    if (items.length === 0) return;
-    const index = items.indexOf(document.activeElement as HTMLElement);
-    const delta = event.key === "ArrowDown" ? 1 : -1;
-    items[(index + delta + items.length) % items.length]?.focus();
-  };
-
-  const panelStyle: React.CSSProperties | undefined =
-    compact || !anchor
-      ? undefined
-      : {
-          bottom: `${Math.max(
-            8,
-            (typeof window === "undefined" ? 0 : window.innerHeight) -
-              anchor.top +
-              8,
-          )}px`,
-          left: `${Math.max(
-            8,
-            Math.min(
-              anchor.left,
-              (typeof window === "undefined" ? 360 : window.innerWidth) - 296,
-            ),
-          )}px`,
-        };
-
-  return (
-    <div className="aui-menu" ref={rootRef}>
-      <button
-        aria-expanded={open}
-        aria-haspopup="menu"
-        aria-label={ariaLabel}
-        className="aui-composer-tool"
-        data-active={open ? "true" : undefined}
-        onClick={toggle}
-        ref={triggerRef}
-        type="button"
-      >
-        {icon ? (
-          <span className="aui-composer-tool-icon" aria-hidden="true">
-            {icon}
-          </span>
-        ) : null}
-        <span className="aui-composer-tool-label">{label}</span>
-        <IconChevronDown size={13} />
-      </button>
-      {open ? (
-        <>
-          <div
-            className="aui-menu-backdrop"
-            data-compact={compact ? "true" : undefined}
-            onClick={close}
-          />
-          <div
-            aria-label={ariaLabel}
-            className="aui-menu-panel"
-            data-compact={compact ? "true" : undefined}
-            onKeyDown={onPanelKeyDown}
-            ref={panelRef}
-            role="menu"
-            style={panelStyle}
-          >
-            <header className="aui-menu-panel-header">
-              <strong>{ariaLabel}</strong>
-              <button
-                aria-label="Close menu"
-                className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
-                onClick={close}
-                type="button"
-              >
-                <IconClose size={14} />
-              </button>
-            </header>
-            <div className="aui-menu-panel-body">{children(close)}</div>
-          </div>
-        </>
-      ) : null}
-    </div>
-  );
 }
 
 function MenuSection({

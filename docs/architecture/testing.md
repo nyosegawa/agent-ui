@@ -88,6 +88,10 @@ Reducer tests assert that normalized events keep Codex session data structured:
   deltas, and idempotent `serverRequest/resolved` notifications
 - stale/hydrated history state from `thread/read`
 - pending server-request queue cleanup on resolve, reject, or disconnect
+- raw App Server JSON-RPC fixture lines from
+  `fixtures/app-server/v2-jsonrpc/`, parsed and normalized before reduction
+- bounded retention for diagnostics, warnings, raw notifications, command
+  output, file patches, and thread registry snapshots
 
 Important invariant: `item/completed` and `turn/completed` are authoritative.
 Transient streaming state must not override completed App Server state.
@@ -102,10 +106,14 @@ Component tests cover:
 - command/tool context retained beside hydrated file changes
 - heavy command output and diff bodies mounted only when opened
 - no nested vertical scroll traps in normal Markdown/code blocks
-- approvals embedded at the end of the transcript, not as a separate pane
+- approvals with `itemId` or `turnId` source metadata anchored after that
+  transcript item or turn, with metadata-free approvals at the transcript tail
+- approvals embedded in the transcript, not as a separate pane
 - approval actions send responses but keep pending state until upstream
   `serverRequest/resolved`
 - composer visibility, attachment chips, resolver errors, and disabled states
+- shared menu/popover/sheet keyboard behavior, focus return, outside click,
+  Escape close, and internal-scroll stability
 - thread history search, infinite scroll sentinel, and fallback Load more
 - usage/status/diagnostic primitives as optional host chrome
 - style selector duplication guards

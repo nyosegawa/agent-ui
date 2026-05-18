@@ -13,6 +13,7 @@ import * as dynamicTools from "./dynamic-tools";
 import type { AgentUiHostEventSink } from "./host-events";
 import { emitHostEvent } from "./host-events";
 import * as requestPolicy from "./server-request-policy";
+import { redactTransportEvent } from "./redaction";
 import {
   createWebSocketBackpressureGuard,
   sendJsonWithBackpressure,
@@ -29,6 +30,7 @@ export interface AgentUiWebSocketBridgeOptions extends CodexAppServerBridgeOptio
    * with 1013. Set to false only for host-owned experiments.
    */
   maxBufferedBytes?: WebSocketBackpressureOptions["maxBufferedBytes"];
+  inbound?: AgentUiWebSocketInboundLimits;
   /**
    * Policy for server requests that can block a turn. Defaults to manual forwarding
    * so application UIs stay in control unless they explicitly opt in.
@@ -36,6 +38,12 @@ export interface AgentUiWebSocketBridgeOptions extends CodexAppServerBridgeOptio
   serverRequestPolicy?: ServerRequestPolicy;
   path?: string;
   browserMethodPolicy?: BrowserMethodPolicy;
+}
+
+export interface AgentUiWebSocketInboundLimits {
+  maxMessageBytes?: number;
+  rateLimitIntervalMs?: number;
+  rateLimitMessages?: number;
 }
 
 export interface AgentUiWebSocketServerOptions extends AgentUiWebSocketBridgeOptions {
@@ -57,6 +65,9 @@ export type BrowserMethodPolicy =
 
 const DEFAULT_PATH = "/agent-ui/ws";
 const DEFAULT_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
+const DEFAULT_MAX_INBOUND_MESSAGE_BYTES = 256 * 1024;
+const DEFAULT_INBOUND_RATE_LIMIT_INTERVAL_MS = 1_000;
+const DEFAULT_INBOUND_RATE_LIMIT_MESSAGES = 60;
 const DEFAULT_BROWSER_REQUEST_METHODS = new Set([
   "initialize",
   "account/read",
@@ -110,6 +121,7 @@ export async function handleAgentUiWebSocketConnection(
     browserMethodPolicy,
     dynamicToolHandler,
     hostEvents,
+    inbound,
     idleTimeoutMs = DEFAULT_IDLE_TIMEOUT_MS,
     maxBufferedBytes,
     serverRequestPolicy,
@@ -123,6 +135,7 @@ export async function handleAgentUiWebSocketConnection(
     }
   }
   const methodPolicy = resolveBrowserMethodPolicy(browserMethodPolicy);
+  const inboundGuard = createInboundGuard(inbound);
   const bridge = createCodexAppServerBridge(bridgeOptions);
   const backpressure = createWebSocketBackpressureGuard({ maxBufferedBytes });
   const effectiveServerRequestPolicy =
@@ -166,7 +179,8 @@ export async function handleAgentUiWebSocketConnection(
     .then(async () => {
       for await (const event of bridge.transport.events) {
         if (event.type === "response") continue;
-        emitHostEvent(hostEvents, event);
+        const safeEvent = redactTransportEvent(event);
+        emitHostEvent(hostEvents, safeEvent);
         resetIdleTimer();
         if (event.type === "request" && event.request) {
           log(
@@ -228,7 +242,7 @@ export async function handleAgentUiWebSocketConnection(
           });
           continue;
         }
-        sendEnvelope(socket, backpressure, event);
+        sendEnvelope(socket, backpressure, safeEvent);
       }
     })
     .catch((error: unknown) => {
@@ -241,6 +255,12 @@ export async function handleAgentUiWebSocketConnection(
 
   socket.on("message", (data) => {
     resetIdleTimer();
+    const inboundDecision = inboundGuard(data);
+    if (inboundDecision.allowed === false) {
+      socket.close(inboundDecision.code, inboundDecision.reason);
+      closeBridge();
+      return;
+    }
     void handleClientMessage(socket, bridge.transport, backpressure, data, methodPolicy).catch((error: unknown) => {
       sendEnvelope(socket, backpressure, {
         error: { message: error instanceof Error ? error.message : String(error) },
@@ -294,7 +314,9 @@ async function handleClientMessage(
       return;
     }
     try {
-      const result = await transport.request(message.method, message.params);
+      const result = await transport.request(message.method, message.params, {
+        ...(message.trace === undefined ? {} : { trace: message.trace }),
+      });
       sendJson(socket, backpressure, { id: message.id, result });
     } catch (error) {
       sendJson(socket, backpressure, {
@@ -329,6 +351,46 @@ async function handleClientMessage(
   }
 }
 
+function rawDataByteLength(data: RawData): number {
+  if (typeof data === "string") return Buffer.byteLength(data);
+  if (Buffer.isBuffer(data)) return data.byteLength;
+  if (Array.isArray(data)) return data.reduce((total, chunk) => total + chunk.byteLength, 0);
+  return data.byteLength;
+}
+
+function createInboundGuard(options: AgentUiWebSocketInboundLimits = {}) {
+  const maxMessageBytes = options.maxMessageBytes ?? DEFAULT_MAX_INBOUND_MESSAGE_BYTES;
+  const rateLimitMessages =
+    options.rateLimitMessages ?? DEFAULT_INBOUND_RATE_LIMIT_MESSAGES;
+  const rateLimitIntervalMs =
+    options.rateLimitIntervalMs ?? DEFAULT_INBOUND_RATE_LIMIT_INTERVAL_MS;
+  let windowStartedAt = Date.now();
+  let count = 0;
+  return (data: RawData): { allowed: true } | { allowed: false; code: number; reason: string } => {
+    if (rawDataByteLength(data) > maxMessageBytes) {
+      return {
+        allowed: false,
+        code: 1009,
+        reason: "Agent UI bridge inbound message exceeds size limit",
+      };
+    }
+    const now = Date.now();
+    if (now - windowStartedAt >= rateLimitIntervalMs) {
+      windowStartedAt = now;
+      count = 0;
+    }
+    count += 1;
+    if (count > rateLimitMessages) {
+      return {
+        allowed: false,
+        code: 1008,
+        reason: "Agent UI bridge inbound rate limit exceeded",
+      };
+    }
+    return { allowed: true };
+  };
+}
+
 interface ResolvedBrowserMethodPolicy {
   notifications: Set<string>;
   requests: Set<string>;
@@ -358,7 +420,7 @@ function sendEnvelope(
   backpressure: ReturnType<typeof createWebSocketBackpressureGuard>,
   event: AgentTransportEvent,
 ): void {
-  sendJson(socket, backpressure, { event, type: "agent-ui/transport-event" });
+  sendJson(socket, backpressure, { event: redactTransportEvent(event), type: "agent-ui/transport-event" });
 }
 
 function sendJson(

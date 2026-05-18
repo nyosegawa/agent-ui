@@ -83,4 +83,5 @@ bun run test:node-compat
 ```
 
 The React package exposes only `styles.css`; fixture and route CSS belongs to
-the examples.
+the examples. Generated stable Codex App Server types are available only from
+the advanced `@nyosegawa/agent-ui-codex/stable-types` subpath.

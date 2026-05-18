@@ -42,6 +42,7 @@ Protocol drift is guarded by:
 - capability metadata equality checks against generated `ClientRequest`,
   `ServerNotification`, and `ServerRequest` files
 - raw readiness/error tests for stdio and WebSocket initialize behavior
+- raw JSON-RPC fixture pack tests under `fixtures/app-server/v2-jsonrpc/`
 - built declaration snapshots for public package API review
 - package export validation
 
@@ -55,3 +56,20 @@ bun run test:api-snapshots
 ```
 
 If the upstream schema adds methods outside the release surface, keep them generated but do not expose them through high-level React APIs unless the current product plan says so.
+
+## Raw Retention Policy
+
+Core state keeps raw payloads only where they support UI rendering, debug
+inspection, docs examples, or host extension points:
+
+- `AgentThread.raw`, `AgentTurn.raw`, `AgentItemState.raw`, and block `raw`
+  preserve source protocol data needed to render current transcript items.
+- Token usage, status banners, warnings, and protocol notifications keep raw
+  payloads for diagnostics but are bounded by the reducer retention policy.
+- Command output is retained per item with a maximum character window.
+- File patch payloads are retained per turn with a maximum item count.
+- Thread registry snapshot arrays are bounded so hydrated history cannot grow
+  indefinitely during long sessions.
+
+The policy is implemented in `packages/core/src/retention.ts` and covered by
+reducer tests.

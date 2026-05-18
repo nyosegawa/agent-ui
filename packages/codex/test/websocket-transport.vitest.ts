@@ -107,6 +107,37 @@ describe("CodexWebSocketTransport", () => {
     });
   });
 
+  it("preserves top-level trace and cleans up aborted, timed-out, and closed pending requests", async () => {
+    const sockets: FakeWebSocket[] = [];
+    const transport = createCodexWebSocketTransport({
+      reconnect: false,
+      url: "ws://localhost/agent-ui",
+      webSocketImpl: fakeWebSocketFactory(sockets) as any,
+    });
+    await transport.connect();
+
+    const traced = transport.request("thread/read", { threadId: "thread-1" }, { trace: { span: "ws" } });
+    const tracedMessage = JSON.parse(sockets[0]!.sent.at(-1) ?? "{}") as { id: number };
+    expect(tracedMessage).toMatchObject({
+      method: "thread/read",
+      trace: { span: "ws" },
+    });
+    sockets[0]!.emitMessage({ id: tracedMessage.id, result: { ok: true } });
+    await expect(traced).resolves.toEqual({ ok: true });
+
+    const controller = new AbortController();
+    const aborted = transport.request("thread/list", {}, { signal: controller.signal });
+    controller.abort();
+    await expect(aborted).rejects.toMatchObject({ name: "AbortError" });
+
+    const timedOut = transport.request("thread/list", {}, { timeoutMs: 1 });
+    await expect(timedOut).rejects.toMatchObject({ name: "TimeoutError" });
+
+    const closed = transport.request("thread/list", {});
+    await transport.close();
+    await expect(closed).rejects.toThrow("closed");
+  });
+
   it("emits raw JSON-RPC server requests as request events", async () => {
     const sockets: FakeWebSocket[] = [];
     const transport = createCodexWebSocketTransport({

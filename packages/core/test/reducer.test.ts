@@ -6,7 +6,10 @@ import interruptedFixture from "../../../fixtures/app-server/interrupted-turn.js
 import planFixture from "../../../fixtures/app-server/plan-update.json" with { type: "json" };
 import rateLimitFixture from "../../../fixtures/app-server/rate-limit-update.json" with { type: "json" };
 import fixture from "../../../fixtures/app-server/text-turn.json" with { type: "json" };
+import { agentReducer } from "../src/reducer";
 import { runEventFixture } from "../src/fixtures";
+import { createInitialAgentState } from "../src/state";
+import { AGENT_RETENTION_POLICY } from "../src/retention";
 import {
   selectOrderedThreads,
   selectOrderedTurns,
@@ -18,6 +21,58 @@ import {
 import type { FixtureStep } from "../src/fixtures";
 
 describe("agentReducer", () => {
+  it("bounds raw diagnostics, command output, file patches, and stale thread snapshots", () => {
+    let state = createInitialAgentState();
+    state = agentReducer(state, {
+      status: "running",
+      thread: { id: "thread-retention" },
+      type: "thread/started",
+    });
+    for (let index = 0; index < AGENT_RETENTION_POLICY.warningsMax + 10; index += 1) {
+      state = agentReducer(state, {
+        type: "warning/added",
+        warning: { id: `warning-${index}`, message: `warning ${index}`, raw: { index } },
+      });
+    }
+    expect(state.diagnostics.warnings).toHaveLength(AGENT_RETENTION_POLICY.warningsMax);
+    expect(state.diagnostics.warnings[0]?.id).toBe("warning-10");
+
+    state = agentReducer(state, {
+      type: "item/commandOutput/delta",
+      threadId: "thread-retention",
+      turnId: "turn-retention",
+      itemId: "cmd-retention",
+      delta: "x".repeat(AGENT_RETENTION_POLICY.commandOutputMaxChars + 10),
+    });
+    expect(
+      state.threads["thread-retention"]?.turns["turn-retention"]?.commandOutputByItemId["cmd-retention"].length,
+    ).toBe(AGENT_RETENTION_POLICY.commandOutputMaxChars);
+
+    for (let index = 0; index < AGENT_RETENTION_POLICY.filePatchesPerTurnMax + 5; index += 1) {
+      state = agentReducer(state, {
+        type: "item/filePatch/updated",
+        threadId: "thread-retention",
+        turnId: "turn-retention",
+        itemId: `patch-${index}`,
+        patch: { index },
+      });
+    }
+    expect(
+      Object.keys(state.threads["thread-retention"]?.turns["turn-retention"]?.filePatchByItemId ?? {}),
+    ).toHaveLength(AGENT_RETENTION_POLICY.filePatchesPerTurnMax);
+
+    for (let index = 0; index < AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax + 5; index += 1) {
+      state = agentReducer(state, {
+        status: "notLoaded",
+        thread: { id: `thread-${index}` },
+        type: "thread/upserted",
+      });
+    }
+    expect(state.threadRegistry.coldThreadIds).toHaveLength(
+      AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax,
+    );
+  });
+
   it("applies streaming text, command output, approvals, and authoritative completion", () => {
     const state = runEventFixture(fixture as FixtureStep[]);
     const turns = selectOrderedTurns(state, "thread-1");

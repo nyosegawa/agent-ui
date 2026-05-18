@@ -116,7 +116,7 @@
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "334px",
-    "height": 413,
+    "height": 339,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,

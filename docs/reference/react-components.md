@@ -110,8 +110,11 @@ quality directly instead of depending on a page-level shell:
   Each trigger shows the current short value; clicking opens a menu of
   `icon + label + selected check` items. The menu opens anchored above the
   trigger on desktop and as a bottom sheet on mobile, and supports
-  `Esc`, outside-click, and arrow-key navigation. Working directory is **not**
-  in this menu — cwd is a thread-start setting (see below).
+  `Esc`, outside-click, focus return, Arrow/Home/End navigation, and internal
+  panel scroll without closing. Working directory is **not** in this menu —
+  cwd is a thread-start setting (see below). `AgentRunControls` uses
+  radiogroup semantics for execution mode selection rather than mixing pressed
+  buttons and tablist roles.
 - **Button system**: `aui-btn` plus `aui-btn-primary | -secondary | -ghost |
   -danger | -subtle` and `aui-btn-sm | -lg | -icon-only`. `Approve` is the
   highest-contrast affordance in the surface, `Decline` is a danger button,
@@ -123,15 +126,17 @@ quality directly instead of depending on a page-level shell:
   refined segmented control with elevated pressed state. None of these read
   as browser defaults.
 - **Approvals**: `AgentApprovalQueue` is a compact pending-decision surface
-  rendered as the final item of the transcript scroll area — not a separate
-  pane stacked between the transcript and the composer, and never an
-  independent scroll pane. The first request is an expanded card (shield
+  rendered in the transcript scroll area — not a separate pane stacked between
+  the transcript and the composer, and never an independent scroll pane.
+  Requests with upstream `itemId` or `turnId` metadata are anchored immediately
+  after that item or turn; only metadata-free requests render at the transcript
+  tail. The first request in each anchor is an expanded card (shield
   icon, humanized title and one-line reason, `LOW / MED / HIGH` risk pill,
   command on a dark code surface, compact inline metadata that wraps instead
   of overflowing, and three explicit decisions on a divider footer — green
   primary `Approve`, secondary `Approve for session`, danger `Decline`). Any
-  remaining requests collapse into compact picker rows; click a row to expand
-  it. The card colour rail switches with risk.
+  remaining requests in that same anchor collapse into compact picker rows;
+  click a row to expand it. The card colour rail switches with risk.
 - **Timeline**: user messages are right-aligned bubbles tinted with the
   primary accent and a tail; assistant text flows as full-width markdown
   without a bubble; reasoning is a muted italic blockquote; plan blocks use
@@ -148,7 +153,9 @@ quality directly instead of depending on a page-level shell:
   as a compact percent indicator beside the composer controls when
   `thread/tokenUsage/updated` has nonzero restored or live usage. Opening it
   shows used/context window, input/output/cached/reasoning breakdown, and a
-  compaction note. Account rate-limit usage remains a separate host rail
+  compaction note. Disclosure surfaces close on Escape and outside click,
+  return focus to their trigger, support Arrow/Home/End navigation where they
+  contain menu items, and stay open during internal scroll. Account rate-limit usage remains a separate host rail
   primitive. Pill-shape summary chips in the rail
   with a pulsing dot for `running`; the details disclosure is a separately
   styled card so the two never read as a duplicate.
@@ -182,7 +189,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
   approvals), and composer.
 - `AgentThreadHeader`: title, cwd/session context, resume, and new-thread actions.
 - `AgentThreadTimeline`: normalized turn and item renderer. Pass `threadId` to
-  append that thread's pending approvals to the end of the transcript.
+  anchor that thread's pending approvals by source metadata, with transcript
+  tail fallback for metadata-free requests.
 - `AgentContentBlockView`: standalone renderer for normalized thinking, plan,
   command, file-change, tool, web search, image, and system-info blocks.
 - `AgentApprovalQueue`: compact pending-decision surface — one expanded
@@ -238,9 +246,10 @@ The side panel is a generic render slot. Host applications own any app runtime,
 panel state, storage, registry, or custom tool workflow they place inside it.
 
 Render a host-owned thread layout without the preset. `AgentThreadTimeline`
-receives `threadId`, so pending approvals are appended to the transcript scroll
-area as the final pending-decision item — there is no separate approval row
-between the transcript and the composer:
+receives `threadId`, so pending approvals with source metadata are anchored
+after the matching source item or turn. Metadata-free approvals fall back to
+the transcript tail; there is no separate approval row between the transcript
+and the composer:
 
 ```tsx
 <AgentThreadSurface>
@@ -267,15 +276,17 @@ types while still preserving protocol-derived detail in adapters and reducers.
 
 `AgentApprovalQueue` reads pending server requests through
 `useAgentServerRequests()` / `useAgentApprovals()` and renders them as a
-compact pending-decision surface. In `AgentThreadView` and `AgentChat` it is
-appended to the end of the transcript scroll area — it is a transcript item,
-not a row stacked between the transcript and the composer, and it has no
-`max-height` or `overflow` of its own (the transcript owns scrolling). One
-expanded card plus compact picker rows for any other pending requests. The
-expanded card shows structured command, cwd, policy, file-change, patch,
-user-input, MCP elicitation, dynamic-tool, permissions, auth-refresh, and
-attestation context before sending the normalized accept / accept-for-session /
-decline response used by the App Server adapter.
+compact pending-decision surface. In `AgentThreadView` and `AgentChat`, pending
+requests with `itemId` or `turnId` metadata render immediately after that
+source context. Requests without source metadata are appended to the end of the
+transcript scroll area. Both placements are transcript items, not rows stacked
+between the transcript and the composer, and have no `max-height` or `overflow`
+of their own (the transcript owns scrolling). One expanded card plus compact
+picker rows for any other pending requests at the same anchor. The expanded
+card shows structured command, cwd, policy, file-change, patch, user-input, MCP
+elicitation, dynamic-tool, permissions, auth-refresh, and attestation context
+before sending the normalized accept / accept-for-session / decline response
+used by the App Server adapter.
 When a pending approval is taller than the transcript viewport, the timeline
 scrolls so the decision footer stays visible on desktop and mobile without a
 manual scroll.

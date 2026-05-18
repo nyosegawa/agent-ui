@@ -432,13 +432,19 @@ interface AgentTransport {
     connect(): Promise<void>;
     notify(method: string, params?: unknown): void;
     reject(requestId: RequestId, error: AgentError): Promise<void>;
-    request<TParams = unknown, TResult = unknown>(method: string, params?: TParams): Promise<TResult>;
+    request<TParams = unknown, TResult = unknown>(method: string, params?: TParams, options?: AgentRequestOptions): Promise<TResult>;
     respond(requestId: RequestId, result: unknown): Promise<void>;
+}
+interface AgentRequestOptions {
+    signal?: AbortSignal;
+    timeoutMs?: number;
+    trace?: unknown;
 }
 
 interface FakeTransportRequest {
     id: RequestId;
     method: string;
+    options?: AgentRequestOptions;
     params?: unknown;
 }
 interface FakeAgentTransportOptions {
@@ -457,7 +463,7 @@ declare class FakeAgentTransport implements AgentTransport {
     get events(): AsyncIterable<AgentTransportEvent>;
     connect(): Promise<void>;
     close(): Promise<void>;
-    request<TParams = unknown, TResult = unknown>(method: string, params?: TParams): Promise<TResult>;
+    request<TParams = unknown, TResult = unknown>(method: string, params?: TParams, options?: AgentRequestOptions): Promise<TResult>;
     notify(method: string, params?: unknown): void;
     respond(requestId: RequestId, result: unknown): Promise<void>;
     reject(requestId: RequestId, error: AgentError): Promise<void>;
@@ -487,6 +493,20 @@ declare function createOpenAIAgentsSdkTransportAdapter(options: OpenAIAgentsAdap
 
 declare function agentReducer(state: AgentSessionState | undefined, event: AgentEvent): AgentSessionState;
 
+declare const AGENT_RETENTION_POLICY: {
+    readonly commandOutputMaxChars: 128000;
+    readonly diagnosticsErrorsMax: 50;
+    readonly filePatchesPerTurnMax: 40;
+    readonly protocolNotificationsMax: 100;
+    readonly statusBannersMax: 20;
+    readonly threadRegistrySnapshotsMax: 200;
+    readonly warningsMax: 50;
+};
+declare function boundedAppend<T>(items: readonly T[], item: T, max: number): T[];
+declare function boundedStringAppend(current: string | undefined, delta: string, maxChars: number): string;
+declare function boundedRecordEntry<T>(record: Record<string, T>, key: string, value: T, maxEntries: number): Record<string, T>;
+declare function boundedUniqueAppend<T>(items: readonly T[], item: T, max: number): T[];
+
 declare function selectActiveThread(state: AgentSessionState): ThreadState | undefined;
 declare function selectThread(state: AgentSessionState, threadId: ThreadId): ThreadState | undefined;
 declare function selectOrderedTurns(state: AgentSessionState, threadId: ThreadId): (TurnState | undefined)[];
@@ -497,4 +517,4 @@ declare function selectUsage(state: AgentSessionState): UsageState;
 declare function selectThreadRegistry(state: AgentSessionState): ThreadRegistryState;
 declare function selectRunSettings(state: AgentSessionState): RunSettingsState;
 
-export { type AccountState, type AgentApp, type AgentError, type AgentEvent, type AgentHook, type AgentItemBlock, type AgentItemBlockKind, type AgentItemState, type AgentModel, type AgentSessionState, type AgentSkill, type AgentThread, type AgentTransport, type AgentTransportEvent, type AgentTurn, type AppsState, type ConnectionState, type DeviceCodeLoginState, type DiagnosticsState, type ExecutionModeId, FakeAgentTransport, type FakeAgentTransportOptions, type FakeTransportRequest, type FixtureStep, type HooksState, type ItemId, type ModelState, type OpenAIAgentsAdapterChunk, type OpenAIAgentsAdapterOptions, type OpenAIAgentsRunContext, type PendingServerRequest, type PendingServerRequestKind, type ProtocolNotificationState, type ReasoningEffort, type RequestId, type RunSettingsState, type ScopedAppsState, type ServerRequestQueueState, type SkillsState, type StatusBannerKind, type StatusBannerState, type ThreadId, type ThreadRegistryState, type ThreadRegistryStatus, type ThreadState, type ThreadStatus, type ThreadTokenUsage, type TokenUsageBreakdown, type TurnDiffState, type TurnId, type TurnPlanState, type TurnState, type UsageState, type WarningState, agentReducer, createInitialAgentState, createOpenAIAgentsSdkTransportAdapter, runEventFixture, selectActiveThread, selectOrderedThreads, selectOrderedTurns, selectPendingApprovals, selectRunSettings, selectServerRequestQueue, selectThread, selectThreadRegistry, selectUsage };
+export { AGENT_RETENTION_POLICY, type AccountState, type AgentApp, type AgentError, type AgentEvent, type AgentHook, type AgentItemBlock, type AgentItemBlockKind, type AgentItemState, type AgentModel, type AgentRequestOptions, type AgentSessionState, type AgentSkill, type AgentThread, type AgentTransport, type AgentTransportEvent, type AgentTurn, type AppsState, type ConnectionState, type DeviceCodeLoginState, type DiagnosticsState, type ExecutionModeId, FakeAgentTransport, type FakeAgentTransportOptions, type FakeTransportRequest, type FixtureStep, type HooksState, type ItemId, type ModelState, type OpenAIAgentsAdapterChunk, type OpenAIAgentsAdapterOptions, type OpenAIAgentsRunContext, type PendingServerRequest, type PendingServerRequestKind, type ProtocolNotificationState, type ReasoningEffort, type RequestId, type RunSettingsState, type ScopedAppsState, type ServerRequestQueueState, type SkillsState, type StatusBannerKind, type StatusBannerState, type ThreadId, type ThreadRegistryState, type ThreadRegistryStatus, type ThreadState, type ThreadStatus, type ThreadTokenUsage, type TokenUsageBreakdown, type TurnDiffState, type TurnId, type TurnPlanState, type TurnState, type UsageState, type WarningState, agentReducer, boundedAppend, boundedRecordEntry, boundedStringAppend, boundedUniqueAppend, createInitialAgentState, createOpenAIAgentsSdkTransportAdapter, runEventFixture, selectActiveThread, selectOrderedThreads, selectOrderedTurns, selectPendingApprovals, selectRunSettings, selectServerRequestQueue, selectThread, selectThreadRegistry, selectUsage };

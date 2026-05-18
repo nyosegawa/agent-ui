@@ -1,0 +1,3 @@
+{"id":"approval-command-raw","method":"item/commandExecution/requestApproval","params":{"threadId":"thread-basic","turnId":"turn-text","itemId":"item-cmd","command":"bun test","cwd":"/tmp/agent-ui","reason":"Run tests before editing"}}
+{"method":"serverRequest/resolved","params":{"requestId":"approval-command-raw"}}
+{"id":"approval-file-raw","method":"item/fileChange/requestApproval","params":{"threadId":"thread-basic","turnId":"turn-text","itemId":"item-file","path":"packages/core/src/reducer.ts","diff":"diff --git a/packages/core/src/reducer.ts b/packages/core/src/reducer.ts"}}

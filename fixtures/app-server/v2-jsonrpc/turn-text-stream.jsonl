@@ -1,0 +1,8 @@
+{"method":"turn/started","params":{"threadId":"thread-basic","turn":{"id":"turn-text","status":"running"}}}
+{"method":"item/started","params":{"threadId":"thread-basic","turnId":"turn-text","item":{"id":"item-user","type":"message","role":"user","content":[{"type":"text","text":"Say hello"}]}}}
+{"method":"item/completed","params":{"threadId":"thread-basic","turnId":"turn-text","item":{"id":"item-user","type":"message","role":"user","content":[{"type":"text","text":"Say hello"}]}}}
+{"method":"item/started","params":{"threadId":"thread-basic","turnId":"turn-text","item":{"id":"item-assistant","type":"message","role":"assistant","content":[]}}}
+{"method":"item/agentMessage/delta","params":{"threadId":"thread-basic","turnId":"turn-text","itemId":"item-assistant","delta":"Hello"}}
+{"method":"item/agentMessage/delta","params":{"threadId":"thread-basic","turnId":"turn-text","itemId":"item-assistant","delta":" there."}}
+{"method":"item/completed","params":{"threadId":"thread-basic","turnId":"turn-text","item":{"id":"item-assistant","type":"message","role":"assistant","content":[{"type":"text","text":"Hello there."}]}}}
+{"method":"turn/completed","params":{"threadId":"thread-basic","turn":{"id":"turn-text","status":"completed"},"items":[]}}

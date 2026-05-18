@@ -1,10 +1,11 @@
 import type { AgentTransportEvent } from "./events";
 import type { AgentError, RequestId } from "./state";
-import type { AgentTransport } from "./transport";
+import type { AgentRequestOptions, AgentTransport } from "./transport";
 
 export interface FakeTransportRequest {
   id: RequestId;
   method: string;
+  options?: AgentRequestOptions;
   params?: unknown;
 }
 
@@ -50,12 +51,13 @@ export class FakeAgentTransport implements AgentTransport {
   async request<TParams = unknown, TResult = unknown>(
     method: string,
     params?: TParams,
+    options?: AgentRequestOptions,
   ): Promise<TResult> {
     if (!this.#connected) {
       throw new Error("FakeAgentTransport is not connected");
     }
     const id = this.#nextId++;
-    const request = { id, method, params };
+    const request = { id, method, options, params };
     this.requests.push(request);
     return (this.#options.onRequest?.(request, this) ?? {}) as TResult;
   }

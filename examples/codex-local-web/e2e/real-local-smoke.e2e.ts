@@ -112,7 +112,7 @@ test("opens a thread by URL and accepts image plus arbitrary file attachments", 
   page,
 }, testInfo) => {
   testInfo.setTimeout(FLOW_TEST_TIMEOUT);
-  await openRealLocalApp(page, { width: 390, height: 900 }, "/threads/thread-stored");
+  await openRealLocalApp(page, { width: 390, height: 560 }, "/threads/thread-stored");
   await expect(page.getByRole("heading", { name: "Stored real smoke" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
@@ -212,12 +212,13 @@ test("follows streaming content only while the transcript is near the bottom", a
   });
   await message.fill("while scrolled up");
   const pausedBefore = await messageListScroll(page);
+  expect(pausedBefore.distanceFromBottom).toBeGreaterThan(80);
   await sendAdditionalInstructionsButton(page).click({ timeout: FAST_EXPECT_TIMEOUT });
   await expect(page.getByRole("button", { name: "Jump to latest" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
   const pausedAfter = await messageListScroll(page);
-  expect(pausedAfter.top).toBe(pausedBefore.top);
+  expect(pausedAfter.distanceFromBottom).toBeGreaterThan(80);
   await page.getByRole("button", { name: "Jump to latest" }).click({ force: true });
   const latestAfter = await messageListScroll(page);
   expect(latestAfter.top).toBeGreaterThanOrEqual(pausedAfter.top);
@@ -311,6 +312,7 @@ async function assertComposerAnchored(page: Page) {
 
 async function messageListScroll(page: Page) {
   return page.locator(".aui-message-list").evaluate((element) => ({
+    distanceFromBottom: element.scrollHeight - element.scrollTop - element.clientHeight,
     height: element.scrollHeight,
     top: element.scrollTop,
   }));

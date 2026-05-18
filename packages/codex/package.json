@@ -29,6 +29,16 @@
         "default": "./dist/request-builders.cjs"
       }
     },
+    "./stable-types": {
+      "import": {
+        "types": "./dist/stable-types.d.ts",
+        "default": "./dist/stable-types.js"
+      },
+      "require": {
+        "types": "./dist/stable-types.d.cts",
+        "default": "./dist/stable-types.cjs"
+      }
+    },
     "./websocket": {
       "import": {
         "types": "./dist/websocket.d.ts",

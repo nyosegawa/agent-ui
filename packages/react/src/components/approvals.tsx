@@ -13,13 +13,16 @@ import { useAgentApprovals } from "../hooks";
 import { deferAction, isRecord, stringField } from "./shared";
 
 export function AgentApprovalQueue({
+  approvals: approvalsProp,
   renderApproval,
   threadId,
 }: {
+  approvals?: PendingServerRequest[];
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
   threadId?: string;
 }) {
-  const { approvals, approve } = useAgentApprovals(threadId);
+  const { approvals: hookApprovals, approve } = useAgentApprovals(threadId);
+  const approvals = approvalsProp ?? hookApprovals;
   const [expandedId, setExpandedId] = useState<string | undefined>();
   if (approvals.length === 0) return null;
   if (renderApproval) {
@@ -37,7 +40,11 @@ export function AgentApprovalQueue({
   return (
     <section
       className="aui-approvals"
-      aria-label="Pending approvals"
+      aria-label={
+        approvals.length === 1
+          ? `Pending approval ${String(expanded.id)}`
+          : "Pending approvals"
+      }
       data-count={approvals.length}
     >
       {approvals.length > 1 ? (

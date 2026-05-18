@@ -4,6 +4,7 @@ export interface JsonRpcRequest {
   id: RequestId;
   method: string;
   params?: unknown;
+  trace?: unknown;
 }
 
 export interface JsonRpcNotification {

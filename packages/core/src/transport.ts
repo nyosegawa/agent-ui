@@ -10,6 +10,13 @@ export interface AgentTransport {
   request<TParams = unknown, TResult = unknown>(
     method: string,
     params?: TParams,
+    options?: AgentRequestOptions,
   ): Promise<TResult>;
   respond(requestId: RequestId, result: unknown): Promise<void>;
+}
+
+export interface AgentRequestOptions {
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  trace?: unknown;
 }

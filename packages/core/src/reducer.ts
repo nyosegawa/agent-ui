@@ -12,6 +12,13 @@ import type {
   TurnState,
 } from "./state";
 import { createInitialAgentState } from "./state";
+import {
+  AGENT_RETENTION_POLICY,
+  boundedAppend,
+  boundedRecordEntry,
+  boundedStringAppend,
+  boundedUniqueAppend,
+} from "./retention";
 
 export function agentReducer(
   state: AgentSessionState = createInitialAgentState(),
@@ -285,13 +292,19 @@ export function agentReducer(
           turn.commandOutputByItemId,
           event.itemId,
           event.delta,
+          AGENT_RETENTION_POLICY.commandOutputMaxChars,
         ),
       }));
     case "item/filePatch/updated":
       return updateTurn(state, event.threadId, event.turnId, (turn) => ({
         ...turn,
         itemOrder: ensureItemOrder(turn.itemOrder, event.itemId),
-        filePatchByItemId: { ...turn.filePatchByItemId, [event.itemId]: event.patch },
+        filePatchByItemId: boundedRecordEntry(
+          turn.filePatchByItemId,
+          event.itemId,
+          event.patch,
+          AGENT_RETENTION_POLICY.filePatchesPerTurnMax,
+        ),
       }));
     case "item/completed":
       return updateTurn(state, event.threadId, event.turnId, (turn) =>
@@ -340,9 +353,18 @@ export function agentReducer(
       delete pendingServerRequests[requestId];
       const nextState = {
         ...state,
-        errors: event.error ? [...state.errors, event.error] : state.errors,
+        errors: event.error
+          ? boundedAppend(state.errors, event.error, AGENT_RETENTION_POLICY.diagnosticsErrorsMax)
+          : state.errors,
         diagnostics: event.error
-          ? { ...state.diagnostics, errors: [...state.diagnostics.errors, event.error] }
+          ? {
+              ...state.diagnostics,
+              errors: boundedAppend(
+                state.diagnostics.errors,
+                event.error,
+                AGENT_RETENTION_POLICY.diagnosticsErrorsMax,
+              ),
+            }
           : state.diagnostics,
         pendingServerRequests,
         serverRequestQueue: dequeueServerRequest(state.serverRequestQueue, requestId),
@@ -362,7 +384,9 @@ export function agentReducer(
         ...state,
         diagnostics: {
           ...state.diagnostics,
-          banners: upsertById(state.diagnostics.banners, event.banner),
+          banners: upsertById(state.diagnostics.banners, event.banner).slice(
+            -AGENT_RETENTION_POLICY.statusBannersMax,
+          ),
         },
       };
     case "status/banner/removed":
@@ -378,19 +402,28 @@ export function agentReducer(
         ...state,
         diagnostics: {
           ...state.diagnostics,
-          protocolNotifications: [
-            ...state.diagnostics.protocolNotifications,
+          protocolNotifications: boundedAppend(
+            state.diagnostics.protocolNotifications,
             event.notification,
-          ],
+            AGENT_RETENTION_POLICY.protocolNotificationsMax,
+          ),
         },
       };
     case "warning/added":
       return {
         ...state,
-        configWarnings: [...state.configWarnings, event.warning],
+        configWarnings: boundedAppend(
+          state.configWarnings,
+          event.warning,
+          AGENT_RETENTION_POLICY.warningsMax,
+        ),
         diagnostics: {
           ...state.diagnostics,
-          warnings: [...state.diagnostics.warnings, event.warning],
+          warnings: boundedAppend(
+            state.diagnostics.warnings,
+            event.warning,
+            AGENT_RETENTION_POLICY.warningsMax,
+          ),
         },
       };
     case "error/added":
@@ -398,9 +431,13 @@ export function agentReducer(
         ...state,
         diagnostics: {
           ...state.diagnostics,
-          errors: [...state.diagnostics.errors, event.error],
+          errors: boundedAppend(
+            state.diagnostics.errors,
+            event.error,
+            AGENT_RETENTION_POLICY.diagnosticsErrorsMax,
+          ),
         },
-        errors: [...state.errors, event.error],
+        errors: boundedAppend(state.errors, event.error, AGENT_RETENTION_POLICY.diagnosticsErrorsMax),
       };
     default:
       return assertNever(event);
@@ -623,8 +660,15 @@ function appendById(
   values: Record<string, string>,
   id: string,
   delta: string,
+  maxChars?: number,
 ): Record<string, string> {
-  return { ...values, [id]: `${values[id] ?? ""}${delta}` };
+  return {
+    ...values,
+    [id]:
+      maxChars === undefined
+        ? `${values[id] ?? ""}${delta}`
+        : boundedStringAppend(values[id], delta, maxChars),
+  };
 }
 
 function ensureItemOrder(itemOrder: string[], itemId: string): string[] {
@@ -731,7 +775,8 @@ function updateThreadRegistry(
   activeThreadId = registry.activeThreadId,
 ): AgentSessionState["threadRegistry"] {
   const remove = (ids: ThreadId[]) => ids.filter((id) => id !== threadId);
-  const add = (ids: ThreadId[]) => (ids.includes(threadId) ? ids : [...ids, threadId]);
+  const add = (ids: ThreadId[]) =>
+    boundedUniqueAppend(ids, threadId, AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax);
   const next = {
     activeThreadId,
     coldThreadIds: remove(registry.coldThreadIds),

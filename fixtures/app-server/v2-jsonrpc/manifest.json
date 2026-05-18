@@ -1,0 +1,52 @@
+{
+  "upstreamCommit": "6a225e4005209f2325ab3c681c7c6beba2907d4d",
+  "source": "/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server/tests/suite/v2 plus app-server outgoing_message.rs shape checks",
+  "format": "raw JSON-RPC-lite JSONL, one App Server line per record",
+  "fixtures": [
+    {
+      "file": "thread-start-basic.jsonl",
+      "methods": ["thread/started"],
+      "purpose": "new persistent thread start notification with nullable name and origin metadata"
+    },
+    {
+      "file": "turn-text-stream.jsonl",
+      "methods": ["turn/started", "item/started", "item/agentMessage/delta", "item/completed", "turn/completed"],
+      "purpose": "basic turn lifecycle and streamed assistant text"
+    },
+    {
+      "file": "approvals-command-file.jsonl",
+      "methods": ["item/commandExecution/requestApproval", "item/fileChange/requestApproval", "serverRequest/resolved"],
+      "purpose": "command and file approvals with thread, turn, and item anchoring metadata"
+    },
+    {
+      "file": "tool-requests.jsonl",
+      "methods": ["item/tool/call", "mcpServer/elicitation/request", "item/tool/requestUserInput"],
+      "purpose": "dynamic tool, MCP elicitation, and user input server requests"
+    },
+    {
+      "file": "patch-streaming.jsonl",
+      "methods": ["item/fileChange/patchUpdated", "item/fileChange/outputDelta", "item/completed"],
+      "purpose": "file patch update and associated output streaming"
+    },
+    {
+      "file": "thread-resume-usage.jsonl",
+      "methods": ["thread/started", "thread/tokenUsage/updated", "thread/status/changed"],
+      "purpose": "resumed thread snapshot and nested token usage"
+    },
+    {
+      "file": "thread-history-state.jsonl",
+      "methods": ["thread/started", "thread/name/updated", "thread/status/changed", "turn/completed"],
+      "purpose": "stored thread title, status, and completed item hydration"
+    },
+    {
+      "file": "apps-list-updates.jsonl",
+      "methods": ["app/list/updated"],
+      "purpose": "global and thread-scoped Codex Apps list updates"
+    },
+    {
+      "file": "account-login-rate-limit.jsonl",
+      "methods": ["account/updated", "account/login/completed", "account/rateLimits/updated", "configWarning"],
+      "purpose": "account, device login completion, rate limits, and warning diagnostics"
+    }
+  ]
+}

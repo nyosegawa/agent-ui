@@ -1,0 +1,4 @@
+{"method":"thread/started","params":{"thread":{"id":"thread-history","name":null,"path":"/tmp/history","ephemeral":false},"status":"notLoaded","turns":[{"id":"turn-history","status":"completed"}]}}
+{"method":"thread/name/updated","params":{"threadId":"thread-history","threadName":"Readable history title"}}
+{"method":"turn/completed","params":{"threadId":"thread-history","turn":{"id":"turn-history","status":"completed"},"items":[{"id":"history-item","type":"message","role":"assistant","content":[{"type":"text","text":"Stored answer"}]}]}}
+{"method":"thread/status/changed","params":{"threadId":"thread-history","status":"loaded"}}

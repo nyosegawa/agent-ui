@@ -79,12 +79,17 @@ Responsibilities:
 
 The package root exports JSON-RPC helpers, protocol capability metadata,
 normalizers, request builders, session helpers, stdio transport, WebSocket
-transport, SDK adapter, auth helpers, and `CodexStable` generated types. Browser
+transport, SDK adapter, and auth helpers. Browser
 code should import the WebSocket transport from
 `@nyosegawa/agent-ui-codex/websocket` so Node stdio code stays out of the browser
 bundle.
 
-Default support is stable App Server API only. Experimental API requires explicit opt-in.
+Default support is stable App Server API only. Experimental API requires
+explicit opt-in. Generated stable App Server types are an advanced public
+surface at `@nyosegawa/agent-ui-codex/stable-types`; they are useful for hosts
+that intentionally track protocol drift, but they are not re-exported from the
+package root. Undocumented deep imports such as
+`@nyosegawa/agent-ui-codex/generated/stable` are blocked by the export map.
 
 The SDK adapter is not the primary integration path and does not add an `@openai/codex` runtime dependency.
 
@@ -253,6 +258,7 @@ Only these subpaths are public today:
 - `@nyosegawa/agent-ui-core`
 - `@nyosegawa/agent-ui-codex`
 - `@nyosegawa/agent-ui-codex/request-builders`
+- `@nyosegawa/agent-ui-codex/stable-types`
 - `@nyosegawa/agent-ui-codex/websocket`
 - `@nyosegawa/agent-ui-react`
 - `@nyosegawa/agent-ui-react/styles.css`
