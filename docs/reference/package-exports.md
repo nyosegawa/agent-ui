@@ -126,7 +126,8 @@ can render outside the transcript surface.
 The default UI keeps the high-traffic surfaces split internally:
 
 - `components.ts`: public barrel; `components/chat.tsx`, `components/thread.tsx`, `components/composer.tsx`, `components/run-settings.tsx`, `components/status.tsx`, `components/sidebar.tsx`, `components/approvals.tsx`, and `components/locale.tsx`: responsibility-scoped React surfaces
-- `i18n.tsx`: built-in UI dictionaries, locale normalization, `AgentI18nProvider`, and host copy override types
+- `i18n.tsx`: compatibility barrel for the i18n public API
+- `i18n/`: locale normalization, interpolation, provider runtime, i18n types, and built-in locale dictionaries
 - `timeline.tsx`: transcript item primitives for messages, reasoning, tool calls, command output, and file-change diffs in App Server item order
 - `transcript-window.ts`: large hydrated transcript item ordering and incremental window policy
 - `diff-viewer.tsx`: read-only diff rendering and patch payload normalization
