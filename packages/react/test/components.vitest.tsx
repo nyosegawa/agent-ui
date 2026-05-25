@@ -3585,8 +3585,10 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-one"));
-    expect(await screen.findByRole("heading", { name: "Thread one" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /Thread one/ })).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/");
+    expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument();
+    expect(screen.getByText("Connect Codex")).toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: /Thread two/ }));
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
@@ -3636,13 +3638,9 @@ describe("AgentChat", () => {
     expect(await screen.findByRole("heading", { name: "Thread one" })).toBeInTheDocument();
   });
 
-  it("keeps manual thread selection when an initial auto activation resolves late", async () => {
+  it("does not auto-select the first history thread from the root route", async () => {
     const user = userEvent.setup();
     window.history.replaceState(null, "", "/");
-    let resolveThreadOne: (response: unknown) => void = () => undefined;
-    const threadOneRead = new Promise((resolve) => {
-      resolveThreadOne = resolve;
-    });
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method === "thread/list") {
@@ -3655,11 +3653,10 @@ describe("AgentChat", () => {
         }
         if (request.method === "thread/read") {
           const id = String((request.params as { threadId?: string }).threadId);
-          if (id === "thread-one") return threadOneRead;
           return {
             thread: {
               id,
-              name: "Thread two",
+              name: id === "thread-two" ? "Thread two" : "Thread one",
               status: { type: "notLoaded" },
               turns: [],
             },
@@ -3675,49 +3672,23 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    await waitFor(() =>
-      expect(
-        transport.requests.some(
-          (request) =>
-            request.method === "thread/read" &&
-            (request.params as { threadId?: string }).threadId === "thread-one",
-        ),
-      ).toBe(true),
-    );
+    expect(await screen.findByRole("button", { name: /Thread one/ })).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/");
+    expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument();
+    expect(transport.requests.map((request) => request.method)).not.toContain("thread/read");
 
     await user.click(await screen.findByRole("button", { name: /Thread two/ }));
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
     expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
-
-    await act(async () => {
-      resolveThreadOne({
-        thread: {
-          id: "thread-one",
-          name: "Thread one",
-          status: { type: "notLoaded" },
-          turns: [],
-        },
-      });
-      await threadOneRead;
-    });
-
-    expect(window.location.pathname).toBe("/threads/thread-two");
-    expect(screen.getByRole("heading", { name: "Thread two" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Thread one" })).not.toBeInTheDocument();
-
-    window.history.back();
-    await waitFor(() => expect(window.location.pathname).toBe("/"));
-    await waitFor(() =>
-      expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument(),
-    );
-    expect(screen.getByText("Connect Codex")).toBeInTheDocument();
-
-    window.history.forward();
-    await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
-    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
+    expect(
+      transport.requests.filter((request) => request.method === "thread/read"),
+    ).toHaveLength(1);
+    expect(
+      transport.requests.find((request) => request.method === "thread/read")?.params,
+    ).toEqual({ includeTurns: true, threadId: "thread-two" });
   });
 
-  it("keeps direct URL thread when sidebar history auto load resolves first", async () => {
+  it("keeps direct URL thread when sidebar history load resolves first", async () => {
     window.history.replaceState(null, "", "/threads/thread-target");
     let resolveThreadTarget: (response: unknown) => void = () => undefined;
     const threadTargetRead = new Promise((resolve) => {

@@ -34,11 +34,11 @@ desktop and mobile, including mobile safe-area padding, so long transcripts,
 approvals, command output, and diffs do not push it below the visible page.
 
 Thread URL routing keeps browser history aligned with the visible thread. The
-initial history auto-selection from `/` replaces the root entry with
-`/threads/<threadId>` so first load does not create a dead back step. Explicit
-user selections, resumed threads, and new threads push history entries, so
-browser back/forward returns to the previous thread or to `/` when the previous
-state was the no-thread view.
+root route `/` remains the no-thread start screen while the sidebar loads
+history without selecting a thread. Direct links to `/threads/<threadId>` read
+that thread on first load. Explicit user selections, resumed threads, and new
+threads push history entries, so browser back/forward returns to the previous
+thread or to `/` when the previous state was the no-thread view.
 
 Running turns follow Codex Desktop-style composer semantics on top of Codex App
 Server methods. Enter stores text in the UI-local follow-up queue; `Send now`

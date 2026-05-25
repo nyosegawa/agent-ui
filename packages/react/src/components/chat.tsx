@@ -49,11 +49,6 @@ export interface AgentThreadUrlRoutingOptions {
   basePath?: string;
 }
 
-interface ThreadUrlRoutingControls {
-  cancelThreadAutoActivation: () => void;
-  markThreadAutoActivation: (threadId: string) => void;
-}
-
 export function AgentChat({
   className,
   diagnostics = false,
@@ -69,16 +64,7 @@ export function AgentChat({
   const compact = useCompactLayout();
   const { thread, threadId, startThread } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
-  const threadUrlRoutingControls = useThreadUrlRouting(threadUrlRouting, activeThreadId);
-  const hasInitialUrlThread =
-    Boolean(threadUrlRouting) &&
-    typeof window !== "undefined" &&
-    Boolean(
-      threadIdFromPath(
-        window.location.pathname,
-        threadUrlRoutingBasePath(threadUrlRouting),
-      ),
-    );
+  useThreadUrlRouting(threadUrlRouting, activeThreadId);
   // Desktop keeps an expand/collapse rail; mobile keeps an off-canvas drawer.
   // Tracking them separately means a viewport change never strands the user
   // with the wrong default.
@@ -105,11 +91,6 @@ export function AgentChat({
             activeThreadId={activeThreadId}
             collapsed={isSidebarCollapsed}
             onCollapsedChange={setSidebarCollapsed}
-            onAutoActivateThread={threadUrlRoutingControls.markThreadAutoActivation}
-            onCancelAutoActivateThread={
-              threadUrlRoutingControls.cancelThreadAutoActivation
-            }
-            disableInitialAutoActivation={hasInitialUrlThread}
             onSelectThread={setActiveThread}
             threads={threads}
           />
@@ -164,31 +145,14 @@ export function AgentChat({
 function useThreadUrlRouting(
   options: AgentChatProps["threadUrlRouting"],
   activeThreadId?: string,
-): ThreadUrlRoutingControls {
+): void {
   const { state } = useAgentContext();
   const { readThread } = useAgentThreadReader();
   const { setActiveThread, threads } = useAgentThreads();
   const lastPathRef = useRef<string | undefined>(undefined);
   const initialUrlThreadReadRef = useRef<string | undefined>(undefined);
-  const initialAutoThreadIdRef = useRef<string | undefined>(undefined);
-  const hasSyncedInitialAutoThreadRef = useRef(false);
   const enabled = Boolean(options);
   const basePath = threadUrlRoutingBasePath(options);
-
-  const markThreadAutoActivation = useCallback(
-    (threadId: string) => {
-      if (!enabled || typeof window === "undefined") return;
-      if (hasSyncedInitialAutoThreadRef.current) return;
-      if (threadIdFromPath(window.location.pathname, basePath)) return;
-      initialAutoThreadIdRef.current = threadId;
-    },
-    [basePath, enabled],
-  );
-
-  const cancelThreadAutoActivation = useCallback(() => {
-    initialAutoThreadIdRef.current = undefined;
-    hasSyncedInitialAutoThreadRef.current = true;
-  }, []);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
@@ -208,16 +172,7 @@ function useThreadUrlRouting(
     const path = threadPath(activeThreadId, basePath);
     if (window.location.pathname === path || lastPathRef.current === path) return;
     lastPathRef.current = path;
-    const method =
-      !hasSyncedInitialAutoThreadRef.current &&
-      initialAutoThreadIdRef.current === activeThreadId
-        ? "replaceState"
-        : "pushState";
-    if (initialAutoThreadIdRef.current === activeThreadId) {
-      hasSyncedInitialAutoThreadRef.current = true;
-      initialAutoThreadIdRef.current = undefined;
-    }
-    window.history[method]({ agentUiThreadId: activeThreadId }, "", path);
+    window.history.pushState({ agentUiThreadId: activeThreadId }, "", path);
   }, [activeThreadId, basePath, enabled]);
 
   useEffect(() => {
@@ -243,7 +198,6 @@ function useThreadUrlRouting(
     return () => window.removeEventListener("popstate", onPopState);
   }, [basePath, enabled, readThread, setActiveThread, threads]);
 
-  return { cancelThreadAutoActivation, markThreadAutoActivation };
 }
 
 function threadPath(threadId: string, basePath: string): string {

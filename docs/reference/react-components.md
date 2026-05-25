@@ -148,12 +148,12 @@ quality directly instead of depending on a page-level shell:
   a primary-tinted callout; command and diff blocks share a single dark
   code surface. `COMPLETED` status labels are suppressed on user/assistant
   bubbles so they stop competing with the content.
-- **Sidebar**: a leading-icon search input that auto-loads the first history
-  page and debounce-filters as you type — there is no standalone Load button;
-  pagination is an IntersectionObserver sentinel with a single subtle
-  `Load more` fallback. Refined thread list items with a coloured status dot.
-  On mobile the sidebar is an off-canvas drawer opened from the `Threads`
-  trigger in the status bar.
+- **Sidebar**: a leading-icon search input that loads the first history page
+  without selecting a thread and debounce-filters as you type — there is no
+  standalone Load button; pagination is an IntersectionObserver sentinel with a
+  single subtle `Load more` fallback. Refined thread list items with a coloured
+  status dot. On mobile the sidebar is an off-canvas drawer opened from the
+  `Threads` trigger in the status bar.
 - **Context / status / usage / status pills**: per-thread context usage appears
   as a compact percent indicator beside the composer controls when
   `thread/tokenUsage/updated` has nonzero restored or live usage. Opening it

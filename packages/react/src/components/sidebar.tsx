@@ -136,19 +136,13 @@ export function isUserFacingPath(path: string): boolean {
 export function AgentThreadSidebar({
   activeThreadId,
   collapsed = false,
-  disableInitialAutoActivation = false,
   onCollapsedChange,
-  onAutoActivateThread,
-  onCancelAutoActivateThread,
   onSelectThread,
   threads,
 }: {
   activeThreadId?: string;
   collapsed?: boolean;
-  disableInitialAutoActivation?: boolean;
   onCollapsedChange?: (collapsed: boolean) => void;
-  onAutoActivateThread?: (threadId: string) => void;
-  onCancelAutoActivateThread?: () => void;
   onSelectThread?: (threadId: string) => void;
   threads: ThreadState[];
 }) {
@@ -163,11 +157,6 @@ export function AgentThreadSidebar({
   const didAutoLoad = useRef(false);
   const searchTouched = useRef(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const activeThreadIdRef = useRef(activeThreadId);
-  const autoActivationTokenRef = useRef(0);
-  useEffect(() => {
-    activeThreadIdRef.current = activeThreadId;
-  }, [activeThreadId]);
   const visibleThreads = useMemo(() => {
     if (!visibleThreadIds) return threads;
     const byId = new Map(threads.map((thread) => [thread.thread.id, thread]));
@@ -179,7 +168,6 @@ export function AgentThreadSidebar({
   const loadThreadPage = useCallback(
     async (
       params: {
-        activateFirst?: boolean;
         append?: boolean;
         cursor?: string | null;
         searchTerm?: string;
@@ -205,38 +193,9 @@ export function AgentThreadSidebar({
       });
       setNextCursor(responseCursor(response));
       setHasLoaded(true);
-      const firstThreadId = threadIds[0];
-      if (
-        params.activateFirst &&
-        !disableInitialAutoActivation &&
-        firstThreadId &&
-        !state.activeThreadId
-      ) {
-        const token = autoActivationTokenRef.current + 1;
-        autoActivationTokenRef.current = token;
-        onAutoActivateThread?.(firstThreadId);
-        readThread(firstThreadId, { activate: false, includeTurns: true })
-          .then(() => {
-            if (autoActivationTokenRef.current !== token) return;
-            if (activeThreadIdRef.current) return;
-            onSelectThread?.(firstThreadId);
-          })
-          .catch(() => {
-            if (autoActivationTokenRef.current !== token) return;
-            if (activeThreadIdRef.current) return;
-            onSelectThread?.(firstThreadId);
-          });
-      }
       return response;
     },
-    [
-      disableInitialAutoActivation,
-      listThreads,
-      onAutoActivateThread,
-      onSelectThread,
-      readThread,
-      state.activeThreadId,
-    ],
+    [listThreads],
   );
   const loadNextThreadPage = useCallback(() => {
     const pageCursor = nextCursor ?? cursor ?? null;
@@ -268,7 +227,7 @@ export function AgentThreadSidebar({
       !didAutoLoad.current
     ) {
       didAutoLoad.current = true;
-      void loadThreadPage({ activateFirst: true }).catch(() => {
+      void loadThreadPage().catch(() => {
         setHasLoaded(true);
       });
     }
@@ -286,14 +245,12 @@ export function AgentThreadSidebar({
 
   const selectThread = useCallback(
     (threadId: string) => {
-      autoActivationTokenRef.current += 1;
-      onCancelAutoActivateThread?.();
       if (compact) onCollapsedChange?.(true);
       void readThread(threadId, { activate: true, includeTurns: true }).catch(() => {
         onSelectThread?.(threadId);
       });
     },
-    [compact, onCancelAutoActivateThread, onCollapsedChange, onSelectThread, readThread],
+    [compact, onCollapsedChange, onSelectThread, readThread],
   );
 
   // On mobile a collapsed sidebar is a closed drawer with no inline chrome —
