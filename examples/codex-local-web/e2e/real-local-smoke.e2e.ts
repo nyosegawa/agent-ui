@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import type { Page } from "@playwright/test";
+import type { Locator, Page } from "@playwright/test";
 
 const FAST_EXPECT_TIMEOUT = 3_000;
 const APP_READY_TIMEOUT = 8_000;
@@ -366,11 +366,7 @@ test("keeps a compact non-scrolling follow-up queue with actionable older items"
   });
   await expect(message).toHaveValue("queued 2", { timeout: FAST_EXPECT_TIMEOUT });
   await message.fill("");
-  if (!(await stopButton(page).isVisible().catch(() => false))) {
-    await message.fill("slow smoke");
-    await sendButton(page).click({ force: true, timeout: FAST_EXPECT_TIMEOUT });
-    await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
-  }
+  await ensureRunningTurn(page, message);
   for (const label of ["queued 6", "queued 7"]) {
     await message.fill(label);
     await message.press("Enter");
@@ -382,7 +378,7 @@ test("keeps a compact non-scrolling follow-up queue with actionable older items"
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await assertComposerAnchored(page);
-  await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
+  await ensureRunningTurn(page, message);
 
   await queuedFollowUps(page).hover({ timeout: FAST_EXPECT_TIMEOUT });
   await page.mouse.wheel(0, 480);
@@ -498,6 +494,13 @@ async function readyMessageInput(page: Page) {
 
 function sendButton(page: Page) {
   return page.locator(".aui-composer button[aria-label='Send']");
+}
+
+async function ensureRunningTurn(page: Page, message: Locator) {
+  if (await stopButton(page).isVisible().catch(() => false)) return;
+  await message.fill("slow smoke");
+  await sendButton(page).click({ force: true, timeout: FAST_EXPECT_TIMEOUT });
+  await expect(stopButton(page)).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
 }
 
 function sendNowButton(page: Page) {

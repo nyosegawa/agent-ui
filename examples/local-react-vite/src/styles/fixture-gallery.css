@@ -88,11 +88,23 @@
 }
 
 .aui-demo-main {
+  background: var(--aui-bg);
   box-sizing: border-box;
   height: 100dvh;
   margin: 0 auto;
   max-width: 1280px;
   padding: 16px 14px 0;
+  position: relative;
+}
+
+.aui-demo-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  min-width: 0;
+  position: absolute;
+  right: 24px;
+  top: 24px;
+  z-index: 4;
 }
 
 @media (max-width: 640px) {
@@ -100,6 +112,10 @@
     height: 100dvh;
     margin: 0;
     padding: 0;
+  }
+
+  .aui-demo-toolbar {
+    display: none;
   }
 }
 

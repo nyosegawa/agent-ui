@@ -3,6 +3,11 @@ import { expect, test, type Page } from "@playwright/test";
 test("renders Agent UI chat", async ({ page }) => {
   await page.goto("/");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
+  await expect(page.getByRole("radiogroup", { name: "Theme" })).toBeVisible();
+  await page.getByRole("radio", { name: "Dark" }).click();
+  await expect(page.getByTestId("agent-chat")).toHaveAttribute("data-aui-theme", "dark");
+  await page.getByRole("radio", { name: "Light" }).click();
+  await expect(page.getByTestId("agent-chat")).toHaveAttribute("data-aui-theme", "light");
   await expect(
     page.getByRole("heading", { name: "Implement approval UI" }),
   ).toBeVisible();
@@ -169,10 +174,15 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
   await expect(page.getByText("Codex bridge unavailable")).toBeVisible();
   await expect(page.getByRole("button", { name: "Start thread" })).toHaveCount(0);
 
-  await page.goto("/rich-transcript");
+  await page.goto("/rich-transcript?theme=dark");
   await expect(
     page.getByRole("heading", { name: "Rich transcript fixture" }),
   ).toBeVisible();
+  await expect(page.getByTestId("agent-chat")).toHaveAttribute("data-aui-theme", "dark");
+  const shellBackground = await page
+    .getByTestId("agent-chat")
+    .evaluate((element) => getComputedStyle(element).backgroundColor);
+  expect(shellBackground).not.toBe("rgb(247, 246, 241)");
   await expect(page.getByLabel("Status summary")).toContainText("2 warning");
   await expect(page.getByLabel("Status details")).toContainText("Model rerouted");
   await expect(page.getByLabel("Critical status")).toHaveCount(0);

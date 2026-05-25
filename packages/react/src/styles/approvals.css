@@ -67,8 +67,8 @@
 /* --- Critical notice (near thread) --------------------------------- */
 
 .aui-critical-banners {
-  background: linear-gradient(180deg, #fff5e6 0%, #fff9ee 100%);
-  border-bottom: 1px solid #f1d6a3;
+  background: linear-gradient(180deg, var(--aui-warn-soft-strong) 0%, var(--aui-warn-soft-faint) 100%);
+  border-bottom: 1px solid var(--aui-warn-border);
   display: grid;
   gap: 8px;
   padding: 10px 20px 12px;
@@ -76,7 +76,7 @@
 
 .aui-critical-banner {
   background: var(--aui-panel);
-  border: 1px solid #f1d6a3;
+  border: 1px solid var(--aui-warn-border);
   border-left: 3px solid var(--aui-warn);
   border-radius: 7px;
   display: grid;

@@ -20,6 +20,7 @@ import {
   AgentShell,
   AgentStatusDetails,
   AgentStatusSummary,
+  AgentThemeToggle,
   AgentThreadSidebar,
   AgentThreadView,
   AgentUsagePanel,
@@ -169,6 +170,60 @@ describe("AgentChat", () => {
     await userEvent.setup().type(screen.getByRole("textbox", { name: "Message" }), "hello");
     expect(screen.getByRole("button", { name: "Start thread" })).toBeEnabled();
     expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
+  });
+
+  it("applies explicit themes without forcing a theme by default", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "user@example.com", planType: "pro" } };
+        }
+        return {};
+      },
+    });
+    const { rerender } = render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+    expect(await screen.findByTestId("agent-chat")).not.toHaveAttribute("data-aui-theme");
+
+    rerender(
+      <AgentProvider transport={transport}>
+        <AgentChat theme="dark" />
+      </AgentProvider>,
+    );
+    expect(screen.getByTestId("agent-chat")).toHaveAttribute("data-aui-theme", "dark");
+  });
+
+  it("keeps AgentShell theme opt-in while preserving explicit data attributes", () => {
+    const { rerender } = render(<AgentShell>Body</AgentShell>);
+    expect(screen.getByTestId("agent-chat")).not.toHaveAttribute("data-aui-theme");
+
+    rerender(<AgentShell data-aui-theme="system">Body</AgentShell>);
+    expect(screen.getByTestId("agent-chat")).toHaveAttribute("data-aui-theme", "system");
+
+    rerender(
+      <AgentShell data-aui-theme="system" theme="dark">
+        Body
+      </AgentShell>,
+    );
+    expect(screen.getByTestId("agent-chat")).toHaveAttribute("data-aui-theme", "dark");
+  });
+
+  it("offers an external theme toggle primitive", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<AgentThemeToggle value="system" onChange={onChange} />);
+
+    expect(screen.getByRole("radio", { name: "System" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    await user.click(screen.getByRole("radio", { name: "Dark" }));
+    expect(onChange).toHaveBeenCalledWith("dark");
+    await user.keyboard("{ArrowLeft}");
+    expect(onChange).toHaveBeenLastCalledWith("dark");
   });
 
   it("renders only a fixed thread without following active selection", () => {

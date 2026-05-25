@@ -130,8 +130,8 @@
     "display": "grid",
     "gridTemplateColumns": "344px",
     "height": 268,
-    "overflowX": "hidden",
-    "overflowY": "hidden",
+    "overflowX": "visible",
+    "overflowY": "visible",
     "present": true,
     "visible": true,
     "width": 366

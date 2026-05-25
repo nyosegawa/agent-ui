@@ -219,7 +219,7 @@
 }
 
 .aui-sidebar-backdrop {
-  background: rgba(15, 14, 12, 0.42);
+  background: var(--aui-overlay);
   border: 0;
   cursor: pointer;
   display: block;

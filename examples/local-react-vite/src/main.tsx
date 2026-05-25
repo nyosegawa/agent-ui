@@ -11,12 +11,14 @@ import {
   AgentProvider,
   AgentStatusDetails,
   AgentStatusSummary,
+  AgentThemeToggle,
   AgentThreadHeader,
   AgentThreadSurface,
   AgentThreadTimeline,
   AgentThreadView,
   AgentUsagePanel,
   AgentUsageSummary,
+  type AgentTheme,
   normalizeUsageWindows,
   useAgentApprovals,
   useAgentBootstrap,
@@ -24,7 +26,7 @@ import {
   useAgentUsage,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
-import { useMemo, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import "./styles/closeups.css";
 import "./styles/fixture-gallery.css";
@@ -66,13 +68,17 @@ function DemoApp() {
 
 function AgentDemo() {
   const demoState = useMemo(() => demoScenarioFromLocation(), []);
+  const [theme, setTheme] = useState<AgentTheme>(() => themeFromLocation());
   const initialState = useMemo(() => createDemoInitialState(demoState), [demoState]);
   const transport = useMemo(() => createDemoTransport(demoState), [demoState]);
 
   return (
     <AgentProvider initialState={initialState} transport={transport}>
-      <main className="aui-demo-main">
-        <AgentChat diagnostics usage />
+      <main className="aui-demo-main" data-aui-theme={theme}>
+        <div className="aui-demo-toolbar">
+          <AgentThemeToggle value={theme} onChange={setTheme} />
+        </div>
+        <AgentChat diagnostics theme={theme} usage />
       </main>
     </AgentProvider>
   );
@@ -80,8 +86,9 @@ function AgentDemo() {
 
 function VisualQaIndex() {
   const grouped = useMemo(() => groupFixtures(visualQaStates), []);
+  const theme = themeFromLocation();
   return (
-    <main className="aui-fixture-gallery">
+    <main className="aui-fixture-gallery" data-aui-theme={theme}>
       <div className="aui-fixture-gallery-header">
         <div>
           <h1>Agent UI visual QA</h1>
@@ -121,6 +128,10 @@ function VisualQaIndex() {
   );
 }
 
+function themeFromLocation(): AgentTheme {
+  const theme = new URLSearchParams(window.location.search).get("theme");
+  return theme === "dark" || theme === "system" || theme === "light" ? theme : "light";
+}
 
 function ScopedThreadPaneExample() {
   const initialState = useMemo(() => {

@@ -41,13 +41,13 @@
 }
 
 .aui-diff-stat-add {
-  background: rgba(21, 128, 61, 0.22);
-  color: #a7f3c8;
+  background: var(--aui-accent-green-soft);
+  color: var(--aui-code-add-fg);
 }
 
 .aui-diff-stat-remove {
-  background: rgba(185, 28, 28, 0.24);
-  color: #fecaca;
+  background: var(--aui-danger-border);
+  color: var(--aui-danger-code-fg);
 }
 
 .aui-diff-files {

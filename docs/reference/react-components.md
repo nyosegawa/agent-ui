@@ -27,6 +27,7 @@ secondary chrome.
 ```tsx
 <AgentChat
   sidebar={false}
+  theme="system"
   usage={false}
   diagnostics={false}
   onRequestAppMention={openAppPicker}
@@ -45,6 +46,11 @@ The preset composes `AgentShell`, optional `AgentThreadSidebar`,
 `usage` or `diagnostics`, the preset adds a secondary context rail; otherwise
 the primary transcript column is the whole experience. Low-priority
 account/model/MCP/rate-limit notices do not stack above the timeline.
+The optional `theme` prop accepts `light`, `dark`, or `system` and only applies
+`data-aui-theme` to the preset shell. Leave it unset when the preset should
+inherit a theme from host chrome. Agent UI does not render an internal theme
+switcher; hosts that want one can place the controlled `AgentThemeToggle`
+primitive beside their own navigation or settings UI.
 
 ## Transcript Primitives
 
@@ -218,6 +224,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentUsagePanel`: account rate-limit windows, renderable inside or outside a shell.
 - `AgentUsageSummary`: compact usage primitive for host chrome.
 - `AgentRateLimitBar`: one normalized rate-limit window.
+- `AgentThemeToggle`: controlled light / dark / system segmented control for
+  host-owned theme state. It is not rendered by `AgentChat` automatically.
 - `AgentContextUsageIndicator`: compact per-thread context usage popover for
   App Server `thread/tokenUsage/updated` totals.
 - `AgentDiagnosticsPanel`: bridge/account/model startup diagnostics.

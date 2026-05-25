@@ -93,7 +93,7 @@
 .aui-approval-risk {
   align-self: center;
   background: var(--aui-warn-soft);
-  border: 1px solid rgba(180, 83, 9, 0.32);
+  border: 1px solid var(--aui-warn-border);
   border-radius: 999px;
   color: var(--aui-warn);
   font: 700 10px/1 var(--aui-font);
@@ -105,13 +105,13 @@
 
 .aui-approval-risk[data-risk="high"] {
   background: var(--aui-danger-soft);
-  border-color: rgba(185, 28, 28, 0.3);
+  border-color: var(--aui-danger-border);
   color: var(--aui-danger);
 }
 
 .aui-approval-risk[data-risk="low"] {
   background: var(--aui-primary-soft);
-  border-color: rgba(13, 148, 136, 0.32);
+  border-color: var(--aui-primary-border);
   color: var(--aui-primary-strong);
 }
 
@@ -264,12 +264,12 @@
 .aui-approval-actions .aui-btn-primary {
   background: var(--aui-success);
   border-color: var(--aui-success);
-  color: #ffffff;
+  color: var(--aui-primary-fg);
 }
 
 .aui-approval-actions .aui-btn-primary:hover:not(:disabled) {
-  background: #126331;
-  border-color: #126331;
+  background: var(--aui-success-strong);
+  border-color: var(--aui-success-strong);
 }
 
 @media (max-width: 640px) {

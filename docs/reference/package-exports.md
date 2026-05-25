@@ -110,14 +110,17 @@ Responsibilities:
 
 The package root also exports lower-level surfaces for advanced hosts:
 `AgentStatusBar`, `AgentFirstRun`, `AgentRunControls`, `ComposerRunSettings`,
-`AgentDiffViewer`, thread-history helpers, transcript-window helpers, and
-sidebar/status formatting utilities. The documented components below are the
-recommended host-facing primitives; these helpers remain public because they are
-re-exported by the package barrel.
+`AgentThemeToggle`, `AgentDiffViewer`, thread-history helpers,
+transcript-window helpers, and sidebar/status formatting utilities. The
+documented components below are the recommended host-facing primitives; these
+helpers remain public because they are re-exported by the package barrel.
 
 The default UI is transcript-first. Usage, diagnostics, status summaries, run
 settings, and side panels are exported as host-composition primitives instead
 of being mandatory chat chrome.
+Theme state is also host-owned: `AgentChat` and `AgentShell` accept an optional
+`theme` prop, while `AgentThemeToggle` is a controlled primitive hosts can
+render outside the transcript surface.
 
 The default UI keeps the high-traffic surfaces split internally:
 

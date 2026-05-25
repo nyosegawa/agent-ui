@@ -21,6 +21,7 @@ import { AgentFirstRun } from "./first-run";
 import type { AgentWorkingDirectoryResolver } from "./run-settings";
 import { AgentThreadSidebar } from "./sidebar";
 import { useCompactLayout } from "./shared";
+import type { AgentTheme } from "./theme";
 import {
   AgentDiagnosticsPanel,
   AgentStatusBar,
@@ -43,6 +44,7 @@ export interface AgentChatProps {
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   sidebar?: boolean;
   slots?: AgentChatSlots;
+  theme?: AgentTheme;
   threadUrlRouting?: boolean | AgentThreadUrlRoutingOptions;
   usage?: boolean;
 }
@@ -60,6 +62,7 @@ export function AgentChat({
   resolveLocalAttachment,
   sidebar = true,
   slots,
+  theme,
   threadUrlRouting = false,
   usage = false,
 }: AgentChatProps = {}) {
@@ -99,6 +102,7 @@ export function AgentChat({
           />
         ) : undefined
       }
+      theme={theme}
     >
       {drawerOpen ? (
         <button
@@ -231,20 +235,24 @@ function isPreviewUrlThread(status?: string): boolean {
 
 export interface AgentShellProps extends React.HTMLAttributes<HTMLElement> {
   sidebar?: React.ReactNode;
+  theme?: AgentTheme;
 }
 
 export function AgentShell({
   children,
   className,
   sidebar,
+  theme,
   ...props
 }: AgentShellProps) {
+  const inheritedTheme = (props as { "data-aui-theme"?: AgentTheme })["data-aui-theme"];
   return (
     <section
       className={["aui-shell", className].filter(Boolean).join(" ")}
       data-sidebar-present={sidebar ? "true" : "false"}
       data-testid="agent-chat"
       {...props}
+      data-aui-theme={theme ?? inheritedTheme}
     >
       {sidebar}
       {children}

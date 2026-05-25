@@ -107,8 +107,8 @@ const diffTheme = EditorView.theme(
     },
     ".cm-gutters": {
       backgroundColor: "transparent",
-      borderRight: "1px solid #344054",
-      color: "#98a2b3",
+      borderRight: "1px solid var(--aui-code-gutter-rule)",
+      color: "var(--aui-code-gutter-fg)",
     },
     ".cm-line": {
       padding: "0 10px",
@@ -118,24 +118,24 @@ const diffTheme = EditorView.theme(
       lineHeight: "1.5",
     },
     ".aui-cm-line-add": {
-      backgroundColor: "rgba(18, 135, 91, 0.22)",
+      backgroundColor: "var(--aui-code-add-bg)",
     },
     ".aui-cm-line-file": {
-      color: "#d0d5dd",
+      color: "var(--aui-code-file-fg)",
       fontWeight: "700",
     },
     ".aui-cm-line-hunk": {
-      backgroundColor: "rgba(84, 121, 255, 0.22)",
-      color: "#b8c7ff",
+      backgroundColor: "var(--aui-code-hunk-bg)",
+      color: "var(--aui-code-hunk-fg)",
     },
     ".aui-cm-line-remove": {
-      backgroundColor: "rgba(180, 35, 24, 0.24)",
+      backgroundColor: "var(--aui-code-remove-bg)",
     },
     ".cm-activeLine": {
       backgroundColor: "transparent",
     },
     "&.cm-focused": {
-      outline: "2px solid #a8ddd2",
+      outline: "2px solid var(--aui-primary)",
       outlineOffset: "-2px",
     },
   },

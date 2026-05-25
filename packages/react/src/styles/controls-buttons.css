@@ -105,12 +105,12 @@
 .aui-btn-danger {
   background: var(--aui-danger);
   border-color: var(--aui-danger);
-  color: #ffffff;
+  color: var(--aui-primary-fg);
 }
 
 .aui-btn-danger:hover:not(:disabled) {
-  background: #991b1b;
-  border-color: #991b1b;
+  background: var(--aui-danger-strong);
+  border-color: var(--aui-danger-strong);
 }
 
 .aui-btn-danger:focus-visible {
@@ -129,4 +129,19 @@
 .aui-btn-subtle:hover:not(:disabled) {
   color: var(--aui-primary-strong);
   text-decoration: underline;
+}
+
+.aui-theme-toggle {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-pill);
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+}
+
+.aui-theme-toggle-option {
+  border-radius: var(--aui-radius-pill);
+  min-height: 28px;
 }

@@ -23,19 +23,19 @@
 
 .aui-status-pill[data-status="running"] {
   background: var(--aui-primary-soft);
-  border-color: rgba(13, 148, 136, 0.4);
+  border-color: var(--aui-primary-border);
   color: var(--aui-primary-strong);
 }
 
 .aui-status-pill[data-status="waitingForInput"] {
   background: var(--aui-warn-soft);
-  border-color: rgba(180, 83, 9, 0.32);
+  border-color: var(--aui-warn-border);
   color: var(--aui-warn);
 }
 
 .aui-status-pill[data-status="error"] {
   background: var(--aui-danger-soft);
-  border-color: rgba(185, 28, 28, 0.32);
+  border-color: var(--aui-danger-border);
   color: var(--aui-danger);
 }
 

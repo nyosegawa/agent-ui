@@ -8,3 +8,4 @@ export * from "./components/approvals";
 export * from "./components/status";
 export * from "./components/sidebar";
 export * from "./components/workspace";
+export * from "./components/theme";

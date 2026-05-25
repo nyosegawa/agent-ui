@@ -202,7 +202,7 @@
 
 .aui-plan-block {
   background: var(--aui-primary-soft);
-  border-color: rgba(13, 148, 136, 0.22);
+  border-color: var(--aui-primary-border-soft);
   border-radius: 10px;
   padding: 12px 14px;
 }
@@ -237,7 +237,7 @@
 }
 
 .aui-json-section[data-tone="danger"] pre {
-  color: #fecaca;
+  color: var(--aui-danger-code-fg);
 }
 
 .aui-block-metadata {
@@ -266,7 +266,7 @@
 
 .aui-system-info-block[data-subtype="error"] {
   background: var(--aui-danger-soft);
-  border-color: rgba(185, 28, 28, 0.24);
+  border-color: var(--aui-danger-border);
   color: var(--aui-danger);
 }
 

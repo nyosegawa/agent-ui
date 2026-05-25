@@ -12,3 +12,39 @@
   --aui-code-fg: #f4f7fb;
   --aui-radius: 6px;
 }
+
+.agent-ui-compact-theme[data-aui-theme="dark"] {
+  --aui-bg: #101419;
+  --aui-panel: #181e25;
+  --aui-panel-alt: #202833;
+  --aui-border: #303946;
+  --aui-border-strong: #4a5565;
+  --aui-fg: #eef3f8;
+  --aui-fg-muted: #a7b2c0;
+  --aui-primary: #5cc8e6;
+  --aui-primary-fg: #071217;
+  --aui-code-bg: #090d12;
+  --aui-code-fg: #eef3f8;
+}
+
+@media (prefers-color-scheme: dark) {
+  .agent-ui-compact-theme[data-aui-theme="system"] {
+    --aui-bg: #101419;
+    --aui-panel: #181e25;
+    --aui-panel-alt: #202833;
+    --aui-border: #303946;
+    --aui-border-strong: #4a5565;
+    --aui-fg: #eef3f8;
+    --aui-fg-muted: #a7b2c0;
+    --aui-primary: #5cc8e6;
+    --aui-primary-fg: #071217;
+    --aui-code-bg: #090d12;
+    --aui-code-fg: #eef3f8;
+  }
+}
+
+.agent-ui-compact-theme-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px;
+}

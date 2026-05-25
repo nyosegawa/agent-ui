@@ -16,7 +16,7 @@
 }
 
 .aui-menu-backdrop[data-compact="true"] {
-  background: rgba(15, 14, 12, 0.42);
+  background: var(--aui-overlay);
 }
 
 .aui-menu-panel {
