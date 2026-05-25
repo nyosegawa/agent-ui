@@ -43,8 +43,9 @@ state was the no-thread view.
 Running turns follow Codex Desktop-style composer semantics on top of Codex App
 Server methods. Enter stores text in the UI-local follow-up queue; `Send now`
 and Cmd/Ctrl+Enter call `turn/steer` with the active turn as `expectedTurnId`.
-The running primary button is Stop and calls only `turn/interrupt`. Unsent
-follow-ups remain in Agent UI state after Stop. Preview-only stored threads and
+On idle or complete threads, Cmd/Ctrl+Enter starts a normal new turn. The
+running primary button is Stop and calls only `turn/interrupt`. Unsent follow-ups
+remain in Agent UI state after Stop. Preview-only stored threads and
 approval-waiting turns remain blocked until resumed or resolved.
 
 Resume can replay restored token usage via `thread/tokenUsage/updated`. The

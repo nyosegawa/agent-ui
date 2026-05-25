@@ -213,7 +213,8 @@ function AgentComposerForm({
   const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
     if (event.key === "Enter" && !event.shiftKey && !isComposing.current) {
       event.preventDefault();
-      submit(event.metaKey || event.ctrlKey ? "steer" : "normal");
+      const wantsImmediateFollowUp = composer.isRunning && (event.metaKey || event.ctrlKey);
+      submit(wantsImmediateFollowUp ? "steer" : "normal");
     }
   };
 

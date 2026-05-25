@@ -92,7 +92,8 @@ Running-turn UX should map directly to App Server methods. App Server has no
 dedicated `queue/message` API. Agent UI's default pending follow-up cards are
 UI-local, thread-scoped state until the user chooses `Send now`; `Send now` and
 Cmd/Ctrl+Enter call `turn/steer` with `threadId`, the active `expectedTurnId`,
-and structured `input`. A queued item is not sent if its stored
+and structured `input` only while a turn is running. Outside a running turn,
+Cmd/Ctrl+Enter starts a normal new turn. A queued item is not sent if its stored
 `expectedTurnId` differs from the current active turn. Stop calls only
 `turn/interrupt` with the active `threadId` and `turnId`; the server may only
 respond after the interrupted `turn/completed`/`TurnAborted` path finishes.

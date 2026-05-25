@@ -97,7 +97,8 @@ quality directly instead of depending on a page-level shell:
   is running, the textarea remains editable and the primary button becomes
   Stop. Enter adds a UI-local follow-up card above the composer, Cmd/Ctrl+Enter
   sends `turn/steer` immediately with the active `expectedTurnId`, and `Send
-  now` on a queued card also sends `turn/steer`. Queued cards are scoped to the
+  now` on a queued card also sends `turn/steer`; outside a running turn,
+  Cmd/Ctrl+Enter starts a normal new turn. Queued cards are scoped to the
   active thread, keep attachment chips restorable through Edit, and compact
   older queued items instead of creating a nested scroll pane. Stop calls only
   `turn/interrupt`; `turn/steer` is not an interrupt. The attach control

@@ -6,8 +6,9 @@ Primary real local example: browser Agent UI, same-origin WebSocket bridge, and
 The app shell is full-height at `http://127.0.0.1:5175/`: the transcript is the
 only scroll container, and the composer stays anchored to the viewport bottom.
 Running-turn Enter creates UI-local follow-up cards; `Send now` and Cmd/Ctrl+Enter
-use `turn/steer`; Stop uses only `turn/interrupt`. Restored context usage from
-`thread/tokenUsage/updated` appears beside the composer when nonzero.
+use `turn/steer`, while idle Cmd/Ctrl+Enter starts a normal turn; Stop uses only
+`turn/interrupt`. Restored context usage from `thread/tokenUsage/updated` appears
+beside the composer when nonzero.
 Uploads use the local helper's per-session temp directory, validation, size
 limit, TTL cleanup, and explicit cleanup hook. Images become `localImage`
 inputs; non-images become explicit `Attached file: /absolute/path` text.

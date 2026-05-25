@@ -1793,6 +1793,39 @@ describe("AgentChat", () => {
     expect(transport.requests.map((request) => request.method)).not.toContain("turn/steer");
   });
 
+  it("starts a new turn with Cmd+Enter when no turn is running", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-ready";
+    initialState.threads["thread-ready"] = {
+      orderedTurnIds: [],
+      status: "complete",
+      thread: { id: "thread-ready", name: "Ready thread" },
+      turns: {},
+    };
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "start from shortcut");
+    await user.keyboard("{Meta>}{Enter}{/Meta}");
+
+    await waitFor(() =>
+      expect(transport.requests.at(-1)).toMatchObject({
+        method: "turn/start",
+        params: {
+          input: [{ text: "start from shortcut", type: "text" }],
+          threadId: "thread-ready",
+        },
+      }),
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain("turn/steer");
+  });
+
   it("sends running Cmd+Enter immediately with turn/steer", async () => {
     const user = userEvent.setup();
     const initialState = runningComposerState();

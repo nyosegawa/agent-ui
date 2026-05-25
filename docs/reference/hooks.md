@@ -56,7 +56,8 @@ const run = useAgentRunSettings();
 controller. Idle threads submit `turn/start`. Running threads keep the textarea
 editable: Enter adds to `queuedFollowUps`, Cmd/Ctrl+Enter calls `turn/steer`
 immediately, and `sendQueuedFollowUp(id)` calls `turn/steer` for that item with
-its stored `expectedTurnId`. Queued items are scoped by thread, retain
+its stored `expectedTurnId`. Cmd/Ctrl+Enter on an idle or complete thread still
+submits through `turn/start`. Queued items are scoped by thread, retain
 structured attachment metadata for Edit, and remain queued with an item error
 if the active turn no longer matches their stored `expectedTurnId`. `Stop`
 calls only `turn/interrupt` and does not clear unsent queued follow-ups. The
