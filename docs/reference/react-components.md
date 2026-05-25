@@ -348,13 +348,18 @@ throwing surfaces an inline composer error.
 `POST /agent-ui/upload` endpoint persists any extension, including unknown
 extensions such as `.3mf`, next to the App Server and returns an absolute path.
 
-### Working directory is a thread-start setting
+### Start Screen
 
-cwd is chosen when a thread starts — the empty-state / first-run
-`AgentRunControls` panel exposes a working-directory field. An existing thread
-shows its cwd read-only in `AgentThreadHeader`; the composer toolbar never
-offers a cwd editor, because changing the working directory mid-thread is not
-a meaningful Codex operation.
+The empty-state / first-run surface is a starter composer: a large prompt card
+whose lower toolbar reuses the composer's execution-mode and model/effort menus
+(`ComposerRunSettings`), with a round send control. The working directory is a
+thread-start setting, so it sits beneath the card as a compact context pill
+(`AgentStarterCwd`) rather than inside the toolbar. The start button stays
+disabled until the first-turn prompt has text. Starting from this surface
+creates the thread and immediately sends the first turn. An existing thread
+shows its cwd read-only in `AgentThreadHeader`; the normal composer toolbar
+never offers a cwd editor, because changing the working directory mid-thread is
+not a meaningful Codex operation.
 
 ### Mobile shell policy
 

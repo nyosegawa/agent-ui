@@ -62,7 +62,7 @@ export function AgentChat({
 }: AgentChatProps = {}) {
   const bootstrap = useAgentBootstrap();
   const compact = useCompactLayout();
-  const { thread, threadId, startThread } = useAgentThread();
+  const { thread, threadId, startThread, startThreadWithInput } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
   useThreadUrlRouting(threadUrlRouting, activeThreadId);
   // Desktop keeps an expand/collapse rail; mobile keeps an off-canvas drawer.
@@ -124,7 +124,12 @@ export function AgentChat({
               />
             ) : (
               <div className="aui-empty">
-                <AgentFirstRun onStartThread={() => void startThread()} />
+                <AgentFirstRun
+                  onStartThread={async (prompt) => {
+                    if (prompt) await startThreadWithInput(prompt);
+                    else await startThread();
+                  }}
+                />
               </div>
             )}
           </div>

@@ -42,7 +42,9 @@ test("resumes stored threads, sends follow-up turns, and syncs browser history",
   page,
 }, testInfo) => {
   testInfo.setTimeout(FLOW_TEST_TIMEOUT);
-  await openRealLocalApp(page);
+  // The root route stays on the start screen, so open the stored thread by URL
+  // rather than relying on auto-navigation to the latest thread.
+  await openRealLocalApp(page, { width: 1280, height: 900 }, "/threads/thread-stored");
   await expect(page).toHaveURL(/\/threads\/thread-stored$/, {
     timeout: FAST_EXPECT_TIMEOUT,
   });
@@ -81,7 +83,7 @@ test("resumes stored threads, sends follow-up turns, and syncs browser history",
   await expect(page.getByRole("heading", { name: "Stored real smoke" })).toHaveCount(0, {
     timeout: FAST_EXPECT_TIMEOUT,
   });
-  await expect(page.getByText("Start a Codex thread")).toBeVisible({
+  await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
 
@@ -96,7 +98,7 @@ test("resumes stored threads, sends follow-up turns, and syncs browser history",
   });
   await page.goBack();
   await expect(page).toHaveURL(/\/$/, { timeout: FAST_EXPECT_TIMEOUT });
-  await expect(page.getByText("Start a Codex thread")).toBeVisible({
+  await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await page.goForward();
@@ -240,7 +242,7 @@ test("keeps queued follow-ups across the no-thread route", async ({ page }, test
     window.dispatchEvent(new PopStateEvent("popstate"));
   });
   await expect(page).toHaveURL(/\/$/, { timeout: FAST_EXPECT_TIMEOUT });
-  await expect(page.getByText("Start a Codex thread")).toBeVisible({
+  await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
 

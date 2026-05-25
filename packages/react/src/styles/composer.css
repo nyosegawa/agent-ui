@@ -1,7 +1,7 @@
 /* --- Composer ------------------------------------------------------------ */
 
 .aui-compose-panel {
-  background: var(--aui-bg-soft);
+  background: var(--aui-bg);
   border-top: 1px solid var(--aui-border);
   display: grid;
   gap: 10px;
@@ -15,13 +15,13 @@
 .aui-composer {
   background: var(--aui-panel);
   border: 1px solid var(--aui-border-strong);
-  border-radius: 14px;
-  box-shadow: var(--aui-elevation-1);
+  border-radius: 20px;
+  box-shadow: var(--aui-elevation-2);
   display: grid;
   gap: 0;
   min-width: 0;
   overflow: hidden;
-  padding: 10px 12px 8px;
+  padding: 14px 16px 12px;
   transition:
     border-color 160ms var(--aui-easing),
     box-shadow 160ms var(--aui-easing);
@@ -304,9 +304,9 @@
   border: 0;
   color: var(--aui-fg);
   display: block;
-  font: 400 14px/1.55 var(--aui-font);
+  font: 400 17px/1.5 var(--aui-font);
   max-height: 220px;
-  min-height: 28px;
+  min-height: 72px;
   outline: none;
   padding: 6px 4px 4px;
   resize: none;
@@ -324,14 +324,14 @@
 
 .aui-composer-toolbar {
   align-items: center;
-  border-top: 1px solid var(--aui-rule);
+  border-top: 0;
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
   justify-content: space-between;
-  margin-top: 6px;
+  margin-top: 8px;
   min-width: 0;
-  padding-top: 6px;
+  padding-top: 0;
 }
 
 .aui-composer-toolbar-start,
@@ -352,22 +352,7 @@
   position: relative;
 }
 
-.aui-composer-hint {
-  color: var(--aui-fg-faint);
-  font-size: 11px;
-  margin-right: 4px;
-}
-
-.aui-composer-hint kbd {
-  background: var(--aui-panel-alt);
-  border: 1px solid var(--aui-border);
-  border-radius: 4px;
-  color: var(--aui-fg-muted);
-  font: inherit;
-  font-family: var(--aui-font-mono);
-  font-size: 10.5px;
-  padding: 1px 5px;
-}
+.aui-composer-hint { display: none; }
 
 .aui-composer .aui-btn-primary.aui-btn-icon-only {
   border-radius: 999px;

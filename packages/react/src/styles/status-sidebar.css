@@ -268,7 +268,7 @@
   padding: 24px;
 }
 
-.aui-first-run .aui-run-controls {
+.aui-first-run:not(.aui-first-run-starter) .aui-run-controls {
   background: var(--aui-panel-quiet);
   border: 1px solid var(--aui-border);
   border-radius: 10px;
@@ -278,11 +278,11 @@
 
 /* The first-run card is narrow, so the thread-start panel stacks: execution
  * mode and working directory span the full width, model and effort pair up. */
-.aui-first-run .aui-run-controls .aui-mode-group,
-.aui-first-run .aui-run-controls .aui-field-wide {
+.aui-first-run:not(.aui-first-run-starter) .aui-run-controls .aui-mode-group,
+.aui-first-run:not(.aui-first-run-starter) .aui-run-controls .aui-field-wide {
   grid-column: 1 / -1;
 }
 
-.aui-first-run .aui-btn {
+.aui-first-run:not(.aui-first-run-starter) .aui-btn {
   width: max-content;
 }

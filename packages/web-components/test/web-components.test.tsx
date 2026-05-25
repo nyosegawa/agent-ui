@@ -32,7 +32,13 @@ describe("AgentChatElement", () => {
         },
       });
     });
-    await expectText("Start thread");
+    // The starter composer's send control is an icon-only round button, so
+    // assert its accessible label rather than visible text.
+    await waitFor(() => {
+      expect(
+        document.querySelector('button[aria-label="Start thread"]'),
+      ).toBeInTheDocument();
+    });
   });
 });
 

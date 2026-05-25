@@ -174,6 +174,40 @@ export function useAgentThread(threadId?: ThreadId) {
     [dispatch, runSettings.cwd, runSettings.modelId, transport],
   );
 
+  const startThreadWithInput = useCallback(
+    async (
+      input: string | CodexUserInput[],
+      params?: Record<string, unknown>,
+    ) => {
+      const result = await startThread(params);
+      const rawThread = asRecord(result)?.thread ?? result;
+      const rawThreadRecord = asRecord(rawThread);
+      const threadId = rawThreadRecord ? rawThreadId(rawThreadRecord) : undefined;
+      if (!threadId) throw new Error("thread/start returned no thread id");
+      const executionMode = AGENT_EXECUTION_MODES.find(
+        (mode) => mode.id === runSettings.executionMode,
+      );
+      const requestParams = turnStartParams({
+        cwd: runSettings.cwd,
+        effort: runSettings.effort as TurnStartParams["effort"],
+        input,
+        model: runSettings.modelId,
+        ...executionMode?.turnParams,
+        threadId,
+      });
+      await transport.request<TurnStartParams>("turn/start", requestParams);
+      return result;
+    },
+    [
+      runSettings.cwd,
+      runSettings.effort,
+      runSettings.executionMode,
+      runSettings.modelId,
+      startThread,
+      transport,
+    ],
+  );
+
   const resumeThread = useCallback(
     async (id: ThreadId, params?: Record<string, unknown>) => {
       const requestParams = threadResumeParams(id, params);
@@ -194,7 +228,14 @@ export function useAgentThread(threadId?: ThreadId) {
     [dispatch, transport],
   );
 
-  return { resumeThread, startThread, thread, threadId: resolvedThreadId, turns };
+  return {
+    resumeThread,
+    startThread,
+    startThreadWithInput,
+    thread,
+    threadId: resolvedThreadId,
+    turns,
+  };
 }
 
 export const useAgentThreadController = useAgentThread;

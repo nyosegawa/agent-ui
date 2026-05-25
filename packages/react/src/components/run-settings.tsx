@@ -189,6 +189,51 @@ export function AgentRunSettingsPanel({
   return <AgentRunControls autoRefresh={autoRefresh} variant="compact" />;
 }
 
+/**
+ * Compact working-directory selector for the start screen. cwd is a
+ * thread-start setting, so it sits beneath the starter composer as a context
+ * pill rather than inside the composer toolbar.
+ */
+export function AgentStarterCwd() {
+  const { state } = useAgentContext();
+  const { runSettings, setCwd } = useAgentRunSettings();
+  const cwdOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          Object.values(state.threads)
+            .map((thread) => thread.thread.path)
+            .filter((path): path is string => Boolean(path && isUserFacingPath(path))),
+        ),
+      ).slice(0, 12),
+    [state.threads],
+  );
+
+  return (
+    <div className="aui-starter-context" aria-label="Thread start context">
+      <label className="aui-starter-cwd">
+        <IconFolder size={14} />
+        <span className="aui-visually-hidden">Working directory</span>
+        <input
+          aria-label="Working directory"
+          list={cwdOptions.length > 0 ? "aui-starter-cwd-options" : undefined}
+          onChange={(event) => setCwd(event.currentTarget.value)}
+          placeholder={cwdOptions[0] ?? "Server default cwd"}
+          type="text"
+          value={runSettings.cwd ?? ""}
+        />
+        {cwdOptions.length > 0 ? (
+          <datalist id="aui-starter-cwd-options">
+            {cwdOptions.map((cwd) => (
+              <option key={cwd} value={cwd} />
+            ))}
+          </datalist>
+        ) : null}
+      </label>
+    </div>
+  );
+}
+
 function formatModelOption(model: { id: string; name?: string }): string {
   if (!model.name || model.name === model.id) return model.id;
   return `${model.name} (${model.id})`;

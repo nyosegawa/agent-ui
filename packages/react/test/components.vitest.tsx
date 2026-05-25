@@ -165,7 +165,9 @@ describe("AgentChat", () => {
         { name: "Start thread" },
         { timeout: 5000 },
       ),
-    ).toBeInTheDocument();
+    ).toBeDisabled();
+    await userEvent.setup().type(screen.getByRole("textbox", { name: "Message" }), "hello");
+    expect(screen.getByRole("button", { name: "Start thread" })).toBeEnabled();
     expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
   });
 
@@ -1261,6 +1263,7 @@ describe("AgentChat", () => {
   });
 
   it("bootstraps account, models, and usage on startup", async () => {
+    const user = userEvent.setup();
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method === "account/read") {
@@ -1300,10 +1303,12 @@ describe("AgentChat", () => {
 
     expect(await screen.findByText(/real@example.com/)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
-    expect(
-      await screen.findByRole("option", { name: "Real Model (real-model)" }),
-    ).toBeInTheDocument();
     expect(await screen.findByText("10%")).toBeInTheDocument();
+    // The starter composer exposes loaded models through the model/effort menu.
+    await user.click(await screen.findByRole("button", { name: "Model and effort" }));
+    expect(
+      await screen.findByRole("menuitemradio", { name: /Real Model/ }),
+    ).toBeInTheDocument();
     expect(transport.requests.map((request) => request.method)).toEqual(
       expect.arrayContaining(["account/read", "model/list", "account/rateLimits/read"]),
     );
@@ -3196,9 +3201,13 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    await screen.findByRole("option", { name: "Real Model (real-model)" });
-    await user.selectOptions(screen.getByLabelText("Model"), "real-model");
+    await waitFor(() =>
+      expect(transport.requests.some((request) => request.method === "model/list")).toBe(true),
+    );
+    await user.click(screen.getByRole("button", { name: "Model and effort" }));
+    await user.click(await screen.findByRole("menuitemradio", { name: /Real Model/ }));
     await user.type(screen.getByLabelText("Working directory"), "/tmp/agent-ui");
+    await user.type(screen.getByRole("textbox", { name: "Message" }), "start here");
     await user.click(screen.getByRole("button", { name: "Start thread" }));
 
     expect(
@@ -3206,6 +3215,13 @@ describe("AgentChat", () => {
     ).toEqual({
       cwd: "/tmp/agent-ui",
       model: "real-model",
+    });
+    expect(
+      transport.requests.find((request) => request.method === "turn/start")?.params,
+    ).toMatchObject({
+      input: [{ text: "start here", text_elements: [], type: "text" }],
+      model: "real-model",
+      threadId: "thread-new",
     });
     expect(await screen.findByText("Ready")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
@@ -3275,7 +3291,12 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    await user.click(await screen.findByRole("button", { name: "New thread" }));
+    // Starting from the start screen creates the thread with the first turn.
+    await user.type(
+      await screen.findByRole("textbox", { name: "Message" }),
+      "start with cwd",
+    );
+    await user.click(screen.getByRole("button", { name: "Start thread" }));
     // cwd is a thread-start setting: it is restored into the started thread
     // and shown read-only in the thread header, not as a composer input.
     expect(await screen.findByText("/Users/example/project")).toBeInTheDocument();
@@ -3337,6 +3358,7 @@ describe("AgentChat", () => {
   });
 
   it("does not fabricate effort options when model metadata has none", async () => {
+    const user = userEvent.setup();
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method === "account/read") {
@@ -3359,13 +3381,20 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    // The thread-start panel exposes model and effort; effort stays disabled
-    // when the model metadata declares no supported reasoning efforts.
-    await screen.findByRole("option", {
-      name: "Metadata-light model (metadata-light-model)",
-    });
-    expect(screen.getByLabelText("Effort")).toBeDisabled();
-    expect(screen.queryByRole("option", { name: "xhigh" })).not.toBeInTheDocument();
+    // The starter model/effort menu exposes the model, but reports no
+    // selectable effort when the metadata declares no supported efforts
+    // instead of fabricating options like "xhigh".
+    await user.click(await screen.findByRole("button", { name: "Model and effort" }));
+    await user.click(
+      await screen.findByRole("menuitemradio", { name: /Metadata-light model/ }),
+    );
+    await user.click(screen.getByRole("button", { name: "Model and effort" }));
+    expect(
+      await screen.findByText("This model exposes no selectable effort."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitemradio", { name: "xhigh" }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows device-code login details from account/login/start", async () => {
@@ -3819,7 +3848,7 @@ describe("AgentChat", () => {
     expect(screen.queryByText("Broken row")).not.toBeInTheDocument();
   });
 
-  it("previews the latest stored thread after startup history load", async () => {
+  it("keeps the start screen and does not auto-open the latest stored thread", async () => {
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method === "thread/list") {
@@ -3868,21 +3897,20 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
+    // The root route stays on the start screen: the latest stored thread is
+    // listed in history but is not auto-read or auto-opened in the main pane.
     expect(
-      await screen.findByRole("heading", { name: "Latest stored session" }),
+      await screen.findByRole("button", { name: /Latest stored session/ }),
     ).toBeInTheDocument();
     expect(
-      await screen.findByText("This stored session opens in the main pane."),
-    ).toBeInTheDocument();
-    // cwd surfaces read-only in the thread header for a previewed thread.
-    expect(screen.getByText("/Users/example/latest-project")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Working directory")).not.toBeInTheDocument();
+      screen.queryByRole("heading", { name: "Latest stored session" }),
+    ).not.toBeInTheDocument();
     expect(
-      transport.requests.find((request) => request.method === "thread/read")?.params,
-    ).toEqual({
-      includeTurns: true,
-      threadId: "thread-auto-preview",
-    });
+      screen.queryByText("This stored session opens in the main pane."),
+    ).not.toBeInTheDocument();
+    expect(
+      transport.requests.some((request) => request.method === "thread/read"),
+    ).toBe(false);
   });
 
   it("loads additional stored thread pages when thread/list returns a cursor", async () => {

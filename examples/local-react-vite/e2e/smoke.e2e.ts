@@ -123,8 +123,11 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
   await expect(page.getByText("fixture@example.com")).toBeVisible();
   await expect(page.getByText("No threads found.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Start thread" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Start thread" })).toBeDisabled();
   // New threads expose cwd / project selection at thread start, fully inside
-  // the narrow first-run card.
+  // the first-run starter composer.
+  await page.getByRole("textbox", { name: "Message" }).fill("start a fixture thread");
+  await expect(page.getByRole("button", { name: "Start thread" })).toBeEnabled();
   const cwdField = page.getByLabel("Working directory");
   await expect(cwdField).toBeVisible();
   const cwdFits = await cwdField.evaluate((element) => {

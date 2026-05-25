@@ -47,3 +47,39 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* --- Starter working-directory pill -------------------------------------- */
+
+.aui-starter-cwd {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 999px;
+  color: var(--aui-fg-muted);
+  display: inline-flex;
+  flex: 0 1 320px;
+  gap: 7px;
+  max-width: 100%;
+  min-height: 30px;
+  min-width: 0;
+  padding: 0 12px;
+}
+
+.aui-starter-cwd:focus-within {
+  border-color: var(--aui-primary);
+  box-shadow: var(--aui-focus-ring);
+}
+
+.aui-starter-cwd input {
+  background: transparent;
+  border: 0;
+  color: var(--aui-fg);
+  font: 600 12px/1 var(--aui-font);
+  min-width: 0;
+  outline: none;
+  width: 100%;
+}
+
+.aui-starter-cwd input::placeholder {
+  color: var(--aui-fg-faint);
+}
