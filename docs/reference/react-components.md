@@ -238,8 +238,9 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentRateLimitBar`: one normalized rate-limit window.
 - `AgentThemeToggle`: controlled light / dark / system segmented control for
   host-owned theme state. It is not rendered by `AgentChat` automatically.
-- `AgentLocaleSelect`: controlled locale select for hosts that want an Agent
-  UI-native language switcher. It is not rendered by `AgentChat` automatically.
+- `AgentLocaleSelect`: controlled compact locale menu for hosts that want an
+  Agent UI-native language switcher. It is not rendered by `AgentChat`
+  automatically.
 - `AgentContextUsageIndicator`: compact per-thread context usage popover for
   App Server `thread/tokenUsage/updated` totals.
 - `AgentDiagnosticsPanel`: bridge/account/model startup diagnostics.

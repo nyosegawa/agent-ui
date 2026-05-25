@@ -284,7 +284,8 @@ describe("AgentChat", () => {
     const onChange = vi.fn();
     render(<AgentLocaleSelect value="en" onChange={onChange} />);
 
-    await user.selectOptions(screen.getByRole("combobox", { name: "Language" }), "fr");
+    await user.click(screen.getByRole("button", { name: "Language" }));
+    await user.click(screen.getByRole("menuitemradio", { name: "French" }));
     expect(onChange).toHaveBeenCalledWith("fr");
   });
 

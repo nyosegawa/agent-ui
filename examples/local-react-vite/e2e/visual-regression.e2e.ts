@@ -75,6 +75,17 @@ test("composer mode menu opens within the viewport on mobile", async ({ page }) 
   await expectWithinViewport(page, ".aui-menu-panel");
 });
 
+test("model and effort menu stays inside a short viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 360 });
+  await page.goto("/");
+  await expect(page.locator(".aui-thread-surface").first()).toBeVisible();
+  const modelMenu = page.getByRole("button", { name: "Model and effort" }).first();
+  await modelMenu.scrollIntoViewIfNeeded();
+  await modelMenu.click();
+  await expect(page.getByRole("menu", { name: "Model and effort" })).toBeVisible();
+  await expectFullyWithinViewport(page, ".aui-menu-panel");
+});
+
 for (const route of ["/", "/host-workflow-recipe"] as const) {
   for (const viewport of [
     { height: 900, name: "desktop", width: 1280 },
@@ -93,7 +104,7 @@ for (const route of ["/", "/host-workflow-recipe"] as const) {
         ".aui-composer",
         ".aui-approvals",
         ".aui-approval-actions .aui-btn",
-        ".aui-composer-tool",
+        ".aui-composer-settings .aui-composer-tool",
       ]) {
         if (route === "/host-workflow-recipe") {
           await page.locator(selector).first().scrollIntoViewIfNeeded();
@@ -611,6 +622,36 @@ async function expectVisibleInViewport(page: Page, selector: string) {
       };
     }, selector);
   expect(result.visible, JSON.stringify(result)).toBe(true);
+}
+
+async function expectFullyWithinViewport(page: Page, selector: string) {
+  const result = await page
+    .locator(selector)
+    .first()
+    .evaluate((element, selector) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        selector,
+        inside:
+          rect.left >= 0 &&
+          rect.right <= window.innerWidth &&
+          rect.top >= 0 &&
+          rect.bottom <= window.innerHeight,
+        rect: {
+          bottom: Math.round(rect.bottom),
+          height: Math.round(rect.height),
+          left: Math.round(rect.left),
+          right: Math.round(rect.right),
+          top: Math.round(rect.top),
+          width: Math.round(rect.width),
+        },
+        viewport: {
+          height: window.innerHeight,
+          width: window.innerWidth,
+        },
+      };
+    }, selector);
+  expect(result.inside, JSON.stringify(result)).toBe(true);
 }
 
 async function visualContract(page: Page) {

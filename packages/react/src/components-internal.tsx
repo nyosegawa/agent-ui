@@ -184,6 +184,14 @@ export const IconGauge = (props: { size?: number }) => (
   </Icon>
 );
 
+export const IconGlobe = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18" />
+    <path d="M12 3a14 14 0 010 18M12 3a14 14 0 000 18" />
+  </Icon>
+);
+
 export const IconAlert = (props: { size?: number }) => (
   <Icon size={props.size}>
     <path d="M12 9v4M12 17h.01M10.3 3.9L2.4 17.5A1.9 1.9 0 004 20.4h16a1.9 1.9 0 001.6-2.9L13.7 3.9a1.9 1.9 0 00-3.4 0z" />
