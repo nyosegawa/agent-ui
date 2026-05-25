@@ -376,6 +376,21 @@ describe("Codex protocol metadata", () => {
         },
       }),
     ).toMatchObject([{ banner: { kind: "modelReroute" }, type: "status/banner/added" }]);
+
+    expect(
+      normalizeCodexServerMessage({
+        method: "mcpServer/oauthLogin/completed",
+        params: { name: "github", success: false },
+      }),
+    ).toMatchObject([
+      {
+        banner: {
+          kind: "mcpOAuth",
+          severity: "critical",
+        },
+        type: "status/banner/added",
+      },
+    ]);
   });
 
   it("turns unsupported notifications into neutral warnings without raw payloads", () => {

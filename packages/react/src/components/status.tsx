@@ -227,20 +227,35 @@ export function AgentCriticalNoticeList() {
 }
 
 export function normalizedStatusNotices(
-  banners: Array<{ id: string; kind: string; message: string }>,
+  banners: Array<{
+    id: string;
+    kind: string;
+    message: string;
+    raw?: unknown;
+    severity?: AgentStatusSeverity;
+  }>,
 ): AgentStatusNotice[] {
   const t = defaultStatusTitle;
   return banners.map((banner) => ({
     id: banner.id,
     kind: banner.kind,
     message: banner.message,
-    severity: statusSeverity(banner.kind, banner.message),
+    severity: statusSeverity(banner),
     title: t(banner.kind),
   }));
 }
 
-function statusSeverity(kind: string, message: string): AgentStatusSeverity {
-  if (kind === "rateLimit") return rateLimitSeverity(message);
+function statusSeverity(banner: {
+  kind: string;
+  message: string;
+  raw?: unknown;
+  severity?: AgentStatusSeverity;
+}): AgentStatusSeverity {
+  const explicit = explicitSeverity(banner.severity ?? recordString(banner.raw, "severity"));
+  if (explicit) return explicit;
+  const kind = banner.kind;
+  const message = banner.message;
+  if (kind === "rateLimit") return rateLimitSeverity(banner.raw, message);
   if (kind === "configWarning" || kind === "deprecationNotice") return "warning";
   if (/failed|blocked|danger|requires action|needs action/i.test(message)) {
     return "critical";
@@ -248,7 +263,9 @@ function statusSeverity(kind: string, message: string): AgentStatusSeverity {
   return "info";
 }
 
-function rateLimitSeverity(message: string): AgentStatusSeverity {
+function rateLimitSeverity(raw: unknown, message: string): AgentStatusSeverity {
+  const structured = structuredRateLimitSeverity(raw);
+  if (structured) return structured;
   if (/below (the )?warning threshold|normal|available|ready/i.test(message)) {
     return "info";
   }
@@ -263,6 +280,64 @@ function rateLimitSeverity(message: string): AgentStatusSeverity {
     return "warning";
   }
   return "info";
+}
+
+function structuredRateLimitSeverity(raw: unknown): AgentStatusSeverity | undefined {
+  const snapshots = collectRateLimitSnapshots(raw);
+  const percents = snapshots.flatMap((snapshot) => {
+    const record = asRecord(snapshot);
+    if (!record) return [];
+    if (record.rateLimitReachedType ?? record.rate_limit_reached_type) return [100];
+    return ["primary", "secondary"].flatMap((key) => {
+      const window = asRecord(record[key]);
+      if (!window) return [];
+      const percent =
+        numberValue(window.usedPercent ?? window.used_percent) ?? percentFromUsedLimit(window);
+      return percent === undefined ? [] : [percent];
+    });
+  });
+  if (percents.some((percent) => percent >= 95)) return "critical";
+  if (percents.some((percent) => percent >= 80)) return "warning";
+  if (percents.length > 0) return "info";
+  return undefined;
+}
+
+function collectRateLimitSnapshots(value: unknown): unknown[] {
+  const record = asRecord(value);
+  if (!record) return [];
+  const snapshots: unknown[] = [];
+  if (record.rateLimits) snapshots.push(record.rateLimits);
+  if (record.rate_limits) snapshots.push(record.rate_limits);
+  const byId = asRecord(record.rateLimitsByLimitId ?? record.rate_limits_by_limit_id);
+  if (byId) snapshots.push(...Object.values(byId));
+  if (record.primary || record.secondary) snapshots.push(record);
+  return snapshots;
+}
+
+function explicitSeverity(value: unknown): AgentStatusSeverity | undefined {
+  return value === "info" || value === "warning" || value === "critical" ? value : undefined;
+}
+
+function recordString(value: unknown, key: string): string | undefined {
+  const record = asRecord(value);
+  if (!record) return undefined;
+  const field = record[key];
+  return typeof field === "string" ? field : undefined;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : undefined;
+}
+
+function numberValue(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+}
+
+function percentFromUsedLimit(window: Record<string, unknown>) {
+  const used = numberValue(window.used);
+  const limit = numberValue(window.limit);
+  if (used === undefined || !limit) return undefined;
+  return (used / limit) * 100;
 }
 
 export function statusSummary(

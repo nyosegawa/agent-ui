@@ -354,6 +354,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
                 ? `MCP OAuth failed for ${String(params.name ?? "server")}.`
                 : `MCP OAuth completed for ${String(params.name ?? "server")}.`,
             raw: params,
+            severity: params.success === false ? "critical" : "info",
           },
         },
       ];

@@ -817,6 +817,85 @@ describe("AgentChat", () => {
     );
   });
 
+  it("uses structured status severity instead of parsing localized banner text", () => {
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-localized-status";
+    initialState.diagnostics.banners = [
+      {
+        id: "localized-critical",
+        kind: "system",
+        message: "認証処理に失敗しました。",
+        severity: "critical",
+      },
+      {
+        id: "localized-rate",
+        kind: "rateLimit",
+        message: "週間利用量",
+        raw: {
+          rateLimits: {
+            primary: { usedPercent: 82 },
+          },
+        },
+      },
+    ];
+    initialState.threads["thread-localized-status"] = {
+      orderedTurnIds: [],
+      registryStatus: "live",
+      status: "complete",
+      thread: { id: "thread-localized-status", name: "Localized status" },
+      turns: {},
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat diagnostics sidebar={false} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("Status summary")).toHaveTextContent(
+      "1 critical · 1 warning · 2 total",
+    );
+    expect(screen.getByLabelText("Critical status")).toHaveTextContent(
+      "認証処理に失敗しました。",
+    );
+    expect(screen.getByLabelText("Status details")).toHaveTextContent("週間利用量");
+  });
+
+  it("marks structured reached rate limits as critical without message parsing", () => {
+    const initialState = createInitialAgentState();
+    initialState.activeThreadId = "thread-rate-reached";
+    initialState.diagnostics.banners = [
+      {
+        id: "rate-reached",
+        kind: "rateLimit",
+        message: "利用上限に達しました。",
+        raw: {
+          rateLimits: {
+            primary: { usedPercent: 50 },
+            rateLimitReachedType: "primary",
+          },
+        },
+      },
+    ];
+    initialState.threads["thread-rate-reached"] = {
+      orderedTurnIds: [],
+      registryStatus: "live",
+      status: "complete",
+      thread: { id: "thread-rate-reached", name: "Rate reached" },
+      turns: {},
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat diagnostics sidebar={false} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("Critical status")).toHaveTextContent(
+      "利用上限に達しました。",
+    );
+  });
+
   it("renders a workspace with a side panel", () => {
     render(
       <AgentProvider

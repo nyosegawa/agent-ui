@@ -245,6 +245,7 @@ export interface StatusBannerState {
   kind: StatusBannerKind;
   message: string;
   raw?: unknown;
+  severity?: "info" | "warning" | "critical";
 }
 
 export interface DiagnosticsState {

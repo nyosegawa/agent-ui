@@ -414,10 +414,12 @@ standalone in product chrome; pass `autoRefresh={false}` when another bootstrap
 surface already owns startup reads.
 
 `AgentStatusSummary` and `AgentStatusDetails` use the same normalized severity
-model as `AgentCriticalNoticeList`. A rate-limit notice is not critical merely
-because its protocol kind is `rateLimit`; normal and below-threshold messages
-remain background status, near-threshold messages are warnings, and only
-reached/exceeded/blocked limit messages become critical.
+model as `AgentCriticalNoticeList`. Codex App Server does not expose a generic
+status-banner protocol or severity field; Agent UI synthesizes banners from
+structured notifications. Prefer explicit `severity` on host-provided banners
+or structured rate-limit fields such as `usedPercent` and
+`rateLimitReachedType`. English message parsing is only a compatibility
+fallback for older host banners that do not carry structured severity.
 
 `AgentContextUsageIndicator` renders nonzero per-thread context usage from
 `thread/tokenUsage/updated`. The default composer places it next to the primary

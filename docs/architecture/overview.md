@@ -110,8 +110,9 @@ but new code should use the normalized stores: `threadRegistry`,
   host capability stores
 - `skills/changed`: add a refresh banner because the App Server notification is
   an invalidation signal, not a full skills payload
-- `status/banner/*`: update model reroute, deprecation, config, account, MCP
-  OAuth, rate-limit, and system banners
+- `status/banner/*`: update Agent UI-synthesized model reroute, deprecation,
+  config, account, MCP OAuth, rate-limit, and system banners; App Server does
+  not have a generic status-banner notification
 - `item/started`: create in-progress item
 - delta notifications: append or update transient state
 - `item/completed`: replace item with authoritative item

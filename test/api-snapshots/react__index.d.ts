@@ -1262,6 +1262,8 @@ declare function normalizedStatusNotices(banners: Array<{
     id: string;
     kind: string;
     message: string;
+    raw?: unknown;
+    severity?: AgentStatusSeverity;
 }>): AgentStatusNotice[];
 declare function statusSummary(total: number, warningCount: number, criticalCount: number, t?: (key: AgentI18nKey, vars?: Record<string, string | number>) => string): string;
 

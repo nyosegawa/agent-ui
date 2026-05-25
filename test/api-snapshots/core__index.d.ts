@@ -179,6 +179,7 @@ interface StatusBannerState {
     kind: StatusBannerKind;
     message: string;
     raw?: unknown;
+    severity?: "info" | "warning" | "critical";
 }
 interface DiagnosticsState {
     banners: StatusBannerState[];
