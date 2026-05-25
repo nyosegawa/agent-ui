@@ -5,6 +5,7 @@ import {
   useAgentComposer,
   type AgentComposerController,
 } from "../hooks";
+import { useAgentI18n } from "../i18n";
 import type { CodexUserInput } from "../codex-request-params";
 import {
   IconAlert,
@@ -70,7 +71,7 @@ function AgentComposerForm({
   disabledReason,
   onRequestAppMention,
   onRequestPluginMention,
-  placeholder = "Ask Codex to work in this thread",
+  placeholder,
   resolveLocalAttachment,
   tokenUsage,
   onRegisterAttachmentRestore,
@@ -78,6 +79,7 @@ function AgentComposerForm({
   composer: AgentComposerController;
   onRegisterAttachmentRestore?: (restore: (attachments: ComposerAttachment[]) => void) => void;
 }) {
+  const { t } = useAgentI18n();
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
   const [attachmentError, setAttachmentError] = useState<string | undefined>();
   const [isFocused, setFocused] = useState(false);
@@ -149,11 +151,14 @@ function AgentComposerForm({
       }
       setAttachmentError(
         rejected > 0
-          ? `${rejected} file${rejected === 1 ? "" : "s"} could not be attached for this Codex thread.`
+          ? t("composer.attachmentRejected", {
+              count: rejected,
+              file: rejected === 1 ? "file" : "files",
+            })
           : undefined,
       );
     },
-    [addAttachment, resolveLocalAttachment],
+    [addAttachment, resolveLocalAttachment, t],
   );
 
   useEffect(() => {
@@ -256,7 +261,7 @@ function AgentComposerForm({
 
   return (
     <form
-      aria-label="Composer attachments"
+      aria-label={t("aria.composerAttachments")}
       className="aui-composer"
       data-disabled={disabled ? "true" : undefined}
       data-focused={isFocused ? "true" : undefined}
@@ -313,7 +318,7 @@ function AgentComposerForm({
         </div>
       ) : null}
       {attachments.length > 0 ? (
-        <ul className="aui-composer-chips" aria-label="Pending attachments">
+        <ul className="aui-composer-chips" aria-label={t("aria.pendingAttachments")}>
           {attachments.map((attachment) => (
             <li className="aui-composer-chip" data-kind={attachment.kind} key={attachment.id}>
               {attachment.previewUrl ? (
@@ -339,7 +344,7 @@ function AgentComposerForm({
                 ) : null}
               </span>
               <button
-                aria-label={`Remove ${attachment.label}`}
+                aria-label={t("composer.removeAttachment", { label: attachment.label })}
                 className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
                 onClick={() => removeAttachment(attachment.id)}
                 type="button"
@@ -351,7 +356,7 @@ function AgentComposerForm({
         </ul>
       ) : null}
       <textarea
-        aria-label="Message"
+        aria-label={t("aria.message")}
         className="aui-composer-input"
         disabled={disabled}
         onBlur={() => setFocused(false)}
@@ -370,7 +375,7 @@ function AgentComposerForm({
           event.preventDefault();
           void addLocalFiles(event.clipboardData.files);
         }}
-        placeholder={composer.isRunning ? "Add a follow-up..." : placeholder}
+        placeholder={composer.isRunning ? t("composer.addFollowUp") : placeholder ?? t("composer.placeholder")}
         ref={textareaRef}
         rows={1}
         value={composer.value}
@@ -381,11 +386,11 @@ function AgentComposerForm({
             {resolveLocalAttachment ? (
               <>
                 <button
-                  aria-label="Attach file"
+                  aria-label={t("composer.attachFile")}
                   className={buttonClass("ghost", { iconOnly: true })}
                   disabled={disabled}
                   onClick={() => fileInputRef.current?.click()}
-                  title="Attach files"
+                  title={t("composer.attachFiles")}
                   type="button"
                 >
                   <IconPaperclip size={16} />
@@ -405,28 +410,28 @@ function AgentComposerForm({
             ) : null}
             {onRequestAppMention ? (
               <button
-                aria-label="App"
+                aria-label={t("composer.app")}
                 className={buttonClass("ghost", { size: "sm" })}
                 disabled={disabled}
                 onClick={() => void handleMention("app")}
-                title="Mention an app"
+                title={t("composer.mentionApp")}
                 type="button"
               >
                 <IconApp size={14} />
-                <span>App</span>
+                <span>{t("composer.app")}</span>
               </button>
             ) : null}
             {onRequestPluginMention ? (
               <button
-                aria-label="Plugin"
+                aria-label={t("composer.plugin")}
                 className={buttonClass("ghost", { size: "sm" })}
                 disabled={disabled}
                 onClick={() => void handleMention("plugin")}
-                title="Mention a plugin"
+                title={t("composer.mentionPlugin")}
                 type="button"
               >
                 <IconPlugin size={14} />
-                <span>Plugin</span>
+                <span>{t("composer.plugin")}</span>
               </button>
             ) : null}
           </div>
@@ -435,16 +440,16 @@ function AgentComposerForm({
         <div className="aui-composer-toolbar-end">
           <AgentContextUsageIndicator tokenUsage={tokenUsage} />
           <span className="aui-composer-hint" aria-hidden="true">
-            <kbd>Enter</kbd> to send
+            {t("composer.enterToSend")}
           </span>
           <button
-            aria-label={isStopAction ? "Stop current turn" : "Send"}
+            aria-label={isStopAction ? t("composer.stopCurrentTurn") : t("composer.send")}
             className={buttonClass(isStopAction ? "danger" : "primary", {
               iconOnly: true,
               size: "lg",
             })}
             disabled={!canSubmit}
-            title={isStopAction ? "Stop current turn" : "Send message"}
+            title={isStopAction ? t("composer.stopCurrentTurn") : t("composer.sendMessage")}
             type="submit"
           >
             {isStopAction ? <IconStop size={18} /> : <IconSend size={18} />}
@@ -481,6 +486,7 @@ export function AgentComposerPanel({
   thread,
   threadId,
 }: AgentComposerPanelProps) {
+  const { t } = useAgentI18n();
   const isPreviewOnly = isPreviewOnlyThread(thread);
   const isBlocked = thread.status === "waitingForInput" || isPreviewOnly;
   const composer = useAgentComposer(threadId);
@@ -488,7 +494,7 @@ export function AgentComposerPanel({
     null,
   );
   return (
-    <section className="aui-compose-panel" aria-label="Message composer">
+    <section className="aui-compose-panel" aria-label={t("aria.messageComposer")}>
       <QueuedFollowUpList
         composer={composer}
         onRestoreAttachments={(attachments) => attachmentRestoreRef.current?.(attachments)}
@@ -496,13 +502,13 @@ export function AgentComposerPanel({
       <AgentComposerForm
         composer={composer}
         disabled={isBlocked}
-        disabledReason={composerDisabledReason(thread.status, isPreviewOnly)}
+        disabledReason={composerDisabledReason(thread.status, isPreviewOnly, t)}
         onRegisterAttachmentRestore={(restore) => {
           attachmentRestoreRef.current = restore;
         }}
         onRequestAppMention={onRequestAppMention}
         onRequestPluginMention={onRequestPluginMention}
-        placeholder={composerPlaceholder(thread.status, isPreviewOnly)}
+        placeholder={composerPlaceholder(thread.status, isPreviewOnly, t)}
         resolveLocalAttachment={resolveLocalAttachment}
         tokenUsage={thread.tokenUsage}
         threadId={threadId}
@@ -514,10 +520,11 @@ export function AgentComposerPanel({
 function composerDisabledReason(
   status: ThreadState["status"],
   isPreviewOnly: boolean,
+  t: ReturnType<typeof useAgentI18n>["t"],
 ): string | undefined {
-  if (isPreviewOnly) return "Resume this stored thread before sending a new message.";
+  if (isPreviewOnly) return t("composer.previewOnlyReason");
   if (status === "waitingForInput") {
-    return "Resolve the pending approval before sending another message.";
+    return t("composer.resolveApprovalReason");
   }
   return undefined;
 }
@@ -529,9 +536,13 @@ function isPreviewOnlyThread(thread: ThreadState): boolean {
   );
 }
 
-function composerPlaceholder(status: ThreadState["status"], isPreviewOnly = false): string {
-  if (isPreviewOnly) return "Stored thread";
-  if (status === "running") return "Add a follow-up...";
-  if (status === "waitingForInput") return "Waiting on approval";
-  return "Ask Codex to work in this thread";
+function composerPlaceholder(
+  status: ThreadState["status"],
+  isPreviewOnly: boolean,
+  t: ReturnType<typeof useAgentI18n>["t"],
+): string {
+  if (isPreviewOnly) return t("thread.status.stored");
+  if (status === "running") return t("composer.addFollowUp");
+  if (status === "waitingForInput") return t("thread.status.needsApproval");
+  return t("composer.placeholder");
 }

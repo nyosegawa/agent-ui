@@ -1,13 +1,12 @@
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useAgentModels, useAgentRunSettings } from "../hooks";
+import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import {
   IconCheck,
-  IconChevronDown,
   IconClose,
   IconCpu,
   IconFolder,
-  IconFolderAdd,
   IconGauge,
   IconShield,
   buttonClass,
@@ -16,6 +15,11 @@ import { useAgentContext } from "../provider";
 import { AuiMenu } from "./disclosure";
 import { isUserFacingPath } from "./sidebar";
 import { useCompactLayout } from "./shared";
+
+export {
+  AgentStarterCwd,
+  type AgentWorkingDirectoryResolver,
+} from "./starter-cwd";
 
 export interface AgentRunControlsProps {
   autoRefresh?: boolean;
@@ -31,6 +35,7 @@ export function AgentRunControls({
   autoRefresh = true,
   variant = "panel",
 }: AgentRunControlsProps = {}) {
+  const { t } = useAgentI18n();
   const { state } = useAgentContext();
   const { models, refreshModels } = useAgentModels();
   const {
@@ -65,12 +70,12 @@ export function AgentRunControls({
   return (
     <section
       className={variant === "compact" ? "aui-run-controls-compact" : "aui-run-controls"}
-      aria-label="Run settings"
+      aria-label={t("aria.runSettings")}
     >
       <fieldset className="aui-mode-group">
-        <legend>Execution mode</legend>
+        <legend>{t("run.executionMode")}</legend>
         <div
-          aria-label="Execution mode"
+          aria-label={t("run.executionMode")}
           className="aui-segmented"
           onKeyDown={(event) => {
             if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
@@ -100,24 +105,24 @@ export function AgentRunControls({
                 onClick={() => setExecutionMode(mode.id)}
                 role="radio"
                 tabIndex={selected ? 0 : -1}
-                title={mode.description}
+                title={executionModeDescription(mode.id, t)}
                 type="button"
               >
-                {mode.label}
+                {executionModeLabel(mode.id, t)}
               </button>
             );
           })}
         </div>
       </fieldset>
       <label className="aui-field">
-        <span>Model</span>
+        <span>{t("run.model")}</span>
         <select
-          aria-label="Model"
+          aria-label={t("run.model")}
           className="aui-select"
           onChange={(event) => setModelId(event.currentTarget.value)}
           value={runSettings.modelId ?? ""}
         >
-          <option value="">Server default</option>
+          <option value="">{t("common.serverDefault")}</option>
           {models.map((model) => (
             <option key={model.id} value={model.id}>
               {formatModelOption(model)}
@@ -126,16 +131,16 @@ export function AgentRunControls({
         </select>
       </label>
       <label className="aui-field">
-        <span>Effort</span>
+        <span>{t("run.effort")}</span>
         <select
-          aria-label="Effort"
+          aria-label={t("run.effort")}
           className="aui-select"
           disabled={!hasEffortOptions}
           onChange={(event) => setEffort(event.currentTarget.value)}
           value={runSettings.effort ?? ""}
         >
           <option value="">
-            {selectedModel && hasEffortOptions ? "Model default" : "Server default"}
+            {selectedModel && hasEffortOptions ? t("run.modelDefault") : t("common.serverDefault")}
           </option>
           {supportedEfforts.map((effort) => (
             <option key={effort} value={effort}>
@@ -145,24 +150,24 @@ export function AgentRunControls({
         </select>
       </label>
       <label className="aui-field aui-field-wide">
-        <span>Working directory</span>
+        <span>{t("run.workingDirectory")}</span>
         <div className="aui-input-shell aui-input-with-icon">
           <IconFolder size={14} />
           <input
-            aria-label="Working directory"
+            aria-label={t("run.workingDirectory")}
             className="aui-text-input"
             list={cwdOptions.length > 0 ? "aui-cwd-options" : undefined}
             onChange={(event) => setCwd(event.currentTarget.value)}
-            placeholder={cwdOptions[0] ?? "Server default cwd"}
+            placeholder={cwdOptions[0] ?? t("run.cwd.serverDefault")}
             type="text"
             value={runSettings.cwd ?? ""}
           />
           {runSettings.cwd ? (
             <button
-              aria-label="Clear working directory"
+              aria-label={t("run.clearWorkingDirectory")}
               className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
               onClick={() => setCwd("")}
-              title="Clear working directory"
+              title={t("run.clearWorkingDirectory")}
               type="button"
             >
               <IconClose size={14} />
@@ -189,147 +194,6 @@ export function AgentRunSettingsPanel({
   autoRefresh = false,
 }: AgentRunSettingsPanelProps = {}) {
   return <AgentRunControls autoRefresh={autoRefresh} variant="compact" />;
-}
-
-export type AgentWorkingDirectoryResolver = () =>
-  | Promise<string | null | undefined>
-  | string
-  | null
-  | undefined;
-
-/**
- * Compact working-directory selector for the start screen. cwd is a
- * thread-start setting, so it sits beneath the starter composer as a context
- * pill rather than inside the composer toolbar.
- */
-export function AgentStarterCwd({
-  onRequestWorkingDirectory,
-}: {
-  onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
-}) {
-  const { state } = useAgentContext();
-  const { runSettings, setCwd } = useAgentRunSettings();
-  const [open, setOpen] = useState(false);
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const cwdOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          [
-            runSettings.cwd,
-            ...Object.values(state.threads)
-              .map((thread) => thread.thread.path)
-              .filter((path): path is string => Boolean(path && isUserFacingPath(path))),
-          ].filter((path): path is string => Boolean(path && isUserFacingPath(path))),
-        ),
-      ).slice(0, 12),
-    [runSettings.cwd, state.threads],
-  );
-  const selectedCwd = runSettings.cwd || undefined;
-  const triggerLabel = selectedCwd ? folderName(selectedCwd) : "Select folder";
-  const requestWorkingDirectory = useCallback(async () => {
-    setOpen(false);
-    const requested = onRequestWorkingDirectory
-      ? await onRequestWorkingDirectory()
-      : fallbackWorkingDirectoryPrompt(runSettings.cwd ?? cwdOptions[0]);
-    const next = typeof requested === "string" ? requested.trim() : "";
-    if (next) setCwd(next);
-  }, [cwdOptions, onRequestWorkingDirectory, runSettings.cwd, setCwd]);
-
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (event: PointerEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open]);
-
-  return (
-    <div className="aui-starter-context" aria-label="Thread start context">
-      <div className="aui-starter-cwd" ref={rootRef}>
-        <div className="aui-starter-cwd-picker">
-          <button
-            aria-expanded={open}
-            aria-haspopup="menu"
-            aria-label="Working directory"
-            className="aui-starter-cwd-trigger"
-            onClick={() => setOpen((current) => !current)}
-            title={selectedCwd ?? "Server default cwd"}
-            type="button"
-          >
-            <IconFolder size={15} />
-            <span className="aui-starter-cwd-trigger-label">{triggerLabel}</span>
-            <IconChevronDown size={13} />
-          </button>
-          {open ? (
-            <div className="aui-starter-cwd-menu" role="menu" aria-label="Working directory">
-              <div className="aui-starter-cwd-section-label">Recent</div>
-              {cwdOptions.length > 0 ? (
-                cwdOptions.map((cwd) => {
-                  const selected = cwd === selectedCwd;
-                  return (
-                    <button
-                      aria-checked={selected}
-                      className="aui-starter-cwd-item"
-                      key={cwd}
-                      onClick={() => {
-                        setCwd(cwd);
-                        setOpen(false);
-                      }}
-                      role="menuitemradio"
-                      title={cwd}
-                      type="button"
-                    >
-                      <span>{folderName(cwd)}</span>
-                      {selected ? <IconCheck size={15} /> : null}
-                    </button>
-                  );
-                })
-              ) : (
-                <span className="aui-starter-cwd-empty">No recent folders</span>
-              )}
-              <div className="aui-starter-cwd-separator" />
-              <button
-                className="aui-starter-cwd-item aui-starter-cwd-open"
-                onClick={() => void requestWorkingDirectory()}
-                role="menuitem"
-                type="button"
-              >
-                Open folder...
-              </button>
-            </div>
-          ) : null}
-        </div>
-        <button
-          aria-label="Open folder"
-          className="aui-starter-cwd-action"
-          onClick={() => void requestWorkingDirectory()}
-          title="Open folder..."
-          type="button"
-        >
-          <IconFolderAdd size={16} />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function folderName(path: string): string {
-  const normalized = path.replace(/\\/g, "/").replace(/\/+$/, "");
-  return normalized.split("/").pop() || normalized || path;
-}
-
-function fallbackWorkingDirectoryPrompt(current?: string): string | null | undefined {
-  if (typeof window === "undefined" || typeof window.prompt !== "function") return undefined;
-  return window.prompt("Working directory", current ?? "");
 }
 
 function formatModelOption(model: { id: string; name?: string }): string {
@@ -392,18 +256,18 @@ function MenuOption({
   );
 }
 
-function effortOptionLabel(effort: string): string {
+function effortOptionLabel(effort: string, t: (key: AgentI18nKey) => string): string {
   switch (effort) {
     case "minimal":
-      return "Minimal";
+      return t("run.effort.minimal");
     case "low":
-      return "Low";
+      return t("run.effort.low");
     case "medium":
-      return "Medium";
+      return t("run.effort.medium");
     case "high":
-      return "High";
+      return t("run.effort.high");
     case "xhigh":
-      return "Very high";
+      return t("run.effort.veryHigh");
     default:
       return effort.charAt(0).toUpperCase() + effort.slice(1);
   }
@@ -412,17 +276,27 @@ function effortOptionLabel(effort: string): string {
 function composerModelLabel(
   selectedModel: { id: string; name?: string } | undefined,
   modelId: string | undefined,
+  t: (key: AgentI18nKey) => string,
 ): string {
-  if (!modelId && !selectedModel) return "Default model";
-  return selectedModel?.name ?? selectedModel?.id ?? modelId ?? "Model";
+  if (!modelId && !selectedModel) return t("run.defaultModel");
+  return selectedModel?.name ?? selectedModel?.id ?? modelId ?? t("run.model");
 }
 
 function composerEffortLabel(
   effort: string | undefined,
   hasEfforts: boolean,
+  t: (key: AgentI18nKey) => string,
 ): string {
-  if (effort) return effortOptionLabel(effort);
-  return hasEfforts ? "Auto effort" : "Default effort";
+  if (effort) return effortOptionLabel(effort, t);
+  return hasEfforts ? t("run.defaultEffort") : t("run.defaultEffort");
+}
+
+function executionModeLabel(id: string, t: (key: AgentI18nKey) => string): string {
+  return t(`run.mode.${id}.label` as AgentI18nKey);
+}
+
+function executionModeDescription(id: string, t: (key: AgentI18nKey) => string): string {
+  return t(`run.mode.${id}.description` as AgentI18nKey);
 }
 
 /**
@@ -432,6 +306,7 @@ function composerEffortLabel(
  * existing thread.
  */
 export function ComposerRunSettings() {
+  const { t } = useAgentI18n();
   const compact = useCompactLayout();
   const { state } = useAgentContext();
   const { models, refreshModels } = useAgentModels();
@@ -465,18 +340,18 @@ export function ComposerRunSettings() {
   return (
     <div className="aui-composer-settings">
       <AuiMenu
-        ariaLabel="Execution mode"
+        ariaLabel={t("run.executionMode")}
         compact={compact}
         icon={<IconShield size={14} />}
-        label={currentMode?.label ?? "Mode"}
+        label={currentMode ? executionModeLabel(currentMode.id, t) : t("run.mode")}
       >
         {(close) =>
           executionModes.map((mode) => (
             <MenuOption
-              description={mode.description}
+              description={executionModeDescription(mode.id, t)}
               icon={<IconShield size={14} />}
               key={mode.id}
-              label={mode.label}
+              label={executionModeLabel(mode.id, t)}
               onSelect={() => {
                 setExecutionMode(mode.id);
                 close();
@@ -487,20 +362,21 @@ export function ComposerRunSettings() {
         }
       </AuiMenu>
       <AuiMenu
-        ariaLabel="Model and effort"
+        ariaLabel={t("run.modelAndEffort")}
         compact={compact}
         icon={<IconCpu size={14} />}
-        label={`${composerModelLabel(selectedModel, runSettings.modelId)} · ${composerEffortLabel(
+        label={`${composerModelLabel(selectedModel, runSettings.modelId, t)} · ${composerEffortLabel(
           runSettings.effort,
           hasEfforts,
+          t,
         )}`}
       >
         {(close) => (
           <>
-            <MenuSection label="Model">
+            <MenuSection label={t("run.model")}>
               <MenuOption
                 icon={<IconCpu size={14} />}
-                label="Server default"
+                label={t("common.serverDefault")}
                 onSelect={() => {
                   setModelId("");
                   close();
@@ -520,12 +396,12 @@ export function ComposerRunSettings() {
                 />
               ))}
             </MenuSection>
-            <MenuSection label="Effort">
+            <MenuSection label={t("run.effort")}>
               {hasEfforts ? (
                 <>
                   <MenuOption
                     icon={<IconGauge size={14} />}
-                    label={selectedModel ? "Model default" : "Server default"}
+                    label={selectedModel ? t("run.modelDefault") : t("common.serverDefault")}
                     onSelect={() => {
                       setEffort("");
                       close();
@@ -536,7 +412,7 @@ export function ComposerRunSettings() {
                     <MenuOption
                       icon={<IconGauge size={14} />}
                       key={effort}
-                      label={effortOptionLabel(effort)}
+                      label={effortOptionLabel(effort, t)}
                       onSelect={() => {
                         setEffort(effort);
                         close();
@@ -547,7 +423,7 @@ export function ComposerRunSettings() {
                 </>
               ) : (
                 <p className="aui-menu-empty">
-                  This model exposes no selectable effort.
+                  {t("run.noSelectableEffort")}
                 </p>
               )}
             </MenuSection>

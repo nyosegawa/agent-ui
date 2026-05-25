@@ -10,6 +10,7 @@ import {
 } from "../components-internal";
 import { AgentDiffViewer } from "../diff-viewer";
 import { useAgentApprovals } from "../hooks";
+import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import { deferAction, isRecord, stringField } from "./shared";
 
 export function AgentApprovalQueue({
@@ -21,13 +22,14 @@ export function AgentApprovalQueue({
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
   threadId?: string;
 }) {
+  const { t } = useAgentI18n();
   const { approvals: hookApprovals, approve } = useAgentApprovals(threadId);
   const approvals = approvalsProp ?? hookApprovals;
   const [expandedId, setExpandedId] = useState<string | undefined>();
   if (approvals.length === 0) return null;
   if (renderApproval) {
     return (
-      <section className="aui-approvals" aria-label="Pending approvals">
+      <section className="aui-approvals" aria-label={t("approval.aria.pending")}>
         {approvals.map((approval) => (
           <div key={String(approval.id)}>{renderApproval(approval)}</div>
         ))}
@@ -42,14 +44,14 @@ export function AgentApprovalQueue({
       className="aui-approvals"
       aria-label={
         approvals.length === 1
-          ? `Pending approval ${String(expanded.id)}`
-          : "Pending approvals"
+          ? t("approval.aria.pendingOne", { id: String(expanded.id) })
+          : t("approval.aria.pending")
       }
       data-count={approvals.length}
     >
       {approvals.length > 1 ? (
         <p className="aui-approvals-count" role="status">
-          {approvals.length} decisions need your review
+          {t("approval.count", { count: approvals.length })}
         </p>
       ) : null}
       <ApprovalCard
@@ -69,16 +71,14 @@ export function AgentApprovalQueue({
         }
       />
       {others.length > 0 ? (
-        <ul className="aui-approval-more" aria-label="Other pending approvals">
+        <ul className="aui-approval-more" aria-label={t("approval.aria.otherPending")}>
           {others.map((approval) => {
             const payload = isRecord(approval.payload) ? approval.payload : {};
             const risk = approvalRisk(approval.kind, payload);
             return (
               <li key={String(approval.id)}>
                 <button
-                  aria-label={`Review ${approvalRequestLabel(approval.kind)} ${String(
-                    approval.id,
-                  )}`}
+                  aria-label={`${t("approval.action.review")} ${approvalRequestLabel(approval.kind, t)} ${String(approval.id)}`}
                   className="aui-approval-compact"
                   data-risk={risk}
                   onClick={() => setExpandedId(String(approval.id))}
@@ -88,14 +88,14 @@ export function AgentApprovalQueue({
                     <IconShield size={14} />
                   </span>
                   <span className="aui-approval-compact-body">
-                    <strong>{approvalTitle(approval.kind)}</strong>
-                    <small>{approvalSubtitle(approval.kind, payload)}</small>
+                    <strong>{approvalTitle(approval.kind, t)}</strong>
+                    <small>{approvalSubtitle(approval.kind, payload, t)}</small>
                   </span>
                   <span className="aui-approval-risk" data-risk={risk}>
-                    {riskLabel(risk)}
+                    {riskLabel(risk, t)}
                   </span>
                   <span className="aui-approval-compact-cta" aria-hidden="true">
-                    Review
+                    {t("approval.action.review")}
                   </span>
                 </button>
               </li>
@@ -118,8 +118,9 @@ function ApprovalCard({
   onApproveForSession: () => void;
   onReject: () => void;
 }) {
+  const { t } = useAgentI18n();
   const payload = isRecord(approval.payload) ? approval.payload : {};
-  const requestLabel = approvalRequestLabel(approval.kind);
+  const requestLabel = approvalRequestLabel(approval.kind, t);
   const risk = approvalRisk(approval.kind, payload);
   return (
     <article
@@ -134,12 +135,12 @@ function ApprovalCard({
         </span>
         <div className="aui-approval-title">
           <strong id={`aui-approval-title-${String(approval.id)}`}>
-            {approvalTitle(approval.kind)}
+            {approvalTitle(approval.kind, t)}
           </strong>
-          <small>{approvalSubtitle(approval.kind, payload)}</small>
+          <small>{approvalSubtitle(approval.kind, payload, t)}</small>
         </div>
         <span className="aui-approval-risk" data-risk={risk}>
-          {riskLabel(risk)} risk
+          {riskLabel(risk, t)} {t("approval.riskSuffix")}
         </span>
       </header>
       <ApprovalSummary approval={approval} payload={payload} />
@@ -151,7 +152,7 @@ function ApprovalCard({
           type="button"
         >
           <IconCheck size={14} />
-          <span>Approve</span>
+          <span>{t("approval.action.approve")}</span>
         </button>
         <button
           aria-label={`Approve ${requestLabel} ${String(approval.id)} for session`}
@@ -159,7 +160,7 @@ function ApprovalCard({
           onClick={onApproveForSession}
           type="button"
         >
-          Approve for session
+          {t("approval.action.approveForSession")}
         </button>
         <button
           aria-label={`Decline ${requestLabel} ${String(approval.id)}`}
@@ -168,7 +169,7 @@ function ApprovalCard({
           type="button"
         >
           <IconBlock size={14} />
-          <span>Decline</span>
+          <span>{t("approval.action.decline")}</span>
         </button>
       </footer>
     </article>
@@ -194,41 +195,45 @@ function approvalRisk(kind: string, payload: Record<string, unknown>): ApprovalR
   return "low";
 }
 
-function riskLabel(risk: ApprovalRisk): string {
+function riskLabel(risk: ApprovalRisk, t: (key: AgentI18nKey) => string): string {
   switch (risk) {
     case "high":
-      return "High";
+      return t("approval.risk.high");
     case "medium":
-      return "Med";
+      return t("approval.risk.medium");
     default:
-      return "Low";
+      return t("approval.risk.low");
   }
 }
 
-function approvalSubtitle(kind: string, payload: Record<string, unknown>): string {
+function approvalSubtitle(
+  kind: string,
+  payload: Record<string, unknown>,
+  t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string,
+): string {
   const reason = stringField(payload, "reason");
   if (reason) return reason;
   switch (kind) {
     case "fileChangeApproval":
     case "legacyPatchApproval":
-      return "Codex wants to apply file changes to your workspace.";
+      return t("approval.summary.fileChange");
     case "commandApproval":
     case "legacyExecApproval":
-      return "Codex wants to run a shell command in your workspace.";
+      return t("approval.summary.command");
     case "dynamicTool":
-      return "Codex wants to call a host-registered dynamic tool.";
+      return t("approval.summary.dynamicTool");
     case "permissionsApproval":
-      return "Codex wants to use an additional permission.";
+      return t("approval.summary.permissions");
     case "userInput":
-      return "Codex needs a free-form answer to continue.";
+      return t("approval.summary.userInput");
     case "mcpElicitation":
-      return "An MCP server needs additional input to continue.";
+      return t("approval.summary.mcpInput");
     case "authRefresh":
-      return "Codex wants to refresh its credentials.";
+      return t("approval.kind.authRefresh");
     case "attestation":
-      return "Codex wants to generate a runtime attestation.";
+      return t("approval.kind.attestation");
     default:
-      return `Codex is requesting a ${kind} decision.`;
+      return t("approval.summary.default", { kind });
   }
 }
 
@@ -257,38 +262,44 @@ function ApprovalSummary({
   return <GenericApprovalSummary kind={approval.kind} payload={payload} />;
 }
 
-function approvalTitle(kind: string): string {
+function approvalTitle(kind: string, t: (key: AgentI18nKey) => string): string {
   switch (kind) {
     case "fileChangeApproval":
     case "legacyPatchApproval":
-      return "Review file changes";
+      return t("approval.kind.fileChange");
     case "commandApproval":
     case "legacyExecApproval":
-      return "Approve command";
+      return t("approval.kind.command");
     case "userInput":
-      return "User input requested";
+      return t("approval.kind.userInput");
     case "mcpElicitation":
-      return "MCP input requested";
+      return t("approval.kind.mcpInput");
     case "dynamicTool":
-      return "Approve dynamic tool";
+      return t("approval.kind.dynamicTool");
     case "permissionsApproval":
-      return "Approve permissions";
+      return t("approval.kind.permissions");
     case "authRefresh":
-      return "Refresh authentication";
+      return t("approval.kind.authRefresh");
     case "attestation":
-      return "Generate attestation";
+      return t("approval.kind.attestation");
     default:
-      return "Review request";
+      return t("approval.kind.generic");
   }
 }
 
-function approvalRequestLabel(kind: string): string {
-  if (kind === "commandApproval") return "command request";
-  if (kind === "fileChangeApproval") return "file-change request";
-  return `${kind.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase()} request`;
+function approvalRequestLabel(
+  kind: string,
+  t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string,
+): string {
+  if (kind === "commandApproval") return t("approval.request.command");
+  if (kind === "fileChangeApproval") return t("approval.request.fileChange");
+  return t("approval.request.generic", {
+    kind: kind.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase(),
+  });
 }
 
 function CommandApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
+  const { t } = useAgentI18n();
   const command =
     stringField(payload, "command") ?? stringField(payload, "cmd") ?? "Command";
   const cwd = stringField(payload, "cwd") ?? stringField(payload, "workingDirectory");
@@ -302,9 +313,9 @@ function CommandApprovalSummary({ payload }: { payload: Record<string, unknown> 
       </pre>
       <MetadataGrid
         rows={[
-          ["Working directory", cwd],
-          ["Sandbox", sandbox],
-          ["Approval policy", policy],
+          [t("approval.meta.workingDirectory"), cwd],
+          [t("approval.meta.sandbox"), sandbox],
+          [t("approval.meta.approvalPolicy"), policy],
         ]}
       />
     </div>
@@ -312,6 +323,7 @@ function CommandApprovalSummary({ payload }: { payload: Record<string, unknown> 
 }
 
 function FileChangeApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
+  const { t } = useAgentI18n();
   const path = stringField(payload, "path");
   const summary = stringField(payload, "summary") ?? stringField(payload, "description");
   const patch = payload.patch ?? payload.diff ?? payload.fileChanges;
@@ -327,7 +339,7 @@ function FileChangeApprovalSummary({ payload }: { payload: Record<string, unknow
       {patch ? <AgentDiffViewer patch={patch} /> : null}
       {!path && !summary && !patch ? (
         <p className="aui-approval-copy">
-          Review the file-change request before deciding.
+          {t("approval.summary.fileChange")}
         </p>
       ) : null}
     </div>
@@ -335,29 +347,31 @@ function FileChangeApprovalSummary({ payload }: { payload: Record<string, unknow
 }
 
 function UserInputApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
+  const { t } = useAgentI18n();
   const prompt =
     stringField(payload, "prompt") ??
     stringField(payload, "question") ??
     stringField(payload, "message") ??
-    "The agent is asking for user input.";
+    t("approval.summary.userInput");
   return (
     <div className="aui-approval-summary">
       <p className="aui-approval-copy">{prompt}</p>
-      <MetadataGrid rows={[["Item", stringField(payload, "itemId")]]} />
+      <MetadataGrid rows={[[t("approval.meta.item"), stringField(payload, "itemId")]]} />
     </div>
   );
 }
 
 function DynamicToolApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
+  const { t } = useAgentI18n();
   const namespace = stringField(payload, "namespace");
   const tool = stringField(payload, "tool") ?? stringField(payload, "name") ?? "tool";
   return (
     <div className="aui-approval-summary">
       <MetadataGrid
         rows={[
-          ["Namespace", namespace],
-          ["Tool", tool],
-          ["Item", stringField(payload, "itemId")],
+          [t("approval.meta.namespace"), namespace],
+          [t("approval.meta.tool"), tool],
+          [t("approval.meta.item"), stringField(payload, "itemId")],
         ]}
       />
       {payload.arguments ? (
@@ -370,10 +384,11 @@ function DynamicToolApprovalSummary({ payload }: { payload: Record<string, unkno
 }
 
 function PermissionsApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
+  const { t } = useAgentI18n();
   return (
     <div className="aui-approval-summary">
       <p className="aui-approval-copy">
-        Review the requested permission before allowing the agent to continue.
+        {t("approval.summary.permissions")}
       </p>
       <pre className="aui-approval-json">{JSON.stringify(payload, null, 2)}</pre>
     </div>
@@ -387,9 +402,10 @@ function GenericApprovalSummary({
   kind: string;
   payload: Record<string, unknown>;
 }) {
+  const { t } = useAgentI18n();
   return (
     <div className="aui-approval-summary">
-      <p className="aui-approval-copy">Review {kind} before deciding.</p>
+      <p className="aui-approval-copy">{t("approval.summary.default", { kind })}</p>
       <pre className="aui-approval-json">{JSON.stringify(payload, null, 2)}</pre>
     </div>
   );

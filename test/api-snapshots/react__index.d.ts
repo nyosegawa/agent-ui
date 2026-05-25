@@ -758,6 +758,24 @@ declare function useAgentModels(): {
     refreshModels: () => Promise<AgentModel[]>;
 };
 
+type AgentLocale = "en" | "ja" | "ko" | "zh-CN" | "es" | "fr";
+declare const agentLocales: AgentLocale[];
+type AgentI18nKey = "account.authenticated" | "account.authenticating" | "account.checking" | "account.connecting" | "account.cancelLogin" | "account.login" | "account.openDeviceLogin" | "account.unauthenticated" | "approval.action.approve" | "approval.action.approveForSession" | "approval.action.decline" | "approval.action.review" | "approval.aria.otherPending" | "approval.aria.pending" | "approval.aria.pendingOne" | "approval.count" | "approval.kind.attestation" | "approval.kind.authRefresh" | "approval.kind.command" | "approval.kind.dynamicTool" | "approval.kind.fileChange" | "approval.kind.generic" | "approval.kind.mcpInput" | "approval.kind.permissions" | "approval.kind.userInput" | "approval.meta.approvalPolicy" | "approval.meta.item" | "approval.meta.namespace" | "approval.meta.sandbox" | "approval.meta.tool" | "approval.meta.workingDirectory" | "approval.request.command" | "approval.request.fileChange" | "approval.request.generic" | "approval.risk.high" | "approval.risk.low" | "approval.risk.medium" | "approval.riskSuffix" | "approval.summary.command" | "approval.summary.default" | "approval.summary.dynamicTool" | "approval.summary.fileChange" | "approval.summary.mcpInput" | "approval.summary.permissions" | "approval.summary.userInput" | "aria.actions" | "aria.agentContext" | "aria.changedFiles" | "aria.codeMirrorPatchViewer" | "aria.commandOutput" | "aria.completedTask" | "aria.composerAttachments" | "aria.contextUsage" | "aria.contextUsageDetails" | "aria.criticalStatus" | "aria.diffPreview" | "aria.dismissThreadHistory" | "aria.message" | "aria.messageComposer" | "aria.openTask" | "aria.pendingAttachments" | "aria.runSettings" | "aria.statusDetails" | "aria.statusSummary" | "aria.threadStartContext" | "aria.threads" | "aria.tokenUsage" | "aria.usageLimits" | "aria.usageSummary" | "apps.authNeeded" | "apps.empty" | "apps.label" | "apps.loadMore" | "apps.notInstalled" | "common.cancel" | "common.close" | "common.closeMenu" | "common.collapse" | "common.default" | "common.details" | "common.disable" | "common.enable" | "common.expand" | "common.loading" | "common.allLoaded" | "common.moreAvailable" | "common.open" | "common.refresh" | "common.refreshing" | "common.serverDefault" | "common.syncPending" | "common.unknown" | "composer.addFollowUp" | "composer.attachFile" | "composer.attachFiles" | "composer.attachedFollowUp" | "composer.attachmentRejected" | "composer.cannotAcceptFollowUp" | "composer.couldNotSendAdditional" | "composer.couldNotStart" | "composer.couldNotStop" | "composer.enterToSend" | "composer.followUpNoActiveTurn" | "composer.followUpTurnChanged" | "composer.app" | "composer.mentionApp" | "composer.mentionPlugin" | "composer.plugin" | "composer.placeholder" | "composer.previewOnlyReason" | "composer.removeAttachment" | "composer.resolveApprovalReason" | "composer.send" | "composer.sendMessage" | "composer.stopCurrentTurn" | "context.cachedInput" | "context.compactionNotice" | "context.contextWindow" | "context.input" | "context.lastTurn" | "context.output" | "context.reasoning" | "context.title" | "context.used" | "diagnostics.label" | "diagnostics.messageCount" | "diagnostics.pluginManifestWarnings" | "diagnostics.syncing" | "diagnostics.withPluginWarnings" | "firstRun.authenticating.body" | "firstRun.authenticating.title" | "firstRun.bridgeError.body" | "firstRun.bridgeError.title" | "firstRun.connect.body" | "firstRun.connect.cta" | "firstRun.connect.title" | "firstRun.error" | "firstRun.form" | "firstRun.placeholder" | "firstRun.preparing.body" | "firstRun.preparing.cta" | "firstRun.preparing.title" | "firstRun.startThread" | "followUp.attachments" | "followUp.earlier" | "followUp.earlierQueued" | "followUp.edit" | "followUp.queued" | "followUp.queuedAttachments" | "followUp.remove" | "followUp.sendNow" | "locale.en" | "locale.es" | "locale.fr" | "locale.ja" | "locale.ko" | "locale.label" | "locale.zh-CN" | "markdown.completedTask" | "markdown.openTask" | "run.clearWorkingDirectory" | "run.cwd.noRecent" | "run.cwd.openFolder" | "run.cwd.openFolderAction" | "run.cwd.prompt" | "run.cwd.recent" | "run.cwd.selectFolder" | "run.cwd.serverDefault" | "run.defaultEffort" | "run.defaultModel" | "run.effort" | "run.effort.high" | "run.effort.low" | "run.effort.medium" | "run.effort.minimal" | "run.effort.veryHigh" | "run.executionMode" | "run.mode" | "run.mode.auto.description" | "run.mode.auto.label" | "run.mode.full-access.description" | "run.mode.full-access.label" | "run.mode.read-only.description" | "run.mode.read-only.label" | "run.mode.review.description" | "run.mode.review.label" | "run.model" | "run.modelAndEffort" | "run.modelDefault" | "run.noSelectableEffort" | "run.serverDefault" | "run.workingDirectory" | "skills.empty" | "skills.label" | "status.account" | "status.backgroundNotice" | "status.configWarning" | "status.critical" | "status.deprecationNotice" | "status.failed" | "status.mcpOAuth" | "status.modelReroute" | "status.rateLimit" | "status.title" | "status.total" | "status.warning" | "theme.dark" | "theme.label" | "theme.light" | "theme.system" | "thread.action.archive" | "thread.action.compact" | "thread.action.fork" | "thread.action.rename" | "thread.action.rollback" | "thread.action.unarchive" | "thread.closeHistory" | "thread.codexSession" | "thread.collapseHistory" | "thread.empty" | "thread.ephemeralSession" | "thread.expandHistory" | "thread.history" | "thread.loaded" | "thread.moreAvailable" | "thread.namePrompt" | "thread.new" | "thread.noThreadsFound" | "thread.openHistory" | "thread.resume" | "thread.resumeFailed" | "thread.search" | "thread.searchHistory" | "thread.status.complete" | "thread.status.failed" | "thread.status.needsApproval" | "thread.status.preview" | "thread.status.ready" | "thread.status.running" | "thread.status.stored" | "thread.threadCount" | "thread.untitled" | "timeline.agentTool" | "timeline.arguments" | "timeline.assistant" | "timeline.collab" | "timeline.collabTool" | "timeline.command" | "timeline.compaction" | "timeline.diff" | "timeline.error" | "timeline.file" | "timeline.fileChange" | "timeline.fileChanges" | "timeline.from" | "timeline.image" | "timeline.imageGenerated" | "timeline.item" | "timeline.items" | "timeline.jumpToLatest" | "timeline.lines" | "timeline.mcpTool" | "timeline.noPatch" | "timeline.noTerminalOutput" | "timeline.output" | "timeline.plan" | "timeline.reasoning" | "timeline.result" | "timeline.search" | "timeline.showEarlier" | "timeline.system" | "timeline.terminal" | "timeline.thinking" | "timeline.thread" | "timeline.to" | "timeline.tool" | "timeline.toolCall" | "timeline.unknownTool" | "timeline.webSearch" | "timeline.you" | "usage.empty" | "usage.inputOutput" | "usage.label" | "usage.limits" | "usage.tokens" | "usage.title";
+type AgentI18nMessages = Partial<Record<AgentI18nKey, string>>;
+type AgentI18nDictionary = Record<AgentI18nKey, string>;
+interface AgentI18nValue {
+    locale: AgentLocale;
+    t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string;
+}
+interface AgentI18nProviderProps extends PropsWithChildren {
+    locale?: AgentLocale | string;
+    messages?: AgentI18nMessages;
+}
+declare function AgentI18nProvider({ children, locale, messages, }: AgentI18nProviderProps): react_jsx_runtime.JSX.Element;
+declare function useAgentI18n(): AgentI18nValue;
+declare function normalizeAgentLocale(locale?: AgentLocale | string): AgentLocale;
+declare const agentI18nDictionaries: Record<AgentLocale, AgentI18nDictionary>;
+
 type ComposerAttachmentKind = "image" | "file" | "app" | "plugin";
 type AgentLocalAttachmentKind = Extract<ComposerAttachmentKind, "image" | "file">;
 type AgentLocalAttachmentResolver = (file: File, kind: AgentLocalAttachmentKind) => CodexUserInput | CodexUserInput[] | null | undefined | Promise<CodexUserInput | CodexUserInput[] | null | undefined>;
@@ -790,6 +808,16 @@ interface AgentComposerPanelProps {
 }
 declare function AgentComposerPanel({ onRequestAppMention, onRequestPluginMention, resolveLocalAttachment, thread, threadId, }: AgentComposerPanelProps): react_jsx_runtime.JSX.Element;
 
+type AgentWorkingDirectoryResolver = () => Promise<string | null | undefined> | string | null | undefined;
+/**
+ * Compact working-directory selector for the start screen. cwd is a
+ * thread-start setting, so it sits beneath the starter composer as a context
+ * pill rather than inside the composer toolbar.
+ */
+declare function AgentStarterCwd({ onRequestWorkingDirectory, }: {
+    onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
+}): react_jsx_runtime.JSX.Element;
+
 interface AgentRunControlsProps {
     autoRefresh?: boolean;
     /**
@@ -804,15 +832,6 @@ interface AgentRunSettingsPanelProps {
     autoRefresh?: boolean;
 }
 declare function AgentRunSettingsPanel({ autoRefresh, }?: AgentRunSettingsPanelProps): react_jsx_runtime.JSX.Element;
-type AgentWorkingDirectoryResolver = () => Promise<string | null | undefined> | string | null | undefined;
-/**
- * Compact working-directory selector for the start screen. cwd is a
- * thread-start setting, so it sits beneath the starter composer as a context
- * pill rather than inside the composer toolbar.
- */
-declare function AgentStarterCwd({ onRequestWorkingDirectory, }: {
-    onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
-}): react_jsx_runtime.JSX.Element;
 /**
  * Mode / model / effort selectors that live directly inside the composer
  * toolbar. Working directory is intentionally absent here; cwd is a
@@ -845,13 +864,15 @@ interface AgentChatProps {
     slots?: AgentChatSlots;
     statusBarEnd?: React__default.ReactNode;
     theme?: AgentTheme;
+    locale?: AgentLocale | string;
+    messages?: AgentI18nMessages;
     threadUrlRouting?: boolean | AgentThreadUrlRoutingOptions;
     usage?: boolean;
 }
 interface AgentThreadUrlRoutingOptions {
     basePath?: string;
 }
-declare function AgentChat({ className, diagnostics, onRequestAppMention, onRequestWorkingDirectory, onRequestPluginMention, resolveLocalAttachment, sidebar, slots, statusBarEnd, theme, threadUrlRouting, usage, }?: AgentChatProps): react_jsx_runtime.JSX.Element;
+declare function AgentChat({ className, diagnostics, onRequestAppMention, onRequestWorkingDirectory, onRequestPluginMention, resolveLocalAttachment, sidebar, slots, statusBarEnd, theme, locale, messages, threadUrlRouting, usage, }?: AgentChatProps): react_jsx_runtime.JSX.Element;
 interface AgentShellProps extends React__default.HTMLAttributes<HTMLElement> {
     sidebar?: React__default.ReactNode;
     theme?: AgentTheme;
@@ -903,6 +924,27 @@ declare function AgentApprovalQueue({ approvals: approvalsProp, renderApproval, 
     threadId?: string;
 }): react_jsx_runtime.JSX.Element | null;
 
+interface AgentUsageProps {
+    autoRefresh?: boolean;
+}
+declare function AgentUsagePanel({ autoRefresh }?: AgentUsageProps): react_jsx_runtime.JSX.Element;
+declare function AgentUsageSummary(): react_jsx_runtime.JSX.Element;
+declare function AgentRateLimitBar({ label, percent, }: {
+    label: string;
+    percent: number;
+}): react_jsx_runtime.JSX.Element;
+declare function AgentTokenUsageBar({ inputTokens, outputTokens, totalTokens, }: {
+    inputTokens?: number;
+    outputTokens?: number;
+    totalTokens?: number;
+}): react_jsx_runtime.JSX.Element;
+declare function AgentSkillsPanel({ cwd }: {
+    cwd?: string;
+}): react_jsx_runtime.JSX.Element;
+declare function AgentAppsPanel({ threadId }: {
+    threadId?: string;
+}): react_jsx_runtime.JSX.Element;
+
 declare function AgentStatusBar({ end, onOpenThreads, }?: {
     end?: React__default.ReactNode;
     onOpenThreads?: () => void;
@@ -928,27 +970,7 @@ declare function normalizedStatusNotices(banners: Array<{
     kind: string;
     message: string;
 }>): AgentStatusNotice[];
-declare function statusSummary(total: number, warningCount: number, criticalCount: number): string;
-interface AgentUsageProps {
-    autoRefresh?: boolean;
-}
-declare function AgentUsagePanel({ autoRefresh }?: AgentUsageProps): react_jsx_runtime.JSX.Element;
-declare function AgentUsageSummary(): react_jsx_runtime.JSX.Element;
-declare function AgentRateLimitBar({ label, percent, }: {
-    label: string;
-    percent: number;
-}): react_jsx_runtime.JSX.Element;
-declare function AgentTokenUsageBar({ inputTokens, outputTokens, totalTokens, }: {
-    inputTokens?: number;
-    outputTokens?: number;
-    totalTokens?: number;
-}): react_jsx_runtime.JSX.Element;
-declare function AgentSkillsPanel({ cwd }: {
-    cwd?: string;
-}): react_jsx_runtime.JSX.Element;
-declare function AgentAppsPanel({ threadId }: {
-    threadId?: string;
-}): react_jsx_runtime.JSX.Element;
+declare function statusSummary(total: number, warningCount: number, criticalCount: number, t?: (key: AgentI18nKey, vars?: Record<string, string | number>) => string): string;
 
 declare function ThreadList({ activeThreadId, footer, onSelectThread, threads, }: {
     activeThreadId?: string;
@@ -958,8 +980,9 @@ declare function ThreadList({ activeThreadId, footer, onSelectThread, threads, }
 }): react_jsx_runtime.JSX.Element;
 declare function formatThreadStatus(status: string, options?: {
     hasTurns?: boolean;
+    t?: (key: AgentI18nKey) => string;
 }): string;
-declare function threadSubtitle(thread: AgentThread): string;
+declare function threadSubtitle(thread: AgentThread, t?: (key: AgentI18nKey) => string): string;
 declare function isUserFacingPath(path: string): boolean;
 declare function AgentThreadSidebar({ activeThreadId, collapsed, onCollapsedChange, onSelectThread, threads, }: {
     activeThreadId?: string;
@@ -974,6 +997,14 @@ interface AgentWorkspaceProps extends AgentChatProps {
     panelClassName?: string;
 }
 declare function AgentWorkspace({ panel, panelClassName, ...chatProps }: AgentWorkspaceProps): react_jsx_runtime.JSX.Element;
+
+interface AgentLocaleSelectProps {
+    "aria-label"?: string;
+    disabled?: boolean;
+    onChange: (locale: AgentLocale) => void;
+    value: AgentLocale;
+}
+declare function AgentLocaleSelect({ "aria-label": ariaLabel, disabled, onChange, value, }: AgentLocaleSelectProps): react_jsx_runtime.JSX.Element;
 
 declare function AgentDiffViewer({ patch }: {
     patch: unknown;
@@ -1060,4 +1091,4 @@ interface UsageWindow {
 }
 declare function normalizeUsageWindows(rateLimits: unknown): UsageWindow[];
 
-export { AGENT_EXECUTION_MODES, AgentApprovalQueue, AgentAppsPanel, type AgentBootstrapState, AgentChat, type AgentChatProps, type AgentChatSlots, AgentCommandItem, AgentCommandOutputItem, AgentComposer, type AgentComposerController, type AgentComposerMentionAttachment, type AgentComposerMentionResolver, AgentComposerPanel, type AgentComposerPanelProps, type AgentComposerProps, AgentContentBlockView, AgentContextUsageIndicator, type AgentContextValue, AgentCriticalNoticeList, AgentDiagnosticsPanel, AgentDiffItem, AgentDiffViewer, type AgentExecutionMode, AgentFileChangeItem, AgentFirstRun, type AgentLocalAttachmentKind, type AgentLocalAttachmentResolver, type AgentMentionAttachmentKind, AgentMessageItem, AgentMessageList, AgentProvider, type AgentProviderProps, AgentRateLimitBar, AgentReasoningItem, AgentRunControls, type AgentRunControlsProps, AgentRunSettingsPanel, type AgentRunSettingsPanelProps, AgentShell, type AgentShellProps, AgentSkillsPanel, AgentStarterCwd, AgentStatusBar, AgentStatusDetails, AgentStatusSummary, type AgentTheme, AgentThemeToggle, type AgentThemeToggleProps, AgentThreadHeader, AgentThreadSidebar, AgentThreadSurface, AgentThreadTimeline, type AgentThreadUrlRoutingOptions, AgentThreadView, type AgentThreadViewProps, AgentTokenUsageBar, AgentToolCallItem, AgentTranscript, AgentTurn, AgentUsagePanel, type AgentUsageProps, AgentUsageSummary, type AgentWorkingDirectoryResolver, AgentWorkspace, type AgentWorkspaceProps, type AppsListParams, type CancelLoginAccountParams, type CodexUserInput, ComposerRunSettings, DEFAULT_TRANSCRIPT_ITEM_LIMIT, type GetAccountParams, type HooksListParams, type LoginAccountParams, type ModelListParams, type QueuedFollowUp, type QueuedFollowUpAttachment, type SkillsConfigWriteParams, type SkillsListParams, TRANSCRIPT_ITEM_INCREMENT, type ThreadArchiveParams, type ThreadCompactStartParams, type ThreadForkParams, type ThreadHistoryParams, type ThreadInjectItemsParams, ThreadList, type ThreadListParams, type ThreadLoadedListParams, type ThreadMetadataUpdateParams, type ThreadReadParams, type ThreadResumeParams, type ThreadRollbackParams, type ThreadSetNameParams, type ThreadStartParams, type ThreadUnarchiveParams, type ThreadUnsubscribeParams, type TranscriptApprovalAnchors, type TurnInterruptParams, type TurnStartParams, type TurnSteerParams, type UsageWindow, accountReadParams, agentBrowserSkillInput, agentBrowserVerificationInput, apiKeyLoginParams, appsListParams, authTokensLoginParams, cancelLoginParams, chatgptLoginParams, deviceCodeLoginParams, disabledProductMethods, formatThreadStatus, hooksListParams, imageInput, isUserFacingPath, localImageInput, mentionInput, modelListParams, normalizeUsageWindows, normalizedStatusNotices, rawThreadId, skillInput, skillsConfigWriteParams, skillsListParams, statusSummary, textInput, threadArchiveParams, threadCompactStartParams, threadForkParams, threadInjectItemsParams, threadListParams, threadLoadedListParams, threadMetadataUpdateParams, threadProjectPath, threadReadParams, threadResumeParams, threadRollbackParams, threadSetNameParams, threadSnapshotEvents, threadStartParams, threadSubtitle, threadUnarchiveParams, threadUnsubscribeParams, threadUpsertEvent, transcriptItemIds, turnInterruptParams, turnStartParams, turnSteerParams, useAgentAction, useAgentApprovals, useAgentApps, useAgentAuth, useAgentBootstrap, useAgentComposer, useAgentContext, useAgentHooks, useAgentModels, useAgentRunSettings, useAgentServerRequests, useAgentSkills, useAgentThread, useAgentThreadActions, useAgentThreadController, useAgentThreadHistory, useAgentThreadReader, useAgentThreads, useAgentTurn, useAgentTurnController, useAgentUsage, visibleTranscriptWindow };
+export { AGENT_EXECUTION_MODES, AgentApprovalQueue, AgentAppsPanel, type AgentBootstrapState, AgentChat, type AgentChatProps, type AgentChatSlots, AgentCommandItem, AgentCommandOutputItem, AgentComposer, type AgentComposerController, type AgentComposerMentionAttachment, type AgentComposerMentionResolver, AgentComposerPanel, type AgentComposerPanelProps, type AgentComposerProps, AgentContentBlockView, AgentContextUsageIndicator, type AgentContextValue, AgentCriticalNoticeList, AgentDiagnosticsPanel, AgentDiffItem, AgentDiffViewer, type AgentExecutionMode, AgentFileChangeItem, AgentFirstRun, type AgentI18nKey, type AgentI18nMessages, AgentI18nProvider, type AgentI18nProviderProps, type AgentI18nValue, type AgentLocalAttachmentKind, type AgentLocalAttachmentResolver, type AgentLocale, AgentLocaleSelect, type AgentLocaleSelectProps, type AgentMentionAttachmentKind, AgentMessageItem, AgentMessageList, AgentProvider, type AgentProviderProps, AgentRateLimitBar, AgentReasoningItem, AgentRunControls, type AgentRunControlsProps, AgentRunSettingsPanel, type AgentRunSettingsPanelProps, AgentShell, type AgentShellProps, AgentSkillsPanel, AgentStarterCwd, AgentStatusBar, AgentStatusDetails, AgentStatusSummary, type AgentTheme, AgentThemeToggle, type AgentThemeToggleProps, AgentThreadHeader, AgentThreadSidebar, AgentThreadSurface, AgentThreadTimeline, type AgentThreadUrlRoutingOptions, AgentThreadView, type AgentThreadViewProps, AgentTokenUsageBar, AgentToolCallItem, AgentTranscript, AgentTurn, AgentUsagePanel, type AgentUsageProps, AgentUsageSummary, type AgentWorkingDirectoryResolver, AgentWorkspace, type AgentWorkspaceProps, type AppsListParams, type CancelLoginAccountParams, type CodexUserInput, ComposerRunSettings, DEFAULT_TRANSCRIPT_ITEM_LIMIT, type GetAccountParams, type HooksListParams, type LoginAccountParams, type ModelListParams, type QueuedFollowUp, type QueuedFollowUpAttachment, type SkillsConfigWriteParams, type SkillsListParams, TRANSCRIPT_ITEM_INCREMENT, type ThreadArchiveParams, type ThreadCompactStartParams, type ThreadForkParams, type ThreadHistoryParams, type ThreadInjectItemsParams, ThreadList, type ThreadListParams, type ThreadLoadedListParams, type ThreadMetadataUpdateParams, type ThreadReadParams, type ThreadResumeParams, type ThreadRollbackParams, type ThreadSetNameParams, type ThreadStartParams, type ThreadUnarchiveParams, type ThreadUnsubscribeParams, type TranscriptApprovalAnchors, type TurnInterruptParams, type TurnStartParams, type TurnSteerParams, type UsageWindow, accountReadParams, agentBrowserSkillInput, agentBrowserVerificationInput, agentI18nDictionaries, agentLocales, apiKeyLoginParams, appsListParams, authTokensLoginParams, cancelLoginParams, chatgptLoginParams, deviceCodeLoginParams, disabledProductMethods, formatThreadStatus, hooksListParams, imageInput, isUserFacingPath, localImageInput, mentionInput, modelListParams, normalizeAgentLocale, normalizeUsageWindows, normalizedStatusNotices, rawThreadId, skillInput, skillsConfigWriteParams, skillsListParams, statusSummary, textInput, threadArchiveParams, threadCompactStartParams, threadForkParams, threadInjectItemsParams, threadListParams, threadLoadedListParams, threadMetadataUpdateParams, threadProjectPath, threadReadParams, threadResumeParams, threadRollbackParams, threadSetNameParams, threadSnapshotEvents, threadStartParams, threadSubtitle, threadUnarchiveParams, threadUnsubscribeParams, threadUpsertEvent, transcriptItemIds, turnInterruptParams, turnStartParams, turnSteerParams, useAgentAction, useAgentApprovals, useAgentApps, useAgentAuth, useAgentBootstrap, useAgentComposer, useAgentContext, useAgentHooks, useAgentI18n, useAgentModels, useAgentRunSettings, useAgentServerRequests, useAgentSkills, useAgentThread, useAgentThreadActions, useAgentThreadController, useAgentThreadHistory, useAgentThreadReader, useAgentThreads, useAgentTurn, useAgentTurnController, useAgentUsage, visibleTranscriptWindow };

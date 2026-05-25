@@ -9,6 +9,12 @@
   padding: 2px;
 }
 
+.agent-ui-local-app .aui-status-actions .aui-locale-select select {
+  background: var(--aui-panel);
+  box-shadow: var(--aui-control-shadow);
+  min-height: 30px;
+}
+
 .agent-ui-local-app .aui-status-actions .aui-theme-toggle-option {
   font-size: 11px;
   min-height: 26px;
@@ -17,6 +23,10 @@
 
 @media (max-width: 720px) {
   .agent-ui-local-app .aui-status-actions .aui-theme-toggle {
+    display: none;
+  }
+
+  .agent-ui-local-app .aui-status-actions .aui-locale-select {
     display: none;
   }
 }

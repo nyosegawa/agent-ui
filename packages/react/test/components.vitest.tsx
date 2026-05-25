@@ -26,6 +26,7 @@ import {
   AgentUsagePanel,
   AgentUsageSummary,
   AgentWorkspace,
+  AgentLocaleSelect,
   AgentSkillsPanel,
   AgentAppsPanel,
   useAgentAuth,
@@ -224,6 +225,67 @@ describe("AgentChat", () => {
     expect(onChange).toHaveBeenCalledWith("dark");
     await user.keyboard("{ArrowLeft}");
     expect(onChange).toHaveBeenLastCalledWith("dark");
+  });
+
+  it("localizes AgentChat chrome through the locale prop", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "user@example.com", planType: "pro" } };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat locale="ja" />
+      </AgentProvider>,
+    );
+
+    expect(
+      await screen.findByRole("button", { name: "スレッドを開始" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: "メッセージ" })).toHaveAttribute(
+      "placeholder",
+      "Codex に作業内容を依頼",
+    );
+  });
+
+  it("lets hosts override localized message dictionaries", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "user@example.com", planType: "pro" } };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat
+          messages={{
+            "aria.message": "Prompt",
+            "firstRun.placeholder": "Describe the work",
+            "firstRun.startThread": "Launch",
+          }}
+        />
+      </AgentProvider>,
+    );
+
+    expect(await screen.findByRole("button", { name: "Launch" })).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: "Prompt" })).toHaveAttribute(
+      "placeholder",
+      "Describe the work",
+    );
+  });
+
+  it("offers a controlled locale selector primitive", async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<AgentLocaleSelect value="en" onChange={onChange} />);
+
+    await user.selectOptions(screen.getByRole("combobox", { name: "Language" }), "fr");
+    expect(onChange).toHaveBeenCalledWith("fr");
   });
 
   it("renders only a fixed thread without following active selection", () => {

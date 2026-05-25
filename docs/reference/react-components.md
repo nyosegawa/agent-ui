@@ -26,6 +26,7 @@ secondary chrome.
 
 ```tsx
 <AgentChat
+  locale="ja"
   sidebar={false}
   theme="system"
   usage={false}
@@ -34,6 +35,9 @@ secondary chrome.
   onRequestPluginMention={openPluginPicker}
   onRequestWorkingDirectory={openDirectoryPicker}
   resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+  messages={{
+    "composer.placeholder": "フォローアップの変更を求める",
+  }}
   slots={{
     renderApproval: (approval) => <CustomApproval approval={approval} />,
     renderItem: (item, turn) => <CustomItem item={item} turn={turn} />,
@@ -52,6 +56,13 @@ inherit a theme from host chrome. Agent UI does not render an internal theme
 switcher; hosts that want one can place the controlled `AgentThemeToggle`
 primitive beside their own navigation or settings UI, or pass it through
 `statusBarEnd` when using the `AgentChat` preset.
+
+The optional `locale` prop accepts `en`, `ja`, `ko`, `zh-CN`, `es`, or `fr`.
+When omitted, Agent UI normalizes `navigator.language` and falls back to
+English. `messages` is a partial override map for host product copy and is
+merged over the built-in dictionary. Transcript content, tool output, command
+output, model messages, and server diagnostics are not machine-translated by
+Agent UI.
 
 ## Transcript Primitives
 
@@ -227,6 +238,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentRateLimitBar`: one normalized rate-limit window.
 - `AgentThemeToggle`: controlled light / dark / system segmented control for
   host-owned theme state. It is not rendered by `AgentChat` automatically.
+- `AgentLocaleSelect`: controlled locale select for hosts that want an Agent
+  UI-native language switcher. It is not rendered by `AgentChat` automatically.
 - `AgentContextUsageIndicator`: compact per-thread context usage popover for
   App Server `thread/tokenUsage/updated` totals.
 - `AgentDiagnosticsPanel`: bridge/account/model startup diagnostics.

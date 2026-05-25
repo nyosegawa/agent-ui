@@ -1,4 +1,5 @@
 import type React from "react";
+import { useAgentI18n } from "./i18n";
 
 interface MarkdownMessageProps {
   className?: string;
@@ -15,17 +16,24 @@ type MarkdownBlock =
   | { type: "table"; rows: string[][] };
 
 export function MarkdownMessage({ className, text }: MarkdownMessageProps) {
+  const { t } = useAgentI18n();
   const blocks = parseMarkdownBlocks(text);
   return (
     <div className={["aui-markdown", className].filter(Boolean).join(" ")}>
       {blocks.map((block, index) => (
-        <MarkdownBlockView block={block} key={index} />
+        <MarkdownBlockView block={block} key={index} taskLabel={t} />
       ))}
     </div>
   );
 }
 
-function MarkdownBlockView({ block }: { block: MarkdownBlock }) {
+function MarkdownBlockView({
+  block,
+  taskLabel,
+}: {
+  block: MarkdownBlock;
+  taskLabel: ReturnType<typeof useAgentI18n>["t"];
+}) {
   switch (block.type) {
     case "blockquote":
       return (
@@ -52,7 +60,7 @@ function MarkdownBlockView({ block }: { block: MarkdownBlock }) {
       return (
         <Tag>
           {block.items.map((item, index) => (
-            <li key={index}>{renderTaskListItem(item, block.task, index)}</li>
+            <li key={index}>{renderTaskListItem(item, block.task, index, taskLabel)}</li>
           ))}
         </Tag>
       );
@@ -229,14 +237,19 @@ function splitTableRow(line: string): string[] {
     .map((cell) => cell.trim());
 }
 
-function renderTaskListItem(item: string, task: boolean | undefined, index: number) {
+function renderTaskListItem(
+  item: string,
+  task: boolean | undefined,
+  index: number,
+  t: ReturnType<typeof useAgentI18n>["t"],
+) {
   if (!task) return renderInline(item, `li-${index}`);
   const match = item.match(/^\[([ xX])\]\s+(.+)$/);
   if (!match) return renderInline(item, `li-${index}`);
   return (
     <>
       <input
-        aria-label={match[1]?.toLowerCase() === "x" ? "Completed task" : "Open task"}
+        aria-label={match[1]?.toLowerCase() === "x" ? t("markdown.completedTask") : t("markdown.openTask")}
         checked={match[1]?.toLowerCase() === "x"}
         disabled
         readOnly

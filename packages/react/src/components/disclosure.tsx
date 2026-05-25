@@ -1,6 +1,7 @@
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { IconChevronDown, IconClose, buttonClass } from "../components-internal";
+import { useAgentI18n } from "../i18n";
 
 export interface AuiMenuProps {
   ariaLabel: string;
@@ -16,6 +17,7 @@ interface MenuAnchor {
 }
 
 export function AuiMenu({ ariaLabel, children, compact, icon, label }: AuiMenuProps) {
+  const { t } = useAgentI18n();
   const [open, setOpen] = useState(false);
   const [anchor, setAnchor] = useState<MenuAnchor | null>(null);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -142,7 +144,7 @@ export function AuiMenu({ ariaLabel, children, compact, icon, label }: AuiMenuPr
             <header className="aui-menu-panel-header">
               <strong>{ariaLabel}</strong>
               <button
-                aria-label="Close menu"
+                aria-label={t("common.closeMenu")}
                 className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
                 onClick={() => {
                   close();

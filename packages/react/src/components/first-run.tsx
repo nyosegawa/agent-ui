@@ -1,6 +1,7 @@
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
 import { useAgentAuth } from "../hooks";
+import { useAgentI18n } from "../i18n";
 import { IconSend, buttonClass } from "../components-internal";
 import { useAgentContext } from "../provider";
 import {
@@ -17,6 +18,7 @@ export function AgentFirstRun({
   onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
   onStartThread: (prompt?: string) => Promise<void> | void;
 }) {
+  const { t } = useAgentI18n();
   const { account, cancelLogin, login } = useAgentAuth();
   const { state } = useAgentContext();
   const [prompt, setPrompt] = useState("");
@@ -43,10 +45,9 @@ export function AgentFirstRun({
   if (state.connection.status === "error" || state.connection.status === "closed") {
     return (
       <div className="aui-first-run">
-        <strong>Codex bridge unavailable</strong>
+        <strong>{t("firstRun.bridgeError.title")}</strong>
         <p>
-          Check diagnostics, restart the local bridge, then reconnect before starting a
-          thread.
+          {t("firstRun.bridgeError.body")}
         </p>
       </div>
     );
@@ -54,10 +55,10 @@ export function AgentFirstRun({
   if (state.connection.status === "connecting" || account.status === "unknown") {
     return (
       <div className="aui-first-run">
-        <strong>Preparing Codex</strong>
-        <p>Connecting to the local bridge and checking account state.</p>
+        <strong>{t("firstRun.preparing.title")}</strong>
+        <p>{t("firstRun.preparing.body")}</p>
         <button className={buttonClass("secondary")} disabled type="button">
-          Syncing
+          {t("firstRun.preparing.cta")}
         </button>
       </div>
     );
@@ -65,14 +66,14 @@ export function AgentFirstRun({
   if (account.status === "unauthenticated") {
     return (
       <div className="aui-first-run">
-        <strong>Connect Codex</strong>
-        <p>Sign in with ChatGPT device code before starting a real local thread.</p>
+        <strong>{t("firstRun.connect.title")}</strong>
+        <p>{t("firstRun.connect.body")}</p>
         <button
           className={buttonClass("primary")}
           onClick={() => deferAction(login)}
           type="button"
         >
-          Start device-code login
+          {t("firstRun.connect.cta")}
         </button>
       </div>
     );
@@ -80,37 +81,37 @@ export function AgentFirstRun({
   if (account.status === "authenticating") {
     return (
       <div className="aui-first-run">
-        <strong>Complete Codex login</strong>
-        <p>Open the device login link and enter the code shown in the status bar.</p>
+        <strong>{t("firstRun.authenticating.title")}</strong>
+        <p>{t("firstRun.authenticating.body")}</p>
         <button
           className={buttonClass("secondary")}
           disabled={!account.login?.loginId}
           onClick={() => deferAction(cancelLogin)}
           type="button"
         >
-          Cancel login
+          {t("common.cancel")} login
         </button>
       </div>
     );
   }
   return (
     <form
-      aria-label="Start a Codex thread"
+      aria-label={t("firstRun.form")}
       className="aui-first-run aui-first-run-starter"
       onSubmit={(event) => {
         event.preventDefault();
         submit();
       }}
     >
-      <strong className="aui-visually-hidden">Start a Codex thread</strong>
+      <strong className="aui-visually-hidden">{t("firstRun.form")}</strong>
       <div className="aui-starter-card">
         {error ? (
           <p className="aui-starter-error" role="alert">
-            Could not start thread: {error}
+            {t("firstRun.error", { message: error })}
           </p>
         ) : null}
         <textarea
-          aria-label="Message"
+          aria-label={t("aria.message")}
           className="aui-first-run-prompt"
           onChange={(event) => setPrompt(event.currentTarget.value)}
           onCompositionEnd={() => {
@@ -125,14 +126,14 @@ export function AgentFirstRun({
               submit();
             }
           }}
-          placeholder="Ask Codex what to work on"
+          placeholder={t("firstRun.placeholder")}
           rows={3}
           value={prompt}
         />
         <div className="aui-first-run-toolbar">
           <ComposerRunSettings />
           <button
-            aria-label="Start thread"
+            aria-label={t("firstRun.startThread")}
             className={buttonClass("primary", {
               className: "aui-first-run-submit",
               iconOnly: true,

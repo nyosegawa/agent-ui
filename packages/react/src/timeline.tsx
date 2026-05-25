@@ -8,6 +8,7 @@ import type {
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AgentDiffViewer } from "./diff-viewer";
+import { useAgentI18n, type AgentI18nKey } from "./i18n";
 import { MarkdownMessage } from "./markdown";
 import {
   DEFAULT_TRANSCRIPT_ITEM_LIMIT,
@@ -51,6 +52,7 @@ export function AgentMessageList({
   scrollKey?: string | number;
   thread: ThreadState;
 }) {
+  const { t } = useAgentI18n();
   const listRef = useRef<HTMLOListElement | null>(null);
   const followModeRef = useRef(true);
   const rafRef = useRef<number | undefined>(undefined);
@@ -143,10 +145,10 @@ export function AgentMessageList({
               }
               type="button"
             >
-              Show earlier items
+              {t("timeline.showEarlier")}
             </button>
             <span>
-              {hiddenItemCount} earlier {hiddenItemCount === 1 ? "item" : "items"} hidden
+              {hiddenItemCount} earlier {hiddenItemCount === 1 ? t("timeline.item") : t("timeline.items")} hidden
             </span>
           </li>
         ) : null}
@@ -177,7 +179,7 @@ export function AgentMessageList({
           }}
           type="button"
         >
-          Jump to latest
+          {t("timeline.jumpToLatest")}
         </button>
       ) : null}
     </div>
@@ -199,6 +201,7 @@ export function AgentTurn({
   turn: TurnState;
   visibleItemIds?: string[];
 }) {
+  const { t } = useAgentI18n();
   const timelineItemIds = visibleItemIds ?? transcriptItemIds(turn);
   return (
     <li className="aui-turn">
@@ -220,7 +223,7 @@ export function AgentTurn({
           return [
             <article className="aui-message aui-block-message" data-kind={kind} key={id}>
               <div className="aui-message-meta">
-                <span>{itemLabel(kind)}</span>
+                <span>{localizedItemLabel(kind, t)}</span>
                 <span>{status}</span>
               </div>
               <AgentContentBlockView
@@ -241,7 +244,7 @@ export function AgentTurn({
               key={id}
             >
               <div className="aui-message-meta">
-                <span>{itemLabel(synthesizedBlock.kind)}</span>
+                <span>{localizedItemLabel(synthesizedBlock.kind, t)}</span>
                 <span>{status}</span>
               </div>
               <AgentContentBlockView
@@ -257,7 +260,7 @@ export function AgentTurn({
         return [
           <article className="aui-message" data-kind={kind} key={id}>
             <div className="aui-message-meta">
-              <span>{itemLabel(kind)}</span>
+              <span>{localizedItemLabel(kind, t)}</span>
               <span>{status}</span>
             </div>
             <MessageBody text={text} />
@@ -358,6 +361,7 @@ export function AgentCommandItem({
   itemId?: string;
   output?: string;
 }) {
+  const { t } = useAgentI18n();
   const [isOpen, setOpen] = useState(false);
   const normalizedOutput = output?.trimEnd() ?? "";
   const title =
@@ -365,19 +369,19 @@ export function AgentCommandItem({
   const status = block?.status ?? item?.status ?? "completed";
   return (
     <details
-      aria-label="Command output"
+      aria-label={t("aria.commandOutput")}
       className="aui-transcript-card aui-command-card"
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary>
-        <span className="aui-terminal-label">terminal</span>
+        <span className="aui-terminal-label">{t("timeline.terminal")}</span>
         <span className="aui-command-title">{title}</span>
         <span className="aui-command-meta">
           {status}
           {block?.exitCode !== undefined ? ` · exit ${block.exitCode}` : ""}
           {block?.durationMs !== undefined ? ` · ${formatDuration(block.durationMs)}` : ""}
           {" · "}
-          {lineCount(normalizedOutput)} lines
+          {lineCount(normalizedOutput)} {t("timeline.lines")}
         </span>
         {normalizedOutput ? (
           <span className="aui-command-preview">{commandPreview(normalizedOutput)}</span>
@@ -386,7 +390,7 @@ export function AgentCommandItem({
       {isOpen && normalizedOutput ? (
         <pre className="aui-command-output">{normalizedOutput}</pre>
       ) : isOpen ? (
-        <div className="aui-transcript-empty">No terminal output captured.</div>
+        <div className="aui-transcript-empty">{t("timeline.noTerminalOutput")}</div>
       ) : null}
     </details>
   );
@@ -401,21 +405,22 @@ export function AgentFileChangeItem({
   item?: AgentItemState;
   patch?: unknown;
 }) {
+  const { t } = useAgentI18n();
   const [isOpen, setOpen] = useState(false);
   const changes = block?.changes ?? [];
   return (
     <details
-      aria-label="Diff preview"
+      aria-label={t("aria.diffPreview")}
       className="aui-transcript-card aui-file-change-card"
       onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary>
-        <span className="aui-terminal-label">diff</span>
+        <span className="aui-terminal-label">{t("timeline.diff")}</span>
         <span className="aui-command-title">
           {displayText(item?.text) ??
             (changes.length > 0
-              ? `${changes.length} ${changes.length === 1 ? "file" : "files"} changed`
-              : "File changes")}
+              ? `${changes.length} ${changes.length === 1 ? t("timeline.file") : "files"} changed`
+              : t("timeline.fileChanges"))}
         </span>
         <span className="aui-command-meta">{block?.status ?? item?.status ?? "completed"}</span>
       </summary>
@@ -423,19 +428,20 @@ export function AgentFileChangeItem({
       {isOpen && patch ? (
         <AgentDiffViewer patch={patch} />
       ) : isOpen ? (
-        <div className="aui-transcript-empty">No patch payload captured.</div>
+        <div className="aui-transcript-empty">{t("timeline.noPatch")}</div>
       ) : null}
     </details>
   );
 }
 
 export function AgentReasoningItem({ block }: { block: AgentItemBlock }) {
-  const summary = block.summary ?? block.text ?? "Thinking";
+  const { t } = useAgentI18n();
+  const summary = block.summary ?? block.text ?? t("timeline.thinking");
   const content = block.content ?? block.text;
   return (
     <details className="aui-content-block aui-thinking-block">
       <summary>
-        <span>Thinking</span>
+        <span>{t("timeline.thinking")}</span>
         <small>{summary}</small>
       </summary>
       {content ? <pre>{content}</pre> : null}
@@ -444,19 +450,21 @@ export function AgentReasoningItem({ block }: { block: AgentItemBlock }) {
 }
 
 function PlanBlock({ block }: { block: AgentItemBlock }) {
+  const { t } = useAgentI18n();
   return (
-    <section className="aui-content-block aui-plan-block" aria-label="Plan">
-      <strong>Plan</strong>
+    <section className="aui-content-block aui-plan-block" aria-label={t("timeline.plan")}>
+      <strong>{t("timeline.plan")}</strong>
       <MessageBody text={block.text ?? block.content ?? ""} />
     </section>
   );
 }
 
 export function AgentToolCallItem({ block }: { block: AgentItemBlock }) {
+  const { t } = useAgentI18n();
   const [isOpen, setOpen] = useState(false);
-  const label = block.toolType === "mcp" ? "MCP tool" : "Tool call";
+  const label = block.toolType === "mcp" ? t("timeline.mcpTool") : t("timeline.toolCall");
   const preview = toolPreview(block);
-  const title = block.server ? `${block.server} / ${block.tool ?? "unknown tool"}` : block.tool ?? "unknown tool";
+  const title = block.server ? `${block.server} / ${block.tool ?? t("timeline.unknownTool")}` : block.tool ?? t("timeline.unknownTool");
   return (
     <details
       aria-label={label}
@@ -472,9 +480,9 @@ export function AgentToolCallItem({ block }: { block: AgentItemBlock }) {
       </summary>
       {isOpen ? (
         <>
-          <JsonSection label="Arguments" value={block.arguments} />
-          <JsonSection label="Result" value={block.result} />
-          <JsonSection label="Error" value={block.error} tone="danger" />
+          <JsonSection label={t("timeline.arguments")} value={block.arguments} />
+          <JsonSection label={t("timeline.result")} value={block.result} />
+          <JsonSection label={t("timeline.error")} value={block.error} tone="danger" />
         </>
       ) : null}
     </details>
@@ -482,34 +490,35 @@ export function AgentToolCallItem({ block }: { block: AgentItemBlock }) {
 }
 
 function CollabToolCallBlock({ block }: { block: AgentItemBlock }) {
+  const { t } = useAgentI18n();
   const metadata = isRecord(block.metadata) ? block.metadata : {};
   const senderThreadId = stringValue(metadata.senderThreadId ?? metadata.sender_thread_id);
   const receiverThreadId = stringValue(metadata.receiverThreadId ?? metadata.receiver_thread_id);
   const newThreadId = stringValue(metadata.newThreadId ?? metadata.new_thread_id);
   return (
-    <section className="aui-content-block aui-collab-tool-block" aria-label="Collab tool call">
+    <section className="aui-content-block aui-collab-tool-block" aria-label={t("timeline.collabTool")}>
       <div className="aui-content-block-heading">
-        <span>Collab tool</span>
-        <strong>{block.tool ?? "agent tool"}</strong>
+        <span>{t("timeline.collabTool")}</span>
+        <strong>{block.tool ?? t("timeline.agentTool")}</strong>
         {block.status ? <small>{block.status}</small> : null}
       </div>
       {block.text ? <p>{block.text}</p> : null}
       <dl className="aui-block-metadata">
         {senderThreadId ? (
           <>
-            <dt>From</dt>
+            <dt>{t("timeline.from")}</dt>
             <dd>{shortId(senderThreadId)}</dd>
           </>
         ) : null}
         {receiverThreadId ? (
           <>
-            <dt>To</dt>
+            <dt>{t("timeline.to")}</dt>
             <dd>{shortId(receiverThreadId)}</dd>
           </>
         ) : null}
         {newThreadId ? (
           <>
-            <dt>Thread</dt>
+            <dt>{t("timeline.thread")}</dt>
             <dd>{shortId(newThreadId)}</dd>
           </>
         ) : null}
@@ -519,20 +528,22 @@ function CollabToolCallBlock({ block }: { block: AgentItemBlock }) {
 }
 
 function WebSearchBlock({ block }: { block: AgentItemBlock }) {
+  const { t } = useAgentI18n();
   return (
-    <section className="aui-content-block aui-web-search-block" aria-label="Web search">
-      <span>Search</span>
-      <strong>{block.query ?? block.text ?? "web search"}</strong>
+    <section className="aui-content-block aui-web-search-block" aria-label={t("timeline.webSearch")}>
+      <span>{t("timeline.search")}</span>
+      <strong>{block.query ?? block.text ?? t("timeline.webSearch")}</strong>
     </section>
   );
 }
 
 function ImageBlock({ block }: { block: AgentItemBlock }) {
+  const { t } = useAgentI18n();
   const path = block.path ?? block.text;
   if (!path) {
     return (
-      <section className="aui-content-block aui-image-block" aria-label="Image">
-        Image generated
+      <section className="aui-content-block aui-image-block" aria-label={t("timeline.image")}>
+        {t("timeline.imageGenerated")}
       </section>
     );
   }
@@ -562,8 +573,9 @@ function SystemInfoBlock({ block }: { block: AgentItemBlock }) {
 }
 
 function ChangedFileList({ changes }: { changes: unknown[] }) {
+  const { t } = useAgentI18n();
   return (
-    <ul className="aui-changed-file-list" aria-label="Changed files">
+    <ul className="aui-changed-file-list" aria-label={t("aria.changedFiles")}>
       {changes.map((change, index) => {
         const record = isRecord(change) ? change : {};
         const path = stringValue(record.path) ?? "unknown";
@@ -607,4 +619,42 @@ export const AgentDiffItem = AgentFileChangeItem;
 
 function MessageBody({ text }: { text: string }) {
   return <AgentMessageItem text={text} />;
+}
+
+function localizedItemLabel(
+  kind: string,
+  t: (key: AgentI18nKey) => string,
+): string {
+  switch (kind) {
+    case "userMessage":
+      return t("timeline.you");
+    case "agentMessage":
+      return t("timeline.assistant");
+    case "reasoning":
+      return t("timeline.reasoning");
+    case "plan":
+      return t("timeline.plan");
+    case "commandExecution":
+      return t("timeline.command");
+    case "fileChange":
+      return t("timeline.fileChange");
+    case "toolCall":
+    case "mcpToolCall":
+      return t("timeline.tool");
+    case "collabToolCall":
+      return t("timeline.collab");
+    case "webSearch":
+      return t("timeline.webSearch");
+    case "image":
+    case "imageView":
+      return t("timeline.image");
+    case "systemInfo":
+      return t("timeline.system");
+    case "contextCompaction":
+      return t("timeline.compaction");
+    case "thinking":
+      return t("timeline.thinking");
+    default:
+      return itemLabel(kind);
+  }
 }

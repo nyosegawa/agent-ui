@@ -7,6 +7,7 @@ import {
   buttonClass,
 } from "../components-internal";
 import { useAgentThreadHistory, useAgentThreadReader } from "../hooks";
+import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import { useAgentContext } from "../provider";
 import { rawThreadId } from "../thread-history";
 import { compactPath, isRecord, stringField, useCompactLayout } from "./shared";
@@ -22,10 +23,11 @@ export function ThreadList({
   onSelectThread?: (threadId: string) => void;
   threads: ThreadState[];
 }) {
+  const { t } = useAgentI18n();
   return (
-    <nav className="aui-thread-list" aria-label="Threads">
+    <nav className="aui-thread-list" aria-label={t("aria.threads")}>
       {threads.map((thread) => {
-        const meta = threadListMeta(thread);
+        const meta = threadListMeta(thread, t);
         return (
           <button
             aria-current={thread.thread.id === activeThreadId ? "page" : undefined}
@@ -54,9 +56,9 @@ export function ThreadList({
   );
 }
 
-function threadListMeta(thread: ThreadState): string {
+function threadListMeta(thread: ThreadState, t: (key: AgentI18nKey) => string): string {
   const parts = [
-    formatThreadStatus(thread.status, { hasTurns: thread.orderedTurnIds.length > 0 }),
+    formatThreadStatus(thread.status, { hasTurns: thread.orderedTurnIds.length > 0, t }),
   ];
   const updated = rawThreadDate(thread.thread.raw, [
     "updatedAt",
@@ -95,24 +97,25 @@ function rawThreadDate(raw: unknown, keys: string[]): string | undefined {
 
 export function formatThreadStatus(
   status: string,
-  options: { hasTurns?: boolean } = {},
+  options: { hasTurns?: boolean; t?: (key: AgentI18nKey) => string } = {},
 ): string {
+  const t = options.t ?? fallbackThreadT;
   switch (status) {
     case "notLoaded":
-      return "Stored";
+      return t("thread.status.stored");
     case "loaded":
-      return options.hasTurns ? "Preview" : "Ready";
+      return options.hasTurns ? t("thread.status.preview") : t("thread.status.ready");
     case "ready":
-      return "Ready";
+      return t("thread.status.ready");
     case "running":
-      return "Running";
+      return t("thread.status.running");
     case "waitingForInput":
-      return "Needs approval";
+      return t("thread.status.needsApproval");
     case "complete":
     case "completed":
-      return "Complete";
+      return t("thread.status.complete");
     case "error":
-      return "Failed";
+      return t("thread.status.failed");
     default:
       return status
         .replace(/([a-z])([A-Z])/g, "$1 $2")
@@ -120,10 +123,13 @@ export function formatThreadStatus(
   }
 }
 
-export function threadSubtitle(thread: AgentThread): string {
+export function threadSubtitle(
+  thread: AgentThread,
+  t: (key: AgentI18nKey) => string = fallbackThreadT,
+): string {
   if (thread.path && isUserFacingPath(thread.path)) return thread.path;
-  if (thread.ephemeral) return "Ephemeral Codex session";
-  return "Codex session";
+  if (thread.ephemeral) return t("thread.ephemeralSession");
+  return t("thread.codexSession");
 }
 
 export function isUserFacingPath(path: string): boolean {
@@ -146,6 +152,7 @@ export function AgentThreadSidebar({
   onSelectThread?: (threadId: string) => void;
   threads: ThreadState[];
 }) {
+  const { t } = useAgentI18n();
   const compact = useCompactLayout();
   const { cursor, error, isLoading, listThreads } = useAgentThreadHistory();
   const { state } = useAgentContext();
@@ -260,10 +267,10 @@ export function AgentThreadSidebar({
     return (
       <aside className="aui-sidebar aui-sidebar-collapsed" data-collapsed="true">
         <button
-          aria-label="Expand history"
+          aria-label={t("thread.expandHistory")}
           className={buttonClass("ghost", { iconOnly: true })}
           onClick={() => onCollapsedChange?.(false)}
-          title="Expand history"
+          title={t("thread.expandHistory")}
           type="button"
         >
           <IconHistory size={16} />
@@ -274,12 +281,12 @@ export function AgentThreadSidebar({
   return (
     <aside className="aui-sidebar" data-collapsed="false">
       <div className="aui-sidebar-header">
-        <div className="aui-sidebar-title">Threads</div>
+        <div className="aui-sidebar-title">{t("thread.history")}</div>
         <button
-          aria-label={compact ? "Close history" : "Collapse history"}
+          aria-label={compact ? t("thread.closeHistory") : t("thread.collapseHistory")}
           className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
           onClick={() => onCollapsedChange?.(true)}
-          title={compact ? "Close history" : "Collapse history"}
+          title={compact ? t("thread.closeHistory") : t("thread.collapseHistory")}
           type="button"
         >
           <IconClose size={14} />
@@ -296,13 +303,13 @@ export function AgentThreadSidebar({
         <div className="aui-input-shell aui-input-with-icon">
           <IconSearch size={14} />
           <input
-            aria-label="Search history"
+            aria-label={t("thread.searchHistory")}
             className="aui-text-input"
             onChange={(event) => {
               searchTouched.current = true;
               setSearchTerm(event.currentTarget.value);
             }}
-            placeholder="Search threads"
+            placeholder={t("thread.search")}
             type="search"
             value={searchTerm}
           />
@@ -318,13 +325,15 @@ export function AgentThreadSidebar({
       <div className="aui-history-feedback" aria-live="polite">
         {error ? <p className="aui-sidebar-error">{error.message}</p> : null}
         {!isLoading && hasLoaded && visibleThreads.length === 0 ? (
-          <p className="aui-sidebar-status">No threads found.</p>
+          <p className="aui-sidebar-status">{t("thread.noThreadsFound")}</p>
         ) : null}
         {hasLoaded && visibleThreads.length > 0 ? (
           <p className="aui-sidebar-status">
-            {visibleThreads.length} {visibleThreads.length === 1 ? "thread" : "threads"}{" "}
-            loaded
-            {(nextCursor ?? cursor) ? " · more available" : " · all loaded"}
+            {t("thread.loaded", {
+              count: visibleThreads.length,
+              label: visibleThreads.length === 1 ? "thread" : "threads",
+            })}
+            {` · ${(nextCursor ?? cursor) ? t("common.moreAvailable") : t("common.allLoaded")}`}
           </p>
         ) : null}
       </div>
@@ -339,7 +348,7 @@ export function AgentThreadSidebar({
                 onClick={loadNextThreadPage}
                 type="button"
               >
-                {isLoading ? "Loading" : "Load more"}
+                {isLoading ? t("common.loading") : t("apps.loadMore")}
               </button>
             </div>
           ) : null
@@ -349,6 +358,21 @@ export function AgentThreadSidebar({
       />
     </aside>
   );
+}
+
+function fallbackThreadT(key: AgentI18nKey): string {
+  const fallback: Partial<Record<AgentI18nKey, string>> = {
+    "thread.codexSession": "Codex session",
+    "thread.ephemeralSession": "Ephemeral Codex session",
+    "thread.status.complete": "Complete",
+    "thread.status.failed": "Failed",
+    "thread.status.needsApproval": "Needs approval",
+    "thread.status.preview": "Preview",
+    "thread.status.ready": "Ready",
+    "thread.status.running": "Running",
+    "thread.status.stored": "Stored",
+  };
+  return fallback[key] ?? key;
 }
 
 function responseCursor(response: Record<string, unknown> | undefined): string | null {

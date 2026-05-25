@@ -1,6 +1,7 @@
 import type { ThreadTokenUsage } from "@nyosegawa/agent-ui-core";
 import { useEffect, useRef, useState } from "react";
 import { IconGauge } from "../components-internal";
+import { useAgentI18n } from "../i18n";
 import { AgentRateLimitBar } from "./status";
 
 export function AgentContextUsageIndicator({
@@ -8,6 +9,7 @@ export function AgentContextUsageIndicator({
 }: {
   tokenUsage?: ThreadTokenUsage;
 }) {
+  const { t } = useAgentI18n();
   const totalTokens = tokenUsage?.totalTokens ?? 0;
   const contextWindow = tokenUsage?.modelContextWindow ?? 0;
   const detailsRef = useRef<HTMLDetailsElement>(null);
@@ -37,32 +39,32 @@ export function AgentContextUsageIndicator({
       open={open}
       ref={detailsRef}
     >
-      <summary aria-label="Context usage" title="Context usage">
+      <summary aria-label={t("aria.contextUsage")} title={t("context.title")}>
         <IconGauge size={14} />
         <span>{Math.round(percent)}%</span>
       </summary>
-      <div className="aui-context-usage-popover" role="dialog" aria-label="Context usage details">
+      <div className="aui-context-usage-popover" role="dialog" aria-label={t("aria.contextUsageDetails")}>
         <div className="aui-context-usage-header">
-          <strong>Context usage</strong>
+          <strong>{t("context.title")}</strong>
           <span>{Math.round(percent)}%</span>
         </div>
-        <AgentRateLimitBar label="Context window" percent={percent} />
+        <AgentRateLimitBar label={t("context.contextWindow")} percent={percent} />
         <dl>
           <div>
-            <dt>Used</dt>
+            <dt>{t("context.used")}</dt>
             <dd>
               {totalTokens.toLocaleString()} / {contextWindow.toLocaleString()}
             </dd>
           </div>
-          <TokenUsageRow label="Input" value={tokenUsage?.inputTokens} />
-          <TokenUsageRow label="Cached input" value={tokenUsage?.cachedInputTokens} />
-          <TokenUsageRow label="Output" value={tokenUsage?.outputTokens} />
-          <TokenUsageRow label="Reasoning" value={tokenUsage?.reasoningOutputTokens} />
+          <TokenUsageRow label={t("context.input")} value={tokenUsage?.inputTokens} />
+          <TokenUsageRow label={t("context.cachedInput")} value={tokenUsage?.cachedInputTokens} />
+          <TokenUsageRow label={t("context.output")} value={tokenUsage?.outputTokens} />
+          <TokenUsageRow label={t("context.reasoning")} value={tokenUsage?.reasoningOutputTokens} />
           {tokenUsage?.last ? (
-            <TokenUsageRow label="Last turn" value={tokenUsage.last.totalTokens} />
+            <TokenUsageRow label={t("context.lastTurn")} value={tokenUsage.last.totalTokens} />
           ) : null}
         </dl>
-        <p>Codex may automatically compact context as a thread approaches its window.</p>
+        <p>{t("context.compactionNotice")}</p>
       </div>
     </details>
   );

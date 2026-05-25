@@ -118,13 +118,15 @@ helpers remain public because they are re-exported by the package barrel.
 The default UI is transcript-first. Usage, diagnostics, status summaries, run
 settings, and side panels are exported as host-composition primitives instead
 of being mandatory chat chrome.
-Theme state is also host-owned: `AgentChat` and `AgentShell` accept an optional
-`theme` prop, while `AgentThemeToggle` is a controlled primitive hosts can
-render outside the transcript surface.
+Theme and locale state are also host-owned: `AgentChat` and `AgentShell`
+accept an optional `theme` prop, `AgentChat` accepts `locale` and `messages`,
+and `AgentThemeToggle` / `AgentLocaleSelect` are controlled primitives hosts
+can render outside the transcript surface.
 
 The default UI keeps the high-traffic surfaces split internally:
 
-- `components.ts`: public barrel; `components/chat.tsx`, `components/thread.tsx`, `components/composer.tsx`, `components/run-settings.tsx`, `components/status.tsx`, `components/sidebar.tsx`, and `components/approvals.tsx`: responsibility-scoped React surfaces
+- `components.ts`: public barrel; `components/chat.tsx`, `components/thread.tsx`, `components/composer.tsx`, `components/run-settings.tsx`, `components/status.tsx`, `components/sidebar.tsx`, `components/approvals.tsx`, and `components/locale.tsx`: responsibility-scoped React surfaces
+- `i18n.tsx`: built-in UI dictionaries, locale normalization, `AgentI18nProvider`, and host copy override types
 - `timeline.tsx`: transcript item primitives for messages, reasoning, tool calls, command output, and file-change diffs in App Server item order
 - `transcript-window.ts`: large hydrated transcript item ordering and incremental window policy
 - `diff-viewer.tsx`: read-only diff rendering and patch payload normalization

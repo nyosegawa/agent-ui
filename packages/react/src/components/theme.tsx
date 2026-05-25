@@ -1,11 +1,12 @@
 import { buttonClass } from "../components-internal";
+import { useAgentI18n } from "../i18n";
 
 export type AgentTheme = "light" | "dark" | "system";
 
-const themeOptions: Array<{ label: string; value: AgentTheme }> = [
-  { label: "Light", value: "light" },
-  { label: "Dark", value: "dark" },
-  { label: "System", value: "system" },
+const themeOptions: Array<{ labelKey: "theme.light" | "theme.dark" | "theme.system"; value: AgentTheme }> = [
+  { labelKey: "theme.light", value: "light" },
+  { labelKey: "theme.dark", value: "dark" },
+  { labelKey: "theme.system", value: "system" },
 ];
 
 export interface AgentThemeToggleProps {
@@ -16,11 +17,13 @@ export interface AgentThemeToggleProps {
 }
 
 export function AgentThemeToggle({
-  "aria-label": ariaLabel = "Theme",
+  "aria-label": ariaLabel,
   disabled = false,
   onChange,
   value,
 }: AgentThemeToggleProps) {
+  const { t } = useAgentI18n();
+  const label = ariaLabel ?? t("theme.label");
   const selectedIndex = themeOptions.findIndex((option) => option.value === value);
   const changeByIndex = (index: number) => {
     const option = themeOptions[index];
@@ -29,7 +32,7 @@ export function AgentThemeToggle({
 
   return (
     <div
-      aria-label={ariaLabel}
+      aria-label={label}
       className="aui-theme-toggle"
       onKeyDown={(event) => {
         if (disabled) return;
@@ -65,7 +68,7 @@ export function AgentThemeToggle({
             tabIndex={selected ? 0 : -1}
             type="button"
           >
-            {option.label}
+            {t(option.labelKey)}
           </button>
         );
       })}

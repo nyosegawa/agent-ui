@@ -145,3 +145,14 @@
   border-radius: var(--aui-radius-pill);
   min-height: 28px;
 }
+
+.aui-locale-select {
+  display: inline-flex;
+  min-width: 0;
+}
+
+.aui-locale-select select {
+  appearance: none;
+  font: inherit;
+  max-width: 120px;
+}

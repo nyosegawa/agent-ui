@@ -11,6 +11,12 @@ import {
   useAgentThreadReader,
   useAgentThreads,
 } from "../hooks";
+import {
+  AgentI18nProvider,
+  useAgentI18n,
+  type AgentI18nMessages,
+  type AgentLocale,
+} from "../i18n";
 import { useAgentContext } from "../provider";
 import { AgentThreadView } from "./thread";
 import type {
@@ -46,6 +52,8 @@ export interface AgentChatProps {
   slots?: AgentChatSlots;
   statusBarEnd?: React.ReactNode;
   theme?: AgentTheme;
+  locale?: AgentLocale | string;
+  messages?: AgentI18nMessages;
   threadUrlRouting?: boolean | AgentThreadUrlRoutingOptions;
   usage?: boolean;
 }
@@ -65,11 +73,48 @@ export function AgentChat({
   slots,
   statusBarEnd,
   theme,
+  locale,
+  messages,
   threadUrlRouting = false,
   usage = false,
 }: AgentChatProps = {}) {
+  return (
+    <AgentI18nProvider locale={locale} messages={messages}>
+      <AgentChatInner
+        className={className}
+        diagnostics={diagnostics}
+        onRequestAppMention={onRequestAppMention}
+        onRequestPluginMention={onRequestPluginMention}
+        onRequestWorkingDirectory={onRequestWorkingDirectory}
+        resolveLocalAttachment={resolveLocalAttachment}
+        sidebar={sidebar}
+        slots={slots}
+        statusBarEnd={statusBarEnd}
+        theme={theme}
+        threadUrlRouting={threadUrlRouting}
+        usage={usage}
+      />
+    </AgentI18nProvider>
+  );
+}
+
+function AgentChatInner({
+  className,
+  diagnostics = false,
+  onRequestAppMention,
+  onRequestWorkingDirectory,
+  onRequestPluginMention,
+  resolveLocalAttachment,
+  sidebar = true,
+  slots,
+  statusBarEnd,
+  theme,
+  threadUrlRouting = false,
+  usage = false,
+}: AgentChatProps) {
   const bootstrap = useAgentBootstrap();
   const compact = useCompactLayout();
+  const { t } = useAgentI18n();
   const { thread, threadId, startThread, startThreadWithInput } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
   useThreadUrlRouting(threadUrlRouting, activeThreadId);
@@ -108,7 +153,7 @@ export function AgentChat({
     >
       {drawerOpen ? (
         <button
-          aria-label="Dismiss thread history"
+          aria-label={t("aria.dismissThreadHistory")}
           className="aui-sidebar-backdrop"
           onClick={() => setSidebarCollapsed(true)}
           type="button"
@@ -145,7 +190,7 @@ export function AgentChat({
             )}
           </div>
           {hasRail ? (
-            <aside className="aui-chat-rail" aria-label="Agent context">
+            <aside className="aui-chat-rail" aria-label={t("aria.agentContext")}>
               <AgentStatusSummary />
               <AgentStatusDetails />
               {usage ? <AgentUsagePanel autoRefresh={false} /> : null}

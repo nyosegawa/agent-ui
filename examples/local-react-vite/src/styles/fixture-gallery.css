@@ -99,6 +99,7 @@
 
 .aui-demo-toolbar {
   display: flex;
+  gap: 8px;
   justify-content: flex-end;
   min-width: 0;
   position: absolute;

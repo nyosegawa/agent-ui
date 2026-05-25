@@ -11,6 +11,7 @@ import {
   useAgentThread,
   useAgentThreadActions,
 } from "../hooks";
+import { useAgentI18n } from "../i18n";
 import { useAgentContext } from "../provider";
 import {
   IconAdd,
@@ -89,11 +90,12 @@ export function AgentThreadHeader({
   thread: ThreadState;
   threadId?: string;
 }) {
+  const { t } = useAgentI18n();
   return (
     <div className="aui-thread-header">
       <div className="aui-thread-title">
-        <h1>{thread.thread.name ?? "Untitled thread"}</h1>
-        <p>{threadSubtitle(thread.thread)}</p>
+        <h1>{thread.thread.name ?? t("thread.untitled")}</h1>
+        <p>{threadSubtitle(thread.thread, t)}</p>
       </div>
       <AgentThreadActions thread={thread} threadId={threadId} />
     </div>
@@ -160,6 +162,7 @@ function AgentThreadActions({
   thread: ThreadState;
   threadId?: string;
 }) {
+  const { t } = useAgentI18n();
   const { resumeThread, startThread } = useAgentThread(threadId);
   const { dispatch } = useAgentContext();
   const [resumeError, setResumeError] = useState<string | undefined>();
@@ -178,7 +181,7 @@ function AgentThreadActions({
     <div className="aui-thread-actions">
       <span className="aui-status-pill" data-status={status}>
         <span className="aui-status-pill-dot" aria-hidden="true" />
-        {formatThreadStatus(status, { hasTurns })}
+        {formatThreadStatus(status, { hasTurns, t })}
       </span>
       {canResume ? (
         <button
@@ -201,74 +204,74 @@ function AgentThreadActions({
           }}
           type="button"
         >
-          Resume
+          {t("thread.resume")}
         </button>
       ) : null}
       <button
-        aria-label="New thread"
+        aria-label={t("thread.new")}
         className={buttonClass("ghost", { size: "sm" })}
         onClick={() => deferAction(startThread)}
-        title="New thread"
+        title={t("thread.new")}
         type="button"
       >
         <IconAdd size={14} />
-        <span>New thread</span>
+        <span>{t("thread.new")}</span>
       </button>
       <details className="aui-thread-action-menu">
-        <summary aria-label="Actions" title="Thread actions">
+        <summary aria-label={t("aria.actions")} title={t("aria.actions")}>
           <IconMoreVertical size={16} />
         </summary>
         <div>
           <button
             disabled={!threadId}
             onClick={() => {
-              const name = globalThis.prompt?.("Thread name", thread.thread.name ?? "");
+              const name = globalThis.prompt?.(t("thread.namePrompt"), thread.thread.name ?? "");
               if (name?.trim()) deferAction(() => void renameThread(name.trim()));
             }}
             type="button"
           >
-            Rename
+            {t("thread.action.rename")}
           </button>
           <button
             disabled={!threadId}
             onClick={() => deferAction(() => void forkThread())}
             type="button"
           >
-            Fork
+            {t("thread.action.fork")}
           </button>
           <button
             disabled={!threadId || status === "archived"}
             onClick={() => deferAction(() => void archiveThread())}
             type="button"
           >
-            Archive
+            {t("thread.action.archive")}
           </button>
           <button
             disabled={!threadId || status !== "archived"}
             onClick={() => deferAction(() => void unarchiveThread())}
             type="button"
           >
-            Unarchive
+            {t("thread.action.unarchive")}
           </button>
           <button
             disabled={!threadId || !hasTurns}
             onClick={() => deferAction(() => void compactThread())}
             type="button"
           >
-            Compact
+            {t("thread.action.compact")}
           </button>
           <button
             disabled={!threadId || !hasTurns}
             onClick={() => deferAction(() => void rollbackThread(1))}
             type="button"
           >
-            Rollback
+            {t("thread.action.rollback")}
           </button>
         </div>
       </details>
       {resumeError ? (
         <div className="aui-thread-action-error" role="alert">
-          Resume failed: {resumeError}
+          {t("thread.resumeFailed", { message: resumeError })}
         </div>
       ) : null}
     </div>

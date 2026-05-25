@@ -1,10 +1,12 @@
 import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
 import {
   AgentChat,
+  AgentLocaleSelect,
   AgentProvider,
   AgentThemeToggle,
   localImageInput,
   textInput,
+  type AgentLocale,
   type AgentTheme,
   type AgentLocalAttachmentKind,
   type CodexUserInput,
@@ -60,6 +62,7 @@ async function requestWorkingDirectory(): Promise<string | null> {
 }
 
 function App() {
+  const [locale, setLocale] = useState<AgentLocale>(() => localeFromLocation());
   const [theme, setTheme] = useState<AgentTheme>(() => themeFromLocation());
   const transport = useMemo(
     () =>
@@ -89,14 +92,14 @@ function App() {
     <AgentProvider transport={transport}>
       <main className="agent-ui-local-app" data-aui-theme={theme}>
         <AgentChat
+          locale={locale}
           onRequestWorkingDirectory={requestWorkingDirectory}
           resolveLocalAttachment={resolveLocalAttachment}
           statusBarEnd={
-            <AgentThemeToggle
-              aria-label="Theme"
-              value={theme}
-              onChange={setTheme}
-            />
+            <>
+              <AgentLocaleSelect value={locale} onChange={setLocale} />
+              <AgentThemeToggle value={theme} onChange={setTheme} />
+            </>
           }
           theme={theme}
           threadUrlRouting
@@ -109,6 +112,18 @@ function App() {
 function themeFromLocation(): AgentTheme {
   const theme = new URLSearchParams(window.location.search).get("theme");
   return theme === "dark" || theme === "system" || theme === "light" ? theme : "light";
+}
+
+function localeFromLocation(): AgentLocale {
+  const locale = new URLSearchParams(window.location.search).get("locale");
+  return locale === "ja" ||
+    locale === "ko" ||
+    locale === "zh-CN" ||
+    locale === "es" ||
+    locale === "fr" ||
+    locale === "en"
+    ? locale
+    : "en";
 }
 
 const rootElement = document.getElementById("root");

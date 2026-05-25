@@ -1,16 +1,19 @@
 import type React from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
 import type { useAgentBootstrap } from "../hooks";
-import {
-  useAgentApps,
-  useAgentAuth,
-  useAgentSkills,
-  useAgentUsage,
-} from "../hooks";
-import { IconHistory, IconRefresh, buttonClass } from "../components-internal";
+import { useAgentAuth } from "../hooks";
+import { useAgentI18n, type AgentI18nKey } from "../i18n";
+import { IconHistory, buttonClass } from "../components-internal";
 import { useAgentContext } from "../provider";
-import { normalizeUsageWindows } from "../usage";
-import { useCompactLayout } from "./shared";
+
+export {
+  AgentAppsPanel,
+  AgentRateLimitBar,
+  AgentSkillsPanel,
+  AgentTokenUsageBar,
+  AgentUsagePanel,
+  AgentUsageSummary,
+  type AgentUsageProps,
+} from "./usage-panels";
 
 export function AgentStatusBar({
   end,
@@ -19,27 +22,28 @@ export function AgentStatusBar({
   end?: React.ReactNode;
   onOpenThreads?: () => void;
 } = {}) {
+  const { t } = useAgentI18n();
   const { state } = useAgentContext();
   const { account, cancelLogin, login } = useAgentAuth();
   const accountLabel = accountLabelText(account.account);
   const statusText =
     account.status === "unknown"
       ? state.connection.status === "connected"
-        ? "checking account"
-        : "connecting"
-      : account.status;
+        ? t("account.checking")
+        : t("account.connecting")
+      : accountStatusLabel(account.status, t);
   return (
     <header className="aui-status">
       {onOpenThreads ? (
         <button
-          aria-label="Open thread history"
+          aria-label={t("thread.openHistory")}
           className="aui-threads-trigger"
           onClick={onOpenThreads}
-          title="Threads"
+          title={t("thread.history")}
           type="button"
         >
           <IconHistory size={16} />
-          <span>Threads</span>
+          <span>{t("thread.history")}</span>
         </button>
       ) : null}
       <div className="aui-brand">
@@ -52,7 +56,7 @@ export function AgentStatusBar({
           <div className="aui-login-code" role="status">
             {account.login.verificationUrl ? (
               <a href={account.login.verificationUrl} rel="noreferrer" target="_blank">
-                Open device login
+                {t("account.openDeviceLogin")}
               </a>
             ) : null}
             {account.login.userCode ? <code>{account.login.userCode}</code> : null}
@@ -62,7 +66,7 @@ export function AgentStatusBar({
                 onClick={() => void cancelLogin()}
                 type="button"
               >
-                Cancel login
+                {t("account.cancelLogin")}
               </button>
             ) : null}
           </div>
@@ -73,7 +77,7 @@ export function AgentStatusBar({
             disabled
             type="button"
           >
-            {state.connection.status === "connected" ? "Checking" : "Connecting"}
+            {state.connection.status === "connected" ? t("account.checking") : t("account.connecting")}
           </button>
         ) : null}
         {account.status === "unauthenticated" ? (
@@ -82,7 +86,7 @@ export function AgentStatusBar({
             onClick={() => void login()}
             type="button"
           >
-            Login
+            {t("account.login")}
           </button>
         ) : null}
       </div>
@@ -105,6 +109,7 @@ export function AgentDiagnosticsPanel({
 }: {
   bootstrap: ReturnType<typeof useAgentBootstrap>;
 }) {
+  const { t } = useAgentI18n();
   const { state } = useAgentContext();
   const messages = [
     ...bootstrap.errors.map((error) => error.message),
@@ -113,19 +118,22 @@ export function AgentDiagnosticsPanel({
   ].filter((message) => message && !isSuppressedDiagnostic(message));
   if (bootstrap.isBootstrapping && messages.length === 0) {
     return (
-      <section className="aui-diagnostics" aria-label="Diagnostics">
-        <span>Syncing account, models, and usage.</span>
+      <section className="aui-diagnostics" aria-label={t("diagnostics.label")}>
+        <span>{t("diagnostics.syncing")}</span>
       </section>
     );
   }
   if (messages.length === 0) return null;
   const title = diagnosticsTitle(messages);
   return (
-    <details className="aui-diagnostics aui-diagnostics-details" aria-label="Diagnostics">
+    <details className="aui-diagnostics aui-diagnostics-details" aria-label={t("diagnostics.label")}>
       <summary>
         <span>{title}</span>
         <small>
-          {messages.length} {messages.length === 1 ? "message" : "messages"}
+          {t("diagnostics.messageCount", {
+            count: messages.length,
+            label: messages.length === 1 ? "message" : "messages",
+          })}
         </small>
       </summary>
       <div>
@@ -148,31 +156,33 @@ interface AgentStatusNotice {
 }
 
 export function AgentStatusSummary() {
+  const { t } = useAgentI18n();
   const { state } = useAgentContext();
   const notices = normalizedStatusNotices(state.diagnostics.banners);
   if (notices.length === 0) return null;
   const criticalCount = notices.filter((notice) => notice.severity === "critical").length;
   const warningCount = notices.filter((notice) => notice.severity === "warning").length;
   return (
-    <section className="aui-status-summary" aria-label="Status summary">
-      <strong>Status</strong>
-      <span>{statusSummary(notices.length, warningCount, criticalCount)}</span>
+    <section className="aui-status-summary" aria-label={t("aria.statusSummary")}>
+      <strong>{t("status.title")}</strong>
+      <span>{statusSummary(notices.length, warningCount, criticalCount, t)}</span>
     </section>
   );
 }
 
 export function AgentStatusDetails({ includeCritical = false }: { includeCritical?: boolean }) {
+  const { t } = useAgentI18n();
   const { state } = useAgentContext();
   const notices = normalizedStatusNotices(state.diagnostics.banners)
     .filter((notice) => includeCritical || notice.severity !== "critical")
     .slice(-6);
   if (notices.length === 0) return null;
   return (
-    <section className="aui-status-banners" aria-label="Status details">
+    <section className="aui-status-banners" aria-label={t("aria.statusDetails")}>
       <details>
         <summary>
-          <strong>Details</strong>
-          <span>{statusDetailsSummary(notices)}</span>
+          <strong>{t("common.details")}</strong>
+          <span>{statusDetailsSummary(notices, t)}</span>
         </summary>
         <div className="aui-status-banner-list">
           {notices.map((notice) => (
@@ -193,13 +203,14 @@ export function AgentStatusDetails({ includeCritical = false }: { includeCritica
 }
 
 export function AgentCriticalNoticeList() {
+  const { t } = useAgentI18n();
   const { state } = useAgentContext();
   const notices = normalizedStatusNotices(state.diagnostics.banners).filter(
     (notice) => notice.severity === "critical",
   );
   if (notices.length === 0) return null;
   return (
-    <section className="aui-critical-banners" aria-label="Critical status">
+    <section className="aui-critical-banners" aria-label={t("aria.criticalStatus")}>
       {notices.slice(-2).map((notice) => (
         <article
           className="aui-critical-banner"
@@ -218,12 +229,13 @@ export function AgentCriticalNoticeList() {
 export function normalizedStatusNotices(
   banners: Array<{ id: string; kind: string; message: string }>,
 ): AgentStatusNotice[] {
+  const t = defaultStatusTitle;
   return banners.map((banner) => ({
     id: banner.id,
     kind: banner.kind,
     message: banner.message,
     severity: statusSeverity(banner.kind, banner.message),
-    title: statusBannerTitle(banner.kind),
+    title: t(banner.kind),
   }));
 }
 
@@ -253,285 +265,99 @@ function rateLimitSeverity(message: string): AgentStatusSeverity {
   return "info";
 }
 
-export function statusSummary(total: number, warningCount: number, criticalCount: number): string {
+export function statusSummary(
+  total: number,
+  warningCount: number,
+  criticalCount: number,
+  t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string = fallbackStatusT,
+): string {
   if (criticalCount > 0) {
-    return `${criticalCount} critical · ${warningCount} warning · ${total} total`;
+    return `${criticalCount} ${t("status.critical")} · ${warningCount} ${t("status.warning")} · ${total} ${t("status.total")}`;
   }
   if (warningCount > 0) {
-    return `${warningCount} warning · ${total} total`;
+    return `${warningCount} ${t("status.warning")} · ${total} ${t("status.total")}`;
   }
-  return `${total} background ${total === 1 ? "notice" : "notices"}`;
+  return t("status.backgroundNotice", {
+    count: total,
+    label: total === 1 ? "notice" : "notices",
+  });
 }
 
-function statusDetailsSummary(notices: AgentStatusNotice[]): string {
+function statusDetailsSummary(
+  notices: AgentStatusNotice[],
+  t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string,
+): string {
   const warningCount = notices.filter((notice) => notice.severity === "warning").length;
-  if (warningCount > 0) return `${warningCount} warning · ${notices.length} notices`;
-  return `${notices.length} background ${notices.length === 1 ? "notice" : "notices"}`;
-}
-
-export interface AgentUsageProps {
-  autoRefresh?: boolean;
-}
-
-export function AgentUsagePanel({ autoRefresh = true }: AgentUsageProps = {}) {
-  const { state } = useAgentContext();
-  const { rateLimits, refreshUsage } = useAgentUsage();
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const didAutoRefresh = useRef(false);
-  const windows = useMemo(() => normalizeUsageWindows(rateLimits), [rateLimits]);
-  const compactLayout = useCompactLayout();
-  useEffect(() => {
-    if (
-      autoRefresh &&
-      state.connection.status === "connected" &&
-      !didAutoRefresh.current
-    ) {
-      didAutoRefresh.current = true;
-      void refreshUsage().catch(() => undefined);
-    }
-  }, [autoRefresh, refreshUsage, state.connection.status]);
-  const refreshButton = (
-    <button
-      aria-label="Refresh"
-      className={buttonClass("ghost", { size: "sm" })}
-      disabled={isRefreshing}
-      onClick={() => {
-        setIsRefreshing(true);
-        void refreshUsage().finally(() => setIsRefreshing(false));
-      }}
-      title="Refresh usage"
-      type="button"
-    >
-      <IconRefresh size={12} />
-      <span>{isRefreshing ? "Refreshing…" : "Refresh"}</span>
-    </button>
-  );
-  const usageBody =
-    windows.length > 0 ? (
-      <div className="aui-usage-grid">
-        {windows.map((window) => (
-          <div className="aui-usage-window" key={window.id}>
-            <div className="aui-usage-row">
-              <span>{window.label}</span>
-              <strong>{window.valueLabel}</strong>
-            </div>
-            <AgentRateLimitBar label={window.label} percent={window.percent} />
-            {window.resetLabel ? <small>{window.resetLabel}</small> : null}
-          </div>
-        ))}
-      </div>
-    ) : (
-      <p className="aui-usage-empty">Usage limits are available after account sync.</p>
-    );
-  if (compactLayout) {
-    return (
-      <section className="aui-usage aui-usage-compact" aria-label="Usage limits">
-        <details>
-          <summary>
-            <strong>Usage</strong>
-            <small>{usageSummary(windows)}</small>
-          </summary>
-          <div className="aui-usage-compact-body">
-            <div className="aui-usage-header">{refreshButton}</div>
-            {usageBody}
-          </div>
-        </details>
-      </section>
-    );
+  if (warningCount > 0) {
+    return `${warningCount} ${t("status.warning")} · ${notices.length} notices`;
   }
-  return (
-    <section className="aui-usage" aria-label="Usage limits">
-      <div className="aui-usage-header">
-        <strong>Usage</strong>
-        {refreshButton}
-      </div>
-      {usageBody}
-    </section>
-  );
-}
-
-export function AgentUsageSummary() {
-  const { rateLimits } = useAgentUsage();
-  const windows = useMemo(() => normalizeUsageWindows(rateLimits), [rateLimits]);
-  return (
-    <section className="aui-usage-summary" aria-label="Usage summary">
-      <strong>Usage</strong>
-      <span>{usageSummary(windows)}</span>
-    </section>
-  );
-}
-
-export function AgentRateLimitBar({
-  label,
-  percent,
-}: {
-  label: string;
-  percent: number;
-}) {
-  return (
-    <div
-      aria-label={`${label} usage`}
-      aria-valuemax={100}
-      aria-valuemin={0}
-      aria-valuenow={Math.round(percent)}
-      className="aui-meter"
-      role="progressbar"
-    >
-      <span style={{ width: `${Math.min(100, Math.max(0, percent))}%` }} />
-    </div>
-  );
-}
-
-export function AgentTokenUsageBar({
-  inputTokens = 0,
-  outputTokens = 0,
-  totalTokens = inputTokens + outputTokens,
-}: {
-  inputTokens?: number;
-  outputTokens?: number;
-  totalTokens?: number;
-}) {
-  const inputPercent = totalTokens > 0 ? (inputTokens / totalTokens) * 100 : 0;
-  const outputPercent = totalTokens > 0 ? (outputTokens / totalTokens) * 100 : 0;
-  return (
-    <div className="aui-token-usage" aria-label="Token usage">
-      <div className="aui-usage-row">
-        <span>Tokens</span>
-        <strong>{totalTokens.toLocaleString()}</strong>
-      </div>
-      <div className="aui-meter aui-token-meter">
-        <span data-kind="input" style={{ width: `${Math.max(0, inputPercent)}%` }} />
-        <span data-kind="output" style={{ width: `${Math.max(0, outputPercent)}%` }} />
-      </div>
-      <small>
-        {inputTokens.toLocaleString()} input · {outputTokens.toLocaleString()} output
-      </small>
-    </div>
-  );
-}
-
-
-export function AgentSkillsPanel({ cwd }: { cwd?: string }) {
-  const { refreshSkills, setSkillEnabled, skills } = useAgentSkills(cwd);
-  return (
-    <section className="aui-skills-panel" aria-label="Skills">
-      <div className="aui-usage-header">
-        <strong>Skills</strong>
-        <button
-          aria-label="Refresh"
-          className={buttonClass("ghost", { size: "sm" })}
-          onClick={() => void refreshSkills().catch(() => undefined)}
-          title="Refresh skills"
-          type="button"
-        >
-          <IconRefresh size={12} />
-          <span>Refresh</span>
-        </button>
-      </div>
-      {skills.length > 0 ? (
-        <ul className="aui-plain-list">
-          {skills.map((skill) => (
-            <li key={`${skill.path ?? ""}:${skill.name}`}>
-              <span>{skill.name}</span>
-              <button
-                className={buttonClass("subtle", { size: "sm" })}
-                onClick={() =>
-                  void setSkillEnabled({
-                    enabled: skill.enabled === false,
-                    ...(skill.path ? { path: skill.path } : { name: skill.name }),
-                  }).catch(() => undefined)
-                }
-                type="button"
-              >
-                {skill.enabled === false ? "Enable" : "Disable"}
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="aui-usage-empty">Skills are available after refresh.</p>
-      )}
-    </section>
-  );
-}
-
-export function AgentAppsPanel({ threadId }: { threadId?: string }) {
-  const { apps, loadMoreApps, nextCursor, refreshApps } = useAgentApps(threadId);
-  return (
-    <section className="aui-apps-panel" aria-label="Apps">
-      <div className="aui-usage-header">
-        <strong>Apps</strong>
-        <button
-          aria-label="Refresh"
-          className={buttonClass("ghost", { size: "sm" })}
-          onClick={() => void refreshApps().catch(() => undefined)}
-          title="Refresh apps"
-          type="button"
-        >
-          <IconRefresh size={12} />
-          <span>Refresh</span>
-        </button>
-      </div>
-      {apps.length > 0 ? (
-        <ul className="aui-plain-list">
-          {apps.map((app) => (
-            <li key={app.id}>
-              <span>{app.name ?? app.id}</span>
-              {app.installed === false ? <small>not installed</small> : null}
-              {app.needsAuth ? <small>auth needed</small> : null}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="aui-usage-empty">Apps are available after refresh.</p>
-      )}
-      {nextCursor ? (
-        <button
-          className={buttonClass("subtle", { size: "sm" })}
-          onClick={() => void loadMoreApps()?.catch(() => undefined)}
-          type="button"
-        >
-          Load more
-        </button>
-      ) : null}
-    </section>
-  );
-}
-
-function usageSummary(windows: ReturnType<typeof normalizeUsageWindows>): string {
-  if (windows.length === 0) return "sync pending";
-  return windows
-    .slice(0, 3)
-    .map((window) => `${window.label} ${window.valueLabel}`)
-    .join(" · ");
+  return t("status.backgroundNotice", {
+    count: notices.length,
+    label: notices.length === 1 ? "notice" : "notices",
+  });
 }
 
 function diagnosticsTitle(messages: string[]): string {
   const pluginWarnings = messages.filter((message) =>
     message.includes("codex_core_plugins::manifest"),
   ).length;
-  if (pluginWarnings === messages.length) return "Plugin manifest warnings";
-  if (pluginWarnings > 0) return "Diagnostics and plugin warnings";
-  return "Diagnostics";
+  if (pluginWarnings === messages.length) return fallbackStatusT("diagnostics.pluginManifestWarnings");
+  if (pluginWarnings > 0) return fallbackStatusT("diagnostics.withPluginWarnings");
+  return fallbackStatusT("diagnostics.label");
 }
 
-function statusBannerTitle(kind: string): string {
+function defaultStatusTitle(kind: string): string {
   switch (kind) {
     case "modelReroute":
-      return "Model rerouted";
+      return fallbackStatusT("status.modelReroute");
     case "deprecationNotice":
-      return "Deprecation notice";
+      return fallbackStatusT("status.deprecationNotice");
     case "configWarning":
-      return "Config warning";
+      return fallbackStatusT("status.configWarning");
     case "accountStatus":
-      return "Account";
+      return fallbackStatusT("status.account");
     case "mcpOAuth":
-      return "MCP OAuth";
+      return fallbackStatusT("status.mcpOAuth");
     case "rateLimit":
-      return "Rate limit";
+      return fallbackStatusT("status.rateLimit");
     default:
-      return "Status";
+      return fallbackStatusT("status.title");
   }
+}
+
+function accountStatusLabel(
+  status: string,
+  t: (key: AgentI18nKey) => string,
+): string {
+  switch (status) {
+    case "authenticated":
+      return t("account.authenticated");
+    case "authenticating":
+      return t("account.authenticating");
+    case "unauthenticated":
+      return t("account.unauthenticated");
+    default:
+      return status;
+  }
+}
+
+function fallbackStatusT(key: AgentI18nKey): string {
+  const fallback: Partial<Record<AgentI18nKey, string>> = {
+    "account.authenticated": "authenticated",
+    "account.authenticating": "authenticating",
+    "account.unauthenticated": "unauthenticated",
+    "diagnostics.label": "Diagnostics",
+    "diagnostics.pluginManifestWarnings": "Plugin manifest warnings",
+    "diagnostics.withPluginWarnings": "Diagnostics and plugin warnings",
+    "status.account": "Account",
+    "status.configWarning": "Config warning",
+    "status.deprecationNotice": "Deprecation notice",
+    "status.mcpOAuth": "MCP OAuth",
+    "status.modelReroute": "Model rerouted",
+    "status.rateLimit": "Rate limit",
+    "status.title": "Status",
+  };
+  return fallback[key] ?? key;
 }
 
 function isSuppressedDiagnostic(message: string): boolean {

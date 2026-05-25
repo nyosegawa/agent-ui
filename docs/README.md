@@ -23,6 +23,8 @@ need exact contracts.
 - [Usage and Status](./guides/usage-and-status.md): account rate limits,
   thread token usage, diagnostics, and status chrome.
 - [Theming](./guides/theming.md): CSS variables and visual customization.
+- [Internationalization](./guides/i18n.md): built-in locales, host-controlled
+  locale state, and copy overrides.
 - [Authentication](./guides/authentication.md): local device-code login and
   account state.
 - [Next.js](./guides/nextjs.md): full chat sidecar versus one-shot Route

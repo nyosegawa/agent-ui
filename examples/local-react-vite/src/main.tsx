@@ -8,6 +8,8 @@ import {
   AgentComposerPanel,
   AgentCriticalNoticeList,
   AgentDiagnosticsPanel,
+  AgentI18nProvider,
+  AgentLocaleSelect,
   AgentProvider,
   AgentStatusDetails,
   AgentStatusSummary,
@@ -18,6 +20,7 @@ import {
   AgentThreadView,
   AgentUsagePanel,
   AgentUsageSummary,
+  type AgentLocale,
   type AgentTheme,
   normalizeUsageWindows,
   useAgentApprovals,
@@ -68,18 +71,22 @@ function DemoApp() {
 
 function AgentDemo() {
   const demoState = useMemo(() => demoScenarioFromLocation(), []);
+  const [locale, setLocale] = useState<AgentLocale>(() => localeFromLocation());
   const [theme, setTheme] = useState<AgentTheme>(() => themeFromLocation());
   const initialState = useMemo(() => createDemoInitialState(demoState), [demoState]);
   const transport = useMemo(() => createDemoTransport(demoState), [demoState]);
 
   return (
     <AgentProvider initialState={initialState} transport={transport}>
-      <main className="aui-demo-main" data-aui-theme={theme}>
-        <div className="aui-demo-toolbar">
-          <AgentThemeToggle value={theme} onChange={setTheme} />
-        </div>
-        <AgentChat diagnostics theme={theme} usage />
-      </main>
+      <AgentI18nProvider locale={locale}>
+        <main className="aui-demo-main" data-aui-theme={theme}>
+          <div className="aui-demo-toolbar">
+            <AgentLocaleSelect value={locale} onChange={setLocale} />
+            <AgentThemeToggle value={theme} onChange={setTheme} />
+          </div>
+          <AgentChat diagnostics locale={locale} theme={theme} usage />
+        </main>
+      </AgentI18nProvider>
     </AgentProvider>
   );
 }
@@ -131,6 +138,18 @@ function VisualQaIndex() {
 function themeFromLocation(): AgentTheme {
   const theme = new URLSearchParams(window.location.search).get("theme");
   return theme === "dark" || theme === "system" || theme === "light" ? theme : "light";
+}
+
+function localeFromLocation(): AgentLocale {
+  const locale = new URLSearchParams(window.location.search).get("locale");
+  return locale === "ja" ||
+    locale === "ko" ||
+    locale === "zh-CN" ||
+    locale === "es" ||
+    locale === "fr" ||
+    locale === "en"
+    ? locale
+    : "en";
 }
 
 function ScopedThreadPaneExample() {
