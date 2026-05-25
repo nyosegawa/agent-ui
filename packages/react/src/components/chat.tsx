@@ -18,6 +18,7 @@ import type {
   AgentLocalAttachmentResolver,
 } from "./composer";
 import { AgentFirstRun } from "./first-run";
+import type { AgentWorkingDirectoryResolver } from "./run-settings";
 import { AgentThreadSidebar } from "./sidebar";
 import { useCompactLayout } from "./shared";
 import {
@@ -37,6 +38,7 @@ export interface AgentChatProps {
   className?: string;
   diagnostics?: boolean;
   onRequestAppMention?: AgentComposerMentionResolver;
+  onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
   onRequestPluginMention?: AgentComposerMentionResolver;
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   sidebar?: boolean;
@@ -53,6 +55,7 @@ export function AgentChat({
   className,
   diagnostics = false,
   onRequestAppMention,
+  onRequestWorkingDirectory,
   onRequestPluginMention,
   resolveLocalAttachment,
   sidebar = true,
@@ -125,6 +128,7 @@ export function AgentChat({
             ) : (
               <div className="aui-empty">
                 <AgentFirstRun
+                  onRequestWorkingDirectory={onRequestWorkingDirectory}
                   onStartThread={async (prompt) => {
                     if (prompt) await startThreadWithInput(prompt);
                     else await startThread();

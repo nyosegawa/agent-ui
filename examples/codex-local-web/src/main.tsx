@@ -42,6 +42,20 @@ async function resolveLocalAttachment(
   return textInput(`Attached file: ${result.path}`);
 }
 
+async function requestWorkingDirectory(): Promise<string | null> {
+  const response = await fetch("/agent-ui/select-directory", { method: "POST" });
+  if (response.status === 204) return null;
+  const result = (await response.json()) as { error?: unknown; path?: unknown };
+  if (!response.ok) {
+    const fallback = window.prompt(
+      typeof result.error === "string" ? result.error : "Working directory",
+      "",
+    );
+    return fallback?.trim() || null;
+  }
+  return typeof result.path === "string" ? result.path : null;
+}
+
 function App() {
   const transport = useMemo(
     () =>
@@ -70,7 +84,11 @@ function App() {
   return (
     <AgentProvider transport={transport}>
       <main className="agent-ui-local-app">
-        <AgentChat resolveLocalAttachment={resolveLocalAttachment} threadUrlRouting />
+        <AgentChat
+          onRequestWorkingDirectory={requestWorkingDirectory}
+          resolveLocalAttachment={resolveLocalAttachment}
+          threadUrlRouting
+        />
       </main>
     </AgentProvider>
   );

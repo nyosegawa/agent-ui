@@ -3,12 +3,18 @@ import { useCallback, useRef, useState } from "react";
 import { useAgentAuth } from "../hooks";
 import { IconSend, buttonClass } from "../components-internal";
 import { useAgentContext } from "../provider";
-import { AgentStarterCwd, ComposerRunSettings } from "./run-settings";
+import {
+  AgentStarterCwd,
+  ComposerRunSettings,
+  type AgentWorkingDirectoryResolver,
+} from "./run-settings";
 import { deferAction } from "./shared";
 
 export function AgentFirstRun({
+  onRequestWorkingDirectory,
   onStartThread,
 }: {
+  onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
   onStartThread: (prompt?: string) => Promise<void> | void;
 }) {
   const { account, cancelLogin, login } = useAgentAuth();
@@ -139,7 +145,7 @@ export function AgentFirstRun({
           </button>
         </div>
       </div>
-      <AgentStarterCwd />
+      <AgentStarterCwd onRequestWorkingDirectory={onRequestWorkingDirectory} />
     </form>
   );
 }

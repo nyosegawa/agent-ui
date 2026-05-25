@@ -128,9 +128,12 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
   // the first-run starter composer.
   await page.getByRole("textbox", { name: "Message" }).fill("start a fixture thread");
   await expect(page.getByRole("button", { name: "Start thread" })).toBeEnabled();
-  const cwdField = page.getByLabel("Working directory");
-  await expect(cwdField).toBeVisible();
-  const cwdFits = await cwdField.evaluate((element) => {
+  const cwdTrigger = page.getByRole("button", { name: "Working directory" });
+  await expect(cwdTrigger).toBeVisible();
+  await cwdTrigger.click();
+  await expect(page.getByRole("menu", { name: "Working directory" })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Open folder..." })).toBeVisible();
+  const cwdFits = await cwdTrigger.evaluate((element) => {
     const rect = element.getBoundingClientRect();
     return rect.left >= -1 && rect.right <= window.innerWidth + 1;
   });

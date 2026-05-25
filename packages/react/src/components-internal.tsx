@@ -98,6 +98,13 @@ export const IconFolder = (props: { size?: number }) => (
   </Icon>
 );
 
+export const IconFolderAdd = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+    <path d="M15 12h4M17 10v4" />
+  </Icon>
+);
+
 export const IconSearch = (props: { size?: number }) => (
   <Icon size={props.size}>
     <circle cx="11" cy="11" r="7" />

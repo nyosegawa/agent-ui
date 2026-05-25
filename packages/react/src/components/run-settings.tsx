@@ -1,11 +1,13 @@
 import type React from "react";
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAgentModels, useAgentRunSettings } from "../hooks";
 import {
   IconCheck,
+  IconChevronDown,
   IconClose,
   IconCpu,
   IconFolder,
+  IconFolderAdd,
   IconGauge,
   IconShield,
   buttonClass,
@@ -189,49 +191,145 @@ export function AgentRunSettingsPanel({
   return <AgentRunControls autoRefresh={autoRefresh} variant="compact" />;
 }
 
+export type AgentWorkingDirectoryResolver = () =>
+  | Promise<string | null | undefined>
+  | string
+  | null
+  | undefined;
+
 /**
  * Compact working-directory selector for the start screen. cwd is a
  * thread-start setting, so it sits beneath the starter composer as a context
  * pill rather than inside the composer toolbar.
  */
-export function AgentStarterCwd() {
+export function AgentStarterCwd({
+  onRequestWorkingDirectory,
+}: {
+  onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
+}) {
   const { state } = useAgentContext();
   const { runSettings, setCwd } = useAgentRunSettings();
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const cwdOptions = useMemo(
     () =>
       Array.from(
         new Set(
-          Object.values(state.threads)
-            .map((thread) => thread.thread.path)
-            .filter((path): path is string => Boolean(path && isUserFacingPath(path))),
+          [
+            runSettings.cwd,
+            ...Object.values(state.threads)
+              .map((thread) => thread.thread.path)
+              .filter((path): path is string => Boolean(path && isUserFacingPath(path))),
+          ].filter((path): path is string => Boolean(path && isUserFacingPath(path))),
         ),
       ).slice(0, 12),
-    [state.threads],
+    [runSettings.cwd, state.threads],
   );
+  const selectedCwd = runSettings.cwd || undefined;
+  const triggerLabel = selectedCwd ? folderName(selectedCwd) : "Select folder";
+  const requestWorkingDirectory = useCallback(async () => {
+    setOpen(false);
+    const requested = onRequestWorkingDirectory
+      ? await onRequestWorkingDirectory()
+      : fallbackWorkingDirectoryPrompt(runSettings.cwd ?? cwdOptions[0]);
+    const next = typeof requested === "string" ? requested.trim() : "";
+    if (next) setCwd(next);
+  }, [cwdOptions, onRequestWorkingDirectory, runSettings.cwd, setCwd]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   return (
     <div className="aui-starter-context" aria-label="Thread start context">
-      <label className="aui-starter-cwd">
-        <IconFolder size={14} />
-        <span className="aui-visually-hidden">Working directory</span>
-        <input
-          aria-label="Working directory"
-          list={cwdOptions.length > 0 ? "aui-starter-cwd-options" : undefined}
-          onChange={(event) => setCwd(event.currentTarget.value)}
-          placeholder={cwdOptions[0] ?? "Server default cwd"}
-          type="text"
-          value={runSettings.cwd ?? ""}
-        />
-        {cwdOptions.length > 0 ? (
-          <datalist id="aui-starter-cwd-options">
-            {cwdOptions.map((cwd) => (
-              <option key={cwd} value={cwd} />
-            ))}
-          </datalist>
-        ) : null}
-      </label>
+      <div className="aui-starter-cwd" ref={rootRef}>
+        <div className="aui-starter-cwd-picker">
+          <button
+            aria-expanded={open}
+            aria-haspopup="menu"
+            aria-label="Working directory"
+            className="aui-starter-cwd-trigger"
+            onClick={() => setOpen((current) => !current)}
+            title={selectedCwd ?? "Server default cwd"}
+            type="button"
+          >
+            <IconFolder size={15} />
+            <span className="aui-starter-cwd-trigger-label">{triggerLabel}</span>
+            <IconChevronDown size={13} />
+          </button>
+          {open ? (
+            <div className="aui-starter-cwd-menu" role="menu" aria-label="Working directory">
+              <div className="aui-starter-cwd-section-label">Recent</div>
+              {cwdOptions.length > 0 ? (
+                cwdOptions.map((cwd) => {
+                  const selected = cwd === selectedCwd;
+                  return (
+                    <button
+                      aria-checked={selected}
+                      className="aui-starter-cwd-item"
+                      key={cwd}
+                      onClick={() => {
+                        setCwd(cwd);
+                        setOpen(false);
+                      }}
+                      role="menuitemradio"
+                      title={cwd}
+                      type="button"
+                    >
+                      <span>{folderName(cwd)}</span>
+                      {selected ? <IconCheck size={15} /> : null}
+                    </button>
+                  );
+                })
+              ) : (
+                <span className="aui-starter-cwd-empty">No recent folders</span>
+              )}
+              <div className="aui-starter-cwd-separator" />
+              <button
+                className="aui-starter-cwd-item aui-starter-cwd-open"
+                onClick={() => void requestWorkingDirectory()}
+                role="menuitem"
+                type="button"
+              >
+                Open folder...
+              </button>
+            </div>
+          ) : null}
+        </div>
+        <button
+          aria-label="Open folder"
+          className="aui-starter-cwd-action"
+          onClick={() => void requestWorkingDirectory()}
+          title="Open folder..."
+          type="button"
+        >
+          <IconFolderAdd size={16} />
+        </button>
+      </div>
     </div>
   );
+}
+
+function folderName(path: string): string {
+  const normalized = path.replace(/\\/g, "/").replace(/\/+$/, "");
+  return normalized.split("/").pop() || normalized || path;
+}
+
+function fallbackWorkingDirectoryPrompt(current?: string): string | null | undefined {
+  if (typeof window === "undefined" || typeof window.prompt !== "function") return undefined;
+  return window.prompt("Working directory", current ?? "");
 }
 
 function formatModelOption(model: { id: string; name?: string }): string {

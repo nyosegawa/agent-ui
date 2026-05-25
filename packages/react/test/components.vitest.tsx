@@ -3197,7 +3197,7 @@ describe("AgentChat", () => {
     });
     render(
       <AgentProvider transport={transport}>
-        <AgentChat />
+        <AgentChat onRequestWorkingDirectory={() => "/tmp/agent-ui"} />
       </AgentProvider>,
     );
 
@@ -3206,7 +3206,10 @@ describe("AgentChat", () => {
     );
     await user.click(screen.getByRole("button", { name: "Model and effort" }));
     await user.click(await screen.findByRole("menuitemradio", { name: /Real Model/ }));
-    await user.type(screen.getByLabelText("Working directory"), "/tmp/agent-ui");
+    await user.click(screen.getByRole("button", { name: "Open folder" }));
+    expect(await screen.findByRole("button", { name: "Working directory" })).toHaveTextContent(
+      "agent-ui",
+    );
     await user.type(screen.getByRole("textbox", { name: "Message" }), "start here");
     await user.click(screen.getByRole("button", { name: "Start thread" }));
 
@@ -3225,6 +3228,68 @@ describe("AgentChat", () => {
     });
     expect(await screen.findByText("Ready")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
+  });
+
+  it("shows recent working directories by folder name before starting a thread", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                cwd: "/Users/sakasegawa",
+                id: "thread-home",
+                name: "Home",
+                path: "/Users/sakasegawa/.codex/sessions/home.jsonl",
+                status: { type: "notLoaded" },
+              },
+              {
+                cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+                id: "thread-repo",
+                name: "Agent UI",
+                path: "/Users/sakasegawa/.codex/sessions/agent-ui.jsonl",
+                status: { type: "notLoaded" },
+              },
+            ],
+          };
+        }
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-new",
+              name: "New real thread",
+              status: { type: "idle" },
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Working directory" }));
+    expect(screen.getByText("Recent")).toBeInTheDocument();
+    expect(screen.getByRole("menuitemradio", { name: "sakasegawa" })).toBeInTheDocument();
+    await user.click(screen.getByRole("menuitemradio", { name: "agent-ui" }));
+    expect(screen.getByRole("button", { name: "Working directory" })).toHaveTextContent(
+      "agent-ui",
+    );
+    await user.type(screen.getByRole("textbox", { name: "Message" }), "start in repo");
+    await user.click(screen.getByRole("button", { name: "Start thread" }));
+
+    expect(
+      transport.requests.find((request) => request.method === "thread/start")?.params,
+    ).toMatchObject({
+      cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+    });
   });
 
   it("restores cwd from started and resumed thread responses", async () => {

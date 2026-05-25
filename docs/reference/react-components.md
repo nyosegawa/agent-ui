@@ -31,6 +31,7 @@ secondary chrome.
   diagnostics={false}
   onRequestAppMention={openAppPicker}
   onRequestPluginMention={openPluginPicker}
+  onRequestWorkingDirectory={openDirectoryPicker}
   resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
   slots={{
     renderApproval: (approval) => <CustomApproval approval={approval} />,
@@ -117,7 +118,9 @@ quality directly instead of depending on a page-level shell:
   trigger on desktop and as a bottom sheet on mobile, and supports
   `Esc`, outside-click, focus return, Arrow/Home/End navigation, and internal
   panel scroll without closing. Working directory is **not** in this menu —
-  cwd is a thread-start setting (see below). `AgentRunControls` uses
+  cwd is a thread-start setting (see below). Hosts that want a native folder
+  picker can pass `AgentChat.onRequestWorkingDirectory`, which must return the
+  absolute cwd path selected by the user. `AgentRunControls` uses
   radiogroup semantics for execution mode selection rather than mixing pressed
   buttons and tablist roles.
 - **Button system**: `aui-btn` plus `aui-btn-primary | -secondary | -ghost |
@@ -353,8 +356,15 @@ extensions such as `.3mf`, next to the App Server and returns an absolute path.
 The empty-state / first-run surface is a starter composer: a large prompt card
 whose lower toolbar reuses the composer's execution-mode and model/effort menus
 (`ComposerRunSettings`), with a round send control. The working directory is a
-thread-start setting, so it sits beneath the card as a compact context pill
-(`AgentStarterCwd`) rather than inside the toolbar. The start button stays
+thread-start setting, so it sits beneath the card as a compact context picker
+(`AgentStarterCwd`) rather than inside the toolbar. The collapsed picker shows
+only the selected folder name; opening it shows recent thread cwd values by
+folder name, keeps the full absolute path in the selection title and request
+params, and marks the selected cwd with a check. `Open folder...` invokes the
+host-provided `onRequestWorkingDirectory` resolver; without one, the component
+falls back to a path prompt so browser-only fixtures can still set a cwd. The
+`examples/codex-local-web` wires that resolver to a local macOS folder picker
+endpoint and returns the absolute selected path. The start button stays
 disabled until the first-turn prompt has text. Starting from this surface
 creates the thread and immediately sends the first turn. An existing thread
 shows its cwd read-only in `AgentThreadHeader`; the normal composer toolbar
