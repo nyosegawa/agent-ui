@@ -3348,6 +3348,49 @@ describe("AgentChat", () => {
     expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
   });
 
+  it("leaves the selected working directory unchanged when folder selection is canceled", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        if (request.method === "thread/list") {
+          return {
+            threads: [
+              {
+                cwd: "/Users/example/project",
+                id: "thread-cwd-option",
+                name: "Thread with cwd",
+                status: { type: "idle" },
+              },
+            ],
+          };
+        }
+        return {};
+      },
+    });
+    const onRequestWorkingDirectory = vi.fn(async () => null);
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat onRequestWorkingDirectory={onRequestWorkingDirectory} />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Working directory" }));
+    await user.click(await screen.findByRole("menuitemradio", { name: "project" }));
+    expect(screen.getByRole("button", { name: "Working directory" })).toHaveTextContent(
+      "project",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Open folder" }));
+
+    expect(onRequestWorkingDirectory).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("button", { name: "Working directory" })).toHaveTextContent(
+      "project",
+    );
+  });
+
   it("shows recent working directories by folder name before starting a thread", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({

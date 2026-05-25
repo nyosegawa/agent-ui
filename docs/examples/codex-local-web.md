@@ -40,6 +40,11 @@ that thread on first load. Explicit user selections, resumed threads, and new
 threads push history entries, so browser back/forward returns to the previous
 thread or to `/` when the previous state was the no-thread view.
 
+The start screen's working-directory picker is backed by
+`POST /agent-ui/select-directory` on macOS. Selecting a folder returns its
+absolute path; canceling the native dialog returns no path and leaves the
+current selection unchanged without showing a browser prompt.
+
 Running turns follow Codex Desktop-style composer semantics on top of Codex App
 Server methods. Enter stores text in the UI-local follow-up queue; `Send now`
 and Cmd/Ctrl+Enter call `turn/steer` with the active turn as `expectedTurnId`.

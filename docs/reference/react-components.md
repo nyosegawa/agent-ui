@@ -387,12 +387,14 @@ params, and marks the selected cwd with a check. `Open folder...` invokes the
 host-provided `onRequestWorkingDirectory` resolver; without one, the component
 falls back to a path prompt so browser-only fixtures can still set a cwd. The
 `examples/codex-local-web` wires that resolver to a local macOS folder picker
-endpoint and returns the absolute selected path. The start button stays
-disabled until the first-turn prompt has text. Starting from this surface
-creates the thread and immediately sends the first turn. An existing thread
-shows its cwd read-only in `AgentThreadHeader`; the normal composer toolbar
-never offers a cwd editor, because changing the working directory mid-thread is
-not a meaningful Codex operation.
+endpoint and returns the absolute selected path. Canceling that native picker
+is a no-op: the resolver returns `null`, the current cwd selection is preserved,
+and no fallback prompt or error is shown. The start button stays disabled until
+the first-turn prompt has text. Starting from this surface creates the thread
+and immediately sends the first turn. An existing thread shows its cwd read-only
+in `AgentThreadHeader`; the normal composer toolbar never offers a cwd editor,
+because changing the working directory mid-thread is not a meaningful Codex
+operation.
 
 ### Mobile shell policy
 

@@ -10,6 +10,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { createServer as createViteServer } from "vite";
 import { isSuppressedCodexDiagnostic } from "./src/diagnostics";
+import { isDirectoryPickerCancelError } from "./src/directory-picker";
 
 const host = process.env.AGENT_UI_HOST ?? "127.0.0.1";
 const port = Number(process.env.AGENT_UI_PORT ?? 5175);
@@ -50,7 +51,7 @@ async function handleSelectDirectory(response: ServerResponse) {
     response.end(JSON.stringify({ path }));
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (message.toLowerCase().includes("user canceled")) {
+    if (isDirectoryPickerCancelError(error)) {
       response.statusCode = 204;
       response.end();
       return;
