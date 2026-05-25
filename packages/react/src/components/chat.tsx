@@ -44,6 +44,7 @@ export interface AgentChatProps {
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   sidebar?: boolean;
   slots?: AgentChatSlots;
+  statusBarEnd?: React.ReactNode;
   theme?: AgentTheme;
   threadUrlRouting?: boolean | AgentThreadUrlRoutingOptions;
   usage?: boolean;
@@ -62,6 +63,7 @@ export function AgentChat({
   resolveLocalAttachment,
   sidebar = true,
   slots,
+  statusBarEnd,
   theme,
   threadUrlRouting = false,
   usage = false,
@@ -114,6 +116,7 @@ export function AgentChat({
       ) : null}
       <div className="aui-chat">
         <AgentStatusBar
+          end={statusBarEnd}
           onOpenThreads={
             sidebar ? () => setSidebarCollapsed(false) : undefined
           }

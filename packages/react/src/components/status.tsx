@@ -1,3 +1,4 @@
+import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { useAgentBootstrap } from "../hooks";
 import {
@@ -12,8 +13,10 @@ import { normalizeUsageWindows } from "../usage";
 import { useCompactLayout } from "./shared";
 
 export function AgentStatusBar({
+  end,
   onOpenThreads,
 }: {
+  end?: React.ReactNode;
   onOpenThreads?: () => void;
 } = {}) {
   const { state } = useAgentContext();
@@ -43,43 +46,46 @@ export function AgentStatusBar({
         <strong>Agent UI</strong>
         <span>{accountLabel ? `${statusText} · ${accountLabel}` : statusText}</span>
       </div>
-      {account.login ? (
-        <div className="aui-login-code" role="status">
-          {account.login.verificationUrl ? (
-            <a href={account.login.verificationUrl} rel="noreferrer" target="_blank">
-              Open device login
-            </a>
-          ) : null}
-          {account.login.userCode ? <code>{account.login.userCode}</code> : null}
-          {account.login.loginId ? (
-            <button
-              className={buttonClass("secondary", { size: "sm" })}
-              onClick={() => void cancelLogin()}
-              type="button"
-            >
-              Cancel login
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-      {account.status === "unknown" ? (
-        <button
-          className={buttonClass("secondary", { size: "sm" })}
-          disabled
-          type="button"
-        >
-          {state.connection.status === "connected" ? "Checking" : "Connecting"}
-        </button>
-      ) : null}
-      {account.status === "unauthenticated" ? (
-        <button
-          className={buttonClass("primary", { size: "sm" })}
-          onClick={() => void login()}
-          type="button"
-        >
-          Login
-        </button>
-      ) : null}
+      <div className="aui-status-actions">
+        {end}
+        {account.login ? (
+          <div className="aui-login-code" role="status">
+            {account.login.verificationUrl ? (
+              <a href={account.login.verificationUrl} rel="noreferrer" target="_blank">
+                Open device login
+              </a>
+            ) : null}
+            {account.login.userCode ? <code>{account.login.userCode}</code> : null}
+            {account.login.loginId ? (
+              <button
+                className={buttonClass("secondary", { size: "sm" })}
+                onClick={() => void cancelLogin()}
+                type="button"
+              >
+                Cancel login
+              </button>
+            ) : null}
+          </div>
+        ) : null}
+        {account.status === "unknown" ? (
+          <button
+            className={buttonClass("secondary", { size: "sm" })}
+            disabled
+            type="button"
+          >
+            {state.connection.status === "connected" ? "Checking" : "Connecting"}
+          </button>
+        ) : null}
+        {account.status === "unauthenticated" ? (
+          <button
+            className={buttonClass("primary", { size: "sm" })}
+            onClick={() => void login()}
+            type="button"
+          >
+            Login
+          </button>
+        ) : null}
+      </div>
     </header>
   );
 }

@@ -1,0 +1,22 @@
+.agent-ui-local-app {
+  background: var(--aui-bg);
+  min-height: 100dvh;
+}
+
+.agent-ui-local-app .aui-status-actions .aui-theme-toggle {
+  background: var(--aui-panel);
+  box-shadow: var(--aui-control-shadow);
+  padding: 2px;
+}
+
+.agent-ui-local-app .aui-status-actions .aui-theme-toggle-option {
+  font-size: 11px;
+  min-height: 26px;
+  padding-inline: 9px;
+}
+
+@media (max-width: 720px) {
+  .agent-ui-local-app .aui-status-actions .aui-theme-toggle {
+    display: none;
+  }
+}

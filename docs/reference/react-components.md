@@ -50,7 +50,8 @@ The optional `theme` prop accepts `light`, `dark`, or `system` and only applies
 `data-aui-theme` to the preset shell. Leave it unset when the preset should
 inherit a theme from host chrome. Agent UI does not render an internal theme
 switcher; hosts that want one can place the controlled `AgentThemeToggle`
-primitive beside their own navigation or settings UI.
+primitive beside their own navigation or settings UI, or pass it through
+`statusBarEnd` when using the `AgentChat` preset.
 
 ## Transcript Primitives
 

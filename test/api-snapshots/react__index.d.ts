@@ -843,6 +843,7 @@ interface AgentChatProps {
     resolveLocalAttachment?: AgentLocalAttachmentResolver;
     sidebar?: boolean;
     slots?: AgentChatSlots;
+    statusBarEnd?: React__default.ReactNode;
     theme?: AgentTheme;
     threadUrlRouting?: boolean | AgentThreadUrlRoutingOptions;
     usage?: boolean;
@@ -850,7 +851,7 @@ interface AgentChatProps {
 interface AgentThreadUrlRoutingOptions {
     basePath?: string;
 }
-declare function AgentChat({ className, diagnostics, onRequestAppMention, onRequestWorkingDirectory, onRequestPluginMention, resolveLocalAttachment, sidebar, slots, theme, threadUrlRouting, usage, }?: AgentChatProps): react_jsx_runtime.JSX.Element;
+declare function AgentChat({ className, diagnostics, onRequestAppMention, onRequestWorkingDirectory, onRequestPluginMention, resolveLocalAttachment, sidebar, slots, statusBarEnd, theme, threadUrlRouting, usage, }?: AgentChatProps): react_jsx_runtime.JSX.Element;
 interface AgentShellProps extends React__default.HTMLAttributes<HTMLElement> {
     sidebar?: React__default.ReactNode;
     theme?: AgentTheme;
@@ -902,7 +903,8 @@ declare function AgentApprovalQueue({ approvals: approvalsProp, renderApproval, 
     threadId?: string;
 }): react_jsx_runtime.JSX.Element | null;
 
-declare function AgentStatusBar({ onOpenThreads, }?: {
+declare function AgentStatusBar({ end, onOpenThreads, }?: {
+    end?: React__default.ReactNode;
     onOpenThreads?: () => void;
 }): react_jsx_runtime.JSX.Element;
 declare function AgentDiagnosticsPanel({ bootstrap, }: {

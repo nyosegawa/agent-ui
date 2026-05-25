@@ -124,6 +124,14 @@
   white-space: nowrap;
 }
 
+.aui-status-actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  min-width: 0;
+}
+
 .aui-login-code {
   align-items: center;
   display: flex;

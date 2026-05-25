@@ -2,14 +2,17 @@ import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websock
 import {
   AgentChat,
   AgentProvider,
+  AgentThemeToggle,
   localImageInput,
   textInput,
+  type AgentTheme,
   type AgentLocalAttachmentKind,
   type CodexUserInput,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import "./styles.css";
 
 declare global {
   interface Window {
@@ -57,6 +60,7 @@ async function requestWorkingDirectory(): Promise<string | null> {
 }
 
 function App() {
+  const [theme, setTheme] = useState<AgentTheme>(() => themeFromLocation());
   const transport = useMemo(
     () =>
       createCodexWebSocketTransport({
@@ -83,15 +87,28 @@ function App() {
 
   return (
     <AgentProvider transport={transport}>
-      <main className="agent-ui-local-app">
+      <main className="agent-ui-local-app" data-aui-theme={theme}>
         <AgentChat
           onRequestWorkingDirectory={requestWorkingDirectory}
           resolveLocalAttachment={resolveLocalAttachment}
+          statusBarEnd={
+            <AgentThemeToggle
+              aria-label="Theme"
+              value={theme}
+              onChange={setTheme}
+            />
+          }
+          theme={theme}
           threadUrlRouting
         />
       </main>
     </AgentProvider>
   );
+}
+
+function themeFromLocation(): AgentTheme {
+  const theme = new URLSearchParams(window.location.search).get("theme");
+  return theme === "dark" || theme === "system" || theme === "light" ? theme : "light";
 }
 
 const rootElement = document.getElementById("root");
