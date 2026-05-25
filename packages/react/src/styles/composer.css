@@ -20,7 +20,7 @@
   display: grid;
   gap: 0;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   padding: 14px 16px 12px;
   transition:
     border-color 160ms var(--aui-easing),

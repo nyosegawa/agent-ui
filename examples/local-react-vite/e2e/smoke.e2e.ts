@@ -114,6 +114,17 @@ async function horizontalOverflowOffenders(page: Page) {
   });
 }
 
+async function contextUsagePopoverIsNotClippedByComposer(page: Page) {
+  return page.evaluate(() => {
+    const composer = document.querySelector(".aui-composer")?.getBoundingClientRect();
+    const popoverElement = document.querySelector(".aui-context-usage-popover");
+    const popover = popoverElement?.getBoundingClientRect();
+    if (!composer || !popover || !popoverElement) return false;
+    const hit = document.elementFromPoint(popover.left + 16, popover.top + 16);
+    return popover.top < composer.top && Boolean(hit && popoverElement.contains(hit));
+  });
+}
+
 test("renders deterministic empty, login, and bridge-error states", async ({ page }) => {
   await page.goto("/qa");
   await expect(page.getByRole("heading", { name: "Agent UI visual QA" })).toBeVisible();
@@ -174,6 +185,7 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
   await expect(page.getByLabel("Context usage", { exact: true })).toContainText("58%");
   await page.getByLabel("Context usage", { exact: true }).click();
   await expect(page.getByLabel("Context usage details")).toContainText("5,800 / 10,000");
+  await expect(contextUsagePopoverIsNotClippedByComposer(page)).resolves.toBe(true);
   const metrics = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
     scrollWidth: document.documentElement.scrollWidth,
