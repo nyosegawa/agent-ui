@@ -14,6 +14,8 @@ test("hydrates stored threads through the browser websocket transport", async ({
   await expect(page.getByRole("heading", { name: "Stored real smoke" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
+  await page.setViewportSize({ width: 1920, height: 900 });
+  await assertLocalAppBackgroundFullBleed(page);
   await expect(page.getByRole("button", { name: "Resume" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
@@ -27,10 +29,14 @@ test("exposes live thread controls through the browser websocket transport", asy
 }, testInfo) => {
   testInfo.setTimeout(SHORT_TEST_TIMEOUT);
   await openRealLocalApp(page, { width: 1280, height: 900 }, "/threads/thread-stored");
-  await expect(page.locator(".aui-sidebar").getByRole("button", { name: "New thread" })).toBeVisible({
+  await expect(
+    page.locator(".aui-sidebar").getByRole("button", { name: "New thread" }),
+  ).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
-  await expect(page.locator(".aui-thread-actions").getByRole("button", { name: "New thread" })).toHaveCount(0);
+  await expect(
+    page.locator(".aui-thread-actions").getByRole("button", { name: "New thread" }),
+  ).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Resume" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
@@ -570,6 +576,21 @@ async function assertNoHorizontalOverflow(page: Page) {
     () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
   );
   expect(horizontalOverflow).toBeLessThanOrEqual(0);
+}
+
+async function assertLocalAppBackgroundFullBleed(page: Page) {
+  const shellMetrics = await page.locator(".agent-ui-local-app").evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    return {
+      left: rect.left,
+      right: rect.right,
+      viewportWidth: window.innerWidth,
+      width: rect.width,
+    };
+  });
+  expect(shellMetrics.left).toBe(0);
+  expect(shellMetrics.right).toBe(shellMetrics.viewportWidth);
+  expect(shellMetrics.width).toBe(shellMetrics.viewportWidth);
 }
 
 async function messageListScroll(page: Page) {

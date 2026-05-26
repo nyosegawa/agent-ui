@@ -27,11 +27,12 @@ bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 
 The default URL is `http://127.0.0.1:5175/`.
 
-The host page treats 5175 as a full-height app. `.agent-ui-local-app` owns
-`height: 100dvh`, `AgentChat` consumes that height, and only
-`.aui-message-list` scrolls. The composer is anchored at the viewport bottom on
-desktop and mobile, including mobile safe-area padding, so long transcripts,
-approvals, command output, and diffs do not push it below the visible page.
+The host page treats 5175 as a full-width, full-height app. `.agent-ui-local-app`
+owns `width: 100%` and `height: 100dvh`, `AgentChat` consumes that height, and
+only `.aui-message-list` scrolls. The composer is anchored at the viewport
+bottom on desktop and mobile, including mobile safe-area padding, so long
+transcripts, approvals, command output, and diffs do not push it below the
+visible page.
 
 Thread URL routing keeps browser history aligned with the visible thread. The
 root route `/` remains the no-thread start screen while the sidebar loads
