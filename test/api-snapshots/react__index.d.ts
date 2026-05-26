@@ -1170,6 +1170,7 @@ interface AgentChatProps {
 }
 interface AgentThreadUrlRoutingOptions {
     basePath?: string;
+    homePath?: string;
 }
 declare function AgentChat({ className, diagnostics, onRequestAppMention, onRequestWorkingDirectory, onRequestPluginMention, resolveLocalAttachment, sidebar, slots, statusBarEnd, theme, locale, messages, threadUrlRouting, usage, }?: AgentChatProps): react_jsx_runtime.JSX.Element;
 interface AgentShellProps extends React__default.HTMLAttributes<HTMLElement> {
@@ -1244,8 +1245,9 @@ declare function AgentAppsPanel({ threadId }: {
     threadId?: string;
 }): react_jsx_runtime.JSX.Element;
 
-declare function AgentStatusBar({ end, onOpenThreads, }?: {
+declare function AgentStatusBar({ end, onNavigateHome, onOpenThreads, }?: {
     end?: React__default.ReactNode;
+    onNavigateHome?: () => void;
     onOpenThreads?: () => void;
 }): react_jsx_runtime.JSX.Element;
 declare function AgentDiagnosticsPanel({ bootstrap, }: {
@@ -1285,9 +1287,10 @@ declare function formatThreadStatus(status: string, options?: {
 }): string;
 declare function threadSubtitle(thread: AgentThread, t?: (key: AgentI18nKey) => string): string;
 declare function isUserFacingPath(path: string): boolean;
-declare function AgentThreadSidebar({ activeThreadId, collapsed, onCollapsedChange, onSelectThread, threads, }: {
+declare function AgentThreadSidebar({ activeThreadId, collapsed, onCreateThread, onCollapsedChange, onSelectThread, threads, }: {
     activeThreadId?: string;
     collapsed?: boolean;
+    onCreateThread?: () => void;
     onCollapsedChange?: (collapsed: boolean) => void;
     onSelectThread?: (threadId: string) => void;
     threads: ThreadState[];
