@@ -218,6 +218,7 @@ this separation so fake visual QA data does not leak into the real
 - Modal and side-panel approvals are supported through slots.
 - Diff viewer uses a read-only CodeMirror surface with a textual fallback.
 - Monaco is deferred because it requires heavier worker and asset configuration from hosts.
-- `ThreadList` / `AgentThreadSidebar` ship as minimal components.
-- Full navigation layouts live in examples.
+- `AgentThreadSidebar` and its thread-list primitive stay narrow history
+  components.
+- Full navigation layouts and host chrome live in examples.
 - `thread/shellCommand` is host-only in the local release.

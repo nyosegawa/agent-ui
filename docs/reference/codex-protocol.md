@@ -383,10 +383,10 @@ The direct real smoke script resumes with `{ threadId }`. The browser UI may
 use `thread/resume` with `excludeTurns: true` when it already hydrated stored
 turns through `thread/read`.
 
-Real Codex smoke checks exercise the same protocol path. The verified surfaces are:
+Real Codex smoke checks exercise the same protocol path. The covered surfaces are:
 
-- `model/list` currently returns models under `data`, including `gpt-5.5` as the first/default entry in this environment.
-- `account/rateLimits/read` returns 5-hour and weekly windows through `primary` and `secondary`.
+- `model/list` returns the account-visible model collection under `data`.
+- `account/rateLimits/read` returns primary and secondary account usage windows when the authenticated App Server exposes them.
 - `thread/list` returns stored sessions.
 - `thread/read` with `includeTurns: true` returns persisted turn history without resuming.
 - `thread/resume` succeeds from a stored history id with `excludeTurns: true`.
@@ -395,3 +395,7 @@ Real Codex smoke checks exercise the same protocol path. The verified surfaces a
 - App Server has no `queue/message` method. Agent UI's follow-up queue is local
   React state; queued `Send now` and Cmd/Ctrl+Enter use `turn/steer`, while Stop
   uses `turn/interrupt`.
+
+Model names, default model ordering, and exact rate-limit windows are
+account/server dependent. Tests should assert protocol shape and UI behavior,
+not hard-coded product availability from one local account.

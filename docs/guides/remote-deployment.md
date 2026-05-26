@@ -53,7 +53,7 @@ For any remote recipe:
 
 - run one Codex App Server process per user/session/workspace
 - keep ChatGPT managed auth on the server side
-- keep API keys server-side if a future recipe uses API keys
+- keep API keys server-side when using the API-key remote pattern
 - do not share a personal OAuth session across users
 - keep workspace filesystem access explicit
 

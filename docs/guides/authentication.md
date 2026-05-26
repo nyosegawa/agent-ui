@@ -25,7 +25,7 @@ Login sequence:
 6. Start or resume a thread
 ```
 
-Agent UI may provide:
+Agent UI provides these authentication primitives:
 
 - device-code login component
 - auth status hook
@@ -66,20 +66,27 @@ Preferred constraints:
 
 ## API Key
 
-API-key based remote operation may be useful for controlled deployments, but it is not the local release default.
+API-key based remote operation is an advanced host-owned deployment pattern,
+not the local release default. The local browser UI should continue to use the
+Codex App Server's ChatGPT-managed account flow.
 
-If supported later:
+Hosts that expose a remote App Server with API-key credentials must:
 
-- document the exact model/account behavior
 - keep keys server-side
 - do not expose keys to browser code
 - separate per-user or per-workspace credentials
+- verify the target App Server auth mode and document account/model behavior
+- use an explicit authorization layer before opening any non-loopback bridge
+
+See [Remote Deployment](./remote-deployment.md) and the
+[API-key remote deployment recipe](../../examples/recipes/api-key-remote-deployment.md)
+for the host-owned boundary.
 
 ## Multi-User
 
 Multi-user use is outside the local release.
 
-Required constraints for future support:
+Any multi-user host must enforce:
 
 - separate App Server process per user/session/workspace
 - separate credentials

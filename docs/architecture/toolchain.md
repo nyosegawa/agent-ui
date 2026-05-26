@@ -1,8 +1,9 @@
 # Toolchain
 
-Checked on 2026-05-17 JST against the repository and public package/version
-indexes. Upstream latest versions are useful for upgrade planning; repository
-pins are the source of truth for day-to-day work.
+Repository pins and CI workflows are the source of truth. Do not keep dated
+"latest upstream" snapshots in product docs; check upstream registries at
+upgrade time and update pins, lockfile, generated output, and workflows in the
+same change.
 
 ## Repository Pins
 
@@ -10,7 +11,9 @@ Current repo-pinned baseline:
 
 ```text
 package manager: bun@1.3.13
+CI setup-bun: 1.3.13
 Node compatibility target: Node 20 / 22 / 24
+pnpm compatibility smoke: pnpm@10.15.0
 TypeScript: 6.0.3
 Vite: 8.0.11
 Vitest: 4.1.5
@@ -22,36 +25,10 @@ React dev/example version: 19.2.6
 Keep `packageManager`, CI setup-bun versions, `@types/bun`, and `bun.lock`
 aligned when changing the Bun pin.
 
-## Local Environment Snapshot
-
-Observed local tools:
-
-```text
-Node.js: v22.19.0
-Bun: 1.3.13
-npm: 11.11.0
-pnpm: 10.15.0
-```
-
-Local installed versions are diagnostics only. They do not define latest
-availability or repository policy.
-
-## Upstream Snapshot
-
-Observed upstream availability on 2026-05-17:
-
-```text
-Node.js current: v26.1.0
-Node.js latest LTS: v24.15.0 Krypton
-Bun latest: 1.3.14
-pnpm latest: 11.1.2
-Vite latest: 8.0.13
-Vitest latest: 4.1.6
-Playwright latest: 1.60.0
-```
-
-Upgrade by changing pins deliberately, updating the lockfile in the same
-change, and running the local release gate in [Testing](./testing.md).
+Local installed tool versions are diagnostics only. They do not define latest
+availability or repository policy. Before dependency upgrades, query the
+current upstream sources live and treat this page as the repo-pinned baseline,
+not as a latest-version catalog.
 
 ## Runtime Policy
 

@@ -390,10 +390,10 @@ The empty-state / first-run surface is a starter composer: a large prompt card
 whose lower toolbar reuses the composer's execution-mode and model/effort menus
 (`ComposerRunSettings`), with a round send control. The working directory is a
 thread-start setting, so it sits beneath the card as a compact context picker
-(`AgentStarterCwd`) rather than inside the toolbar. The collapsed picker shows
-only the selected folder name; opening it shows recent thread cwd values by
-folder name, keeps the full absolute path in the selection title and request
-params, and marks the selected cwd with a check. `Open folder...` invokes the
+instead of inside the toolbar. The collapsed picker shows only the selected
+folder name; opening it shows recent thread cwd values by folder name, keeps
+the full absolute path in the selection title and request params, and marks
+the selected cwd with a check. `Open folder...` invokes the
 host-provided `onRequestWorkingDirectory` resolver; without one, the component
 falls back to a path prompt so browser-only fixtures can still set a cwd. The
 `examples/codex-local-web` wires that resolver to a local macOS folder picker
