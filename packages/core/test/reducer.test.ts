@@ -408,6 +408,55 @@ describe("agentReducer", () => {
     expect(preview.threads["thread-preview"]?.status).toBe("loaded");
   });
 
+  it("keeps thread/read snapshot status when stored history ends with an interrupted turn", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-interrupted-history" },
+          turns: [
+            {
+              id: "turn-interrupted-history",
+              status: "interrupted",
+              threadId: "thread-interrupted-history",
+            },
+          ],
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          items: [],
+          snapshot: true,
+          threadId: "thread-interrupted-history",
+          turn: {
+            id: "turn-interrupted-history",
+            status: "interrupted",
+            threadId: "thread-interrupted-history",
+          },
+          type: "turn/completed",
+        },
+      },
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          threadId: "thread-interrupted-history",
+          type: "thread/status/changed",
+        },
+      },
+    ]);
+
+    expect(state.threads["thread-interrupted-history"]?.status).toBe("loaded");
+    expect(
+      state.threads["thread-interrupted-history"]?.turns["turn-interrupted-history"]?.turn.status,
+    ).toBe("interrupted");
+    expect(selectThreadRegistry(state).loadedThreadIds).toContain(
+      "thread-interrupted-history",
+    );
+  });
+
   it("normalizes skills, apps, hooks, diagnostics, and split usage state", () => {
     const state = runEventFixture([
       {

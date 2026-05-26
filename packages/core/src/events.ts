@@ -55,14 +55,37 @@ export type AgentEvent =
       effort?: ReasoningEffort;
       cwd?: string;
     }
-  | { type: "thread/upserted"; thread: AgentThread; status?: ThreadStatus; turns?: AgentTurn[] }
-  | { type: "thread/started"; thread: AgentThread; status?: ThreadStatus; turns?: AgentTurn[] }
-  | { type: "thread/status/changed"; threadId: ThreadId; status: ThreadStatus }
+  | {
+      type: "thread/upserted";
+      thread: AgentThread;
+      status?: ThreadStatus;
+      turns?: AgentTurn[];
+      snapshot?: boolean;
+    }
+  | {
+      type: "thread/started";
+      thread: AgentThread;
+      status?: ThreadStatus;
+      turns?: AgentTurn[];
+      snapshot?: boolean;
+    }
+  | {
+      type: "thread/status/changed";
+      threadId: ThreadId;
+      status: ThreadStatus;
+      snapshot?: boolean;
+    }
   | { type: "thread/name/updated"; threadId: ThreadId; name: string }
   | { type: "thread/tokenUsage/updated"; threadId: ThreadId; tokenUsage: ThreadTokenUsage }
   | { type: "thread/active/set"; threadId?: ThreadId }
   | { type: "turn/started"; threadId: ThreadId; turn: AgentTurn }
-  | { type: "turn/completed"; threadId: ThreadId; turn: AgentTurn; items?: AgentItemState[] }
+  | {
+      type: "turn/completed";
+      threadId: ThreadId;
+      turn: AgentTurn;
+      items?: AgentItemState[];
+      snapshot?: boolean;
+    }
   | { type: "turn/plan/updated"; threadId: ThreadId; turnId: TurnId; explanation?: string | null; plan: unknown; raw?: unknown }
   | { type: "turn/diff/updated"; threadId: ThreadId; turnId: TurnId; diff: unknown; raw?: unknown }
   | { type: "item/started"; threadId: ThreadId; turnId: TurnId; item: AgentItemState }

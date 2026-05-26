@@ -101,7 +101,27 @@ describe("thread history normalization", () => {
         { id: "item-command", status: "completed", text: "bun test" },
         { id: "item-file", status: "completed" },
       ],
+      snapshot: true,
     });
-    expect(events[4]).toMatchObject({ status: "loaded" });
+    expect(events[4]).toMatchObject({ snapshot: true, status: "loaded" });
+  });
+
+  it("marks interrupted thread/read turns as snapshot history", () => {
+    const events = threadSnapshotEvents(
+      {
+        id: "thread-interrupted-history",
+        status: { type: "notLoaded" },
+        turns: [{ id: "turn-interrupted-history", status: "interrupted" }],
+      },
+      true,
+    );
+
+    expect(events[0]).toMatchObject({ snapshot: true, status: "loaded" });
+    expect(events[1]).toMatchObject({
+      snapshot: true,
+      turn: { id: "turn-interrupted-history", status: "interrupted" },
+      type: "turn/completed",
+    });
+    expect(events.at(-1)).toMatchObject({ snapshot: true, status: "loaded" });
   });
 });

@@ -43,7 +43,10 @@ metadata without forcing activation.
 
 `useAgentThreadReader().readThread(threadId, { includeTurns: true })` calls
 `thread/read` and hydrates persisted turns/items before activation. This is the
-preferred preview path for stored sessions.
+preferred preview path for stored sessions. Stored turn outcomes remain visible
+on the hydrated turns, but they do not replace the thread-level preview status;
+for example, a stored session whose last turn was interrupted still hydrates as
+a resumable preview instead of an interrupted live thread.
 
 ## Composer And Run Settings
 

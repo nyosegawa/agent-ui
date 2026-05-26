@@ -29,6 +29,7 @@ export function threadSnapshotEvents(
     {
       status,
       thread,
+      snapshot: true,
       turns,
       type: activate ? "thread/started" : "thread/upserted",
     },
@@ -41,6 +42,7 @@ export function threadSnapshotEvents(
     const itemStatus = turn.status === "completed" ? "completed" : undefined;
     events.push({
       items: items.map((item) => normalizeRawItem(item, thread.id, turn.id, itemStatus)),
+      snapshot: true,
       threadId: thread.id,
       turn,
       type: "turn/completed",
@@ -74,6 +76,7 @@ export function threadSnapshotEvents(
 
   events.push({
     status,
+    snapshot: true,
     threadId: thread.id,
     type: "thread/status/changed",
   });

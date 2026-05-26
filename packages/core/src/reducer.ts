@@ -144,6 +144,7 @@ export function agentReducer(
     case "thread/started": {
       const threadState = upsertThread(state, event.thread);
       const stalePreviewStatus =
+        !event.snapshot &&
         state.threads[event.thread.id] &&
         isPreviewThreadStatus(event.status) &&
         preservesAgainstPreviewSnapshot(threadState.status);
@@ -181,6 +182,7 @@ export function agentReducer(
     case "thread/status/changed": {
       const currentStatus = state.threads[event.threadId]?.status;
       const status =
+        !event.snapshot &&
         currentStatus &&
         isPreviewThreadStatus(event.status) &&
         preservesAgainstPreviewSnapshot(currentStatus)
@@ -226,10 +228,12 @@ export function agentReducer(
     case "turn/completed":
       return updateThread(state, event.threadId, (thread) => {
         const completedStatus =
-          (thread.status === "ready" || isPreviewThreadStatus(thread.status)) &&
-          isCompletedTurnStatus(event.turn.status)
+          event.snapshot
             ? thread.status
-            : (event.turn.status ?? "complete");
+            : (thread.status === "ready" || isPreviewThreadStatus(thread.status)) &&
+                isCompletedTurnStatus(event.turn.status)
+              ? thread.status
+              : (event.turn.status ?? "complete");
         const next = upsertTurn(thread, event.turn, completedStatus);
         const turn =
           next.turns[event.turn.id] ?? createTurnState(event.turn, event.threadId);
