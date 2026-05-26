@@ -1,7 +1,13 @@
 import type { AgentI18nMessages } from "../types";
 
 export const ko = {
+  "account.details": "계정 세부 정보",
+  "account.email": "이메일",
   "account.login": "로그인",
+  "account.logout": "로그아웃",
+  "account.openMenu": "계정 열기",
+  "account.plan": "요금제",
+  "account.status": "상태",
   "approval.action.approve": "승인",
   "approval.action.decline": "거부",
   "approval.action.review": "검토",

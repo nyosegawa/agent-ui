@@ -64,6 +64,12 @@ merged over the built-in dictionary. Transcript content, tool output, command
 output, model messages, and server diagnostics are not machine-translated by
 Agent UI.
 
+`AgentStatusBar` keeps the persistent brand row to connection/auth status. It
+does not render the authenticated email inline. Authenticated account details,
+plan, usage windows, and logout are available from the account dialog in the
+status actions so host applications can keep personal identity in profile or
+settings chrome.
+
 ## Transcript Primitives
 
 `AgentTranscript` / `AgentMessageList` render App Server turn items in order.

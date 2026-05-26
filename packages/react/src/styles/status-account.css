@@ -1,0 +1,163 @@
+/* --- Account status popover ---------------------------------------- */
+
+.aui-account-control {
+  display: inline-flex;
+  position: relative;
+}
+
+.aui-account-trigger {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-pill);
+  color: var(--aui-fg);
+  cursor: pointer;
+  display: inline-flex;
+  font: 600 12px/1 var(--aui-font);
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 9px 4px 5px;
+}
+
+.aui-account-trigger:hover {
+  background: var(--aui-panel-quiet);
+  border-color: var(--aui-border-strong);
+}
+
+.aui-account-trigger:focus-visible {
+  box-shadow: var(--aui-focus-ring);
+  outline: none;
+}
+
+.aui-account-avatar {
+  align-items: center;
+  background: var(--aui-primary-soft);
+  border: 1px solid var(--aui-primary-border-soft);
+  border-radius: var(--aui-radius-pill);
+  color: var(--aui-primary);
+  display: inline-flex;
+  height: 22px;
+  justify-content: center;
+  width: 22px;
+}
+
+.aui-account-plan {
+  max-width: 8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-account-backdrop {
+  background: transparent;
+  border: 0;
+  cursor: default;
+  inset: 0;
+  padding: 0;
+  position: fixed;
+  z-index: 110;
+}
+
+.aui-account-popover {
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border-strong);
+  border-radius: var(--aui-radius-lg);
+  box-shadow: var(--aui-shadow-lift);
+  color: var(--aui-fg);
+  display: grid;
+  gap: 12px;
+  max-height: calc(100dvh - 64px);
+  overflow: auto;
+  padding: 12px;
+  position: fixed;
+  right: 14px;
+  top: 56px;
+  width: min(380px, calc(100vw - 24px));
+  z-index: 111;
+}
+
+.aui-account-popover:focus {
+  outline: none;
+}
+
+.aui-account-popover-header {
+  align-items: start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.aui-account-popover-header > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.aui-account-popover-header strong {
+  color: var(--aui-fg-strong);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.aui-account-popover-header span {
+  color: var(--aui-fg-muted);
+  font-size: 12px;
+}
+
+.aui-account-meta {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.aui-account-meta div {
+  align-items: baseline;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: 76px minmax(0, 1fr);
+}
+
+.aui-account-meta dt {
+  color: var(--aui-fg-faint);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.aui-account-meta dd {
+  color: var(--aui-fg);
+  font-size: 13px;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.aui-account-popover .aui-usage {
+  background: var(--aui-panel-quiet);
+  box-shadow: none;
+}
+
+.aui-account-actions {
+  border-top: 1px solid var(--aui-rule);
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 10px;
+}
+
+@media (max-width: 760px) {
+  .aui-account-backdrop {
+    background: var(--aui-overlay);
+  }
+
+  .aui-account-popover {
+    border-bottom: 0;
+    border-radius: var(--aui-radius-xl) var(--aui-radius-xl) 0 0;
+    bottom: 0;
+    left: 0;
+    max-height: 82dvh;
+    right: 0;
+    top: auto;
+    width: auto;
+  }
+}

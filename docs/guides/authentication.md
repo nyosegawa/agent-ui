@@ -40,8 +40,9 @@ Implemented surface:
 - Device-code login state stores `loginId`, `verificationUrl`, and `userCode`; `loginId` is used only for `account/login/cancel`.
 - `cancelLogin()` calls `account/login/cancel` with stable params `{ loginId }`.
 - `AgentStatusBar` exposes a login action only when account state is confirmed unauthenticated.
+- When authenticated, `AgentStatusBar` keeps the header label to account status and moves email, plan, usage windows, and logout into an account dialog opened from the status actions. Host chrome should follow the same pattern instead of persistently rendering personal account identifiers in the main brand area.
 - `AgentChat` shows a first-run device-code login state for unauthenticated local users.
-- After `account/login/completed`, `AgentChat` re-reads `account/read` and `account/rateLimits/read` so the account label and usage windows update without a page refresh.
+- After `account/login/completed`, `AgentChat` re-reads `account/read` and `account/rateLimits/read` so account details and usage windows update without a page refresh.
 - `logout()` calls `account/logout` without params and clears local account state after the request succeeds.
 - The helper does not store or log raw tokens.
 

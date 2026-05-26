@@ -15,6 +15,9 @@ rails in `AgentChat`.
 Use `AgentUsageSummary` for compact host chrome and
 `AgentContextUsageIndicator` for nonzero per-thread context usage restored from
 `thread/tokenUsage/updated`.
+`AgentStatusBar` also mounts `AgentUsagePanel` inside its authenticated account
+dialog. This keeps rate-limit detail discoverable from account chrome without
+requiring a persistent usage rail in the default transcript layout.
 
 ## Status
 

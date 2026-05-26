@@ -4,6 +4,7 @@ import { useAgentAuth } from "../hooks";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import { IconHistory, buttonClass } from "../components-internal";
 import { useAgentContext } from "../provider";
+import { AgentAccountControl } from "./account-popover";
 
 export {
   AgentAppsPanel,
@@ -25,7 +26,6 @@ export function AgentStatusBar({
   const { t } = useAgentI18n();
   const { state } = useAgentContext();
   const { account, cancelLogin, login } = useAgentAuth();
-  const accountLabel = accountLabelText(account.account);
   const statusText =
     account.status === "unknown"
       ? state.connection.status === "connected"
@@ -48,7 +48,7 @@ export function AgentStatusBar({
       ) : null}
       <div className="aui-brand">
         <strong>Agent UI</strong>
-        <span>{accountLabel ? `${statusText} · ${accountLabel}` : statusText}</span>
+        <span>{statusText}</span>
       </div>
       <div className="aui-status-actions">
         {end}
@@ -89,19 +89,15 @@ export function AgentStatusBar({
             {t("account.login")}
           </button>
         ) : null}
+        {account.status === "authenticated" ? (
+          <AgentAccountControl
+            account={account.account}
+            statusText={statusText}
+          />
+        ) : null}
       </div>
     </header>
   );
-}
-
-function accountLabelText(
-  account: Record<string, unknown> | undefined,
-): string | undefined {
-  if (!account) return undefined;
-  const email = typeof account.email === "string" ? account.email : undefined;
-  const planType = typeof account.planType === "string" ? account.planType : undefined;
-  if (email && planType) return `${email} (${planType})`;
-  return email ?? planType;
 }
 
 export function AgentDiagnosticsPanel({

@@ -1,7 +1,13 @@
 import type { AgentI18nMessages } from "../types";
 
 export const fr = {
+  "account.details": "Détails du compte",
+  "account.email": "E-mail",
   "account.login": "Connexion",
+  "account.logout": "Déconnexion",
+  "account.openMenu": "Ouvrir le compte",
+  "account.plan": "Forfait",
+  "account.status": "État",
   "approval.action.approve": "Approuver",
   "approval.action.decline": "Refuser",
   "approval.action.review": "Examiner",

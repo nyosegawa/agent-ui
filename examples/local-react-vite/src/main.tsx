@@ -80,11 +80,18 @@ function AgentDemo() {
     <AgentProvider initialState={initialState} transport={transport}>
       <AgentI18nProvider locale={locale}>
         <main className="aui-demo-main" data-aui-theme={theme}>
-          <div className="aui-demo-toolbar">
-            <AgentLocaleSelect value={locale} onChange={setLocale} />
-            <AgentThemeToggle value={theme} onChange={setTheme} />
-          </div>
-          <AgentChat diagnostics locale={locale} theme={theme} usage />
+          <AgentChat
+            diagnostics
+            locale={locale}
+            statusBarEnd={
+              <div className="aui-demo-toolbar">
+                <AgentLocaleSelect value={locale} onChange={setLocale} />
+                <AgentThemeToggle value={theme} onChange={setTheme} />
+              </div>
+            }
+            theme={theme}
+            usage
+          />
         </main>
       </AgentI18nProvider>
     </AgentProvider>

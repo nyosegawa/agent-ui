@@ -766,8 +766,14 @@ interface AgentI18nDictionary {
     "account.checking": string;
     "account.connecting": string;
     "account.cancelLogin": string;
+    "account.details": string;
+    "account.email": string;
     "account.login": string;
+    "account.logout": string;
     "account.openDeviceLogin": string;
+    "account.openMenu": string;
+    "account.plan": string;
+    "account.status": string;
     "account.unauthenticated": string;
     "approval.action.approve": string;
     "approval.action.approveForSession": string;

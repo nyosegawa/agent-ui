@@ -119,6 +119,13 @@ export const IconShield = (props: { size?: number }) => (
   </Icon>
 );
 
+export const IconUser = (props: { size?: number }) => (
+  <Icon size={props.size}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 21a8 8 0 0116 0" />
+  </Icon>
+);
+
 export const IconClose = (props: { size?: number }) => (
   <Icon size={props.size}>
     <path d="M6 6l12 12M6 18L18 6" />

@@ -1498,9 +1498,16 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(await screen.findByText(/real@example.com/)).toBeInTheDocument();
+    await screen.findByText("authenticated");
+    expect(screen.queryByText(/real@example.com/)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
     expect(await screen.findByText("10%")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Open account" }));
+    const dialog = await screen.findByRole("dialog", { name: "Account details" });
+    expect(within(dialog).getByText("real@example.com")).toBeInTheDocument();
+    expect(within(dialog).getByText("pro")).toBeInTheDocument();
+    expect(within(dialog).getByLabelText("Usage limits")).toHaveTextContent("10%");
+    await user.keyboard("{Escape}");
     // The starter composer exposes loaded models through the model/effort menu.
     await user.click(await screen.findByRole("button", { name: "Model and effort" }));
     expect(
@@ -1583,7 +1590,8 @@ describe("AgentChat", () => {
       type: "event",
     });
 
-    expect(await screen.findByText(/login-complete@example.com/)).toBeInTheDocument();
+    expect(await screen.findByText("authenticated")).toBeInTheDocument();
+    expect(screen.queryByText(/login-complete@example.com/)).not.toBeInTheDocument();
     expect(await screen.findByText("42%")).toBeInTheDocument();
     expect(
       transport.requests.filter((request) => request.method === "account/read"),
@@ -1718,7 +1726,7 @@ describe("AgentChat", () => {
       type: "stderr",
     });
 
-    expect(await screen.findByText(/real@example.com/)).toBeInTheDocument();
+    expect(await screen.findByText("authenticated")).toBeInTheDocument();
     expect(screen.queryByText(/Plugin manifest warnings/)).not.toBeInTheDocument();
     expect(screen.queryByText(/maximum of 3 prompts/)).not.toBeInTheDocument();
   });
@@ -1749,7 +1757,7 @@ describe("AgentChat", () => {
       type: "stderr",
     });
 
-    expect(await screen.findByText(/real@example.com/)).toBeInTheDocument();
+    expect(await screen.findByText("authenticated")).toBeInTheDocument();
     expect(screen.queryByText(/icon path must not contain/)).not.toBeInTheDocument();
   });
 

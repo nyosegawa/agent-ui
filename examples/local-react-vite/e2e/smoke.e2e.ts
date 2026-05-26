@@ -136,7 +136,14 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
   await expect(page.getByRole("link", { name: /Bridge error/ })).toBeVisible();
 
   await page.goto("/?state=empty");
-  await expect(page.getByText("fixture@example.com")).toBeVisible();
+  const account = page.getByRole("button", { name: "Open account" });
+  await expect(account).toBeVisible();
+  await expect(account).toHaveAttribute("title", /fixture@example.com/);
+  await account.click();
+  const accountDialog = page.getByRole("dialog", { name: "Account details" });
+  await expect(accountDialog).toContainText("fixture@example.com");
+  await expect(accountDialog).toContainText("Usage");
+  await page.keyboard.press("Escape");
   await expect(page.getByText("No threads found.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Start thread" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Start thread" })).toBeDisabled();

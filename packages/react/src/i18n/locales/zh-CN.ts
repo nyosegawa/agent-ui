@@ -1,7 +1,13 @@
 import type { AgentI18nMessages } from "../types";
 
 export const zhCN = {
+  "account.details": "账户详情",
+  "account.email": "邮箱",
   "account.login": "登录",
+  "account.logout": "退出登录",
+  "account.openMenu": "打开账户",
+  "account.plan": "套餐",
+  "account.status": "状态",
   "approval.action.approve": "批准",
   "approval.action.decline": "拒绝",
   "approval.action.review": "查看",

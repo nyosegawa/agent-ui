@@ -469,7 +469,7 @@ async function openRealLocalApp(
   if (!(await page.getByTestId("agent-chat").isVisible().catch(() => false))) {
     throw lastError instanceof Error ? lastError : new Error(String(lastError));
   }
-  await expect(page.getByText(/real-smoke@example.com/)).toBeVisible({
+  await expect(page.getByRole("button", { name: "Open account" })).toBeVisible({
     timeout: APP_READY_TIMEOUT,
   });
 }
@@ -478,9 +478,6 @@ async function resumeStoredThread(page: Page) {
   const resume = page.getByRole("button", { name: "Resume" });
   await expect(resume).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
   await resume.evaluate((button) => (button as HTMLButtonElement).click(), {
-    timeout: FAST_EXPECT_TIMEOUT,
-  });
-  await expect(page.locator(".aui-status-pill", { hasText: "Ready" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await readyMessageInput(page);
