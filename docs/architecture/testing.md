@@ -120,6 +120,8 @@ Component tests cover:
 - thread history search, infinite scroll sentinel, and fallback Load more
 - usage/status/diagnostic primitives as optional host chrome
 - style selector duplication guards
+- design-system boundary guards for the single public stylesheet, private
+  style chunks, internal `.aui-*` selectors, and token-based customization
 - public source structure guards
 
 Accessibility smoke should cover the composer, approval queue, dialogs/sheets,
@@ -155,13 +157,38 @@ overflow, composer reachability, approval hit testing, sidebar behavior, and
 that old UI concepts such as Work trace and Load all do not return.
 It also protects CSS ownership: fixture, route, close-up, and usage-only styles
 live in `examples/local-react-vite`, not in the distributed React stylesheet.
+Those example styles should consume `--aui-*` tokens because they are visual QA
+for the library. The recipes package may intentionally override tokens to show
+host theming.
+
+The deterministic fixture Playwright files are split by contract ownership:
+
+- `smoke.e2e.ts` covers route availability, basic interaction, and blank-page
+  regressions.
+- `visual-layout.e2e.ts` owns shell snapshots, viewport containment, menu
+  reachability, and host layout examples.
+- `visual-closeups.e2e.ts` owns the component close-up gallery and verifies that
+  close-ups render real primitives instead of iframe or hand-written DOM
+  substitutes.
+- `visual-approvals.e2e.ts` owns approval layout, queue behavior, and hit-test
+  reachability in transcript flow.
+- `design-system-contract.e2e.ts` owns concrete token-backed UI contracts such
+  as shared control heights, composer typography, icon button sizes, thread
+  metadata alignment, and the absence of decorative left rails.
+- `capture-docs-screenshots.e2e.ts` is opt-in and only refreshes docs images
+  when `CAPTURE_DOCS_SCREENSHOTS=1`.
+
+Do not split e2e files mechanically by line count. A new file should correspond
+to a durable product contract with its own failure story. Shared helpers belong
+under `examples/local-react-vite/e2e/support/` and should be thin page-contract
+helpers, not hidden test flows.
 
 Keep Playwright failures fast and diagnostic. If a browser test is flaky,
 do not increase the test timeout as the first fix. Separate the problem into
 server readiness, stale ports, selector drift, and the actual UI contract.
 Use a short retry only around opening an app whose preview server may still be
 warming up, then keep clicks and visible/enabled assertions on explicit low
-timeouts so a broken composer, resume button, or transcript state fails in a
+timeouts so a broken composer, stored-thread resume flow, or transcript state fails in a
 few seconds instead of waiting for the suite-level timeout.
 
 ## Real Local Web Gate
@@ -186,6 +213,22 @@ stop the server. Browser smoke coverage also exercises stored-thread resume,
 and arbitrary file upload chips. Non-image uploads are expected to reach Codex
 as explicit `Attached file: /absolute/path` text, not as a generic App Server
 file input.
+
+The deterministic `examples/codex-local-web/e2e` Playwright files are split by
+App Server integration contract:
+
+- `real-local-thread-lifecycle.e2e.ts` covers stored-thread hydration and
+  auto-resume, thread creation, URL routing, browser history, and stale-thread
+  cleanup on popstate.
+- `real-local-attachments.e2e.ts` covers paste/upload handling, image chips,
+  arbitrary file chips, attachment restoration, and App Server payload text for
+  non-image files.
+- `real-local-follow-ups.e2e.ts` covers running-turn composer semantics,
+  UI-local queued follow-ups, `turn/steer`, `turn/interrupt`, queue compaction,
+  anchored composer layout, and scroll-follow behavior.
+- `support/real-local-page.ts` contains the shared page helper layer and is the
+  only place for app-open readiness retries. Interaction assertions in tests
+  should remain explicit and low-timeout.
 
 ## Real Codex Smoke
 
@@ -213,3 +256,4 @@ CAPTURE_DOCS_SCREENSHOTS=1 bunx playwright test \
 ```
 
 Regenerate screenshots only when the visual contract intentionally changes.
+Do not regenerate screenshots for documentation-only wording changes.

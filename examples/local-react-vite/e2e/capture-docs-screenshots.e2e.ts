@@ -59,20 +59,24 @@ test.describe.configure({ mode: "default" });
 
 test("refresh docs/screenshots", async ({ browser }) => {
   test.setTimeout(120_000);
-  test.skip(!shouldRun, "Run with CAPTURE_DOCS_SCREENSHOTS=1 to regenerate docs screenshots");
+  test.skip(
+    !shouldRun,
+    "Run with CAPTURE_DOCS_SCREENSHOTS=1 to regenerate docs screenshots",
+  );
   for (const route of routes) {
     for (const size of ["desktop", "mobile"] as const) {
       const context = await browser.newContext({
         viewport:
-          size === "desktop"
-            ? { width: 1280, height: 900 }
-            : { width: 390, height: 900 },
+          size === "desktop" ? { width: 1280, height: 900 } : { width: 390, height: 900 },
       });
       const page = await context.newPage();
       await page.goto(route.path, { waitUntil: "domcontentloaded" });
-      await page.locator("body").waitFor({ state: "visible" });
-      // Thread history loads automatically; allow it to settle before capture.
-      await page.waitForTimeout(250);
+      await page.getByTestId("agent-chat").waitFor({ state: "visible" });
+      await page.evaluate(async () => {
+        await document.fonts?.ready;
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      });
       const filename = size === "desktop" ? route.desktopName : route.mobileName;
       const path = resolve(outputDir, filename);
       await page.screenshot({ fullPage: route.fullPage ?? false, path });

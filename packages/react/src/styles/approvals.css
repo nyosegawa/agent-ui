@@ -3,14 +3,14 @@
 /* Command line wraps long content so it can never push the viewport. */
 .aui-command-line {
   background: var(--aui-code-bg);
-  border-radius: 7px;
+  border-radius: var(--aui-radius-md);
   color: var(--aui-code-fg);
   display: block;
   font-family: var(--aui-font-mono);
-  font-size: 12.5px;
+  font-size: var(--aui-font-size-sm-plus);
   margin: 0;
   overflow-wrap: anywhere;
-  padding: 10px 12px;
+  padding: var(--aui-space-200) var(--aui-space-250);
   white-space: pre-wrap;
 }
 
@@ -18,34 +18,34 @@
  * stacking large three-column cards. No border so it reads as a metadata
  * row rather than a nested card. */
 .aui-metadata-grid {
-  column-gap: 14px;
+  column-gap: var(--aui-space-300);
   display: flex;
   flex-wrap: wrap;
   margin: 0;
   padding: 0;
-  row-gap: 4px;
+  row-gap: var(--aui-space-075);
 }
 
 .aui-metadata-grid div {
   align-items: baseline;
   display: flex;
-  gap: 6px;
+  gap: var(--aui-space-150);
   min-width: 0;
 }
 
 .aui-metadata-grid dt {
   color: var(--aui-fg-faint);
   flex: 0 0 auto;
-  font-size: 10px;
+  font-size: var(--aui-font-size-2xs);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--aui-letter-spacing-label);
   text-transform: uppercase;
 }
 
 .aui-metadata-grid dd {
   color: var(--aui-fg);
   font-family: var(--aui-font-mono);
-  font-size: 11.5px;
+  font-size: var(--aui-font-size-xs-plus);
   margin: 0;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -53,49 +53,53 @@
 
 .aui-approval-json {
   background: var(--aui-code-bg);
-  border-radius: 6px;
+  border-radius: var(--aui-radius-sm);
   color: var(--aui-code-fg);
   font-family: var(--aui-font-mono);
-  font-size: 12px;
-  margin: 4px 0 0;
-  max-height: 220px;
+  font-size: var(--aui-font-size-sm);
+  margin: var(--aui-space-100) 0 0;
+  max-height: 180px;
   overflow: auto;
-  padding: 10px 12px;
+  padding: var(--aui-space-200) var(--aui-space-250);
   white-space: pre-wrap;
 }
 
 /* --- Critical notice (near thread) --------------------------------- */
 
 .aui-critical-banners {
-  background: linear-gradient(180deg, var(--aui-warn-soft-strong) 0%, var(--aui-warn-soft-faint) 100%);
+  background: linear-gradient(
+    180deg,
+    var(--aui-warn-soft-strong) 0%,
+    var(--aui-warn-soft-faint) 100%
+  );
   border-bottom: 1px solid var(--aui-warn-border);
   display: grid;
-  gap: 8px;
-  padding: 10px 20px 12px;
+  gap: var(--aui-space-200);
+  padding: var(--aui-space-250) var(--aui-space-500) var(--aui-space-300);
 }
 
 .aui-critical-banner {
   background: var(--aui-panel);
   border: 1px solid var(--aui-warn-border);
-  border-left: 3px solid var(--aui-warn);
-  border-radius: 7px;
+  border-radius: var(--aui-radius-md);
   display: grid;
-  gap: 3px;
-  padding: 9px 12px;
+  gap: var(--aui-space-075);
+  padding: var(--aui-space-225) var(--aui-space-300);
 }
 
 .aui-critical-banner[data-severity="critical"] {
-  border-left-color: var(--aui-danger);
+  background: var(--aui-danger-soft);
+  border-color: var(--aui-danger-border);
 }
 
 .aui-critical-banner strong {
   color: var(--aui-fg-strong);
-  font-size: 12.5px;
+  font-size: var(--aui-font-size-sm-plus);
   font-weight: 650;
 }
 
 .aui-critical-banner span {
   color: var(--aui-fg-muted);
-  font-size: 12px;
-  line-height: 1.45;
+  font-size: var(--aui-font-size-sm);
+  line-height: var(--aui-line-relaxed);
 }

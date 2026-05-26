@@ -162,13 +162,11 @@ describe("AgentChat", () => {
     );
     expect(await screen.findByTestId("agent-chat")).toBeInTheDocument();
     expect(
-      await screen.findByRole(
-        "button",
-        { name: "Start thread" },
-        { timeout: 5000 },
-      ),
+      await screen.findByRole("button", { name: "Start thread" }, { timeout: 5000 }),
     ).toBeDisabled();
-    await userEvent.setup().type(screen.getByRole("textbox", { name: "Message" }), "hello");
+    await userEvent
+      .setup()
+      .type(screen.getByRole("textbox", { name: "Message" }), "hello");
     expect(screen.getByRole("button", { name: "Start thread" })).toBeEnabled();
     expect(screen.queryByRole("button", { name: "Login" })).not.toBeInTheDocument();
   });
@@ -242,9 +240,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(
-      await screen.findByRole("button", { name: "スレッドを開始" }),
-    ).toBeDisabled();
+    expect(await screen.findByRole("button", { name: "スレッドを開始" })).toBeDisabled();
     expect(screen.getByRole("textbox", { name: "メッセージ" })).toHaveAttribute(
       "placeholder",
       "Codex に作業内容を依頼",
@@ -329,7 +325,9 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(screen.getByRole("heading", { name: "Fixed worker thread" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Fixed worker thread" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Only this thread should render.")).toBeInTheDocument();
     expect(screen.queryByText("Active global thread")).not.toBeInTheDocument();
   });
@@ -409,7 +407,9 @@ describe("AgentChat", () => {
               raw: {
                 arguments: { title: "Inspect Agent UI DOM" },
                 result: {
-                  content: [{ text: "DOM audit found no horizontal overflow.", type: "text" }],
+                  content: [
+                    { text: "DOM audit found no horizontal overflow.", type: "text" },
+                  ],
                   structuredContent: null,
                 },
                 server: "node_repl",
@@ -436,7 +436,9 @@ describe("AgentChat", () => {
             "file-change": {
               id: "file-change",
               kind: "fileChange",
-              raw: { changes: [{ kind: "update", path: "packages/react/src/timeline.tsx" }] },
+              raw: {
+                changes: [{ kind: "update", path: "packages/react/src/timeline.tsx" }],
+              },
               status: "completed",
               threadId: "thread-context",
               turnId: "turn-context",
@@ -574,14 +576,16 @@ describe("AgentChat", () => {
     );
 
     const command = container.querySelector('[data-kind="commandExecution"]');
-    const anchored = screen.getByRole("button", {
-      name: "Approve command request approval-anchored",
-    }).closest(".aui-transcript-approval-anchor");
+    const anchored = screen
+      .getByRole("button", {
+        name: "Approve command request approval-anchored",
+      })
+      .closest(".aui-transcript-approval-anchor");
     expect(command?.nextElementSibling).toBe(anchored);
     expect(screen.getByText("Tail fallback")).toBeInTheDocument();
-    expect(container.querySelector(".aui-transcript-tail .aui-approval")).toHaveTextContent(
-      "Tail fallback",
-    );
+    expect(
+      container.querySelector(".aui-transcript-tail .aui-approval"),
+    ).toHaveTextContent("Tail fallback");
   });
 
   it("keeps tool cards readable when closed and exposes details when opened", async () => {
@@ -681,10 +685,7 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentThreadSidebar
-          activeThreadId="thread-stored"
-          threads={[storedThread]}
-        />
+        <AgentThreadSidebar activeThreadId="thread-stored" threads={[storedThread]} />
       </AgentProvider>,
     );
 
@@ -725,7 +726,9 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(screen.getByRole("heading", { name: "Implement approval UI" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Implement approval UI" }),
+    ).toBeInTheDocument();
     expect(screen.queryByLabelText("Agent context")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Usage limits")).not.toBeInTheDocument();
     expect(screen.queryByLabelText("Diagnostics")).not.toBeInTheDocument();
@@ -744,7 +747,9 @@ describe("AgentChat", () => {
 
     expect(screen.getByLabelText("Usage limits")).toHaveTextContent("fixture-demo-model");
     expect(screen.queryByRole("navigation", { name: "Threads" })).not.toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Implement approval UI" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Implement approval UI" }),
+    ).toBeInTheDocument();
   });
 
   it("exposes status and usage primitives without the AgentChat preset", () => {
@@ -781,9 +786,7 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("Status summary")).toHaveTextContent(
       "1 warning · 2 total",
     );
-    expect(screen.getByLabelText("Status details")).toHaveTextContent(
-      "Model rerouted",
-    );
+    expect(screen.getByLabelText("Status details")).toHaveTextContent("Model rerouted");
     expect(screen.getByLabelText("Usage summary")).toHaveTextContent("55%");
   });
 
@@ -907,7 +910,9 @@ describe("AgentChat", () => {
     );
 
     expect(screen.getByText("Host panel content")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Implement approval UI" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Implement approval UI" }),
+    ).toBeInTheDocument();
   });
 
   it("refreshes skills through the public hook and panel", async () => {
@@ -919,7 +924,9 @@ describe("AgentChat", () => {
             data: [
               {
                 cwd: "/repo",
-                skills: [{ enabled: true, name: "agent-browser", path: "/repo/SKILL.md" }],
+                skills: [
+                  { enabled: true, name: "agent-browser", path: "/repo/SKILL.md" },
+                ],
               },
             ],
           };
@@ -993,7 +1000,9 @@ describe("AgentChat", () => {
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method !== "app/list") return {};
-        if ((request.params as { cursor?: string | null } | undefined)?.cursor === "page-2") {
+        if (
+          (request.params as { cursor?: string | null } | undefined)?.cursor === "page-2"
+        ) {
           return {
             data: [
               {
@@ -1378,17 +1387,15 @@ describe("AgentChat", () => {
     expect(attachFile).toBeInTheDocument();
     expect(screen.getAllByRole("button", { name: /^Attach/ })).toHaveLength(1);
 
-    const imageInput = document.querySelector(
-      'input[type="file"]',
-    ) as HTMLInputElement;
+    const imageInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     await user.upload(imageInput, [
       new File(["binary"], "shot.png", { type: "" }),
       new File(["model"], "part.3mf", { type: "" }),
     ]);
 
-    const chip = screen.getByLabelText("Pending attachments").querySelector(
-      '.aui-composer-chip[data-kind="image"]',
-    );
+    const chip = screen
+      .getByLabelText("Pending attachments")
+      .querySelector('.aui-composer-chip[data-kind="image"]');
     expect(chip).not.toBeNull();
     expect(chip?.querySelector("img.aui-composer-chip-thumbnail")).not.toBeNull();
     expect(screen.getByText("part.3mf")).toBeInTheDocument();
@@ -1796,7 +1803,9 @@ describe("AgentChat", () => {
     );
 
     expect(screen.getByText(/Review this session/)).toBeInTheDocument();
-    expect(document.querySelector(".aui-message-body-collapsible")).not.toBeInTheDocument();
+    expect(
+      document.querySelector(".aui-message-body-collapsible"),
+    ).not.toBeInTheDocument();
   });
 
   it("renders structured App Server message content without crashing", () => {
@@ -1846,7 +1855,12 @@ describe("AgentChat", () => {
   it("renders rich transcript content blocks from normalized state", async () => {
     const user = userEvent.setup();
     const initialState = runEventFixture([
-      { event: { thread: { id: "thread-blocks", name: "Block renderers" }, type: "thread/started" } },
+      {
+        event: {
+          thread: { id: "thread-blocks", name: "Block renderers" },
+          type: "thread/started",
+        },
+      },
       {
         event: {
           threadId: "thread-blocks",
@@ -1945,7 +1959,9 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("Plan")).toHaveTextContent("Render command");
     expect(screen.getByText("MCP tool")).toBeInTheDocument();
     expect(screen.getByText("agent-browser / snapshot")).toBeInTheDocument();
-    expect(screen.getByLabelText("MCP tool")).toHaveTextContent("agent-browser / snapshot");
+    expect(screen.getByLabelText("MCP tool")).toHaveTextContent(
+      "agent-browser / snapshot",
+    );
     expect(screen.getByLabelText("MCP tool")).toHaveTextContent("Result captured");
     expect(screen.queryByText(/"selector": "#app"/)).not.toBeInTheDocument();
     await user.click(screen.getByText("agent-browser / snapshot"));
@@ -1972,8 +1988,12 @@ describe("AgentChat", () => {
     );
 
     expect(screen.getByRole("textbox", { name: "Message" })).toBeEnabled();
-    expect(screen.queryByRole("button", { name: "Stop current turn", hidden: false })).toBeInTheDocument();
-    expect(screen.queryAllByRole("button", { name: "Stop current turn" })).toHaveLength(1);
+    expect(
+      screen.queryByRole("button", { name: "Stop current turn", hidden: false }),
+    ).toBeInTheDocument();
+    expect(screen.queryAllByRole("button", { name: "Stop current turn" })).toHaveLength(
+      1,
+    );
     await user.click(screen.getByRole("button", { name: "Stop current turn" }));
 
     await waitFor(() =>
@@ -1997,10 +2017,16 @@ describe("AgentChat", () => {
     await user.type(message, "focus on tests");
     await user.keyboard("{Enter}");
 
-    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent("focus on tests");
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "focus on tests",
+    );
     expect(message).toHaveValue("");
-    expect(transport.requests.map((request) => request.method)).not.toContain("turn/start");
-    expect(transport.requests.map((request) => request.method)).not.toContain("turn/steer");
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/steer",
+    );
   });
 
   it("starts a new turn with Cmd+Enter when no turn is running", async () => {
@@ -2033,7 +2059,9 @@ describe("AgentChat", () => {
         },
       }),
     );
-    expect(transport.requests.map((request) => request.method)).not.toContain("turn/steer");
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/steer",
+    );
   });
 
   it("sends running Cmd+Enter immediately with turn/steer", async () => {
@@ -2241,7 +2269,9 @@ describe("AgentChat", () => {
         },
       }),
     );
-    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent("same ms send B");
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "same ms send B",
+    );
     expect(screen.queryByText("same ms send A")).not.toBeInTheDocument();
   });
 
@@ -2249,7 +2279,10 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     vi.spyOn(Date, "now").mockReturnValue(1_234);
     render(
-      <AgentProvider initialState={twoRunningThreadsState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={twoRunningThreadsState()}
+        transport={new FakeAgentTransport()}
+      >
         <ActiveThreadHarness />
       </AgentProvider>,
     );
@@ -2259,16 +2292,25 @@ describe("AgentChat", () => {
     expect(firstItem).not.toBeNull();
     await user.click(within(firstItem!).getByRole("button", { name: "Edit" }));
 
-    expect(screen.getByRole("textbox", { name: "Message" })).toHaveValue("same ms edit A");
-    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent("same ms edit B");
-    expect(screen.getByLabelText("Queued follow-ups")).not.toHaveTextContent("same ms edit A");
+    expect(screen.getByRole("textbox", { name: "Message" })).toHaveValue(
+      "same ms edit A",
+    );
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "same ms edit B",
+    );
+    expect(screen.getByLabelText("Queued follow-ups")).not.toHaveTextContent(
+      "same ms edit A",
+    );
   });
 
   it("keeps remounted same-timestamp queued follow-ups independently removable", async () => {
     const user = userEvent.setup();
     vi.spyOn(Date, "now").mockReturnValue(1_234);
     render(
-      <AgentProvider initialState={twoRunningThreadsState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={twoRunningThreadsState()}
+        transport={new FakeAgentTransport()}
+      >
         <ActiveThreadHarness />
       </AgentProvider>,
     );
@@ -2348,7 +2390,9 @@ describe("AgentChat", () => {
     await user.click(screen.getByRole("button", { name: "Send now" }));
 
     await screen.findByText(/cannot accept additional instructions/i);
-    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent("do not lose this");
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "do not lose this",
+    );
     expect(failingMessage).toHaveValue("");
   });
 
@@ -2382,7 +2426,10 @@ describe("AgentChat", () => {
   it("edits and removes queued follow-ups", async () => {
     const user = userEvent.setup();
     render(
-      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={runningComposerState()}
+        transport={new FakeAgentTransport()}
+      >
         <AgentChat />
       </AgentProvider>,
     );
@@ -2462,7 +2509,10 @@ describe("AgentChat", () => {
     );
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    await user.upload(fileInput, new File(["png"], "queued-shot.png", { type: "image/png" }));
+    await user.upload(
+      fileInput,
+      new File(["png"], "queued-shot.png", { type: "image/png" }),
+    );
     await user.type(screen.getByLabelText("Message"), "review queued image");
     await user.keyboard("{Enter}");
 
@@ -2553,7 +2603,10 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const revoke = vi.spyOn(URL, "revokeObjectURL");
     render(
-      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={runningComposerState()}
+        transport={new FakeAgentTransport()}
+      >
         <AgentChat
           resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
           sidebar={false}
@@ -2563,7 +2616,10 @@ describe("AgentChat", () => {
     );
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    await user.upload(fileInput, new File(["png"], "remove-queued.png", { type: "image/png" }));
+    await user.upload(
+      fileInput,
+      new File(["png"], "remove-queued.png", { type: "image/png" }),
+    );
     await user.type(screen.getByLabelText("Message"), "remove queued image");
     await user.keyboard("{Enter}");
     await user.click(screen.getByRole("button", { name: "Remove" }));
@@ -2576,7 +2632,10 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const revoke = vi.spyOn(URL, "revokeObjectURL");
     const { unmount } = render(
-      <AgentProvider initialState={twoRunningThreadsState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={twoRunningThreadsState()}
+        transport={new FakeAgentTransport()}
+      >
         <ActiveThreadHarness
           resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
         />
@@ -2584,7 +2643,10 @@ describe("AgentChat", () => {
     );
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    await user.upload(fileInput, new File(["png"], "persist-preview.png", { type: "image/png" }));
+    await user.upload(
+      fileInput,
+      new File(["png"], "persist-preview.png", { type: "image/png" }),
+    );
     await user.type(screen.getByLabelText("Message"), "preview survives view unmount");
     await user.keyboard("{Enter}");
     await user.click(screen.getByRole("button", { name: "Show no thread" }));
@@ -2598,7 +2660,10 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const revoke = vi.spyOn(URL, "revokeObjectURL");
     const { unmount } = render(
-      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={runningComposerState()}
+        transport={new FakeAgentTransport()}
+      >
         <AgentChat
           resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
           sidebar={false}
@@ -2608,7 +2673,10 @@ describe("AgentChat", () => {
     );
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    await user.upload(fileInput, new File(["png"], "remove-once.png", { type: "image/png" }));
+    await user.upload(
+      fileInput,
+      new File(["png"], "remove-once.png", { type: "image/png" }),
+    );
     await user.type(screen.getByLabelText("Message"), "remove once");
     await user.keyboard("{Enter}");
     await user.click(screen.getByRole("button", { name: "Remove" }));
@@ -2622,7 +2690,10 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const revoke = vi.spyOn(URL, "revokeObjectURL");
     const { unmount } = render(
-      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={runningComposerState()}
+        transport={new FakeAgentTransport()}
+      >
         <AgentChat
           resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
           sidebar={false}
@@ -2632,7 +2703,10 @@ describe("AgentChat", () => {
     );
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    await user.upload(fileInput, new File(["png"], "edit-preview.png", { type: "image/png" }));
+    await user.upload(
+      fileInput,
+      new File(["png"], "edit-preview.png", { type: "image/png" }),
+    );
     await user.type(screen.getByLabelText("Message"), "edit preview");
     await user.keyboard("{Enter}");
     await user.click(screen.getByRole("button", { name: "Edit" }));
@@ -2666,7 +2740,10 @@ describe("AgentChat", () => {
       );
     }
     const { unmount } = render(
-      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={runningComposerState()}
+        transport={new FakeAgentTransport()}
+      >
         <ArchiveNotification />
         <AgentChat
           resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
@@ -2677,7 +2754,10 @@ describe("AgentChat", () => {
     );
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    await user.upload(fileInput, new File(["png"], "server-archived.png", { type: "image/png" }));
+    await user.upload(
+      fileInput,
+      new File(["png"], "server-archived.png", { type: "image/png" }),
+    );
     await user.type(screen.getByLabelText("Message"), "server archived queue");
     await user.keyboard("{Enter}");
     expect(screen.getByLabelText("Queued attachments")).toHaveTextContent(
@@ -2714,7 +2794,10 @@ describe("AgentChat", () => {
       );
     }
     const { unmount } = render(
-      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={runningComposerState()}
+        transport={new FakeAgentTransport()}
+      >
         <CloseNotification />
         <AgentChat
           resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
@@ -2725,7 +2808,10 @@ describe("AgentChat", () => {
     );
 
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    await user.upload(fileInput, new File(["png"], "server-closed.png", { type: "image/png" }));
+    await user.upload(
+      fileInput,
+      new File(["png"], "server-closed.png", { type: "image/png" }),
+    );
     await user.type(screen.getByLabelText("Message"), "server closed queue");
     await user.keyboard("{Enter}");
     expect(screen.getByLabelText("Queued attachments")).toHaveTextContent(
@@ -2761,9 +2847,13 @@ describe("AgentChat", () => {
     await user.click(screen.getByRole("button", { name: "Stop current turn" }));
 
     await waitFor(() =>
-      expect(transport.requests.some((request) => request.method === "turn/interrupt")).toBe(true),
+      expect(
+        transport.requests.some((request) => request.method === "turn/interrupt"),
+      ).toBe(true),
     );
-    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent("keep after stop");
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "keep after stop",
+    );
   });
 
   it("does not submit while IME composition is active", async () => {
@@ -2781,7 +2871,9 @@ describe("AgentChat", () => {
     fireEvent.keyDown(message, { key: "Enter" });
 
     expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
-    expect(transport.requests.map((request) => request.method)).not.toContain("turn/steer");
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/steer",
+    );
   });
 
   it("does not leave messages marked in progress after the thread completes", () => {
@@ -2947,9 +3039,7 @@ describe("AgentChat", () => {
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(screen.getAllByLabelText("CodeMirror patch viewer").length).toBeGreaterThan(0);
-    expect(
-      screen.getByRole("button", { name: "Execution mode" }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Execution mode" })).toBeInTheDocument();
     expect(screen.getByLabelText("Usage limits")).toHaveTextContent(
       "fixture-demo-model 5h",
     );
@@ -3105,22 +3195,24 @@ describe("AgentChat", () => {
     await user.type(message, "hello codex");
     await user.keyboard("{Enter}");
 
-    await waitFor(() => expect(transport.requests.at(-1)).toMatchObject({
-      method: "turn/start",
-      params: {
-        approvalPolicy: "on-request",
-        input: [{ text: "hello codex", text_elements: [], type: "text" }],
-        model: "fixture-demo-model",
-        sandboxPolicy: {
-          excludeSlashTmp: false,
-          excludeTmpdirEnvVar: false,
-          networkAccess: false,
-          type: "workspaceWrite",
-          writableRoots: [],
+    await waitFor(() =>
+      expect(transport.requests.at(-1)).toMatchObject({
+        method: "turn/start",
+        params: {
+          approvalPolicy: "on-request",
+          input: [{ text: "hello codex", text_elements: [], type: "text" }],
+          model: "fixture-demo-model",
+          sandboxPolicy: {
+            excludeSlashTmp: false,
+            excludeTmpdirEnvVar: false,
+            networkAccess: false,
+            type: "workspaceWrite",
+            writableRoots: [],
+          },
+          threadId: "thread-demo",
         },
-        threadId: "thread-demo",
-      },
-    }));
+      }),
+    );
   });
 
   it("shows compact context usage near the composer only for nonzero usage", async () => {
@@ -3291,8 +3383,7 @@ describe("AgentChat", () => {
                   id: "item-markdown",
                   kind: "agentMessage",
                   status: "completed",
-                  text:
-                    "## Result\n\n- `bun test` passed\n- [Docs](https://example.com)\n\n```sh\nbun test\n```\n\n| File | State |\n| --- | --- |\n| README.md | updated |\n\n<script>alert('x')</script>",
+                  text: "## Result\n\n- `bun test` passed\n- [Docs](https://example.com)\n\n```sh\nbun test\n```\n\n| File | State |\n| --- | --- |\n| README.md | updated |\n\n<script>alert('x')</script>",
                   threadId: "thread-markdown",
                   turnId: "turn-markdown",
                 },
@@ -3407,14 +3498,16 @@ describe("AgentChat", () => {
     );
 
     await waitFor(() =>
-      expect(transport.requests.some((request) => request.method === "model/list")).toBe(true),
+      expect(transport.requests.some((request) => request.method === "model/list")).toBe(
+        true,
+      ),
     );
     await user.click(screen.getByRole("button", { name: "Model and effort" }));
     await user.click(await screen.findByRole("menuitemradio", { name: /Real Model/ }));
     await user.click(screen.getByRole("button", { name: "Open folder" }));
-    expect(await screen.findByRole("button", { name: "Working directory" })).toHaveTextContent(
-      "agent-ui",
-    );
+    expect(
+      await screen.findByRole("button", { name: "Working directory" }),
+    ).toHaveTextContent("agent-ui");
     await user.type(screen.getByRole("textbox", { name: "Message" }), "start here");
     await user.click(screen.getByRole("button", { name: "Start thread" }));
 
@@ -3615,12 +3708,8 @@ describe("AgentChat", () => {
     expect(await screen.findByText("/Users/example/project")).toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: /Old project/ }));
-    expect(await screen.findByText("Preview")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Resume" }));
     expect(await screen.findByText("Ready")).toBeInTheDocument();
-    expect(
-      await screen.findByText("/Users/example/old-project"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("/Users/example/old-project")).toBeInTheDocument();
     expect(screen.queryByText(/\.codex\/sessions/)).not.toBeInTheDocument();
   });
 
@@ -3750,7 +3839,7 @@ describe("AgentChat", () => {
     ).toEqual({ loginId: "login-123" });
   });
 
-  it("loads persisted session history and reads an individual thread", async () => {
+  it("loads persisted session history and resumes an individual thread", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
       onRequest(request) {
@@ -3769,47 +3858,12 @@ describe("AgentChat", () => {
             ],
           };
         }
-        if (request.method === "thread/read") {
-          return {
-            thread: {
-              id: "thread-history",
-              name: "Historical fix",
-              path: "/Users/example/.codex/sessions/2026/05/09/rollout-demo.jsonl",
-              preview: "Fix a stored bug",
-              status: { type: "notLoaded" },
-              turns: [
-                {
-                  id: "turn-history",
-                  items: [
-                    {
-                      content: [{ text: "What changed?", type: "text" }],
-                      id: "item-history-user",
-                      type: "userMessage",
-                    },
-                    {
-                      id: "item-history-agent",
-                      text: "The stored thread was loaded.",
-                      type: "agentMessage",
-                    },
-                    {
-                      aggregatedOutput: "bun test\nok\n",
-                      command: "bun test",
-                      id: "item-history-command",
-                      status: "completed",
-                      type: "commandExecution",
-                    },
-                  ],
-                  status: "completed",
-                },
-              ],
-            },
-          };
-        }
         if (request.method === "thread/resume") {
           return {
             thread: {
               id: "thread-history",
               name: "Historical fix",
+              path: "/Users/example/.codex/sessions/2026/05/09/rollout-demo.jsonl",
               status: { type: "idle" },
               turns: [],
             },
@@ -3832,41 +3886,33 @@ describe("AgentChat", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Codex session")).toBeInTheDocument();
     expect(screen.queryByText(/rollout-demo\.jsonl/)).not.toBeInTheDocument();
-    expect(screen.getByText("The stored thread was loaded.")).toBeInTheDocument();
-    await user.click(screen.getByLabelText("Command output").querySelector("summary")!);
-    expect(screen.getByLabelText("Command output")).toHaveTextContent("ok");
-    expect(screen.getByText("Preview")).toBeInTheDocument();
-    expect(screen.getByLabelText("Message")).toBeDisabled();
-    expect(screen.getByText("Resume this stored thread before sending a new message.")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Resume" }));
     expect(await screen.findByText("Ready")).toBeInTheDocument();
     expect(screen.getByLabelText("Message")).not.toBeDisabled();
     expect(screen.queryByText("notLoaded")).not.toBeInTheDocument();
     expect(transport.requests.map((request) => request.method)).toEqual(
-      expect.arrayContaining(["thread/list", "thread/read", "thread/resume"]),
+      expect.arrayContaining(["thread/list", "thread/resume"]),
+    );
+    expect(transport.requests.some((request) => request.method === "thread/read")).toBe(
+      false,
     );
     expect(
       transport.requests.find((request) => request.method === "thread/resume")?.params,
     ).toEqual({ threadId: "thread-history" });
   });
 
-  it("surfaces resume failures inline and keeps the stable resume request shape", async () => {
+  it("does not expose a manual resume button for stored threads", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method === "thread/list") {
           return {
-            data: [{ id: "thread-fail-resume", name: "Needs resume", status: { type: "notLoaded" } }],
-          };
-        }
-        if (request.method === "thread/read") {
-          return {
-            thread: {
-              id: "thread-fail-resume",
-              name: "Needs resume",
-              status: { type: "notLoaded" },
-              turns: [],
-            },
+            data: [
+              {
+                id: "thread-fail-resume",
+                name: "Needs resume",
+                status: { type: "notLoaded" },
+              },
+            ],
           };
         }
         if (request.method === "thread/resume") {
@@ -3883,11 +3929,7 @@ describe("AgentChat", () => {
     );
 
     await user.click(await screen.findByRole("button", { name: /Needs resume/ }));
-    await user.click(await screen.findByRole("button", { name: "Resume" }));
-
-    expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Resume failed: resume unavailable",
-    );
+    expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
     expect(
       transport.requests.find((request) => request.method === "thread/resume")?.params,
     ).toEqual({ threadId: "thread-fail-resume" });
@@ -3906,13 +3948,13 @@ describe("AgentChat", () => {
             ],
           };
         }
-        if (request.method === "thread/read") {
+        if (request.method === "thread/resume") {
           const id = String((request.params as { threadId?: string }).threadId);
           return {
             thread: {
               id,
               name: id === "thread-two" ? "Thread two" : "Thread one",
-              status: { type: "notLoaded" },
+              status: { type: "idle" },
               turns: [],
             },
           };
@@ -3929,47 +3971,63 @@ describe("AgentChat", () => {
 
     expect(await screen.findByRole("button", { name: /Thread one/ })).toBeInTheDocument();
     expect(window.location.pathname).toBe("/");
-    expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: /Thread (one|two)/ }),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("Connect Codex")).toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: /Thread two/ }));
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
-    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Thread two" }),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Start a Codex thread" }));
     await waitFor(() => expect(window.location.pathname).toBe("/"));
     await waitFor(() =>
-      expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument(),
+      expect(
+        screen.queryByRole("heading", { name: /Thread (one|two)/ }),
+      ).not.toBeInTheDocument(),
     );
     expect(screen.getByText("Connect Codex")).toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: /Thread two/ }));
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
-    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Thread two" }),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "New thread" }));
     await waitFor(() => expect(window.location.pathname).toBe("/"));
     await waitFor(() =>
-      expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument(),
+      expect(
+        screen.queryByRole("heading", { name: /Thread (one|two)/ }),
+      ).not.toBeInTheDocument(),
     );
     expect(screen.getByText("Connect Codex")).toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: /Thread two/ }));
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
-    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Thread two" }),
+    ).toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: /Thread one/ }));
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-one"));
-    expect(await screen.findByRole("heading", { name: "Thread one" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Thread one" }),
+    ).toBeInTheDocument();
 
     window.history.back();
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
-    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Thread two" }),
+    ).toBeInTheDocument();
     await waitFor(() =>
       expect(
         transport.requests.some(
           (request) =>
-            request.method === "thread/read" &&
+            request.method === "thread/resume" &&
             (request.params as { threadId?: string }).threadId === "thread-two",
         ),
       ).toBe(true),
@@ -3978,28 +4036,38 @@ describe("AgentChat", () => {
     window.history.pushState(null, "", "/");
     window.dispatchEvent(new PopStateEvent("popstate"));
     await waitFor(() =>
-      expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument(),
+      expect(
+        screen.queryByRole("heading", { name: /Thread (one|two)/ }),
+      ).not.toBeInTheDocument(),
     );
     expect(screen.getByText("Connect Codex")).toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: /Thread two/ }));
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
-    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Thread two" }),
+    ).toBeInTheDocument();
 
     window.history.back();
     await waitFor(() => expect(window.location.pathname).toBe("/"));
     await waitFor(() =>
-      expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument(),
+      expect(
+        screen.queryByRole("heading", { name: /Thread (one|two)/ }),
+      ).not.toBeInTheDocument(),
     );
     expect(screen.getByText("Connect Codex")).toBeInTheDocument();
 
     window.history.forward();
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
-    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Thread two" }),
+    ).toBeInTheDocument();
 
     window.history.pushState(null, "", "/threads/thread-one");
     window.dispatchEvent(new PopStateEvent("popstate"));
-    expect(await screen.findByRole("heading", { name: "Thread one" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Thread one" }),
+    ).toBeInTheDocument();
   });
 
   it("does not auto-select the first history thread from the root route", async () => {
@@ -4015,13 +4083,13 @@ describe("AgentChat", () => {
             ],
           };
         }
-        if (request.method === "thread/read") {
+        if (request.method === "thread/resume") {
           const id = String((request.params as { threadId?: string }).threadId);
           return {
             thread: {
               id,
               name: id === "thread-two" ? "Thread two" : "Thread one",
-              status: { type: "notLoaded" },
+              status: { type: "idle" },
               turns: [],
             },
           };
@@ -4038,18 +4106,24 @@ describe("AgentChat", () => {
 
     expect(await screen.findByRole("button", { name: /Thread one/ })).toBeInTheDocument();
     expect(window.location.pathname).toBe("/");
-    expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument();
-    expect(transport.requests.map((request) => request.method)).not.toContain("thread/read");
+    expect(
+      screen.queryByRole("heading", { name: /Thread (one|two)/ }),
+    ).not.toBeInTheDocument();
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "thread/read",
+    );
 
     await user.click(await screen.findByRole("button", { name: /Thread two/ }));
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
-    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
     expect(
-      transport.requests.filter((request) => request.method === "thread/read"),
+      await screen.findByRole("heading", { name: "Thread two" }),
+    ).toBeInTheDocument();
+    expect(
+      transport.requests.filter((request) => request.method === "thread/resume"),
     ).toHaveLength(1);
     expect(
-      transport.requests.find((request) => request.method === "thread/read")?.params,
-    ).toEqual({ includeTurns: true, threadId: "thread-two" });
+      transport.requests.find((request) => request.method === "thread/resume")?.params,
+    ).toEqual({ threadId: "thread-two" });
   });
 
   it("uses the configured home path when navigating back to the start screen", async () => {
@@ -4059,15 +4133,21 @@ describe("AgentChat", () => {
       onRequest(request) {
         if (request.method === "thread/list") {
           return {
-            data: [{ id: "thread-custom", name: "Thread custom", status: { type: "notLoaded" } }],
+            data: [
+              {
+                id: "thread-custom",
+                name: "Thread custom",
+                status: { type: "notLoaded" },
+              },
+            ],
           };
         }
-        if (request.method === "thread/read") {
+        if (request.method === "thread/resume") {
           return {
             thread: {
               id: "thread-custom",
               name: "Thread custom",
-              status: { type: "notLoaded" },
+              status: { type: "idle" },
               turns: [],
             },
           };
@@ -4078,18 +4158,26 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider transport={transport}>
-        <AgentChat threadUrlRouting={{ basePath: "/agent/threads", homePath: "/agent" }} />
+        <AgentChat
+          threadUrlRouting={{ basePath: "/agent/threads", homePath: "/agent" }}
+        />
       </AgentProvider>,
     );
 
     await user.click(await screen.findByRole("button", { name: /Thread custom/ }));
-    await waitFor(() => expect(window.location.pathname).toBe("/agent/threads/thread-custom"));
-    expect(await screen.findByRole("heading", { name: "Thread custom" })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(window.location.pathname).toBe("/agent/threads/thread-custom"),
+    );
+    expect(
+      await screen.findByRole("heading", { name: "Thread custom" }),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Start a Codex thread" }));
     await waitFor(() => expect(window.location.pathname).toBe("/agent"));
     await waitFor(() =>
-      expect(screen.queryByRole("heading", { name: "Thread custom" })).not.toBeInTheDocument(),
+      expect(
+        screen.queryByRole("heading", { name: "Thread custom" }),
+      ).not.toBeInTheDocument(),
     );
     expect(screen.getByText("Connect Codex")).toBeInTheDocument();
   });
@@ -4097,7 +4185,7 @@ describe("AgentChat", () => {
   it("keeps direct URL thread when sidebar history load resolves first", async () => {
     window.history.replaceState(null, "", "/threads/thread-target");
     let resolveThreadTarget: (response: unknown) => void = () => undefined;
-    const threadTargetRead = new Promise((resolve) => {
+    const threadTargetResume = new Promise((resolve) => {
       resolveThreadTarget = resolve;
     });
     const transport = new FakeAgentTransport({
@@ -4106,18 +4194,22 @@ describe("AgentChat", () => {
           return {
             data: [
               { id: "thread-other", name: "Thread other", status: { type: "notLoaded" } },
-              { id: "thread-target", name: "Thread target", status: { type: "notLoaded" } },
+              {
+                id: "thread-target",
+                name: "Thread target",
+                status: { type: "notLoaded" },
+              },
             ],
           };
         }
-        if (request.method === "thread/read") {
+        if (request.method === "thread/resume") {
           const id = String((request.params as { threadId?: string }).threadId);
-          if (id === "thread-target") return threadTargetRead;
+          if (id === "thread-target") return threadTargetResume;
           return {
             thread: {
               id,
               name: "Thread other",
-              status: { type: "notLoaded" },
+              status: { type: "idle" },
               turns: [],
             },
           };
@@ -4133,17 +4225,28 @@ describe("AgentChat", () => {
     );
 
     await waitFor(() =>
-      expect(
-        transport.requests.some((request) => request.method === "thread/list"),
-      ).toBe(true),
+      expect(transport.requests.some((request) => request.method === "thread/list")).toBe(
+        true,
+      ),
     );
-    expect(await screen.findByRole("button", { name: /Thread other/ })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Thread other" })).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole("button", { name: /Thread other/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Thread other" }),
+    ).not.toBeInTheDocument();
     expect(window.location.pathname).toBe("/threads/thread-target");
     expect(
       transport.requests.some(
         (request) =>
           request.method === "thread/read" &&
+          (request.params as { threadId?: string }).threadId === "thread-other",
+      ),
+    ).toBe(false);
+    expect(
+      transport.requests.some(
+        (request) =>
+          request.method === "thread/resume" &&
           (request.params as { threadId?: string }).threadId === "thread-other",
       ),
     ).toBe(false);
@@ -4153,15 +4256,19 @@ describe("AgentChat", () => {
         thread: {
           id: "thread-target",
           name: "Thread target",
-          status: { type: "notLoaded" },
+          status: { type: "idle" },
           turns: [],
         },
       });
-      await threadTargetRead;
+      await threadTargetResume;
     });
 
-    expect(await screen.findByRole("heading", { name: "Thread target" })).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Thread other" })).not.toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Thread target" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Thread other" }),
+    ).not.toBeInTheDocument();
     expect(window.location.pathname).toBe("/threads/thread-target");
   });
 
@@ -4285,9 +4392,9 @@ describe("AgentChat", () => {
     expect(
       screen.queryByText("This stored session opens in the main pane."),
     ).not.toBeInTheDocument();
-    expect(
-      transport.requests.some((request) => request.method === "thread/read"),
-    ).toBe(false);
+    expect(transport.requests.some((request) => request.method === "thread/read")).toBe(
+      false,
+    );
   });
 
   it("loads additional stored thread pages when thread/list returns a cursor", async () => {
@@ -4325,7 +4432,7 @@ describe("AgentChat", () => {
         };
       },
     });
-    const { container } = render(
+    render(
       <AgentProvider transport={transport}>
         <AgentChat />
       </AgentProvider>,
@@ -4333,16 +4440,12 @@ describe("AgentChat", () => {
 
     expect(await screen.findAllByText("First page thread")).not.toHaveLength(0);
     expect((await screen.findAllByText(/first-project/)).length).toBeGreaterThan(0);
-    expect(await screen.findByText(/1 thread loaded · more available/)).toBeInTheDocument();
-    const feedback = container.querySelector(".aui-history-feedback");
-    expect(feedback).toContainElement(screen.getByText(/1 thread loaded/));
-    expect(feedback).not.toContainElement(screen.getByRole("button", { name: "Load more" }));
-    expect(screen.getByRole("navigation", { name: "Threads" })).not.toBe(feedback);
+    expect(screen.queryByText(/thread loaded/)).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Load more" }));
 
     expect(await screen.findByText("Second page thread")).toBeInTheDocument();
     expect((await screen.findAllByText(/second-project/)).length).toBeGreaterThan(0);
-    expect(await screen.findByText(/2 threads loaded · all loaded/)).toBeInTheDocument();
+    expect(screen.queryByText(/threads loaded/)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Load more" })).not.toBeInTheDocument();
     expect(
       transport.requests.find(
@@ -4410,7 +4513,7 @@ describe("AgentChat", () => {
     await user.click(await screen.findByRole("button", { name: "Load more" }));
 
     expect(await screen.findByText("Page three")).toBeInTheDocument();
-    expect(screen.getByText(/3 threads loaded · all loaded/)).toBeInTheDocument();
+    expect(screen.queryByText(/threads loaded/)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Load\s+all/ })).not.toBeInTheDocument();
     expect(
       transport.requests.filter((request) => request.method === "thread/list").length,
@@ -4429,7 +4532,10 @@ describe("AgentChat", () => {
 
   it("accepts pasted images as composer attachments", async () => {
     render(
-      <AgentProvider initialState={existingThreadState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={existingThreadState()}
+        transport={new FakeAgentTransport()}
+      >
         <AgentChat
           resolveLocalAttachment={(file) => localImageInput(`/tmp/${file.name}`)}
         />
@@ -4446,7 +4552,10 @@ describe("AgentChat", () => {
 
   it("accepts dropped files as composer attachments", async () => {
     const { container } = render(
-      <AgentProvider initialState={existingThreadState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={existingThreadState()}
+        transport={new FakeAgentTransport()}
+      >
         <AgentChat
           resolveLocalAttachment={(file, kind) =>
             kind === "image"
@@ -4469,7 +4578,10 @@ describe("AgentChat", () => {
   it("removes a pending composer attachment", async () => {
     const user = userEvent.setup();
     render(
-      <AgentProvider initialState={existingThreadState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={existingThreadState()}
+        transport={new FakeAgentTransport()}
+      >
         <AgentChat
           resolveLocalAttachment={(file) => localImageInput(`/tmp/${file.name}`)}
         />
@@ -4549,7 +4661,10 @@ describe("AgentChat", () => {
 
   it("hides composer attachment controls without a host resolver", async () => {
     render(
-      <AgentProvider initialState={existingThreadState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={existingThreadState()}
+        transport={new FakeAgentTransport()}
+      >
         <AgentChat />
       </AgentProvider>,
     );
@@ -4626,7 +4741,11 @@ describe("AgentChat", () => {
         }
         return {
           data: [
-            { id: "thread-initial", name: "Initial thread", status: { type: "notLoaded" } },
+            {
+              id: "thread-initial",
+              name: "Initial thread",
+              status: { type: "notLoaded" },
+            },
           ],
         };
       },

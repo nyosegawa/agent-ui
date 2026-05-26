@@ -1,8 +1,7 @@
 :root {
-  color: #15171c;
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  background: #f4f6f8;
+  color: var(--aui-fg);
+  font-family: var(--aui-font);
+  background: var(--aui-bg);
 }
 
 body {
@@ -22,135 +21,135 @@ a {
 
 .docs-nav {
   align-content: start;
-  background: #111827;
-  color: #f9fafb;
+  background: var(--aui-code-bg);
+  color: var(--aui-code-fg);
   display: grid;
-  gap: 8px;
-  padding: 18px;
+  gap: var(--aui-space-200);
+  padding: var(--aui-space-450);
   position: sticky;
   top: 0;
   height: 100vh;
 }
 
 .docs-nav strong {
-  font-size: 15px;
-  margin-bottom: 12px;
+  font-size: var(--aui-font-size-xl);
+  margin-bottom: var(--aui-space-300);
 }
 
 .docs-nav a {
-  border-radius: 6px;
-  color: #d0d5dd;
-  font-size: 14px;
-  padding: 8px 10px;
+  border-radius: var(--aui-radius-sm);
+  color: var(--aui-code-fg);
+  font-size: var(--aui-font-size-lg);
+  padding: var(--aui-space-200) var(--aui-space-250);
   text-decoration: none;
 }
 
 .docs-nav a:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffffff;
+  background: var(--aui-code-rule);
+  color: var(--aui-primary-strong);
 }
 
 .docs-main {
   display: grid;
-  gap: 22px;
-  padding: 28px;
+  gap: var(--aui-space-550);
+  padding: var(--aui-space-700);
 }
 
 .docs-intro {
   align-items: end;
-  border-bottom: 1px solid #d7dde6;
+  border-bottom: 1px solid var(--aui-border);
   display: grid;
-  gap: 18px;
+  gap: var(--aui-space-450);
   grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.8fr);
-  padding-bottom: 22px;
+  padding-bottom: var(--aui-space-550);
 }
 
 .docs-kicker {
-  color: #0f766e;
-  font-size: 12px;
+  color: var(--aui-primary-strong);
+  font-size: var(--aui-font-size-sm);
   font-weight: 750;
-  letter-spacing: 0;
-  margin: 0 0 8px;
+  letter-spacing: var(--aui-letter-spacing);
+  margin: 0 0 var(--aui-space-200);
   text-transform: uppercase;
 }
 
 .docs-intro h1 {
-  font-size: clamp(32px, 5vw, 58px);
-  letter-spacing: 0;
-  line-height: 1;
+  font-size: var(--aui-font-size-4xl);
+  letter-spacing: var(--aui-letter-spacing);
+  line-height: var(--aui-line-tight);
   margin: 0;
   max-width: 780px;
 }
 
 .docs-intro p {
-  color: #4b5565;
-  font-size: 16px;
-  line-height: 1.6;
+  color: var(--aui-fg-muted);
+  font-size: var(--aui-font-size-xl-plus);
+  line-height: var(--aui-line-reading);
   margin: 0;
 }
 
 .docs-grid {
   display: grid;
-  gap: 12px;
+  gap: var(--aui-space-300);
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
 .docs-card {
-  background: #ffffff;
-  border: 1px solid #d7dde6;
-  border-radius: 8px;
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-md);
   display: grid;
-  gap: 10px;
-  padding: 14px;
+  gap: var(--aui-space-250);
+  padding: var(--aui-space-350);
 }
 
 .docs-card h2,
 .docs-band h2,
 .docs-demo h2 {
-  font-size: 16px;
-  letter-spacing: 0;
+  font-size: var(--aui-font-size-xl-plus);
+  letter-spacing: var(--aui-letter-spacing);
   margin: 0;
 }
 
 .docs-card p,
 .docs-band li,
 .docs-demo p {
-  color: #4b5565;
-  font-size: 14px;
-  line-height: 1.55;
+  color: var(--aui-fg-muted);
+  font-size: var(--aui-font-size-lg);
+  line-height: var(--aui-line-loose);
   margin: 0;
 }
 
 .docs-band {
-  background: #ffffff;
-  border: 1px solid #d7dde6;
-  border-radius: 8px;
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-md);
   display: grid;
-  gap: 12px;
-  padding: 16px;
+  gap: var(--aui-space-300);
+  padding: var(--aui-space-400);
 }
 
 .docs-band ol,
 .docs-band ul {
   display: grid;
-  gap: 8px;
+  gap: var(--aui-space-200);
   margin: 0;
-  padding-left: 20px;
+  padding-left: var(--aui-space-500);
 }
 
 .docs-demo {
   display: grid;
-  gap: 12px;
+  gap: var(--aui-space-300);
   min-width: 0;
 }
 
 .docs-demo-header {
   display: grid;
-  gap: 6px;
+  gap: var(--aui-space-150);
 }
 
 .docs-demo .aui-shell {
-  box-shadow: 0 16px 60px rgba(17, 24, 39, 0.12);
+  box-shadow: var(--aui-shadow-lift);
 }
 
 @media (max-width: 1060px) {
@@ -179,7 +178,7 @@ a {
   }
 
   .docs-main {
-    padding: 16px;
+    padding: var(--aui-space-400);
     min-width: 0;
   }
 

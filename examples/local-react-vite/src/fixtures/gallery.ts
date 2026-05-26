@@ -14,7 +14,7 @@ export interface FixtureState {
 export const visualQaStates: FixtureState[] = [
   {
     description:
-      "Fixture-backed streaming, approvals, diff, usage, and stored thread preview through AgentChat.",
+      "Fixture-backed streaming, approvals, diff, usage, and automatic stored thread resume through AgentChat.",
     group: "core",
     href: "/",
     meta: "preset · default fixture",
@@ -61,15 +61,15 @@ export const visualQaStates: FixtureState[] = [
     title: "App connectors",
   },
   {
-    description: "Authenticated Codex account with no stored threads — first-run after login.",
+    description:
+      "Authenticated Codex account with no stored threads — first-run after login.",
     group: "states",
     href: "/?state=empty",
     meta: "preset · empty",
     title: "Empty authenticated workspace",
   },
   {
-    description:
-      "First-run device-code login flow without stale account or usage state.",
+    description: "First-run device-code login flow without stale account or usage state.",
     group: "states",
     href: "/?state=unauth",
     meta: "preset · unauthenticated",

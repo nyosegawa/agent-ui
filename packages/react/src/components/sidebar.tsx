@@ -7,7 +7,7 @@ import {
   IconSearch,
   buttonClass,
 } from "../components-internal";
-import { useAgentThreadHistory, useAgentThreadReader } from "../hooks";
+import { useAgentThread, useAgentThreadHistory, useAgentThreadReader } from "../hooks";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import { useAgentContext } from "../provider";
 import { rawThreadId } from "../thread-history";
@@ -160,6 +160,7 @@ export function AgentThreadSidebar({
   const { cursor, error, isLoading, listThreads } = useAgentThreadHistory();
   const { state } = useAgentContext();
   const { readThread } = useAgentThreadReader();
+  const { resumeThread } = useAgentThread();
   const [searchTerm, setSearchTerm] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>();
@@ -256,13 +257,19 @@ export function AgentThreadSidebar({
   const selectThread = useCallback(
     (threadId: string) => {
       if (compact) onCollapsedChange?.(true);
-      void readThread(threadId, { activate: true, includeTurns: true })
+      const selectedThread = threads.find((thread) => thread.thread.id === threadId);
+      const shouldResume =
+        selectedThread?.status === "notLoaded" || selectedThread?.status === "loaded";
+      const openThread = shouldResume
+        ? resumeThread(threadId)
+        : readThread(threadId, { activate: true, includeTurns: true });
+      void openThread
         .catch(() => undefined)
         .finally(() => {
           onSelectThread?.(threadId);
         });
     },
-    [compact, onCollapsedChange, onSelectThread, readThread],
+    [compact, onCollapsedChange, onSelectThread, readThread, resumeThread, threads],
   );
   const createThread = useCallback(() => {
     if (compact) onCollapsedChange?.(true);
@@ -360,20 +367,11 @@ export function AgentThreadSidebar({
         {!isLoading && hasLoaded && visibleThreads.length === 0 ? (
           <p className="aui-sidebar-status">{t("thread.noThreadsFound")}</p>
         ) : null}
-        {hasLoaded && visibleThreads.length > 0 ? (
-          <p className="aui-sidebar-status">
-            {t("thread.loaded", {
-              count: visibleThreads.length,
-              label: visibleThreads.length === 1 ? "thread" : "threads",
-            })}
-            {` · ${(nextCursor ?? cursor) ? t("common.moreAvailable") : t("common.allLoaded")}`}
-          </p>
-        ) : null}
       </div>
       <ThreadList
         activeThreadId={activeThreadId}
         footer={
-          nextCursor ?? cursor ? (
+          (nextCursor ?? cursor) ? (
             <div className="aui-thread-list-sentinel" ref={sentinelRef}>
               <button
                 className={buttonClass("subtle", { size: "sm" })}
@@ -410,5 +408,7 @@ function fallbackThreadT(key: AgentI18nKey): string {
 
 function responseCursor(response: Record<string, unknown> | undefined): string | null {
   if (!response) return null;
-  return stringField(response, "nextCursor") ?? stringField(response, "next_cursor") ?? null;
+  return (
+    stringField(response, "nextCursor") ?? stringField(response, "next_cursor") ?? null
+  );
 }

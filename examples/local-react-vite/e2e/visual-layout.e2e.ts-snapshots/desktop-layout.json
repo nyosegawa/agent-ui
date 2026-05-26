@@ -4,8 +4,8 @@
     "scrollWidth": 1280
   },
   "shell": {
-    "backgroundColor": "rgb(247, 246, 241)",
-    "borderColor": "rgb(231, 228, 218)",
+    "backgroundColor": "rgb(246, 247, 249)",
+    "borderColor": "rgb(223, 229, 235)",
     "borderRadius": "10px",
     "display": "grid",
     "gridTemplateColumns": "280px 970px",
@@ -17,8 +17,8 @@
     "width": 1252
   },
   "sidebar": {
-    "backgroundColor": "rgb(243, 241, 234)",
-    "borderColor": "rgb(26, 25, 22) rgb(231, 228, 218) rgb(26, 25, 22) rgb(26, 25, 22)",
+    "backgroundColor": "rgb(238, 242, 245)",
+    "borderColor": "rgb(23, 26, 31) rgb(223, 229, 235) rgb(23, 26, 31) rgb(23, 26, 31)",
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "255px",
@@ -30,8 +30,8 @@
     "width": 280
   },
   "chat": {
-    "backgroundColor": "rgb(247, 246, 241)",
-    "borderColor": "rgb(26, 25, 22)",
+    "backgroundColor": "rgb(246, 247, 249)",
+    "borderColor": "rgb(23, 26, 31)",
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "970px",
@@ -44,7 +44,7 @@
   },
   "status": {
     "backgroundColor": "rgb(255, 255, 255)",
-    "borderColor": "rgb(107, 102, 96) rgb(107, 102, 96) rgb(231, 228, 218)",
+    "borderColor": "rgb(94, 104, 117) rgb(94, 104, 117) rgb(223, 229, 235)",
     "borderRadius": "0px",
     "display": "flex",
     "gridTemplateColumns": "none",
@@ -57,7 +57,7 @@
   },
   "usage": {
     "backgroundColor": "rgb(255, 255, 255)",
-    "borderColor": "rgb(231, 228, 218)",
+    "borderColor": "rgb(223, 229, 235)",
     "borderRadius": "10px",
     "display": "grid",
     "gridTemplateColumns": "250px",
@@ -70,11 +70,11 @@
   },
   "threadHeader": {
     "backgroundColor": "rgb(255, 255, 255)",
-    "borderColor": "rgb(26, 25, 22) rgb(26, 25, 22) rgb(231, 228, 218)",
+    "borderColor": "rgb(23, 26, 31) rgb(23, 26, 31) rgb(223, 229, 235)",
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "447.781px 157.219px",
-    "height": 70,
+    "height": 69,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
@@ -83,11 +83,11 @@
   },
   "messageList": {
     "backgroundColor": "rgb(255, 255, 255)",
-    "borderColor": "rgb(26, 25, 22)",
+    "borderColor": "rgb(23, 26, 31)",
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "617px",
-    "height": 521,
+    "height": 538,
     "overflowX": "auto",
     "overflowY": "auto",
     "present": true,
@@ -96,7 +96,7 @@
   },
   "activity": {
     "backgroundColor": "rgb(255, 255, 255)",
-    "borderColor": "rgb(231, 228, 218)",
+    "borderColor": "rgb(223, 229, 235)",
     "borderRadius": "10px",
     "display": "block",
     "gridTemplateColumns": "none",
@@ -109,7 +109,7 @@
   },
   "diffActivity": {
     "backgroundColor": "rgb(255, 255, 255)",
-    "borderColor": "rgb(231, 228, 218)",
+    "borderColor": "rgb(223, 229, 235)",
     "borderRadius": "10px",
     "display": "block",
     "gridTemplateColumns": "none",
@@ -122,11 +122,11 @@
   },
   "approvals": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
-    "borderColor": "rgb(26, 25, 22)",
+    "borderColor": "rgb(23, 26, 31)",
     "borderRadius": "0px",
     "display": "grid",
     "gridTemplateColumns": "617px",
-    "height": 208,
+    "height": 191,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
@@ -134,12 +134,12 @@
     "width": 617
   },
   "composer": {
-    "backgroundColor": "rgb(250, 249, 244)",
-    "borderColor": "rgb(208, 204, 192)",
+    "backgroundColor": "rgb(250, 251, 252)",
+    "borderColor": "rgb(199, 209, 219)",
     "borderRadius": "20px",
     "display": "grid",
     "gridTemplateColumns": "591px",
-    "height": 189,
+    "height": 173,
     "overflowX": "visible",
     "overflowY": "visible",
     "present": true,
@@ -148,7 +148,7 @@
   },
   "composerSettings": {
     "backgroundColor": "rgba(0, 0, 0, 0)",
-    "borderColor": "rgb(26, 25, 22)",
+    "borderColor": "rgb(23, 26, 31)",
     "borderRadius": "0px",
     "display": "flex",
     "gridTemplateColumns": "none",

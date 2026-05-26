@@ -19,6 +19,7 @@
     "lint": "eslint .",
     "check:dead-code": "knip --include files,exports,dependencies --reporter compact",
     "test": "vitest run",
+    "test:styles": "vitest run packages/react/test/style-duplication.vitest.ts packages/react/test/source-structure.vitest.ts",
     "test:protocol": "bun test packages/codex/test",
     "test:fixtures": "bun test packages/core/test",
     "test:node-compat": "node scripts/node-compat-smoke.mjs",

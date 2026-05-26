@@ -6,10 +6,10 @@
   border-bottom: 1px solid var(--aui-border);
   color: var(--aui-fg-muted);
   display: flex;
-  gap: 12px;
+  gap: var(--aui-space-300);
   justify-content: space-between;
   min-height: 48px;
-  padding: 8px 16px;
+  padding: var(--aui-space-200) var(--aui-space-400);
 }
 
 .aui-brand {
@@ -19,10 +19,11 @@
   border-radius: var(--aui-radius-sm);
   color: inherit;
   display: flex;
+  flex: 1 1 auto;
   font: inherit;
-  gap: 10px;
+  gap: var(--aui-space-250);
   min-width: 0;
-  padding: 2px 4px;
+  padding: var(--aui-space-050) var(--aui-space-100);
   text-align: left;
 }
 
@@ -41,14 +42,17 @@
 
 .aui-brand strong {
   color: var(--aui-fg-strong);
-  font-size: 14px;
+  flex: 0 0 auto;
+  font-size: var(--aui-font-size-lg);
   font-weight: 700;
-  letter-spacing: -0.01em;
+  letter-spacing: var(--aui-letter-spacing);
+  white-space: nowrap;
 }
 
 .aui-brand span {
   color: var(--aui-fg-muted);
-  font-size: 12px;
+  flex: 1 1 auto;
+  font-size: var(--aui-font-size-sm);
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -59,29 +63,35 @@
   align-items: center;
   display: flex;
   flex: 0 0 auto;
-  gap: 8px;
+  gap: var(--aui-space-200);
   min-width: 0;
 }
 
 .aui-login-code {
   align-items: center;
   display: flex;
-  gap: 8px;
+  gap: var(--aui-space-200);
   margin-left: auto;
 }
 
 .aui-login-code a {
   color: var(--aui-primary);
-  font-size: 13px;
+  font-size: var(--aui-font-size-md);
   font-weight: 600;
 }
 
 .aui-login-code code {
   background: var(--aui-panel-alt);
   border: 1px solid var(--aui-border);
-  border-radius: 5px;
+  border-radius: var(--aui-radius-sm);
   color: var(--aui-fg);
   font-family: var(--aui-font-mono);
-  font-size: 12px;
-  padding: 3px 6px;
+  font-size: var(--aui-font-size-sm);
+  padding: var(--aui-space-075) var(--aui-space-150);
+}
+
+@media (max-width: 640px) {
+  .aui-brand span {
+    display: none;
+  }
 }

@@ -625,16 +625,8 @@ function ExampleFrame({
   title: string;
 }) {
   return (
-    <main style={{ margin: "28px auto", maxWidth: 1180, padding: "0 18px" }}>
-      <h1
-        style={{
-          font: "650 22px/1.2 system-ui, sans-serif",
-          letterSpacing: "-0.015em",
-          margin: "0 0 14px",
-        }}
-      >
-        {title}
-      </h1>
+    <main className="aui-example-frame">
+      <h1>{title}</h1>
       {children}
     </main>
   );

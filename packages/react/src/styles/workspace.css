@@ -2,7 +2,7 @@
 
 .aui-workspace {
   display: grid;
-  gap: 12px;
+  gap: var(--aui-space-300);
   grid-template-columns: minmax(0, 1fr) minmax(280px, 360px);
   min-height: 0;
   overflow: hidden;

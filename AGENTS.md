@@ -46,6 +46,20 @@ The default product experience is transcript-first.
 - Use purpose-based names for fixtures, routes, screenshots, and tests. Do not preserve legacy or source-of-inspiration names once they no longer describe the current product surface.
 - After each coherent slice, update docs as needed, run relevant validation, commit, push, verify the branch is clean, and follow CI to a concrete success or failure.
 
+## Design System And CSS
+
+Agent UI's design system is the `--aui-*` token contract in `packages/react/src/styles/tokens.css`.
+
+- Treat `packages/react/src/styles/tokens.css` as the source of truth for color, surfaces, borders, text, semantic state, code surfaces, elevation, radii, spacing, type scale, line height, control heights, focus, and motion.
+- Do not preserve awkward old values by hiding them behind variables. Read the UI and change the visual decision itself when consistency requires it.
+- Keep `@nyosegawa/agent-ui-react/styles.css` as the only public stylesheet import. The files under `packages/react/src/styles/*` are private implementation chunks imported by `packages/react/src/styles.css`; do not document or rely on deep CSS imports.
+- Distributed React CSS, bundled fixture/docs example CSS, and visual inline style objects in examples should use `--aui-*` tokens for colors, radii, type scale, spacing, control sizing, focus, elevation, and motion. Do not add raw colors, negative letter spacing, or pixel `border-radius` values outside `tokens.css`; `border-radius: 0` and `50%` are the only normal exceptions. React numeric `borderRadius` values count as pixel radii.
+- Keep example route CSS aligned with the same token system. `examples/local-react-vite`, `examples/codex-local-web`, and `examples/docs-site` are visual QA surfaces for the library, not independent brand experiments. A recipe such as `examples/recipes/src/themed.css` may intentionally override token values to demonstrate host theming.
+- Before adding a new token, read the existing token groups and choose a semantic name that can survive future visual changes. Add a token only when it represents a reusable design decision, not a one-off layout measurement.
+- Before adding a new style chunk or selector family, read the owning component and nearby CSS chunk. Prefer extending the existing primitive system (`aui-btn`, inputs, menus, status pills, transcript blocks) over creating a parallel visual language.
+- If a CSS change affects visual contracts, update `docs/guides/theming.md`, `docs/reference/react-components.md`, relevant example docs, screenshots, or AGENTS instructions in the same change.
+- Preserve the CSS guard tests in `packages/react/test/style-duplication.vitest.ts`. When changing the rules intentionally, update the test and documentation together instead of loosening the guard silently.
+
 ## Documentation Practice
 
 `README.md` and `docs/README.md` are the documentation entry points.
@@ -80,11 +94,14 @@ Package validation:
 
 Focused validation:
 
+- Before adding, moving, or substantially refactoring tests, read `docs/architecture/testing.md` and follow its current test-layer ownership, e2e file-boundary, readiness, and validation guidance.
 - For React component, transcript, bridge, or UI behavior changes, run the focused Vitest or Playwright suites that cover the changed surface.
+- For design-system or CSS-token changes, run `bun run test:styles` plus `bun run typecheck`, `bun run lint`, and the relevant browser-visible checks. If `packages/react/src/styles.css`, package exports, or copied package CSS changes, also run `bun run validate:packages` and `bun run test:package-resolution`. Run the full `bun run test` and `bun run build` before claiming broad CSS work complete.
 - For browser-visible changes, run `bun run test:e2e:playwright`.
 - `bun run test:e2e:playwright` owns preview ports `4173` and `4174` and cleans them before starting web servers.
 - If running targeted Playwright after an interrupted test, run `bun run test:e2e:clean-ports` first so a stale preview or fake Codex bridge cannot satisfy the port check with old state.
 - Do not fix flaky e2e by simply increasing timeouts. First classify the failure as server readiness, stale port state, selector drift, or a real UI contract failure. Add short readiness retry only at the app-open boundary; keep interaction assertions fail-fast with explicit low timeouts.
+- Do not split e2e files mechanically. File boundaries must follow durable contracts: real App Server lifecycle/routing, attachments, follow-ups/scrolling, fixture layout, closeups, approvals, and design-system invariants. Shared helpers belong under `e2e/support/` and should expose thin page operations, not hidden DOM shortcuts or whole flows.
 - For real Codex local web layout or App Server bridge changes, run `bun run test:e2e:real-local-web-layout` against an available `examples/codex-local-web` server.
 
 Clean-state validation:

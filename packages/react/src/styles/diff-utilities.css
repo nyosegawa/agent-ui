@@ -3,11 +3,11 @@
 .aui-diff {
   background: var(--aui-code-bg);
   border: 1px solid var(--aui-code-rule);
-  border-radius: 8px;
+  border-radius: var(--aui-radius-md);
   color: var(--aui-code-fg);
   font-family: var(--aui-font-mono);
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: var(--aui-font-size-sm);
+  line-height: var(--aui-line-loose);
   margin: 0;
   max-width: 100%;
   min-width: 0;
@@ -19,15 +19,15 @@
   align-items: center;
   border-bottom: 1px solid var(--aui-code-rule);
   display: flex;
-  gap: 8px;
+  gap: var(--aui-space-200);
   min-width: 0;
-  padding: 9px 12px;
+  padding: var(--aui-space-225) var(--aui-space-300);
 }
 
 .aui-diff-header strong {
   color: var(--aui-code-fg);
   font-family: var(--aui-font);
-  font-size: 12px;
+  font-size: var(--aui-font-size-sm);
   font-weight: 650;
   margin-right: auto;
 }
@@ -35,9 +35,9 @@
 .aui-diff-stat {
   border-radius: var(--aui-radius-pill);
   font-family: var(--aui-font);
-  font-size: 11px;
+  font-size: var(--aui-font-size-xs);
   font-weight: 600;
-  padding: 2px 8px;
+  padding: var(--aui-space-050) var(--aui-space-200);
 }
 
 .aui-diff-stat-add {
@@ -53,18 +53,18 @@
 .aui-diff-files {
   border-bottom: 1px solid var(--aui-code-rule);
   display: grid;
-  gap: 4px;
+  gap: var(--aui-space-100);
   list-style: none;
   margin: 0;
   max-width: 100%;
   min-width: 0;
-  padding: 9px 12px;
+  padding: var(--aui-space-225) var(--aui-space-300);
 }
 
 .aui-diff-files li {
   align-items: center;
   display: flex;
-  gap: 8px;
+  gap: var(--aui-space-200);
   min-width: 0;
 }
 
@@ -77,7 +77,7 @@
 .aui-diff-files em {
   color: var(--aui-code-muted);
   font-family: var(--aui-font);
-  font-size: 11px;
+  font-size: var(--aui-font-size-xs);
   font-style: normal;
   margin-left: auto;
 }
@@ -92,12 +92,12 @@
 .aui-diff-source {
   color: var(--aui-code-fg);
   font-family: var(--aui-font-mono);
-  font-size: 12px;
-  line-height: 1.55;
+  font-size: var(--aui-font-size-sm);
+  line-height: var(--aui-line-loose);
   margin: 0;
   max-width: 100%;
   overflow: auto;
-  padding: 12px 14px;
+  padding: var(--aui-space-300) var(--aui-space-350);
   white-space: pre;
 }
 

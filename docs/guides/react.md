@@ -21,6 +21,12 @@ export function App() {
 }
 ```
 
+`@nyosegawa/agent-ui-react/styles.css` is the only public stylesheet import for
+React hosts. It includes the default component CSS and the `--aui-*`
+design-system tokens from `packages/react/src/styles/tokens.css`. Override
+tokens on a host wrapper for theming; avoid depending on `dist/styles/*` files
+or internal `.aui-*` selectors.
+
 `AgentChat` is a convenience preset. It renders the transcript, composer,
 approvals, and optional thread sidebar. Usage and diagnostics are opt-in
 secondary chrome because many host apps already have their own shell.

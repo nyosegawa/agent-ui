@@ -24,9 +24,7 @@ test("renders Agent UI chat", async ({ page }) => {
   await expect(modeMenu).toBeVisible();
   await modeMenu.click();
   await expect(page.getByRole("menu", { name: "Execution mode" })).toBeVisible();
-  await expect(
-    page.getByRole("menuitemradio", { name: /Read-only/ }),
-  ).toBeVisible();
+  await expect(page.getByRole("menuitemradio", { name: /Read-only/ })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu", { name: "Execution mode" })).toHaveCount(0);
 
@@ -40,10 +38,6 @@ test("renders Agent UI chat", async ({ page }) => {
   await page.getByLabel("Search history").fill("stored");
   await page.getByRole("button", { name: /Stored session/ }).click();
   await expect(page.getByRole("heading", { name: "Stored session" })).toBeVisible();
-  await expect(
-    page.getByText("Stored session history can be read before resuming."),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Resume" }).click();
   await expect(page.locator(".aui-status-pill")).toContainText("Ready");
   await expect(page.getByLabel("Message", { exact: true })).toBeEnabled();
 
@@ -70,7 +64,9 @@ test("opens the thread history drawer on mobile", async ({ page }) => {
   await page.getByRole("button", { name: "Open thread history" }).click();
   await expect(page.locator(".aui-sidebar")).toBeVisible();
   await expect(page.getByLabel("Search history")).toBeVisible();
-  await expect(page.locator(".aui-sidebar").getByRole("button", { name: "New thread" })).toBeVisible();
+  await expect(
+    page.locator(".aui-sidebar").getByRole("button", { name: "New thread" }),
+  ).toBeVisible();
   await page.locator(".aui-sidebar").getByRole("button", { name: "New thread" }).click();
   await expect(page.locator(".aui-sidebar")).toHaveCount(0);
   await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible();
@@ -79,7 +75,9 @@ test("opens the thread history drawer on mobile", async ({ page }) => {
 async function headerDoesNotOverlapTimeline(page: Page) {
   return page.evaluate(() => {
     const header = document.querySelector(".aui-thread-header")?.getBoundingClientRect();
-    const actions = document.querySelector(".aui-thread-actions")?.getBoundingClientRect();
+    const actions = document
+      .querySelector(".aui-thread-actions")
+      ?.getBoundingClientRect();
     const messages = document.querySelector(".aui-message-list")?.getBoundingClientRect();
     if (!header || !actions || !messages) return false;
     return actions.bottom <= header.bottom + 1 && header.bottom <= messages.top + 1;
@@ -113,7 +111,9 @@ async function horizontalOverflowOffenders(page: Page) {
       for (const element of document.querySelectorAll(selector)) {
         const rect = element.getBoundingClientRect();
         if (rect.left < -0.5 || rect.right > viewportRight) {
-          offenders.push(`${selector}:${Math.round(rect.left)}:${Math.round(rect.right)}`);
+          offenders.push(
+            `${selector}:${Math.round(rect.left)}:${Math.round(rect.right)}`,
+          );
         }
       }
     }
@@ -214,7 +214,9 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
 
 test("renders primitive composition examples", async ({ page }) => {
   await page.goto("/scoped-thread-pane");
-  await expect(page.getByRole("heading", { name: "Scoped thread pane" }).first()).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Scoped thread pane" }).first(),
+  ).toBeVisible();
   await expect(page.getByText("This pane stays locked to thread-fixed.")).toBeVisible();
   await expect(page.getByText("Active host thread")).toHaveCount(0);
 
@@ -243,7 +245,9 @@ test("renders primitive composition examples", async ({ page }) => {
   await expect(page.getByLabel("Host-owned panel")).toContainText("Validation status");
   await expect(page.getByLabel("Host-owned panel")).toContainText("Pending requests");
   await expect(page.getByLabel("Host-owned panel")).toContainText("Usage windows");
-  await expect(page.getByRole("heading", { name: "Rich transcript fixture" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Rich transcript fixture" }),
+  ).toBeVisible();
 });
 
 test("mobile keeps secondary chrome reachable", async ({ page }) => {
@@ -275,7 +279,9 @@ test("fixture gallery previews load meaningful content", async ({ page }) => {
   ).toBeVisible();
   const hostFrame = page.frameLocator('iframe[title="Host workflow recipe desktop"]');
   await expect(hostFrame.getByLabel("Host primitive composition")).toBeVisible();
-  const reloadButtons = await page.getByRole("button", { name: "Reload preview" }).count();
+  const reloadButtons = await page
+    .getByRole("button", { name: "Reload preview" })
+    .count();
   expect(reloadButtons).toBeGreaterThan(0);
 });
 

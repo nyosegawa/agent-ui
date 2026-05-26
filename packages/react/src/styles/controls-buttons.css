@@ -4,22 +4,22 @@
   align-items: center;
   background: var(--aui-panel);
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--aui-radius-md);
   color: var(--aui-fg);
   cursor: pointer;
   display: inline-flex;
-  font: 600 13px/1 var(--aui-font);
-  gap: 6px;
+  font: 600 var(--aui-font-size-md)/var(--aui-line-tight) var(--aui-font);
+  gap: var(--aui-space-150);
+  height: var(--aui-tap-target);
   justify-content: center;
-  letter-spacing: -0.005em;
-  min-height: var(--aui-tap-target);
-  padding: 0 14px;
+  letter-spacing: var(--aui-letter-spacing);
+  padding: 0 var(--aui-space-350);
   transition:
-    background-color 140ms var(--aui-easing),
-    border-color 140ms var(--aui-easing),
-    color 140ms var(--aui-easing),
-    box-shadow 140ms var(--aui-easing),
-    transform 80ms var(--aui-easing);
+    background-color var(--aui-duration-normal) var(--aui-easing),
+    border-color var(--aui-duration-normal) var(--aui-easing),
+    color var(--aui-duration-normal) var(--aui-easing),
+    box-shadow var(--aui-duration-normal) var(--aui-easing),
+    transform var(--aui-duration-fast) var(--aui-easing);
   user-select: none;
   white-space: nowrap;
 }
@@ -44,16 +44,16 @@
 }
 
 .aui-btn-sm {
-  font-size: 12px;
-  gap: 5px;
-  min-height: 28px;
-  padding: 0 10px;
+  font-size: var(--aui-font-size-sm);
+  gap: var(--aui-space-125);
+  height: var(--aui-control-height-sm);
+  padding: 0 var(--aui-space-250);
 }
 
 .aui-btn-lg {
-  font-size: 14px;
-  min-height: 40px;
-  padding: 0 18px;
+  font-size: var(--aui-font-size-lg);
+  height: var(--aui-control-height-xl);
+  padding: 0 var(--aui-space-450);
 }
 
 .aui-btn-icon-only {
@@ -62,11 +62,11 @@
 }
 
 .aui-btn-icon-only.aui-btn-sm {
-  width: 28px;
+  width: var(--aui-control-height-sm);
 }
 
 .aui-btn-icon-only.aui-btn-lg {
-  width: 40px;
+  width: var(--aui-control-height-xl);
 }
 
 .aui-btn-primary {
@@ -122,8 +122,8 @@
   border-color: transparent;
   color: var(--aui-primary);
   font-weight: 600;
-  padding: 0 6px;
-  min-height: 26px;
+  padding: 0 var(--aui-space-150);
+  min-height: var(--aui-control-height-xs);
 }
 
 .aui-btn-subtle:hover:not(:disabled) {
@@ -137,13 +137,13 @@
   border: 1px solid var(--aui-border);
   border-radius: var(--aui-radius-pill);
   display: inline-flex;
-  gap: 2px;
-  padding: 3px;
+  gap: var(--aui-space-050);
+  padding: var(--aui-space-075);
 }
 
 .aui-theme-toggle-option {
   border-radius: var(--aui-radius-pill);
-  min-height: 28px;
+  height: var(--aui-control-height-sm);
 }
 
 .aui-locale-menu {
@@ -159,13 +159,13 @@
   color: var(--aui-fg);
   cursor: pointer;
   display: inline-flex;
-  font: 600 13px/1.2 var(--aui-font);
-  gap: 7px;
+  font: 600 var(--aui-font-size-md)/var(--aui-line-snug) var(--aui-font);
+  gap: var(--aui-space-175);
+  height: var(--aui-control-height-lg);
   justify-content: center;
-  min-height: 36px;
   min-width: 0;
   padding-block: 0;
-  padding-inline: 10px;
+  padding-inline: var(--aui-space-250);
 }
 
 .aui-locale-trigger:disabled {

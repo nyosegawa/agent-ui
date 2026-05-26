@@ -9,8 +9,8 @@ need exact contracts.
 
 - [Getting Started](./getting-started.md): run the real local Codex web app and
   the deterministic fixture app.
-- [Installation](./installation.md): packages, peer dependencies, and CSS
-  import.
+- [Installation](./installation.md): packages, peer dependencies, and the
+  single public React stylesheet import.
 
 ## Guides
 
@@ -22,7 +22,7 @@ need exact contracts.
   path resolution.
 - [Usage and Status](./guides/usage-and-status.md): account rate limits,
   thread token usage, diagnostics, and status chrome.
-- [Theming](./guides/theming.md): CSS variables and visual customization.
+- [Theming](./guides/theming.md): `--aui-*` tokens and visual customization.
 - [Internationalization](./guides/i18n.md): built-in locales, host-controlled
   locale state, and copy overrides.
 - [Authentication](./guides/authentication.md): local device-code login and
@@ -84,6 +84,11 @@ bun run test:package-resolution
 bun run test:node-compat
 ```
 
-The React package exposes only `styles.css`; fixture and route CSS belongs to
-the examples. Generated stable Codex App Server types are available only from
-the advanced `@nyosegawa/agent-ui-codex/stable-types` subpath.
+The React package exposes one public stylesheet entry point:
+`@nyosegawa/agent-ui-react/styles.css`. Design-system tokens in
+`packages/react/src/styles/tokens.css` are the host customization API; copied
+`dist/styles/*` chunks and internal `.aui-*` selectors are private
+implementation details. Fixture and route CSS belongs to examples as visual QA,
+and recipe theming intentionally overrides tokens. Generated stable Codex App
+Server types are available only from the advanced
+`@nyosegawa/agent-ui-codex/stable-types` subpath.

@@ -8,11 +8,7 @@ Omit the prop when Agent UI should inherit the host application's theme scope.
 ## Import
 
 ```ts
-import {
-  AgentChat,
-  AgentThemeToggle,
-  type AgentTheme,
-} from "@nyosegawa/agent-ui-react";
+import { AgentChat, AgentThemeToggle, type AgentTheme } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
 ```
 
@@ -51,15 +47,25 @@ The active token source is
 older `--aui-text`, `--aui-muted`, `--aui-accent`, and
 `--aui-accent-strong` names are not part of the current contract.
 
+Agent UI treats tokens as the design-system API. Distributed component CSS and
+the bundled fixture/docs examples use these tokens for color, radius, type
+scale, spacing, control height, motion, and focus styling. Avoid styling host
+surfaces by targeting internal `.aui-*` selectors when a token override or a
+component slot can express the same change.
+
+The public stylesheet exposes one CSS entry point:
+`@nyosegawa/agent-ui-react/styles.css`. The files copied under
+`dist/styles/*` are private chunks used by that entry point.
+
 Surfaces:
 
 ```css
 .my-agent-ui {
-  --aui-bg: #f7f6f1;
-  --aui-bg-soft: #f3f1ea;
+  --aui-bg: #f6f7f9;
+  --aui-bg-soft: #eef2f5;
   --aui-panel: #ffffff;
-  --aui-panel-alt: #f0eee6;
-  --aui-panel-quiet: #faf9f4;
+  --aui-panel-alt: #f0f3f6;
+  --aui-panel-quiet: #fafbfc;
 }
 ```
 
@@ -67,10 +73,10 @@ Borders and rules:
 
 ```css
 .my-agent-ui {
-  --aui-border: #e7e4da;
-  --aui-border-soft: #efece3;
-  --aui-border-strong: #d0ccc0;
-  --aui-rule: #ece9df;
+  --aui-border: #dfe5eb;
+  --aui-border-soft: #e8edf2;
+  --aui-border-strong: #c7d1db;
+  --aui-rule: #e6ebf0;
 }
 ```
 
@@ -78,10 +84,10 @@ Text:
 
 ```css
 .my-agent-ui {
-  --aui-fg: #1a1916;
-  --aui-fg-strong: #0f0e0c;
-  --aui-fg-muted: #6b6660;
-  --aui-fg-faint: #98948b;
+  --aui-fg: #171a1f;
+  --aui-fg-strong: #0b0d10;
+  --aui-fg-muted: #5e6875;
+  --aui-fg-faint: #8a95a3;
 }
 ```
 
@@ -140,31 +146,132 @@ Code surfaces:
 }
 ```
 
-Shape, focus, and type:
+Shape, focus, and elevation:
 
 ```css
 .my-agent-ui {
   --aui-overlay: rgba(15, 14, 12, 0.42);
-  --aui-shadow-card: 0 1px 0 rgba(20, 18, 14, 0.04);
-  --aui-shadow-lift: 0 10px 32px -16px rgba(20, 18, 14, 0.22);
+  --aui-shadow-card: 0 1px 0 rgba(15, 23, 42, 0.04);
+  --aui-shadow-lift: 0 10px 32px -16px rgba(15, 23, 42, 0.22);
   --aui-shadow-focus: 0 0 0 3px var(--aui-primary-border-soft);
   --aui-focus-ring: 0 0 0 3px rgba(13, 148, 136, 0.28);
   --aui-focus-ring-danger: 0 0 0 3px var(--aui-danger-border);
-  --aui-elevation-1: 0 1px 0 rgba(20, 18, 14, 0.05);
-  --aui-elevation-2: 0 6px 22px -14px rgba(20, 18, 14, 0.22);
-  --aui-control-shadow: 0 1px 2px rgba(20, 18, 14, 0.06);
+  --aui-elevation-1: 0 1px 0 rgba(15, 23, 42, 0.05);
+  --aui-elevation-2: 0 6px 22px -14px rgba(15, 23, 42, 0.22);
+  --aui-control-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --aui-color-scheme: light;
   --aui-radius: 10px;
+  --aui-radius-xs: 4px;
   --aui-radius-sm: 6px;
   --aui-radius-md: 8px;
   --aui-radius-lg: 12px;
   --aui-radius-xl: 16px;
+  --aui-radius-2xl: 20px;
   --aui-radius-pill: 999px;
+}
+```
+
+Spacing:
+
+```css
+.my-agent-ui {
+  --aui-space-0: 0;
+  --aui-space-025: 1px;
+  --aui-space-050: 2px;
+  --aui-space-075: 3px;
+  --aui-space-100: 4px;
+  --aui-space-125: 5px;
+  --aui-space-150: 6px;
+  --aui-space-175: 7px;
+  --aui-space-200: 8px;
+  --aui-space-225: 9px;
+  --aui-space-250: 10px;
+  --aui-space-275: 11px;
+  --aui-space-300: 12px;
+  --aui-space-325: 13px;
+  --aui-space-350: 14px;
+  --aui-space-400: 16px;
+  --aui-space-450: 18px;
+  --aui-space-500: 20px;
+  --aui-space-550: 22px;
+  --aui-space-600: 24px;
+  --aui-space-700: 28px;
+  --aui-space-800: 32px;
+  --aui-space-900: 36px;
+  --aui-space-1000: 40px;
+  --aui-space-1200: 48px;
+  --aui-space-1600: 64px;
+}
+```
+
+Type and controls:
+
+```css
+.my-agent-ui {
+  --aui-font-size-2xs: 10px;
+  --aui-font-size-2xs-plus: 10.5px;
+  --aui-font-size-xs: 11px;
+  --aui-font-size-xs-plus: 11.5px;
+  --aui-font-size-sm: 12px;
+  --aui-font-size-sm-plus: 12.5px;
+  --aui-font-size-md: 13px;
+  --aui-font-size-md-plus: 13.5px;
+  --aui-font-size-lg: 14px;
+  --aui-font-size-lg-plus: 14.5px;
+  --aui-font-size-xl: 15px;
+  --aui-font-size-xl-half: 15.5px;
+  --aui-font-size-xl-plus: 16px;
+  --aui-font-size-2xl: 17px;
+  --aui-font-size-2xl-plus: 19px;
+  --aui-font-size-3xl: 22px;
+  --aui-font-size-4xl: 24px;
+  --aui-line-tight: 1;
+  --aui-line-snug: 1.2;
+  --aui-line-normal: 1.3;
+  --aui-line-relaxed: 1.45;
+  --aui-line-prose: 1.5;
+  --aui-line-loose: 1.55;
+  --aui-line-reading: 1.62;
+  --aui-control-height-xs: 26px;
+  --aui-control-height-sm: 28px;
+  --aui-control-height-md: 30px;
+  --aui-control-height-lg: 36px;
+  --aui-control-height-lg-plus: 38px;
+  --aui-control-height-xl: 40px;
+  --aui-tap-target: var(--aui-control-height-lg);
   --aui-easing: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --aui-tap-target: 36px;
+  --aui-duration-fast: 80ms;
+  --aui-duration-normal: 140ms;
+  --aui-duration-focus: 160ms;
+  --aui-duration-meter: 200ms;
+  --aui-duration-spin: 0.9s;
+  --aui-duration-pulse: 1.4s;
+  --aui-letter-spacing: 0;
+  --aui-letter-spacing-code: 0.005em;
+  --aui-letter-spacing-label: 0.04em;
+  --aui-letter-spacing-meta: 0.06em;
+  --aui-letter-spacing-wide: 0.08em;
   --aui-font: ui-sans-serif, system-ui, sans-serif;
   --aui-font-mono: ui-monospace, "SF Mono", monospace;
 }
 ```
+
+## Maintenance Rules
+
+Use tokens before selectors. Prefer overriding token values on a wrapper over
+targeting `.aui-*` internals. If a slot or render prop exists for the surface,
+use it for structural customization and keep tokens for the visual system.
+
+Add a token only when the value represents a reusable design decision. One-off
+layout constraints such as fixed preview iframe heights, responsive breakpoints,
+and grid track widths can remain local CSS values because they describe a
+specific composition rather than the shared visual language.
+
+Distributed component CSS and bundled visual examples should not introduce raw
+colors, negative letter spacing, or pixel `border-radius` values outside
+`tokens.css`. The normal radius exceptions are `0` for flush joins and `50%`
+for circular indicators. `examples/recipes/src/themed.css` is intentionally a
+host override recipe and may define concrete token values.
 
 ## Layout
 

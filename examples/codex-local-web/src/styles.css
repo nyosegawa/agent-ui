@@ -6,19 +6,19 @@
 .agent-ui-local-app .aui-status-actions .aui-theme-toggle {
   background: var(--aui-panel);
   box-shadow: var(--aui-control-shadow);
-  padding: 2px;
+  padding: var(--aui-space-050);
 }
 
 .agent-ui-local-app .aui-status-actions .aui-locale-select select {
   background: var(--aui-panel);
   box-shadow: var(--aui-control-shadow);
-  min-height: 30px;
+  min-height: var(--aui-control-height-md);
 }
 
 .agent-ui-local-app .aui-status-actions .aui-theme-toggle-option {
-  font-size: 11px;
-  min-height: 26px;
-  padding-inline: 9px;
+  font-size: var(--aui-font-size-xs);
+  min-height: var(--aui-control-height-xs);
+  padding-inline: var(--aui-space-225);
 }
 
 @media (max-width: 720px) {

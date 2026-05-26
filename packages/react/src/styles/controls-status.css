@@ -4,18 +4,18 @@
   align-items: center;
   background: var(--aui-panel-alt);
   border: 1px solid var(--aui-border);
-  border-radius: 999px;
+  border-radius: var(--aui-radius-pill);
   color: var(--aui-fg-muted);
   display: inline-flex;
-  font: 600 11.5px/1 var(--aui-font);
-  gap: 6px;
-  letter-spacing: 0.005em;
-  padding: 4px 10px;
+  font: 600 var(--aui-font-size-xs-plus)/var(--aui-line-tight) var(--aui-font);
+  gap: var(--aui-space-150);
+  letter-spacing: var(--aui-letter-spacing-code);
+  padding: var(--aui-space-100) var(--aui-space-250);
 }
 
 .aui-status-pill-dot {
   background: currentColor;
-  border-radius: 999px;
+  border-radius: var(--aui-radius-pill);
   display: inline-block;
   height: 6px;
   width: 6px;
@@ -40,7 +40,7 @@
 }
 
 .aui-status-pill[data-status="running"] .aui-status-pill-dot {
-  animation: aui-pulse 1.4s ease-in-out infinite;
+  animation: aui-pulse var(--aui-duration-pulse) ease-in-out infinite;
 }
 
 @keyframes aui-pulse {

@@ -46,9 +46,7 @@ export function AgentFirstRun({
     return (
       <div className="aui-first-run">
         <strong>{t("firstRun.bridgeError.title")}</strong>
-        <p>
-          {t("firstRun.bridgeError.body")}
-        </p>
+        <p>{t("firstRun.bridgeError.body")}</p>
       </div>
     );
   }
@@ -127,7 +125,7 @@ export function AgentFirstRun({
             }
           }}
           placeholder={t("firstRun.placeholder")}
-          rows={3}
+          rows={2}
           value={prompt}
         />
         <div className="aui-first-run-toolbar">
@@ -137,12 +135,11 @@ export function AgentFirstRun({
             className={buttonClass("primary", {
               className: "aui-first-run-submit",
               iconOnly: true,
-              size: "lg",
             })}
             disabled={isSubmitting || !prompt.trim()}
             type="submit"
           >
-            <IconSend size={18} />
+            <IconSend size={16} />
           </button>
         </div>
       </div>

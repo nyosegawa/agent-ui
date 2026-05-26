@@ -1,10 +1,7 @@
 import type React from "react";
 import type { ThreadState, ThreadTokenUsage } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  useAgentComposer,
-  type AgentComposerController,
-} from "../hooks";
+import { useAgentComposer, type AgentComposerController } from "../hooks";
 import { useAgentI18n } from "../i18n";
 import type { CodexUserInput } from "../codex-request-params";
 import {
@@ -14,11 +11,10 @@ import {
   IconImage,
   IconPaperclip,
   IconPlugin,
-  IconSend,
   IconShield,
-  IconStop,
   buttonClass,
 } from "../components-internal";
+import { ComposerSubmitButton } from "./composer-submit-button";
 import { ComposerRunSettings } from "./run-settings";
 import { deferAction } from "./shared";
 import { AgentContextUsageIndicator } from "./context-usage";
@@ -45,14 +41,16 @@ export type {
 
 export function AgentComposer(props: AgentComposerProps) {
   const composer = useAgentComposer(props.threadId);
-  const attachmentRestoreRef = useRef<((attachments: ComposerAttachment[]) => void) | null>(
-    null,
-  );
+  const attachmentRestoreRef = useRef<
+    ((attachments: ComposerAttachment[]) => void) | null
+  >(null);
   return (
     <>
       <QueuedFollowUpList
         composer={composer}
-        onRestoreAttachments={(attachments) => attachmentRestoreRef.current?.(attachments)}
+        onRestoreAttachments={(attachments) =>
+          attachmentRestoreRef.current?.(attachments)
+        }
       />
       <AgentComposerForm
         {...props}
@@ -77,7 +75,9 @@ function AgentComposerForm({
   onRegisterAttachmentRestore,
 }: AgentComposerProps & {
   composer: AgentComposerController;
-  onRegisterAttachmentRestore?: (restore: (attachments: ComposerAttachment[]) => void) => void;
+  onRegisterAttachmentRestore?: (
+    restore: (attachments: ComposerAttachment[]) => void,
+  ) => void;
 }) {
   const { t } = useAgentI18n();
   const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
@@ -218,7 +218,8 @@ function AgentComposerForm({
   const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
     if (event.key === "Enter" && !event.shiftKey && !isComposing.current) {
       event.preventDefault();
-      const wantsImmediateFollowUp = composer.isRunning && (event.metaKey || event.ctrlKey);
+      const wantsImmediateFollowUp =
+        composer.isRunning && (event.metaKey || event.ctrlKey);
       submit(wantsImmediateFollowUp ? "steer" : "normal");
     }
   };
@@ -320,7 +321,11 @@ function AgentComposerForm({
       {attachments.length > 0 ? (
         <ul className="aui-composer-chips" aria-label={t("aria.pendingAttachments")}>
           {attachments.map((attachment) => (
-            <li className="aui-composer-chip" data-kind={attachment.kind} key={attachment.id}>
+            <li
+              className="aui-composer-chip"
+              data-kind={attachment.kind}
+              key={attachment.id}
+            >
               {attachment.previewUrl ? (
                 <img
                   alt=""
@@ -339,7 +344,9 @@ function AgentComposerForm({
                 <span className="aui-composer-chip-label">{attachment.label}</span>
                 {attachment.kind === "file" ? (
                   <span className="aui-composer-chip-meta">
-                    {[attachment.extension, attachment.sizeLabel].filter(Boolean).join(" · ")}
+                    {[attachment.extension, attachment.sizeLabel]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </span>
                 ) : null}
               </span>
@@ -375,7 +382,11 @@ function AgentComposerForm({
           event.preventDefault();
           void addLocalFiles(event.clipboardData.files);
         }}
-        placeholder={composer.isRunning ? t("composer.addFollowUp") : placeholder ?? t("composer.placeholder")}
+        placeholder={
+          composer.isRunning
+            ? t("composer.addFollowUp")
+            : (placeholder ?? t("composer.placeholder"))
+        }
         ref={textareaRef}
         rows={1}
         value={composer.value}
@@ -442,18 +453,7 @@ function AgentComposerForm({
           <span className="aui-composer-hint" aria-hidden="true">
             {t("composer.enterToSend")}
           </span>
-          <button
-            aria-label={isStopAction ? t("composer.stopCurrentTurn") : t("composer.send")}
-            className={buttonClass(isStopAction ? "danger" : "primary", {
-              iconOnly: true,
-              size: "lg",
-            })}
-            disabled={!canSubmit}
-            title={isStopAction ? t("composer.stopCurrentTurn") : t("composer.sendMessage")}
-            type="submit"
-          >
-            {isStopAction ? <IconStop size={18} /> : <IconSend size={18} />}
-          </button>
+          <ComposerSubmitButton canSubmit={canSubmit} isStopAction={isStopAction} />
         </div>
       </div>
     </form>
@@ -490,14 +490,16 @@ export function AgentComposerPanel({
   const isPreviewOnly = isPreviewOnlyThread(thread);
   const isBlocked = thread.status === "waitingForInput" || isPreviewOnly;
   const composer = useAgentComposer(threadId);
-  const attachmentRestoreRef = useRef<((attachments: ComposerAttachment[]) => void) | null>(
-    null,
-  );
+  const attachmentRestoreRef = useRef<
+    ((attachments: ComposerAttachment[]) => void) | null
+  >(null);
   return (
     <section className="aui-compose-panel" aria-label={t("aria.messageComposer")}>
       <QueuedFollowUpList
         composer={composer}
-        onRestoreAttachments={(attachments) => attachmentRestoreRef.current?.(attachments)}
+        onRestoreAttachments={(attachments) =>
+          attachmentRestoreRef.current?.(attachments)
+        }
       />
       <AgentComposerForm
         composer={composer}

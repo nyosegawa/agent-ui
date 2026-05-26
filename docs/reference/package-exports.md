@@ -106,7 +106,7 @@ Responsibilities:
 - composer hooks
 - drop-in components
 - headless customization API
-- CSS variables and plain CSS theme
+- `--aui-*` design-system tokens and the bundled plain CSS theme
 
 The package root also exports lower-level surfaces for advanced hosts:
 `AgentStatusBar`, `AgentFirstRun`, `AgentRunControls`, `ComposerRunSettings`,
@@ -122,6 +122,15 @@ Theme and locale state are also host-owned: `AgentChat` and `AgentShell`
 accept an optional `theme` prop, `AgentChat` accepts `locale` and `messages`,
 and `AgentThemeToggle` / `AgentLocaleSelect` are controlled primitives hosts
 can render outside the transcript surface.
+
+The only public stylesheet export is
+`@nyosegawa/agent-ui-react/styles.css`. That file imports private source chunks
+from `packages/react/src/styles/*`; package builds copy those chunks under
+`dist/styles/*` for the bundled stylesheet only. Hosts should not import
+`dist/styles/*` or rely on internal `.aui-*` selectors as a styling contract.
+The stable customization surface is the token set in
+`packages/react/src/styles/tokens.css`, plus documented component props,
+slots, render props, and `className` attachment points.
 
 The default UI keeps the high-traffic surfaces split internally:
 
@@ -163,7 +172,10 @@ Responsibilities:
 - accept `transport`, `initialState`, and `slots` as JavaScript properties
 - render the standard React `AgentChat` inside `AgentProvider`
 
-The wrapper does not create transports, spawn Codex, or include CSS automatically. Hosts should import `@nyosegawa/agent-ui-react/styles.css`.
+The wrapper does not create transports, spawn Codex, or include CSS
+automatically. Hosts should import `@nyosegawa/agent-ui-react/styles.css`.
+Token overrides on the custom element or a wrapper are the supported styling
+path.
 
 ## Examples
 
@@ -272,4 +284,6 @@ Only these subpaths are public today:
 - `@nyosegawa/agent-ui-web-components`
 
 React style chunks under `dist/styles/*` are copied package internals used by
-`styles.css`, not documented host imports.
+`styles.css`, not host imports. Internal `.aui-*` selectors are likewise
+implementation details; the design-system contract is the `--aui-*` token set
+from `packages/react/src/styles/tokens.css`.

@@ -1,3 +1,4 @@
+import { readdirSync } from "node:fs";
 import { mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -98,7 +99,14 @@ function blockedSubpathsForPackage(dir) {
     return [...common, "./src/protocol.ts", "./generated/stable", "./dist/request-builders-bJCKxvYC.js"];
   }
   if (dir === "react") {
-    return [...common, "./style.css", "./styles/tokens.css", "./dist/styles/tokens.css"];
+    const styleChunks = readdirSync(join(repoRoot, "packages", "react", "src", "styles"))
+      .filter((name) => name.endsWith(".css"))
+      .flatMap((name) => [
+        `./src/styles/${name}`,
+        `./styles/${name}`,
+        `./dist/styles/${name}`,
+      ]);
+    return [...common, "./style.css", "./dist/styles.css", ...styleChunks];
   }
   if (dir === "server") return [...common, "./src/websocket.ts", "./dynamic-tools"];
   if (dir === "web-components") return ["./dist/index.js", "./dist/index.cjs", "./src/index.tsx"];

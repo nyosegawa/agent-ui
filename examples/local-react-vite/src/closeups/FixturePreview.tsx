@@ -46,7 +46,7 @@ function FixturePreviewFrame({
   return (
     <figure data-size={size}>
       <figcaption>
-        <span>{size === "desktop" ? "Desktop · 1280 × 900" : "Mobile · 390 × 900"}</span>
+        <span>{size === "desktop" ? "Desktop preview" : "Mobile preview"}</span>
         <span>{meta}</span>
       </figcaption>
       <div className="aui-fixture-frame-shell">

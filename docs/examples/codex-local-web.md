@@ -29,10 +29,15 @@ The default URL is `http://127.0.0.1:5175/`.
 
 The host page treats 5175 as a full-width, full-height app. `.agent-ui-local-app`
 owns `width: 100%` and `height: 100dvh`, `AgentChat` consumes that height, and
-only `.aui-message-list` scrolls. The composer is anchored at the viewport
-bottom on desktop and mobile, including mobile safe-area padding, so long
-transcripts, approvals, command output, and diffs do not push it below the
-visible page.
+the provided transcript area owns reading scroll. The composer is anchored at
+the viewport bottom on desktop and mobile, including mobile safe-area padding,
+so long transcripts, approvals, command output, and diffs do not push it below
+the visible page.
+
+The example imports `@nyosegawa/agent-ui-react/styles.css` once and keeps its
+route CSS token-based. Any `.aui-*` classes produced by the React package are
+internal implementation details of that stylesheet, not selectors this example
+documents as a host contract.
 
 Thread URL routing keeps browser history aligned with the visible thread. The
 root route `/` remains the no-thread start screen while the sidebar loads
@@ -51,12 +56,13 @@ Server methods. Enter stores text in the UI-local follow-up queue; `Send now`
 and Cmd/Ctrl+Enter call `turn/steer` with the active turn as `expectedTurnId`.
 On idle or complete threads, Cmd/Ctrl+Enter starts a normal new turn. The
 running primary button is Stop and calls only `turn/interrupt`. Unsent follow-ups
-remain in Agent UI state after Stop. Preview-only stored threads and
-approval-waiting turns remain blocked until resumed or resolved.
+remain in Agent UI state after Stop. Stored threads opened through the default
+sidebar or thread URL resume automatically; approval-waiting turns remain
+blocked until resolved.
 
-Resume can replay restored token usage via `thread/tokenUsage/updated`. The
-example shows nonzero context usage beside the composer and hides the indicator
-when usage is absent or zero.
+The automatic resume path can replay restored token usage via
+`thread/tokenUsage/updated`. The example shows nonzero context usage beside the
+composer and hides the indicator when usage is absent or zero.
 
 For the real layout audit:
 
@@ -70,6 +76,23 @@ bun run test:e2e:real-local-web-layout
 ```
 
 The audit script checks an already-running page; it does not start the server.
+
+The deterministic Playwright smoke suite for this example is split by App
+Server integration contract:
+
+- `real-local-thread-lifecycle.e2e.ts` protects stored-thread hydration,
+  auto-resume, new-thread creation, direct thread URLs, browser back/forward,
+  sidebar selection, and popstate cleanup.
+- `real-local-attachments.e2e.ts` protects image paste, arbitrary file upload
+  chips, attachment restoration for queued edits, and non-image upload payload
+  text.
+- `real-local-follow-ups.e2e.ts` protects running-turn composer semantics,
+  queued follow-ups, `turn/steer`, `turn/interrupt`, queue compaction,
+  anchored composer layout, and scroll-follow behavior.
+- `e2e/support/real-local-page.ts` contains shared page helpers and app-open
+  readiness. Do not hide user interactions behind DOM-only shortcuts in helpers;
+  normal fill, click, keyboard, and hit-test operations should remain visible in
+  the tests.
 
 Attachment handling is host-owned. Image uploads are sent as `localImage`
 inputs with the saved absolute path. Non-image uploads, including unknown

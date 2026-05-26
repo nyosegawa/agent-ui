@@ -87,11 +87,20 @@ export function App() {
 The browser transport expects a host-owned WebSocket endpoint. Use
 `@nyosegawa/agent-ui-server` to attach a local bridge to a Node HTTP server.
 
+Import `@nyosegawa/agent-ui-react/styles.css` once for the bundled design
+system. Hosts customize the default UI by overriding `--aui-*` tokens from
+`packages/react/src/styles/tokens.css` on their own theme scope. The copied
+`dist/styles/*` files and internal `.aui-*` selectors are implementation
+details of that stylesheet, not public host import paths or styling contracts.
+
 ## Design
 
 - User and assistant messages stay in transcript order.
 - Tool, command, output, and file-change items render inline with the
   surrounding conversation.
+- The design-system API is the `--aui-*` token set; example route CSS uses
+  those tokens as visual QA for library surfaces, while recipe theming
+  intentionally demonstrates host token overrides.
 - Pending approvals render inside the transcript, anchored after source
   item/turn metadata when present and at the transcript tail only when source
   metadata is absent. They stay pending until App Server sends

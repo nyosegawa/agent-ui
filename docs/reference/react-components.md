@@ -110,9 +110,17 @@ Transcript item primitives are exported for host composition and close-up QA:
 - `AgentFileChangeItem`
 - `AgentDiffItem`
 
-### Visual design system
+### Visual Design System
 
-The default style sheet is warm and typography-led, not card-heavy. Every
+The public React stylesheet is
+`@nyosegawa/agent-ui-react/styles.css`. Its design-system API is the
+`--aui-*` token set defined in `packages/react/src/styles/tokens.css`. Hosts
+should theme Agent UI by overriding tokens on their wrapper or by using
+documented props, slots, render props, and `className` attachment points.
+Copied `dist/styles/*` files and internal `.aui-*` selectors are private
+implementation details, not stable host imports or styling contracts.
+
+The default stylesheet is warm and typography-led, not card-heavy. Every
 interactive primitive (button, input, composer, approval) owns its visual
 quality directly instead of depending on a page-level shell:
 
@@ -124,7 +132,7 @@ quality directly instead of depending on a page-level shell:
   is running, the textarea remains editable and the primary button becomes
   Stop. Enter adds a UI-local follow-up card above the composer, Cmd/Ctrl+Enter
   sends `turn/steer` immediately with the active `expectedTurnId`, and `Send
-  now` on a queued card also sends `turn/steer`; outside a running turn,
+now` on a queued card also sends `turn/steer`; outside a running turn,
   Cmd/Ctrl+Enter starts a normal new turn. Queued cards are scoped to the
   active thread, keep attachment chips restorable through Edit, and compact
   older queued items instead of creating a nested scroll pane. Stop calls only
@@ -149,16 +157,15 @@ quality directly instead of depending on a page-level shell:
   absolute cwd path selected by the user. `AgentRunControls` uses
   radiogroup semantics for execution mode selection rather than mixing pressed
   buttons and tablist roles.
-- **Button system**: `aui-btn` plus `aui-btn-primary | -secondary | -ghost |
-  -danger | -subtle` and `aui-btn-sm | -lg | -icon-only`. `Approve` is the
+- **Buttons**: the internal button primitives provide primary, secondary,
+  ghost, danger, subtle, size, and icon-only variants. `Approve` is the
   highest-contrast affordance in the surface, `Decline` is a danger button,
   `Approve for session` is a scoped secondary outline, the history `New thread`
   action and the thread-action menu are icon-led ghosts, and link-style work
-  (`Refresh`, `Load`, `Hide`) uses the subtle variant.
-- **Inputs / selects / segmented**: a shared `aui-input-shell` with an
-  optional leading icon, a unified `aui-select` with a custom chevron, and a
-  refined segmented control with elevated pressed state. None of these read
-  as browser defaults.
+  (`Refresh`, `Load`, `Hide`) uses the subtle treatment.
+- **Inputs / selects / segmented controls**: the internal form primitives share
+  tokenized shells, leading-icon support, custom chevrons, and refined pressed
+  states. None of these read as browser defaults.
 - **Approvals**: `AgentApprovalQueue` is a compact pending-decision surface
   rendered in the transcript scroll area — not a separate pane stacked between
   the transcript and the composer, and never an independent scroll pane.
@@ -204,7 +211,9 @@ Saved screenshot evidence lives under `docs/screenshots/`. The host workflow
 recipe (`examples/local-react-vite` `/host-workflow-recipe`) is the canonical
 proof that the same primitives compose into a real product surface without the
 preset, and the fixture gallery (`/fixture-gallery`) is the visual QA index for
-every state plus the component-level close-ups.
+every state plus the component-level close-ups. Example CSS is part of that QA
+surface and should use `--aui-*` tokens; recipe CSS may intentionally override
+tokens to demonstrate host theming.
 
 ## Layout Primitives
 
@@ -220,7 +229,7 @@ Use these primitives when embedding Agent UI into existing product chrome:
   header, notices, timeline, and composer. Its grid rows are header, optional
   critical notices, the transcript scroll area, then the composer — pending
   approvals are not a row here. Full-height hosts should give the shell a real
-  height; the transcript scroll container is `.aui-message-list`, while the
+  height so the provided transcript area owns reading scroll while the
   composer stays bottom anchored.
 - `AgentThreadView`: one thread with header, transcript (with embedded
   approvals), and composer.
@@ -278,9 +287,7 @@ Render usage in host chrome while the chat stays sidebar-free:
 Render a full workspace with a host-owned side panel:
 
 ```tsx
-<AgentWorkspace
-  panel={<HostPanel threadId="thread_123" />}
-/>
+<AgentWorkspace panel={<HostPanel threadId="thread_123" />} />
 ```
 
 The side panel is a generic render slot. Host applications own any app runtime,
@@ -334,9 +341,9 @@ manual scroll.
 
 Thread actions are exposed through the default header and
 `useAgentThreadActions()`: rename, fork, archive, unarchive, compact, and
-rollback call generated-method request builders. Resume remains part of
-`AgentThreadHeader` because it depends on thread registry state and the loaded
-session lifecycle.
+rollback call generated-method request builders. Stored threads opened from the
+default sidebar or URL routing resume automatically, so the default header does
+not expose a separate manual Resume button.
 
 Composer attachments are represented as visible chips for `app://` and
 `plugin://` mentions. The composer does not invoke `globalThis.prompt` for any

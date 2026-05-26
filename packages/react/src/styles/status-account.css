@@ -13,10 +13,11 @@
   color: var(--aui-fg);
   cursor: pointer;
   display: inline-flex;
-  font: 600 12px/1 var(--aui-font);
-  gap: 6px;
-  min-height: 32px;
-  padding: 4px 9px 4px 5px;
+  font: 600 var(--aui-font-size-md)/var(--aui-line-snug) var(--aui-font);
+  gap: var(--aui-space-175);
+  height: var(--aui-control-height-lg);
+  min-width: 0;
+  padding: 0 var(--aui-space-250) 0 var(--aui-space-150);
 }
 
 .aui-account-trigger:hover {
@@ -65,10 +66,10 @@
   box-shadow: var(--aui-shadow-lift);
   color: var(--aui-fg);
   display: grid;
-  gap: 12px;
+  gap: var(--aui-space-300);
   max-height: calc(100dvh - 64px);
   overflow: auto;
-  padding: 12px;
+  padding: var(--aui-space-300);
   position: fixed;
   right: 14px;
   top: 56px;
@@ -83,51 +84,51 @@
 .aui-account-popover-header {
   align-items: start;
   display: flex;
-  gap: 12px;
+  gap: var(--aui-space-300);
   justify-content: space-between;
 }
 
 .aui-account-popover-header > div {
   display: grid;
-  gap: 3px;
+  gap: var(--aui-space-075);
   min-width: 0;
 }
 
 .aui-account-popover-header strong {
   color: var(--aui-fg-strong);
-  font-size: 14px;
+  font-size: var(--aui-font-size-lg);
   font-weight: 700;
 }
 
 .aui-account-popover-header span {
   color: var(--aui-fg-muted);
-  font-size: 12px;
+  font-size: var(--aui-font-size-sm);
 }
 
 .aui-account-meta {
   display: grid;
-  gap: 8px;
+  gap: var(--aui-space-200);
   margin: 0;
 }
 
 .aui-account-meta div {
   align-items: baseline;
   display: grid;
-  gap: 8px;
+  gap: var(--aui-space-200);
   grid-template-columns: 76px minmax(0, 1fr);
 }
 
 .aui-account-meta dt {
   color: var(--aui-fg-faint);
-  font-size: 11px;
+  font-size: var(--aui-font-size-xs);
   font-weight: 700;
-  letter-spacing: 0.04em;
+  letter-spacing: var(--aui-letter-spacing-label);
   text-transform: uppercase;
 }
 
 .aui-account-meta dd {
   color: var(--aui-fg);
-  font-size: 13px;
+  font-size: var(--aui-font-size-md);
   margin: 0;
   min-width: 0;
   overflow-wrap: anywhere;
@@ -142,7 +143,7 @@
   border-top: 1px solid var(--aui-rule);
   display: flex;
   justify-content: flex-end;
-  padding-top: 10px;
+  padding-top: var(--aui-space-250);
 }
 
 @media (max-width: 760px) {

@@ -5,18 +5,9 @@ import type {
   ThreadState,
   TurnState,
 } from "@nyosegawa/agent-ui-core";
-import { useState } from "react";
-import {
-  useAgentApprovals,
-  useAgentThread,
-  useAgentThreadActions,
-} from "../hooks";
+import { useAgentApprovals, useAgentThread, useAgentThreadActions } from "../hooks";
 import { useAgentI18n } from "../i18n";
-import { useAgentContext } from "../provider";
-import {
-  IconMoreVertical,
-  buttonClass,
-} from "../components-internal";
+import { IconMoreVertical } from "../components-internal";
 import { AgentMessageList } from "../timeline";
 import { AgentApprovalQueue } from "./approvals";
 import {
@@ -120,8 +111,12 @@ export function AgentThreadTimeline({
 }) {
   const approvalThreadId = threadId ?? thread.thread.id;
   const { approvals } = useAgentApprovals(approvalThreadId);
-  const anchoredApprovals = approvals.filter((approval) => approval.itemId || approval.turnId);
-  const tailApprovals = approvals.filter((approval) => !approval.itemId && !approval.turnId);
+  const anchoredApprovals = approvals.filter(
+    (approval) => approval.itemId || approval.turnId,
+  );
+  const tailApprovals = approvals.filter(
+    (approval) => !approval.itemId && !approval.turnId,
+  );
   return (
     <AgentMessageList
       approvalAnchors={
@@ -162,9 +157,6 @@ function AgentThreadActions({
   threadId?: string;
 }) {
   const { t } = useAgentI18n();
-  const { resumeThread } = useAgentThread(threadId);
-  const { dispatch } = useAgentContext();
-  const [resumeError, setResumeError] = useState<string | undefined>();
   const {
     archiveThread,
     compactThread,
@@ -175,37 +167,12 @@ function AgentThreadActions({
   } = useAgentThreadActions(threadId);
   const status = thread.status;
   const hasTurns = thread.orderedTurnIds.length > 0;
-  const canResume = threadId && (status === "notLoaded" || status === "loaded");
   return (
     <div className="aui-thread-actions">
       <span className="aui-status-pill" data-status={status}>
         <span className="aui-status-pill-dot" aria-hidden="true" />
         {formatThreadStatus(status, { hasTurns, t })}
       </span>
-      {canResume ? (
-        <button
-          className={buttonClass("secondary", { size: "sm" })}
-          onClick={() => {
-            setResumeError(undefined);
-            deferAction(async () => {
-              try {
-                await resumeThread(threadId);
-              } catch (error) {
-                const message =
-                  error instanceof Error ? error.message : String(error);
-                setResumeError(message);
-                dispatch({
-                  error: { message: t("thread.resumeFailed", { message }) },
-                  type: "error/added",
-                });
-              }
-            });
-          }}
-          type="button"
-        >
-          {t("thread.resume")}
-        </button>
-      ) : null}
       <details className="aui-thread-action-menu">
         <summary aria-label={t("aria.actions")} title={t("aria.actions")}>
           <IconMoreVertical size={16} />
@@ -214,7 +181,10 @@ function AgentThreadActions({
           <button
             disabled={!threadId}
             onClick={() => {
-              const name = globalThis.prompt?.(t("thread.namePrompt"), thread.thread.name ?? "");
+              const name = globalThis.prompt?.(
+                t("thread.namePrompt"),
+                thread.thread.name ?? "",
+              );
               if (name?.trim()) deferAction(() => void renameThread(name.trim()));
             }}
             type="button"
@@ -258,11 +228,6 @@ function AgentThreadActions({
           </button>
         </div>
       </details>
-      {resumeError ? (
-        <div className="aui-thread-action-error" role="alert">
-          {t("thread.resumeFailed", { message: resumeError })}
-        </div>
-      ) : null}
     </div>
   );
 }

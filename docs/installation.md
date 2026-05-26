@@ -29,11 +29,21 @@ bun add @nyosegawa/agent-ui-server
 
 React is a peer dependency. The package supports React 18.3+ and React 19.
 
-Import the default style sheet once:
+Import the default stylesheet once:
 
 ```ts
 import "@nyosegawa/agent-ui-react/styles.css";
 ```
+
+This is the only public React stylesheet entry point. Do not import copied
+package chunks such as `@nyosegawa/agent-ui-react/dist/styles/*`; they are
+private files used by `styles.css`.
+
+The design-system API is the `--aui-*` token set defined in
+`packages/react/src/styles/tokens.css`. Override those tokens on a host wrapper
+or theme scope when customizing color, type, spacing, radii, elevation,
+control sizing, focus, or motion. Internal `.aui-*` selectors can change with
+component implementation and are not a stable host styling contract.
 
 ## Browser Transport
 
