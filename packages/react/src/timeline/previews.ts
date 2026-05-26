@@ -1,4 +1,6 @@
 import type { AgentI18nKey } from "../i18n";
+import { interpolate } from "../i18n/interpolate";
+import { en } from "../i18n/locales/en";
 import type { AgentItemBlock } from "@nyosegawa/agent-ui-core";
 import { formatJson, isRecord } from "./formatters";
 
@@ -13,7 +15,7 @@ export function commandPreview(text: string): string {
 
 export function toolPreview(
   block: AgentItemBlock,
-  t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string,
+  t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string = fallbackTimelineT,
 ): string | undefined {
   if (block.status === "failed") return undefined;
   const resultPreview = toolResultPreview(block.result, t);
@@ -21,6 +23,10 @@ export function toolPreview(
   const argsPreview = block.status === "inProgress" ? compactJsonPreview(block.arguments) : undefined;
   if (argsPreview) return t("timeline.argumentsPreview", { preview: argsPreview });
   return undefined;
+}
+
+function fallbackTimelineT(key: AgentI18nKey, vars?: Record<string, string | number>) {
+  return interpolate(en[key], vars);
 }
 
 function toolResultPreview(

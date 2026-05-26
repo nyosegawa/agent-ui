@@ -16,6 +16,7 @@ export const zhCN = {
   "approval.action.review": "查看",
   "approval.action.reviewAria": "查看 {label} {id}",
   "apps.label": "应用",
+  "aria.patchContent": "补丁内容",
   "common.cancel": "取消",
   "common.close": "关闭",
   "common.closeMenu": "关闭菜单",

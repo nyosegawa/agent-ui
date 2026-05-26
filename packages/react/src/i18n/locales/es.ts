@@ -16,6 +16,7 @@ export const es = {
   "approval.action.review": "Revisar",
   "approval.action.reviewAria": "Revisar {label} {id}",
   "apps.label": "Aplicaciones",
+  "aria.patchContent": "Contenido del parche",
   "common.cancel": "Cancelar",
   "common.close": "Cerrar",
   "common.closeMenu": "Cerrar menú",

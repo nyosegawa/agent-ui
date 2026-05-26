@@ -16,6 +16,7 @@ export const fr = {
   "approval.action.review": "Examiner",
   "approval.action.reviewAria": "Examiner {label} {id}",
   "apps.label": "Apps",
+  "aria.patchContent": "Contenu du patch",
   "common.cancel": "Annuler",
   "common.close": "Fermer",
   "common.closeMenu": "Fermer le menu",

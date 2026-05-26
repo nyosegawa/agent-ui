@@ -32,6 +32,7 @@ export const ja = {
   "approval.riskSuffix": "リスク",
   "aria.agentContext": "エージェントコンテキスト",
   "aria.message": "メッセージ",
+  "aria.patchContent": "パッチ内容",
   "apps.label": "アプリ",
   "common.cancel": "キャンセル",
   "common.close": "閉じる",

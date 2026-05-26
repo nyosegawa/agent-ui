@@ -75,6 +75,7 @@ export interface AgentI18nDictionary {
   "aria.message": string;
   "aria.messageComposer": string;
   "aria.openTask": string;
+  "aria.patchContent": string;
   "aria.pendingAttachments": string;
   "aria.runSettings": string;
   "aria.statusDetails": string;

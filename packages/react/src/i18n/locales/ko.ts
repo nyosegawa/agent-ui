@@ -16,6 +16,7 @@ export const ko = {
   "approval.action.review": "검토",
   "approval.action.reviewAria": "{label} {id} 검토",
   "apps.label": "앱",
+  "aria.patchContent": "패치 내용",
   "common.cancel": "취소",
   "common.close": "닫기",
   "common.closeMenu": "메뉴 닫기",

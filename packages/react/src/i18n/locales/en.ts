@@ -71,6 +71,7 @@ export const en = {
   "aria.message": "Message",
   "aria.messageComposer": "Message composer",
   "aria.openTask": "Open task",
+  "aria.patchContent": "Patch content",
   "aria.pendingAttachments": "Pending attachments",
   "aria.runSettings": "Run settings",
   "aria.statusDetails": "Status details",

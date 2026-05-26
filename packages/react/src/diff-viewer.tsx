@@ -30,7 +30,7 @@ export function AgentDiffViewer({ patch }: { patch: unknown }) {
         </ul>
       ) : null}
       <CodeMirrorDiff
-        patchContentLabel={t("aria.diffPreview")}
+        patchContentLabel={t("aria.patchContent")}
         viewerLabel={t("aria.codeMirrorPatchViewer")}
         text={normalized.text}
       />
