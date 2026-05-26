@@ -148,7 +148,10 @@ export function AgentMessageList({
               {t("timeline.showEarlier")}
             </button>
             <span>
-              {hiddenItemCount} earlier {hiddenItemCount === 1 ? t("timeline.item") : t("timeline.items")} hidden
+              {t("timeline.earlierHidden", {
+                count: hiddenItemCount,
+                label: hiddenItemCount === 1 ? t("timeline.item") : t("timeline.items"),
+              })}
             </span>
           </li>
         ) : null}
@@ -365,7 +368,7 @@ export function AgentCommandItem({
   const [isOpen, setOpen] = useState(false);
   const normalizedOutput = output?.trimEnd() ?? "";
   const title =
-    block?.command ?? commandTextForItem(item) ?? displayText(item?.text) ?? itemId ?? "Command";
+    block?.command ?? commandTextForItem(item) ?? displayText(item?.text) ?? itemId ?? t("timeline.command");
   const status = block?.status ?? item?.status ?? "completed";
   return (
     <details
@@ -378,7 +381,9 @@ export function AgentCommandItem({
         <span className="aui-command-title">{title}</span>
         <span className="aui-command-meta">
           {status}
-          {block?.exitCode !== undefined ? ` · exit ${block.exitCode}` : ""}
+          {block?.exitCode !== undefined
+            ? ` · ${t("timeline.exitCode", { code: block.exitCode })}`
+            : ""}
           {block?.durationMs !== undefined ? ` · ${formatDuration(block.durationMs)}` : ""}
           {" · "}
           {lineCount(normalizedOutput)} {t("timeline.lines")}
@@ -419,7 +424,10 @@ export function AgentFileChangeItem({
         <span className="aui-command-title">
           {displayText(item?.text) ??
             (changes.length > 0
-              ? `${changes.length} ${changes.length === 1 ? t("timeline.file") : "files"} changed`
+              ? t("timeline.filesChanged", {
+                  count: changes.length,
+                  label: changes.length === 1 ? t("timeline.file") : t("timeline.files"),
+                })
               : t("timeline.fileChanges"))}
         </span>
         <span className="aui-command-meta">{block?.status ?? item?.status ?? "completed"}</span>
@@ -463,7 +471,7 @@ export function AgentToolCallItem({ block }: { block: AgentItemBlock }) {
   const { t } = useAgentI18n();
   const [isOpen, setOpen] = useState(false);
   const label = block.toolType === "mcp" ? t("timeline.mcpTool") : t("timeline.toolCall");
-  const preview = toolPreview(block);
+  const preview = toolPreview(block, t);
   const title = block.server ? `${block.server} / ${block.tool ?? t("timeline.unknownTool")}` : block.tool ?? t("timeline.unknownTool");
   return (
     <details

@@ -78,7 +78,10 @@ export function AgentApprovalQueue({
             return (
               <li key={String(approval.id)}>
                 <button
-                  aria-label={`${t("approval.action.review")} ${approvalRequestLabel(approval.kind, t)} ${String(approval.id)}`}
+                  aria-label={t("approval.action.reviewAria", {
+                    id: String(approval.id),
+                    label: approvalRequestLabel(approval.kind, t),
+                  })}
                   className="aui-approval-compact"
                   data-risk={risk}
                   onClick={() => setExpandedId(String(approval.id))}
@@ -146,7 +149,10 @@ function ApprovalCard({
       <ApprovalSummary approval={approval} payload={payload} />
       <footer className="aui-approval-actions">
         <button
-          aria-label={`Approve ${requestLabel} ${String(approval.id)}`}
+          aria-label={t("approval.action.approveAria", {
+            id: String(approval.id),
+            label: requestLabel,
+          })}
           className={buttonClass("primary", { size: "md" })}
           onClick={onApprove}
           type="button"
@@ -155,7 +161,10 @@ function ApprovalCard({
           <span>{t("approval.action.approve")}</span>
         </button>
         <button
-          aria-label={`Approve ${requestLabel} ${String(approval.id)} for session`}
+          aria-label={t("approval.action.approveForSessionAria", {
+            id: String(approval.id),
+            label: requestLabel,
+          })}
           className={buttonClass("secondary", { size: "md" })}
           onClick={onApproveForSession}
           type="button"
@@ -163,7 +172,10 @@ function ApprovalCard({
           {t("approval.action.approveForSession")}
         </button>
         <button
-          aria-label={`Decline ${requestLabel} ${String(approval.id)}`}
+          aria-label={t("approval.action.declineAria", {
+            id: String(approval.id),
+            label: requestLabel,
+          })}
           className={buttonClass("danger", { size: "md" })}
           onClick={onReject}
           type="button"
@@ -301,7 +313,7 @@ function approvalRequestLabel(
 function CommandApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
   const { t } = useAgentI18n();
   const command =
-    stringField(payload, "command") ?? stringField(payload, "cmd") ?? "Command";
+    stringField(payload, "command") ?? stringField(payload, "cmd") ?? t("timeline.command");
   const cwd = stringField(payload, "cwd") ?? stringField(payload, "workingDirectory");
   const policy = stringField(payload, "approvalPolicy");
   const sandbox =
@@ -364,7 +376,7 @@ function UserInputApprovalSummary({ payload }: { payload: Record<string, unknown
 function DynamicToolApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
   const { t } = useAgentI18n();
   const namespace = stringField(payload, "namespace");
-  const tool = stringField(payload, "tool") ?? stringField(payload, "name") ?? "tool";
+  const tool = stringField(payload, "tool") ?? stringField(payload, "name") ?? t("approval.meta.tool");
   return (
     <div className="aui-approval-summary">
       <MetadataGrid

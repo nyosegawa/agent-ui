@@ -1,13 +1,17 @@
 import { EditorState, RangeSetBuilder } from "@codemirror/state";
 import { Decoration, EditorView, type DecorationSet } from "@codemirror/view";
 import { useEffect, useRef, useState } from "react";
+import { useAgentI18n } from "./i18n";
 
 export function AgentDiffViewer({ patch }: { patch: unknown }) {
+  const { t } = useAgentI18n();
   const normalized = normalizePatch(patch);
   return (
     <div className="aui-diff">
       <div className="aui-diff-header">
-        <strong>{formatCount(normalized.files.length, "file")}</strong>
+        <strong>
+          {formatCount(normalized.files.length, t("common.file"), t("common.files"))}
+        </strong>
         <span className="aui-diff-stat aui-diff-stat-add">
           +{normalized.stats.additions}
         </span>
@@ -16,7 +20,7 @@ export function AgentDiffViewer({ patch }: { patch: unknown }) {
         </span>
       </div>
       {normalized.files.length > 0 ? (
-        <ul className="aui-diff-files" aria-label="Changed files">
+        <ul className="aui-diff-files" aria-label={t("aria.changedFiles")}>
           {normalized.files.map((file) => (
             <li key={`${file.path}:${file.kind}`}>
               <span>{file.path}</span>
@@ -25,12 +29,24 @@ export function AgentDiffViewer({ patch }: { patch: unknown }) {
           ))}
         </ul>
       ) : null}
-      <CodeMirrorDiff text={normalized.text} />
+      <CodeMirrorDiff
+        patchContentLabel={t("aria.diffPreview")}
+        viewerLabel={t("aria.codeMirrorPatchViewer")}
+        text={normalized.text}
+      />
     </div>
   );
 }
 
-function CodeMirrorDiff({ text }: { text: string }) {
+function CodeMirrorDiff({
+  patchContentLabel,
+  text,
+  viewerLabel,
+}: {
+  patchContentLabel: string;
+  text: string;
+  viewerLabel: string;
+}) {
   const ref = useRef<HTMLDivElement | null>(null);
   const [isEnhanced, setIsEnhanced] = useState(false);
 
@@ -43,7 +59,7 @@ function CodeMirrorDiff({ text }: { text: string }) {
         EditorView.editable.of(false),
         EditorView.lineWrapping,
         EditorView.decorations.compute(["doc"], diffLineDecorations),
-        EditorView.contentAttributes.of({ "aria-label": "Patch content" }),
+        EditorView.contentAttributes.of({ "aria-label": patchContentLabel }),
         diffTheme,
       ],
       parent: ref.current,
@@ -53,12 +69,12 @@ function CodeMirrorDiff({ text }: { text: string }) {
       view.destroy();
       setIsEnhanced(false);
     };
-  }, [text]);
+  }, [patchContentLabel, text]);
 
   return (
     <>
       <div
-        aria-label="CodeMirror patch viewer"
+        aria-label={viewerLabel}
         className="aui-codemirror-diff"
         ref={ref}
       />
@@ -263,8 +279,8 @@ function diffStats(text: string) {
   );
 }
 
-function formatCount(count: number, singular: string) {
-  return `${count} ${count === 1 ? singular : `${singular}s`}`;
+function formatCount(count: number, singular: string, plural: string) {
+  return `${count} ${count === 1 ? singular : plural}`;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

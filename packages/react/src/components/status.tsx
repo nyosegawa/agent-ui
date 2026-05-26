@@ -142,7 +142,7 @@ export function AgentDiagnosticsPanel({
         <small>
           {t("diagnostics.messageCount", {
             count: messages.length,
-            label: messages.length === 1 ? "message" : "messages",
+            label: messages.length === 1 ? t("common.message") : t("common.messages"),
           })}
         </small>
       </summary>
@@ -364,7 +364,7 @@ export function statusSummary(
   }
   return t("status.backgroundNotice", {
     count: total,
-    label: total === 1 ? "notice" : "notices",
+    label: total === 1 ? t("common.notice") : t("common.notices"),
   });
 }
 
@@ -374,11 +374,13 @@ function statusDetailsSummary(
 ): string {
   const warningCount = notices.filter((notice) => notice.severity === "warning").length;
   if (warningCount > 0) {
-    return `${warningCount} ${t("status.warning")} · ${notices.length} notices`;
+    return `${warningCount} ${t("status.warning")} · ${notices.length} ${
+      notices.length === 1 ? t("common.notice") : t("common.notices")
+    }`;
   }
   return t("status.backgroundNotice", {
     count: notices.length,
-    label: notices.length === 1 ? "notice" : "notices",
+    label: notices.length === 1 ? t("common.notice") : t("common.notices"),
   });
 }
 

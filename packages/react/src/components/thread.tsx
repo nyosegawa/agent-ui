@@ -195,7 +195,7 @@ function AgentThreadActions({
                   error instanceof Error ? error.message : String(error);
                 setResumeError(message);
                 dispatch({
-                  error: { message: `Resume failed: ${message}` },
+                  error: { message: t("thread.resumeFailed", { message }) },
                   type: "error/added",
                 });
               }

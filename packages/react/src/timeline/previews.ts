@@ -1,3 +1,4 @@
+import type { AgentI18nKey } from "../i18n";
 import type { AgentItemBlock } from "@nyosegawa/agent-ui-core";
 import { formatJson, isRecord } from "./formatters";
 
@@ -10,27 +11,36 @@ export function commandPreview(text: string): string {
   return preview.length > 180 ? `${preview.slice(0, 177)}...` : preview;
 }
 
-export function toolPreview(block: AgentItemBlock): string | undefined {
+export function toolPreview(
+  block: AgentItemBlock,
+  t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string,
+): string | undefined {
   if (block.status === "failed") return undefined;
-  const resultPreview = toolResultPreview(block.result);
+  const resultPreview = toolResultPreview(block.result, t);
   if (resultPreview) return resultPreview;
   const argsPreview = block.status === "inProgress" ? compactJsonPreview(block.arguments) : undefined;
-  if (argsPreview) return `args ${argsPreview}`;
+  if (argsPreview) return t("timeline.argumentsPreview", { preview: argsPreview });
   return undefined;
 }
 
-function toolResultPreview(value: unknown): string | undefined {
+function toolResultPreview(
+  value: unknown,
+  t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string,
+): string | undefined {
   const record = isRecord(value) ? value : undefined;
   const content = Array.isArray(record?.content) ? record.content : undefined;
   if (content && content.length > 0) {
     const textItem = content.find((item) => isRecord(item) && item.type === "text");
     if (isRecord(textItem) && typeof textItem.text === "string") {
       const preview = compactTextPreview(textItem.text);
-      return preview && looksLikeMachinePreview(preview) ? "Result captured" : preview;
+      return preview && looksLikeMachinePreview(preview) ? t("timeline.resultCaptured") : preview;
     }
-    return `${content.length} result ${content.length === 1 ? "item" : "items"}`;
+    return t("timeline.resultItems", {
+      count: content.length,
+      label: content.length === 1 ? t("timeline.item") : t("timeline.items"),
+    });
   }
-  return value === undefined || value === null ? undefined : "Result captured";
+  return value === undefined || value === null ? undefined : t("timeline.resultCaptured");
 }
 
 function compactJsonPreview(value: unknown): string | undefined {

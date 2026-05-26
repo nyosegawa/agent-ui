@@ -16,7 +16,7 @@ export function AgentUsagePanel({ autoRefresh = true }: AgentUsageProps = {}) {
   const { rateLimits, refreshUsage } = useAgentUsage();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const didAutoRefresh = useRef(false);
-  const windows = useMemo(() => normalizeUsageWindows(rateLimits), [rateLimits]);
+  const windows = useMemo(() => normalizeUsageWindows(rateLimits, t), [rateLimits, t]);
   const compactLayout = useCompactLayout();
   useEffect(() => {
     if (
@@ -91,7 +91,7 @@ export function AgentUsagePanel({ autoRefresh = true }: AgentUsageProps = {}) {
 export function AgentUsageSummary() {
   const { t } = useAgentI18n();
   const { rateLimits } = useAgentUsage();
-  const windows = useMemo(() => normalizeUsageWindows(rateLimits), [rateLimits]);
+  const windows = useMemo(() => normalizeUsageWindows(rateLimits, t), [rateLimits, t]);
   return (
     <section className="aui-usage-summary" aria-label={t("aria.usageSummary")}>
       <strong>{t("usage.label")}</strong>
@@ -107,9 +107,10 @@ export function AgentRateLimitBar({
   label: string;
   percent: number;
 }) {
+  const { t } = useAgentI18n();
   return (
     <div
-      aria-label={`${label} usage`}
+      aria-label={t("usage.meterLabel", { label })}
       aria-valuemax={100}
       aria-valuemin={0}
       aria-valuenow={Math.round(percent)}

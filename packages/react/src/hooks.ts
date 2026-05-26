@@ -72,6 +72,7 @@ import {
   threadSnapshotEvents,
   threadUpsertEvent,
 } from "./thread-history";
+import { useAgentI18n, type AgentI18nKey } from "./i18n";
 
 export interface AgentExecutionMode {
   id: ExecutionModeId;
@@ -539,6 +540,7 @@ export function useAgentServerRequests(threadId?: ThreadId) {
 }
 
 export function useAgentComposer(threadId?: ThreadId) {
+  const { t } = useAgentI18n();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -570,13 +572,13 @@ export function useAgentComposer(threadId?: ThreadId) {
         attachments,
         expectedTurnId,
         input: built.input,
-        text: built.text || summarizeUserInput(built.input),
+        text: built.text || summarizeUserInput(built.input, t),
         threadId: resolvedThreadId,
       });
       setValue("");
       return id;
     },
-    [activeTurnId, buildInput, composerQueue, resolvedThreadId],
+    [activeTurnId, buildInput, composerQueue, resolvedThreadId, t],
   );
   const steerNow = useCallback(
     async (items: CodexUserInput[] = []) => {
@@ -589,13 +591,13 @@ export function useAgentComposer(threadId?: ThreadId) {
         await steerTurn(activeTurnId, built.input);
         setValue("");
       } catch (caught) {
-        setError(composerActionError(caught, "steer"));
+        setError(composerActionError(caught, "steer", t));
         throw caught;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [activeTurnId, buildInput, steerTurn],
+    [activeTurnId, buildInput, steerTurn, t],
   );
   const submit = useCallback(
     async (
@@ -614,13 +616,13 @@ export function useAgentComposer(threadId?: ThreadId) {
         setValue("");
         return "sent";
       } catch (caught) {
-        setError(composerActionError(caught, "start"));
+        setError(composerActionError(caught, "start", t));
         throw caught;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [buildInput, isRunning, queueFollowUp, startTurn],
+    [buildInput, isRunning, queueFollowUp, startTurn, t],
   );
   const scopedQueuedFollowUps = useMemo(
     () =>
@@ -644,7 +646,7 @@ export function useAgentComposer(threadId?: ThreadId) {
         (followUp) => followUp.id === id && followUp.threadId === resolvedThreadId,
       );
       if (!item) return;
-      const error = followUpSendPreflightError(activeTurnId, item.expectedTurnId);
+      const error = followUpSendPreflightError(activeTurnId, item.expectedTurnId, t);
       if (error) {
         composerQueue.setFollowUpError(id, error);
         return;
@@ -657,12 +659,12 @@ export function useAgentComposer(threadId?: ThreadId) {
         await steerTurn(expectedTurnId, item.input);
         composerQueue.removeFollowUp(id, item.threadId, { revokePreviewUrls: true });
       } catch (caught) {
-        composerQueue.setFollowUpError(id, composerActionError(caught, "steer"));
+        composerQueue.setFollowUpError(id, composerActionError(caught, "steer", t));
       } finally {
         composerQueue.markFollowUpIdle(id);
       }
     },
-    [activeTurnId, composerQueue, resolvedThreadId, steerTurn],
+    [activeTurnId, composerQueue, resolvedThreadId, steerTurn, t],
   );
   const editQueuedFollowUp = useCallback(
     (id: string) => {
@@ -697,13 +699,13 @@ export function useAgentComposer(threadId?: ThreadId) {
           type: "thread/status/changed",
         });
       } else {
-        setError(composerActionError(caught, "interrupt"));
+        setError(composerActionError(caught, "interrupt", t));
         throw caught;
       }
     } finally {
       setIsInterrupting(false);
     }
-  }, [activeTurnId, dispatch, interruptTurn, resolvedThreadId]);
+  }, [activeTurnId, dispatch, interruptTurn, resolvedThreadId, t]);
   return {
     activeTurnId,
     editQueuedFollowUp,
@@ -743,44 +745,49 @@ function latestRunningTurnId(thread?: ThreadState): string | undefined {
     });
 }
 
-function composerActionError(caught: unknown, action: "interrupt" | "start" | "steer") {
+function composerActionError(
+  caught: unknown,
+  action: "interrupt" | "start" | "steer",
+  t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string,
+) {
   const message = caught instanceof Error ? caught.message : String(caught);
   if (action === "steer") {
     if (/not steerable|non.?steerable|review|compact/i.test(message)) {
-      return "This active turn cannot accept additional instructions. Wait for it to finish, then send a new message.";
+      return t("composer.cannotAcceptFollowUp");
     }
     if (/expected.*turn|mismatch/i.test(message)) {
-      return "The active turn changed before this instruction was sent. The thread state was refreshed; try again.";
+      return t("composer.followUpTurnChangedRefresh");
     }
     if (/no active turn/i.test(message)) {
-      return "There is no active turn to steer. Wait for the thread state to refresh, then send a new message.";
+      return t("composer.followUpNoActiveTurn");
     }
-    return `Could not send additional instructions: ${message}`;
+    return t("composer.couldNotSendAdditional", { message });
   }
-  if (action === "interrupt") return `Could not stop the turn: ${message}`;
-  return `Could not start the turn: ${message}`;
+  if (action === "interrupt") return t("composer.couldNotStop", { message });
+  return t("composer.couldNotStart", { message });
 }
 
 function followUpSendPreflightError(
   activeTurnId: string | undefined,
   expectedTurnId: string | undefined,
+  t: (key: AgentI18nKey) => string,
 ): string | undefined {
   if (!activeTurnId || !expectedTurnId) {
-    return "There is no active turn to steer. Wait for the thread state to refresh, then send a new message.";
+    return t("composer.followUpNoActiveTurn");
   }
   if (activeTurnId !== expectedTurnId) {
-    return "The active turn changed before this instruction was sent. The queued follow-up was not sent.";
+    return t("composer.followUpTurnChanged");
   }
   return undefined;
 }
 
-function summarizeUserInput(input: CodexUserInput[]): string {
+function summarizeUserInput(input: CodexUserInput[], t: (key: AgentI18nKey) => string): string {
   const text = input
     .map((item) => (typeof item === "object" && "text" in item ? item.text : ""))
     .filter(Boolean)
     .join("\n")
     .trim();
-  return text || "Attached follow-up";
+  return text || t("composer.attachedFollowUp");
 }
 
 export function useAgentRunSettings() {

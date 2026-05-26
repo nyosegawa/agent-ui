@@ -20,9 +20,13 @@ export interface AgentI18nDictionary {
   "account.status": string;
   "account.unauthenticated": string;
   "approval.action.approve": string;
+  "approval.action.approveAria": string;
   "approval.action.approveForSession": string;
+  "approval.action.approveForSessionAria": string;
   "approval.action.decline": string;
+  "approval.action.declineAria": string;
   "approval.action.review": string;
+  "approval.action.reviewAria": string;
   "approval.aria.otherPending": string;
   "approval.aria.pending": string;
   "approval.aria.pendingOne": string;
@@ -94,9 +98,15 @@ export interface AgentI18nDictionary {
   "common.disable": string;
   "common.enable": string;
   "common.expand": string;
+  "common.file": string;
+  "common.files": string;
   "common.loading": string;
   "common.allLoaded": string;
+  "common.message": string;
+  "common.messages": string;
   "common.moreAvailable": string;
+  "common.notice": string;
+  "common.notices": string;
   "common.open": string;
   "common.refresh": string;
   "common.refreshing": string;
@@ -115,6 +125,7 @@ export interface AgentI18nDictionary {
   "composer.enterToSend": string;
   "composer.followUpNoActiveTurn": string;
   "composer.followUpTurnChanged": string;
+  "composer.followUpTurnChangedRefresh": string;
   "composer.app": string;
   "composer.mentionApp": string;
   "composer.mentionPlugin": string;
@@ -255,16 +266,21 @@ export interface AgentI18nDictionary {
   "thread.untitled": string;
   "timeline.agentTool": string;
   "timeline.arguments": string;
+  "timeline.argumentsPreview": string;
   "timeline.assistant": string;
   "timeline.collab": string;
   "timeline.collabTool": string;
   "timeline.command": string;
   "timeline.compaction": string;
   "timeline.diff": string;
+  "timeline.earlierHidden": string;
   "timeline.error": string;
+  "timeline.exitCode": string;
   "timeline.file": string;
   "timeline.fileChange": string;
   "timeline.fileChanges": string;
+  "timeline.files": string;
+  "timeline.filesChanged": string;
   "timeline.from": string;
   "timeline.image": string;
   "timeline.imageGenerated": string;
@@ -279,6 +295,8 @@ export interface AgentI18nDictionary {
   "timeline.plan": string;
   "timeline.reasoning": string;
   "timeline.result": string;
+  "timeline.resultCaptured": string;
+  "timeline.resultItems": string;
   "timeline.search": string;
   "timeline.showEarlier": string;
   "timeline.system": string;
@@ -295,8 +313,13 @@ export interface AgentI18nDictionary {
   "usage.inputOutput": string;
   "usage.label": string;
   "usage.limits": string;
+  "usage.meterLabel": string;
+  "usage.namedWindow": string;
+  "usage.resetAt": string;
+  "usage.hourWindow": string;
   "usage.tokens": string;
   "usage.title": string;
+  "usage.weeklyWindow": string;
 }
 
 export type AgentI18nKey = keyof AgentI18nDictionary;
