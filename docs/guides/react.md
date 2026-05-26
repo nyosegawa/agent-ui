@@ -60,12 +60,31 @@ Render a specific thread without following global active selection:
 Usage, status, apps, skills, and diagnostics can sit outside the chat column:
 
 ```tsx
-<AgentShell sidebar={<AgentThreadSidebar />}>
-  <AgentWorkspace panel={<AgentUsagePanel />}>
-    <AgentChat sidebar={false} usage={false} diagnostics={false} />
-  </AgentWorkspace>
-</AgentShell>
+function HostChrome() {
+  const { threads, activeThreadId, setActiveThread } = useAgentThreads();
+
+  return (
+    <AgentShell
+      sidebar={
+        <AgentThreadSidebar
+          activeThreadId={activeThreadId}
+          onSelectThread={setActiveThread}
+          threads={threads}
+        />
+      }
+    >
+      <AgentWorkspace panel={<AgentUsagePanel />}>
+        <AgentChat sidebar={false} usage={false} diagnostics={false} />
+      </AgentWorkspace>
+    </AgentShell>
+  );
+}
 ```
+
+`AgentChat threadUrlRouting` keeps direct thread URLs in sync. The root route
+stays on the start screen; selecting a stored thread pushes
+`/threads/<threadId>`, and the `Agent UI` brand or sidebar `+` returns to the
+configured home path (`/` by default) without eagerly creating a thread.
 
 For exact component props and visual contracts, see
 [reference/react-components.md](../reference/react-components.md).

@@ -3936,6 +3936,28 @@ describe("AgentChat", () => {
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
     expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
 
+    await user.click(screen.getByRole("button", { name: "Start a Codex thread" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/"));
+    await waitFor(() =>
+      expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("Connect Codex")).toBeInTheDocument();
+
+    await user.click(await screen.findByRole("button", { name: /Thread two/ }));
+    await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
+    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "New thread" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/"));
+    await waitFor(() =>
+      expect(screen.queryByRole("heading", { name: /Thread (one|two)/ })).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("Connect Codex")).toBeInTheDocument();
+
+    await user.click(await screen.findByRole("button", { name: /Thread two/ }));
+    await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-two"));
+    expect(await screen.findByRole("heading", { name: "Thread two" })).toBeInTheDocument();
+
     await user.click(await screen.findByRole("button", { name: /Thread one/ }));
     await waitFor(() => expect(window.location.pathname).toBe("/threads/thread-one"));
     expect(await screen.findByRole("heading", { name: "Thread one" })).toBeInTheDocument();
@@ -4028,6 +4050,48 @@ describe("AgentChat", () => {
     expect(
       transport.requests.find((request) => request.method === "thread/read")?.params,
     ).toEqual({ includeTurns: true, threadId: "thread-two" });
+  });
+
+  it("uses the configured home path when navigating back to the start screen", async () => {
+    const user = userEvent.setup();
+    window.history.replaceState(null, "", "/agent");
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [{ id: "thread-custom", name: "Thread custom", status: { type: "notLoaded" } }],
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-custom",
+              name: "Thread custom",
+              status: { type: "notLoaded" },
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat threadUrlRouting={{ basePath: "/agent/threads", homePath: "/agent" }} />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /Thread custom/ }));
+    await waitFor(() => expect(window.location.pathname).toBe("/agent/threads/thread-custom"));
+    expect(await screen.findByRole("heading", { name: "Thread custom" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Start a Codex thread" }));
+    await waitFor(() => expect(window.location.pathname).toBe("/agent"));
+    await waitFor(() =>
+      expect(screen.queryByRole("heading", { name: "Thread custom" })).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("Connect Codex")).toBeInTheDocument();
   });
 
   it("keeps direct URL thread when sidebar history load resolves first", async () => {

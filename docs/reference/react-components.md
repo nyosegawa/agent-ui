@@ -64,11 +64,13 @@ merged over the built-in dictionary. Transcript content, tool output, command
 output, model messages, and server diagnostics are not machine-translated by
 Agent UI.
 
-`AgentStatusBar` keeps the persistent brand row to connection/auth status. It
-does not render the authenticated email inline. Authenticated account details,
-plan, usage windows, and logout are available from the account dialog in the
-status actions so host applications can keep personal identity in profile or
-settings chrome.
+`AgentStatusBar` keeps the persistent brand row to connection/auth status. When
+used through `AgentChat`, the `Agent UI` brand returns to the start screen
+without creating a thread; with `threadUrlRouting`, it also pushes the configured
+home path (`/` by default). The bar does not render the authenticated email
+inline. Authenticated account details, plan, usage windows, and logout are
+available from the account dialog in the status actions so host applications can
+keep personal identity in profile or settings chrome.
 
 ## Transcript Primitives
 
@@ -150,9 +152,9 @@ quality directly instead of depending on a page-level shell:
 - **Button system**: `aui-btn` plus `aui-btn-primary | -secondary | -ghost |
   -danger | -subtle` and `aui-btn-sm | -lg | -icon-only`. `Approve` is the
   highest-contrast affordance in the surface, `Decline` is a danger button,
-  `Approve for session` is a scoped secondary outline, `New thread` and the
-  thread-action menu are icon-led ghosts, and link-style work (`Refresh`,
-  `Load`, `Hide`) uses the subtle variant.
+  `Approve for session` is a scoped secondary outline, the history `New thread`
+  action and the thread-action menu are icon-led ghosts, and link-style work
+  (`Refresh`, `Load`, `Hide`) uses the subtle variant.
 - **Inputs / selects / segmented**: a shared `aui-input-shell` with an
   optional leading icon, a unified `aui-select` with a custom chevron, and a
   refined segmented control with elevated pressed state. None of these read
@@ -178,9 +180,10 @@ quality directly instead of depending on a page-level shell:
 - **Sidebar**: a leading-icon search input that loads the first history page
   without selecting a thread and debounce-filters as you type — there is no
   standalone Load button; pagination is an IntersectionObserver sentinel with a
-  single subtle `Load more` fallback. Refined thread list items with a coloured
-  status dot. On mobile the sidebar is an off-canvas drawer opened from the
-  `Threads` trigger in the status bar.
+  single subtle `Load more` fallback. The header includes a `+` new-thread
+  action that returns to the start screen without creating a thread. Refined
+  thread list items with a coloured status dot. On mobile the sidebar is an
+  off-canvas drawer opened from the `Threads` trigger in the status bar.
 - **Context / status / usage / status pills**: per-thread context usage appears
   as a compact percent indicator beside the composer controls when
   `thread/tokenUsage/updated` has nonzero restored or live usage. Opening it
@@ -210,7 +213,9 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentShell`: app viewport layout with an optional sidebar slot.
 - `AgentThreadSidebar`: persisted Codex thread history browser. It follows
   `thread/list` cursors with an IntersectionObserver sentinel and keeps the
-  visible fallback to a single Load more action.
+  visible fallback to a single Load more action. Its optional new-thread action
+  is a host navigation callback; it should return the user to the thread-start
+  screen rather than eagerly calling `thread/start`.
 - `AgentThreadSurface`: unopinionated thread column surface for a host-arranged
   header, notices, timeline, and composer. Its grid rows are header, optional
   critical notices, the transcript scroll area, then the composer — pending
@@ -219,7 +224,7 @@ Use these primitives when embedding Agent UI into existing product chrome:
   composer stays bottom anchored.
 - `AgentThreadView`: one thread with header, transcript (with embedded
   approvals), and composer.
-- `AgentThreadHeader`: title, cwd/session context, resume, and new-thread actions.
+- `AgentThreadHeader`: title, cwd/session context, resume, and thread action menu.
 - `AgentThreadTimeline`: normalized turn and item renderer. Pass `threadId` to
   anchor that thread's pending approvals by source metadata, with transcript
   tail fallback for metadata-free requests.
@@ -231,9 +236,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
   hosts can also place it standalone.
 - `AgentComposerPanel`: turn composer with inline mode / model / effort menus,
   running-turn steering, composer-local Stop, and compact context usage.
-- `AgentRunSettingsPanel`: thread-start settings panel with model, effort,
-  cwd, and execution-mode
-  settings primitive for popovers, sheets, or host-owned settings panels.
+- `AgentRunSettingsPanel`: thread-start settings primitive with model, effort,
+  cwd, and execution mode for popovers, sheets, or host-owned settings panels.
 - `AgentStatusSummary`, `AgentStatusDetails`, and `AgentCriticalNoticeList`:
   severity-normalized model reroute, deprecation, config, account, MCP OAuth,
   and rate-limit notices. Info/background notices stay in secondary chrome,

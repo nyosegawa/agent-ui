@@ -60,6 +60,7 @@ export interface AgentChatProps {
 
 export interface AgentThreadUrlRoutingOptions {
   basePath?: string;
+  homePath?: string;
 }
 
 export function AgentChat({
@@ -118,6 +119,9 @@ function AgentChatInner({
   const { thread, threadId, startThread, startThreadWithInput } = useAgentThread();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
   useThreadUrlRouting(threadUrlRouting, activeThreadId);
+  const urlRoutingEnabled = Boolean(threadUrlRouting);
+  const routingBasePath = threadUrlRoutingBasePath(threadUrlRouting);
+  const homePath = threadUrlRoutingHomePath(threadUrlRouting);
   // Desktop keeps an expand/collapse rail; mobile keeps an off-canvas drawer.
   // Tracking them separately means a viewport change never strands the user
   // with the wrong default.
@@ -133,6 +137,25 @@ function AgentChatInner({
   );
   const hasRail = usage || diagnostics;
   const drawerOpen = compact && sidebar && !isSidebarCollapsed;
+  const navigateHome = useCallback(() => {
+    setActiveThread(undefined);
+    if (compact) setSidebarOpenMobile(false);
+    if (!urlRoutingEnabled || typeof window === "undefined") return;
+    if (window.location.pathname !== homePath) {
+      window.history.pushState({ agentUiHome: true }, "", homePath);
+    }
+  }, [compact, homePath, setActiveThread, urlRoutingEnabled]);
+  const navigateToThread = useCallback(
+    (nextThreadId: string) => {
+      setActiveThread(nextThreadId);
+      if (!urlRoutingEnabled || typeof window === "undefined") return;
+      const path = threadPath(nextThreadId, routingBasePath);
+      if (window.location.pathname !== path) {
+        window.history.pushState({ agentUiThreadId: nextThreadId }, "", path);
+      }
+    },
+    [routingBasePath, setActiveThread, urlRoutingEnabled],
+  );
   return (
     <AgentShell
       className={className}
@@ -143,8 +166,9 @@ function AgentChatInner({
           <AgentThreadSidebar
             activeThreadId={activeThreadId}
             collapsed={isSidebarCollapsed}
+            onCreateThread={navigateHome}
             onCollapsedChange={setSidebarCollapsed}
-            onSelectThread={setActiveThread}
+            onSelectThread={navigateToThread}
             threads={threads}
           />
         ) : undefined
@@ -162,6 +186,7 @@ function AgentChatInner({
       <div className="aui-chat">
         <AgentStatusBar
           end={statusBarEnd}
+          onNavigateHome={navigateHome}
           onOpenThreads={
             sidebar ? () => setSidebarCollapsed(false) : undefined
           }
@@ -268,6 +293,10 @@ function threadPath(threadId: string, basePath: string): string {
 
 function threadUrlRoutingBasePath(options: AgentChatProps["threadUrlRouting"]): string {
   return typeof options === "object" && options.basePath ? options.basePath : "/threads";
+}
+
+function threadUrlRoutingHomePath(options: AgentChatProps["threadUrlRouting"]): string {
+  return typeof options === "object" && options.homePath ? options.homePath : "/";
 }
 
 function threadIdFromPath(pathname: string, basePath: string): string | undefined {

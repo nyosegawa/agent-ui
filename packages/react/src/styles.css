@@ -2,6 +2,7 @@
 @import "./styles/shell.css";
 @import "./styles/sidebar.css";
 @import "./styles/thread.css";
+@import "./styles/status-bar.css";
 @import "./styles/status-account.css";
 @import "./styles/markdown.css";
 @import "./styles/transcript-blocks.css";

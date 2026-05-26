@@ -18,9 +18,11 @@ export {
 
 export function AgentStatusBar({
   end,
+  onNavigateHome,
   onOpenThreads,
 }: {
   end?: React.ReactNode;
+  onNavigateHome?: () => void;
   onOpenThreads?: () => void;
 } = {}) {
   const { t } = useAgentI18n();
@@ -46,10 +48,22 @@ export function AgentStatusBar({
           <span>{t("thread.history")}</span>
         </button>
       ) : null}
-      <div className="aui-brand">
-        <strong>Agent UI</strong>
-        <span>{statusText}</span>
-      </div>
+      {onNavigateHome ? (
+        <button
+          aria-label={t("firstRun.form")}
+          className="aui-brand aui-brand-action"
+          onClick={onNavigateHome}
+          type="button"
+        >
+          <strong>Agent UI</strong>
+          <span>{statusText}</span>
+        </button>
+      ) : (
+        <div className="aui-brand">
+          <strong>Agent UI</strong>
+          <span>{statusText}</span>
+        </div>
+      )}
       <div className="aui-status-actions">
         {end}
         {account.login ? (

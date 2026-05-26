@@ -70,8 +70,10 @@ test("opens the thread history drawer on mobile", async ({ page }) => {
   await page.getByRole("button", { name: "Open thread history" }).click();
   await expect(page.locator(".aui-sidebar")).toBeVisible();
   await expect(page.getByLabel("Search history")).toBeVisible();
-  await page.getByRole("button", { name: "Close history" }).click();
+  await expect(page.locator(".aui-sidebar").getByRole("button", { name: "New thread" })).toBeVisible();
+  await page.locator(".aui-sidebar").getByRole("button", { name: "New thread" }).click();
   await expect(page.locator(".aui-sidebar")).toHaveCount(0);
+  await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible();
 });
 
 async function headerDoesNotOverlapTimeline(page: Page) {

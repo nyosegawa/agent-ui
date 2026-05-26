@@ -27,9 +27,10 @@ test("exposes live thread controls through the browser websocket transport", asy
 }, testInfo) => {
   testInfo.setTimeout(SHORT_TEST_TIMEOUT);
   await openRealLocalApp(page, { width: 1280, height: 900 }, "/threads/thread-stored");
-  await expect(page.getByRole("button", { name: "New thread" })).toBeVisible({
+  await expect(page.locator(".aui-sidebar").getByRole("button", { name: "New thread" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
+  await expect(page.locator(".aui-thread-actions").getByRole("button", { name: "New thread" })).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Resume" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
@@ -60,8 +61,28 @@ test("resumes stored threads, sends follow-up turns, and syncs browser history",
     timeout: FAST_EXPECT_TIMEOUT,
   });
 
-  await page.getByRole("button", { name: "New thread" }).click({ force: true });
+  await page.getByRole("button", { name: "Start a Codex thread" }).click();
+  await expect(page).toHaveURL(/\/$/, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  const starter = page.getByRole("form", { name: "Start a Codex thread" });
+  await expect(starter).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await starter.getByRole("textbox", { name: "Message" }).fill("new smoke");
+  await starter.getByRole("button", { name: "Start thread" }).click({
+    force: true,
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
   await expect(page).toHaveURL(/\/threads\/thread-live-\d+$/, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(page.getByText("Echo: new smoke")).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/, { timeout: FAST_EXPECT_TIMEOUT });
+  await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await page.goBack();
@@ -69,6 +90,11 @@ test("resumes stored threads, sends follow-up turns, and syncs browser history",
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await expect(page.getByRole("heading", { name: "Stored real smoke" })).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await page.goForward();
+  await expect(page).toHaveURL(/\/$/, { timeout: FAST_EXPECT_TIMEOUT });
+  await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await page.goForward();

@@ -1,0 +1,87 @@
+/* --- Status bar ----------------------------------------------------- */
+
+.aui-status {
+  align-items: center;
+  background: var(--aui-panel);
+  border-bottom: 1px solid var(--aui-border);
+  color: var(--aui-fg-muted);
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 8px 16px;
+}
+
+.aui-brand {
+  align-items: baseline;
+  background: transparent;
+  border: 0;
+  border-radius: var(--aui-radius-sm);
+  color: inherit;
+  display: flex;
+  font: inherit;
+  gap: 10px;
+  min-width: 0;
+  padding: 2px 4px;
+  text-align: left;
+}
+
+.aui-brand-action {
+  cursor: pointer;
+}
+
+.aui-brand-action:hover {
+  background: var(--aui-panel-alt);
+}
+
+.aui-brand-action:focus-visible {
+  box-shadow: var(--aui-focus-ring);
+  outline: none;
+}
+
+.aui-brand strong {
+  color: var(--aui-fg-strong);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.aui-brand span {
+  color: var(--aui-fg-muted);
+  font-size: 12px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aui-status-actions {
+  align-items: center;
+  display: flex;
+  flex: 0 0 auto;
+  gap: 8px;
+  min-width: 0;
+}
+
+.aui-login-code {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.aui-login-code a {
+  color: var(--aui-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.aui-login-code code {
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: 5px;
+  color: var(--aui-fg);
+  font-family: var(--aui-font-mono);
+  font-size: 12px;
+  padding: 3px 6px;
+}

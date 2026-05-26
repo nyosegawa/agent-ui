@@ -1,6 +1,7 @@
 import type { AgentThread, ThreadState } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  IconAdd,
   IconClose,
   IconHistory,
   IconSearch,
@@ -142,12 +143,14 @@ export function isUserFacingPath(path: string): boolean {
 export function AgentThreadSidebar({
   activeThreadId,
   collapsed = false,
+  onCreateThread,
   onCollapsedChange,
   onSelectThread,
   threads,
 }: {
   activeThreadId?: string;
   collapsed?: boolean;
+  onCreateThread?: () => void;
   onCollapsedChange?: (collapsed: boolean) => void;
   onSelectThread?: (threadId: string) => void;
   threads: ThreadState[];
@@ -253,12 +256,18 @@ export function AgentThreadSidebar({
   const selectThread = useCallback(
     (threadId: string) => {
       if (compact) onCollapsedChange?.(true);
-      void readThread(threadId, { activate: true, includeTurns: true }).catch(() => {
-        onSelectThread?.(threadId);
-      });
+      void readThread(threadId, { activate: true, includeTurns: true })
+        .catch(() => undefined)
+        .finally(() => {
+          onSelectThread?.(threadId);
+        });
     },
     [compact, onCollapsedChange, onSelectThread, readThread],
   );
+  const createThread = useCallback(() => {
+    if (compact) onCollapsedChange?.(true);
+    onCreateThread?.();
+  }, [compact, onCollapsedChange, onCreateThread]);
 
   // On mobile a collapsed sidebar is a closed drawer with no inline chrome —
   // the open trigger lives in the chat header instead.
@@ -275,6 +284,17 @@ export function AgentThreadSidebar({
         >
           <IconHistory size={16} />
         </button>
+        {onCreateThread ? (
+          <button
+            aria-label={t("thread.new")}
+            className={buttonClass("ghost", { iconOnly: true })}
+            onClick={createThread}
+            title={t("thread.new")}
+            type="button"
+          >
+            <IconAdd size={16} />
+          </button>
+        ) : null}
       </aside>
     );
   }
@@ -282,15 +302,28 @@ export function AgentThreadSidebar({
     <aside className="aui-sidebar" data-collapsed="false">
       <div className="aui-sidebar-header">
         <div className="aui-sidebar-title">{t("thread.history")}</div>
-        <button
-          aria-label={compact ? t("thread.closeHistory") : t("thread.collapseHistory")}
-          className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
-          onClick={() => onCollapsedChange?.(true)}
-          title={compact ? t("thread.closeHistory") : t("thread.collapseHistory")}
-          type="button"
-        >
-          <IconClose size={14} />
-        </button>
+        <div className="aui-sidebar-header-actions">
+          {onCreateThread ? (
+            <button
+              aria-label={t("thread.new")}
+              className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
+              onClick={createThread}
+              title={t("thread.new")}
+              type="button"
+            >
+              <IconAdd size={14} />
+            </button>
+          ) : null}
+          <button
+            aria-label={compact ? t("thread.closeHistory") : t("thread.collapseHistory")}
+            className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
+            onClick={() => onCollapsedChange?.(true)}
+            title={compact ? t("thread.closeHistory") : t("thread.collapseHistory")}
+            type="button"
+          >
+            <IconClose size={14} />
+          </button>
+        </div>
       </div>
       <form
         className="aui-history-controls"

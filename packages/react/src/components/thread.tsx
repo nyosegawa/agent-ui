@@ -14,7 +14,6 @@ import {
 import { useAgentI18n } from "../i18n";
 import { useAgentContext } from "../provider";
 import {
-  IconAdd,
   IconMoreVertical,
   buttonClass,
 } from "../components-internal";
@@ -163,7 +162,7 @@ function AgentThreadActions({
   threadId?: string;
 }) {
   const { t } = useAgentI18n();
-  const { resumeThread, startThread } = useAgentThread(threadId);
+  const { resumeThread } = useAgentThread(threadId);
   const { dispatch } = useAgentContext();
   const [resumeError, setResumeError] = useState<string | undefined>();
   const {
@@ -207,16 +206,6 @@ function AgentThreadActions({
           {t("thread.resume")}
         </button>
       ) : null}
-      <button
-        aria-label={t("thread.new")}
-        className={buttonClass("ghost", { size: "sm" })}
-        onClick={() => deferAction(startThread)}
-        title={t("thread.new")}
-        type="button"
-      >
-        <IconAdd size={14} />
-        <span>{t("thread.new")}</span>
-      </button>
       <details className="aui-thread-action-menu">
         <summary aria-label={t("aria.actions")} title={t("aria.actions")}>
           <IconMoreVertical size={16} />
