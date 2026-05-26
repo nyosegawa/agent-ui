@@ -315,15 +315,18 @@ type AgentEvent = {
     thread: AgentThread;
     status?: ThreadStatus;
     turns?: AgentTurn[];
+    snapshot?: boolean;
 } | {
     type: "thread/started";
     thread: AgentThread;
     status?: ThreadStatus;
     turns?: AgentTurn[];
+    snapshot?: boolean;
 } | {
     type: "thread/status/changed";
     threadId: ThreadId;
     status: ThreadStatus;
+    snapshot?: boolean;
 } | {
     type: "thread/name/updated";
     threadId: ThreadId;
@@ -344,6 +347,7 @@ type AgentEvent = {
     threadId: ThreadId;
     turn: AgentTurn;
     items?: AgentItemState[];
+    snapshot?: boolean;
 } | {
     type: "turn/plan/updated";
     threadId: ThreadId;
