@@ -858,10 +858,8 @@ interface AgentI18nDictionary {
     "common.file": string;
     "common.files": string;
     "common.loading": string;
-    "common.allLoaded": string;
     "common.message": string;
     "common.messages": string;
-    "common.moreAvailable": string;
     "common.notice": string;
     "common.notices": string;
     "common.open": string;
@@ -1002,14 +1000,10 @@ interface AgentI18nDictionary {
     "thread.ephemeralSession": string;
     "thread.expandHistory": string;
     "thread.history": string;
-    "thread.loaded": string;
-    "thread.moreAvailable": string;
     "thread.namePrompt": string;
     "thread.new": string;
     "thread.noThreadsFound": string;
     "thread.openHistory": string;
-    "thread.resume": string;
-    "thread.resumeFailed": string;
     "thread.search": string;
     "thread.searchHistory": string;
     "thread.status.complete": string;
