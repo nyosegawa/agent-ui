@@ -37,6 +37,23 @@ const eventDomainFiles = [
   "usage",
 ];
 
+const reducerDomainFiles = [
+  "account",
+  "apps",
+  "connection",
+  "diagnostics",
+  "hooks",
+  "item",
+  "models",
+  "run-settings",
+  "server-requests",
+  "shared",
+  "skills",
+  "thread",
+  "turn",
+  "usage",
+];
+
 describe("Core package source structure", () => {
   it("keeps normalized state types split by product domain", () => {
     const barrel = readFileSync(join(coreSrc, "state.ts"), "utf8");
@@ -54,5 +71,17 @@ describe("Core package source structure", () => {
       expect(existsSync(join(coreSrc, "events", `${domain}.ts`))).toBe(true);
       expect(barrel).toContain(`export type * from "./events/${domain}";`);
     }
+  });
+
+  it("keeps normalized reducer logic split by product domain", () => {
+    const compositionRoot = readFileSync(join(coreSrc, "reducer.ts"), "utf8");
+
+    for (const domain of reducerDomainFiles) {
+      expect(existsSync(join(coreSrc, "reducer", `${domain}.ts`))).toBe(true);
+    }
+
+    expect(compositionRoot).toContain("reduceConnectionEvent");
+    expect(compositionRoot).toContain("reduceThreadEvent");
+    expect(compositionRoot).toContain("reduceServerRequestEvent");
   });
 });
