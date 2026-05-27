@@ -84,7 +84,7 @@ Acceptance:
   history deletion.
 - [x] Remove compatibility aliases from normalized state.
 - [x] Add retention tests for ordered indexes.
-- [ ] Add retention tests for backing entity maps.
+- [x] Add retention tests for backing entity maps.
 - [ ] Update raw fixture tests to stay core-owned and protocol-neutral.
 
 Acceptance:

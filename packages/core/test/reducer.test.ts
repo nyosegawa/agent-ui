@@ -196,6 +196,86 @@ describe("agentReducer", () => {
     expect(state.threadRegistry.loadedThreadIds).toEqual(["thread-cold-2"]);
   });
 
+  it("bounds backing entity maps when registry and retained turn maps evict stale entries", () => {
+    let state = createInitialAgentState();
+    const max = AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax;
+
+    state = agentReducer(state, {
+      status: "running",
+      thread: { id: "thread-active" },
+      type: "thread/started",
+    });
+    state = agentReducer(state, {
+      status: "notLoaded",
+      thread: { id: "thread-pending" },
+      type: "thread/upserted",
+    });
+    state = agentReducer(state, {
+      request: {
+        id: "approval-retains-thread",
+        kind: "commandApproval",
+        payload: {},
+        threadId: "thread-pending",
+        turnId: "turn-pending",
+      },
+      type: "serverRequest/created",
+    });
+
+    for (let index = 0; index < max + 2; index += 1) {
+      state = agentReducer(state, {
+        status: "notLoaded",
+        thread: { id: `thread-cold-${index}` },
+        type: "thread/upserted",
+      });
+      state = agentReducer(state, {
+        status: "notLoaded",
+        thread: { id: `thread-preview-${index}` },
+        turns: [{ id: `turn-preview-${index}`, threadId: `thread-preview-${index}` }],
+        type: "thread/upserted",
+      });
+      state = agentReducer(state, {
+        status: "loaded",
+        thread: { id: `thread-loaded-${index}` },
+        type: "thread/upserted",
+      });
+    }
+
+    const retainedThreadIds = new Set([
+      "thread-active",
+      "thread-pending",
+      ...Array.from({ length: max }, (_, index) => `thread-cold-${index + 2}`),
+      ...Array.from({ length: max }, (_, index) => `thread-preview-${index + 2}`),
+      ...Array.from({ length: max }, (_, index) => `thread-loaded-${index + 2}`),
+    ]);
+    expect(new Set(Object.keys(state.threads))).toEqual(retainedThreadIds);
+    expect(state.threads["thread-cold-0"]).toBeUndefined();
+    expect(state.threads["thread-preview-0"]).toBeUndefined();
+    expect(state.threads["thread-loaded-0"]).toBeUndefined();
+    expect(state.threads["thread-active"]).toBeDefined();
+    expect(state.threads["thread-pending"]).toBeDefined();
+
+    for (let index = 0; index < AGENT_RETENTION_POLICY.filePatchesPerTurnMax + 3; index += 1) {
+      state = agentReducer(state, {
+        type: "item/filePatch/updated",
+        threadId: "thread-active",
+        turnId: "turn-active",
+        itemId: `patch-${index}`,
+        patch: { index },
+      });
+    }
+
+    expect(
+      Object.keys(
+        state.threads["thread-active"]?.turns["turn-active"]?.filePatchByItemId ?? {},
+      ),
+    ).toEqual(
+      Array.from(
+        { length: AGENT_RETENTION_POLICY.filePatchesPerTurnMax },
+        (_, index) => `patch-${index + 3}`,
+      ),
+    );
+  });
+
   it("applies streaming text, command output, approvals, and authoritative completion", () => {
     const state = runEventFixture(fixture as FixtureStep[]);
     const turns = selectOrderedTurns(state, "thread-1");
