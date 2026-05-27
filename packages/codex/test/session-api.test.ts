@@ -3,8 +3,13 @@ import { describe, expect, it } from "vitest";
 import { createCodexClients, createCodexSession } from "../src";
 import {
   accountReadParams,
+  apiKeyLoginParams,
   appsListParams,
+  authTokensLoginParams,
+  cancelLoginParams,
+  chatgptLoginParams,
   type CodexStableMethodParams,
+  deviceCodeLoginParams,
   disabledProductMethods,
   hooksListParams,
   modelListParams,
@@ -65,6 +70,10 @@ type GeneratedParams<TMethod extends ClientRequest["method"]> = Extract<
   ClientRequest,
   { method: TMethod }
 >["params"];
+type GeneratedRequestParamsCase<TMethod extends ClientRequest["method"]> = {
+  method: TMethod;
+  params: GeneratedParams<TMethod>;
+};
 
 const generatedParamTypeAssertions: [
   Assert<
@@ -179,7 +188,107 @@ describe("Codex request builders", () => {
   it("derives method params from the generated ClientRequest union", () => {
     expect(generatedParamTypeAssertions).toEqual([true, true, true]);
   });
+
+  it("emits params accepted by generated ClientRequest method schemas", () => {
+    const cases = [
+      generatedRequestParams("account/read", accountReadParams(true)),
+      generatedRequestParams("account/login/start", deviceCodeLoginParams()),
+      generatedRequestParams("account/login/start", chatgptLoginParams(true)),
+      generatedRequestParams("account/login/start", apiKeyLoginParams("sk-test")),
+      generatedRequestParams(
+        "account/login/start",
+        authTokensLoginParams({
+          accessToken: "access-token",
+          chatgptAccountId: "account-id",
+          chatgptPlanType: null,
+        }),
+      ),
+      generatedRequestParams("account/login/cancel", cancelLoginParams("login-1")),
+      generatedRequestParams("model/list", modelListParams({ includeHidden: true })),
+      generatedRequestParams("thread/list", threadListParams({ cwd: "/repo" })),
+      generatedRequestParams("thread/loaded/list", threadLoadedListParams({ limit: 2 })),
+      generatedRequestParams("thread/read", threadReadParams("thread-1")),
+      generatedRequestParams("thread/resume", threadResumeParams("thread-1")),
+      generatedRequestParams("thread/start", threadStartParams({ cwd: "/repo" })),
+      generatedRequestParams("thread/fork", threadForkParams("thread-1")),
+      generatedRequestParams("thread/archive", threadArchiveParams("thread-1")),
+      generatedRequestParams("thread/unarchive", threadUnarchiveParams("thread-1")),
+      generatedRequestParams(
+        "thread/name/set",
+        threadSetNameParams("thread-1", "Renamed"),
+      ),
+      generatedRequestParams(
+        "thread/metadata/update",
+        threadMetadataUpdateParams("thread-1", { gitInfo: { branch: "main" } }),
+      ),
+      generatedRequestParams("thread/compact/start", threadCompactStartParams("thread-1")),
+      generatedRequestParams("thread/rollback", threadRollbackParams("thread-1", 1)),
+      generatedRequestParams(
+        "thread/inject_items",
+        threadInjectItemsParams("thread-1", [{ type: "message" }]),
+      ),
+      generatedRequestParams("thread/unsubscribe", threadUnsubscribeParams("thread-1")),
+      generatedRequestParams(
+        "turn/start",
+        turnStartParams({ input: "hello", threadId: "thread-1" }),
+      ),
+      generatedRequestParams(
+        "turn/steer",
+        turnSteerParams({
+          expectedTurnId: "turn-1",
+          input: "continue",
+          threadId: "thread-1",
+        }),
+      ),
+      generatedRequestParams("turn/interrupt", turnInterruptParams("thread-1", "turn-1")),
+      generatedRequestParams("skills/list", skillsListParams({ cwds: ["/repo"] })),
+      generatedRequestParams(
+        "skills/config/write",
+        skillsConfigWriteParams({ enabled: true, name: "agent-browser" }),
+      ),
+      generatedRequestParams("hooks/list", hooksListParams({ cwds: ["/repo"] })),
+      generatedRequestParams("app/list", appsListParams({ threadId: "thread-1" })),
+    ];
+
+    expect(cases.map((entry) => entry.method)).toEqual([
+      "account/read",
+      "account/login/start",
+      "account/login/start",
+      "account/login/start",
+      "account/login/start",
+      "account/login/cancel",
+      "model/list",
+      "thread/list",
+      "thread/loaded/list",
+      "thread/read",
+      "thread/resume",
+      "thread/start",
+      "thread/fork",
+      "thread/archive",
+      "thread/unarchive",
+      "thread/name/set",
+      "thread/metadata/update",
+      "thread/compact/start",
+      "thread/rollback",
+      "thread/inject_items",
+      "thread/unsubscribe",
+      "turn/start",
+      "turn/steer",
+      "turn/interrupt",
+      "skills/list",
+      "skills/config/write",
+      "hooks/list",
+      "app/list",
+    ]);
+  });
 });
+
+function generatedRequestParams<TMethod extends ClientRequest["method"]>(
+  method: TMethod,
+  params: GeneratedParams<TMethod>,
+): GeneratedRequestParamsCase<TMethod> {
+  return { method, params };
+}
 
 describe("Codex session facade", () => {
   it("routes thread and turn helpers through stable methods", async () => {

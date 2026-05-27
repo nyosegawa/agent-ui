@@ -115,7 +115,7 @@ Acceptance:
   `models`, and `account`.
 - [x] Enforce stable/productized/host-only/experimental capability
   classification at client construction and public exports.
-- [ ] Add generated-schema-backed tests for request builders.
+- [x] Add generated-schema-backed tests for request builders.
 - [ ] Add tests for initialize and notification opt-out behavior.
 - [ ] Add tests for item lifecycle using `item/started`, deltas, and
   `item/completed`.
