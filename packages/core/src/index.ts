@@ -13,4 +13,5 @@ export * from "./stores/server-request";
 export * from "./stores/thread-entity";
 export * from "./stores/thread-index";
 export * from "./stores/turn";
+export * from "./stores/usage";
 export * from "./transport";

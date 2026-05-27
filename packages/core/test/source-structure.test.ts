@@ -63,6 +63,7 @@ const storeFiles = [
   "thread-entity",
   "thread-index",
   "turn",
+  "usage",
 ];
 
 describe("Core package source structure", () => {
@@ -111,5 +112,6 @@ describe("Core package source structure", () => {
     expect(root).toContain('export * from "./stores/thread-entity";');
     expect(root).toContain('export * from "./stores/thread-index";');
     expect(root).toContain('export * from "./stores/turn";');
+    expect(root).toContain('export * from "./stores/usage";');
   });
 });

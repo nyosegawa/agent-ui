@@ -110,6 +110,8 @@ queues, and thread-scoped pending request checks. `appsStore` owns App
 connector list initialization and scoped global/thread update semantics.
 `diagnosticsStore` owns diagnostics initialization, status banners, protocol
 notification history, warnings, and errors.
+`usageStore` owns usage initialization, host metrics, and account rate-limit
+usage snapshots.
 
 ## Reducer Rules
 

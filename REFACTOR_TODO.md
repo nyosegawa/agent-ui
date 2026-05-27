@@ -77,7 +77,7 @@ Acceptance:
 - [x] Add `serverRequestStore`.
 - [x] Add `appsStore`.
 - [x] Add `diagnosticsStore`.
-- [ ] Add `usageStore`.
+- [x] Add `usageStore`.
 - [ ] Add selectors for thread, turn, item, approvals, apps, diagnostics, and
   usage surfaces.
 - [ ] Preserve merge semantics where omitted `Thread.turns` is not treated as

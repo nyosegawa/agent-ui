@@ -1,5 +1,6 @@
 import type { AccountEvent } from "../events";
 import type { AgentSessionState } from "../state";
+import { usageStore } from "../stores/usage";
 import { recordOrUndefined } from "./shared";
 
 export function reduceAccountEvent(
@@ -47,10 +48,7 @@ export function reduceAccountEvent(
           ...state.account,
           rateLimits: event.rateLimits,
         },
-        usage: {
-          ...state.usage,
-          accountRateLimits: event.rateLimits,
-        },
+        usage: usageStore.setAccountRateLimits(state.usage, event.rateLimits),
       };
     default:
       return assertNever(event);

@@ -22,6 +22,7 @@ import {
 } from "./stores/server-request";
 import { createInitialThreadEntityState } from "./stores/thread-entity";
 import { createInitialThreadRegistryState } from "./stores/thread-index";
+import { createInitialUsageState } from "./stores/usage";
 
 export type * from "./state/account";
 export type * from "./state/apps";
@@ -73,6 +74,6 @@ export function createInitialAgentState(): AgentSessionState {
     skills: { byCwd: {} },
     threadRegistry: createInitialThreadRegistryState(),
     threads: createInitialThreadEntityState(),
-    usage: {},
+    usage: createInitialUsageState(),
   };
 }

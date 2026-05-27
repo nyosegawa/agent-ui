@@ -1,5 +1,6 @@
 import type { UsageEvent } from "../events";
 import type { AgentSessionState } from "../state";
+import { usageStore } from "../stores/usage";
 
 export function reduceUsageEvent(
   state: AgentSessionState,
@@ -9,7 +10,7 @@ export function reduceUsageEvent(
     case "usage/hostMetrics/updated":
       return {
         ...state,
-        usage: { ...state.usage, hostMetrics: event.metrics },
+        usage: usageStore.reduce(state.usage, event),
       };
     default:
       throw new Error(`Unhandled usage event: ${JSON.stringify(event)}`);
