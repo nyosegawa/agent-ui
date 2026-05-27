@@ -5,6 +5,13 @@
     { "path": "./packages/core" },
     { "path": "./packages/codex" },
     { "path": "./packages/react" },
-    { "path": "./packages/server" }
+    { "path": "./packages/server" },
+    { "path": "./packages/web-components" },
+    { "path": "./examples/codex-local-web" },
+    { "path": "./examples/docs-site" },
+    { "path": "./examples/local-react-vite" },
+    { "path": "./examples/next-rpc-route" },
+    { "path": "./examples/next-with-bridge-sidecar" },
+    { "path": "./examples/recipes" }
   ]
 }

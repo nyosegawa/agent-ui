@@ -13,7 +13,7 @@ export default defineConfig({
   webServer: [
     {
       command:
-        "env -u NO_COLOR -u FORCE_COLOR bun run --cwd examples/local-react-vite preview --host 127.0.0.1",
+        "env -u NO_COLOR -u FORCE_COLOR bun run --cwd examples/local-react-vite build && env -u NO_COLOR -u FORCE_COLOR bun run --cwd examples/local-react-vite preview --host 127.0.0.1",
       port: 4173,
       reuseExistingServer: false,
     },

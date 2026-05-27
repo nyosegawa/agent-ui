@@ -29,14 +29,7 @@ jobs:
         with:
           bun-version: 1.3.13
       - run: bun install --frozen-lockfile
-      - run: bun run typecheck
-      - run: bun run lint
-      - run: bun test
-      - run: bun run build
-      - run: bun run test:protocol
-      - run: bun run test:fixtures
-      - run: bun run publint
-      - run: bun run attw
+      - run: bun run validate:release
       - uses: changesets/action@v1
         if: env.CHANGESETS_GITHUB_TOKEN != ''
         with:

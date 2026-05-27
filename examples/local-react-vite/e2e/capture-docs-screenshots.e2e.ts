@@ -15,43 +15,51 @@ const routes: ReadonlyArray<{
   fullPage?: boolean;
   mobileName: string;
   path: string;
+  readySelector: string;
 }> = [
   {
     desktopName: "agent-ui-home-desktop.png",
     mobileName: "agent-ui-home-mobile.png",
     path: "/",
+    readySelector: '[data-testid="agent-chat"]',
   },
   {
     desktopName: "agent-ui-rich-transcript-desktop.png",
     mobileName: "agent-ui-rich-transcript-mobile.png",
     path: "/rich-transcript",
+    readySelector: '[data-testid="agent-chat"]',
   },
   {
     desktopName: "agent-ui-host-workflow-desktop.png",
     fullPage: true,
     mobileName: "agent-ui-host-workflow-mobile.png",
     path: "/host-workflow-recipe",
+    readySelector: ".aui-host-recipe",
   },
   {
     desktopName: "agent-ui-usage-only-desktop.png",
     mobileName: "agent-ui-usage-only-mobile.png",
     path: "/usage-only",
+    readySelector: ".aui-usage-only",
   },
   {
     desktopName: "agent-ui-scoped-thread-desktop.png",
     mobileName: "agent-ui-scoped-thread-mobile.png",
     path: "/scoped-thread-pane",
+    readySelector: ".aui-example-frame .aui-thread-surface",
   },
   {
     desktopName: "agent-ui-app-connectors-desktop.png",
     mobileName: "agent-ui-app-connectors-mobile.png",
     path: "/app-connectors",
+    readySelector: ".aui-example-frame .aui-apps-panel",
   },
   {
     desktopName: "agent-ui-fixture-gallery-desktop.png",
     fullPage: true,
     mobileName: "agent-ui-fixture-gallery-mobile.png",
     path: "/fixture-gallery",
+    readySelector: ".aui-fixture-gallery",
   },
 ];
 
@@ -71,7 +79,7 @@ test("refresh docs/screenshots", async ({ browser }) => {
       });
       const page = await context.newPage();
       await page.goto(route.path, { waitUntil: "domcontentloaded" });
-      await page.getByTestId("agent-chat").waitFor({ state: "visible" });
+      await page.locator(route.readySelector).waitFor({ state: "visible" });
       await page.evaluate(async () => {
         await document.fonts?.ready;
         await new Promise((resolve) => requestAnimationFrame(resolve));

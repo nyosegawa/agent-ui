@@ -24,7 +24,7 @@
   display: grid;
   gap: var(--aui-space-450);
   grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.6fr);
-  padding: 0 0 var(--aui-space-650);
+  padding: 0 0 var(--aui-space-600);
 }
 
 .aui-usage-only-header h1 {
@@ -59,7 +59,7 @@
   border-top: 1px solid var(--aui-border);
   display: grid;
   gap: var(--aui-space-450);
-  padding: var(--aui-space-650) 0 0;
+  padding: var(--aui-space-600) 0 0;
 }
 
 .aui-usage-only-section > header {
@@ -183,7 +183,7 @@
 
 @media (max-width: 760px) {
   .aui-usage-only {
-    gap: var(--aui-space-650);
+    gap: var(--aui-space-600);
     padding: var(--aui-space-550) var(--aui-space-350) var(--aui-space-1200);
   }
   .aui-usage-only-header {

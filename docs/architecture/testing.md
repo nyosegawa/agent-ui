@@ -19,16 +19,7 @@ Run this before publishing, changing package boundaries, or changing App Server
 protocol handling:
 
 ```sh
-bun run typecheck
-bun run lint
-bun run test
-bun run test:protocol
-bun run test:fixtures
-bun run validate:packages
-bun run check:dead-code
-bun run test:api-snapshots
-bun run test:package-resolution
-bun run test:node-compat
+bun run validate:release
 bun run test:e2e:playwright
 ```
 
@@ -36,16 +27,29 @@ bun run test:e2e:playwright
 `arethetypeswrong`. Do not run those three in parallel because build cleans
 package `dist/` directories.
 
+Canonical validation tiers:
+
+- `bun run validate:fast`: typecheck, lint, and the normal Vitest suite.
+- `bun run validate:protocol`: Codex protocol coverage plus core fixture
+  normalization coverage.
+- `bun run validate:packages`: fresh package build, `publint`, and
+  `arethetypeswrong` in the required order.
+- `bun run validate:e2e`: clean Playwright ports, then deterministic browser
+  e2e.
+- `bun run validate:release`: fast, protocol, packages, dead-code,
+  API-snapshot, package-resolution, and Node compatibility gates.
+
+Use `bun run check:clean-build-output` before claiming a clean-state validation
+when package, example, declaration, or TypeScript graph changes should be proven
+without ignored `dist` or `.next` output already present.
+
 ## CI Coverage
 
 The main CI workflow validates the normal development path:
 
 - install with the repo-pinned Bun version
-- `bun run typecheck`
-- `bun run lint`
-- `bun run test`
-- `bun run test:protocol`
-- `bun run test:fixtures`
+- `bun run validate:fast`
+- `bun run validate:protocol`
 - `bun run validate:packages`
 - `bun run check:dead-code`
 - `bun run test:api-snapshots`
@@ -60,6 +64,10 @@ maps: missing, changed, and stale public declaration snapshots fail unless
 public API change. Bundler implementation chunks are not snapshots unless an
 export map points to them. pnpm compatibility is a smoke target only; Bun
 remains the package manager and lockfile owner.
+
+`bun run test:package-resolution` performs a fresh package build before it
+creates an isolated consumer project, so it cannot pass by resolving stale
+local `dist` artifacts left by an older build.
 
 ## Protocol Tests
 
@@ -137,6 +145,9 @@ Edit restores queued attachment chips.
 
 `bun run test:e2e:playwright` starts its own fixture preview servers. Do not
 manually start port 5174 for this command.
+The fixture preview server builds `examples/local-react-vite` before previewing
+it, so ignored `dist` output from a previous run cannot satisfy the browser
+gate.
 
 The fixture routes are:
 
