@@ -14,6 +14,12 @@
       "@nyosegawa/agent-ui-codex/request-builders": [
         "../../packages/codex/src/request-builders.ts"
       ],
+      "@nyosegawa/agent-ui-codex/session": [
+        "../../packages/codex/src/session.ts"
+      ],
+      "@nyosegawa/agent-ui-codex/stable-types": [
+        "../../packages/codex/src/stable-types.ts"
+      ],
       "@nyosegawa/agent-ui-codex/websocket": [
         "../../packages/codex/src/websocket.ts"
       ],

@@ -70,8 +70,8 @@ Implementation status:
   `transport` property and redacts stderr before forwarding logs.
 - The generated stable and experimental TypeScript schemas are vendored under `packages/codex/src/generated`.
 - `request-builders.ts` is the product request boundary. Builders return
-  params that satisfy generated stable App Server types; React re-exports those
-  builders instead of owning Codex-specific request shapes.
+  params that satisfy generated stable App Server types. React does not own or
+  re-export Codex-specific request shapes.
 - `createCodexSession()` is the stable facade for productized account, model,
   thread, turn, skills, hooks, and app methods. Experimental method calls must
   use `requestExperimental()` and require explicit opt-in.

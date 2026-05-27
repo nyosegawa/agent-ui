@@ -15,52 +15,7 @@ import {
   type ThreadState,
 } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  accountReadParams,
-  cancelLoginParams,
-  appsListParams,
-  deviceCodeLoginParams,
-  hooksListParams,
-  modelListParams,
-  skillsConfigWriteParams,
-  skillsListParams,
-  textInput,
-  threadArchiveParams,
-  threadCompactStartParams,
-  threadForkParams,
-  threadListParams,
-  threadRollbackParams,
-  threadSetNameParams,
-  threadReadParams,
-  threadResumeParams,
-  threadStartParams,
-  threadUnarchiveParams,
-  turnInterruptParams,
-  turnStartParams,
-  turnSteerParams,
-  type CancelLoginAccountParams,
-  type AppsListParams,
-  type CodexUserInput as InternalCodexUserInput,
-  type GetAccountParams,
-  type HooksListParams,
-  type LoginAccountParams,
-  type ModelListParams,
-  type SkillsConfigWriteParams,
-  type SkillsListParams,
-  type ThreadArchiveParams,
-  type ThreadCompactStartParams,
-  type ThreadForkParams,
-  type ThreadListParams,
-  type ThreadReadParams,
-  type ThreadResumeParams,
-  type ThreadRollbackParams,
-  type ThreadSetNameParams,
-  type ThreadStartParams,
-  type ThreadUnarchiveParams,
-  type TurnInterruptParams,
-  type TurnStartParams,
-  type TurnSteerParams,
-} from "@nyosegawa/agent-ui-codex/request-builders";
+import { createCodexSession } from "@nyosegawa/agent-ui-codex/session";
 import type { AgentUserInput } from "./agent-input";
 import { useAgentContext } from "./provider";
 import {
@@ -93,6 +48,15 @@ type AgentSkillConfigParams = AgentRequestParams & {
   name?: unknown;
   path?: unknown;
 };
+
+function useCodexSession() {
+  const { transport } = useAgentContext();
+  return useMemo(() => createCodexSession(transport), [transport]);
+}
+
+function textAgentInput(text: string): AgentUserInput {
+  return { text, text_elements: [], type: "text" };
+}
 
 export const AGENT_EXECUTION_MODES: AgentExecutionMode[] = [
   {
@@ -146,7 +110,8 @@ export const AGENT_EXECUTION_MODES: AgentExecutionMode[] = [
 ];
 
 export function useAgentThread(threadId?: ThreadId) {
-  const { dispatch, state, transport } = useAgentContext();
+  const { dispatch, state } = useAgentContext();
+  const codex = useCodexSession();
   const resolvedThreadId = threadId ?? state.activeThreadId;
   const thread = resolvedThreadId
     ? selectThread(state, resolvedThreadId)
@@ -156,15 +121,11 @@ export function useAgentThread(threadId?: ThreadId) {
 
   const startThread = useCallback(
     async (params?: Record<string, unknown>) => {
-      const requestParams = threadStartParams({
+      const result = await codex.thread.start({
         cwd: runSettings.cwd,
         model: runSettings.modelId,
         ...params,
       });
-      const result = await transport.request<ThreadStartParams, unknown>(
-        "thread/start",
-        requestParams,
-      );
       const resultRecord = asRecord(result) ?? {};
       const rawThread = resultRecord.thread ?? result;
       const rawThreadRecord = asRecord(rawThread) ?? {};
@@ -185,7 +146,7 @@ export function useAgentThread(threadId?: ThreadId) {
       syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       return result;
     },
-    [dispatch, runSettings.cwd, runSettings.modelId, transport],
+    [codex, dispatch, runSettings.cwd, runSettings.modelId],
   );
 
   const startThreadWithInput = useCallback(
@@ -201,34 +162,29 @@ export function useAgentThread(threadId?: ThreadId) {
       const executionMode = AGENT_EXECUTION_MODES.find(
         (mode) => mode.id === runSettings.executionMode,
       );
-      const requestParams = turnStartParams({
+      await codex.turn.start({
         cwd: runSettings.cwd,
-        effort: runSettings.effort as TurnStartParams["effort"],
+        effort: runSettings.effort,
         input: normalizeTurnInput(input),
         model: runSettings.modelId,
         ...executionMode?.turnParams,
         threadId,
       });
-      await transport.request<TurnStartParams>("turn/start", requestParams);
       return result;
     },
     [
+      codex,
       runSettings.cwd,
       runSettings.effort,
       runSettings.executionMode,
       runSettings.modelId,
       startThread,
-      transport,
     ],
   );
 
   const resumeThread = useCallback(
     async (id: ThreadId, params?: Record<string, unknown>) => {
-      const requestParams = threadResumeParams(id, params);
-      const result = await transport.request<ThreadResumeParams, unknown>(
-        "thread/resume",
-        requestParams,
-      );
+      const result = await codex.thread.resume(id, params);
       const rawThread = asRecord(result)?.thread ?? result;
       const rawThreadRecord = asRecord(rawThread);
       if (rawThreadRecord && hasThreadId(rawThreadRecord)) {
@@ -239,7 +195,7 @@ export function useAgentThread(threadId?: ThreadId) {
       dispatch({ threadId: id, type: "thread/active/set" });
       return result;
     },
-    [dispatch, transport],
+    [codex, dispatch],
   );
 
   return {
@@ -255,7 +211,8 @@ export function useAgentThread(threadId?: ThreadId) {
 export const useAgentThreadController = useAgentThread;
 
 export function useAgentThreadActions(threadId?: ThreadId) {
-  const { dispatch, state, transport } = useAgentContext();
+  const { dispatch, state } = useAgentContext();
+  const codex = useCodexSession();
   const composerQueue = useAgentComposerQueueStore();
   const resolvedThreadId = threadId ?? state.activeThreadId;
 
@@ -267,66 +224,47 @@ export function useAgentThreadActions(threadId?: ThreadId) {
   const renameThread = useCallback(
     async (name: string) => {
       const id = requireThreadId();
-      const params = threadSetNameParams(id, name);
-      const response = await transport.request<ThreadSetNameParams, unknown>(
-        "thread/name/set",
-        params,
-      );
+      const response = await codex.thread.setName(id, name);
       dispatch({ name, threadId: id, type: "thread/name/updated" });
       return response;
     },
-    [dispatch, requireThreadId, transport],
+    [codex, dispatch, requireThreadId],
   );
 
   const archiveThread = useCallback(async () => {
     const id = requireThreadId();
-    const response = await transport.request<ThreadArchiveParams, unknown>(
-      "thread/archive",
-      threadArchiveParams(id),
-    );
+    const response = await codex.thread.archive(id);
     composerQueue.clearThreadFollowUps(id);
     dispatch({ status: "archived", threadId: id, type: "thread/status/changed" });
     return response;
-  }, [composerQueue, dispatch, requireThreadId, transport]);
+  }, [codex, composerQueue, dispatch, requireThreadId]);
 
   const unarchiveThread = useCallback(async () => {
     const id = requireThreadId();
-    const response = await transport.request<ThreadUnarchiveParams, unknown>(
-      "thread/unarchive",
-      threadUnarchiveParams(id),
-    );
+    const response = await codex.thread.unarchive(id);
     dispatch({ status: "loaded", threadId: id, type: "thread/status/changed" });
     return response;
-  }, [dispatch, requireThreadId, transport]);
+  }, [codex, dispatch, requireThreadId]);
 
   const forkThread = useCallback(
     async (params: AgentRequestParams = {}) => {
       const id = requireThreadId();
-      return transport.request<ThreadForkParams, unknown>(
-        "thread/fork",
-        threadForkParams(id, params as Omit<ThreadForkParams, "threadId">),
-      );
+      return codex.thread.fork(id, params);
     },
-    [requireThreadId, transport],
+    [codex, requireThreadId],
   );
 
   const compactThread = useCallback(async () => {
     const id = requireThreadId();
-    return transport.request<ThreadCompactStartParams, unknown>(
-      "thread/compact/start",
-      threadCompactStartParams(id),
-    );
-  }, [requireThreadId, transport]);
+    return codex.thread.compactStart(id);
+  }, [codex, requireThreadId]);
 
   const rollbackThread = useCallback(
     async (numTurns = 1) => {
       const id = requireThreadId();
-      return transport.request<ThreadRollbackParams, unknown>(
-        "thread/rollback",
-        threadRollbackParams(id, numTurns),
-      );
+      return codex.thread.rollback(id, numTurns);
     },
-    [requireThreadId, transport],
+    [codex, requireThreadId],
   );
 
   return {
@@ -357,7 +295,8 @@ export interface ThreadHistoryParams {
 }
 
 export function useAgentThreadHistory() {
-  const { dispatch, state, transport } = useAgentContext();
+  const { dispatch, state } = useAgentContext();
+  const codex = useCodexSession();
   const [isLoading, setIsLoading] = useState(false);
   const [cursor, setCursor] = useState<string | null>();
   const [error, setError] = useState<Error | undefined>();
@@ -367,11 +306,7 @@ export function useAgentThreadHistory() {
       setIsLoading(true);
       setError(undefined);
       try {
-        const requestParams = threadListParams(params);
-        const response = await transport.request<ThreadListParams, unknown>(
-          "thread/list",
-          requestParams,
-        );
+        const response = await codex.thread.list(params);
         const responseRecord = asRecord(response);
         const rawThreads = Array.isArray(responseRecord?.data)
           ? responseRecord.data
@@ -395,7 +330,7 @@ export function useAgentThreadHistory() {
         setIsLoading(false);
       }
     },
-    [dispatch, transport],
+    [codex, dispatch],
   );
 
   return {
@@ -408,17 +343,14 @@ export function useAgentThreadHistory() {
 }
 
 export function useAgentThreadReader() {
-  const { dispatch, transport } = useAgentContext();
+  const { dispatch } = useAgentContext();
+  const codex = useCodexSession();
   const readThread = useCallback(
     async (
       threadId: ThreadId,
       options: { activate?: boolean; includeTurns?: boolean } = {},
     ) => {
-      const requestParams = threadReadParams(threadId, options.includeTurns ?? true);
-      const response = await transport.request<ThreadReadParams, unknown>(
-        "thread/read",
-        requestParams,
-      );
+      const response = await codex.thread.read(threadId, options.includeTurns ?? true);
       const rawThread = asRecord(response)?.thread ?? response;
       if (!hasThreadId(rawThread)) {
         throw new Error(`thread/read returned no thread for ${threadId}`);
@@ -430,7 +362,7 @@ export function useAgentThreadReader() {
       syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       return response;
     },
-    [dispatch, transport],
+    [codex, dispatch],
   );
   return { readThread };
 }
@@ -462,7 +394,8 @@ function syncRunSettingsFromRawThread(
 }
 
 export function useAgentTurn(threadId?: ThreadId) {
-  const { state, transport } = useAgentContext();
+  const { state } = useAgentContext();
+  const codex = useCodexSession();
   const resolvedThreadId = threadId ?? state.activeThreadId;
   const runSettings = selectRunSettings(state);
 
@@ -472,51 +405,44 @@ export function useAgentTurn(threadId?: ThreadId) {
       const executionMode = AGENT_EXECUTION_MODES.find(
         (mode) => mode.id === runSettings.executionMode,
       );
-      const requestParams = turnStartParams({
+      return codex.turn.start({
         cwd: runSettings.cwd,
-        effort: runSettings.effort as TurnStartParams["effort"],
+        effort: runSettings.effort,
         input: normalizeTurnInput(input),
         model: runSettings.modelId,
         ...executionMode?.turnParams,
         ...params,
         threadId: resolvedThreadId,
       });
-      return transport.request<TurnStartParams>("turn/start", requestParams);
     },
     [
+      codex,
       resolvedThreadId,
       runSettings.cwd,
       runSettings.effort,
       runSettings.executionMode,
       runSettings.modelId,
-      transport,
     ],
   );
 
   const interruptTurn = useCallback(
     async (turnId: string) => {
       if (!resolvedThreadId) throw new Error("No active thread");
-      return transport.request<TurnInterruptParams>(
-        "turn/interrupt",
-        turnInterruptParams(resolvedThreadId, turnId),
-      );
+      return codex.turn.interrupt(resolvedThreadId, turnId);
     },
-    [resolvedThreadId, transport],
+    [codex, resolvedThreadId],
   );
 
   const steerTurn = useCallback(
     async (expectedTurnId: string, input: string | AgentUserInput[]) => {
       if (!resolvedThreadId) throw new Error("No active thread");
-      return transport.request<TurnSteerParams>(
-        "turn/steer",
-        turnSteerParams({
-          expectedTurnId,
-          input: normalizeTurnInput(input),
-          threadId: resolvedThreadId,
-        }),
-      );
+      return codex.turn.steer({
+        expectedTurnId,
+        input: normalizeTurnInput(input),
+        threadId: resolvedThreadId,
+      });
     },
-    [resolvedThreadId, transport],
+    [codex, resolvedThreadId],
   );
 
   return { interruptTurn, startTurn, steerTurn };
@@ -574,7 +500,7 @@ export function useAgentComposer(threadId?: ThreadId) {
       const input = value.trim();
       if (!input && items.length === 0) return undefined;
       return {
-        input: input ? [textInput(input), ...items] : items,
+        input: input ? [textAgentInput(input), ...items] : items,
         text: input,
       };
     },
@@ -798,8 +724,8 @@ function followUpSendPreflightError(
   return undefined;
 }
 
-function normalizeTurnInput(input: string | AgentUserInput[]): string | InternalCodexUserInput[] {
-  return typeof input === "string" ? input : (input as InternalCodexUserInput[]);
+function normalizeTurnInput(input: string | AgentUserInput[]): string | AgentUserInput[] {
+  return input;
 }
 
 function summarizeUserInput(input: AgentUserInput[], t: (key: AgentI18nKey) => string): string {
@@ -863,13 +789,10 @@ export function useAgentRunSettings() {
 }
 
 export function useAgentAuth() {
-  const { dispatch, state, transport } = useAgentContext();
+  const { dispatch, state } = useAgentContext();
+  const codex = useCodexSession();
   const readAccount = useCallback(async () => {
-    const params = accountReadParams(false);
-    const response = await transport.request<GetAccountParams, unknown>(
-      "account/read",
-      params,
-    );
+    const response = await codex.account.read(false);
     const responseRecord = asRecord(response);
     const account =
       responseRecord && Object.prototype.hasOwnProperty.call(responseRecord, "account")
@@ -883,13 +806,9 @@ export function useAgentAuth() {
       type: "account/updated",
     });
     return response;
-  }, [dispatch, transport]);
+  }, [codex, dispatch]);
   const login = useCallback(async () => {
-    const params = deviceCodeLoginParams();
-    const raw = await transport.request<LoginAccountParams, unknown>(
-      "account/login/start",
-      params,
-    );
+    const raw = await codex.account.loginDeviceCode();
     const record = asRecord(raw) ?? {};
     const loginState = {
       loginId: stringValue(record.loginId) ?? stringValue(record.login_id),
@@ -904,19 +823,18 @@ export function useAgentAuth() {
       verificationUrl: loginState.verificationUrl,
     });
     return loginState;
-  }, [dispatch, transport]);
+  }, [codex, dispatch]);
   const cancelLogin = useCallback(async () => {
     const loginId = state.account.login?.loginId;
     if (!loginId) return;
-    const params = cancelLoginParams(loginId);
-    await transport.request<CancelLoginAccountParams>("account/login/cancel", params);
+    await codex.account.cancelLogin(loginId);
     dispatch({ account: null, status: "unauthenticated", type: "account/updated" });
-  }, [dispatch, state.account.login?.loginId, transport]);
+  }, [codex, dispatch, state.account.login?.loginId]);
   const logout = useCallback(async () => {
-    const response = await transport.request("account/logout");
+    const response = await codex.account.logout();
     dispatch({ account: null, status: "unauthenticated", type: "account/updated" });
     return response;
-  }, [dispatch, transport]);
+  }, [codex, dispatch]);
   return { account: state.account, cancelLogin, login, logout, readAccount };
 }
 
@@ -1050,42 +968,36 @@ function accountResponseHasAccount(response: unknown): boolean {
 }
 
 export function useAgentUsage() {
-  const { dispatch, state, transport } = useAgentContext();
+  const { dispatch, state } = useAgentContext();
+  const codex = useCodexSession();
   const refreshUsage = useCallback(async () => {
-    const response = await transport.request("account/rateLimits/read");
+    const response = await codex.account.rateLimitsRead();
     dispatch({ rateLimits: response, type: "account/rateLimits/updated" });
     return response;
-  }, [dispatch, transport]);
+  }, [codex, dispatch]);
   return { rateLimits: state.account.rateLimits, refreshUsage };
 }
 
 export function useAgentSkills(cwd?: string) {
-  const { dispatch, state, transport } = useAgentContext();
+  const { dispatch, state } = useAgentContext();
+  const codex = useCodexSession();
   const key = cwd ?? "";
   const skills = state.skills.byCwd[key] ?? [];
   const refreshSkills = useCallback(
     async (params: AgentListRequestParams = {}) => {
-      const requestParams = skillsListParams(
-        cwd && !params.cwds ? { ...params, cwds: [cwd] } : params,
-      );
-      const response = await transport.request<SkillsListParams, unknown>(
-        "skills/list",
-        requestParams,
-      );
+      const requestParams = cwd && !params.cwds ? { ...params, cwds: [cwd] } : params;
+      const response = await codex.skills.list(requestParams);
       const entries = normalizeSkillsList(response, cwd);
       for (const entry of entries) {
         dispatch({ cwd: entry.cwd, skills: entry.skills, type: "skills/updated" });
       }
       return entries;
     },
-    [cwd, dispatch, transport],
+    [codex, cwd, dispatch],
   );
   const setSkillEnabled = useCallback(
     async (params: AgentSkillConfigParams) => {
-      const response = await transport.request<SkillsConfigWriteParams, unknown>(
-        "skills/config/write",
-        skillsConfigWriteParams(params as SkillsConfigWriteParams),
-      );
+      const response = await codex.skills.configWrite(params);
       const targetName = stringValue(params.name);
       const targetPath = stringValue(params.path);
       const updateCwd = cwd ?? key;
@@ -1101,37 +1013,34 @@ export function useAgentSkills(cwd?: string) {
       });
       return response;
     },
-    [cwd, dispatch, key, state.skills.byCwd, transport],
+    [codex, cwd, dispatch, key, state.skills.byCwd],
   );
   return { refreshSkills, setSkillEnabled, skills };
 }
 
 export function useAgentHooks(cwd?: string) {
-  const { dispatch, state, transport } = useAgentContext();
+  const { dispatch, state } = useAgentContext();
+  const codex = useCodexSession();
   const key = cwd ?? "";
   const hooks = state.hooks.byCwd[key] ?? [];
   const refreshHooks = useCallback(
     async (params: AgentListRequestParams = {}) => {
-      const requestParams = hooksListParams(
-        cwd && !params.cwds ? { ...params, cwds: [cwd] } : params,
-      );
-      const response = await transport.request<HooksListParams, unknown>(
-        "hooks/list",
-        requestParams,
-      );
+      const requestParams = cwd && !params.cwds ? { ...params, cwds: [cwd] } : params;
+      const response = await codex.hooks.list(requestParams);
       const entries = normalizeHooksList(response, cwd);
       for (const entry of entries) {
         dispatch({ cwd: entry.cwd, hooks: entry.hooks, type: "hooks/updated" });
       }
       return entries;
     },
-    [cwd, dispatch, transport],
+    [codex, cwd, dispatch],
   );
   return { hooks, refreshHooks };
 }
 
 export function useAgentApps(threadId?: string) {
-  const { dispatch, state, transport } = useAgentContext();
+  const { dispatch, state } = useAgentContext();
+  const codex = useCodexSession();
   const appScope = threadId ?? "";
   const scopedApps = state.apps.byScope[appScope] ?? {
     apps: threadId ? [] : state.apps.apps,
@@ -1140,13 +1049,8 @@ export function useAgentApps(threadId?: string) {
   };
   const refreshApps = useCallback(
     async (params: AgentListRequestParams = {}) => {
-      const requestParams = appsListParams(
-        threadId && !params.threadId ? { ...params, threadId } : params,
-      );
-      const response = await transport.request<AppsListParams, unknown>(
-        "app/list",
-        requestParams,
-      );
+      const requestParams = threadId && !params.threadId ? { ...params, threadId } : params;
+      const response = await codex.apps.list(requestParams);
       const { apps, nextCursor } = normalizeAppsList(response);
       dispatch({
         apps: requestParams.cursor ? mergeApps(scopedApps.apps, apps) : apps,
@@ -1156,7 +1060,7 @@ export function useAgentApps(threadId?: string) {
       });
       return { apps, nextCursor };
     },
-    [dispatch, scopedApps.apps, threadId, transport],
+    [codex, dispatch, scopedApps.apps, threadId],
   );
   const loadMoreApps = useCallback(
     async () =>
@@ -1172,17 +1076,14 @@ export function useAgentApps(threadId?: string) {
 }
 
 export function useAgentModels() {
-  const { dispatch, state, transport } = useAgentContext();
+  const { dispatch, state } = useAgentContext();
+  const codex = useCodexSession();
   const refreshModels = useCallback(async () => {
-    const params = modelListParams();
-    const response = await transport.request<ModelListParams, unknown>(
-      "model/list",
-      params,
-    );
+    const response = await codex.models.list();
     const models = normalizeModelList(response);
     dispatch({ models, type: "models/updated" });
     return models;
-  }, [dispatch, transport]);
+  }, [codex, dispatch]);
   return { models: state.models.models, refreshModels };
 }
 

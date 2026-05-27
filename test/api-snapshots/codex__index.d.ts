@@ -2,9 +2,10 @@ import { RequestId, AgentError, AgentApp, AgentEvent, AgentModel, AgentTransport
 import { C as CodexInitializeOptions } from './websocket-CE3l2YpP.js';
 export { a as CODEX_PROTOCOL_COMMIT, b as CODEX_PROTOCOL_GENERATED_AT, c as CodexCapabilityMetadata, d as CodexCapabilityStatus, e as CodexClientInfo, f as CodexInitializeCapabilities, g as CodexWebSocketReconnectOptions, h as CodexWebSocketTransportOptions, E as ExperimentalAvailableMethod, H as HostOnlyMethod, S as StableAvailableMethod, i as StableNotificationMethod, j as StableProductizedMethod, k as StableServerRequestMethod, l as codexCapabilityMetadata, m as codexInitializeParams, n as createCodexWebSocketTransport, o as experimentalAvailableMethods, p as hostOnlyMethods, s as stableAvailableMethods, q as stableClientMethods, r as stableNotificationMethods, t as stableProductizedMethods, u as stableServerRequestMethods } from './websocket-CE3l2YpP.js';
 export { AgentBrowserVerificationInputOptions, CodexUserInput, accountReadParams, agentBrowserSkillInput, agentBrowserVerificationInput, apiKeyLoginParams, appsListParams, authTokensLoginParams, cancelLoginParams, chatgptLoginParams, deviceCodeLoginParams, disabledProductMethods, hooksListParams, imageInput, localImageInput, mentionInput, modelListParams, skillInput, skillsConfigWriteParams, skillsListParams, textInput, threadArchiveParams, threadCompactStartParams, threadForkParams, threadInjectItemsParams, threadListParams, threadLoadedListParams, threadMetadataUpdateParams, threadReadParams, threadResumeParams, threadRollbackParams, threadSetNameParams, threadStartParams, threadUnarchiveParams, threadUnsubscribeParams, turnInterruptParams, turnStartParams, turnSteerParams } from './request-builders.js';
-import { A as AppsListParams, H as HooksListParams, S as SkillsConfigWriteParams, a as SkillsListParams, c as ThreadForkParams, d as ThreadInjectItemsParams, e as ThreadListParams, f as ThreadLoadedListParams, g as ThreadMetadataUpdateParams, i as ThreadResumeParams, l as ThreadStartParams, U as UserInput, p as TurnStartParams, M as ModelListParams } from './TurnSteerParams-CYQ33vq2.js';
-export { C as CancelLoginAccountParams, G as GetAccountParams, L as LoginAccountParams, T as ThreadArchiveParams, b as ThreadCompactStartParams, h as ThreadReadParams, j as ThreadRollbackParams, k as ThreadSetNameParams, m as ThreadUnarchiveParams, n as ThreadUnsubscribeParams, o as TurnInterruptParams, q as TurnSteerParams } from './TurnSteerParams-CYQ33vq2.js';
+export { CodexRequestOptions, CodexSession, CodexSessionOptions, CodexSessionUserInput, createCodexSession } from './session.js';
 import { Writable, Readable } from 'node:stream';
+export { A as AppsListParams, C as CancelLoginAccountParams, G as GetAccountParams, H as HooksListParams, L as LoginAccountParams, M as ModelListParams, S as SkillsConfigWriteParams, a as SkillsListParams, T as ThreadArchiveParams, b as ThreadCompactStartParams, c as ThreadForkParams, d as ThreadListParams, e as ThreadLoadedListParams, f as ThreadMetadataUpdateParams, g as ThreadReadParams, h as ThreadResumeParams, i as ThreadRollbackParams, j as ThreadSetNameParams, k as ThreadStartParams, l as ThreadUnarchiveParams, m as ThreadUnsubscribeParams, n as TurnInterruptParams, o as TurnStartParams, p as TurnSteerParams, U as UserInput } from './TurnSteerParams-C1hpUYn_.js';
+export { T as ThreadInjectItemsParams } from './ThreadInjectItemsParams-0F8pIWcm.js';
 import './InitializeParams-CDX1c2T9.js';
 
 interface JsonRpcRequest {
@@ -50,62 +51,6 @@ declare function normalizeCodexServerMessage(message: MethodMessage): AgentEvent
 declare function normalizeApps(raw: unknown): AgentApp[];
 declare function normalizeModelListResponse(response: unknown): AgentModel[];
 
-interface CodexSessionOptions {
-    experimental?: boolean;
-}
-interface CodexSession {
-    account: {
-        cancelLogin(loginId: string): Promise<unknown>;
-        loginDeviceCode(): Promise<unknown>;
-        logout(): Promise<unknown>;
-        read(refreshToken?: boolean): Promise<unknown>;
-        rateLimitsRead(): Promise<unknown>;
-    };
-    apps: {
-        list(params?: AppsListParams): Promise<unknown>;
-    };
-    hooks: {
-        list(params?: HooksListParams): Promise<unknown>;
-    };
-    requestExperimental<TParams = unknown, TResult = unknown>(method: string, params?: TParams): Promise<TResult>;
-    skills: {
-        configWrite(params: SkillsConfigWriteParams): Promise<unknown>;
-        list(params?: SkillsListParams): Promise<unknown>;
-    };
-    thread: {
-        archive(threadId: string): Promise<unknown>;
-        compactStart(threadId: string): Promise<unknown>;
-        fork(threadId: string, params?: Omit<ThreadForkParams, "threadId">): Promise<unknown>;
-        injectItems(threadId: string, items: ThreadInjectItemsParams["items"]): Promise<unknown>;
-        list(params?: ThreadListParams): Promise<unknown>;
-        loadedList(params?: ThreadLoadedListParams): Promise<unknown>;
-        metadataUpdate(threadId: string, params?: Omit<ThreadMetadataUpdateParams, "threadId">): Promise<unknown>;
-        read(threadId: string, includeTurns?: boolean): Promise<unknown>;
-        resume(threadId: string, params?: Omit<ThreadResumeParams, "threadId">): Promise<unknown>;
-        rollback(threadId: string, numTurns: number): Promise<unknown>;
-        setName(threadId: string, name: string): Promise<unknown>;
-        start(params?: ThreadStartParams): Promise<unknown>;
-        unarchive(threadId: string): Promise<unknown>;
-        unsubscribe(threadId: string): Promise<unknown>;
-    };
-    turn: {
-        interrupt(threadId: string, turnId: string): Promise<unknown>;
-        start(params: {
-            input: string | UserInput[];
-            threadId: string;
-        } & Omit<TurnStartParams, "input" | "threadId">): Promise<unknown>;
-        steer(params: {
-            expectedTurnId: string;
-            input: string | UserInput[];
-            threadId: string;
-        }): Promise<unknown>;
-    };
-    models: {
-        list(params?: ModelListParams): Promise<unknown>;
-    };
-}
-declare function createCodexSession(transport: AgentTransport, options?: CodexSessionOptions): CodexSession;
-
 interface CodexStdioTransportOptions {
     stdin: Writable;
     stdout: Readable;
@@ -140,4 +85,4 @@ interface DeviceCodeLoginStart {
 declare function startDeviceCodeLogin(transport: AgentTransport): Promise<DeviceCodeLoginStart>;
 declare function cancelDeviceCodeLogin(transport: AgentTransport, loginId: string): Promise<void>;
 
-export { AppsListParams, CodexInitializeOptions, type CodexSdkLikeClient, type CodexSession, type CodexSessionOptions, type CodexStdioTransportOptions, type DeviceCodeLoginStart, HooksListParams, type JsonRpcFailure, type JsonRpcMessage, type JsonRpcNotification, type JsonRpcRequest, type JsonRpcSuccess, ModelListParams, SkillsConfigWriteParams, SkillsListParams, ThreadForkParams, ThreadInjectItemsParams, ThreadListParams, ThreadLoadedListParams, ThreadMetadataUpdateParams, ThreadResumeParams, ThreadStartParams, TurnStartParams, UserInput, cancelDeviceCodeLogin, createCodexSdkTransportAdapter, createCodexSession, createCodexStdioTransport, encodeJsonRpcLine, isBackpressureRetrySafeMethod, isJsonRpcNotification, isJsonRpcRequest, isJsonRpcResponse, jsonRpcErrorObject, jsonRpcErrorPayload, normalizeApps, normalizeCodexServerMessage, normalizeModelListResponse, parseJsonRpcLine, startDeviceCodeLogin };
+export { CodexInitializeOptions, type CodexSdkLikeClient, type CodexStdioTransportOptions, type DeviceCodeLoginStart, type JsonRpcFailure, type JsonRpcMessage, type JsonRpcNotification, type JsonRpcRequest, type JsonRpcSuccess, cancelDeviceCodeLogin, createCodexSdkTransportAdapter, createCodexStdioTransport, encodeJsonRpcLine, isBackpressureRetrySafeMethod, isJsonRpcNotification, isJsonRpcRequest, isJsonRpcResponse, jsonRpcErrorObject, jsonRpcErrorPayload, normalizeApps, normalizeCodexServerMessage, normalizeModelListResponse, parseJsonRpcLine, startDeviceCodeLogin };

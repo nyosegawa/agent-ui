@@ -1,4 +1,3 @@
-import { mentionInput } from "@nyosegawa/agent-ui-codex/request-builders";
 import type { AgentUserInput } from "../agent-input";
 import type { QueuedFollowUpAttachment } from "../hooks";
 
@@ -45,7 +44,7 @@ export interface ComposerAttachment extends QueuedFollowUpAttachment {
 export function composerAttachmentInput(attachment: ComposerAttachment): AgentUserInput[] {
   if (Array.isArray(attachment.input)) return attachment.input;
   if (attachment.input) return [attachment.input];
-  return [mentionInput(attachment.label, attachment.value)];
+  return [{ name: attachment.label, path: attachment.value, type: "mention" }];
 }
 
 export function formatFileSize(size: number): string {

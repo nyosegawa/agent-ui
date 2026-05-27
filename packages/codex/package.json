@@ -29,6 +29,16 @@
         "default": "./dist/request-builders.cjs"
       }
     },
+    "./session": {
+      "import": {
+        "types": "./dist/session.d.ts",
+        "default": "./dist/session.js"
+      },
+      "require": {
+        "types": "./dist/session.d.cts",
+        "default": "./dist/session.cjs"
+      }
+    },
     "./stable-types": {
       "import": {
         "types": "./dist/stable-types.d.ts",

@@ -80,10 +80,10 @@ Responsibilities:
 
 The package root exports JSON-RPC helpers, protocol capability metadata,
 normalizers, request builders, session helpers, stdio transport, WebSocket
-transport, SDK adapter, and auth helpers. Browser
-code should import the WebSocket transport from
-`@nyosegawa/agent-ui-codex/websocket` so Node stdio code stays out of the browser
-bundle.
+transport, SDK adapter, and auth helpers. Browser code should import the
+browser-safe session facade from `@nyosegawa/agent-ui-codex/session` and the
+WebSocket transport from `@nyosegawa/agent-ui-codex/websocket` so Node stdio
+code stays out of the browser bundle.
 
 Default support is stable App Server API only. Experimental API requires
 explicit opt-in. Generated stable App Server types are an advanced public
@@ -284,6 +284,7 @@ Only these subpaths are public today:
 - `@nyosegawa/agent-ui-core`
 - `@nyosegawa/agent-ui-codex`
 - `@nyosegawa/agent-ui-codex/request-builders`
+- `@nyosegawa/agent-ui-codex/session`
 - `@nyosegawa/agent-ui-codex/stable-types`
 - `@nyosegawa/agent-ui-codex/websocket`
 - `@nyosegawa/agent-ui-react`

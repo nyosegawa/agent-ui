@@ -41,7 +41,7 @@ Acceptance:
   API.
 - [x] Remove React root exports for Codex request builders and Codex param
   helpers.
-- [ ] Move all Codex request construction behind Codex package clients or
+- [x] Move all Codex request construction behind Codex package clients or
   host-injected session/controllers.
 - [x] Remove Codex imports from core tests.
 - [x] Remove generic/non-App-Server adapters from the core public API.

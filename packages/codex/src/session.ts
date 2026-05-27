@@ -59,6 +59,12 @@ export interface CodexSessionOptions {
   experimental?: boolean;
 }
 
+export type CodexRequestOptions = object;
+
+export type CodexSessionUserInput = {
+  type: string;
+};
+
 export interface CodexSession {
   account: {
     cancelLogin(loginId: string): Promise<unknown>;
@@ -68,63 +74,64 @@ export interface CodexSession {
     rateLimitsRead(): Promise<unknown>;
   };
   apps: {
-    list(params?: AppsListParams): Promise<unknown>;
+    list(params?: CodexRequestOptions): Promise<unknown>;
   };
   hooks: {
-    list(params?: HooksListParams): Promise<unknown>;
+    list(params?: CodexRequestOptions): Promise<unknown>;
   };
   requestExperimental<TParams = unknown, TResult = unknown>(
     method: string,
     params?: TParams,
   ): Promise<TResult>;
   skills: {
-    configWrite(params: SkillsConfigWriteParams): Promise<unknown>;
-    list(params?: SkillsListParams): Promise<unknown>;
+    configWrite(params: CodexRequestOptions): Promise<unknown>;
+    list(params?: CodexRequestOptions): Promise<unknown>;
   };
   thread: {
     archive(threadId: string): Promise<unknown>;
     compactStart(threadId: string): Promise<unknown>;
     fork(
       threadId: string,
-      params?: Omit<ThreadForkParams, "threadId">,
+      params?: CodexRequestOptions,
     ): Promise<unknown>;
     injectItems(
       threadId: string,
       items: ThreadInjectItemsParams["items"],
     ): Promise<unknown>;
-    list(params?: ThreadListParams): Promise<unknown>;
-    loadedList(params?: ThreadLoadedListParams): Promise<unknown>;
+    list(params?: CodexRequestOptions): Promise<unknown>;
+    loadedList(params?: CodexRequestOptions): Promise<unknown>;
     metadataUpdate(
       threadId: string,
-      params?: Omit<ThreadMetadataUpdateParams, "threadId">,
+      params?: CodexRequestOptions,
     ): Promise<unknown>;
     read(threadId: string, includeTurns?: boolean): Promise<unknown>;
     resume(
       threadId: string,
-      params?: Omit<ThreadResumeParams, "threadId">,
+      params?: CodexRequestOptions,
     ): Promise<unknown>;
     rollback(threadId: string, numTurns: number): Promise<unknown>;
     setName(threadId: string, name: string): Promise<unknown>;
-    start(params?: ThreadStartParams): Promise<unknown>;
+    start(params?: CodexRequestOptions): Promise<unknown>;
     unarchive(threadId: string): Promise<unknown>;
     unsubscribe(threadId: string): Promise<unknown>;
   };
   turn: {
     interrupt(threadId: string, turnId: string): Promise<unknown>;
     start(
-      params: { input: string | UserInput[]; threadId: string } & Omit<
-        TurnStartParams,
-        "input" | "threadId"
-      >,
+      params: {
+        input: string | CodexSessionUserInput[];
+        threadId: string;
+        [key: string]: unknown;
+      },
     ): Promise<unknown>;
     steer(params: {
       expectedTurnId: string;
-      input: string | UserInput[];
+      input: string | CodexSessionUserInput[];
       threadId: string;
     }): Promise<unknown>;
   };
   models: {
-    list(params?: ModelListParams): Promise<unknown>;
+    list(params?: CodexRequestOptions): Promise<unknown>;
   };
 }
 
@@ -144,13 +151,24 @@ export function createCodexSession(
         request<GetAccountParams>(transport, "account/read", accountReadParams(refreshToken)),
     },
     apps: {
-      list: (params) => request<AppsListParams>(transport, "app/list", appsListParams(params)),
+      list: (params) =>
+        request<AppsListParams>(transport, "app/list", appsListParams(params as AppsListParams)),
     },
     hooks: {
-      list: (params) => request<HooksListParams>(transport, "hooks/list", hooksListParams(params)),
+      list: (params) =>
+        request<HooksListParams>(
+          transport,
+          "hooks/list",
+          hooksListParams(params as HooksListParams),
+        ),
     },
     models: {
-      list: (params) => request<ModelListParams>(transport, "model/list", modelListParams(params)),
+      list: (params) =>
+        request<ModelListParams>(
+          transport,
+          "model/list",
+          modelListParams(params as ModelListParams),
+        ),
     },
     requestExperimental: async (method, params) => {
       if (!options.experimental) {
@@ -163,8 +181,17 @@ export function createCodexSession(
     },
     skills: {
       configWrite: (params) =>
-        request<SkillsConfigWriteParams>(transport, "skills/config/write", skillsConfigWriteParams(params)),
-      list: (params) => request<SkillsListParams>(transport, "skills/list", skillsListParams(params)),
+        request<SkillsConfigWriteParams>(
+          transport,
+          "skills/config/write",
+          skillsConfigWriteParams(params as SkillsConfigWriteParams),
+        ),
+      list: (params) =>
+        request<SkillsListParams>(
+          transport,
+          "skills/list",
+          skillsListParams(params as SkillsListParams),
+        ),
     },
     thread: {
       archive: (threadId) =>
@@ -176,7 +203,11 @@ export function createCodexSession(
           threadCompactStartParams(threadId),
         ),
       fork: (threadId, params) =>
-        request<ThreadForkParams>(transport, "thread/fork", threadForkParams(threadId, params)),
+        request<ThreadForkParams>(
+          transport,
+          "thread/fork",
+          threadForkParams(threadId, params as Omit<ThreadForkParams, "threadId">),
+        ),
       injectItems: (threadId, items) =>
         request<ThreadInjectItemsParams>(
           transport,
@@ -184,18 +215,25 @@ export function createCodexSession(
           threadInjectItemsParams(threadId, items),
         ),
       list: (params) =>
-        request<ThreadListParams>(transport, "thread/list", threadListParams(params)),
+        request<ThreadListParams>(
+          transport,
+          "thread/list",
+          threadListParams(params as ThreadListParams),
+        ),
       loadedList: (params) =>
         request<ThreadLoadedListParams>(
           transport,
           "thread/loaded/list",
-          threadLoadedListParams(params),
+          threadLoadedListParams(params as ThreadLoadedListParams),
         ),
       metadataUpdate: (threadId, params) =>
         request<ThreadMetadataUpdateParams>(
           transport,
           "thread/metadata/update",
-          threadMetadataUpdateParams(threadId, params),
+          threadMetadataUpdateParams(
+            threadId,
+            params as Omit<ThreadMetadataUpdateParams, "threadId">,
+          ),
         ),
       read: (threadId, includeTurns) =>
         request<ThreadReadParams>(
@@ -207,7 +245,7 @@ export function createCodexSession(
         request<ThreadResumeParams>(
           transport,
           "thread/resume",
-          threadResumeParams(threadId, params),
+          threadResumeParams(threadId, params as Omit<ThreadResumeParams, "threadId">),
         ),
       rollback: (threadId, numTurns) =>
         request<ThreadRollbackParams>(
@@ -222,7 +260,11 @@ export function createCodexSession(
           threadSetNameParams(threadId, name),
         ),
       start: (params) =>
-        request<ThreadStartParams>(transport, "thread/start", threadStartParams(params)),
+        request<ThreadStartParams>(
+          transport,
+          "thread/start",
+          threadStartParams(params as ThreadStartParams),
+        ),
       unarchive: (threadId) =>
         request<ThreadUnarchiveParams>(
           transport,
@@ -244,9 +286,28 @@ export function createCodexSession(
           turnInterruptParams(threadId, turnId),
         ),
       start: (params) =>
-        request<TurnStartParams>(transport, "turn/start", turnStartParams(params)),
+        request<TurnStartParams>(
+          transport,
+          "turn/start",
+          turnStartParams(
+            params as { input: string | UserInput[]; threadId: string } & Omit<
+              TurnStartParams,
+              "input" | "threadId"
+            >,
+          ),
+        ),
       steer: (params) =>
-        request<TurnSteerParams>(transport, "turn/steer", turnSteerParams(params)),
+        request<TurnSteerParams>(
+          transport,
+          "turn/steer",
+          turnSteerParams(
+            params as {
+              expectedTurnId: string;
+              input: string | UserInput[];
+              threadId: string;
+            },
+          ),
+        ),
     },
   };
 }
