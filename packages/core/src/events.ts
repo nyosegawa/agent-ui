@@ -1,131 +1,46 @@
-import type {
-  AgentError,
-  AgentApp,
-  AgentHook,
-  AgentItemState,
-  AgentModel,
-  AgentSkill,
-  AgentThread,
-  AgentTurn,
-  ExecutionModeId,
-  ItemId,
-  PendingServerRequest,
-  ProtocolNotificationState,
-  RequestId,
-  ReasoningEffort,
-  ThreadId,
-  ThreadStatus,
-  ThreadTokenUsage,
-  TurnId,
-  StatusBannerState,
-  WarningState,
-} from "./state";
+import type { AccountEvent } from "./events/account";
+import type { AppsEvent } from "./events/apps";
+import type { ConnectionEvent } from "./events/connection";
+import type { DiagnosticsEvent } from "./events/diagnostics";
+import type { HooksEvent } from "./events/hooks";
+import type { ItemEvent } from "./events/item";
+import type { ModelsEvent } from "./events/models";
+import type { RunSettingsEvent } from "./events/run-settings";
+import type { ServerRequestEvent } from "./events/server-requests";
+import type { SkillsEvent } from "./events/skills";
+import type { ThreadEvent } from "./events/thread";
+import type { TurnEvent } from "./events/turn";
+import type { UsageEvent } from "./events/usage";
+import type { AgentError, PendingServerRequest, RequestId } from "./state";
+
+export type * from "./events/account";
+export type * from "./events/apps";
+export type * from "./events/connection";
+export type * from "./events/diagnostics";
+export type * from "./events/hooks";
+export type * from "./events/item";
+export type * from "./events/models";
+export type * from "./events/run-settings";
+export type * from "./events/server-requests";
+export type * from "./events/skills";
+export type * from "./events/thread";
+export type * from "./events/turn";
+export type * from "./events/usage";
 
 export type AgentEvent =
-  | { type: "connection/connecting" }
-  | { type: "connection/connected" }
-  | { type: "connection/closed"; reason?: string }
-  | { type: "connection/error"; error: AgentError }
-  | { type: "account/updated"; status?: "unauthenticated" | "authenticated"; account?: unknown }
-  | { type: "account/rateLimits/updated"; rateLimits: unknown }
-  | { type: "usage/hostMetrics/updated"; metrics: unknown }
-  | { type: "skills/updated"; cwd: string; skills: AgentSkill[] }
-  | { type: "apps/updated"; apps: AgentApp[]; nextCursor?: string | null; threadId?: ThreadId }
-  | { type: "hooks/updated"; cwd: string; hooks: AgentHook[] }
-  | {
-      type: "account/login/deviceCodeStarted";
-      loginId?: string;
-      requestId?: RequestId;
-      userCode?: string;
-      verificationUrl?: string;
-      expiresAt?: string;
-    }
-  | {
-      type: "account/login/completed";
-      account?: unknown;
-      error?: string | null;
-      loginId?: string | null;
-      success?: boolean;
-    }
-  | { type: "models/updated"; models: AgentModel[]; selectedModelId?: string }
-  | {
-      type: "runSettings/updated";
-      executionMode?: ExecutionModeId;
-      modelId?: string;
-      effort?: ReasoningEffort;
-      cwd?: string;
-    }
-  | {
-      type: "thread/upserted";
-      thread: AgentThread;
-      status?: ThreadStatus;
-      turns?: AgentTurn[];
-      snapshot?: boolean;
-    }
-  | {
-      type: "thread/started";
-      thread: AgentThread;
-      status?: ThreadStatus;
-      turns?: AgentTurn[];
-      snapshot?: boolean;
-    }
-  | {
-      type: "thread/status/changed";
-      threadId: ThreadId;
-      status: ThreadStatus;
-      snapshot?: boolean;
-    }
-  | { type: "thread/name/updated"; threadId: ThreadId; name: string }
-  | { type: "thread/tokenUsage/updated"; threadId: ThreadId; tokenUsage: ThreadTokenUsage }
-  | { type: "thread/active/set"; threadId?: ThreadId }
-  | { type: "turn/started"; threadId: ThreadId; turn: AgentTurn }
-  | {
-      type: "turn/completed";
-      threadId: ThreadId;
-      turn: AgentTurn;
-      items?: AgentItemState[];
-      snapshot?: boolean;
-    }
-  | { type: "turn/plan/updated"; threadId: ThreadId; turnId: TurnId; explanation?: string | null; plan: unknown; raw?: unknown }
-  | { type: "turn/diff/updated"; threadId: ThreadId; turnId: TurnId; diff: unknown; raw?: unknown }
-  | { type: "item/started"; threadId: ThreadId; turnId: TurnId; item: AgentItemState }
-  | {
-      type: "item/agentMessage/delta";
-      threadId: ThreadId;
-      turnId: TurnId;
-      itemId: ItemId;
-      delta: string;
-    }
-  | {
-      type: "item/reasoning/summaryTextDelta";
-      threadId: ThreadId;
-      turnId: TurnId;
-      itemId: ItemId;
-      delta: string;
-    }
-  | {
-      type: "item/commandOutput/delta";
-      threadId: ThreadId;
-      turnId: TurnId;
-      itemId: ItemId;
-      delta: string;
-    }
-  | {
-      type: "item/filePatch/updated";
-      threadId: ThreadId;
-      turnId: TurnId;
-      itemId: ItemId;
-      patch: unknown;
-    }
-  | { type: "item/completed"; threadId: ThreadId; turnId: TurnId; item: AgentItemState }
-  | { type: "serverRequest/created"; request: PendingServerRequest }
-  | { type: "serverRequest/resolved"; requestId: RequestId }
-  | { type: "serverRequest/rejected"; requestId: RequestId; error?: AgentError }
-  | { type: "status/banner/added"; banner: StatusBannerState }
-  | { type: "status/banner/removed"; id: string }
-  | { type: "notification/received"; notification: ProtocolNotificationState }
-  | { type: "warning/added"; warning: WarningState }
-  | { type: "error/added"; error: AgentError };
+  | ConnectionEvent
+  | AccountEvent
+  | UsageEvent
+  | SkillsEvent
+  | AppsEvent
+  | HooksEvent
+  | ModelsEvent
+  | RunSettingsEvent
+  | ThreadEvent
+  | TurnEvent
+  | ItemEvent
+  | ServerRequestEvent
+  | DiagnosticsEvent;
 
 export interface AgentTransportEvent {
   type: "event" | "request" | "response" | "error" | "stderr" | "raw";

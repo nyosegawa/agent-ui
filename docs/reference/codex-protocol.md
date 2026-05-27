@@ -40,6 +40,12 @@ type AgentError = {
 };
 ```
 
+`AgentEvent` is the normalized event union emitted by protocol adapters. The
+core package also exports domain unions such as `ConnectionEvent`,
+`ThreadEvent`, `TurnEvent`, `ItemEvent`, `ServerRequestEvent`,
+`DiagnosticsEvent`, and `UsageEvent` for hosts that route event handling by
+surface.
+
 ## Stdio Transport
 
 The default transport:

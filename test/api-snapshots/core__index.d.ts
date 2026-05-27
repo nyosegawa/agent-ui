@@ -268,39 +268,13 @@ interface AgentSessionState {
 }
 declare function createInitialAgentState(): AgentSessionState;
 
-type AgentEvent = {
-    type: "connection/connecting";
-} | {
-    type: "connection/connected";
-} | {
-    type: "connection/closed";
-    reason?: string;
-} | {
-    type: "connection/error";
-    error: AgentError;
-} | {
+type AccountEvent = {
     type: "account/updated";
     status?: "unauthenticated" | "authenticated";
     account?: unknown;
 } | {
     type: "account/rateLimits/updated";
     rateLimits: unknown;
-} | {
-    type: "usage/hostMetrics/updated";
-    metrics: unknown;
-} | {
-    type: "skills/updated";
-    cwd: string;
-    skills: AgentSkill[];
-} | {
-    type: "apps/updated";
-    apps: AgentApp[];
-    nextCursor?: string | null;
-    threadId?: ThreadId;
-} | {
-    type: "hooks/updated";
-    cwd: string;
-    hooks: AgentHook[];
 } | {
     type: "account/login/deviceCodeStarted";
     loginId?: string;
@@ -314,68 +288,51 @@ type AgentEvent = {
     error?: string | null;
     loginId?: string | null;
     success?: boolean;
-} | {
-    type: "models/updated";
-    models: AgentModel[];
-    selectedModelId?: string;
-} | {
-    type: "runSettings/updated";
-    executionMode?: ExecutionModeId;
-    modelId?: string;
-    effort?: ReasoningEffort;
-    cwd?: string;
-} | {
-    type: "thread/upserted";
-    thread: AgentThread;
-    status?: ThreadStatus;
-    turns?: AgentTurn[];
-    snapshot?: boolean;
-} | {
-    type: "thread/started";
-    thread: AgentThread;
-    status?: ThreadStatus;
-    turns?: AgentTurn[];
-    snapshot?: boolean;
-} | {
-    type: "thread/status/changed";
-    threadId: ThreadId;
-    status: ThreadStatus;
-    snapshot?: boolean;
-} | {
-    type: "thread/name/updated";
-    threadId: ThreadId;
-    name: string;
-} | {
-    type: "thread/tokenUsage/updated";
-    threadId: ThreadId;
-    tokenUsage: ThreadTokenUsage;
-} | {
-    type: "thread/active/set";
+};
+
+type AppsEvent = {
+    type: "apps/updated";
+    apps: AgentApp[];
+    nextCursor?: string | null;
     threadId?: ThreadId;
+};
+
+type ConnectionEvent = {
+    type: "connection/connecting";
 } | {
-    type: "turn/started";
-    threadId: ThreadId;
-    turn: AgentTurn;
+    type: "connection/connected";
 } | {
-    type: "turn/completed";
-    threadId: ThreadId;
-    turn: AgentTurn;
-    items?: AgentItemState[];
-    snapshot?: boolean;
+    type: "connection/closed";
+    reason?: string;
 } | {
-    type: "turn/plan/updated";
-    threadId: ThreadId;
-    turnId: TurnId;
-    explanation?: string | null;
-    plan: unknown;
-    raw?: unknown;
+    type: "connection/error";
+    error: AgentError;
+};
+
+type DiagnosticsEvent = {
+    type: "status/banner/added";
+    banner: StatusBannerState;
 } | {
-    type: "turn/diff/updated";
-    threadId: ThreadId;
-    turnId: TurnId;
-    diff: unknown;
-    raw?: unknown;
+    type: "status/banner/removed";
+    id: string;
 } | {
+    type: "notification/received";
+    notification: ProtocolNotificationState;
+} | {
+    type: "warning/added";
+    warning: WarningState;
+} | {
+    type: "error/added";
+    error: AgentError;
+};
+
+type HooksEvent = {
+    type: "hooks/updated";
+    cwd: string;
+    hooks: AgentHook[];
+};
+
+type ItemEvent = {
     type: "item/started";
     threadId: ThreadId;
     turnId: TurnId;
@@ -409,7 +366,23 @@ type AgentEvent = {
     threadId: ThreadId;
     turnId: TurnId;
     item: AgentItemState;
-} | {
+};
+
+type ModelsEvent = {
+    type: "models/updated";
+    models: AgentModel[];
+    selectedModelId?: string;
+};
+
+type RunSettingsEvent = {
+    type: "runSettings/updated";
+    executionMode?: ExecutionModeId;
+    modelId?: string;
+    effort?: ReasoningEffort;
+    cwd?: string;
+};
+
+type ServerRequestEvent = {
     type: "serverRequest/created";
     request: PendingServerRequest;
 } | {
@@ -419,22 +392,75 @@ type AgentEvent = {
     type: "serverRequest/rejected";
     requestId: RequestId;
     error?: AgentError;
-} | {
-    type: "status/banner/added";
-    banner: StatusBannerState;
-} | {
-    type: "status/banner/removed";
-    id: string;
-} | {
-    type: "notification/received";
-    notification: ProtocolNotificationState;
-} | {
-    type: "warning/added";
-    warning: WarningState;
-} | {
-    type: "error/added";
-    error: AgentError;
 };
+
+type SkillsEvent = {
+    type: "skills/updated";
+    cwd: string;
+    skills: AgentSkill[];
+};
+
+type ThreadEvent = {
+    type: "thread/upserted";
+    thread: AgentThread;
+    status?: ThreadStatus;
+    turns?: AgentTurn[];
+    snapshot?: boolean;
+} | {
+    type: "thread/started";
+    thread: AgentThread;
+    status?: ThreadStatus;
+    turns?: AgentTurn[];
+    snapshot?: boolean;
+} | {
+    type: "thread/status/changed";
+    threadId: ThreadId;
+    status: ThreadStatus;
+    snapshot?: boolean;
+} | {
+    type: "thread/name/updated";
+    threadId: ThreadId;
+    name: string;
+} | {
+    type: "thread/tokenUsage/updated";
+    threadId: ThreadId;
+    tokenUsage: ThreadTokenUsage;
+} | {
+    type: "thread/active/set";
+    threadId?: ThreadId;
+};
+
+type TurnEvent = {
+    type: "turn/started";
+    threadId: ThreadId;
+    turn: AgentTurn;
+} | {
+    type: "turn/completed";
+    threadId: ThreadId;
+    turn: AgentTurn;
+    items?: AgentItemState[];
+    snapshot?: boolean;
+} | {
+    type: "turn/plan/updated";
+    threadId: ThreadId;
+    turnId: TurnId;
+    explanation?: string | null;
+    plan: unknown;
+    raw?: unknown;
+} | {
+    type: "turn/diff/updated";
+    threadId: ThreadId;
+    turnId: TurnId;
+    diff: unknown;
+    raw?: unknown;
+};
+
+type UsageEvent = {
+    type: "usage/hostMetrics/updated";
+    metrics: unknown;
+};
+
+type AgentEvent = ConnectionEvent | AccountEvent | UsageEvent | SkillsEvent | AppsEvent | HooksEvent | ModelsEvent | RunSettingsEvent | ThreadEvent | TurnEvent | ItemEvent | ServerRequestEvent | DiagnosticsEvent;
 interface AgentTransportEvent {
     type: "event" | "request" | "response" | "error" | "stderr" | "raw";
     event?: AgentEvent;
@@ -521,4 +547,4 @@ declare function selectUsage(state: AgentSessionState): UsageState;
 declare function selectThreadRegistry(state: AgentSessionState): ThreadRegistryState;
 declare function selectRunSettings(state: AgentSessionState): RunSettingsState;
 
-export { AGENT_RETENTION_POLICY, type AccountState, type AgentApp, type AgentError, type AgentEvent, type AgentHook, type AgentItemBlock, type AgentItemBlockKind, type AgentItemState, type AgentModel, type AgentRequestOptions, type AgentSessionState, type AgentSkill, type AgentThread, type AgentTransport, type AgentTransportEvent, type AgentTurn, type AppsState, type ConnectionState, type DeviceCodeLoginState, type DiagnosticsState, type ExecutionModeId, FakeAgentTransport, type FakeAgentTransportOptions, type FakeTransportRequest, type FixtureStep, type HooksState, type ItemId, type ModelState, type PendingServerRequest, type PendingServerRequestKind, type ProtocolNotificationState, type ReasoningEffort, type RequestId, type RunSettingsState, type ScopedAppsState, type ServerRequestQueueState, type SkillsState, type StatusBannerKind, type StatusBannerState, type ThreadId, type ThreadRegistryState, type ThreadRegistryStatus, type ThreadState, type ThreadStatus, type ThreadTokenUsage, type TokenUsageBreakdown, type TurnDiffState, type TurnId, type TurnPlanState, type TurnState, type UsageState, type WarningState, agentReducer, boundedAppend, boundedRecordEntry, boundedStringAppend, boundedUniqueAppend, createInitialAgentState, runEventFixture, selectActiveThread, selectOrderedThreads, selectOrderedTurns, selectPendingApprovals, selectRunSettings, selectServerRequestQueue, selectThread, selectThreadRegistry, selectUsage };
+export { AGENT_RETENTION_POLICY, type AccountEvent, type AccountState, type AgentApp, type AgentError, type AgentEvent, type AgentHook, type AgentItemBlock, type AgentItemBlockKind, type AgentItemState, type AgentModel, type AgentRequestOptions, type AgentSessionState, type AgentSkill, type AgentThread, type AgentTransport, type AgentTransportEvent, type AgentTurn, type AppsEvent, type AppsState, type ConnectionEvent, type ConnectionState, type DeviceCodeLoginState, type DiagnosticsEvent, type DiagnosticsState, type ExecutionModeId, FakeAgentTransport, type FakeAgentTransportOptions, type FakeTransportRequest, type FixtureStep, type HooksEvent, type HooksState, type ItemEvent, type ItemId, type ModelState, type ModelsEvent, type PendingServerRequest, type PendingServerRequestKind, type ProtocolNotificationState, type ReasoningEffort, type RequestId, type RunSettingsEvent, type RunSettingsState, type ScopedAppsState, type ServerRequestEvent, type ServerRequestQueueState, type SkillsEvent, type SkillsState, type StatusBannerKind, type StatusBannerState, type ThreadEvent, type ThreadId, type ThreadRegistryState, type ThreadRegistryStatus, type ThreadState, type ThreadStatus, type ThreadTokenUsage, type TokenUsageBreakdown, type TurnDiffState, type TurnEvent, type TurnId, type TurnPlanState, type TurnState, type UsageEvent, type UsageState, type WarningState, agentReducer, boundedAppend, boundedRecordEntry, boundedStringAppend, boundedUniqueAppend, createInitialAgentState, runEventFixture, selectActiveThread, selectOrderedThreads, selectOrderedTurns, selectPendingApprovals, selectRunSettings, selectServerRequestQueue, selectThread, selectThreadRegistry, selectUsage };
