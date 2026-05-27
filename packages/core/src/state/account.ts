@@ -4,7 +4,6 @@ export interface AccountState {
   status: "unknown" | "unauthenticated" | "authenticating" | "authenticated";
   account?: Record<string, unknown>;
   login?: DeviceCodeLoginState;
-  rateLimits?: unknown;
 }
 
 export interface DeviceCodeLoginState {

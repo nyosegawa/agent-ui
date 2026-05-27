@@ -108,11 +108,10 @@ function CloseupComposerProvider({ children }: { children: ReactNode }) {
     const state = createInitialAgentState();
     state.account = {
       account: { email: "fixture@example.com", planType: "pro" },
-      rateLimits: demoRateLimits(),
       status: "authenticated",
     };
+    state.usage.accountRateLimits = demoRateLimits();
     state.models = { models: demoModels(), selectedModelId: "fixture-demo-model" };
-    state.activeThreadId = "thread-closeup";
     state.threadRegistry.activeThreadId = "thread-closeup";
     state.threadRegistry.liveThreadIds = ["thread-closeup"];
     state.threads["thread-closeup"] = {
@@ -473,7 +472,6 @@ function CloseupMobileChatShell() {
 function CloseupComposerWithMentions() {
   const initialState = useMemo(() => {
     const state = createInitialAgentState();
-    state.activeThreadId = "thread-mentions";
     state.threadRegistry.activeThreadId = "thread-mentions";
     state.threadRegistry.liveThreadIds = ["thread-mentions"];
     state.threads["thread-mentions"] = {
@@ -544,9 +542,9 @@ function CloseupUsagePanel() {
     const state = createInitialAgentState();
     state.account = {
       account: { email: "fixture@example.com", planType: "pro" },
-      rateLimits: demoRateLimits(),
       status: "authenticated",
     };
+    state.usage.accountRateLimits = demoRateLimits();
     return state;
   }, []);
   return (
@@ -628,11 +626,10 @@ function CloseupCommandStage() {
 
 function createSingleApprovalState(id: string): AgentSessionState {
   const state = createRichTranscriptInitialState();
-  const request = state.pendingServerRequests[id];
+  const request = state.serverRequestQueue.byId[id];
   if (!request) return state;
-  state.pendingServerRequests = { [id]: request };
   state.serverRequestQueue = {
-    byId: state.pendingServerRequests,
+    byId: { [id]: request },
     order: [id],
   };
   return state;

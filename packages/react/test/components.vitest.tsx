@@ -9,6 +9,7 @@ import {
   createInitialAgentState,
   FakeAgentTransport,
   runEventFixture,
+  selectDiagnosticWarnings,
   type FixtureStep,
 } from "@nyosegawa/agent-ui-core";
 import {
@@ -53,7 +54,7 @@ afterEach(() => {
 
 function runningComposerState() {
   const initialState = createInitialAgentState();
-  initialState.activeThreadId = "thread-running";
+  initialState.threadRegistry.activeThreadId = "thread-running";
   initialState.threads["thread-running"] = {
     orderedTurnIds: ["turn-running"],
     status: "running",
@@ -293,7 +294,7 @@ describe("AgentChat", () => {
 
   it("renders only a fixed thread without following active selection", () => {
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-active";
+    initialState.threadRegistry.activeThreadId = "thread-active";
     initialState.threads["thread-active"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -554,24 +555,23 @@ describe("AgentChat", () => {
         },
       },
     };
-    initialState.pendingServerRequests = {
-      "approval-anchored": {
-        id: "approval-anchored",
-        itemId: "item-command",
-        kind: "commandApproval",
-        payload: { command: "bun test" },
-        threadId: "thread-anchor",
-        turnId: "turn-anchor",
-      },
-      "approval-tail": {
-        id: "approval-tail",
-        kind: "userInput",
-        payload: { prompt: "Tail fallback" },
-        threadId: "thread-anchor",
-      },
-    };
     initialState.serverRequestQueue = {
-      byId: initialState.pendingServerRequests,
+      byId: {
+        "approval-anchored": {
+          id: "approval-anchored",
+          itemId: "item-command",
+          kind: "commandApproval",
+          payload: { command: "bun test" },
+          threadId: "thread-anchor",
+          turnId: "turn-anchor",
+        },
+        "approval-tail": {
+          id: "approval-tail",
+          kind: "userInput",
+          payload: { prompt: "Tail fallback" },
+          threadId: "thread-anchor",
+        },
+      },
       order: ["approval-anchored", "approval-tail"],
     };
 
@@ -704,7 +704,7 @@ describe("AgentChat", () => {
 
   it("renders usage as a standalone primitive without chat chrome", () => {
     const initialState = createInitialAgentState();
-    initialState.account.rateLimits = {
+    initialState.usage.accountRateLimits = {
       rateLimitsByLimitId: {
         weekly: {
           limitName: "fixture-demo-model",
@@ -760,7 +760,7 @@ describe("AgentChat", () => {
 
   it("exposes status and usage primitives without the AgentChat preset", () => {
     const initialState = createInitialAgentState();
-    initialState.account.rateLimits = {
+    initialState.usage.accountRateLimits = {
       rateLimitsByLimitId: {
         weekly: {
           limitName: "fixture-demo-model",
@@ -798,7 +798,7 @@ describe("AgentChat", () => {
 
   it("keeps normal rate-limit notices out of critical thread warnings", () => {
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-rate";
+    initialState.threadRegistry.activeThreadId = "thread-rate";
     initialState.diagnostics.banners = [
       {
         id: "rate-normal",
@@ -828,7 +828,7 @@ describe("AgentChat", () => {
 
   it("uses structured status severity instead of parsing localized banner text", () => {
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-localized-status";
+    initialState.threadRegistry.activeThreadId = "thread-localized-status";
     initialState.diagnostics.banners = [
       {
         id: "localized-critical",
@@ -872,7 +872,7 @@ describe("AgentChat", () => {
 
   it("marks structured reached rate limits as critical without message parsing", () => {
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-rate-reached";
+    initialState.threadRegistry.activeThreadId = "thread-rate-reached";
     initialState.diagnostics.banners = [
       {
         id: "rate-reached",
@@ -1135,7 +1135,6 @@ describe("AgentChat", () => {
       },
       order: ["request-input"],
     };
-    initialState.pendingServerRequests = initialState.serverRequestQueue.byId;
     function Probe() {
       const { requests } = useAgentServerRequests("thread-1");
       return <output>{requests.map((request) => request.kind).join(",")}</output>;
@@ -1152,7 +1151,7 @@ describe("AgentChat", () => {
 
   it("renders status banners as first-class shell content", () => {
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-banner";
+    initialState.threadRegistry.activeThreadId = "thread-banner";
     initialState.diagnostics.banners = [
       {
         id: "model-reroute",
@@ -1189,7 +1188,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const prompt = vi.spyOn(globalThis, "prompt").mockReturnValue("Renamed thread");
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-actions";
+    initialState.threadRegistry.activeThreadId = "thread-actions";
     initialState.threads["thread-actions"] = {
       orderedTurnIds: ["turn-actions"],
       status: "loaded",
@@ -1248,7 +1247,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const prompt = vi.spyOn(globalThis, "prompt");
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-compose";
+    initialState.threadRegistry.activeThreadId = "thread-compose";
     initialState.threads["thread-compose"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -1282,7 +1281,7 @@ describe("AgentChat", () => {
 
   it("hides composer App/Plugin buttons when no host resolver is provided", async () => {
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-compose-noresolver";
+    initialState.threadRegistry.activeThreadId = "thread-compose-noresolver";
     initialState.threads["thread-compose-noresolver"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -1304,7 +1303,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const prompt = vi.spyOn(globalThis, "prompt");
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-compose-prompt";
+    initialState.threadRegistry.activeThreadId = "thread-compose-prompt";
     initialState.threads["thread-compose-prompt"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -1334,7 +1333,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-compose-reject";
+    initialState.threadRegistry.activeThreadId = "thread-compose-reject";
     initialState.threads["thread-compose-reject"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -1366,7 +1365,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const resolvedKinds: string[] = [];
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-image";
+    initialState.threadRegistry.activeThreadId = "thread-image";
     initialState.threads["thread-image"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -1412,7 +1411,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-compose";
+    initialState.threadRegistry.activeThreadId = "thread-compose";
     initialState.threads["thread-compose"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -1693,7 +1692,9 @@ describe("AgentChat", () => {
       const { state } = useAgentContext();
       return (
         <output>
-          {state.configWarnings.map((warning) => JSON.stringify(warning)).join("\n")}
+          {selectDiagnosticWarnings(state)
+            .map((warning) => JSON.stringify(warning))
+            .join("\n")}
         </output>
       );
     }
@@ -1776,7 +1777,7 @@ describe("AgentChat", () => {
 
   it("keeps long history messages expanded without a preview disclosure", () => {
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-history";
+    initialState.threadRegistry.activeThreadId = "thread-history";
     initialState.threads["thread-history"] = {
       orderedTurnIds: ["turn-history"],
       status: "loaded",
@@ -1816,7 +1817,7 @@ describe("AgentChat", () => {
 
   it("renders structured App Server message content without crashing", () => {
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-real";
+    initialState.threadRegistry.activeThreadId = "thread-real";
     initialState.threads["thread-real"] = {
       orderedTurnIds: ["turn-real"],
       status: "running",
@@ -2039,7 +2040,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-ready";
+    initialState.threadRegistry.activeThreadId = "thread-ready";
     initialState.threads["thread-ready"] = {
       orderedTurnIds: [],
       status: "complete",
@@ -2884,7 +2885,7 @@ describe("AgentChat", () => {
 
   it("does not leave messages marked in progress after the thread completes", () => {
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-real";
+    initialState.threadRegistry.activeThreadId = "thread-real";
     initialState.threads["thread-real"] = {
       orderedTurnIds: ["turn-real"],
       status: "completed",
@@ -2923,7 +2924,7 @@ describe("AgentChat", () => {
 
   it("does not leave hydrated history messages marked in progress", () => {
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-history";
+    initialState.threadRegistry.activeThreadId = "thread-history";
     initialState.threads["thread-history"] = {
       orderedTurnIds: ["turn-history"],
       status: "loaded",
@@ -2963,7 +2964,7 @@ describe("AgentChat", () => {
   it("keeps large historical command output inline in transcript order", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-history";
+    initialState.threadRegistry.activeThreadId = "thread-history";
     const itemOrder = Array.from({ length: 80 }, (_, index) => `command-${index}`);
     initialState.threads["thread-history"] = {
       orderedTurnIds: ["turn-history"],
@@ -3134,7 +3135,6 @@ describe("AgentChat", () => {
       },
       order: ["request-input"],
     };
-    initialState.pendingServerRequests = initialState.serverRequestQueue.byId;
     const transport = new FakeAgentTransport();
     render(
       <AgentProvider initialState={initialState} transport={transport}>
@@ -3187,10 +3187,10 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
-    if (initialState.activeThreadId) {
-      initialState.threads[initialState.activeThreadId]!.status = "complete";
+    if (initialState.threadRegistry.activeThreadId) {
+      initialState.threads[initialState.threadRegistry.activeThreadId]!.status = "complete";
     }
-    initialState.pendingServerRequests = {};
+    initialState.serverRequestQueue = { byId: {}, order: [] };
     render(
       <AgentProvider initialState={initialState} transport={transport}>
         <AgentChat />
@@ -3224,7 +3224,7 @@ describe("AgentChat", () => {
   it("shows compact context usage near the composer only for nonzero usage", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();
-    initialState.activeThreadId = "thread-usage";
+    initialState.threadRegistry.activeThreadId = "thread-usage";
     initialState.threads["thread-usage"] = {
       orderedTurnIds: [],
       status: "complete",
@@ -3257,7 +3257,7 @@ describe("AgentChat", () => {
     );
 
     const zeroState = createInitialAgentState();
-    zeroState.activeThreadId = "thread-zero";
+    zeroState.threadRegistry.activeThreadId = "thread-zero";
     zeroState.threads["thread-zero"] = {
       orderedTurnIds: [],
       status: "complete",
@@ -3278,10 +3278,10 @@ describe("AgentChat", () => {
     const prompt = vi.spyOn(globalThis, "prompt");
     const transport = new FakeAgentTransport();
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
-    if (initialState.activeThreadId) {
-      initialState.threads[initialState.activeThreadId]!.status = "complete";
+    if (initialState.threadRegistry.activeThreadId) {
+      initialState.threads[initialState.threadRegistry.activeThreadId]!.status = "complete";
     }
-    initialState.pendingServerRequests = {};
+    initialState.serverRequestQueue = { byId: {}, order: [] };
     render(
       <AgentProvider initialState={initialState} transport={transport}>
         <AgentChat
@@ -3320,10 +3320,10 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
-    if (initialState.activeThreadId) {
-      initialState.threads[initialState.activeThreadId]!.status = "complete";
+    if (initialState.threadRegistry.activeThreadId) {
+      initialState.threads[initialState.threadRegistry.activeThreadId]!.status = "complete";
     }
-    initialState.pendingServerRequests = {};
+    initialState.serverRequestQueue = { byId: {}, order: [] };
     render(
       <AgentProvider initialState={initialState} transport={transport}>
         <AgentChat />
@@ -3358,10 +3358,10 @@ describe("AgentChat", () => {
   it("does not expose working-directory editing on an existing thread", async () => {
     const transport = new FakeAgentTransport();
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
-    if (initialState.activeThreadId) {
-      initialState.threads[initialState.activeThreadId]!.status = "complete";
+    if (initialState.threadRegistry.activeThreadId) {
+      initialState.threads[initialState.threadRegistry.activeThreadId]!.status = "complete";
     }
-    initialState.pendingServerRequests = {};
+    initialState.serverRequestQueue = { byId: {}, order: [] };
     render(
       <AgentProvider initialState={initialState} transport={transport}>
         <AgentChat />
@@ -4528,10 +4528,9 @@ describe("AgentChat", () => {
 
   function existingThreadState() {
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
-    if (initialState.activeThreadId) {
-      initialState.threads[initialState.activeThreadId]!.status = "complete";
+    if (initialState.threadRegistry.activeThreadId) {
+      initialState.threads[initialState.threadRegistry.activeThreadId]!.status = "complete";
     }
-    initialState.pendingServerRequests = {};
     initialState.serverRequestQueue = { byId: {}, order: [] };
     return initialState;
   }
@@ -4681,7 +4680,6 @@ describe("AgentChat", () => {
   it("expands additional pending approvals from the compact picker", async () => {
     const user = userEvent.setup();
     const state = createInitialAgentState();
-    state.activeThreadId = "thread-approvals";
     state.threadRegistry.activeThreadId = "thread-approvals";
     state.threadRegistry.liveThreadIds = ["thread-approvals"];
     state.threads["thread-approvals"] = {
@@ -4691,22 +4689,21 @@ describe("AgentChat", () => {
       thread: { id: "thread-approvals", name: "Approvals" },
       turns: {},
     };
-    state.pendingServerRequests = {
-      "ap-1": {
-        id: "ap-1",
-        kind: "commandApproval",
-        payload: { command: "bun test" },
-        threadId: "thread-approvals",
-      },
-      "ap-2": {
-        id: "ap-2",
-        kind: "fileChangeApproval",
-        payload: { path: "src/x.ts" },
-        threadId: "thread-approvals",
-      },
-    };
     state.serverRequestQueue = {
-      byId: state.pendingServerRequests,
+      byId: {
+        "ap-1": {
+          id: "ap-1",
+          kind: "commandApproval",
+          payload: { command: "bun test" },
+          threadId: "thread-approvals",
+        },
+        "ap-2": {
+          id: "ap-2",
+          kind: "fileChangeApproval",
+          payload: { path: "src/x.ts" },
+          threadId: "thread-approvals",
+        },
+      },
       order: ["ap-1", "ap-2"],
     };
     render(

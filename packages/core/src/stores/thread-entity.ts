@@ -71,11 +71,10 @@ export function pruneThreadSnapshots(state: AgentSessionState): AgentSessionStat
     ...state.threadRegistry.liveThreadIds,
     ...state.threadRegistry.loadedThreadIds,
   ]);
-  if (state.activeThreadId) retainedThreadIds.add(state.activeThreadId);
   if (state.threadRegistry.activeThreadId) {
     retainedThreadIds.add(state.threadRegistry.activeThreadId);
   }
-  for (const request of Object.values(state.pendingServerRequests)) {
+  for (const request of Object.values(state.serverRequestQueue.byId)) {
     if (request.threadId) retainedThreadIds.add(request.threadId);
   }
 

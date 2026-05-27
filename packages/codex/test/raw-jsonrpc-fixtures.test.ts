@@ -39,17 +39,17 @@ describe("raw App Server JSON-RPC fixture pack", () => {
         "item-assistant"
       ],
     ).toBe("Hello there.");
-    expect(state.pendingServerRequests["approval-file-raw"]).toMatchObject({
+    expect(state.serverRequestQueue.byId["approval-file-raw"]).toMatchObject({
       itemId: "item-file",
       kind: "fileChangeApproval",
       threadId: "thread-basic",
       turnId: "turn-text",
     });
-    expect(state.pendingServerRequests["approval-command-raw"]).toBeUndefined();
+    expect(state.serverRequestQueue.byId["approval-command-raw"]).toBeUndefined();
     expect(state.threads["thread-resume"]?.tokenUsage?.totalTokens).toBe(168);
     expect(state.apps.apps.map((app) => app.id)).toEqual(["gmail", "drive"]);
     expect(state.apps.byScope["thread-basic"]?.apps[0]?.id).toBe("calendar");
     expect(state.account.status).toBe("authenticated");
-    expect(state.configWarnings.at(-1)?.message).toContain("Config warning");
+    expect(state.diagnostics.warnings.at(-1)?.message).toContain("Config warning");
   });
 });

@@ -57,14 +57,10 @@ type AgentSessionState = {
   hooks: HooksState;
   threads: Record<ThreadId, ThreadState>;
   threadRegistry: ThreadRegistryState;
-  activeThreadId?: ThreadId;
-  pendingServerRequests: Record<RequestId, PendingServerRequest>;
   serverRequestQueue: ServerRequestQueueState;
   models: ModelState;
   runSettings: RunSettingsState;
   diagnostics: DiagnosticsState;
-  configWarnings: WarningState[];
-  errors: AgentError[];
 };
 
 type ThreadState = {
@@ -89,10 +85,10 @@ type TurnState = {
 };
 ```
 
-The reducer keeps compatibility aliases such as `activeThreadId`,
-`pendingServerRequests`, `account.rateLimits`, `configWarnings`, and `errors`,
-but new code should use the normalized stores: `threadRegistry`,
-`serverRequestQueue`, `usage`, `runSettings`, and `diagnostics`.
+The reducer keeps normalized stores as the source of truth. Active selection
+lives in `threadRegistry.activeThreadId`, pending approvals and other server
+requests live in `serverRequestQueue`, account rate-limit usage lives in
+`usage.accountRateLimits`, and warnings/errors live in `diagnostics`.
 Domain store modules expose reusable state initialization and state-only
 reducers as they are split out of the session reducer. `connectionStore` owns
 `ConnectionState` initialization and `ConnectionEvent` updates; the session

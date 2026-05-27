@@ -44,10 +44,6 @@ export function reduceAccountEvent(
     case "account/rateLimits/updated":
       return {
         ...state,
-        account: {
-          ...state.account,
-          rateLimits: event.rateLimits,
-        },
         usage: usageStore.setAccountRateLimits(state.usage, event.rateLimits),
       };
     default:

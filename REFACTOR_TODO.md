@@ -82,7 +82,7 @@ Acceptance:
   usage surfaces.
 - [x] Preserve merge semantics where omitted `Thread.turns` is not treated as
   history deletion.
-- [ ] Remove compatibility aliases from normalized state.
+- [x] Remove compatibility aliases from normalized state.
 - [ ] Add retention tests for ordered indexes.
 - [ ] Add retention tests for backing entity maps.
 - [ ] Update raw fixture tests to stay core-owned and protocol-neutral.

@@ -1,6 +1,5 @@
 import type { ServerRequestEvent } from "../events";
 import type { AgentSessionState } from "../state";
-import { AGENT_RETENTION_POLICY, boundedAppend } from "../retention";
 import { diagnosticsStore } from "../stores/diagnostics";
 import { serverRequestStore } from "../stores/server-request";
 import { threadEntityStore } from "../stores/thread-entity";
@@ -14,10 +13,6 @@ export function reduceServerRequestEvent(
       return threadEntityStore.update(
         {
           ...state,
-          pendingServerRequests: {
-            ...state.pendingServerRequests,
-            [String(event.request.id)]: event.request,
-          },
           serverRequestQueue: serverRequestStore.enqueue(
             state.serverRequestQueue,
             event.request,
@@ -28,21 +23,19 @@ export function reduceServerRequestEvent(
       );
     case "serverRequest/resolved": {
       const requestId = String(event.requestId);
-      const request = state.pendingServerRequests[requestId];
-      const pendingServerRequests = { ...state.pendingServerRequests };
-      delete pendingServerRequests[requestId];
+      const request = state.serverRequestQueue.byId[requestId];
+      const serverRequestQueue = serverRequestStore.dequeue(
+        state.serverRequestQueue,
+        requestId,
+      );
       const nextState = {
         ...state,
-        pendingServerRequests,
-        serverRequestQueue: serverRequestStore.dequeue(
-          state.serverRequestQueue,
-          requestId,
-        ),
+        serverRequestQueue,
       };
       if (
         !request?.threadId ||
         serverRequestStore.hasPendingThreadRequest(
-          pendingServerRequests,
+          serverRequestQueue.byId,
           request.threadId,
         )
       ) {
@@ -58,27 +51,22 @@ export function reduceServerRequestEvent(
     }
     case "serverRequest/rejected": {
       const requestId = String(event.requestId);
-      const request = state.pendingServerRequests[requestId];
-      const pendingServerRequests = { ...state.pendingServerRequests };
-      delete pendingServerRequests[requestId];
+      const request = state.serverRequestQueue.byId[requestId];
+      const serverRequestQueue = serverRequestStore.dequeue(
+        state.serverRequestQueue,
+        requestId,
+      );
       const nextState = {
         ...state,
-        errors: event.error
-          ? boundedAppend(state.errors, event.error, AGENT_RETENTION_POLICY.diagnosticsErrorsMax)
-          : state.errors,
         diagnostics: event.error
           ? diagnosticsStore.addError(state.diagnostics, event.error)
           : state.diagnostics,
-        pendingServerRequests,
-        serverRequestQueue: serverRequestStore.dequeue(
-          state.serverRequestQueue,
-          requestId,
-        ),
+        serverRequestQueue,
       };
       if (
         !request?.threadId ||
         serverRequestStore.hasPendingThreadRequest(
-          pendingServerRequests,
+          serverRequestQueue.byId,
           request.threadId,
         )
       ) {

@@ -1,4 +1,5 @@
 import type React from "react";
+import { selectDiagnosticErrors, selectDiagnosticWarnings } from "@nyosegawa/agent-ui-core";
 import type { useAgentBootstrap } from "../hooks";
 import { useAgentAuth } from "../hooks";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
@@ -123,8 +124,8 @@ export function AgentDiagnosticsPanel({
   const { state } = useAgentContext();
   const messages = [
     ...bootstrap.errors.map((error) => error.message),
-    ...state.errors.map((error) => error.message),
-    ...state.configWarnings.map((warning) => warning.message),
+    ...selectDiagnosticErrors(state).map((error) => error.message),
+    ...selectDiagnosticWarnings(state).map((warning) => warning.message),
   ].filter((message) => message && !isSuppressedDiagnostic(message));
   if (bootstrap.isBootstrapping && messages.length === 0) {
     return (

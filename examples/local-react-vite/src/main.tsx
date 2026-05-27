@@ -162,7 +162,7 @@ function localeFromLocation(): AgentLocale {
 function ScopedThreadPaneExample() {
   const initialState = useMemo(() => {
     const state = createInitialAgentState();
-    state.activeThreadId = "thread-active";
+    state.threadRegistry.activeThreadId = "thread-active";
     state.threads["thread-active"] = {
       orderedTurnIds: [],
       registryStatus: "live",
@@ -212,9 +212,9 @@ function UsageOnlyExample() {
     const state = createInitialAgentState();
     state.account = {
       account: { email: "fixture@example.com", planType: "pro" },
-      rateLimits: demoRateLimits(),
       status: "authenticated",
     };
+    state.usage.accountRateLimits = demoRateLimits();
     return state;
   }, []);
   return (

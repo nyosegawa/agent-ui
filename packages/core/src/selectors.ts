@@ -1,7 +1,8 @@
 import type { AgentSessionState, ItemId, ThreadId, TurnId } from "./state";
 
 export function selectActiveThread(state: AgentSessionState) {
-  return state.activeThreadId ? state.threads[state.activeThreadId] : undefined;
+  const threadId = state.threadRegistry.activeThreadId;
+  return threadId ? state.threads[threadId] : undefined;
 }
 
 export function selectThread(state: AgentSessionState, threadId: ThreadId) {
@@ -77,7 +78,7 @@ export function selectOrderedThreads(state: AgentSessionState) {
 }
 
 export function selectPendingApprovals(state: AgentSessionState, threadId?: ThreadId) {
-  return Object.values(state.pendingServerRequests).filter((request) => {
+  return Object.values(state.serverRequestQueue.byId).filter((request) => {
     return threadId == null || request.threadId === threadId;
   });
 }

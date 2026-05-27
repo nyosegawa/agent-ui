@@ -7,6 +7,7 @@ import {
   type AgentTransportEvent,
   type FakeTransportRequest,
   type FixtureStep,
+  type PendingServerRequest,
 } from "@nyosegawa/agent-ui-core";
 import demoFixture from "../../../../fixtures/app-server/demo-session.json";
 import type { DemoScenario } from "./gallery";
@@ -22,9 +23,9 @@ export function createDemoInitialState(demoState: DemoScenario): AgentSessionSta
   if (demoState === "empty") {
     state.account = {
       account: { email: "fixture@example.com", planType: "pro" },
-      rateLimits: demoRateLimits(),
       status: "authenticated",
     };
+    state.usage.accountRateLimits = demoRateLimits();
     state.models = { models: demoModels() };
     return state;
   }
@@ -125,11 +126,10 @@ export function createRichTranscriptInitialState(): AgentSessionState {
   const state = createInitialAgentState();
   state.account = {
     account: { email: "fixture@example.com", planType: "pro" },
-    rateLimits: demoRateLimits(),
     status: "authenticated",
   };
+  state.usage.accountRateLimits = demoRateLimits();
   state.models = { models: demoModels(), selectedModelId: "fixture-demo-model" };
-  state.activeThreadId = "thread-rich-transcript";
   state.threadRegistry.activeThreadId = "thread-rich-transcript";
   state.threadRegistry.liveThreadIds = ["thread-rich-transcript"];
   state.diagnostics.banners = [
@@ -164,7 +164,7 @@ export function createRichTranscriptInitialState(): AgentSessionState {
       message: "Weekly rate-limit usage is below the warning threshold.",
     },
   ];
-  state.pendingServerRequests = {
+  const pendingRequests: Record<string, PendingServerRequest> = {
     "approval-command-rich-transcript": {
       id: "approval-command-rich-transcript",
       kind: "commandApproval",
@@ -194,7 +194,7 @@ export function createRichTranscriptInitialState(): AgentSessionState {
     },
   };
   state.serverRequestQueue = {
-    byId: state.pendingServerRequests,
+    byId: pendingRequests,
     order: [
       "approval-command-rich-transcript",
       "approval-input-rich-transcript",

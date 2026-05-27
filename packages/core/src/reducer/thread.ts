@@ -39,8 +39,6 @@ export function reduceThreadEvent(
       const registryStatus = threadIndexStore.classifyStatus(status, classificationTurns);
       return threadEntityStore.pruneSnapshots({
         ...state,
-        activeThreadId:
-          event.type === "thread/started" ? event.thread.id : state.activeThreadId,
         threadRegistry: threadIndexStore.upsert(
           state.threadRegistry,
           event.thread.id,
@@ -98,7 +96,6 @@ export function reduceThreadEvent(
     case "thread/active/set":
       return {
         ...state,
-        activeThreadId: event.threadId,
         threadRegistry: { ...state.threadRegistry, activeThreadId: event.threadId },
       };
     default:

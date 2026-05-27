@@ -1,25 +1,19 @@
 import type { AccountState } from "./state/account";
 import type { AppsState } from "./state/apps";
-import type { AgentError, ThreadId } from "./state/common";
+import type { ThreadId } from "./state/common";
 import type { ConnectionState } from "./state/connection";
-import type { DiagnosticsState, WarningState } from "./state/diagnostics";
+import type { DiagnosticsState } from "./state/diagnostics";
 import type { HooksState } from "./state/hooks";
 import type { ModelState } from "./state/models";
 import type { RunSettingsState } from "./state/run-settings";
-import type {
-  PendingServerRequest,
-  ServerRequestQueueState,
-} from "./state/server-requests";
+import type { ServerRequestQueueState } from "./state/server-requests";
 import type { SkillsState } from "./state/skills";
 import type { ThreadRegistryState, ThreadState } from "./state/thread";
 import type { UsageState } from "./state/usage";
 import { createInitialAppsState } from "./stores/apps";
 import { createInitialConnectionState } from "./stores/connection";
 import { createInitialDiagnosticsState } from "./stores/diagnostics";
-import {
-  createInitialPendingServerRequestState,
-  createInitialServerRequestQueueState,
-} from "./stores/server-request";
+import { createInitialServerRequestQueueState } from "./stores/server-request";
 import { createInitialThreadEntityState } from "./stores/thread-entity";
 import { createInitialThreadRegistryState } from "./stores/thread-index";
 import { createInitialUsageState } from "./stores/usage";
@@ -47,28 +41,21 @@ export interface AgentSessionState {
   hooks: HooksState;
   threads: Record<ThreadId, ThreadState>;
   threadRegistry: ThreadRegistryState;
-  activeThreadId?: ThreadId;
-  pendingServerRequests: Record<string, PendingServerRequest>;
   serverRequestQueue: ServerRequestQueueState;
   models: ModelState;
   runSettings: RunSettingsState;
   skills: SkillsState;
   usage: UsageState;
-  configWarnings: WarningState[];
-  errors: AgentError[];
 }
 
 export function createInitialAgentState(): AgentSessionState {
   return {
     account: { status: "unknown" },
     apps: createInitialAppsState(),
-    configWarnings: [],
     connection: createInitialConnectionState(),
     diagnostics: createInitialDiagnosticsState(),
-    errors: [],
     hooks: { byCwd: {} },
     models: { models: [] },
-    pendingServerRequests: createInitialPendingServerRequestState(),
     runSettings: { executionMode: "review" },
     serverRequestQueue: createInitialServerRequestQueueState(),
     skills: { byCwd: {} },

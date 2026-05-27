@@ -1,5 +1,6 @@
 import {
   selectActiveThread,
+  selectAccountRateLimits,
   selectApps,
   selectLatestRunningTurnId,
   selectOrderedThreads,
@@ -8,6 +9,7 @@ import {
   selectRunSettings,
   selectServerRequestQueue,
   selectThread,
+  selectThreadRegistry,
   type AgentApp,
   type AgentModel,
   type ExecutionModeId,
@@ -114,7 +116,7 @@ export const AGENT_EXECUTION_MODES: AgentExecutionMode[] = [
 export function useAgentThread(threadId?: ThreadId) {
   const { dispatch, state } = useAgentContext();
   const codex = useCodexSession();
-  const resolvedThreadId = threadId ?? state.activeThreadId;
+  const resolvedThreadId = threadId ?? selectThreadRegistry(state).activeThreadId;
   const thread: ThreadState | undefined = resolvedThreadId
     ? selectThread(state, resolvedThreadId)
     : selectActiveThread(state);
@@ -216,7 +218,7 @@ export function useAgentThreadActions(threadId?: ThreadId) {
   const { dispatch, state } = useAgentContext();
   const codex = useCodexSession();
   const composerQueue = useAgentComposerQueueStore();
-  const resolvedThreadId = threadId ?? state.activeThreadId;
+  const resolvedThreadId = threadId ?? selectThreadRegistry(state).activeThreadId;
 
   const requireThreadId = useCallback(() => {
     if (!resolvedThreadId) throw new Error("No thread selected");
@@ -282,12 +284,13 @@ export function useAgentThreadActions(threadId?: ThreadId) {
 
 export function useAgentThreads() {
   const { dispatch, state } = useAgentContext();
+  const activeThreadId = selectThreadRegistry(state).activeThreadId;
   const threads = useMemo(() => selectOrderedThreads(state), [state]);
   const setActiveThread = useCallback(
     (threadId?: ThreadId) => dispatch({ threadId, type: "thread/active/set" }),
     [dispatch],
   );
-  return { activeThreadId: state.activeThreadId, setActiveThread, threads };
+  return { activeThreadId, setActiveThread, threads };
 }
 
 export interface ThreadHistoryParams {
@@ -398,7 +401,7 @@ function syncRunSettingsFromRawThread(
 export function useAgentTurn(threadId?: ThreadId) {
   const { state } = useAgentContext();
   const codex = useCodexSession();
-  const resolvedThreadId = threadId ?? state.activeThreadId;
+  const resolvedThreadId = threadId ?? selectThreadRegistry(state).activeThreadId;
   const runSettings = selectRunSettings(state);
 
   const startTurn = useCallback(
@@ -492,7 +495,7 @@ export function useAgentComposer(threadId?: ThreadId) {
   const [isInterrupting, setIsInterrupting] = useState(false);
   const { dispatch, state } = useAgentContext();
   const composerQueue = useAgentComposerQueueStore();
-  const resolvedThreadId = threadId ?? state.activeThreadId;
+  const resolvedThreadId = threadId ?? selectThreadRegistry(state).activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;
   const { interruptTurn, startTurn, steerTurn } = useAgentTurn(threadId);
   const activeTurnId = resolvedThreadId
@@ -839,6 +842,7 @@ export function useAgentBootstrap(): AgentBootstrapState {
   const { readAccount } = useAgentAuth();
   const { refreshUsage } = useAgentUsage();
   const { refreshModels } = useAgentModels();
+  const accountRateLimits = selectAccountRateLimits(state);
   const didBootstrap = useRef(false);
   const didAuthenticatedSync = useRef(false);
   const [bootstrap, setBootstrap] = useState<AgentBootstrapState>({
@@ -866,7 +870,7 @@ export function useAgentBootstrap(): AgentBootstrapState {
         accountResponseHasAccount(accountResponse);
       const tasks = [
         state.models.models.length === 0 ? refreshModels() : Promise.resolve(),
-        isAuthenticated && state.account.rateLimits == null
+        isAuthenticated && accountRateLimits == null
           ? refreshUsage()
           : Promise.resolve(),
       ];
@@ -893,7 +897,7 @@ export function useAgentBootstrap(): AgentBootstrapState {
     readAccount,
     refreshModels,
     refreshUsage,
-    state.account.rateLimits,
+    accountRateLimits,
     state.account.status,
     state.connection.status,
     state.models.models.length,
@@ -914,7 +918,7 @@ export function useAgentBootstrap(): AgentBootstrapState {
       const tasks = [
         state.account.account == null ? readAccount() : Promise.resolve(),
         state.models.models.length === 0 ? refreshModels() : Promise.resolve(),
-        state.account.rateLimits == null ? refreshUsage() : Promise.resolve(),
+        accountRateLimits == null ? refreshUsage() : Promise.resolve(),
       ];
       const results = await Promise.allSettled(tasks);
       errors.push(
@@ -939,7 +943,7 @@ export function useAgentBootstrap(): AgentBootstrapState {
     refreshModels,
     refreshUsage,
     state.account.account,
-    state.account.rateLimits,
+    accountRateLimits,
     state.account.status,
     state.connection.status,
     state.models.models.length,
@@ -960,12 +964,13 @@ function accountResponseHasAccount(response: unknown): boolean {
 export function useAgentUsage() {
   const { dispatch, state } = useAgentContext();
   const codex = useCodexSession();
+  const rateLimits = selectAccountRateLimits(state);
   const refreshUsage = useCallback(async () => {
     const response = await codex.account.rateLimitsRead();
     dispatch({ rateLimits: response, type: "account/rateLimits/updated" });
     return response;
   }, [codex, dispatch]);
-  return { rateLimits: state.account.rateLimits, refreshUsage };
+  return { rateLimits, refreshUsage };
 }
 
 export function useAgentSkills(cwd?: string) {

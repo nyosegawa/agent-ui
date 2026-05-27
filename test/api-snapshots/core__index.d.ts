@@ -12,7 +12,6 @@ interface AccountState {
     status: "unknown" | "unauthenticated" | "authenticating" | "authenticated";
     account?: Record<string, unknown>;
     login?: DeviceCodeLoginState;
-    rateLimits?: unknown;
 }
 interface DeviceCodeLoginState {
     loginId?: string;
@@ -256,15 +255,11 @@ interface AgentSessionState {
     hooks: HooksState;
     threads: Record<ThreadId, ThreadState>;
     threadRegistry: ThreadRegistryState;
-    activeThreadId?: ThreadId;
-    pendingServerRequests: Record<string, PendingServerRequest>;
     serverRequestQueue: ServerRequestQueueState;
     models: ModelState;
     runSettings: RunSettingsState;
     skills: SkillsState;
     usage: UsageState;
-    configWarnings: WarningState[];
-    errors: AgentError[];
 }
 declare function createInitialAgentState(): AgentSessionState;
 

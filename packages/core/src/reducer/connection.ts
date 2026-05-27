@@ -1,6 +1,7 @@
 import type { ConnectionEvent } from "../events";
 import type { AgentSessionState } from "../state";
 import { connectionStore } from "../stores/connection";
+import { diagnosticsStore } from "../stores/diagnostics";
 import { serverRequestStore } from "../stores/server-request";
 
 export function reduceConnectionEvent(
@@ -15,14 +16,13 @@ export function reduceConnectionEvent(
       return {
         ...state,
         connection: connectionStore.reduce(state.connection, event),
-        pendingServerRequests: serverRequestStore.createInitialPendingState(),
         serverRequestQueue: serverRequestStore.createInitialQueueState(),
       };
     case "connection/error":
       return {
         ...state,
         connection: connectionStore.reduce(state.connection, event),
-        errors: [...state.errors, event.error],
+        diagnostics: diagnosticsStore.addError(state.diagnostics, event.error),
       };
     default:
       return assertNever(event);

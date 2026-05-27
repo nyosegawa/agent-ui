@@ -186,7 +186,6 @@ describe("agentReducer", () => {
       },
       { event: { type: "connection/closed" } },
     ]);
-    expect(state.pendingServerRequests).toEqual({});
     expect(state.serverRequestQueue).toEqual({ byId: {}, order: [] });
   });
 
@@ -261,7 +260,6 @@ describe("agentReducer", () => {
       { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
       { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
     ]);
-    expect(twice.pendingServerRequests).toEqual(once.pendingServerRequests);
     expect(twice.serverRequestQueue).toEqual(once.serverRequestQueue);
     expect(twice.threads["thread-approval"]?.status).toBe("running");
   });
@@ -352,7 +350,7 @@ describe("agentReducer", () => {
         },
       },
     ]);
-    expect(state.activeThreadId).toBe("thread-active");
+    expect(state.threadRegistry.activeThreadId).toBe("thread-active");
     expect(selectThreadRegistry(state).activeThreadId).toBe("thread-active");
     expect(selectThreadRegistry(state).liveThreadIds).toEqual([
       "thread-active",
@@ -546,7 +544,6 @@ describe("agentReducer", () => {
     });
     expect(selectAccountRateLimits(state)).toEqual({ primary: { usedPercent: 33 } });
     expect(selectHostMetrics(state)).toEqual({ totalTokens: 12 });
-    expect(state.account.rateLimits).toEqual({ primary: { usedPercent: 33 } });
     expect(state.diagnostics.banners[0]?.kind).toBe("rateLimit");
     expect(selectDiagnostics(state).banners[0]?.kind).toBe("rateLimit");
     expect(selectStatusBanners(state)[0]?.kind).toBe("rateLimit");
@@ -633,7 +630,7 @@ describe("agentReducer", () => {
     const turns = selectOrderedTurns(state, "thread-demo");
 
     expect(state.account.status).toBe("authenticated");
-    expect(state.activeThreadId).toBe("thread-demo");
+    expect(state.threadRegistry.activeThreadId).toBe("thread-demo");
     expect(threads.map((thread) => thread.thread.id)).toEqual([
       "thread-demo",
       "thread-docs",
@@ -824,7 +821,7 @@ describe("agentReducer", () => {
     });
 
     const rateLimited = runEventFixture(rateLimitFixture as FixtureStep[]);
-    expect(rateLimited.account.rateLimits).toEqual({
+    expect(rateLimited.usage.accountRateLimits).toEqual({
       limitName: "fixture-demo-model",
       planType: "plus",
       primary: {
@@ -833,6 +830,5 @@ describe("agentReducer", () => {
         used: 12,
       },
     });
-    expect(rateLimited.usage.accountRateLimits).toEqual(rateLimited.account.rateLimits);
   });
 });
