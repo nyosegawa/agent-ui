@@ -101,7 +101,9 @@ requests on disconnect. `threadIndexStore` owns `ThreadRegistryState`
 initialization, registry status classification, and movement between cold,
 preview, live, and loaded thread indexes. `threadEntityStore` owns the backing
 thread entity map, individual thread entity updates, and pruning stale thread
-snapshots from that map.
+snapshots from that map. `turnStore` owns turn creation, insertion into a
+thread's ordered turn collection, and focused turn updates inside a thread
+entity.
 
 ## Reducer Rules
 

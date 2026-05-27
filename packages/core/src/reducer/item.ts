@@ -1,10 +1,10 @@
 import type { ItemEvent } from "../events";
 import type { AgentSessionState } from "../state";
 import { AGENT_RETENTION_POLICY } from "../retention";
+import { turnStore } from "../stores/turn";
 import {
   appendById,
   ensureItemOrder,
-  updateTurn,
   upsertItem,
   withBoundedRecordEntry,
 } from "./shared";
@@ -15,12 +15,12 @@ export function reduceItemEvent(
 ): AgentSessionState {
   switch (event.type) {
     case "item/started":
-      return updateTurn(state, event.threadId, event.turnId, (turn) =>
+      return turnStore.update(state, event.threadId, event.turnId, (turn) =>
         upsertItem(turn, event.item),
       );
     case "item/agentMessage/delta":
     case "item/reasoning/summaryTextDelta":
-      return updateTurn(state, event.threadId, event.turnId, (turn) => ({
+      return turnStore.update(state, event.threadId, event.turnId, (turn) => ({
         ...turn,
         itemOrder: ensureItemOrder(turn.itemOrder, event.itemId),
         streamingTextByItemId: appendById(
@@ -30,7 +30,7 @@ export function reduceItemEvent(
         ),
       }));
     case "item/commandOutput/delta":
-      return updateTurn(state, event.threadId, event.turnId, (turn) => ({
+      return turnStore.update(state, event.threadId, event.turnId, (turn) => ({
         ...turn,
         itemOrder: ensureItemOrder(turn.itemOrder, event.itemId),
         commandOutputByItemId: appendById(
@@ -41,7 +41,7 @@ export function reduceItemEvent(
         ),
       }));
     case "item/filePatch/updated":
-      return updateTurn(state, event.threadId, event.turnId, (turn) => ({
+      return turnStore.update(state, event.threadId, event.turnId, (turn) => ({
         ...turn,
         itemOrder: ensureItemOrder(turn.itemOrder, event.itemId),
         filePatchByItemId: withBoundedRecordEntry(
@@ -52,7 +52,7 @@ export function reduceItemEvent(
         ),
       }));
     case "item/completed":
-      return updateTurn(state, event.threadId, event.turnId, (turn) =>
+      return turnStore.update(state, event.threadId, event.turnId, (turn) =>
         upsertItem(turn, event.item),
       );
     default:

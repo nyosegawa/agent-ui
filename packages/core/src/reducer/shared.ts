@@ -3,13 +3,10 @@ import type {
   AgentItemBlockKind,
   AgentItemState,
   AgentSessionState,
-  AgentTurn,
   ThreadId,
-  ThreadState,
   TurnState,
 } from "../state";
 import { boundedRecordEntry, boundedStringAppend } from "../retention";
-import { threadEntityStore } from "../stores/thread-entity";
 
 export function hasPendingThreadRequest(
   requests: AgentSessionState["pendingServerRequests"],
@@ -22,63 +19,6 @@ export function recordOrUndefined(value: unknown): Record<string, unknown> | und
   return typeof value === "object" && value !== null
     ? (value as Record<string, unknown>)
     : undefined;
-}
-
-export function createTurnState(turn: AgentTurn, threadId: ThreadId): TurnState {
-  return {
-    blocksByItemId: {},
-    commandOutputByItemId: {},
-    filePatchByItemId: {},
-    itemOrder: [],
-    items: {},
-    streamingTextByItemId: {},
-    turn: { ...turn, threadId },
-  };
-}
-
-export function upsertTurn(
-  thread: ThreadState,
-  turn: AgentTurn,
-  threadStatus: ThreadState["status"],
-): ThreadState {
-  const orderedTurnIds = thread.orderedTurnIds.includes(turn.id)
-    ? thread.orderedTurnIds
-    : [...thread.orderedTurnIds, turn.id];
-  return {
-    ...thread,
-    orderedTurnIds,
-    status: threadStatus,
-    turns: {
-      ...thread.turns,
-      [turn.id]: {
-        ...(thread.turns[turn.id] ?? createTurnState(turn, thread.thread.id)),
-        turn,
-      },
-    },
-  };
-}
-
-export function updateTurn(
-  state: AgentSessionState,
-  threadId: ThreadId,
-  turnId: string,
-  updater: (turn: TurnState) => TurnState,
-): AgentSessionState {
-  return threadEntityStore.update(state, threadId, (thread) => {
-    const turn =
-      thread.turns[turnId] ??
-      createTurnState({ id: turnId, threadId, status: "running" }, threadId);
-    return {
-      ...thread,
-      orderedTurnIds: thread.orderedTurnIds.includes(turnId)
-        ? thread.orderedTurnIds
-        : [...thread.orderedTurnIds, turnId],
-      turns: {
-        ...thread.turns,
-        [turnId]: updater(turn),
-      },
-    };
-  });
 }
 
 export function upsertItem(turn: TurnState, item: AgentItemState): TurnState {

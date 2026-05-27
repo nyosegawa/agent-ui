@@ -54,7 +54,7 @@ const reducerDomainFiles = [
   "usage",
 ];
 
-const storeFiles = ["connection", "thread-entity", "thread-index"];
+const storeFiles = ["connection", "thread-entity", "thread-index", "turn"];
 
 describe("Core package source structure", () => {
   it("keeps normalized state types split by product domain", () => {
@@ -97,5 +97,6 @@ describe("Core package source structure", () => {
     expect(root).toContain('export * from "./stores/connection";');
     expect(root).toContain('export * from "./stores/thread-entity";');
     expect(root).toContain('export * from "./stores/thread-index";');
+    expect(root).toContain('export * from "./stores/turn";');
   });
 });

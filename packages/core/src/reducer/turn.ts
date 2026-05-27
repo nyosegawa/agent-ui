@@ -1,12 +1,10 @@
 import type { TurnEvent } from "../events";
 import type { AgentSessionState } from "../state";
 import { threadEntityStore } from "../stores/thread-entity";
+import { turnStore } from "../stores/turn";
 import {
-  createTurnState,
   isCompletedTurnStatus,
   isPreviewThreadStatus,
-  updateTurn,
-  upsertTurn,
 } from "./shared";
 
 export function reduceTurnEvent(
@@ -16,7 +14,7 @@ export function reduceTurnEvent(
   switch (event.type) {
     case "turn/started":
       return threadEntityStore.update(state, event.threadId, (thread) =>
-        upsertTurn(thread, event.turn, "running"),
+        turnStore.upsert(thread, event.turn, "running"),
       );
     case "turn/completed":
       return threadEntityStore.update(state, event.threadId, (thread) => {
@@ -27,9 +25,10 @@ export function reduceTurnEvent(
                 isCompletedTurnStatus(event.turn.status)
               ? thread.status
               : (event.turn.status ?? "complete");
-        const next = upsertTurn(thread, event.turn, completedStatus);
+        const next = turnStore.upsert(thread, event.turn, completedStatus);
         const turn =
-          next.turns[event.turn.id] ?? createTurnState(event.turn, event.threadId);
+          next.turns[event.turn.id] ??
+          turnStore.createTurnState(event.turn, event.threadId);
         const items = { ...turn.items };
         const itemOrder = [...turn.itemOrder];
         for (const item of event.items ?? []) {
@@ -50,7 +49,7 @@ export function reduceTurnEvent(
         };
       });
     case "turn/plan/updated":
-      return updateTurn(state, event.threadId, event.turnId, (turn) => ({
+      return turnStore.update(state, event.threadId, event.turnId, (turn) => ({
         ...turn,
         plan: {
           explanation: event.explanation,
@@ -59,7 +58,7 @@ export function reduceTurnEvent(
         },
       }));
     case "turn/diff/updated":
-      return updateTurn(state, event.threadId, event.turnId, (turn) => ({
+      return turnStore.update(state, event.threadId, event.turnId, (turn) => ({
         ...turn,
         diff: {
           diff: event.diff,

@@ -1,12 +1,12 @@
 import type { ThreadEvent } from "../events";
 import type { AgentSessionState } from "../state";
+import { threadEntityStore } from "../stores/thread-entity";
+import { threadIndexStore } from "../stores/thread-index";
+import { turnStore } from "../stores/turn";
 import {
-  createTurnState,
   isPreviewThreadStatus,
   preservesAgainstPreviewSnapshot,
 } from "./shared";
-import { threadEntityStore } from "../stores/thread-entity";
-import { threadIndexStore } from "../stores/thread-index";
 
 export function reduceThreadEvent(
   state: AgentSessionState,
@@ -28,7 +28,8 @@ export function reduceThreadEvent(
       const orderedTurnIds = [...threadState.orderedTurnIds];
       for (const turn of event.turns ?? []) {
         if (!orderedTurnIds.includes(turn.id)) orderedTurnIds.push(turn.id);
-        turns[turn.id] = turns[turn.id] ?? createTurnState(turn, event.thread.id);
+        turns[turn.id] =
+          turns[turn.id] ?? turnStore.createTurnState(turn, event.thread.id);
       }
       return threadEntityStore.pruneSnapshots({
         ...state,
