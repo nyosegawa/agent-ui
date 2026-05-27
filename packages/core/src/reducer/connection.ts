@@ -1,6 +1,7 @@
 import type { ConnectionEvent } from "../events";
 import type { AgentSessionState } from "../state";
 import { connectionStore } from "../stores/connection";
+import { serverRequestStore } from "../stores/server-request";
 
 export function reduceConnectionEvent(
   state: AgentSessionState,
@@ -14,8 +15,8 @@ export function reduceConnectionEvent(
       return {
         ...state,
         connection: connectionStore.reduce(state.connection, event),
-        pendingServerRequests: {},
-        serverRequestQueue: { byId: {}, order: [] },
+        pendingServerRequests: serverRequestStore.createInitialPendingState(),
+        serverRequestQueue: serverRequestStore.createInitialQueueState(),
       };
     case "connection/error":
       return {

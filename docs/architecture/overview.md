@@ -105,7 +105,8 @@ snapshots from that map. `turnStore` owns turn creation, insertion into a
 thread's ordered turn collection, and focused turn updates inside a thread
 entity. `itemStore` owns item insertion, streaming item deltas, retained command
 output and file patches, and normalized transcript block synthesis for stored
-items.
+items. `serverRequestStore` owns pending server request maps, FIFO approval
+queues, and thread-scoped pending request checks.
 
 ## Reducer Rules
 

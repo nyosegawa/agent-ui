@@ -1,12 +1,8 @@
 import type { ServerRequestEvent } from "../events";
 import type { AgentSessionState } from "../state";
 import { AGENT_RETENTION_POLICY, boundedAppend } from "../retention";
+import { serverRequestStore } from "../stores/server-request";
 import { threadEntityStore } from "../stores/thread-entity";
-import {
-  dequeueServerRequest,
-  enqueueServerRequest,
-  hasPendingThreadRequest,
-} from "./shared";
 
 export function reduceServerRequestEvent(
   state: AgentSessionState,
@@ -21,7 +17,7 @@ export function reduceServerRequestEvent(
             ...state.pendingServerRequests,
             [String(event.request.id)]: event.request,
           },
-          serverRequestQueue: enqueueServerRequest(
+          serverRequestQueue: serverRequestStore.enqueue(
             state.serverRequestQueue,
             event.request,
           ),
@@ -37,17 +33,27 @@ export function reduceServerRequestEvent(
       const nextState = {
         ...state,
         pendingServerRequests,
-        serverRequestQueue: dequeueServerRequest(state.serverRequestQueue, requestId),
+        serverRequestQueue: serverRequestStore.dequeue(
+          state.serverRequestQueue,
+          requestId,
+        ),
       };
       if (
         !request?.threadId ||
-        hasPendingThreadRequest(pendingServerRequests, request.threadId)
+        serverRequestStore.hasPendingThreadRequest(
+          pendingServerRequests,
+          request.threadId,
+        )
       ) {
         return threadEntityStore.pruneSnapshots(nextState);
       }
-      return threadEntityStore.pruneSnapshots(threadEntityStore.update(nextState, request.threadId, (thread) =>
-        thread.status === "waitingForInput" ? { ...thread, status: "running" } : thread,
-      ));
+      return threadEntityStore.pruneSnapshots(
+        threadEntityStore.update(nextState, request.threadId, (thread) =>
+          thread.status === "waitingForInput"
+            ? { ...thread, status: "running" }
+            : thread,
+        ),
+      );
     }
     case "serverRequest/rejected": {
       const requestId = String(event.requestId);
@@ -70,17 +76,27 @@ export function reduceServerRequestEvent(
             }
           : state.diagnostics,
         pendingServerRequests,
-        serverRequestQueue: dequeueServerRequest(state.serverRequestQueue, requestId),
+        serverRequestQueue: serverRequestStore.dequeue(
+          state.serverRequestQueue,
+          requestId,
+        ),
       };
       if (
         !request?.threadId ||
-        hasPendingThreadRequest(pendingServerRequests, request.threadId)
+        serverRequestStore.hasPendingThreadRequest(
+          pendingServerRequests,
+          request.threadId,
+        )
       ) {
         return threadEntityStore.pruneSnapshots(nextState);
       }
-      return threadEntityStore.pruneSnapshots(threadEntityStore.update(nextState, request.threadId, (thread) =>
-        thread.status === "waitingForInput" ? { ...thread, status: "running" } : thread,
-      ));
+      return threadEntityStore.pruneSnapshots(
+        threadEntityStore.update(nextState, request.threadId, (thread) =>
+          thread.status === "waitingForInput"
+            ? { ...thread, status: "running" }
+            : thread,
+        ),
+      );
     }
     default:
       return assertNever(event);

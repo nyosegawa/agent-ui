@@ -14,6 +14,10 @@ import type { SkillsState } from "./state/skills";
 import type { ThreadRegistryState, ThreadState } from "./state/thread";
 import type { UsageState } from "./state/usage";
 import { createInitialConnectionState } from "./stores/connection";
+import {
+  createInitialPendingServerRequestState,
+  createInitialServerRequestQueueState,
+} from "./stores/server-request";
 import { createInitialThreadEntityState } from "./stores/thread-entity";
 import { createInitialThreadRegistryState } from "./stores/thread-index";
 
@@ -61,9 +65,9 @@ export function createInitialAgentState(): AgentSessionState {
     errors: [],
     hooks: { byCwd: {} },
     models: { models: [] },
-    pendingServerRequests: {},
+    pendingServerRequests: createInitialPendingServerRequestState(),
     runSettings: { executionMode: "review" },
-    serverRequestQueue: { byId: {}, order: [] },
+    serverRequestQueue: createInitialServerRequestQueueState(),
     skills: { byCwd: {} },
     threadRegistry: createInitialThreadRegistryState(),
     threads: createInitialThreadEntityState(),
