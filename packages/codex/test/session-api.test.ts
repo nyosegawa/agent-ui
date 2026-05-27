@@ -188,7 +188,8 @@ describe("Codex request builders", () => {
     expect(hooksListParams({ cwds: ["/repo"] })).toEqual({
       cwds: ["/repo"],
     } satisfies HooksListParams);
-    expect(appsListParams({ forceRefetch: true, threadId: "thread-1" })).toEqual({
+    expect(appsListParams({ cursor: "page-2", forceRefetch: true, threadId: "thread-1" })).toEqual({
+      cursor: "page-2",
       forceRefetch: true,
       threadId: "thread-1",
     } satisfies AppsListParams);
@@ -260,7 +261,10 @@ describe("Codex request builders", () => {
         skillsConfigWriteParams({ enabled: true, name: "agent-browser" }),
       ),
       generatedRequestParams("hooks/list", hooksListParams({ cwds: ["/repo"] })),
-      generatedRequestParams("app/list", appsListParams({ threadId: "thread-1" })),
+      generatedRequestParams(
+        "app/list",
+        appsListParams({ cursor: "page-2", forceRefetch: true, threadId: "thread-1" }),
+      ),
     ];
 
     expect(cases.map((entry) => entry.method)).toEqual([

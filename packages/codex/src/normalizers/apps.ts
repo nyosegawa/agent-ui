@@ -37,3 +37,14 @@ export function normalizeApps(raw: unknown): AgentApp[] {
     ];
   });
 }
+
+export function normalizeAppsListResponse(response: unknown): {
+  apps: AgentApp[];
+  nextCursor: string | null;
+} {
+  const record = asRecord(response);
+  return {
+    apps: normalizeApps(record?.data ?? record?.apps ?? response),
+    nextCursor: optionalStringValue(record?.nextCursor ?? record?.next_cursor) ?? null,
+  };
+}

@@ -28,6 +28,7 @@ import {
 } from "../src/protocol";
 import { encodeJsonRpcLine, parseJsonRpcLine } from "../src/json-rpc";
 import {
+  normalizeAppsListResponse,
   normalizeCodexServerMessage,
   normalizeModelListResponse,
   normalizeThreadReadResponse,
@@ -675,6 +676,68 @@ describe("Codex protocol metadata", () => {
           severity: "critical",
         },
         type: "status/banner/added",
+      },
+    ]);
+  });
+
+  it("normalizes app/list pagination responses and refresh notifications", () => {
+    expect(
+      normalizeAppsListResponse({
+        data: [
+          {
+            id: "browser",
+            installUrl: "app://browser",
+            isAccessible: false,
+            isEnabled: false,
+            name: "Browser",
+          },
+        ],
+        nextCursor: "page-2",
+      }),
+    ).toMatchObject({
+      apps: [
+        {
+          id: "browser",
+          installed: false,
+          name: "Browser",
+          needsAuth: true,
+          uri: "app://browser",
+        },
+      ],
+      nextCursor: "page-2",
+    });
+
+    expect(
+      normalizeCodexServerMessage({
+        method: "app/list/updated",
+        params: {
+          apps: [
+            {
+              id: "drive",
+              isAccessible: true,
+              isEnabled: true,
+              name: "Drive",
+              uri: "app://drive",
+            },
+          ],
+          next_cursor: null,
+          thread_id: "thread-apps",
+        },
+      }),
+    ).toMatchObject([
+      {
+        apps: [
+          {
+            id: "drive",
+            installed: true,
+            name: "Drive",
+            needsAuth: false,
+            uri: "app://drive",
+          },
+        ],
+        nextCursor: null,
+        threadId: "thread-apps",
+        type: "apps/updated",
       },
     ]);
   });

@@ -14,7 +14,7 @@ import { normalizeThreadNotification } from "./normalizers/threads";
 import { normalizeTurnNotification } from "./normalizers/turns";
 import { stableNotificationMethods } from "./protocol";
 
-export { normalizeApps } from "./normalizers/apps";
+export { normalizeApps, normalizeAppsListResponse } from "./normalizers/apps";
 export { normalizeModelListResponse } from "./normalizers/models";
 export { normalizeThreadReadResponse } from "./normalizers/threads";
 
