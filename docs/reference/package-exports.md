@@ -95,6 +95,9 @@ generated-schema-backed method-param aliases and input helpers live at
 `@nyosegawa/agent-ui-codex/request-builders`. Request builders are useful for
 hosts that intentionally track protocol drift or construct App Server params
 directly, but they are not re-exported from the package root.
+Protocol capability metadata and guards are exported from the package root so
+hosts can distinguish stable productized, stable host-only, stable available,
+and experimental methods before making dynamic requests.
 Undocumented deep imports such as
 `@nyosegawa/agent-ui-codex/generated/stable` are blocked by the export map.
 

@@ -3,9 +3,15 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
   CODEX_PROTOCOL_COMMIT,
+  assertCodexExperimentalMethod,
+  assertCodexProductizedMethod,
   codexCapabilityMetadata,
   experimentalAvailableMethods,
+  getCodexCapabilityStatus,
   hostOnlyMethods,
+  isExperimentalAvailableMethod,
+  isHostOnlyMethod,
+  isStableProductizedMethod,
   stableAvailableMethods,
   stableClientMethods,
   stableNotificationMethods,
@@ -42,6 +48,25 @@ describe("Codex protocol metadata", () => {
       method: "thread/turns/list",
       status: "experimentalAvailable",
     });
+  });
+
+  it("classifies methods for product clients and explicit experimental access", () => {
+    expect(getCodexCapabilityStatus("thread/start")).toBe("stableProductized");
+    expect(getCodexCapabilityStatus("command/exec")).toBe("hostOnly");
+    expect(getCodexCapabilityStatus("thread/turns/list")).toBe("experimentalAvailable");
+    expect(getCodexCapabilityStatus("not/a/method")).toBeNull();
+
+    expect(isStableProductizedMethod("thread/start")).toBe(true);
+    expect(isStableProductizedMethod("command/exec")).toBe(false);
+    expect(isHostOnlyMethod("command/exec")).toBe(true);
+    expect(isExperimentalAvailableMethod("thread/turns/list")).toBe(true);
+
+    expect(() => assertCodexProductizedMethod("thread/start")).not.toThrow();
+    expect(() => assertCodexProductizedMethod("command/exec")).toThrow("hostOnly");
+    expect(() => assertCodexExperimentalMethod("thread/turns/list")).not.toThrow();
+    expect(() => assertCodexExperimentalMethod("thread/start")).toThrow(
+      "stableProductized",
+    );
   });
 
   it("round trips JSON-RPC-lite lines without jsonrpc header", () => {

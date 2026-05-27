@@ -334,6 +334,57 @@ export const codexCapabilityMetadata: readonly CodexCapabilityMetadata[] = [
   })),
 ];
 
+const stableAvailableMethodSet = new Set<string>(stableAvailableMethods);
+const stableProductizedMethodSet = new Set<string>(stableProductizedMethods);
+const experimentalAvailableMethodSet = new Set<string>(experimentalAvailableMethods);
+const hostOnlyMethodSet = new Set<string>(hostOnlyMethods);
+
+export function getCodexCapabilityStatus(
+  method: string,
+): CodexCapabilityStatus | null {
+  if (stableProductizedMethodSet.has(method)) return "stableProductized";
+  if (hostOnlyMethodSet.has(method)) return "hostOnly";
+  if (stableAvailableMethodSet.has(method)) return "stableAvailable";
+  if (experimentalAvailableMethodSet.has(method)) {
+    return "experimentalAvailable";
+  }
+  return null;
+}
+
+export function isStableProductizedMethod(
+  method: string,
+): method is StableProductizedMethod {
+  return stableProductizedMethodSet.has(method);
+}
+
+export function isExperimentalAvailableMethod(
+  method: string,
+): method is ExperimentalAvailableMethod {
+  return experimentalAvailableMethodSet.has(method);
+}
+
+export function isHostOnlyMethod(method: string): method is HostOnlyMethod {
+  return hostOnlyMethodSet.has(method);
+}
+
+export function assertCodexProductizedMethod(
+  method: string,
+): asserts method is StableProductizedMethod {
+  if (!isStableProductizedMethod(method)) {
+    const status = getCodexCapabilityStatus(method) ?? "unknown";
+    throw new Error(`Codex method is not productized: ${method} (${status})`);
+  }
+}
+
+export function assertCodexExperimentalMethod(
+  method: string,
+): asserts method is ExperimentalAvailableMethod {
+  if (!isExperimentalAvailableMethod(method)) {
+    const status = getCodexCapabilityStatus(method) ?? "unknown";
+    throw new Error(`Codex method is not experimental: ${method} (${status})`);
+  }
+}
+
 export type CodexClientInfo = StableClientInfo;
 export type CodexInitializeCapabilities = StableInitializeCapabilities;
 export type CodexInitializeOptions = InitializeParams;

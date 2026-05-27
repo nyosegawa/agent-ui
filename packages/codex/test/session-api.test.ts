@@ -239,6 +239,15 @@ describe("Codex session facade", () => {
     await expect(
       experimental.requestExperimental("thread/turns/items/list", {}),
     ).rejects.toThrow("disabled");
+    await expect(experimental.requestExperimental("thread/start", {})).rejects.toThrow(
+      "stableProductized",
+    );
+    await expect(experimental.requestExperimental("command/exec", {})).rejects.toThrow(
+      "hostOnly",
+    );
+    await expect(experimental.requestExperimental("not/a/method", {})).rejects.toThrow(
+      "unknown",
+    );
   });
 });
 

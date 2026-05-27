@@ -33,7 +33,6 @@ import {
 } from "./request-builders";
 import type {
   AppsListParams,
-  CodexStableMethod,
   CodexStableMethodParams,
   HooksListParams,
   ModelListParams,
@@ -51,8 +50,12 @@ import type {
   UserInput,
 } from "./request-builders";
 import {
+  assertCodexExperimentalMethod,
+  assertCodexProductizedMethod,
   codexInitializeParams,
+  stableProductizedMethods,
   type CodexInitializeOptions,
+  type StableProductizedMethod,
 } from "./protocol";
 
 export interface CodexClientsOptions {
@@ -156,10 +159,43 @@ export interface CodexClients {
   turns: CodexTurnsClient;
 }
 
+const codexClientMethods = [
+  "initialize",
+  "account/read",
+  "account/login/start",
+  "account/login/cancel",
+  "account/logout",
+  "account/rateLimits/read",
+  "model/list",
+  "thread/start",
+  "thread/resume",
+  "thread/fork",
+  "thread/list",
+  "thread/loaded/list",
+  "thread/read",
+  "thread/archive",
+  "thread/unarchive",
+  "thread/name/set",
+  "thread/metadata/update",
+  "thread/compact/start",
+  "thread/rollback",
+  "thread/inject_items",
+  "thread/unsubscribe",
+  "turn/start",
+  "turn/steer",
+  "turn/interrupt",
+  "skills/list",
+  "skills/config/write",
+  "hooks/list",
+  "app/list",
+] as const satisfies readonly StableProductizedMethod[];
+
 export function createCodexClients(
   transport: AgentTransport,
   options: CodexClientsOptions = {},
 ): CodexClients {
+  assertCodexClientSurfaceProductized();
+
   return {
     account: {
       cancelLogin: (loginId) =>
@@ -198,6 +234,7 @@ export function createCodexClients(
       if (!options.experimental) {
         throw new Error(`Experimental Codex method requires opt-in: ${method}`);
       }
+      assertCodexExperimentalMethod(method);
       if (method === "thread/turns/items/list") {
         throw new Error("thread/turns/items/list is disabled until upstream implements it");
       }
@@ -285,7 +322,7 @@ export function createCodexClients(
   };
 }
 
-function request<TMethod extends CodexStableMethod>(
+function request<TMethod extends StableProductizedMethod>(
   transport: AgentTransport,
   method: TMethod,
   params?: CodexStableMethodParams<TMethod>,
@@ -295,4 +332,16 @@ function request<TMethod extends CodexStableMethod>(
     return transport.request(method);
   }
   return transport.request(method, params as unknown, options);
+}
+
+function assertCodexClientSurfaceProductized(): void {
+  for (const method of codexClientMethods) {
+    assertCodexProductizedMethod(method);
+  }
+  if (
+    codexClientMethods.length !== stableProductizedMethods.length ||
+    codexClientMethods.some((method, index) => method !== stableProductizedMethods[index])
+  ) {
+    throw new Error("Codex client method surface does not match productized methods");
+  }
 }

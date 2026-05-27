@@ -82,8 +82,11 @@ Implementation status:
 - `createCodexClients()` groups productized App Server methods by protocol
   primitive: connection, threads, turns, approvals, apps, skills, hooks,
   models, and account. Its method params use the same generated-schema-derived
-  aliases as the request builders. Experimental method calls must use
-  `requestExperimental()` and require explicit opt-in.
+  aliases as the request builders. Client construction validates that this
+  method surface exactly matches the productized stable method classification.
+  Experimental method calls must use `requestExperimental()`, require explicit
+  opt-in, and are rejected if the method is stable/productized, host-only, or
+  unknown.
 - `createCodexSession()` is a compatibility facade over `createCodexClients()`
   for host code that still expects `thread` and `turn` namespaces.
 - `normalizer.ts` is the composition root for App Server notifications and
@@ -160,6 +163,11 @@ normalizes them through the Codex adapter, and reduces them into core state.
 ## Stable and Experimental API
 
 Default public API uses stable App Server protocol only.
+The package exposes capability metadata plus `getCodexCapabilityStatus()`,
+`isStableProductizedMethod()`, `isExperimentalAvailableMethod()`,
+`isHostOnlyMethod()`, `assertCodexProductizedMethod()`, and
+`assertCodexExperimentalMethod()` for hosts that need to gate dynamic method
+selection.
 
 Experimental protocol support:
 

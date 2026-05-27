@@ -113,7 +113,7 @@ Acceptance:
 - [x] Group typed clients by protocol primitive:
   `connection`, `threads`, `turns`, `approvals`, `apps`, `skills`, `hooks`,
   `models`, and `account`.
-- [ ] Enforce stable/productized/host-only/experimental capability
+- [x] Enforce stable/productized/host-only/experimental capability
   classification at client construction and public exports.
 - [ ] Add generated-schema-backed tests for request builders.
 - [ ] Add tests for initialize and notification opt-out behavior.
