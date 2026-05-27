@@ -73,7 +73,7 @@ Acceptance:
 - [x] Add `threadIndexStore`.
 - [x] Add `threadEntityStore`.
 - [x] Add `turnStore`.
-- [ ] Add `itemStore`.
+- [x] Add `itemStore`.
 - [ ] Add `serverRequestStore`.
 - [ ] Add `appsStore`.
 - [ ] Add `diagnosticsStore`.

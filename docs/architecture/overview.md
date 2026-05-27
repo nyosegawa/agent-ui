@@ -103,7 +103,9 @@ preview, live, and loaded thread indexes. `threadEntityStore` owns the backing
 thread entity map, individual thread entity updates, and pruning stale thread
 snapshots from that map. `turnStore` owns turn creation, insertion into a
 thread's ordered turn collection, and focused turn updates inside a thread
-entity.
+entity. `itemStore` owns item insertion, streaming item deltas, retained command
+output and file patches, and normalized transcript block synthesis for stored
+items.
 
 ## Reducer Rules
 
