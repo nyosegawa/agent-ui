@@ -81,18 +81,20 @@ Responsibilities:
 The package root exports the protocol/session/transport facade: JSON-RPC
 helpers, protocol capability metadata, normalizers, session helpers, stdio
 transport, WebSocket transport, SDK adapter, and auth helpers. Browser code
-should import the browser-safe session facade from
-`@nyosegawa/agent-ui-codex/session` and the WebSocket transport from
+should import the browser-safe grouped clients from
+`@nyosegawa/agent-ui-codex/clients`, the compatibility session facade from
+`@nyosegawa/agent-ui-codex/session`, and the WebSocket transport from
 `@nyosegawa/agent-ui-codex/websocket` so Node stdio code stays out of the
 browser bundle.
 
 Default support is stable App Server API only. Experimental API requires
 explicit opt-in. Generated stable App Server types are an advanced public
-surface at `@nyosegawa/agent-ui-codex/stable-types`; request builders and
+surface at `@nyosegawa/agent-ui-codex/stable-types`; the grouped typed client
+surface lives at `@nyosegawa/agent-ui-codex/clients`; request builders and
 generated-schema-backed method-param aliases and input helpers live at
-`@nyosegawa/agent-ui-codex/request-builders`. These advanced surfaces are
-useful for hosts that intentionally track protocol drift or construct App
-Server params directly, but they are not re-exported from the package root.
+`@nyosegawa/agent-ui-codex/request-builders`. Request builders are useful for
+hosts that intentionally track protocol drift or construct App Server params
+directly, but they are not re-exported from the package root.
 Undocumented deep imports such as
 `@nyosegawa/agent-ui-codex/generated/stable` are blocked by the export map.
 
@@ -286,6 +288,7 @@ Only these subpaths are public today:
 
 - `@nyosegawa/agent-ui-core`
 - `@nyosegawa/agent-ui-codex`
+- `@nyosegawa/agent-ui-codex/clients`
 - `@nyosegawa/agent-ui-codex/request-builders`
 - `@nyosegawa/agent-ui-codex/session`
 - `@nyosegawa/agent-ui-codex/stable-types`

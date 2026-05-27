@@ -19,6 +19,16 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./clients": {
+      "import": {
+        "types": "./dist/clients.d.ts",
+        "default": "./dist/clients.js"
+      },
+      "require": {
+        "types": "./dist/clients.d.cts",
+        "default": "./dist/clients.cjs"
+      }
+    },
     "./request-builders": {
       "import": {
         "types": "./dist/request-builders.d.ts",

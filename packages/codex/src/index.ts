@@ -1,3 +1,4 @@
+export * from "./clients";
 export * from "./json-rpc";
 export * from "./method-params";
 export * from "./normalizer";

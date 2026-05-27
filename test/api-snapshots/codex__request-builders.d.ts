@@ -1,5 +1,5 @@
-import { C as CodexStableMethodParams, U as UserInput } from './method-params-BXDZnxMW.js';
-export { a as CodexStableMethod } from './method-params-BXDZnxMW.js';
+import { C as CodexStableMethodParams, U as UserInput } from './method-params-s6VeRfnU.js';
+export { a as CodexStableMethod } from './method-params-s6VeRfnU.js';
 import './InitializeParams-CDX1c2T9.js';
 
 type AppsListParams = CodexStableMethodParams<"app/list">;

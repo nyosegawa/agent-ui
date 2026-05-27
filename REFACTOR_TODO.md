@@ -110,7 +110,7 @@ Acceptance:
 - [x] Add normalizer modules for server requests and request resolution.
 - [x] Add normalizer modules for apps/connectors events.
 - [x] Add normalizer modules for diagnostics/status events.
-- [ ] Group typed clients by protocol primitive:
+- [x] Group typed clients by protocol primitive:
   `connection`, `threads`, `turns`, `approvals`, `apps`, `skills`, `hooks`,
   `models`, and `account`.
 - [ ] Enforce stable/productized/host-only/experimental capability

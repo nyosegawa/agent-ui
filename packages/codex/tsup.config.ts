@@ -3,6 +3,7 @@ import baseConfig from "../../tsup.config";
 export default {
   ...baseConfig,
   entry: [
+    "src/clients.ts",
     "src/index.ts",
     "src/request-builders.ts",
     "src/session.ts",

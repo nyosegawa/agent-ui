@@ -79,10 +79,13 @@ Implementation status:
   params whose method-specific types are derived from the generated stable
   `ClientRequest` union. React does not own or re-export Codex-specific
   request shapes.
-- `createCodexSession()` is the stable facade for productized account, model,
-  thread, turn, skills, hooks, and app methods. Its method params use the same
-  generated-schema-derived aliases as the request builders. Experimental
-  method calls must use `requestExperimental()` and require explicit opt-in.
+- `createCodexClients()` groups productized App Server methods by protocol
+  primitive: connection, threads, turns, approvals, apps, skills, hooks,
+  models, and account. Its method params use the same generated-schema-derived
+  aliases as the request builders. Experimental method calls must use
+  `requestExperimental()` and require explicit opt-in.
+- `createCodexSession()` is a compatibility facade over `createCodexClients()`
+  for host code that still expects `thread` and `turn` namespaces.
 - `normalizer.ts` is the composition root for App Server notifications and
   server requests. Protocol-family modules under `packages/codex/src/normalizers`
   own account, thread, turn, item, server-request, apps/connectors, status, and

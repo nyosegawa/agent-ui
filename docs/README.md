@@ -93,4 +93,6 @@ and recipe theming intentionally overrides tokens. Generated stable Codex App
 Server types are available only from the advanced
 `@nyosegawa/agent-ui-codex/stable-types` subpath. Stable method-param aliases
 are derived from the generated `ClientRequest` schema instead of maintained as
-separate hand-written request models.
+separate hand-written request models. Browser-safe Codex request execution is
+grouped by protocol primitive at `@nyosegawa/agent-ui-codex/clients`; the
+`@nyosegawa/agent-ui-codex/session` subpath remains as a compatibility facade.

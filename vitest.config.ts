@@ -4,6 +4,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@nyosegawa/agent-ui-core": new URL("./packages/core/src/index.ts", import.meta.url).pathname,
+      "@nyosegawa/agent-ui-codex/clients": new URL("./packages/codex/src/clients.ts", import.meta.url).pathname,
       "@nyosegawa/agent-ui-codex/request-builders": new URL("./packages/codex/src/request-builders.ts", import.meta.url).pathname,
       "@nyosegawa/agent-ui-codex/session": new URL("./packages/codex/src/session.ts", import.meta.url).pathname,
       "@nyosegawa/agent-ui-codex/stable-types": new URL("./packages/codex/src/stable-types.ts", import.meta.url).pathname,

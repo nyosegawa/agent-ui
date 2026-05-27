@@ -22,6 +22,7 @@
     "paths": {
       "@nyosegawa/agent-ui-core": ["packages/core/src/index.ts"],
       "@nyosegawa/agent-ui-codex": ["packages/codex/src/index.ts"],
+      "@nyosegawa/agent-ui-codex/clients": ["packages/codex/src/clients.ts"],
       "@nyosegawa/agent-ui-codex/request-builders": ["packages/codex/src/request-builders.ts"],
       "@nyosegawa/agent-ui-codex/session": ["packages/codex/src/session.ts"],
       "@nyosegawa/agent-ui-codex/stable-types": ["packages/codex/src/stable-types.ts"],

@@ -126,6 +126,7 @@ function blockedSubpathsForPackage(dir) {
 function assertCanonicalPublicSpecifiers(surfaces) {
   const expected = [
     "@nyosegawa/agent-ui-codex",
+    "@nyosegawa/agent-ui-codex/clients",
     "@nyosegawa/agent-ui-codex/request-builders",
     "@nyosegawa/agent-ui-codex/session",
     "@nyosegawa/agent-ui-codex/stable-types",

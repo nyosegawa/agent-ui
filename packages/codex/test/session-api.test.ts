@@ -1,6 +1,6 @@
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 import { describe, expect, it } from "vitest";
-import { createCodexSession } from "../src";
+import { createCodexClients, createCodexSession } from "../src";
 import {
   accountReadParams,
   appsListParams,
@@ -242,17 +242,73 @@ describe("Codex session facade", () => {
   });
 });
 
+describe("Codex typed clients", () => {
+  it("groups stable methods by protocol primitive", async () => {
+    const transport = new FakeTransport();
+    const clients = createCodexClients(transport);
+
+    await clients.connection.initialize({
+      capabilities: {
+        experimentalApi: true,
+        requestAttestation: false,
+      },
+      clientInfo: {
+        name: "agent-ui-test",
+        title: null,
+        version: "0.0.0",
+      },
+    });
+    clients.connection.initialized();
+    await clients.account.read();
+    await clients.apps.list();
+    await clients.hooks.list();
+    await clients.models.list();
+    await clients.skills.list();
+    await clients.threads.start({ cwd: "/repo" });
+    await clients.turns.start({ input: "hello", threadId: "thread-1" });
+    await clients.approvals.respond("request-1", { ok: true });
+    await clients.approvals.reject("request-2", { message: "denied" });
+
+    expect(transport.calls.map((call) => call.method)).toEqual([
+      "initialize",
+      "account/read",
+      "app/list",
+      "hooks/list",
+      "model/list",
+      "skills/list",
+      "thread/start",
+      "turn/start",
+    ]);
+    expect(transport.notifications).toEqual([{ method: "initialized", params: undefined }]);
+    expect(transport.responses).toEqual([
+      { requestId: "request-1", result: { ok: true } },
+    ]);
+    expect(transport.rejections).toEqual([
+      { error: { message: "denied" }, requestId: "request-2" },
+    ]);
+  });
+});
+
 class FakeTransport implements AgentTransport {
   readonly calls: Array<{ method: string; params: unknown }> = [];
+  readonly notifications: Array<{ method: string; params: unknown }> = [];
+  readonly rejections: Array<{ error: unknown; requestId: string }> = [];
+  readonly responses: Array<{ requestId: string; result: unknown }> = [];
   readonly events = {
     [Symbol.asyncIterator]: async function* () {},
   };
 
   async close(): Promise<void> {}
   async connect(): Promise<void> {}
-  notify(): void {}
-  async reject(): Promise<void> {}
-  async respond(): Promise<void> {}
+  notify(method: string, params?: unknown): void {
+    this.notifications.push({ method, params });
+  }
+  async reject(requestId: string, error: unknown): Promise<void> {
+    this.rejections.push({ error, requestId });
+  }
+  async respond(requestId: string, result: unknown): Promise<void> {
+    this.responses.push({ requestId, result });
+  }
 
   async request<TParams = unknown, TResult = unknown>(
     method: string,
