@@ -4,10 +4,8 @@ import {
   createTurnState,
   isPreviewThreadStatus,
   preservesAgainstPreviewSnapshot,
-  pruneThreadSnapshots,
-  updateThread,
-  upsertThread,
 } from "./shared";
+import { threadEntityStore } from "../stores/thread-entity";
 import { threadIndexStore } from "../stores/thread-index";
 
 export function reduceThreadEvent(
@@ -17,7 +15,7 @@ export function reduceThreadEvent(
   switch (event.type) {
     case "thread/upserted":
     case "thread/started": {
-      const threadState = upsertThread(state, event.thread);
+      const threadState = threadEntityStore.getOrCreate(state.threads, event.thread);
       const stalePreviewStatus =
         !event.snapshot &&
         state.threads[event.thread.id] &&
@@ -32,7 +30,7 @@ export function reduceThreadEvent(
         if (!orderedTurnIds.includes(turn.id)) orderedTurnIds.push(turn.id);
         turns[turn.id] = turns[turn.id] ?? createTurnState(turn, event.thread.id);
       }
-      return pruneThreadSnapshots({
+      return threadEntityStore.pruneSnapshots({
         ...state,
         activeThreadId:
           event.type === "thread/started" ? event.thread.id : state.activeThreadId,
@@ -63,7 +61,7 @@ export function reduceThreadEvent(
         preservesAgainstPreviewSnapshot(currentStatus)
           ? currentStatus
           : event.status;
-      return pruneThreadSnapshots(updateThread(
+      return threadEntityStore.pruneSnapshots(threadEntityStore.update(
         {
           ...state,
           threadRegistry: threadIndexStore.upsert(
@@ -81,12 +79,12 @@ export function reduceThreadEvent(
       ));
     }
     case "thread/name/updated":
-      return updateThread(state, event.threadId, (thread) => ({
+      return threadEntityStore.update(state, event.threadId, (thread) => ({
         ...thread,
         thread: { ...thread.thread, name: event.name },
       }));
     case "thread/tokenUsage/updated":
-      return updateThread(state, event.threadId, (thread) => ({
+      return threadEntityStore.update(state, event.threadId, (thread) => ({
         ...thread,
         tokenUsage: event.tokenUsage,
       }));

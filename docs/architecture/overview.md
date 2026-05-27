@@ -99,7 +99,9 @@ reducers as they are split out of the session reducer. `connectionStore` owns
 reducer still performs cross-store effects such as clearing pending server
 requests on disconnect. `threadIndexStore` owns `ThreadRegistryState`
 initialization, registry status classification, and movement between cold,
-preview, live, and loaded thread indexes.
+preview, live, and loaded thread indexes. `threadEntityStore` owns the backing
+thread entity map, individual thread entity updates, and pruning stale thread
+snapshots from that map.
 
 ## Reducer Rules
 

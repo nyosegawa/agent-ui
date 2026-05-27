@@ -6,5 +6,6 @@ export * from "./retention";
 export * from "./selectors";
 export * from "./state";
 export * from "./stores/connection";
+export * from "./stores/thread-entity";
 export * from "./stores/thread-index";
 export * from "./transport";

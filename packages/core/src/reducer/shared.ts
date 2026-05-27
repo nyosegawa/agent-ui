@@ -3,61 +3,13 @@ import type {
   AgentItemBlockKind,
   AgentItemState,
   AgentSessionState,
-  AgentThread,
   AgentTurn,
   ThreadId,
   ThreadState,
   TurnState,
 } from "../state";
 import { boundedRecordEntry, boundedStringAppend } from "../retention";
-
-export function updateThread(
-  state: AgentSessionState,
-  threadId: ThreadId,
-  updater: (thread: ThreadState) => ThreadState,
-): AgentSessionState {
-  const thread = state.threads[threadId];
-  if (!thread) return state;
-  return {
-    ...state,
-    threads: {
-      ...state.threads,
-      [threadId]: updater(thread),
-    },
-  };
-}
-
-export function pruneThreadSnapshots(state: AgentSessionState): AgentSessionState {
-  const retainedThreadIds = new Set<ThreadId>([
-    ...state.threadRegistry.coldThreadIds,
-    ...state.threadRegistry.previewThreadIds,
-    ...state.threadRegistry.liveThreadIds,
-    ...state.threadRegistry.loadedThreadIds,
-  ]);
-  if (state.activeThreadId) retainedThreadIds.add(state.activeThreadId);
-  if (state.threadRegistry.activeThreadId) {
-    retainedThreadIds.add(state.threadRegistry.activeThreadId);
-  }
-  for (const request of Object.values(state.pendingServerRequests)) {
-    if (request.threadId) retainedThreadIds.add(request.threadId);
-  }
-
-  let changed = false;
-  const threads: AgentSessionState["threads"] = {};
-  for (const [threadId, thread] of Object.entries(state.threads)) {
-    if (retainedThreadIds.has(threadId)) {
-      threads[threadId] = thread;
-      continue;
-    }
-    if (thread.registryStatus === "live") {
-      threads[threadId] = thread;
-      retainedThreadIds.add(threadId);
-      continue;
-    }
-    changed = true;
-  }
-  return changed ? { ...state, threads } : state;
-}
+import { threadEntityStore } from "../stores/thread-entity";
 
 export function hasPendingThreadRequest(
   requests: AgentSessionState["pendingServerRequests"],
@@ -112,7 +64,7 @@ export function updateTurn(
   turnId: string,
   updater: (turn: TurnState) => TurnState,
 ): AgentSessionState {
-  return updateThread(state, threadId, (thread) => {
+  return threadEntityStore.update(state, threadId, (thread) => {
     const turn =
       thread.turns[turnId] ??
       createTurnState({ id: turnId, threadId, status: "running" }, threadId);
@@ -163,18 +115,6 @@ export function appendById(
 
 export function ensureItemOrder(itemOrder: string[], itemId: string): string[] {
   return itemOrder.includes(itemId) ? itemOrder : [...itemOrder, itemId];
-}
-
-export function upsertThread(state: AgentSessionState, thread: AgentThread): ThreadState {
-  return (
-    state.threads[thread.id] ?? {
-      orderedTurnIds: [],
-      registryStatus: "loaded",
-      status: "loaded",
-      thread,
-      turns: {},
-    }
-  );
 }
 
 export function isPreviewThreadStatus(status?: string): boolean {

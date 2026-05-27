@@ -71,7 +71,7 @@ Acceptance:
   composition root.
 - [x] Add `connectionStore`.
 - [x] Add `threadIndexStore`.
-- [ ] Add `threadEntityStore`.
+- [x] Add `threadEntityStore`.
 - [ ] Add `turnStore`.
 - [ ] Add `itemStore`.
 - [ ] Add `serverRequestStore`.

@@ -1,12 +1,11 @@
 import type { ServerRequestEvent } from "../events";
 import type { AgentSessionState } from "../state";
 import { AGENT_RETENTION_POLICY, boundedAppend } from "../retention";
+import { threadEntityStore } from "../stores/thread-entity";
 import {
   dequeueServerRequest,
   enqueueServerRequest,
   hasPendingThreadRequest,
-  pruneThreadSnapshots,
-  updateThread,
 } from "./shared";
 
 export function reduceServerRequestEvent(
@@ -15,7 +14,7 @@ export function reduceServerRequestEvent(
 ): AgentSessionState {
   switch (event.type) {
     case "serverRequest/created":
-      return updateThread(
+      return threadEntityStore.update(
         {
           ...state,
           pendingServerRequests: {
@@ -44,9 +43,9 @@ export function reduceServerRequestEvent(
         !request?.threadId ||
         hasPendingThreadRequest(pendingServerRequests, request.threadId)
       ) {
-        return pruneThreadSnapshots(nextState);
+        return threadEntityStore.pruneSnapshots(nextState);
       }
-      return pruneThreadSnapshots(updateThread(nextState, request.threadId, (thread) =>
+      return threadEntityStore.pruneSnapshots(threadEntityStore.update(nextState, request.threadId, (thread) =>
         thread.status === "waitingForInput" ? { ...thread, status: "running" } : thread,
       ));
     }
@@ -77,9 +76,9 @@ export function reduceServerRequestEvent(
         !request?.threadId ||
         hasPendingThreadRequest(pendingServerRequests, request.threadId)
       ) {
-        return pruneThreadSnapshots(nextState);
+        return threadEntityStore.pruneSnapshots(nextState);
       }
-      return pruneThreadSnapshots(updateThread(nextState, request.threadId, (thread) =>
+      return threadEntityStore.pruneSnapshots(threadEntityStore.update(nextState, request.threadId, (thread) =>
         thread.status === "waitingForInput" ? { ...thread, status: "running" } : thread,
       ));
     }
