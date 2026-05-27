@@ -134,9 +134,3 @@ workflow. Hosts can pass the returned `UserInput[]` directly to
 `@nyosegawa/agent-ui-codex` exports `createCodexSdkTransportAdapter()` for
 hosts that already own a Codex SDK-like client with request, response, and event
 methods.
-
-`@nyosegawa/agent-ui-core` exports
-`createOpenAIAgentsSdkTransportAdapter()` for host-owned OpenAI Agents SDK
-runners that only need simple thread start and text streaming. This adapter is
-intentionally narrower than Codex App Server and does not support command or
-file approvals.

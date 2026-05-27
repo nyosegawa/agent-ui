@@ -1,8 +1,8 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { agentReducer, createInitialAgentState } from "@nyosegawa/agent-ui-core";
 import { describe, expect, it } from "vitest";
-import { normalizeCodexServerMessage, parseJsonRpcLine } from "@nyosegawa/agent-ui-codex";
-import { agentReducer, createInitialAgentState } from "../src";
+import { normalizeCodexServerMessage, parseJsonRpcLine } from "../src";
 
 const fixtureRoot = join(process.cwd(), "fixtures/app-server/v2-jsonrpc");
 
@@ -34,7 +34,11 @@ describe("raw App Server JSON-RPC fixture pack", () => {
       }
     }
 
-    expect(state.threads["thread-basic"]?.turns["turn-text"]?.streamingTextByItemId["item-assistant"]).toBe("Hello there.");
+    expect(
+      state.threads["thread-basic"]?.turns["turn-text"]?.streamingTextByItemId[
+        "item-assistant"
+      ],
+    ).toBe("Hello there.");
     expect(state.pendingServerRequests["approval-file-raw"]).toMatchObject({
       itemId: "item-file",
       kind: "fileChangeApproval",

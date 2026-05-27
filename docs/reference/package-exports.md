@@ -45,18 +45,19 @@ Responsibilities:
 - transport interface
 - fake transport
 - fixture utilities
-- optional OpenAI Agents SDK runner adapter for simple text streaming demos
 
 The package root exports these building blocks directly: state/event/transport
-types, reducer and selector helpers, `FakeAgentTransport`, fixture utilities,
-and `createOpenAIAgentsSdkTransportAdapter()`. JSON-RPC framing is Codex
-adapter responsibility, not core responsibility.
+types, reducer and selector helpers, `FakeAgentTransport`, and fixture
+utilities. JSON-RPC framing and generated App Server schema are Codex adapter
+responsibilities, not core responsibilities.
 
 Must not include:
 
 - React
 - Node child process management
-- direct public exposure of Codex generated types
+- generated Codex types
+- Codex request builders
+- generic/non-App-Server SDK adapters
 
 ## `@nyosegawa/agent-ui-codex`
 

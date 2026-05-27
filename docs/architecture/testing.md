@@ -83,6 +83,10 @@ Failures usually mean the vendored App Server schema or request builders must
 be reviewed. Do not accept snapshot changes without reading the upstream App
 Server diff.
 
+Raw App Server JSON-RPC fixture lines from
+`fixtures/app-server/v2-jsonrpc/` are Codex adapter coverage: the Codex tests
+parse and normalize the lines before reducing them through core state.
+
 ## Reducer And Normalizer Tests
 
 Reducer tests assert that normalized events keep Codex session data structured:
@@ -96,8 +100,6 @@ Reducer tests assert that normalized events keep Codex session data structured:
   deltas, and idempotent `serverRequest/resolved` notifications
 - stale/hydrated history state from `thread/read`
 - pending server-request queue cleanup on resolve, reject, or disconnect
-- raw App Server JSON-RPC fixture lines from
-  `fixtures/app-server/v2-jsonrpc/`, parsed and normalized before reduction
 - bounded retention for diagnostics, warnings, raw notifications, command
   output, file patches, and thread registry snapshots. Thread snapshot tests
   must assert both the registry ID arrays and the backing `state.threads`

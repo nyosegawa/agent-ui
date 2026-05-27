@@ -481,21 +481,6 @@ interface FixtureStep {
 }
 declare function runEventFixture(steps: FixtureStep[], initialState?: AgentSessionState): AgentSessionState;
 
-type OpenAIAgentsAdapterChunk = string | AgentEvent | AgentTransportEvent;
-interface OpenAIAgentsRunContext {
-    input: unknown;
-    params?: Record<string, unknown>;
-    threadId: ThreadId;
-    turnId: TurnId;
-}
-interface OpenAIAgentsAdapterOptions {
-    createItemId?: (context: OpenAIAgentsRunContext) => string;
-    createThreadId?: () => ThreadId;
-    createTurnId?: (threadId: ThreadId) => TurnId;
-    run: (context: OpenAIAgentsRunContext) => AsyncIterable<OpenAIAgentsAdapterChunk> | Iterable<OpenAIAgentsAdapterChunk> | Promise<string | OpenAIAgentsAdapterChunk[]> | string | OpenAIAgentsAdapterChunk[];
-}
-declare function createOpenAIAgentsSdkTransportAdapter(options: OpenAIAgentsAdapterOptions): AgentTransport;
-
 declare function agentReducer(state: AgentSessionState | undefined, event: AgentEvent): AgentSessionState;
 
 declare const AGENT_RETENTION_POLICY: {
@@ -522,4 +507,4 @@ declare function selectUsage(state: AgentSessionState): UsageState;
 declare function selectThreadRegistry(state: AgentSessionState): ThreadRegistryState;
 declare function selectRunSettings(state: AgentSessionState): RunSettingsState;
 
-export { AGENT_RETENTION_POLICY, type AccountState, type AgentApp, type AgentError, type AgentEvent, type AgentHook, type AgentItemBlock, type AgentItemBlockKind, type AgentItemState, type AgentModel, type AgentRequestOptions, type AgentSessionState, type AgentSkill, type AgentThread, type AgentTransport, type AgentTransportEvent, type AgentTurn, type AppsState, type ConnectionState, type DeviceCodeLoginState, type DiagnosticsState, type ExecutionModeId, FakeAgentTransport, type FakeAgentTransportOptions, type FakeTransportRequest, type FixtureStep, type HooksState, type ItemId, type ModelState, type OpenAIAgentsAdapterChunk, type OpenAIAgentsAdapterOptions, type OpenAIAgentsRunContext, type PendingServerRequest, type PendingServerRequestKind, type ProtocolNotificationState, type ReasoningEffort, type RequestId, type RunSettingsState, type ScopedAppsState, type ServerRequestQueueState, type SkillsState, type StatusBannerKind, type StatusBannerState, type ThreadId, type ThreadRegistryState, type ThreadRegistryStatus, type ThreadState, type ThreadStatus, type ThreadTokenUsage, type TokenUsageBreakdown, type TurnDiffState, type TurnId, type TurnPlanState, type TurnState, type UsageState, type WarningState, agentReducer, boundedAppend, boundedRecordEntry, boundedStringAppend, boundedUniqueAppend, createInitialAgentState, createOpenAIAgentsSdkTransportAdapter, runEventFixture, selectActiveThread, selectOrderedThreads, selectOrderedTurns, selectPendingApprovals, selectRunSettings, selectServerRequestQueue, selectThread, selectThreadRegistry, selectUsage };
+export { AGENT_RETENTION_POLICY, type AccountState, type AgentApp, type AgentError, type AgentEvent, type AgentHook, type AgentItemBlock, type AgentItemBlockKind, type AgentItemState, type AgentModel, type AgentRequestOptions, type AgentSessionState, type AgentSkill, type AgentThread, type AgentTransport, type AgentTransportEvent, type AgentTurn, type AppsState, type ConnectionState, type DeviceCodeLoginState, type DiagnosticsState, type ExecutionModeId, FakeAgentTransport, type FakeAgentTransportOptions, type FakeTransportRequest, type FixtureStep, type HooksState, type ItemId, type ModelState, type PendingServerRequest, type PendingServerRequestKind, type ProtocolNotificationState, type ReasoningEffort, type RequestId, type RunSettingsState, type ScopedAppsState, type ServerRequestQueueState, type SkillsState, type StatusBannerKind, type StatusBannerState, type ThreadId, type ThreadRegistryState, type ThreadRegistryStatus, type ThreadState, type ThreadStatus, type ThreadTokenUsage, type TokenUsageBreakdown, type TurnDiffState, type TurnId, type TurnPlanState, type TurnState, type UsageState, type WarningState, agentReducer, boundedAppend, boundedRecordEntry, boundedStringAppend, boundedUniqueAppend, createInitialAgentState, runEventFixture, selectActiveThread, selectOrderedThreads, selectOrderedTurns, selectPendingApprovals, selectRunSettings, selectServerRequestQueue, selectThread, selectThreadRegistry, selectUsage };

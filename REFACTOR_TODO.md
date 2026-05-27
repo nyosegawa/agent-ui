@@ -35,7 +35,7 @@ Acceptance:
 
 ## Phase 1: Package Boundary Cut
 
-- [ ] Define final responsibilities for `core`, `codex`, `react`, `server`, and
+- [x] Define final responsibilities for `core`, `codex`, `react`, `server`, and
   `web-components`.
 - [x] Remove `packages/react/src/codex-request-params.ts` from the React public
   API.
@@ -43,9 +43,9 @@ Acceptance:
   helpers.
 - [ ] Move all Codex request construction behind Codex package clients or
   host-injected session/controllers.
-- [ ] Remove Codex imports from core tests.
-- [ ] Remove generic/non-App-Server adapters from the core public API.
-- [ ] Tighten `packages/core/src/index.ts`.
+- [x] Remove Codex imports from core tests.
+- [x] Remove generic/non-App-Server adapters from the core public API.
+- [x] Tighten `packages/core/src/index.ts`.
 - [ ] Tighten `packages/codex/src/index.ts`.
 - [x] Tighten `packages/react/src/index.ts`.
 - [ ] Tighten `packages/server/src/index.ts`.
@@ -57,7 +57,7 @@ Acceptance:
 
 - [x] React no longer exports `threadStartParams`, `turnStartParams`,
   `textInput`, or Codex param types.
-- [ ] Core exports no generated Codex types and no request builders.
+- [x] Core exports no generated Codex types and no request builders.
 - [ ] Codex is the only package that owns generated App Server schema.
 - [x] `bun run test:api-snapshots` passes with the new public surface.
 - [x] `bun run test:package-resolution` passes.
