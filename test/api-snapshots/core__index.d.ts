@@ -2,24 +2,12 @@ type RequestId = string | number;
 type ThreadId = string;
 type TurnId = string;
 type ItemId = string;
-type ConnectionState = {
-    status: "idle";
-} | {
-    status: "connecting";
-} | {
-    status: "connected";
-} | {
-    status: "closed";
-    reason?: string;
-} | {
-    status: "error";
-    error: AgentError;
-};
 interface AgentError {
     code?: number;
     message: string;
     data?: unknown;
 }
+
 interface AccountState {
     status: "unknown" | "unauthenticated" | "authenticating" | "authenticated";
     account?: Record<string, unknown>;
@@ -33,6 +21,76 @@ interface DeviceCodeLoginState {
     verificationUrl?: string;
     expiresAt?: string;
 }
+
+interface AgentApp {
+    id: string;
+    name?: string;
+    uri?: string;
+    installed?: boolean;
+    needsAuth?: boolean;
+    raw?: unknown;
+}
+interface AppsState {
+    apps: AgentApp[];
+    byScope: Record<string, ScopedAppsState>;
+    nextCursor?: string | null;
+}
+interface ScopedAppsState {
+    apps: AgentApp[];
+    nextCursor?: string | null;
+    threadId?: ThreadId;
+}
+
+type ConnectionState = {
+    status: "idle";
+} | {
+    status: "connecting";
+} | {
+    status: "connected";
+} | {
+    status: "closed";
+    reason?: string;
+} | {
+    status: "error";
+    error: AgentError;
+};
+
+interface WarningState {
+    id: string;
+    message: string;
+    raw?: unknown;
+}
+type StatusBannerKind = "modelReroute" | "deprecationNotice" | "configWarning" | "accountStatus" | "mcpOAuth" | "rateLimit" | "system";
+interface StatusBannerState {
+    id: string;
+    kind: StatusBannerKind;
+    message: string;
+    raw?: unknown;
+    severity?: "info" | "warning" | "critical";
+}
+interface DiagnosticsState {
+    banners: StatusBannerState[];
+    errors: AgentError[];
+    protocolNotifications: ProtocolNotificationState[];
+    warnings: WarningState[];
+}
+interface ProtocolNotificationState {
+    id: string;
+    method: string;
+    params?: unknown;
+}
+
+interface AgentHook {
+    id: string;
+    name?: string;
+    cwd?: string;
+    enabled?: boolean;
+    raw?: unknown;
+}
+interface HooksState {
+    byCwd: Record<string, AgentHook[]>;
+}
+
 interface ModelState {
     models: AgentModel[];
     selectedModelId?: string;
@@ -45,6 +103,7 @@ interface AgentModel {
     raw?: unknown;
 }
 type ReasoningEffort = "none" | "minimal" | "low" | "medium" | "high" | "xhigh" | string;
+
 type ExecutionModeId = "review" | "auto" | "read-only" | "full-access" | string;
 interface RunSettingsState {
     executionMode: ExecutionModeId;
@@ -52,6 +111,95 @@ interface RunSettingsState {
     effort?: ReasoningEffort;
     cwd?: string;
 }
+
+type PendingServerRequestKind = "attestation" | "authRefresh" | "commandApproval" | "dynamicTool" | "fileChangeApproval" | "legacyExecApproval" | "legacyPatchApproval" | "mcpElicitation" | "permissionsApproval" | "userInput" | "unknown";
+interface PendingServerRequest {
+    id: RequestId;
+    kind: PendingServerRequestKind;
+    threadId?: ThreadId;
+    turnId?: TurnId;
+    itemId?: ItemId;
+    payload: unknown;
+}
+interface ServerRequestQueueState {
+    byId: Record<string, PendingServerRequest>;
+    order: string[];
+}
+
+interface AgentSkill {
+    name: string;
+    path?: string;
+    cwd?: string;
+    enabled?: boolean;
+    raw?: unknown;
+}
+interface SkillsState {
+    byCwd: Record<string, AgentSkill[]>;
+}
+
+interface AgentItemState {
+    id: ItemId;
+    turnId: TurnId;
+    threadId: ThreadId;
+    kind: string;
+    status: "inProgress" | "completed" | "failed";
+    text?: string;
+    raw?: unknown;
+}
+type AgentItemBlockKind = "text" | "thinking" | "plan" | "commandExecution" | "fileChange" | "toolCall" | "mcpToolCall" | "collabToolCall" | "webSearch" | "image" | "systemInfo" | "unknown";
+interface AgentItemBlock {
+    id: ItemId;
+    kind: AgentItemBlockKind;
+    status?: AgentItemState["status"];
+    text?: string;
+    summary?: string;
+    content?: string;
+    command?: string;
+    cwd?: string;
+    output?: string;
+    exitCode?: number;
+    durationMs?: number;
+    changes?: unknown[];
+    tool?: string;
+    toolType?: "mcp" | "dynamic" | "generic" | "collab";
+    server?: string;
+    arguments?: unknown;
+    result?: unknown;
+    error?: unknown;
+    query?: string;
+    path?: string;
+    subtype?: "review_mode" | "compaction" | "unknown_item" | "error" | "status" | string;
+    metadata?: Record<string, unknown>;
+    raw?: unknown;
+}
+
+interface AgentTurn {
+    id: TurnId;
+    threadId: ThreadId;
+    status?: string;
+    raw?: unknown;
+}
+interface TurnState {
+    turn: AgentTurn;
+    itemOrder: ItemId[];
+    items: Record<ItemId, AgentItemState>;
+    blocksByItemId: Record<ItemId, AgentItemBlock>;
+    streamingTextByItemId: Record<ItemId, string>;
+    commandOutputByItemId: Record<ItemId, string>;
+    filePatchByItemId: Record<ItemId, unknown>;
+    plan?: TurnPlanState;
+    diff?: TurnDiffState;
+}
+interface TurnPlanState {
+    explanation?: string | null;
+    plan: unknown;
+    raw?: unknown;
+}
+interface TurnDiffState {
+    diff: unknown;
+    raw?: unknown;
+}
+
 interface AgentThread {
     id: ThreadId;
     name?: string;
@@ -94,146 +242,12 @@ interface ThreadRegistryState {
     liveThreadIds: ThreadId[];
     loadedThreadIds: ThreadId[];
 }
-interface AgentTurn {
-    id: TurnId;
-    threadId: ThreadId;
-    status?: string;
-    raw?: unknown;
-}
-interface TurnState {
-    turn: AgentTurn;
-    itemOrder: ItemId[];
-    items: Record<ItemId, AgentItemState>;
-    blocksByItemId: Record<ItemId, AgentItemBlock>;
-    streamingTextByItemId: Record<ItemId, string>;
-    commandOutputByItemId: Record<ItemId, string>;
-    filePatchByItemId: Record<ItemId, unknown>;
-    plan?: TurnPlanState;
-    diff?: TurnDiffState;
-}
-interface TurnPlanState {
-    explanation?: string | null;
-    plan: unknown;
-    raw?: unknown;
-}
-interface TurnDiffState {
-    diff: unknown;
-    raw?: unknown;
-}
-interface AgentItemState {
-    id: ItemId;
-    turnId: TurnId;
-    threadId: ThreadId;
-    kind: string;
-    status: "inProgress" | "completed" | "failed";
-    text?: string;
-    raw?: unknown;
-}
-type AgentItemBlockKind = "text" | "thinking" | "plan" | "commandExecution" | "fileChange" | "toolCall" | "mcpToolCall" | "collabToolCall" | "webSearch" | "image" | "systemInfo" | "unknown";
-interface AgentItemBlock {
-    id: ItemId;
-    kind: AgentItemBlockKind;
-    status?: AgentItemState["status"];
-    text?: string;
-    summary?: string;
-    content?: string;
-    command?: string;
-    cwd?: string;
-    output?: string;
-    exitCode?: number;
-    durationMs?: number;
-    changes?: unknown[];
-    tool?: string;
-    toolType?: "mcp" | "dynamic" | "generic" | "collab";
-    server?: string;
-    arguments?: unknown;
-    result?: unknown;
-    error?: unknown;
-    query?: string;
-    path?: string;
-    subtype?: "review_mode" | "compaction" | "unknown_item" | "error" | "status" | string;
-    metadata?: Record<string, unknown>;
-    raw?: unknown;
-}
-type PendingServerRequestKind = "attestation" | "authRefresh" | "commandApproval" | "dynamicTool" | "fileChangeApproval" | "legacyExecApproval" | "legacyPatchApproval" | "mcpElicitation" | "permissionsApproval" | "userInput" | "unknown";
-interface PendingServerRequest {
-    id: RequestId;
-    kind: PendingServerRequestKind;
-    threadId?: ThreadId;
-    turnId?: TurnId;
-    itemId?: ItemId;
-    payload: unknown;
-}
-interface ServerRequestQueueState {
-    byId: Record<string, PendingServerRequest>;
-    order: string[];
-}
-interface WarningState {
-    id: string;
-    message: string;
-    raw?: unknown;
-}
-type StatusBannerKind = "modelReroute" | "deprecationNotice" | "configWarning" | "accountStatus" | "mcpOAuth" | "rateLimit" | "system";
-interface StatusBannerState {
-    id: string;
-    kind: StatusBannerKind;
-    message: string;
-    raw?: unknown;
-    severity?: "info" | "warning" | "critical";
-}
-interface DiagnosticsState {
-    banners: StatusBannerState[];
-    errors: AgentError[];
-    protocolNotifications: ProtocolNotificationState[];
-    warnings: WarningState[];
-}
-interface ProtocolNotificationState {
-    id: string;
-    method: string;
-    params?: unknown;
-}
+
 interface UsageState {
     accountRateLimits?: unknown;
     hostMetrics?: unknown;
 }
-interface AgentSkill {
-    name: string;
-    path?: string;
-    cwd?: string;
-    enabled?: boolean;
-    raw?: unknown;
-}
-interface SkillsState {
-    byCwd: Record<string, AgentSkill[]>;
-}
-interface AgentApp {
-    id: string;
-    name?: string;
-    uri?: string;
-    installed?: boolean;
-    needsAuth?: boolean;
-    raw?: unknown;
-}
-interface AppsState {
-    apps: AgentApp[];
-    byScope: Record<string, ScopedAppsState>;
-    nextCursor?: string | null;
-}
-interface ScopedAppsState {
-    apps: AgentApp[];
-    nextCursor?: string | null;
-    threadId?: ThreadId;
-}
-interface AgentHook {
-    id: string;
-    name?: string;
-    cwd?: string;
-    enabled?: boolean;
-    raw?: unknown;
-}
-interface HooksState {
-    byCwd: Record<string, AgentHook[]>;
-}
+
 interface AgentSessionState {
     connection: ConnectionState;
     account: AccountState;
