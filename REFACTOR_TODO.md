@@ -89,12 +89,12 @@ Acceptance:
 
 Acceptance:
 
-- [ ] Core state files map to protocol/product domains.
-- [ ] Thread index, thread entities, turns, items, and server requests can be
+- [x] Core state files map to protocol/product domains.
+- [x] Thread index, thread entities, turns, items, and server requests can be
   reasoned about independently.
-- [ ] Stored history is not lost when a protocol payload omits turns/items.
-- [ ] Bounded-state docs are backed by tests for both lists and maps.
-- [ ] `bun run test:fixtures` passes.
+- [x] Stored history is not lost when a protocol payload omits turns/items.
+- [x] Bounded-state docs are backed by tests for both lists and maps.
+- [x] `bun run test:fixtures` passes.
 
 ## Phase 3: Codex Adapter Split
 
