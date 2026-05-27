@@ -1,4 +1,5 @@
-import { mentionInput, type CodexUserInput } from "../codex-request-params";
+import { mentionInput } from "@nyosegawa/agent-ui-codex/request-builders";
+import type { AgentUserInput } from "../agent-input";
 import type { QueuedFollowUpAttachment } from "../hooks";
 
 export type ComposerAttachmentKind = "image" | "file" | "app" | "plugin";
@@ -9,17 +10,17 @@ export type AgentLocalAttachmentResolver = (
   file: File,
   kind: AgentLocalAttachmentKind,
 ) =>
-  | CodexUserInput
-  | CodexUserInput[]
+  | AgentUserInput
+  | AgentUserInput[]
   | null
   | undefined
-  | Promise<CodexUserInput | CodexUserInput[] | null | undefined>;
+  | Promise<AgentUserInput | AgentUserInput[] | null | undefined>;
 
 export type AgentMentionAttachmentKind = Extract<ComposerAttachmentKind, "app" | "plugin">;
 
 export interface AgentComposerMentionAttachment {
   id?: string;
-  input?: CodexUserInput;
+  input?: AgentUserInput;
   label: string;
   value: string;
 }
@@ -33,7 +34,7 @@ export type AgentComposerMentionResolver = () =>
 export interface ComposerAttachment extends QueuedFollowUpAttachment {
   extension?: string;
   id: string;
-  input?: CodexUserInput | CodexUserInput[];
+  input?: AgentUserInput | AgentUserInput[];
   kind: ComposerAttachmentKind;
   label: string;
   previewUrl?: string;
@@ -41,7 +42,7 @@ export interface ComposerAttachment extends QueuedFollowUpAttachment {
   value: string;
 }
 
-export function composerAttachmentInput(attachment: ComposerAttachment): CodexUserInput[] {
+export function composerAttachmentInput(attachment: ComposerAttachment): AgentUserInput[] {
   if (Array.isArray(attachment.input)) return attachment.input;
   if (attachment.input) return [attachment.input];
   return [mentionInput(attachment.label, attachment.value)];

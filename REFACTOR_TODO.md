@@ -37,9 +37,9 @@ Acceptance:
 
 - [ ] Define final responsibilities for `core`, `codex`, `react`, `server`, and
   `web-components`.
-- [ ] Remove `packages/react/src/codex-request-params.ts` from the React public
+- [x] Remove `packages/react/src/codex-request-params.ts` from the React public
   API.
-- [ ] Remove React root exports for Codex request builders and Codex param
+- [x] Remove React root exports for Codex request builders and Codex param
   helpers.
 - [ ] Move all Codex request construction behind Codex package clients or
   host-injected session/controllers.
@@ -47,21 +47,21 @@ Acceptance:
 - [ ] Remove generic/non-App-Server adapters from the core public API.
 - [ ] Tighten `packages/core/src/index.ts`.
 - [ ] Tighten `packages/codex/src/index.ts`.
-- [ ] Tighten `packages/react/src/index.ts`.
+- [x] Tighten `packages/react/src/index.ts`.
 - [ ] Tighten `packages/server/src/index.ts`.
 - [ ] Tighten each package `exports` map.
-- [ ] Update `docs/reference/package-exports.md`.
-- [ ] Update API snapshots for the new ideal API.
+- [x] Update `docs/reference/package-exports.md`.
+- [x] Update API snapshots for the new ideal API.
 
 Acceptance:
 
-- [ ] React no longer exports `threadStartParams`, `turnStartParams`,
+- [x] React no longer exports `threadStartParams`, `turnStartParams`,
   `textInput`, or Codex param types.
 - [ ] Core exports no generated Codex types and no request builders.
 - [ ] Codex is the only package that owns generated App Server schema.
-- [ ] `bun run test:api-snapshots` passes with the new public surface.
-- [ ] `bun run test:package-resolution` passes.
-- [ ] `bun run test:node-compat` passes.
+- [x] `bun run test:api-snapshots` passes with the new public surface.
+- [x] `bun run test:package-resolution` passes.
+- [x] `bun run test:node-compat` passes.
 
 ## Phase 2: Core State Split
 

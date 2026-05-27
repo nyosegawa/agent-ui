@@ -1,15 +1,17 @@
+import {
+  localImageInput,
+  textInput,
+} from "@nyosegawa/agent-ui-codex/request-builders";
 import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
 import {
   AgentChat,
   AgentLocaleSelect,
   AgentProvider,
   AgentThemeToggle,
-  localImageInput,
-  textInput,
   type AgentLocale,
   type AgentTheme,
   type AgentLocalAttachmentKind,
-  type CodexUserInput,
+  type AgentUserInput,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
 import { useMemo, useState } from "react";
@@ -32,7 +34,7 @@ declare global {
 async function resolveLocalAttachment(
   file: File,
   kind: AgentLocalAttachmentKind,
-): Promise<CodexUserInput | null> {
+): Promise<AgentUserInput | null> {
   const response = await fetch("/agent-ui/upload", {
     body: await file.arrayBuffer(),
     headers: { "x-agent-ui-filename": encodeURIComponent(file.name || "upload") },

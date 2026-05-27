@@ -12,6 +12,10 @@ import {
   type FixtureStep,
 } from "@nyosegawa/agent-ui-core";
 import {
+  localImageInput,
+  textInput,
+} from "@nyosegawa/agent-ui-codex/request-builders";
+import {
   AgentChat,
   AgentApprovalQueue,
   AgentDiffViewer,
@@ -35,8 +39,6 @@ import {
   useAgentContext,
   useAgentThreads,
   useAgentTurn,
-  localImageInput,
-  textInput,
 } from "../src";
 
 expect.extend(toHaveNoViolations);

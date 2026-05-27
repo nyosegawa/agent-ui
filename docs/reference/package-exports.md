@@ -115,6 +115,13 @@ transcript-window helpers, and sidebar/status formatting utilities. The
 documented components below are the recommended host-facing primitives; these
 helpers remain public because they are re-exported by the package barrel.
 
+React does not export Codex request builders such as `threadStartParams()`,
+`turnStartParams()`, `textInput()`, `localImageInput()`, or generated Codex
+method parameter types. Hosts that need to construct App Server request params
+or structured user input should import them from
+`@nyosegawa/agent-ui-codex/request-builders` or use a host-provided Codex
+session/controller.
+
 The default UI is transcript-first. Usage, diagnostics, status summaries, run
 settings, and side panels are exported as host-composition primitives instead
 of being mandatory chat chrome.

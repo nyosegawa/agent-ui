@@ -13,13 +13,13 @@ import {
   useState,
   type PropsWithChildren,
 } from "react";
-import type { CodexUserInput } from "./codex-request-params";
+import type { AgentUserInput } from "./agent-input";
 
 export interface QueuedFollowUp {
   attachments: QueuedFollowUpAttachment[];
   expectedTurnId?: string;
   id: string;
-  input: CodexUserInput[];
+  input: AgentUserInput[];
   text: string;
   threadId: ThreadId;
 }
@@ -27,7 +27,7 @@ export interface QueuedFollowUp {
 export interface QueuedFollowUpAttachment {
   extension?: string;
   id: string;
-  input?: CodexUserInput | CodexUserInput[];
+  input?: AgentUserInput | AgentUserInput[];
   kind: "image" | "file" | "app" | "plugin";
   label: string;
   previewUrl?: string;

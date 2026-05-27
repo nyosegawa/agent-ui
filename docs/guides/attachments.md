@@ -13,6 +13,9 @@ browser `File.name` into an App Server path by itself.
 ## React Resolver
 
 ```tsx
+import { localImageInput, textInput } from "@nyosegawa/agent-ui-codex/request-builders";
+import { AgentChat } from "@nyosegawa/agent-ui-react";
+
 <AgentChat
   resolveLocalAttachment={async (file, kind) => {
     const response = await fetch("/agent-ui/upload", {
@@ -29,6 +32,9 @@ browser `File.name` into an App Server path by itself.
   }}
 />
 ```
+
+React owns the attachment UI, while Codex-shaped input construction stays in
+`@nyosegawa/agent-ui-codex/request-builders`.
 
 The composer shows removable chips for resolved attachments and appends the
 corresponding Codex input items after the text when sending a turn. Images show

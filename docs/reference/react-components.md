@@ -25,6 +25,8 @@ host-composition primitives; opt into them only when the preset should own that
 secondary chrome.
 
 ```tsx
+import { localImageInput } from "@nyosegawa/agent-ui-codex/request-builders";
+
 <AgentChat
   locale="ja"
   sidebar={false}
@@ -376,7 +378,7 @@ Local image and file attachments are only enabled when the host supplies
 paste, drag and drop, and one toolbar attach file picker, then shows each as a
 removable chip above the textarea. Image chips render a local thumbnail. File
 chips render an attachment icon, filename, extension, and size. The resolver
-may return one `CodexUserInput` or multiple input items for each browser
+may return one `AgentUserInput` or multiple input items for each browser
 `File`.
 
 Codex App Server stable v2 has `text`, `image`, `localImage`, `skill`, and

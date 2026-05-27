@@ -4,14 +4,16 @@ import {
   type AgentSessionState,
 } from "@nyosegawa/agent-ui-core";
 import {
+  localImageInput,
+  textInput,
+} from "@nyosegawa/agent-ui-codex/request-builders";
+import {
   AgentApprovalQueue,
   AgentComposer,
   AgentProvider,
   AgentStatusDetails,
   AgentStatusSummary,
   AgentUsagePanel,
-  localImageInput,
-  textInput,
 } from "@nyosegawa/agent-ui-react";
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import {

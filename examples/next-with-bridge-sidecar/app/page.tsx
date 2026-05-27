@@ -1,13 +1,15 @@
 "use client";
 
+import {
+  localImageInput,
+  textInput,
+} from "@nyosegawa/agent-ui-codex/request-builders";
 import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
 import {
   AgentChat,
   AgentProvider,
-  localImageInput,
-  textInput,
   type AgentLocalAttachmentKind,
-  type CodexUserInput,
+  type AgentUserInput,
 } from "@nyosegawa/agent-ui-react";
 import { useMemo } from "react";
 
@@ -20,7 +22,7 @@ function getAgentUiWebSocketUrl(): string {
 async function resolveLocalAttachment(
   file: File,
   kind: AgentLocalAttachmentKind,
-): Promise<CodexUserInput | null> {
+): Promise<AgentUserInput | null> {
   const response = await fetch("/agent-ui/upload", {
     body: await file.arrayBuffer(),
     headers: { "x-agent-ui-filename": encodeURIComponent(file.name || "upload") },

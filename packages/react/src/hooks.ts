@@ -40,7 +40,7 @@ import {
   turnSteerParams,
   type CancelLoginAccountParams,
   type AppsListParams,
-  type CodexUserInput,
+  type CodexUserInput as InternalCodexUserInput,
   type GetAccountParams,
   type HooksListParams,
   type LoginAccountParams,
@@ -60,7 +60,8 @@ import {
   type TurnInterruptParams,
   type TurnStartParams,
   type TurnSteerParams,
-} from "./codex-request-params";
+} from "@nyosegawa/agent-ui-codex/request-builders";
+import type { AgentUserInput } from "./agent-input";
 import { useAgentContext } from "./provider";
 import {
   useAgentComposerQueueStore,
@@ -80,6 +81,18 @@ export interface AgentExecutionMode {
   description: string;
   turnParams: Record<string, unknown>;
 }
+
+type AgentRequestParams = Record<string, unknown>;
+type AgentListRequestParams = AgentRequestParams & {
+  cursor?: string | null;
+  cwds?: string[];
+  threadId?: string;
+};
+type AgentSkillConfigParams = AgentRequestParams & {
+  enabled?: boolean;
+  name?: unknown;
+  path?: unknown;
+};
 
 export const AGENT_EXECUTION_MODES: AgentExecutionMode[] = [
   {
@@ -177,7 +190,7 @@ export function useAgentThread(threadId?: ThreadId) {
 
   const startThreadWithInput = useCallback(
     async (
-      input: string | CodexUserInput[],
+      input: string | AgentUserInput[],
       params?: Record<string, unknown>,
     ) => {
       const result = await startThread(params);
@@ -191,7 +204,7 @@ export function useAgentThread(threadId?: ThreadId) {
       const requestParams = turnStartParams({
         cwd: runSettings.cwd,
         effort: runSettings.effort as TurnStartParams["effort"],
-        input,
+        input: normalizeTurnInput(input),
         model: runSettings.modelId,
         ...executionMode?.turnParams,
         threadId,
@@ -287,11 +300,11 @@ export function useAgentThreadActions(threadId?: ThreadId) {
   }, [dispatch, requireThreadId, transport]);
 
   const forkThread = useCallback(
-    async (params: Omit<ThreadForkParams, "threadId"> = {}) => {
+    async (params: AgentRequestParams = {}) => {
       const id = requireThreadId();
       return transport.request<ThreadForkParams, unknown>(
         "thread/fork",
-        threadForkParams(id, params),
+        threadForkParams(id, params as Omit<ThreadForkParams, "threadId">),
       );
     },
     [requireThreadId, transport],
@@ -454,7 +467,7 @@ export function useAgentTurn(threadId?: ThreadId) {
   const runSettings = selectRunSettings(state);
 
   const startTurn = useCallback(
-    async (input: string | CodexUserInput[], params?: Record<string, unknown>) => {
+    async (input: string | AgentUserInput[], params?: Record<string, unknown>) => {
       if (!resolvedThreadId) throw new Error("No active thread");
       const executionMode = AGENT_EXECUTION_MODES.find(
         (mode) => mode.id === runSettings.executionMode,
@@ -462,7 +475,7 @@ export function useAgentTurn(threadId?: ThreadId) {
       const requestParams = turnStartParams({
         cwd: runSettings.cwd,
         effort: runSettings.effort as TurnStartParams["effort"],
-        input,
+        input: normalizeTurnInput(input),
         model: runSettings.modelId,
         ...executionMode?.turnParams,
         ...params,
@@ -492,11 +505,15 @@ export function useAgentTurn(threadId?: ThreadId) {
   );
 
   const steerTurn = useCallback(
-    async (expectedTurnId: string, input: string | CodexUserInput[]) => {
+    async (expectedTurnId: string, input: string | AgentUserInput[]) => {
       if (!resolvedThreadId) throw new Error("No active thread");
       return transport.request<TurnSteerParams>(
         "turn/steer",
-        turnSteerParams({ expectedTurnId, input, threadId: resolvedThreadId }),
+        turnSteerParams({
+          expectedTurnId,
+          input: normalizeTurnInput(input),
+          threadId: resolvedThreadId,
+        }),
       );
     },
     [resolvedThreadId, transport],
@@ -553,7 +570,7 @@ export function useAgentComposer(threadId?: ThreadId) {
   const activeTurnId = latestRunningTurnId(thread);
   const isRunning = thread?.status === "running";
   const buildInput = useCallback(
-    (items: CodexUserInput[] = []) => {
+    (items: AgentUserInput[] = []) => {
       const input = value.trim();
       if (!input && items.length === 0) return undefined;
       return {
@@ -564,7 +581,7 @@ export function useAgentComposer(threadId?: ThreadId) {
     [value],
   );
   const queueFollowUp = useCallback(
-    (items: CodexUserInput[] = [], attachments: QueuedFollowUpAttachment[] = []) => {
+    (items: AgentUserInput[] = [], attachments: QueuedFollowUpAttachment[] = []) => {
       const built = buildInput(items);
       if (!built || !resolvedThreadId) return;
       const expectedTurnId = activeTurnId;
@@ -581,7 +598,7 @@ export function useAgentComposer(threadId?: ThreadId) {
     [activeTurnId, buildInput, composerQueue, resolvedThreadId, t],
   );
   const steerNow = useCallback(
-    async (items: CodexUserInput[] = []) => {
+    async (items: AgentUserInput[] = []) => {
       const built = buildInput(items);
       if (!built) return;
       setError(undefined);
@@ -601,7 +618,7 @@ export function useAgentComposer(threadId?: ThreadId) {
   );
   const submit = useCallback(
     async (
-      items: CodexUserInput[] = [],
+      items: AgentUserInput[] = [],
       options: { attachments?: QueuedFollowUpAttachment[] } = {},
     ) => {
       const built = buildInput(items);
@@ -781,7 +798,11 @@ function followUpSendPreflightError(
   return undefined;
 }
 
-function summarizeUserInput(input: CodexUserInput[], t: (key: AgentI18nKey) => string): string {
+function normalizeTurnInput(input: string | AgentUserInput[]): string | InternalCodexUserInput[] {
+  return typeof input === "string" ? input : (input as InternalCodexUserInput[]);
+}
+
+function summarizeUserInput(input: AgentUserInput[], t: (key: AgentI18nKey) => string): string {
   const text = input
     .map((item) => (typeof item === "object" && "text" in item ? item.text : ""))
     .filter(Boolean)
@@ -1043,7 +1064,7 @@ export function useAgentSkills(cwd?: string) {
   const key = cwd ?? "";
   const skills = state.skills.byCwd[key] ?? [];
   const refreshSkills = useCallback(
-    async (params: SkillsListParams = {}) => {
+    async (params: AgentListRequestParams = {}) => {
       const requestParams = skillsListParams(
         cwd && !params.cwds ? { ...params, cwds: [cwd] } : params,
       );
@@ -1060,10 +1081,10 @@ export function useAgentSkills(cwd?: string) {
     [cwd, dispatch, transport],
   );
   const setSkillEnabled = useCallback(
-    async (params: SkillsConfigWriteParams) => {
+    async (params: AgentSkillConfigParams) => {
       const response = await transport.request<SkillsConfigWriteParams, unknown>(
         "skills/config/write",
-        skillsConfigWriteParams(params),
+        skillsConfigWriteParams(params as SkillsConfigWriteParams),
       );
       const targetName = stringValue(params.name);
       const targetPath = stringValue(params.path);
@@ -1090,7 +1111,7 @@ export function useAgentHooks(cwd?: string) {
   const key = cwd ?? "";
   const hooks = state.hooks.byCwd[key] ?? [];
   const refreshHooks = useCallback(
-    async (params: HooksListParams = {}) => {
+    async (params: AgentListRequestParams = {}) => {
       const requestParams = hooksListParams(
         cwd && !params.cwds ? { ...params, cwds: [cwd] } : params,
       );
@@ -1118,7 +1139,7 @@ export function useAgentApps(threadId?: string) {
     threadId,
   };
   const refreshApps = useCallback(
-    async (params: AppsListParams = {}) => {
+    async (params: AgentListRequestParams = {}) => {
       const requestParams = appsListParams(
         threadId && !params.threadId ? { ...params, threadId } : params,
       );

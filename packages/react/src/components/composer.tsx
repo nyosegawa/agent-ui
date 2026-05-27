@@ -3,7 +3,7 @@ import type { ThreadState, ThreadTokenUsage } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAgentComposer, type AgentComposerController } from "../hooks";
 import { useAgentI18n } from "../i18n";
-import type { CodexUserInput } from "../codex-request-params";
+import type { AgentUserInput } from "../agent-input";
 import {
   IconAlert,
   IconApp,
@@ -123,7 +123,7 @@ function AgentComposerForm({
       let rejected = 0;
       for (const file of list) {
         const kind: AgentLocalAttachmentKind = isImageFile(file) ? "image" : "file";
-        let input: CodexUserInput | CodexUserInput[] | null | undefined;
+        let input: AgentUserInput | AgentUserInput[] | null | undefined;
         try {
           input = await resolveLocalAttachment(file, kind);
         } catch (error) {

@@ -10,6 +10,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@nyosegawa/agent-ui-codex": "workspace:*",
     "@nyosegawa/agent-ui-core": "workspace:*",
     "@nyosegawa/agent-ui-react": "workspace:*",
     "vite": "8.0.11",
