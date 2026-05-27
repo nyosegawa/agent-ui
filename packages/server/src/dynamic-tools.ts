@@ -1,4 +1,4 @@
-import { threadStartParams } from "@nyosegawa/agent-ui-codex/request-builders";
+import { createCodexSession } from "@nyosegawa/agent-ui-codex";
 import type { AgentTransportEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
 import type { createCodexAppServerBridge } from "./bridge";
 
@@ -83,11 +83,11 @@ export async function createDynamicToolHelperThread(
   transport: ReturnType<typeof createCodexAppServerBridge>["transport"],
   cwd?: string,
 ): Promise<string> {
-  const response = await transport.request("thread/start", threadStartParams({
+  const response = await createCodexSession(transport).thread.start({
     approvalPolicy: "on-request",
     ...(cwd ? { cwd } : {}),
     sandbox: "workspace-write",
-  }));
+  });
   const threadId = extractThreadId(response);
   if (!threadId) throw new Error("Could not create dynamic tool helper thread");
   return threadId;
