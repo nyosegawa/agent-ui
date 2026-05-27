@@ -84,8 +84,10 @@ be reviewed. Do not accept snapshot changes without reading the upstream App
 Server diff.
 
 Raw App Server JSON-RPC fixture lines from
-`fixtures/app-server/v2-jsonrpc/` are Codex adapter coverage: the Codex tests
-parse and normalize the lines before reducing them through core state.
+`fixtures/app-server/v2-jsonrpc/` are Codex adapter coverage under
+`bun run test:protocol`: the Codex tests parse and normalize the lines before
+reducing them through core state. Core fixture tests stay protocol-neutral and
+consume normalized `AgentEvent` fixtures only.
 
 ## Reducer And Normalizer Tests
 

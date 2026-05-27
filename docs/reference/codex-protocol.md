@@ -143,8 +143,10 @@ purpose for:
 - `apps-list-updates.jsonl`
 - `account-login-rate-limit.jsonl`
 
-`bun run test:fixtures` parses those lines with the JSON-RPC parser, normalizes
-them through the Codex adapter, and reduces them into core state.
+`bun run test:protocol` parses those lines with the JSON-RPC parser,
+normalizes them through the Codex adapter, and reduces them into core state.
+`bun run test:fixtures` remains core-owned reducer coverage over normalized
+`AgentEvent` fixtures.
 
 ## Stable and Experimental API
 
