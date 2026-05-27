@@ -65,7 +65,7 @@ Acceptance:
 
 ## Phase 2: Core State Split
 
-- [ ] Split `packages/core/src/state.ts` into explicit domain store files.
+- [x] Split `packages/core/src/state.ts` into explicit domain store files.
 - [ ] Split `packages/core/src/events.ts` into domain event unions.
 - [ ] Split `packages/core/src/reducer.ts` into domain reducers plus a
   composition root.
