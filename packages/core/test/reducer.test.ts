@@ -165,6 +165,37 @@ describe("agentReducer", () => {
     );
   });
 
+  it("bounds ordered thread registry indexes while preserving recency and bucket moves", () => {
+    let state = createInitialAgentState();
+    const max = AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax;
+
+    for (let index = 0; index < max + 2; index += 1) {
+      state = agentReducer(state, {
+        status: "notLoaded",
+        thread: { id: `thread-cold-${index}` },
+        type: "thread/upserted",
+      });
+    }
+
+    expect(state.threadRegistry.coldThreadIds).toHaveLength(max);
+    expect(state.threadRegistry.coldThreadIds[0]).toBe("thread-cold-2");
+    expect(state.threadRegistry.coldThreadIds.at(-1)).toBe(`thread-cold-${max + 1}`);
+
+    state = agentReducer(state, {
+      status: "loaded",
+      thread: { id: "thread-cold-2" },
+      type: "thread/upserted",
+    });
+    state = agentReducer(state, {
+      status: "loaded",
+      thread: { id: "thread-cold-2" },
+      type: "thread/upserted",
+    });
+
+    expect(state.threadRegistry.coldThreadIds).not.toContain("thread-cold-2");
+    expect(state.threadRegistry.loadedThreadIds).toEqual(["thread-cold-2"]);
+  });
+
   it("applies streaming text, command output, approvals, and authoritative completion", () => {
     const state = runEventFixture(fixture as FixtureStep[]);
     const turns = selectOrderedTurns(state, "thread-1");
