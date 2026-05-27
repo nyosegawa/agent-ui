@@ -15,11 +15,3 @@ export function preservesAgainstPreviewSnapshot(status?: string): boolean {
 export function isCompletedTurnStatus(status?: string): boolean {
   return status === "complete" || status === "completed";
 }
-
-export function upsertById<T extends { id: string }>(values: T[], value: T): T[] {
-  const index = values.findIndex((current) => current.id === value.id);
-  if (index === -1) return [...values, value];
-  const next = [...values];
-  next[index] = value;
-  return next;
-}
