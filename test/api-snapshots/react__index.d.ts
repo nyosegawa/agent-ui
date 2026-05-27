@@ -66,6 +66,28 @@ interface QueuedFollowUpAttachment {
     value: string;
 }
 
+declare function useAgentAuth(): {
+    account: _nyosegawa_agent_ui_core.AccountState;
+    cancelLogin: () => Promise<void>;
+    login: () => Promise<{
+        loginId: string | undefined;
+        userCode: string | undefined;
+        verificationUrl: string | undefined;
+    }>;
+    logout: () => Promise<unknown>;
+    readAccount: () => Promise<unknown>;
+};
+interface AgentBootstrapState {
+    errors: Error[];
+    isBootstrapping: boolean;
+    status: "idle" | "loading" | "ready" | "error";
+}
+declare function useAgentBootstrap(): AgentBootstrapState;
+declare function useAgentUsage(): {
+    rateLimits: unknown;
+    refreshUsage: () => Promise<unknown>;
+};
+
 declare function useAgentSkills(cwd?: string): {
     refreshSkills: (params?: SkillsListParams) => Promise<{
         cwd: string;
@@ -205,27 +227,6 @@ declare function useAgentRunSettings(): {
     setExecutionMode: (executionMode: ExecutionModeId) => void;
     setModelId: (modelId: string) => void;
     supportedEfforts: string[];
-};
-declare function useAgentAuth(): {
-    account: _nyosegawa_agent_ui_core.AccountState;
-    cancelLogin: () => Promise<void>;
-    login: () => Promise<{
-        loginId: string | undefined;
-        userCode: string | undefined;
-        verificationUrl: string | undefined;
-    }>;
-    logout: () => Promise<unknown>;
-    readAccount: () => Promise<unknown>;
-};
-interface AgentBootstrapState {
-    errors: Error[];
-    isBootstrapping: boolean;
-    status: "idle" | "loading" | "ready" | "error";
-}
-declare function useAgentBootstrap(): AgentBootstrapState;
-declare function useAgentUsage(): {
-    rateLimits: unknown;
-    refreshUsage: () => Promise<unknown>;
 };
 
 type AgentLocale = "en" | "ja" | "ko" | "zh-CN" | "es" | "fr";
