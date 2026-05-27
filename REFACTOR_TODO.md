@@ -58,7 +58,7 @@ Acceptance:
 - [x] React no longer exports `threadStartParams`, `turnStartParams`,
   `textInput`, or Codex param types.
 - [x] Core exports no generated Codex types and no request builders.
-- [ ] Codex is the only package that owns generated App Server schema.
+- [x] Codex is the only package that owns generated App Server schema.
 - [x] `bun run test:api-snapshots` passes with the new public surface.
 - [x] `bun run test:package-resolution` passes.
 - [x] `bun run test:node-compat` passes.
