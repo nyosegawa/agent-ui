@@ -4,6 +4,7 @@ import { createCodexSession } from "../src";
 import {
   accountReadParams,
   appsListParams,
+  type CodexStableMethodParams,
   disabledProductMethods,
   hooksListParams,
   modelListParams,
@@ -27,6 +28,7 @@ import {
   turnStartParams,
   turnSteerParams,
 } from "../src/request-builders";
+import type { ClientRequest } from "../src/generated/stable";
 import type {
   AppsListParams,
   GetAccountParams,
@@ -52,6 +54,25 @@ import type {
   TurnStartParams,
   TurnSteerParams,
 } from "../src/generated/stable/v2";
+
+type Equal<TActual, TExpected> =
+  (<T>() => T extends TActual ? 1 : 2) extends
+  (<T>() => T extends TExpected ? 1 : 2)
+    ? true
+    : false;
+type Assert<T extends true> = T;
+type GeneratedParams<TMethod extends ClientRequest["method"]> = Extract<
+  ClientRequest,
+  { method: TMethod }
+>["params"];
+
+const generatedParamTypeAssertions: [
+  Assert<
+    Equal<CodexStableMethodParams<"thread/start">, GeneratedParams<"thread/start">>
+  >,
+  Assert<Equal<CodexStableMethodParams<"turn/start">, GeneratedParams<"turn/start">>>,
+  Assert<Equal<CodexStableMethodParams<"app/list">, GeneratedParams<"app/list">>>,
+] = [true, true, true];
 
 describe("Codex request builders", () => {
   it("builds stable params against generated App Server request types", () => {
@@ -153,6 +174,10 @@ describe("Codex request builders", () => {
 
   it("keeps unimplemented thread item pagination out of product APIs", () => {
     expect(disabledProductMethods).toEqual(["thread/turns/items/list"]);
+  });
+
+  it("derives method params from the generated ClientRequest union", () => {
+    expect(generatedParamTypeAssertions).toEqual([true, true, true]);
   });
 });
 

@@ -28,42 +28,41 @@ import {
 } from "./request-builders";
 import type {
   AppsListParams,
-  CancelLoginAccountParams,
-  GetAccountParams,
+  CodexStableMethod,
+  CodexStableMethodParams,
   HooksListParams,
-  LoginAccountParams,
   ModelListParams,
   SkillsConfigWriteParams,
   SkillsListParams,
-  ThreadArchiveParams,
-  ThreadCompactStartParams,
   ThreadForkParams,
   ThreadInjectItemsParams,
   ThreadListParams,
   ThreadLoadedListParams,
   ThreadMetadataUpdateParams,
-  ThreadReadParams,
   ThreadResumeParams,
-  ThreadRollbackParams,
-  ThreadSetNameParams,
   ThreadStartParams,
-  ThreadUnarchiveParams,
-  ThreadUnsubscribeParams,
-  TurnInterruptParams,
   TurnStartParams,
   TurnSteerParams,
   UserInput,
-} from "./generated/stable/v2";
+} from "./request-builders";
 
 export interface CodexSessionOptions {
   experimental?: boolean;
 }
 
-export type CodexRequestOptions = object;
-
-export type CodexSessionUserInput = {
-  type: string;
-};
+export type CodexThreadForkOptions = Omit<ThreadForkParams, "threadId">;
+export type CodexThreadMetadataUpdateOptions = Omit<
+  ThreadMetadataUpdateParams,
+  "threadId"
+>;
+export type CodexThreadResumeOptions = Omit<ThreadResumeParams, "threadId">;
+export type CodexTurnStartOptions = {
+  input: string | UserInput[];
+  threadId: string;
+} & Omit<TurnStartParams, "input" | "threadId">;
+export type CodexTurnSteerOptions = {
+  input: string | UserInput[];
+} & Omit<TurnSteerParams, "input">;
 
 export interface CodexSession {
   account: {
@@ -74,64 +73,54 @@ export interface CodexSession {
     rateLimitsRead(): Promise<unknown>;
   };
   apps: {
-    list(params?: CodexRequestOptions): Promise<unknown>;
+    list(params?: AppsListParams): Promise<unknown>;
   };
   hooks: {
-    list(params?: CodexRequestOptions): Promise<unknown>;
+    list(params?: HooksListParams): Promise<unknown>;
   };
   requestExperimental<TParams = unknown, TResult = unknown>(
     method: string,
     params?: TParams,
   ): Promise<TResult>;
   skills: {
-    configWrite(params: CodexRequestOptions): Promise<unknown>;
-    list(params?: CodexRequestOptions): Promise<unknown>;
+    configWrite(params: SkillsConfigWriteParams): Promise<unknown>;
+    list(params?: SkillsListParams): Promise<unknown>;
   };
   thread: {
     archive(threadId: string): Promise<unknown>;
     compactStart(threadId: string): Promise<unknown>;
     fork(
       threadId: string,
-      params?: CodexRequestOptions,
+      params?: CodexThreadForkOptions,
     ): Promise<unknown>;
     injectItems(
       threadId: string,
       items: ThreadInjectItemsParams["items"],
     ): Promise<unknown>;
-    list(params?: CodexRequestOptions): Promise<unknown>;
-    loadedList(params?: CodexRequestOptions): Promise<unknown>;
+    list(params?: ThreadListParams): Promise<unknown>;
+    loadedList(params?: ThreadLoadedListParams): Promise<unknown>;
     metadataUpdate(
       threadId: string,
-      params?: CodexRequestOptions,
+      params?: CodexThreadMetadataUpdateOptions,
     ): Promise<unknown>;
     read(threadId: string, includeTurns?: boolean): Promise<unknown>;
     resume(
       threadId: string,
-      params?: CodexRequestOptions,
+      params?: CodexThreadResumeOptions,
     ): Promise<unknown>;
     rollback(threadId: string, numTurns: number): Promise<unknown>;
     setName(threadId: string, name: string): Promise<unknown>;
-    start(params?: CodexRequestOptions): Promise<unknown>;
+    start(params?: ThreadStartParams): Promise<unknown>;
     unarchive(threadId: string): Promise<unknown>;
     unsubscribe(threadId: string): Promise<unknown>;
   };
   turn: {
     interrupt(threadId: string, turnId: string): Promise<unknown>;
-    start(
-      params: {
-        input: string | CodexSessionUserInput[];
-        threadId: string;
-        [key: string]: unknown;
-      },
-    ): Promise<unknown>;
-    steer(params: {
-      expectedTurnId: string;
-      input: string | CodexSessionUserInput[];
-      threadId: string;
-    }): Promise<unknown>;
+    start(params: CodexTurnStartOptions): Promise<unknown>;
+    steer(params: CodexTurnSteerOptions): Promise<unknown>;
   };
   models: {
-    list(params?: CodexRequestOptions): Promise<unknown>;
+    list(params?: ModelListParams): Promise<unknown>;
   };
 }
 
@@ -142,33 +131,22 @@ export function createCodexSession(
   return {
     account: {
       cancelLogin: (loginId) =>
-        request<CancelLoginAccountParams>(transport, "account/login/cancel", cancelLoginParams(loginId)),
+        request(transport, "account/login/cancel", cancelLoginParams(loginId)),
       loginDeviceCode: () =>
-        request<LoginAccountParams>(transport, "account/login/start", deviceCodeLoginParams()),
+        request(transport, "account/login/start", deviceCodeLoginParams()),
       logout: () => request(transport, "account/logout"),
       rateLimitsRead: () => request(transport, "account/rateLimits/read"),
       read: (refreshToken) =>
-        request<GetAccountParams>(transport, "account/read", accountReadParams(refreshToken)),
+        request(transport, "account/read", accountReadParams(refreshToken)),
     },
     apps: {
-      list: (params) =>
-        request<AppsListParams>(transport, "app/list", appsListParams(params as AppsListParams)),
+      list: (params) => request(transport, "app/list", appsListParams(params)),
     },
     hooks: {
-      list: (params) =>
-        request<HooksListParams>(
-          transport,
-          "hooks/list",
-          hooksListParams(params as HooksListParams),
-        ),
+      list: (params) => request(transport, "hooks/list", hooksListParams(params)),
     },
     models: {
-      list: (params) =>
-        request<ModelListParams>(
-          transport,
-          "model/list",
-          modelListParams(params as ModelListParams),
-        ),
+      list: (params) => request(transport, "model/list", modelListParams(params)),
     },
     requestExperimental: async (method, params) => {
       if (!options.experimental) {
@@ -181,98 +159,66 @@ export function createCodexSession(
     },
     skills: {
       configWrite: (params) =>
-        request<SkillsConfigWriteParams>(
-          transport,
-          "skills/config/write",
-          skillsConfigWriteParams(params as SkillsConfigWriteParams),
-        ),
-      list: (params) =>
-        request<SkillsListParams>(
-          transport,
-          "skills/list",
-          skillsListParams(params as SkillsListParams),
-        ),
+        request(transport, "skills/config/write", skillsConfigWriteParams(params)),
+      list: (params) => request(transport, "skills/list", skillsListParams(params)),
     },
     thread: {
       archive: (threadId) =>
-        request<ThreadArchiveParams>(transport, "thread/archive", threadArchiveParams(threadId)),
+        request(transport, "thread/archive", threadArchiveParams(threadId)),
       compactStart: (threadId) =>
-        request<ThreadCompactStartParams>(
+        request(
           transport,
           "thread/compact/start",
           threadCompactStartParams(threadId),
         ),
       fork: (threadId, params) =>
-        request<ThreadForkParams>(
-          transport,
-          "thread/fork",
-          threadForkParams(threadId, params as Omit<ThreadForkParams, "threadId">),
-        ),
+        request(transport, "thread/fork", threadForkParams(threadId, params)),
       injectItems: (threadId, items) =>
-        request<ThreadInjectItemsParams>(
+        request(
           transport,
           "thread/inject_items",
           threadInjectItemsParams(threadId, items),
         ),
       list: (params) =>
-        request<ThreadListParams>(
-          transport,
-          "thread/list",
-          threadListParams(params as ThreadListParams),
-        ),
+        request(transport, "thread/list", threadListParams(params)),
       loadedList: (params) =>
-        request<ThreadLoadedListParams>(
-          transport,
-          "thread/loaded/list",
-          threadLoadedListParams(params as ThreadLoadedListParams),
-        ),
+        request(transport, "thread/loaded/list", threadLoadedListParams(params)),
       metadataUpdate: (threadId, params) =>
-        request<ThreadMetadataUpdateParams>(
+        request(
           transport,
           "thread/metadata/update",
-          threadMetadataUpdateParams(
-            threadId,
-            params as Omit<ThreadMetadataUpdateParams, "threadId">,
-          ),
+          threadMetadataUpdateParams(threadId, params),
         ),
       read: (threadId, includeTurns) =>
-        request<ThreadReadParams>(
+        request(
           transport,
           "thread/read",
           threadReadParams(threadId, includeTurns),
         ),
       resume: (threadId, params) =>
-        request<ThreadResumeParams>(
-          transport,
-          "thread/resume",
-          threadResumeParams(threadId, params as Omit<ThreadResumeParams, "threadId">),
-        ),
+        request(transport, "thread/resume", threadResumeParams(threadId, params)),
       rollback: (threadId, numTurns) =>
-        request<ThreadRollbackParams>(
+        request(
           transport,
           "thread/rollback",
           threadRollbackParams(threadId, numTurns),
         ),
       setName: (threadId, name) =>
-        request<ThreadSetNameParams>(
+        request(
           transport,
           "thread/name/set",
           threadSetNameParams(threadId, name),
         ),
       start: (params) =>
-        request<ThreadStartParams>(
-          transport,
-          "thread/start",
-          threadStartParams(params as ThreadStartParams),
-        ),
+        request(transport, "thread/start", threadStartParams(params)),
       unarchive: (threadId) =>
-        request<ThreadUnarchiveParams>(
+        request(
           transport,
           "thread/unarchive",
           threadUnarchiveParams(threadId),
         ),
       unsubscribe: (threadId) =>
-        request<ThreadUnsubscribeParams>(
+        request(
           transport,
           "thread/unsubscribe",
           threadUnsubscribeParams(threadId),
@@ -280,42 +226,25 @@ export function createCodexSession(
     },
     turn: {
       interrupt: (threadId, turnId) =>
-        request<TurnInterruptParams>(
+        request(
           transport,
           "turn/interrupt",
           turnInterruptParams(threadId, turnId),
         ),
       start: (params) =>
-        request<TurnStartParams>(
-          transport,
-          "turn/start",
-          turnStartParams(
-            params as { input: string | UserInput[]; threadId: string } & Omit<
-              TurnStartParams,
-              "input" | "threadId"
-            >,
-          ),
-        ),
+        request(transport, "turn/start", turnStartParams(params)),
       steer: (params) =>
-        request<TurnSteerParams>(
-          transport,
-          "turn/steer",
-          turnSteerParams(
-            params as {
-              expectedTurnId: string;
-              input: string | UserInput[];
-              threadId: string;
-            },
-          ),
-        ),
+        request(transport, "turn/steer", turnSteerParams(params)),
     },
   };
 }
 
-function request<TParams>(
+function request<TMethod extends CodexStableMethod>(
   transport: AgentTransport,
-  method: string,
-  params?: TParams,
+  method: TMethod,
+  params?: CodexStableMethodParams<TMethod>,
 ): Promise<unknown> {
-  return params === undefined ? transport.request(method) : transport.request(method, params);
+  return params === undefined
+    ? transport.request(method)
+    : transport.request(method, params as unknown);
 }

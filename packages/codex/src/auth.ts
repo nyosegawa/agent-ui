@@ -1,9 +1,9 @@
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
-import type {
-  CancelLoginAccountParams,
-  LoginAccountParams,
-  LoginAccountResponse,
-} from "./generated/stable/v2";
+import type { LoginAccountResponse } from "./generated/stable/v2";
+import type { CodexStableMethodParams } from "./method-params";
+
+type CancelLoginAccountParams = CodexStableMethodParams<"account/login/cancel">;
+type LoginAccountParams = CodexStableMethodParams<"account/login/start">;
 
 export interface DeviceCodeLoginStart {
   loginId?: string;

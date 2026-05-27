@@ -78,9 +78,9 @@ type AgentListRequestParams = AgentRequestParams & {
     threadId?: string;
 };
 type AgentSkillConfigParams = AgentRequestParams & {
-    enabled?: boolean;
-    name?: unknown;
-    path?: unknown;
+    enabled: boolean;
+    name?: string | null;
+    path?: string | null;
 };
 declare const AGENT_EXECUTION_MODES: AgentExecutionMode[];
 declare function useAgentThread(threadId?: ThreadId): {

@@ -89,7 +89,7 @@ browser bundle.
 Default support is stable App Server API only. Experimental API requires
 explicit opt-in. Generated stable App Server types are an advanced public
 surface at `@nyosegawa/agent-ui-codex/stable-types`; request builders and
-generated-schema-backed input helpers live at
+generated-schema-backed method-param aliases and input helpers live at
 `@nyosegawa/agent-ui-codex/request-builders`. These advanced surfaces are
 useful for hosts that intentionally track protocol drift or construct App
 Server params directly, but they are not re-exported from the package root.

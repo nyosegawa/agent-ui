@@ -102,7 +102,7 @@ Acceptance:
   Server checkout.
 - [x] Record upstream commit metadata and generator command with generated
   schema.
-- [ ] Make generated schema the only source for Codex method params.
+- [x] Make generated schema the only source for Codex method params.
 - [ ] Split `packages/codex/src/normalizer.ts` into protocol-family modules.
 - [ ] Add normalizer modules for thread events.
 - [ ] Add normalizer modules for turn events.

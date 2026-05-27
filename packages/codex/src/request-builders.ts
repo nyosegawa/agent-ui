@@ -1,60 +1,41 @@
-import type {
-  AppsListParams,
-  CancelLoginAccountParams,
-  GetAccountParams,
-  HooksListParams,
-  LoginAccountParams,
-  ModelListParams,
-  SkillsConfigWriteParams,
-  SkillsListParams,
-  ThreadArchiveParams,
-  ThreadCompactStartParams,
-  ThreadForkParams,
-  ThreadInjectItemsParams,
-  ThreadListParams,
-  ThreadLoadedListParams,
-  ThreadMetadataUpdateParams,
-  ThreadReadParams,
-  ThreadResumeParams,
-  ThreadRollbackParams,
-  ThreadSetNameParams,
-  ThreadStartParams,
-  ThreadUnarchiveParams,
-  ThreadUnsubscribeParams,
-  TurnInterruptParams,
-  TurnStartParams,
-  TurnSteerParams,
-  UserInput,
-} from "./generated/stable/v2";
+import type { UserInput } from "./generated/stable/v2";
+import type { CodexStableMethodParams } from "./method-params";
 
-export type {
-  AppsListParams,
-  CancelLoginAccountParams,
-  GetAccountParams,
-  HooksListParams,
-  LoginAccountParams,
-  ModelListParams,
-  SkillsConfigWriteParams,
-  SkillsListParams,
-  ThreadArchiveParams,
-  ThreadCompactStartParams,
-  ThreadForkParams,
-  ThreadInjectItemsParams,
-  ThreadListParams,
-  ThreadLoadedListParams,
-  ThreadMetadataUpdateParams,
-  ThreadReadParams,
-  ThreadResumeParams,
-  ThreadRollbackParams,
-  ThreadSetNameParams,
-  ThreadStartParams,
-  ThreadUnarchiveParams,
-  ThreadUnsubscribeParams,
-  TurnInterruptParams,
-  TurnStartParams,
-  TurnSteerParams,
-  UserInput,
-} from "./generated/stable/v2";
+export type { UserInput } from "./generated/stable/v2";
+export type { CodexStableMethod, CodexStableMethodParams } from "./method-params";
+
+export type AppsListParams = CodexStableMethodParams<"app/list">;
+export type CancelLoginAccountParams =
+  CodexStableMethodParams<"account/login/cancel">;
+export type GetAccountParams = CodexStableMethodParams<"account/read">;
+export type HooksListParams = CodexStableMethodParams<"hooks/list">;
+export type LoginAccountParams = CodexStableMethodParams<"account/login/start">;
+export type ModelListParams = CodexStableMethodParams<"model/list">;
+export type SkillsConfigWriteParams =
+  CodexStableMethodParams<"skills/config/write">;
+export type SkillsListParams = CodexStableMethodParams<"skills/list">;
+export type ThreadArchiveParams = CodexStableMethodParams<"thread/archive">;
+export type ThreadCompactStartParams =
+  CodexStableMethodParams<"thread/compact/start">;
+export type ThreadForkParams = CodexStableMethodParams<"thread/fork">;
+export type ThreadInjectItemsParams =
+  CodexStableMethodParams<"thread/inject_items">;
+export type ThreadListParams = CodexStableMethodParams<"thread/list">;
+export type ThreadLoadedListParams =
+  CodexStableMethodParams<"thread/loaded/list">;
+export type ThreadMetadataUpdateParams =
+  CodexStableMethodParams<"thread/metadata/update">;
+export type ThreadReadParams = CodexStableMethodParams<"thread/read">;
+export type ThreadResumeParams = CodexStableMethodParams<"thread/resume">;
+export type ThreadRollbackParams = CodexStableMethodParams<"thread/rollback">;
+export type ThreadSetNameParams = CodexStableMethodParams<"thread/name/set">;
+export type ThreadStartParams = CodexStableMethodParams<"thread/start">;
+export type ThreadUnarchiveParams = CodexStableMethodParams<"thread/unarchive">;
+export type ThreadUnsubscribeParams =
+  CodexStableMethodParams<"thread/unsubscribe">;
+export type TurnInterruptParams = CodexStableMethodParams<"turn/interrupt">;
+export type TurnStartParams = CodexStableMethodParams<"turn/start">;
+export type TurnSteerParams = CodexStableMethodParams<"turn/steer">;
 
 export type CodexUserInput = UserInput;
 

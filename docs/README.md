@@ -91,4 +91,6 @@ The React package exposes one public stylesheet entry point:
 implementation details. Fixture and route CSS belongs to examples as visual QA,
 and recipe theming intentionally overrides tokens. Generated stable Codex App
 Server types are available only from the advanced
-`@nyosegawa/agent-ui-codex/stable-types` subpath.
+`@nyosegawa/agent-ui-codex/stable-types` subpath. Stable method-param aliases
+are derived from the generated `ClientRequest` schema instead of maintained as
+separate hand-written request models.

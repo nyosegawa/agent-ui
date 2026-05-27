@@ -1,6 +1,32 @@
-import { U as UserInput, G as GetAccountParams, L as LoginAccountParams, A as AppsListParams, C as CancelLoginAccountParams, H as HooksListParams, M as ModelListParams, S as SkillsConfigWriteParams, a as SkillsListParams, T as ThreadArchiveParams, b as ThreadCompactStartParams, c as ThreadForkParams, d as ThreadListParams, e as ThreadLoadedListParams, f as ThreadMetadataUpdateParams, g as ThreadReadParams, h as ThreadResumeParams, i as ThreadRollbackParams, j as ThreadSetNameParams, k as ThreadStartParams, l as ThreadUnarchiveParams, m as ThreadUnsubscribeParams, n as TurnInterruptParams, o as TurnStartParams, p as TurnSteerParams } from './TurnSteerParams-Z-i9GB-E.js';
-import { T as ThreadInjectItemsParams } from './ThreadInjectItemsParams-0F8pIWcm.js';
+import { C as CodexStableMethodParams, U as UserInput } from './method-params-BXDZnxMW.js';
+export { a as CodexStableMethod } from './method-params-BXDZnxMW.js';
+import './InitializeParams-CDX1c2T9.js';
 
+type AppsListParams = CodexStableMethodParams<"app/list">;
+type CancelLoginAccountParams = CodexStableMethodParams<"account/login/cancel">;
+type GetAccountParams = CodexStableMethodParams<"account/read">;
+type HooksListParams = CodexStableMethodParams<"hooks/list">;
+type LoginAccountParams = CodexStableMethodParams<"account/login/start">;
+type ModelListParams = CodexStableMethodParams<"model/list">;
+type SkillsConfigWriteParams = CodexStableMethodParams<"skills/config/write">;
+type SkillsListParams = CodexStableMethodParams<"skills/list">;
+type ThreadArchiveParams = CodexStableMethodParams<"thread/archive">;
+type ThreadCompactStartParams = CodexStableMethodParams<"thread/compact/start">;
+type ThreadForkParams = CodexStableMethodParams<"thread/fork">;
+type ThreadInjectItemsParams = CodexStableMethodParams<"thread/inject_items">;
+type ThreadListParams = CodexStableMethodParams<"thread/list">;
+type ThreadLoadedListParams = CodexStableMethodParams<"thread/loaded/list">;
+type ThreadMetadataUpdateParams = CodexStableMethodParams<"thread/metadata/update">;
+type ThreadReadParams = CodexStableMethodParams<"thread/read">;
+type ThreadResumeParams = CodexStableMethodParams<"thread/resume">;
+type ThreadRollbackParams = CodexStableMethodParams<"thread/rollback">;
+type ThreadSetNameParams = CodexStableMethodParams<"thread/name/set">;
+type ThreadStartParams = CodexStableMethodParams<"thread/start">;
+type ThreadUnarchiveParams = CodexStableMethodParams<"thread/unarchive">;
+type ThreadUnsubscribeParams = CodexStableMethodParams<"thread/unsubscribe">;
+type TurnInterruptParams = CodexStableMethodParams<"turn/interrupt">;
+type TurnStartParams = CodexStableMethodParams<"turn/start">;
+type TurnSteerParams = CodexStableMethodParams<"turn/steer">;
 type CodexUserInput = UserInput;
 interface AgentBrowserVerificationInputOptions {
     prompt: string;
@@ -55,4 +81,4 @@ declare function skillsConfigWriteParams(params: SkillsConfigWriteParams): Skill
 declare function hooksListParams(params?: HooksListParams): HooksListParams;
 declare function appsListParams(params?: AppsListParams): AppsListParams;
 
-export { type AgentBrowserVerificationInputOptions, AppsListParams, CancelLoginAccountParams, type CodexUserInput, GetAccountParams, HooksListParams, LoginAccountParams, ModelListParams, SkillsConfigWriteParams, SkillsListParams, ThreadArchiveParams, ThreadCompactStartParams, ThreadForkParams, ThreadInjectItemsParams, ThreadListParams, ThreadLoadedListParams, ThreadMetadataUpdateParams, ThreadReadParams, ThreadResumeParams, ThreadRollbackParams, ThreadSetNameParams, ThreadStartParams, ThreadUnarchiveParams, ThreadUnsubscribeParams, TurnInterruptParams, TurnStartParams, TurnSteerParams, UserInput, accountReadParams, agentBrowserSkillInput, agentBrowserVerificationInput, apiKeyLoginParams, appsListParams, authTokensLoginParams, cancelLoginParams, chatgptLoginParams, deviceCodeLoginParams, disabledProductMethods, hooksListParams, imageInput, localImageInput, mentionInput, modelListParams, skillInput, skillsConfigWriteParams, skillsListParams, textInput, threadArchiveParams, threadCompactStartParams, threadForkParams, threadInjectItemsParams, threadListParams, threadLoadedListParams, threadMetadataUpdateParams, threadReadParams, threadResumeParams, threadRollbackParams, threadSetNameParams, threadStartParams, threadUnarchiveParams, threadUnsubscribeParams, turnInterruptParams, turnStartParams, turnSteerParams };
+export { type AgentBrowserVerificationInputOptions, type AppsListParams, type CancelLoginAccountParams, CodexStableMethodParams, type CodexUserInput, type GetAccountParams, type HooksListParams, type LoginAccountParams, type ModelListParams, type SkillsConfigWriteParams, type SkillsListParams, type ThreadArchiveParams, type ThreadCompactStartParams, type ThreadForkParams, type ThreadInjectItemsParams, type ThreadListParams, type ThreadLoadedListParams, type ThreadMetadataUpdateParams, type ThreadReadParams, type ThreadResumeParams, type ThreadRollbackParams, type ThreadSetNameParams, type ThreadStartParams, type ThreadUnarchiveParams, type ThreadUnsubscribeParams, type TurnInterruptParams, type TurnStartParams, type TurnSteerParams, UserInput, accountReadParams, agentBrowserSkillInput, agentBrowserVerificationInput, apiKeyLoginParams, appsListParams, authTokensLoginParams, cancelLoginParams, chatgptLoginParams, deviceCodeLoginParams, disabledProductMethods, hooksListParams, imageInput, localImageInput, mentionInput, modelListParams, skillInput, skillsConfigWriteParams, skillsListParams, textInput, threadArchiveParams, threadCompactStartParams, threadForkParams, threadInjectItemsParams, threadListParams, threadLoadedListParams, threadMetadataUpdateParams, threadReadParams, threadResumeParams, threadRollbackParams, threadSetNameParams, threadStartParams, threadUnarchiveParams, threadUnsubscribeParams, turnInterruptParams, turnStartParams, turnSteerParams };

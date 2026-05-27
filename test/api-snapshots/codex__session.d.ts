@@ -1,13 +1,21 @@
 import { AgentTransport } from '@nyosegawa/agent-ui-core';
-import { T as ThreadInjectItemsParams } from './ThreadInjectItemsParams-0F8pIWcm.js';
+import { AppsListParams, HooksListParams, SkillsConfigWriteParams, SkillsListParams, ThreadForkParams, ThreadInjectItemsParams, ThreadListParams, ThreadLoadedListParams, ThreadMetadataUpdateParams, ThreadResumeParams, ThreadStartParams, TurnStartParams, TurnSteerParams, ModelListParams } from './request-builders.js';
+import { U as UserInput } from './method-params-BXDZnxMW.js';
+import './InitializeParams-CDX1c2T9.js';
 
 interface CodexSessionOptions {
     experimental?: boolean;
 }
-type CodexRequestOptions = object;
-type CodexSessionUserInput = {
-    type: string;
-};
+type CodexThreadForkOptions = Omit<ThreadForkParams, "threadId">;
+type CodexThreadMetadataUpdateOptions = Omit<ThreadMetadataUpdateParams, "threadId">;
+type CodexThreadResumeOptions = Omit<ThreadResumeParams, "threadId">;
+type CodexTurnStartOptions = {
+    input: string | UserInput[];
+    threadId: string;
+} & Omit<TurnStartParams, "input" | "threadId">;
+type CodexTurnSteerOptions = {
+    input: string | UserInput[];
+} & Omit<TurnSteerParams, "input">;
 interface CodexSession {
     account: {
         cancelLogin(loginId: string): Promise<unknown>;
@@ -17,49 +25,41 @@ interface CodexSession {
         rateLimitsRead(): Promise<unknown>;
     };
     apps: {
-        list(params?: CodexRequestOptions): Promise<unknown>;
+        list(params?: AppsListParams): Promise<unknown>;
     };
     hooks: {
-        list(params?: CodexRequestOptions): Promise<unknown>;
+        list(params?: HooksListParams): Promise<unknown>;
     };
     requestExperimental<TParams = unknown, TResult = unknown>(method: string, params?: TParams): Promise<TResult>;
     skills: {
-        configWrite(params: CodexRequestOptions): Promise<unknown>;
-        list(params?: CodexRequestOptions): Promise<unknown>;
+        configWrite(params: SkillsConfigWriteParams): Promise<unknown>;
+        list(params?: SkillsListParams): Promise<unknown>;
     };
     thread: {
         archive(threadId: string): Promise<unknown>;
         compactStart(threadId: string): Promise<unknown>;
-        fork(threadId: string, params?: CodexRequestOptions): Promise<unknown>;
+        fork(threadId: string, params?: CodexThreadForkOptions): Promise<unknown>;
         injectItems(threadId: string, items: ThreadInjectItemsParams["items"]): Promise<unknown>;
-        list(params?: CodexRequestOptions): Promise<unknown>;
-        loadedList(params?: CodexRequestOptions): Promise<unknown>;
-        metadataUpdate(threadId: string, params?: CodexRequestOptions): Promise<unknown>;
+        list(params?: ThreadListParams): Promise<unknown>;
+        loadedList(params?: ThreadLoadedListParams): Promise<unknown>;
+        metadataUpdate(threadId: string, params?: CodexThreadMetadataUpdateOptions): Promise<unknown>;
         read(threadId: string, includeTurns?: boolean): Promise<unknown>;
-        resume(threadId: string, params?: CodexRequestOptions): Promise<unknown>;
+        resume(threadId: string, params?: CodexThreadResumeOptions): Promise<unknown>;
         rollback(threadId: string, numTurns: number): Promise<unknown>;
         setName(threadId: string, name: string): Promise<unknown>;
-        start(params?: CodexRequestOptions): Promise<unknown>;
+        start(params?: ThreadStartParams): Promise<unknown>;
         unarchive(threadId: string): Promise<unknown>;
         unsubscribe(threadId: string): Promise<unknown>;
     };
     turn: {
         interrupt(threadId: string, turnId: string): Promise<unknown>;
-        start(params: {
-            input: string | CodexSessionUserInput[];
-            threadId: string;
-            [key: string]: unknown;
-        }): Promise<unknown>;
-        steer(params: {
-            expectedTurnId: string;
-            input: string | CodexSessionUserInput[];
-            threadId: string;
-        }): Promise<unknown>;
+        start(params: CodexTurnStartOptions): Promise<unknown>;
+        steer(params: CodexTurnSteerOptions): Promise<unknown>;
     };
     models: {
-        list(params?: CodexRequestOptions): Promise<unknown>;
+        list(params?: ModelListParams): Promise<unknown>;
     };
 }
 declare function createCodexSession(transport: AgentTransport, options?: CodexSessionOptions): CodexSession;
 
-export { type CodexRequestOptions, type CodexSession, type CodexSessionOptions, type CodexSessionUserInput, createCodexSession };
+export { type CodexSession, type CodexSessionOptions, type CodexThreadForkOptions, type CodexThreadMetadataUpdateOptions, type CodexThreadResumeOptions, type CodexTurnStartOptions, type CodexTurnSteerOptions, createCodexSession };
