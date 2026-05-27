@@ -22,6 +22,7 @@ const tempRoot = await mkdir(join(tmpdir(), `agent-ui-package-resolution-${proce
 }).then(() => join(tmpdir(), `agent-ui-package-resolution-${process.pid}`));
 
 const packageSurfaces = await readWorkspacePackageSurfaces(repoRoot);
+assertCanonicalPublicSpecifiers(packageSurfaces);
 const groupedSurfaces = new Map();
 for (const surface of packageSurfaces) {
   groupedSurfaces.set(surface.packageName, [...(groupedSurfaces.get(surface.packageName) ?? []), surface]);
@@ -120,4 +121,33 @@ function blockedSubpathsForPackage(dir) {
   if (dir === "server") return [...common, "./src/websocket.ts", "./dynamic-tools"];
   if (dir === "web-components") return ["./dist/index.js", "./dist/index.cjs", "./src/index.tsx"];
   return [...common, "./reducer"];
+}
+
+function assertCanonicalPublicSpecifiers(surfaces) {
+  const expected = [
+    "@nyosegawa/agent-ui-codex",
+    "@nyosegawa/agent-ui-codex/request-builders",
+    "@nyosegawa/agent-ui-codex/session",
+    "@nyosegawa/agent-ui-codex/stable-types",
+    "@nyosegawa/agent-ui-codex/websocket",
+    "@nyosegawa/agent-ui-core",
+    "@nyosegawa/agent-ui-react",
+    "@nyosegawa/agent-ui-react/styles.css",
+    "@nyosegawa/agent-ui-server",
+    "@nyosegawa/agent-ui-web-components",
+  ];
+  const actual = surfaces.map((surface) => surface.specifier).sort();
+  const missing = expected.filter((specifier) => !actual.includes(specifier));
+  const extra = actual.filter((specifier) => !expected.includes(specifier));
+  if (missing.length > 0 || extra.length > 0) {
+    throw new Error(
+      [
+        "Package exports map drifted from the documented public surface.",
+        missing.length > 0 ? `Missing: ${missing.join(", ")}` : undefined,
+        extra.length > 0 ? `Extra: ${extra.join(", ")}` : undefined,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+    );
+  }
 }
