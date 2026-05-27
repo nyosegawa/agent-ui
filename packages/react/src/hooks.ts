@@ -1,5 +1,7 @@
 import {
   selectActiveThread,
+  selectApps,
+  selectLatestRunningTurnId,
   selectOrderedThreads,
   selectOrderedTurns,
   selectPendingApprovals,
@@ -113,7 +115,7 @@ export function useAgentThread(threadId?: ThreadId) {
   const { dispatch, state } = useAgentContext();
   const codex = useCodexSession();
   const resolvedThreadId = threadId ?? state.activeThreadId;
-  const thread = resolvedThreadId
+  const thread: ThreadState | undefined = resolvedThreadId
     ? selectThread(state, resolvedThreadId)
     : selectActiveThread(state);
   const turns = resolvedThreadId ? selectOrderedTurns(state, resolvedThreadId) : [];
@@ -493,7 +495,9 @@ export function useAgentComposer(threadId?: ThreadId) {
   const resolvedThreadId = threadId ?? state.activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;
   const { interruptTurn, startTurn, steerTurn } = useAgentTurn(threadId);
-  const activeTurnId = latestRunningTurnId(thread);
+  const activeTurnId = resolvedThreadId
+    ? selectLatestRunningTurnId(state, resolvedThreadId)
+    : undefined;
   const isRunning = thread?.status === "running";
   const buildInput = useCallback(
     (items: AgentUserInput[] = []) => {
@@ -673,20 +677,6 @@ export function useAgentComposer(threadId?: ThreadId) {
 export type { QueuedFollowUp, QueuedFollowUpAttachment } from "./composer-queue";
 
 export type AgentComposerController = ReturnType<typeof useAgentComposer>;
-
-function latestRunningTurnId(thread?: ThreadState): string | undefined {
-  if (!thread) return undefined;
-  return [...thread.orderedTurnIds]
-    .reverse()
-    .find((turnId) => {
-      const status = thread.turns[turnId]?.turn.status;
-      return (
-        status === "running" ||
-        status === "inProgress" ||
-        (thread.status === "running" && status !== "completed" && status !== "interrupted")
-      );
-    });
-}
 
 function composerActionError(
   caught: unknown,
@@ -1041,12 +1031,7 @@ export function useAgentHooks(cwd?: string) {
 export function useAgentApps(threadId?: string) {
   const { dispatch, state } = useAgentContext();
   const codex = useCodexSession();
-  const appScope = threadId ?? "";
-  const scopedApps = state.apps.byScope[appScope] ?? {
-    apps: threadId ? [] : state.apps.apps,
-    nextCursor: threadId ? null : state.apps.nextCursor,
-    threadId,
-  };
+  const scopedApps = selectApps(state, threadId);
   const refreshApps = useCallback(
     async (params: AgentListRequestParams = {}) => {
       const requestParams = threadId && !params.threadId ? { ...params, threadId } : params;

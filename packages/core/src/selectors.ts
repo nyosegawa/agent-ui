@@ -1,4 +1,4 @@
-import type { AgentSessionState, ThreadId } from "./state";
+import type { AgentSessionState, ItemId, ThreadId, TurnId } from "./state";
 
 export function selectActiveThread(state: AgentSessionState) {
   return state.activeThreadId ? state.threads[state.activeThreadId] : undefined;
@@ -11,6 +11,65 @@ export function selectThread(state: AgentSessionState, threadId: ThreadId) {
 export function selectOrderedTurns(state: AgentSessionState, threadId: ThreadId) {
   const thread = selectThread(state, threadId);
   return thread?.orderedTurnIds.map((turnId) => thread.turns[turnId]).filter(Boolean) ?? [];
+}
+
+export function selectTurn(
+  state: AgentSessionState,
+  threadId: ThreadId,
+  turnId: TurnId,
+) {
+  return selectThread(state, threadId)?.turns[turnId];
+}
+
+export function selectLatestRunningTurnId(
+  state: AgentSessionState,
+  threadId: ThreadId,
+) {
+  const thread = selectThread(state, threadId);
+  if (!thread) return undefined;
+  return [...thread.orderedTurnIds].reverse().find((turnId) => {
+    const status = thread.turns[turnId]?.turn.status;
+    return (
+      status === "running" ||
+      status === "inProgress" ||
+      (thread.status === "running" && status !== "completed" && status !== "interrupted")
+    );
+  });
+}
+
+export function selectLatestRunningTurn(
+  state: AgentSessionState,
+  threadId: ThreadId,
+) {
+  const turnId = selectLatestRunningTurnId(state, threadId);
+  return turnId ? selectTurn(state, threadId, turnId) : undefined;
+}
+
+export function selectTurnItem(
+  state: AgentSessionState,
+  threadId: ThreadId,
+  turnId: TurnId,
+  itemId: ItemId,
+) {
+  return selectTurn(state, threadId, turnId)?.items[itemId];
+}
+
+export function selectOrderedItems(
+  state: AgentSessionState,
+  threadId: ThreadId,
+  turnId: TurnId,
+) {
+  const turn = selectTurn(state, threadId, turnId);
+  return turn?.itemOrder.map((itemId) => turn.items[itemId]).filter(Boolean) ?? [];
+}
+
+export function selectItemBlock(
+  state: AgentSessionState,
+  threadId: ThreadId,
+  turnId: TurnId,
+  itemId: ItemId,
+) {
+  return selectTurn(state, threadId, turnId)?.blocksByItemId[itemId];
 }
 
 export function selectOrderedThreads(state: AgentSessionState) {
@@ -29,8 +88,45 @@ export function selectServerRequestQueue(state: AgentSessionState, threadId?: Th
     .filter((request) => request && (threadId == null || request.threadId === threadId));
 }
 
+export function selectApps(state: AgentSessionState, threadId?: ThreadId) {
+  const appScope = threadId ?? "";
+  return state.apps.byScope[appScope] ?? {
+    apps: threadId ? [] : state.apps.apps,
+    nextCursor: threadId ? null : state.apps.nextCursor,
+    threadId,
+  };
+}
+
+export function selectDiagnostics(state: AgentSessionState) {
+  return state.diagnostics;
+}
+
+export function selectStatusBanners(state: AgentSessionState) {
+  return state.diagnostics.banners;
+}
+
+export function selectDiagnosticWarnings(state: AgentSessionState) {
+  return state.diagnostics.warnings;
+}
+
+export function selectDiagnosticErrors(state: AgentSessionState) {
+  return state.diagnostics.errors;
+}
+
+export function selectProtocolNotifications(state: AgentSessionState) {
+  return state.diagnostics.protocolNotifications;
+}
+
 export function selectUsage(state: AgentSessionState) {
   return state.usage;
+}
+
+export function selectAccountRateLimits(state: AgentSessionState) {
+  return state.usage.accountRateLimits;
+}
+
+export function selectHostMetrics(state: AgentSessionState) {
+  return state.usage.hostMetrics;
 }
 
 export function selectThreadRegistry(state: AgentSessionState) {

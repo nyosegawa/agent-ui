@@ -113,6 +113,11 @@ notification history, warnings, and errors.
 `usageStore` owns usage initialization, host metrics, and account rate-limit
 usage snapshots.
 
+Selectors expose stable read surfaces for hosts and React hooks across thread,
+turn, item, approval, app, diagnostics, and usage state. Components should use
+selectors instead of reaching through normalized maps when the read represents a
+public UI surface.
+
 ## Reducer Rules
 
 - `thread/started`: upsert thread

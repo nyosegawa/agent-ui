@@ -11,10 +11,18 @@ import { runEventFixture } from "../src/fixtures";
 import { createInitialAgentState } from "../src/state";
 import { AGENT_RETENTION_POLICY } from "../src/retention";
 import {
+  selectAccountRateLimits,
+  selectApps,
+  selectDiagnostics,
+  selectHostMetrics,
+  selectItemBlock,
+  selectLatestRunningTurnId,
   selectOrderedThreads,
+  selectOrderedItems,
   selectOrderedTurns,
   selectPendingApprovals,
   selectServerRequestQueue,
+  selectStatusBanners,
   selectThreadRegistry,
   selectUsage,
 } from "../src/selectors";
@@ -502,13 +510,18 @@ describe("agentReducer", () => {
     expect(state.skills.byCwd["/repo"]?.[0]?.name).toBe("agent-browser");
     expect(state.apps.apps[0]?.id).toBe("app://browser");
     expect(state.apps.byScope[""]?.apps[0]?.id).toBe("app://browser");
+    expect(selectApps(state).apps[0]?.id).toBe("app://browser");
     expect(state.hooks.byCwd["/repo"]?.[0]?.id).toBe("hook-1");
     expect(selectUsage(state)).toEqual({
       accountRateLimits: { primary: { usedPercent: 33 } },
       hostMetrics: { totalTokens: 12 },
     });
+    expect(selectAccountRateLimits(state)).toEqual({ primary: { usedPercent: 33 } });
+    expect(selectHostMetrics(state)).toEqual({ totalTokens: 12 });
     expect(state.account.rateLimits).toEqual({ primary: { usedPercent: 33 } });
     expect(state.diagnostics.banners[0]?.kind).toBe("rateLimit");
+    expect(selectDiagnostics(state).banners[0]?.kind).toBe("rateLimit");
+    expect(selectStatusBanners(state)[0]?.kind).toBe("rateLimit");
   });
 
   it("stores restored thread token usage with context-window breakdown", () => {
@@ -573,6 +586,17 @@ describe("agentReducer", () => {
       threadId: "thread-a",
     });
     expect(state.apps.byScope["thread-b"]?.apps[0]?.id).toBe("app://thread-b");
+    expect(selectApps(state).apps[0]?.id).toBe("app://global");
+    expect(selectApps(state, "thread-a")).toMatchObject({
+      apps: [{ id: "app://thread-a", name: "Thread A" }],
+      nextCursor: "next-a",
+      threadId: "thread-a",
+    });
+    expect(selectApps(state, "thread-missing")).toEqual({
+      apps: [],
+      nextCursor: null,
+      threadId: "thread-missing",
+    });
   });
 
   it("loads the demo session fixture with threads, diff preview, and file approval", () => {
@@ -590,9 +614,45 @@ describe("agentReducer", () => {
     expect(turns[0]?.streamingTextByItemId["item-reasoning"]).toContain("reviewable");
     expect(turns[0]?.commandOutputByItemId["item-command"]).toContain("7 tests passed");
     expect(turns[0]?.filePatchByItemId["item-file"]).toContain("AgentDiffViewer");
+    expect(selectOrderedItems(state, "thread-demo", "turn-demo")[0]?.id).toBe(
+      "item-user",
+    );
+    expect(selectItemBlock(state, "thread-demo", "turn-demo", "item-agent")?.kind).toBe(
+      "text",
+    );
     expect(
       selectPendingApprovals(state, "thread-demo").map((request) => request.kind),
     ).toEqual(["commandApproval", "fileChangeApproval"]);
+  });
+
+  it("selects the latest running turn from thread status and turn status", () => {
+    const state = runEventFixture([
+      { event: { thread: { id: "thread-running" }, type: "thread/started" } },
+      {
+        event: {
+          threadId: "thread-running",
+          turn: { id: "turn-complete", status: "completed", threadId: "thread-running" },
+          type: "turn/started",
+        },
+      },
+      {
+        event: {
+          items: [],
+          threadId: "thread-running",
+          turn: { id: "turn-complete", status: "completed", threadId: "thread-running" },
+          type: "turn/completed",
+        },
+      },
+      {
+        event: {
+          threadId: "thread-running",
+          turn: { id: "turn-running", status: "running", threadId: "thread-running" },
+          type: "turn/started",
+        },
+      },
+    ]);
+
+    expect(selectLatestRunningTurnId(state, "thread-running")).toBe("turn-running");
   });
 
   it("normalizes rich transcript block taxonomy into item blocks", () => {
