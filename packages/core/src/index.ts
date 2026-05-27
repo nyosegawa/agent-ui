@@ -7,6 +7,7 @@ export * from "./selectors";
 export * from "./state";
 export * from "./stores/apps";
 export * from "./stores/connection";
+export * from "./stores/diagnostics";
 export * from "./stores/item";
 export * from "./stores/server-request";
 export * from "./stores/thread-entity";

@@ -15,6 +15,7 @@ import type { ThreadRegistryState, ThreadState } from "./state/thread";
 import type { UsageState } from "./state/usage";
 import { createInitialAppsState } from "./stores/apps";
 import { createInitialConnectionState } from "./stores/connection";
+import { createInitialDiagnosticsState } from "./stores/diagnostics";
 import {
   createInitialPendingServerRequestState,
   createInitialServerRequestQueueState,
@@ -62,7 +63,7 @@ export function createInitialAgentState(): AgentSessionState {
     apps: createInitialAppsState(),
     configWarnings: [],
     connection: createInitialConnectionState(),
-    diagnostics: { banners: [], errors: [], protocolNotifications: [], warnings: [] },
+    diagnostics: createInitialDiagnosticsState(),
     errors: [],
     hooks: { byCwd: {} },
     models: { models: [] },

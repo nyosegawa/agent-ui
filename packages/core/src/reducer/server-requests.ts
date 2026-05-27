@@ -1,6 +1,7 @@
 import type { ServerRequestEvent } from "../events";
 import type { AgentSessionState } from "../state";
 import { AGENT_RETENTION_POLICY, boundedAppend } from "../retention";
+import { diagnosticsStore } from "../stores/diagnostics";
 import { serverRequestStore } from "../stores/server-request";
 import { threadEntityStore } from "../stores/thread-entity";
 
@@ -66,14 +67,7 @@ export function reduceServerRequestEvent(
           ? boundedAppend(state.errors, event.error, AGENT_RETENTION_POLICY.diagnosticsErrorsMax)
           : state.errors,
         diagnostics: event.error
-          ? {
-              ...state.diagnostics,
-              errors: boundedAppend(
-                state.diagnostics.errors,
-                event.error,
-                AGENT_RETENTION_POLICY.diagnosticsErrorsMax,
-              ),
-            }
+          ? diagnosticsStore.addError(state.diagnostics, event.error)
           : state.diagnostics,
         pendingServerRequests,
         serverRequestQueue: serverRequestStore.dequeue(

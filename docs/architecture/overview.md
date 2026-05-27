@@ -108,6 +108,8 @@ output and file patches, and normalized transcript block synthesis for stored
 items. `serverRequestStore` owns pending server request maps, FIFO approval
 queues, and thread-scoped pending request checks. `appsStore` owns App
 connector list initialization and scoped global/thread update semantics.
+`diagnosticsStore` owns diagnostics initialization, status banners, protocol
+notification history, warnings, and errors.
 
 ## Reducer Rules
 

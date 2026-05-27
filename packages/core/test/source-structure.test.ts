@@ -57,6 +57,7 @@ const reducerDomainFiles = [
 const storeFiles = [
   "apps",
   "connection",
+  "diagnostics",
   "item",
   "server-request",
   "thread-entity",
@@ -104,6 +105,7 @@ describe("Core package source structure", () => {
 
     expect(root).toContain('export * from "./stores/connection";');
     expect(root).toContain('export * from "./stores/apps";');
+    expect(root).toContain('export * from "./stores/diagnostics";');
     expect(root).toContain('export * from "./stores/item";');
     expect(root).toContain('export * from "./stores/server-request";');
     expect(root).toContain('export * from "./stores/thread-entity";');
