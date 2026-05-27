@@ -1,4 +1,4 @@
-import { threadStartParams } from "@nyosegawa/agent-ui-codex";
+import { threadStartParams } from "@nyosegawa/agent-ui-codex/request-builders";
 import type { AgentTransportEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
 import type { createCodexAppServerBridge } from "./bridge";
 

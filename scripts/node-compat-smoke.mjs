@@ -27,7 +27,6 @@ const packages = [
       "createCodexStdioTransport",
       "createCodexWebSocketTransport",
       "normalizeCodexServerMessage",
-      "threadStartParams",
     ],
   },
   {

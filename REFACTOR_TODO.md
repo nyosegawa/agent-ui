@@ -46,7 +46,7 @@ Acceptance:
 - [x] Remove Codex imports from core tests.
 - [x] Remove generic/non-App-Server adapters from the core public API.
 - [x] Tighten `packages/core/src/index.ts`.
-- [ ] Tighten `packages/codex/src/index.ts`.
+- [x] Tighten `packages/codex/src/index.ts`.
 - [x] Tighten `packages/react/src/index.ts`.
 - [ ] Tighten `packages/server/src/index.ts`.
 - [ ] Tighten each package `exports` map.

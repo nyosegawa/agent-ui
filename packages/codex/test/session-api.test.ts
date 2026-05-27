@@ -1,9 +1,9 @@
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 import { describe, expect, it } from "vitest";
+import { createCodexSession } from "../src";
 import {
   accountReadParams,
   appsListParams,
-  createCodexSession,
   disabledProductMethods,
   hooksListParams,
   modelListParams,
@@ -26,7 +26,7 @@ import {
   turnInterruptParams,
   turnStartParams,
   turnSteerParams,
-} from "../src";
+} from "../src/request-builders";
 import type {
   AppsListParams,
   GetAccountParams,

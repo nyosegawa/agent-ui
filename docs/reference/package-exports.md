@@ -78,18 +78,22 @@ Responsibilities:
 - generated-schema-backed input helpers for text, images, mentions, skills, and
   agent-browser verification turns
 
-The package root exports JSON-RPC helpers, protocol capability metadata,
-normalizers, request builders, session helpers, stdio transport, WebSocket
-transport, SDK adapter, and auth helpers. Browser code should import the
-browser-safe session facade from `@nyosegawa/agent-ui-codex/session` and the
-WebSocket transport from `@nyosegawa/agent-ui-codex/websocket` so Node stdio
-code stays out of the browser bundle.
+The package root exports the protocol/session/transport facade: JSON-RPC
+helpers, protocol capability metadata, normalizers, session helpers, stdio
+transport, WebSocket transport, SDK adapter, and auth helpers. Browser code
+should import the browser-safe session facade from
+`@nyosegawa/agent-ui-codex/session` and the WebSocket transport from
+`@nyosegawa/agent-ui-codex/websocket` so Node stdio code stays out of the
+browser bundle.
 
 Default support is stable App Server API only. Experimental API requires
 explicit opt-in. Generated stable App Server types are an advanced public
-surface at `@nyosegawa/agent-ui-codex/stable-types`; they are useful for hosts
-that intentionally track protocol drift, but they are not re-exported from the
-package root. Undocumented deep imports such as
+surface at `@nyosegawa/agent-ui-codex/stable-types`; request builders and
+generated-schema-backed input helpers live at
+`@nyosegawa/agent-ui-codex/request-builders`. These advanced surfaces are
+useful for hosts that intentionally track protocol drift or construct App
+Server params directly, but they are not re-exported from the package root.
+Undocumented deep imports such as
 `@nyosegawa/agent-ui-codex/generated/stable` are blocked by the export map.
 
 The SDK adapter is not the primary integration path and does not add an `@openai/codex` runtime dependency.
