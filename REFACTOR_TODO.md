@@ -48,7 +48,7 @@ Acceptance:
 - [x] Tighten `packages/core/src/index.ts`.
 - [x] Tighten `packages/codex/src/index.ts`.
 - [x] Tighten `packages/react/src/index.ts`.
-- [ ] Tighten `packages/server/src/index.ts`.
+- [x] Tighten `packages/server/src/index.ts`.
 - [ ] Tighten each package `exports` map.
 - [x] Update `docs/reference/package-exports.md`.
 - [x] Update API snapshots for the new ideal API.

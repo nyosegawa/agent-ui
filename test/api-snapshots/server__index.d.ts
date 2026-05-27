@@ -1,30 +1,8 @@
-import { Options } from 'execa';
 import { CodexInitializeOptions } from '@nyosegawa/agent-ui-codex';
 import { AgentTransport, AgentTransportEvent, PendingServerRequest } from '@nyosegawa/agent-ui-core';
 import { Readable, Writable } from 'node:stream';
 import { IncomingMessage, ServerResponse, Server } from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
-
-interface AgentBrowserDetection {
-    cliAvailable: boolean;
-    coreSkillAvailable: boolean;
-    diagnostics: string[];
-    repoSkillPath?: string;
-    skillInput?: {
-        name: "agent-browser";
-        path: string;
-        type: "skill";
-    };
-    version?: string;
-}
-type AgentBrowserRunner = (command: string, args: string[], options?: Options) => Promise<{
-    stdout?: unknown;
-}>;
-declare function detectAgentBrowser(options: {
-    cwd: string;
-    execaOptions?: Options;
-    runner?: AgentBrowserRunner;
-}): Promise<AgentBrowserDetection>;
 
 interface CodexAppServerBridgeOptions {
     args?: string[];
@@ -227,4 +205,4 @@ type BrowserMethodPolicy = "productized" | "all" | {
 declare function attachAgentUiWebSocketBridge(options: AgentUiWebSocketServerOptions): WebSocketServer;
 declare function handleAgentUiWebSocketConnection(socket: WebSocket, options?: AgentUiWebSocketBridgeOptions, request?: IncomingMessage): Promise<void>;
 
-export { type AgentBrowserDetection, type AgentBrowserRunner, type AgentUiBridgeAdmissionHook, type AgentUiHostEventSink, type AgentUiNextRpcRouteOptions, type AgentUiUploadHandler, type AgentUiUploadHandlerOptions, type AgentUiWebSocketBridgeOptions, type AgentUiWebSocketInboundLimits, type AgentUiWebSocketServerOptions, type BrowserMethodPolicy, type CodexAppServerBridge, type CodexAppServerBridgeOptions, type CodexBridgeShutdownOptions, type CodexChildProcess, type CodexSpawnOptions, type DynamicToolCallOutputContentItem, type DynamicToolCallResponse, type DynamicToolHandler$1 as DynamicToolHandler, type DynamicToolHandlerContext, type DynamicToolRequest, type MinimalExpressRequest, type MinimalExpressResponse, type PermissionApprovalContext, type PermissionApprovalDecision, type PermissionApprovalPolicy, type ResolvedServerRequestPolicy, type ServerRequestPolicy$1 as ServerRequestPolicy, attachAgentUiWebSocketBridge, createAgentUiExpressMiddleware, createAgentUiLocalUploadHandler, createAgentUiNextRpcRoute, createCodexAppServerBridge, createDynamicToolHelperThread, defaultDynamicToolHandler, detectAgentBrowser, dynamicToolFailure, emitHostEvent, handleAgentUiWebSocketConnection, handleDynamicToolRequest, maybeResolveHelperThreadRequest, redactSecrets, redactStructuredValue, redactTransportEvent, resolveServerRequestPolicy, responseForServerRequest };
+export { type AgentUiBridgeAdmissionHook, type AgentUiHostEventSink, type AgentUiNextRpcRouteOptions, type AgentUiUploadHandler, type AgentUiUploadHandlerOptions, type AgentUiWebSocketBridgeOptions, type AgentUiWebSocketInboundLimits, type AgentUiWebSocketServerOptions, type BrowserMethodPolicy, type CodexAppServerBridge, type CodexAppServerBridgeOptions, type CodexBridgeShutdownOptions, type CodexChildProcess, type CodexSpawnOptions, type DynamicToolCallOutputContentItem, type DynamicToolCallResponse, type DynamicToolHandler$1 as DynamicToolHandler, type DynamicToolHandlerContext, type DynamicToolRequest, type MinimalExpressRequest, type MinimalExpressResponse, type PermissionApprovalContext, type PermissionApprovalDecision, type PermissionApprovalPolicy, type ResolvedServerRequestPolicy, type ServerRequestPolicy$1 as ServerRequestPolicy, attachAgentUiWebSocketBridge, createAgentUiExpressMiddleware, createAgentUiLocalUploadHandler, createAgentUiNextRpcRoute, createCodexAppServerBridge, createDynamicToolHelperThread, defaultDynamicToolHandler, dynamicToolFailure, emitHostEvent, handleAgentUiWebSocketConnection, handleDynamicToolRequest, maybeResolveHelperThreadRequest, redactSecrets, redactStructuredValue, redactTransportEvent, resolveServerRequestPolicy, responseForServerRequest };

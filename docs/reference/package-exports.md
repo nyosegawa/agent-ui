@@ -170,7 +170,6 @@ Responsibilities:
 - dynamic tool helper thread utilities, server-request policy helpers,
   host-event sinks, and redaction utilities
 - auth/token forwarding recipes
-- `detectAgentBrowser()` for repo skill path, CLI version, and core skill checks
 
 Browser packages must not spawn child processes directly.
 
