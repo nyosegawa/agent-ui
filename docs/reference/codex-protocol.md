@@ -83,6 +83,10 @@ Implementation status:
   thread, turn, skills, hooks, and app methods. Its method params use the same
   generated-schema-derived aliases as the request builders. Experimental
   method calls must use `requestExperimental()` and require explicit opt-in.
+- `normalizer.ts` is the composition root for App Server notifications and
+  server requests. Protocol-family modules under `packages/codex/src/normalizers`
+  own account, thread, turn, item, server-request, apps/connectors, status, and
+  model-list normalization.
 - `thread/turns/items/list` is intentionally disabled in the product facade
   until upstream implements it.
 - Protocol metadata records upstream commit `64e340ad2809a4da61ec12535a056bcf58f5d6ef`.

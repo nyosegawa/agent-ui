@@ -103,13 +103,13 @@ Acceptance:
 - [x] Record upstream commit metadata and generator command with generated
   schema.
 - [x] Make generated schema the only source for Codex method params.
-- [ ] Split `packages/codex/src/normalizer.ts` into protocol-family modules.
-- [ ] Add normalizer modules for thread events.
-- [ ] Add normalizer modules for turn events.
-- [ ] Add normalizer modules for item events and streaming deltas.
-- [ ] Add normalizer modules for server requests and request resolution.
-- [ ] Add normalizer modules for apps/connectors events.
-- [ ] Add normalizer modules for diagnostics/status events.
+- [x] Split `packages/codex/src/normalizer.ts` into protocol-family modules.
+- [x] Add normalizer modules for thread events.
+- [x] Add normalizer modules for turn events.
+- [x] Add normalizer modules for item events and streaming deltas.
+- [x] Add normalizer modules for server requests and request resolution.
+- [x] Add normalizer modules for apps/connectors events.
+- [x] Add normalizer modules for diagnostics/status events.
 - [ ] Group typed clients by protocol primitive:
   `connection`, `threads`, `turns`, `approvals`, `apps`, `skills`, `hooks`,
   `models`, and `account`.
