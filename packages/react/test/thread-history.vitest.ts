@@ -124,4 +124,30 @@ describe("thread history normalization", () => {
     });
     expect(events.at(-1)).toMatchObject({ snapshot: true, status: "loaded" });
   });
+
+  it("preserves omitted turns as omitted snapshot payloads", () => {
+    expect(
+      threadSnapshotEvents(
+        {
+          id: "thread-history",
+          status: { type: "notLoaded" },
+        },
+        true,
+      )[0],
+    ).toEqual({
+      snapshot: true,
+      status: "notLoaded",
+      thread: {
+        ephemeral: false,
+        id: "thread-history",
+        name: undefined,
+        path: undefined,
+        raw: {
+          id: "thread-history",
+          status: { type: "notLoaded" },
+        },
+      },
+      type: "thread/started",
+    });
+  });
 });

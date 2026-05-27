@@ -360,6 +360,34 @@ describe("agentReducer", () => {
     ]);
   });
 
+  it("preserves stored turns and preview classification when later thread payloads omit turns", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          status: "notLoaded",
+          thread: { id: "thread-history" },
+          turns: [{ id: "turn-history", threadId: "thread-history", status: "completed" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          status: "notLoaded",
+          thread: { id: "thread-history", name: "History without turns" },
+          type: "thread/upserted",
+        },
+      },
+    ]);
+
+    expect(state.threads["thread-history"]?.orderedTurnIds).toEqual(["turn-history"]);
+    expect(state.threads["thread-history"]?.turns["turn-history"]?.turn.status).toBe(
+      "completed",
+    );
+    expect(state.threads["thread-history"]?.registryStatus).toBe("preview");
+    expect(selectThreadRegistry(state).previewThreadIds).toContain("thread-history");
+    expect(selectThreadRegistry(state).coldThreadIds).not.toContain("thread-history");
+  });
+
   it("does not downgrade a live thread when a preview snapshot is activated", () => {
     const state = runEventFixture([
       {

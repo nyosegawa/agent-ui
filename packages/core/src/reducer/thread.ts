@@ -31,6 +31,12 @@ export function reduceThreadEvent(
         turns[turn.id] =
           turns[turn.id] ?? turnStore.createTurnState(turn, event.thread.id);
       }
+      const classificationTurns =
+        event.turns ??
+        orderedTurnIds
+          .map((turnId) => turns[turnId]?.turn)
+          .filter((turn) => turn != null);
+      const registryStatus = threadIndexStore.classifyStatus(status, classificationTurns);
       return threadEntityStore.pruneSnapshots({
         ...state,
         activeThreadId:
@@ -38,7 +44,7 @@ export function reduceThreadEvent(
         threadRegistry: threadIndexStore.upsert(
           state.threadRegistry,
           event.thread.id,
-          threadIndexStore.classifyStatus(status, event.turns),
+          registryStatus,
           event.type === "thread/started" ? event.thread.id : state.threadRegistry.activeThreadId,
         ),
         threads: {
@@ -46,7 +52,7 @@ export function reduceThreadEvent(
           [event.thread.id]: {
             ...threadState,
             orderedTurnIds,
-            registryStatus: threadIndexStore.classifyStatus(status, event.turns),
+            registryStatus,
             status,
             turns,
           },

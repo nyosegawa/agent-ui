@@ -80,7 +80,7 @@ Acceptance:
 - [x] Add `usageStore`.
 - [x] Add selectors for thread, turn, item, approvals, apps, diagnostics, and
   usage surfaces.
-- [ ] Preserve merge semantics where omitted `Thread.turns` is not treated as
+- [x] Preserve merge semantics where omitted `Thread.turns` is not treated as
   history deletion.
 - [ ] Remove compatibility aliases from normalized state.
 - [ ] Add retention tests for ordered indexes.

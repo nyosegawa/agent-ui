@@ -22,20 +22,20 @@ export function threadSnapshotEvents(
 ): AgentEvent[] {
   if (!rawThreadId(rawThread)) throw new Error("thread payload is missing an id");
   const thread = normalizeRawThread(rawThread);
-  const rawTurns = Array.isArray(rawThread.turns) ? rawThread.turns : [];
-  const turns = rawTurns.map((turn) => normalizeRawTurn(turn, thread.id));
-  const status = snapshotStatus(rawThread.status, rawTurns.length);
+  const rawTurns = Array.isArray(rawThread.turns) ? rawThread.turns : undefined;
+  const turns = rawTurns?.map((turn) => normalizeRawTurn(turn, thread.id)) ?? [];
+  const status = snapshotStatus(rawThread.status, rawTurns?.length ?? 0);
   const events: AgentEvent[] = [
     {
       status,
       thread,
       snapshot: true,
-      turns,
+      ...(rawTurns ? { turns } : {}),
       type: activate ? "thread/started" : "thread/upserted",
     },
   ];
 
-  for (const rawTurn of rawTurns) {
+  for (const rawTurn of rawTurns ?? []) {
     const turn = normalizeRawTurn(rawTurn, thread.id);
     const rawTurnRecord = asRecord(rawTurn);
     const items = Array.isArray(rawTurnRecord?.items) ? rawTurnRecord.items : [];
