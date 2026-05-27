@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
+  agentReducer,
+  createInitialAgentState,
+  type AgentEvent,
+} from "@nyosegawa/agent-ui-core";
+import {
   CODEX_PROTOCOL_COMMIT,
   assertCodexExperimentalMethod,
   assertCodexProductizedMethod,
@@ -123,6 +128,110 @@ describe("Codex protocol metadata", () => {
         type: "item/agentMessage/delta",
       },
     ]);
+  });
+
+  it("normalizes item lifecycle notifications into reducer item state", () => {
+    const events = [
+      ...normalizeCodexServerMessage({
+        method: "thread/started",
+        params: { thread: { id: "thread-items", name: "Item lifecycle" } },
+      }),
+      ...normalizeCodexServerMessage({
+        method: "turn/started",
+        params: {
+          threadId: "thread-items",
+          turn: { id: "turn-items", status: "running" },
+        },
+      }),
+      ...normalizeCodexServerMessage({
+        method: "item/started",
+        params: {
+          item: {
+            id: "agent-item",
+            text: "",
+            type: "agentMessage",
+          },
+          threadId: "thread-items",
+          turnId: "turn-items",
+        },
+      }),
+      ...normalizeCodexServerMessage({
+        method: "item/agentMessage/delta",
+        params: {
+          delta: "Hello ",
+          itemId: "agent-item",
+          threadId: "thread-items",
+          turnId: "turn-items",
+        },
+      }),
+      ...normalizeCodexServerMessage({
+        method: "item/agentMessage/delta",
+        params: {
+          delta: "world",
+          itemId: "agent-item",
+          threadId: "thread-items",
+          turnId: "turn-items",
+        },
+      }),
+      ...normalizeCodexServerMessage({
+        method: "item/commandExecution/outputDelta",
+        params: {
+          delta: "bun test\n",
+          itemId: "command-item",
+          threadId: "thread-items",
+          turnId: "turn-items",
+        },
+      }),
+      ...normalizeCodexServerMessage({
+        method: "item/fileChange/patchUpdated",
+        params: {
+          itemId: "patch-item",
+          patch: "diff --git a/file.ts b/file.ts",
+          threadId: "thread-items",
+          turnId: "turn-items",
+        },
+      }),
+      ...normalizeCodexServerMessage({
+        method: "item/completed",
+        params: {
+          item: {
+            id: "agent-item",
+            text: "Hello world",
+            type: "agentMessage",
+          },
+          threadId: "thread-items",
+          turnId: "turn-items",
+        },
+      }),
+    ];
+    const state = events.reduce(
+      (current, event) => agentReducer(current, event as AgentEvent),
+      createInitialAgentState(),
+    );
+    const turn = state.threads["thread-items"]?.turns["turn-items"];
+
+    expect(events.map((event) => event.type)).toEqual([
+      "thread/started",
+      "turn/started",
+      "item/started",
+      "item/agentMessage/delta",
+      "item/agentMessage/delta",
+      "item/commandOutput/delta",
+      "item/filePatch/updated",
+      "item/completed",
+    ]);
+    expect(turn?.itemOrder).toEqual(["agent-item", "command-item", "patch-item"]);
+    expect(turn?.items["agent-item"]).toMatchObject({
+      id: "agent-item",
+      kind: "agentMessage",
+      status: "completed",
+      text: "Hello world",
+    });
+    expect(turn?.streamingTextByItemId["agent-item"]).toBe("Hello world");
+    expect(turn?.commandOutputByItemId["command-item"]).toBe("bun test\n");
+    expect(turn?.filePatchByItemId["patch-item"]).toBe(
+      "diff --git a/file.ts b/file.ts",
+    );
   });
 
   it("normalizes nested token usage notifications", () => {

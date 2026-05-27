@@ -117,7 +117,7 @@ Acceptance:
   classification at client construction and public exports.
 - [x] Add generated-schema-backed tests for request builders.
 - [x] Add tests for initialize and notification opt-out behavior.
-- [ ] Add tests for item lifecycle using `item/started`, deltas, and
+- [x] Add tests for item lifecycle using `item/started`, deltas, and
   `item/completed`.
 - [ ] Add tests for `thread/read`.
 - [ ] Add tests for `thread/turns/list`.
