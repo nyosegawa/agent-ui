@@ -34,6 +34,7 @@ import {
   turnSteerParams,
 } from "../src/request-builders";
 import type { ClientRequest } from "../src/generated/stable";
+import type { ClientRequest as ExperimentalClientRequest } from "../src/generated/experimental";
 import type {
   AppsListParams,
   GetAccountParams,
@@ -59,6 +60,10 @@ import type {
   TurnStartParams,
   TurnSteerParams,
 } from "../src/generated/stable/v2";
+import type {
+  ThreadTurnsListParams,
+  ThreadTurnsListResponse,
+} from "../src/generated/experimental/v2";
 
 type Equal<TActual, TExpected> =
   (<T>() => T extends TActual ? 1 : 2) extends
@@ -70,6 +75,8 @@ type GeneratedParams<TMethod extends ClientRequest["method"]> = Extract<
   ClientRequest,
   { method: TMethod }
 >["params"];
+type GeneratedExperimentalParams<TMethod extends ExperimentalClientRequest["method"]> =
+  Extract<ExperimentalClientRequest, { method: TMethod }>["params"];
 type GeneratedRequestParamsCase<TMethod extends ClientRequest["method"]> = {
   method: TMethod;
   params: GeneratedParams<TMethod>;
@@ -81,7 +88,13 @@ const generatedParamTypeAssertions: [
   >,
   Assert<Equal<CodexStableMethodParams<"turn/start">, GeneratedParams<"turn/start">>>,
   Assert<Equal<CodexStableMethodParams<"app/list">, GeneratedParams<"app/list">>>,
-] = [true, true, true];
+  Assert<
+    Equal<
+      ThreadTurnsListParams,
+      GeneratedExperimentalParams<"thread/turns/list">
+    >
+  >,
+] = [true, true, true, true];
 
 describe("Codex request builders", () => {
   it("builds stable params against generated App Server request types", () => {
@@ -186,7 +199,7 @@ describe("Codex request builders", () => {
   });
 
   it("derives method params from the generated ClientRequest union", () => {
-    expect(generatedParamTypeAssertions).toEqual([true, true, true]);
+    expect(generatedParamTypeAssertions).toEqual([true, true, true, true]);
   });
 
   it("emits params accepted by generated ClientRequest method schemas", () => {
@@ -357,6 +370,32 @@ describe("Codex session facade", () => {
     await expect(experimental.requestExperimental("not/a/method", {})).rejects.toThrow(
       "unknown",
     );
+  });
+
+  it("passes thread/turns/list through the explicit experimental request path", async () => {
+    const transport = new FakeTransport();
+    const experimental = createCodexSession(transport, { experimental: true });
+    const params = {
+      cursor: "cursor-1",
+      itemsView: "summary",
+      limit: 10,
+      sortDirection: "asc",
+      threadId: "thread-1",
+    } satisfies ThreadTurnsListParams;
+
+    const response = await experimental.requestExperimental<
+      ThreadTurnsListParams,
+      ThreadTurnsListResponse
+    >("thread/turns/list", params);
+
+    expect(response).toEqual({});
+    expect(transport.calls).toEqual([
+      {
+        method: "thread/turns/list",
+        options: undefined,
+        params,
+      },
+    ]);
   });
 });
 

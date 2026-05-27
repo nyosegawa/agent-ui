@@ -120,7 +120,7 @@ Acceptance:
 - [x] Add tests for item lifecycle using `item/started`, deltas, and
   `item/completed`.
 - [x] Add tests for `thread/read`.
-- [ ] Add tests for `thread/turns/list`.
+- [x] Add tests for `thread/turns/list`.
 - [ ] Mark `thread/turns/items/list` as unsupported/not productized.
 - [ ] Add tests for `app/list` pagination and refresh/update behavior.
 
