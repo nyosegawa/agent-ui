@@ -53,6 +53,7 @@ import {
   assertCodexExperimentalMethod,
   assertCodexProductizedMethod,
   codexInitializeParams,
+  isExperimentalUnsupportedMethod,
   stableProductizedMethods,
   type CodexInitializeOptions,
   type StableProductizedMethod,
@@ -234,10 +235,10 @@ export function createCodexClients(
       if (!options.experimental) {
         throw new Error(`Experimental Codex method requires opt-in: ${method}`);
       }
-      assertCodexExperimentalMethod(method);
-      if (method === "thread/turns/items/list") {
-        throw new Error("thread/turns/items/list is disabled until upstream implements it");
+      if (isExperimentalUnsupportedMethod(method)) {
+        throw new Error(`${method} is disabled until upstream implements it`);
       }
+      assertCodexExperimentalMethod(method);
       return transport.request(method, params);
     },
     skills: {

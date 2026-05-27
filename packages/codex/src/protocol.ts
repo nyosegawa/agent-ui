@@ -11,6 +11,7 @@ export type CodexCapabilityStatus =
   | "stableAvailable"
   | "stableProductized"
   | "experimentalAvailable"
+  | "experimentalUnsupported"
   | "hostOnly";
 
 export const stableAvailableMethods = [
@@ -216,8 +217,11 @@ export const experimentalAvailableMethods = [
   "thread/realtime/stop",
   "thread/search",
   "thread/settings/update",
-  "thread/turns/items/list",
   "thread/turns/list",
+] as const;
+
+export const experimentalUnsupportedMethods = [
+  "thread/turns/items/list",
 ] as const;
 
 export const stableServerRequestMethods = [
@@ -306,6 +310,8 @@ export const stableClientMethods = stableProductizedMethods;
 export type StableAvailableMethod = (typeof stableAvailableMethods)[number];
 export type StableProductizedMethod = (typeof stableProductizedMethods)[number];
 export type ExperimentalAvailableMethod = (typeof experimentalAvailableMethods)[number];
+export type ExperimentalUnsupportedMethod =
+  (typeof experimentalUnsupportedMethods)[number];
 export type HostOnlyMethod = (typeof hostOnlyMethods)[number];
 export type StableServerRequestMethod = (typeof stableServerRequestMethods)[number];
 export type StableNotificationMethod = (typeof stableNotificationMethods)[number];
@@ -332,11 +338,18 @@ export const codexCapabilityMetadata: readonly CodexCapabilityMetadata[] = [
     method,
     status: "experimentalAvailable" as const,
   })),
+  ...experimentalUnsupportedMethods.map((method) => ({
+    method,
+    status: "experimentalUnsupported" as const,
+  })),
 ];
 
 const stableAvailableMethodSet = new Set<string>(stableAvailableMethods);
 const stableProductizedMethodSet = new Set<string>(stableProductizedMethods);
 const experimentalAvailableMethodSet = new Set<string>(experimentalAvailableMethods);
+const experimentalUnsupportedMethodSet = new Set<string>(
+  experimentalUnsupportedMethods,
+);
 const hostOnlyMethodSet = new Set<string>(hostOnlyMethods);
 
 export function getCodexCapabilityStatus(
@@ -347,6 +360,9 @@ export function getCodexCapabilityStatus(
   if (stableAvailableMethodSet.has(method)) return "stableAvailable";
   if (experimentalAvailableMethodSet.has(method)) {
     return "experimentalAvailable";
+  }
+  if (experimentalUnsupportedMethodSet.has(method)) {
+    return "experimentalUnsupported";
   }
   return null;
 }
@@ -361,6 +377,12 @@ export function isExperimentalAvailableMethod(
   method: string,
 ): method is ExperimentalAvailableMethod {
   return experimentalAvailableMethodSet.has(method);
+}
+
+export function isExperimentalUnsupportedMethod(
+  method: string,
+): method is ExperimentalUnsupportedMethod {
+  return experimentalUnsupportedMethodSet.has(method);
 }
 
 export function isHostOnlyMethod(method: string): method is HostOnlyMethod {

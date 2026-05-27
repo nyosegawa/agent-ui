@@ -85,8 +85,8 @@ Implementation status:
   aliases as the request builders. Client construction validates that this
   method surface exactly matches the productized stable method classification.
   Experimental method calls must use `requestExperimental()`, require explicit
-  opt-in, and are rejected if the method is stable/productized, host-only, or
-  unknown.
+  opt-in, and are rejected if the method is stable/productized, host-only,
+  experimental unsupported, or unknown.
 - `createCodexSession()` is a compatibility facade over `createCodexClients()`
   for host code that still expects `thread` and `turn` namespaces.
 - `normalizer.ts` is the composition root for App Server notifications and
@@ -196,9 +196,9 @@ Generated experimental types may exist internally, but they must not appear in d
 
 `createCodexSession(transport)` defaults to stable methods only. Hosts that
 need experimental methods must opt in with
-`createCodexSession(transport, { experimental: true })`; even then,
-`thread/turns/items/list` remains disabled because it is not implemented
-upstream.
+`createCodexSession(transport, { experimental: true })`.
+`thread/turns/items/list` is tracked as experimental unsupported and remains
+disabled because it is not implemented upstream.
 
 ## Schema Drift
 
@@ -343,6 +343,9 @@ Experimental available methods:
 - `thread/realtime/listVoices`
 - `thread/realtime/stop`
 - `thread/turns/list`
+
+Experimental unsupported methods:
+
 - `thread/turns/items/list`
 
 Server requests:

@@ -1,5 +1,5 @@
 import { AgentTransport } from '@nyosegawa/agent-ui-core';
-import { C as CodexInitializeOptions } from './protocol-BUWHUFYe.js';
+import { C as CodexInitializeOptions } from './protocol-DPMAEzJ6.js';
 import './InitializeParams-CDX1c2T9.js';
 
 interface CodexWebSocketTransportOptions {

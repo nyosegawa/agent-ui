@@ -37,8 +37,8 @@ The chat-capable local bridge is `attachAgentUiWebSocketBridge()`. It keeps one 
 - React imports request builders through the Codex package instead of carrying
   hand-written protocol copies
 - experimental methods require explicit `experimental: true` opt-in
-- `thread/turns/items/list` is disabled even with opt-in until upstream
-  implements it
+- `thread/turns/items/list` is classified as experimental unsupported and is
+  disabled even with opt-in until upstream implements it
 
 The stdio transport retries overload error `-32001` only for read-only,
 idempotent methods such as `thread/read`, `thread/list`, `skills/list`,

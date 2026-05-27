@@ -121,7 +121,7 @@ Acceptance:
   `item/completed`.
 - [x] Add tests for `thread/read`.
 - [x] Add tests for `thread/turns/list`.
-- [ ] Mark `thread/turns/items/list` as unsupported/not productized.
+- [x] Mark `thread/turns/items/list` as unsupported/not productized.
 - [ ] Add tests for `app/list` pagination and refresh/update behavior.
 
 Acceptance:

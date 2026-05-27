@@ -11,7 +11,8 @@ Codex App Server schema can change. Agent UI treats drift as expected maintenanc
 - generator command
 - stable and experimental generated schema files
 - generated-schema-derived capability metadata split into `stableAvailable`,
-  `stableProductized`, `experimentalAvailable`, and `hostOnly`
+  `stableProductized`, `experimentalAvailable`, `experimentalUnsupported`,
+  and `hostOnly`
 
 The generated schema lives under `packages/codex/src/generated`.
 `packages/codex/src/generated/README.md` records the exact upstream commit,

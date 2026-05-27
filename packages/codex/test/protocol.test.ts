@@ -13,9 +13,11 @@ import {
   codexCapabilityMetadata,
   codexInitializeParams,
   experimentalAvailableMethods,
+  experimentalUnsupportedMethods,
   getCodexCapabilityStatus,
   hostOnlyMethods,
   isExperimentalAvailableMethod,
+  isExperimentalUnsupportedMethod,
   isHostOnlyMethod,
   isStableProductizedMethod,
   stableAvailableMethods,
@@ -39,7 +41,8 @@ describe("Codex protocol metadata", () => {
     expect(stableProductizedMethods).toContain("skills/list");
     expect(stableProductizedMethods).toContain("app/list");
     expect(hostOnlyMethods).toContain("command/exec");
-    expect(experimentalAvailableMethods).toContain("thread/turns/items/list");
+    expect(experimentalAvailableMethods).toContain("thread/turns/list");
+    expect(experimentalUnsupportedMethods).toContain("thread/turns/items/list");
     expect(stableServerRequestMethods).toContain("item/commandExecution/requestApproval");
     expect(stableServerRequestMethods).toContain("attestation/generate");
     expect(stableNotificationMethods).toContain("item/agentMessage/delta");
@@ -55,22 +58,34 @@ describe("Codex protocol metadata", () => {
       method: "thread/turns/list",
       status: "experimentalAvailable",
     });
+    expect(codexCapabilityMetadata).toContainEqual({
+      method: "thread/turns/items/list",
+      status: "experimentalUnsupported",
+    });
   });
 
   it("classifies methods for product clients and explicit experimental access", () => {
     expect(getCodexCapabilityStatus("thread/start")).toBe("stableProductized");
     expect(getCodexCapabilityStatus("command/exec")).toBe("hostOnly");
     expect(getCodexCapabilityStatus("thread/turns/list")).toBe("experimentalAvailable");
+    expect(getCodexCapabilityStatus("thread/turns/items/list")).toBe(
+      "experimentalUnsupported",
+    );
     expect(getCodexCapabilityStatus("not/a/method")).toBeNull();
 
     expect(isStableProductizedMethod("thread/start")).toBe(true);
     expect(isStableProductizedMethod("command/exec")).toBe(false);
     expect(isHostOnlyMethod("command/exec")).toBe(true);
     expect(isExperimentalAvailableMethod("thread/turns/list")).toBe(true);
+    expect(isExperimentalAvailableMethod("thread/turns/items/list")).toBe(false);
+    expect(isExperimentalUnsupportedMethod("thread/turns/items/list")).toBe(true);
 
     expect(() => assertCodexProductizedMethod("thread/start")).not.toThrow();
     expect(() => assertCodexProductizedMethod("command/exec")).toThrow("hostOnly");
     expect(() => assertCodexExperimentalMethod("thread/turns/list")).not.toThrow();
+    expect(() => assertCodexExperimentalMethod("thread/turns/items/list")).toThrow(
+      "experimentalUnsupported",
+    );
     expect(() => assertCodexExperimentalMethod("thread/start")).toThrow(
       "stableProductized",
     );
@@ -938,7 +953,9 @@ describe("Codex protocol metadata", () => {
     const stable = extractMethods("../src/generated/stable/ClientRequest.ts");
     const experimental = extractMethods("../src/generated/experimental/ClientRequest.ts");
     const experimentalOnly = experimental.filter((method) => !stable.includes(method));
-    expect(experimentalAvailableMethods).toEqual(experimentalOnly);
+    expect(
+      [...experimentalAvailableMethods, ...experimentalUnsupportedMethods].toSorted(),
+    ).toEqual(experimentalOnly.toSorted());
     expect(experimentalOnly).toMatchInlineSnapshot(`
       [
         "collaborationMode/list",
