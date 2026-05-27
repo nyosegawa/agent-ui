@@ -5,4 +5,5 @@ export * from "./reducer";
 export * from "./retention";
 export * from "./selectors";
 export * from "./state";
+export * from "./stores/connection";
 export * from "./transport";

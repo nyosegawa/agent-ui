@@ -13,6 +13,7 @@ import type {
 import type { SkillsState } from "./state/skills";
 import type { ThreadRegistryState, ThreadState } from "./state/thread";
 import type { UsageState } from "./state/usage";
+import { createInitialConnectionState } from "./stores/connection";
 
 export type * from "./state/account";
 export type * from "./state/apps";
@@ -53,7 +54,7 @@ export function createInitialAgentState(): AgentSessionState {
     account: { status: "unknown" },
     apps: { apps: [], byScope: {} },
     configWarnings: [],
-    connection: { status: "idle" },
+    connection: createInitialConnectionState(),
     diagnostics: { banners: [], errors: [], protocolNotifications: [], warnings: [] },
     errors: [],
     hooks: { byCwd: {} },

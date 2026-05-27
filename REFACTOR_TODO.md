@@ -69,7 +69,7 @@ Acceptance:
 - [x] Split `packages/core/src/events.ts` into domain event unions.
 - [x] Split `packages/core/src/reducer.ts` into domain reducers plus a
   composition root.
-- [ ] Add `connectionStore`.
+- [x] Add `connectionStore`.
 - [ ] Add `threadIndexStore`.
 - [ ] Add `threadEntityStore`.
 - [ ] Add `turnStore`.

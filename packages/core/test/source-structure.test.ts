@@ -54,6 +54,8 @@ const reducerDomainFiles = [
   "usage",
 ];
 
+const storeFiles = ["connection"];
+
 describe("Core package source structure", () => {
   it("keeps normalized state types split by product domain", () => {
     const barrel = readFileSync(join(coreSrc, "state.ts"), "utf8");
@@ -83,5 +85,15 @@ describe("Core package source structure", () => {
     expect(compositionRoot).toContain("reduceConnectionEvent");
     expect(compositionRoot).toContain("reduceThreadEvent");
     expect(compositionRoot).toContain("reduceServerRequestEvent");
+  });
+
+  it("keeps normalized stores explicit by product domain", () => {
+    const root = readFileSync(join(coreSrc, "index.ts"), "utf8");
+
+    for (const store of storeFiles) {
+      expect(existsSync(join(coreSrc, "stores", `${store}.ts`))).toBe(true);
+    }
+
+    expect(root).toContain('export * from "./stores/connection";');
   });
 });

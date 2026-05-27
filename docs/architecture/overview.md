@@ -93,6 +93,11 @@ The reducer keeps compatibility aliases such as `activeThreadId`,
 `pendingServerRequests`, `account.rateLimits`, `configWarnings`, and `errors`,
 but new code should use the normalized stores: `threadRegistry`,
 `serverRequestQueue`, `usage`, `runSettings`, and `diagnostics`.
+Domain store modules expose reusable state initialization and state-only
+reducers as they are split out of the session reducer. `connectionStore` owns
+`ConnectionState` initialization and `ConnectionEvent` updates; the session
+reducer still performs cross-store effects such as clearing pending server
+requests on disconnect.
 
 ## Reducer Rules
 
