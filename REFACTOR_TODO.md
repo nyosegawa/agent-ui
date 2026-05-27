@@ -98,9 +98,9 @@ Acceptance:
 
 ## Phase 3: Codex Adapter Split
 
-- [ ] Regenerate or verify generated schema against the selected upstream App
+- [x] Regenerate or verify generated schema against the selected upstream App
   Server checkout.
-- [ ] Record upstream commit metadata and generator command with generated
+- [x] Record upstream commit metadata and generator command with generated
   schema.
 - [ ] Make generated schema the only source for Codex method params.
 - [ ] Split `packages/codex/src/normalizer.ts` into protocol-family modules.

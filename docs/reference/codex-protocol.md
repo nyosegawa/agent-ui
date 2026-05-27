@@ -83,12 +83,12 @@ Implementation status:
   use `requestExperimental()` and require explicit opt-in.
 - `thread/turns/items/list` is intentionally disabled in the product facade
   until upstream implements it.
-- Protocol metadata records upstream commit `6a225e4005209f2325ab3c681c7c6beba2907d4d`.
+- Protocol metadata records upstream commit `64e340ad2809a4da61ec12535a056bcf58f5d6ef`.
 - The schema refresh command used for this pass was
-  `cargo run -p codex-app-server-protocol --bin export -- --out packages/codex/src/generated/stable`
-  and the same command with `--experimental` for
-  `packages/codex/src/generated/experimental`, run from
-  `/Users/sakasegawa/src/github.com/openai/codex/codex-rs`.
+  `bun --filter @nyosegawa/agent-ui-codex generate:schema`.
+- `packages/codex/src/generated/README.md` records the upstream commit,
+  commit date, subject, generated timestamp, and generator command beside the
+  generated artifact.
 
 ## WebSocket Transport
 

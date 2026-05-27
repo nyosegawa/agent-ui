@@ -4,8 +4,8 @@ import type {
   InitializeParams,
 } from "./generated/stable";
 
-export const CODEX_PROTOCOL_COMMIT = "6a225e4005209f2325ab3c681c7c6beba2907d4d";
-export const CODEX_PROTOCOL_GENERATED_AT = "2026-05-14T15:21:25+09:00";
+export const CODEX_PROTOCOL_COMMIT = "64e340ad2809a4da61ec12535a056bcf58f5d6ef";
+export const CODEX_PROTOCOL_GENERATED_AT = "2026-05-27T18:55:58+09:00";
 
 export type CodexCapabilityStatus =
   | "stableAvailable"
@@ -59,7 +59,9 @@ export const stableAvailableMethods = [
   "mcpServerStatus/list",
   "model/list",
   "modelProvider/capabilities/read",
+  "permissionProfile/list",
   "plugin/install",
+  "plugin/installed",
   "plugin/list",
   "plugin/read",
   "plugin/share/checkout",
@@ -76,6 +78,9 @@ export const stableAvailableMethods = [
   "thread/archive",
   "thread/compact/start",
   "thread/fork",
+  "thread/goal/clear",
+  "thread/goal/get",
+  "thread/goal/set",
   "thread/inject_items",
   "thread/list",
   "thread/loaded/list",
@@ -163,7 +168,9 @@ export const hostOnlyMethods = [
   "mcpServer/tool/call",
   "mcpServerStatus/list",
   "modelProvider/capabilities/read",
+  "permissionProfile/list",
   "plugin/install",
+  "plugin/installed",
   "plugin/list",
   "plugin/read",
   "plugin/share/checkout",
@@ -176,6 +183,9 @@ export const hostOnlyMethods = [
   "review/start",
   "thread/approveGuardianDeniedAction",
   "thread/shellCommand",
+  "thread/goal/clear",
+  "thread/goal/get",
+  "thread/goal/set",
   "windowsSandbox/readiness",
   "windowsSandbox/setupStart",
 ] as const satisfies readonly StableAvailableMethod[];
@@ -194,11 +204,9 @@ export const experimentalAvailableMethods = [
   "process/writeStdin",
   "remoteControl/disable",
   "remoteControl/enable",
+  "remoteControl/status/read",
   "thread/backgroundTerminals/clean",
   "thread/decrement_elicitation",
-  "thread/goal/clear",
-  "thread/goal/get",
-  "thread/goal/set",
   "thread/increment_elicitation",
   "thread/memoryMode/set",
   "thread/realtime/appendAudio",
@@ -206,6 +214,8 @@ export const experimentalAvailableMethods = [
   "thread/realtime/listVoices",
   "thread/realtime/start",
   "thread/realtime/stop",
+  "thread/search",
+  "thread/settings/update",
   "thread/turns/items/list",
   "thread/turns/list",
 ] as const;
@@ -277,6 +287,7 @@ export const stableNotificationMethods = [
   "thread/realtime/started",
   "thread/realtime/transcript/delta",
   "thread/realtime/transcript/done",
+  "thread/settings/updated",
   "thread/started",
   "thread/status/changed",
   "thread/tokenUsage/updated",

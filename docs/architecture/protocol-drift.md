@@ -8,11 +8,15 @@ Codex App Server schema can change. Agent UI treats drift as expected maintenanc
 
 - upstream Codex commit
 - generated timestamp
+- generator command
 - stable and experimental generated schema files
 - generated-schema-derived capability metadata split into `stableAvailable`,
   `stableProductized`, `experimentalAvailable`, and `hostOnly`
 
 The generated schema lives under `packages/codex/src/generated`.
+`packages/codex/src/generated/README.md` records the exact upstream commit,
+commit date, subject, generated timestamp, and generator command for the
+checked-in artifact.
 
 ## Update Flow
 
@@ -24,8 +28,9 @@ The generated schema lives under `packages/codex/src/generated`.
 4. Update `CODEX_PROTOCOL_COMMIT` and `CODEX_PROTOCOL_GENERATED_AT` in
    `packages/codex/src/protocol.ts`. The generation script updates schema
    files; it does not make the metadata decision for you.
-5. Update package/docs metadata that mentions the protocol commit when that
-   metadata is part of the public release note or docs.
+5. Update `packages/codex/package.json` and
+   `packages/codex/src/generated/README.md` so package metadata and the
+   generated artifact record the same upstream commit and generator command.
 6. Update `packages/codex/src/protocol.ts` capability classifications when the
    generated method surface changes.
 7. Update normalizer mappings when notification or request payloads changed.
