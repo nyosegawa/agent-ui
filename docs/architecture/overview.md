@@ -97,7 +97,9 @@ Domain store modules expose reusable state initialization and state-only
 reducers as they are split out of the session reducer. `connectionStore` owns
 `ConnectionState` initialization and `ConnectionEvent` updates; the session
 reducer still performs cross-store effects such as clearing pending server
-requests on disconnect.
+requests on disconnect. `threadIndexStore` owns `ThreadRegistryState`
+initialization, registry status classification, and movement between cold,
+preview, live, and loaded thread indexes.
 
 ## Reducer Rules
 

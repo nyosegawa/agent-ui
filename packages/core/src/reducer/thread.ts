@@ -1,15 +1,14 @@
 import type { ThreadEvent } from "../events";
 import type { AgentSessionState } from "../state";
 import {
-  classifyThreadRegistryStatus,
   createTurnState,
   isPreviewThreadStatus,
   preservesAgainstPreviewSnapshot,
   pruneThreadSnapshots,
   updateThread,
-  updateThreadRegistry,
   upsertThread,
 } from "./shared";
+import { threadIndexStore } from "../stores/thread-index";
 
 export function reduceThreadEvent(
   state: AgentSessionState,
@@ -37,10 +36,10 @@ export function reduceThreadEvent(
         ...state,
         activeThreadId:
           event.type === "thread/started" ? event.thread.id : state.activeThreadId,
-        threadRegistry: updateThreadRegistry(
+        threadRegistry: threadIndexStore.upsert(
           state.threadRegistry,
           event.thread.id,
-          classifyThreadRegistryStatus(status, event.turns),
+          threadIndexStore.classifyStatus(status, event.turns),
           event.type === "thread/started" ? event.thread.id : state.threadRegistry.activeThreadId,
         ),
         threads: {
@@ -48,7 +47,7 @@ export function reduceThreadEvent(
           [event.thread.id]: {
             ...threadState,
             orderedTurnIds,
-            registryStatus: classifyThreadRegistryStatus(status, event.turns),
+            registryStatus: threadIndexStore.classifyStatus(status, event.turns),
             status,
             turns,
           },
@@ -67,16 +66,16 @@ export function reduceThreadEvent(
       return pruneThreadSnapshots(updateThread(
         {
           ...state,
-          threadRegistry: updateThreadRegistry(
+          threadRegistry: threadIndexStore.upsert(
             state.threadRegistry,
             event.threadId,
-            classifyThreadRegistryStatus(status),
+            threadIndexStore.classifyStatus(status),
           ),
         },
         event.threadId,
         (thread) => ({
           ...thread,
-          registryStatus: classifyThreadRegistryStatus(status),
+          registryStatus: threadIndexStore.classifyStatus(status),
           status,
         }),
       ));

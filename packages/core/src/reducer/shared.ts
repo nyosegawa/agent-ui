@@ -6,16 +6,10 @@ import type {
   AgentThread,
   AgentTurn,
   ThreadId,
-  ThreadRegistryStatus,
   ThreadState,
   TurnState,
 } from "../state";
-import {
-  AGENT_RETENTION_POLICY,
-  boundedRecordEntry,
-  boundedStringAppend,
-  boundedUniqueAppend,
-} from "../retention";
+import { boundedRecordEntry, boundedStringAppend } from "../retention";
 
 export function updateThread(
   state: AgentSessionState,
@@ -183,15 +177,6 @@ export function upsertThread(state: AgentSessionState, thread: AgentThread): Thr
   );
 }
 
-export function classifyThreadRegistryStatus(
-  status?: string,
-  turns?: readonly AgentTurn[],
-): ThreadRegistryStatus {
-  if (status === "notLoaded") return turns?.length ? "preview" : "cold";
-  if (status === "running" || status === "waitingForInput") return "live";
-  return "loaded";
-}
-
 export function isPreviewThreadStatus(status?: string): boolean {
   return status === "notLoaded" || status === "loaded";
 }
@@ -202,29 +187,6 @@ export function preservesAgainstPreviewSnapshot(status?: string): boolean {
 
 export function isCompletedTurnStatus(status?: string): boolean {
   return status === "complete" || status === "completed";
-}
-
-export function updateThreadRegistry(
-  registry: AgentSessionState["threadRegistry"],
-  threadId: ThreadId,
-  status: ThreadRegistryStatus,
-  activeThreadId = registry.activeThreadId,
-): AgentSessionState["threadRegistry"] {
-  const remove = (ids: ThreadId[]) => ids.filter((id) => id !== threadId);
-  const add = (ids: ThreadId[]) =>
-    boundedUniqueAppend(ids, threadId, AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax);
-  const next = {
-    activeThreadId,
-    coldThreadIds: remove(registry.coldThreadIds),
-    liveThreadIds: remove(registry.liveThreadIds),
-    loadedThreadIds: remove(registry.loadedThreadIds),
-    previewThreadIds: remove(registry.previewThreadIds),
-  };
-  if (status === "cold") next.coldThreadIds = add(next.coldThreadIds);
-  if (status === "preview") next.previewThreadIds = add(next.previewThreadIds);
-  if (status === "live") next.liveThreadIds = add(next.liveThreadIds);
-  if (status === "loaded") next.loadedThreadIds = add(next.loadedThreadIds);
-  return next;
 }
 
 export function enqueueServerRequest(

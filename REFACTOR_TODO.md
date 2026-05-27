@@ -70,7 +70,7 @@ Acceptance:
 - [x] Split `packages/core/src/reducer.ts` into domain reducers plus a
   composition root.
 - [x] Add `connectionStore`.
-- [ ] Add `threadIndexStore`.
+- [x] Add `threadIndexStore`.
 - [ ] Add `threadEntityStore`.
 - [ ] Add `turnStore`.
 - [ ] Add `itemStore`.

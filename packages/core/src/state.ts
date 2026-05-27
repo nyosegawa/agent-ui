@@ -14,6 +14,7 @@ import type { SkillsState } from "./state/skills";
 import type { ThreadRegistryState, ThreadState } from "./state/thread";
 import type { UsageState } from "./state/usage";
 import { createInitialConnectionState } from "./stores/connection";
+import { createInitialThreadRegistryState } from "./stores/thread-index";
 
 export type * from "./state/account";
 export type * from "./state/apps";
@@ -63,12 +64,7 @@ export function createInitialAgentState(): AgentSessionState {
     runSettings: { executionMode: "review" },
     serverRequestQueue: { byId: {}, order: [] },
     skills: { byCwd: {} },
-    threadRegistry: {
-      coldThreadIds: [],
-      liveThreadIds: [],
-      loadedThreadIds: [],
-      previewThreadIds: [],
-    },
+    threadRegistry: createInitialThreadRegistryState(),
     threads: {},
     usage: {},
   };
