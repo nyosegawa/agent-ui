@@ -53,6 +53,10 @@ declare function normalizeApps(raw: unknown): AgentApp[];
 
 declare function normalizeModelListResponse(response: unknown): AgentModel[];
 
+declare function normalizeThreadReadResponse(response: unknown, options?: {
+    activate?: boolean;
+}): AgentEvent[];
+
 declare function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[];
 
 interface CodexStdioTransportOptions {
@@ -89,4 +93,4 @@ interface DeviceCodeLoginStart {
 declare function startDeviceCodeLogin(transport: AgentTransport): Promise<DeviceCodeLoginStart>;
 declare function cancelDeviceCodeLogin(transport: AgentTransport, loginId: string): Promise<void>;
 
-export { CodexInitializeOptions, type CodexSdkLikeClient, type CodexStdioTransportOptions, type DeviceCodeLoginStart, type JsonRpcFailure, type JsonRpcMessage, type JsonRpcNotification, type JsonRpcRequest, type JsonRpcSuccess, cancelDeviceCodeLogin, createCodexSdkTransportAdapter, createCodexStdioTransport, encodeJsonRpcLine, isBackpressureRetrySafeMethod, isJsonRpcNotification, isJsonRpcRequest, isJsonRpcResponse, jsonRpcErrorObject, jsonRpcErrorPayload, normalizeApps, normalizeCodexServerMessage, normalizeModelListResponse, parseJsonRpcLine, startDeviceCodeLogin };
+export { CodexInitializeOptions, type CodexSdkLikeClient, type CodexStdioTransportOptions, type DeviceCodeLoginStart, type JsonRpcFailure, type JsonRpcMessage, type JsonRpcNotification, type JsonRpcRequest, type JsonRpcSuccess, cancelDeviceCodeLogin, createCodexSdkTransportAdapter, createCodexStdioTransport, encodeJsonRpcLine, isBackpressureRetrySafeMethod, isJsonRpcNotification, isJsonRpcRequest, isJsonRpcResponse, jsonRpcErrorObject, jsonRpcErrorPayload, normalizeApps, normalizeCodexServerMessage, normalizeModelListResponse, normalizeThreadReadResponse, parseJsonRpcLine, startDeviceCodeLogin };
