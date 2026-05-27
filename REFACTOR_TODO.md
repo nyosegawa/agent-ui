@@ -126,11 +126,11 @@ Acceptance:
 
 Acceptance:
 
-- [ ] No hand-written Codex method param model exists outside `packages/codex`.
-- [ ] Normalizer files are split by protocol family, not one broad switch.
-- [ ] Unsupported experimental methods are represented but not exposed as a
+- [x] No hand-written Codex method param model exists outside `packages/codex`.
+- [x] Normalizer files are split by protocol family, not one broad switch.
+- [x] Unsupported experimental methods are represented but not exposed as a
   productized UI primitive.
-- [ ] `bun run test:protocol` passes.
+- [x] `bun run test:protocol` passes.
 
 ## Phase 4: React Hooks And Controllers
 

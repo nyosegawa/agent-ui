@@ -21,7 +21,16 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createCodexSession } from "@nyosegawa/agent-ui-codex/session";
 import type {
+  AppsListParams,
   ReasoningEffort as CodexReasoningEffort,
+  HooksListParams,
+  SkillsConfigWriteParams,
+  SkillsListParams,
+  ThreadForkParams,
+  ThreadListParams,
+  ThreadResumeParams,
+  ThreadStartParams,
+  TurnStartParams,
   UserInput as CodexUserInput,
 } from "@nyosegawa/agent-ui-codex/stable-types";
 import type { AgentUserInput } from "./agent-input";
@@ -38,24 +47,16 @@ import {
 } from "./thread-history";
 import { useAgentI18n, type AgentI18nKey } from "./i18n";
 
+type ThreadForkOptions = Omit<ThreadForkParams, "threadId">;
+type ThreadResumeOptions = Omit<ThreadResumeParams, "threadId">;
+type TurnStartOptions = Partial<Omit<TurnStartParams, "input" | "threadId">>;
+
 export interface AgentExecutionMode {
   id: ExecutionModeId;
   label: string;
   description: string;
-  turnParams: Record<string, unknown>;
+  turnParams: TurnStartOptions;
 }
-
-type AgentRequestParams = Record<string, unknown>;
-type AgentListRequestParams = AgentRequestParams & {
-  cursor?: string | null;
-  cwds?: string[];
-  threadId?: string;
-};
-type AgentSkillConfigParams = AgentRequestParams & {
-  enabled: boolean;
-  name?: string | null;
-  path?: string | null;
-};
 
 function useCodexSession() {
   const { transport } = useAgentContext();
@@ -128,7 +129,7 @@ export function useAgentThread(threadId?: ThreadId) {
   const runSettings = selectRunSettings(state);
 
   const startThread = useCallback(
-    async (params?: Record<string, unknown>) => {
+    async (params?: ThreadStartParams) => {
       const result = await codex.thread.start({
         cwd: runSettings.cwd,
         model: runSettings.modelId,
@@ -160,7 +161,7 @@ export function useAgentThread(threadId?: ThreadId) {
   const startThreadWithInput = useCallback(
     async (
       input: string | AgentUserInput[],
-      params?: Record<string, unknown>,
+      params?: ThreadStartParams,
     ) => {
       const result = await startThread(params);
       const rawThread = asRecord(result)?.thread ?? result;
@@ -191,7 +192,7 @@ export function useAgentThread(threadId?: ThreadId) {
   );
 
   const resumeThread = useCallback(
-    async (id: ThreadId, params?: Record<string, unknown>) => {
+    async (id: ThreadId, params?: ThreadResumeOptions) => {
       const result = await codex.thread.resume(id, params);
       const rawThread = asRecord(result)?.thread ?? result;
       const rawThreadRecord = asRecord(rawThread);
@@ -255,7 +256,7 @@ export function useAgentThreadActions(threadId?: ThreadId) {
   }, [codex, dispatch, requireThreadId]);
 
   const forkThread = useCallback(
-    async (params: AgentRequestParams = {}) => {
+    async (params: ThreadForkOptions = {}) => {
       const id = requireThreadId();
       return codex.thread.fork(id, params);
     },
@@ -297,11 +298,7 @@ export function useAgentThreads() {
   return { activeThreadId, setActiveThread, threads };
 }
 
-export interface ThreadHistoryParams {
-  cursor?: string | null;
-  limit?: number;
-  searchTerm?: string;
-}
+export type ThreadHistoryParams = ThreadListParams;
 
 export function useAgentThreadHistory() {
   const { dispatch, state } = useAgentContext();
@@ -409,7 +406,7 @@ export function useAgentTurn(threadId?: ThreadId) {
   const runSettings = selectRunSettings(state);
 
   const startTurn = useCallback(
-    async (input: string | AgentUserInput[], params?: Record<string, unknown>) => {
+    async (input: string | AgentUserInput[], params?: TurnStartOptions) => {
       if (!resolvedThreadId) throw new Error("No active thread");
       const executionMode = AGENT_EXECUTION_MODES.find(
         (mode) => mode.id === runSettings.executionMode,
@@ -1034,7 +1031,7 @@ export function useAgentSkills(cwd?: string) {
   const key = cwd ?? "";
   const skills = state.skills.byCwd[key] ?? [];
   const refreshSkills = useCallback(
-    async (params: AgentListRequestParams = {}) => {
+    async (params: SkillsListParams = {}) => {
       const requestParams = cwd && !params.cwds ? { ...params, cwds: [cwd] } : params;
       const response = await codex.skills.list(requestParams);
       const entries = normalizeSkillsList(response, cwd);
@@ -1046,7 +1043,7 @@ export function useAgentSkills(cwd?: string) {
     [codex, cwd, dispatch],
   );
   const setSkillEnabled = useCallback(
-    async (params: AgentSkillConfigParams) => {
+    async (params: SkillsConfigWriteParams) => {
       const response = await codex.skills.configWrite(params);
       const targetName = stringValue(params.name);
       const targetPath = stringValue(params.path);
@@ -1074,7 +1071,7 @@ export function useAgentHooks(cwd?: string) {
   const key = cwd ?? "";
   const hooks = state.hooks.byCwd[key] ?? [];
   const refreshHooks = useCallback(
-    async (params: AgentListRequestParams = {}) => {
+    async (params: HooksListParams = {}) => {
       const requestParams = cwd && !params.cwds ? { ...params, cwds: [cwd] } : params;
       const response = await codex.hooks.list(requestParams);
       const entries = normalizeHooksList(response, cwd);
@@ -1093,7 +1090,7 @@ export function useAgentApps(threadId?: string) {
   const codex = useCodexSession();
   const scopedApps = selectApps(state, threadId);
   const refreshApps = useCallback(
-    async (params: AgentListRequestParams = {}) => {
+    async (params: AppsListParams = {}) => {
       const requestParams = threadId && !params.threadId ? { ...params, threadId } : params;
       const response = await codex.apps.list(requestParams);
       const { apps, nextCursor } = normalizeAppsList(response);

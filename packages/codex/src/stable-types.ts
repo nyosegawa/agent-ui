@@ -11,4 +11,7 @@ export type SkillsConfigWriteParams =
   CodexStableMethodParams<"skills/config/write">;
 export type SkillsListParams = CodexStableMethodParams<"skills/list">;
 export type ThreadForkParams = CodexStableMethodParams<"thread/fork">;
+export type ThreadListParams = CodexStableMethodParams<"thread/list">;
+export type ThreadResumeParams = CodexStableMethodParams<"thread/resume">;
+export type ThreadStartParams = CodexStableMethodParams<"thread/start">;
 export type TurnStartParams = CodexStableMethodParams<"turn/start">;
