@@ -89,7 +89,7 @@ function itemText(raw: Record<string, unknown>): string | undefined {
   return undefined;
 }
 
-export function isNonEmptyString(value: unknown): value is string {
+function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.length > 0;
 }
 
