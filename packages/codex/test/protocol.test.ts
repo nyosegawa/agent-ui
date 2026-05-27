@@ -6,6 +6,7 @@ import {
   assertCodexExperimentalMethod,
   assertCodexProductizedMethod,
   codexCapabilityMetadata,
+  codexInitializeParams,
   experimentalAvailableMethods,
   getCodexCapabilityStatus,
   hostOnlyMethods,
@@ -73,6 +74,38 @@ describe("Codex protocol metadata", () => {
     const line = encodeJsonRpcLine({ id: 1, method: "initialize", params: {} });
     expect(line).toBe('{"id":1,"method":"initialize","params":{}}\n');
     expect(parseJsonRpcLine(line)).toEqual({ id: 1, method: "initialize", params: {} });
+  });
+
+  it("normalizes initialize notification opt-out capabilities", () => {
+    const clientInfo = { name: "agent-ui-test", title: null, version: "0.0.0" };
+
+    expect(
+      codexInitializeParams({
+        capabilities: {
+          experimentalApi: false,
+          requestAttestation: false,
+        },
+        clientInfo,
+      }).capabilities,
+    ).toEqual({
+      experimentalApi: false,
+      requestAttestation: false,
+    });
+    expect(
+      codexInitializeParams({
+        capabilities: {
+          experimentalApi: true,
+          optOutNotificationMethods: ["thread/status/changed"],
+          requestAttestation: false,
+        },
+        clientInfo,
+      }).capabilities,
+    ).toEqual({
+      experimentalApi: true,
+      optOutNotificationMethods: ["thread/status/changed"],
+      requestAttestation: false,
+    });
+    expect(codexInitializeParams({ capabilities: null, clientInfo }).capabilities).toBeNull();
   });
 
   it("normalizes streaming text notifications", () => {

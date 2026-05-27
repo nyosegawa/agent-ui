@@ -365,17 +365,24 @@ describe("Codex typed clients", () => {
     const transport = new FakeTransport();
     const clients = createCodexClients(transport);
 
-    await clients.connection.initialize({
-      capabilities: {
-        experimentalApi: true,
-        requestAttestation: false,
+    await clients.connection.initialize(
+      {
+        capabilities: {
+          experimentalApi: true,
+          optOutNotificationMethods: ["thread/status/changed"],
+          requestAttestation: false,
+        },
+        clientInfo: {
+          name: "agent-ui-test",
+          title: null,
+          version: "0.0.0",
+        },
       },
-      clientInfo: {
-        name: "agent-ui-test",
-        title: null,
-        version: "0.0.0",
+      {
+        timeoutMs: 100,
+        trace: { source: "test" },
       },
-    });
+    );
     clients.connection.initialized();
     await clients.account.read();
     await clients.apps.list();
@@ -397,6 +404,25 @@ describe("Codex typed clients", () => {
       "thread/start",
       "turn/start",
     ]);
+    expect(transport.calls[0]).toEqual({
+      method: "initialize",
+      options: {
+        timeoutMs: 100,
+        trace: { source: "test" },
+      },
+      params: {
+        capabilities: {
+          experimentalApi: true,
+          optOutNotificationMethods: ["thread/status/changed"],
+          requestAttestation: false,
+        },
+        clientInfo: {
+          name: "agent-ui-test",
+          title: null,
+          version: "0.0.0",
+        },
+      },
+    });
     expect(transport.notifications).toEqual([{ method: "initialized", params: undefined }]);
     expect(transport.responses).toEqual([
       { requestId: "request-1", result: { ok: true } },
@@ -408,7 +434,7 @@ describe("Codex typed clients", () => {
 });
 
 class FakeTransport implements AgentTransport {
-  readonly calls: Array<{ method: string; params: unknown }> = [];
+  readonly calls: Array<{ method: string; options: unknown; params: unknown }> = [];
   readonly notifications: Array<{ method: string; params: unknown }> = [];
   readonly rejections: Array<{ error: unknown; requestId: string }> = [];
   readonly responses: Array<{ requestId: string; result: unknown }> = [];
@@ -431,8 +457,9 @@ class FakeTransport implements AgentTransport {
   async request<TParams = unknown, TResult = unknown>(
     method: string,
     params?: TParams,
+    options?: unknown,
   ): Promise<TResult> {
-    this.calls.push({ method, params });
+    this.calls.push({ method, options, params });
     return {} as TResult;
   }
 }

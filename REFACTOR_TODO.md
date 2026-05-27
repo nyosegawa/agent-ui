@@ -116,7 +116,7 @@ Acceptance:
 - [x] Enforce stable/productized/host-only/experimental capability
   classification at client construction and public exports.
 - [x] Add generated-schema-backed tests for request builders.
-- [ ] Add tests for initialize and notification opt-out behavior.
+- [x] Add tests for initialize and notification opt-out behavior.
 - [ ] Add tests for item lifecycle using `item/started`, deltas, and
   `item/completed`.
 - [ ] Add tests for `thread/read`.
