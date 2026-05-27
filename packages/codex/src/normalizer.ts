@@ -16,6 +16,7 @@ import { stableNotificationMethods } from "./protocol";
 
 export { normalizeApps } from "./normalizers/apps";
 export { normalizeModelListResponse } from "./normalizers/models";
+export { normalizeThreadReadResponse } from "./normalizers/threads";
 
 const notificationNormalizers = [
   normalizeAccountNotification,

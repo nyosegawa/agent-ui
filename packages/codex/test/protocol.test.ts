@@ -28,6 +28,7 @@ import { encodeJsonRpcLine, parseJsonRpcLine } from "../src/json-rpc";
 import {
   normalizeCodexServerMessage,
   normalizeModelListResponse,
+  normalizeThreadReadResponse,
 } from "../src/normalizer";
 
 describe("Codex protocol metadata", () => {
@@ -231,6 +232,109 @@ describe("Codex protocol metadata", () => {
     expect(turn?.commandOutputByItemId["command-item"]).toBe("bun test\n");
     expect(turn?.filePatchByItemId["patch-item"]).toBe(
       "diff --git a/file.ts b/file.ts",
+    );
+  });
+
+  it("normalizes thread/read responses into snapshot history events", () => {
+    const events = normalizeThreadReadResponse({
+      thread: {
+        id: "thread-history",
+        name: "Stored history",
+        status: { type: "notLoaded" },
+        turns: [
+          {
+            id: "turn-history",
+            items: [
+              {
+                content: [{ text: "Please inspect this", type: "text" }],
+                id: "item-user",
+                type: "userMessage",
+              },
+              {
+                aggregatedOutput: "bun test\nok\n",
+                command: "bun test",
+                id: "item-command",
+                status: "completed",
+                type: "commandExecution",
+              },
+              {
+                changes: [{ path: "src/app.ts", type: "update" }],
+                id: "item-file",
+                status: "completed",
+                type: "fileChange",
+              },
+            ],
+            status: "completed",
+          },
+        ],
+      },
+    });
+    const state = events.reduce(
+      (current, event) => agentReducer(current, event as AgentEvent),
+      createInitialAgentState(),
+    );
+    const turn = state.threads["thread-history"]?.turns["turn-history"];
+
+    expect(events.map((event) => event.type)).toEqual([
+      "thread/started",
+      "turn/completed",
+      "item/commandOutput/delta",
+      "item/filePatch/updated",
+      "thread/status/changed",
+    ]);
+    expect(events[0]).toMatchObject({
+      snapshot: true,
+      status: "loaded",
+      thread: { id: "thread-history", name: "Stored history" },
+    });
+    expect(events[1]).toMatchObject({
+      items: [
+        { id: "item-user", kind: "userMessage", status: "completed" },
+        {
+          id: "item-command",
+          kind: "commandExecution",
+          status: "completed",
+          text: "bun test",
+        },
+        { id: "item-file", kind: "fileChange", status: "completed" },
+      ],
+      snapshot: true,
+      type: "turn/completed",
+    });
+    expect(turn?.itemOrder).toEqual(["item-user", "item-command", "item-file"]);
+    expect(turn?.commandOutputByItemId["item-command"]).toBe("bun test\nok\n");
+    expect(turn?.filePatchByItemId["item-file"]).toEqual([
+      { path: "src/app.ts", type: "update" },
+    ]);
+    expect(state.threads["thread-history"]?.status).toBe("loaded");
+  });
+
+  it("normalizes thread/read preview responses without activating them", () => {
+    expect(
+      normalizeThreadReadResponse(
+        {
+          id: "thread-preview",
+          preview: "Investigate regression",
+          status: { type: "idle" },
+        },
+        { activate: false },
+      ),
+    ).toMatchObject([
+      {
+        snapshot: true,
+        status: "loaded",
+        thread: { id: "thread-preview", name: "Investigate regression" },
+        type: "thread/upserted",
+      },
+      {
+        snapshot: true,
+        status: "loaded",
+        threadId: "thread-preview",
+        type: "thread/status/changed",
+      },
+    ]);
+    expect(() => normalizeThreadReadResponse({ thread: { name: "Broken" } })).toThrow(
+      "thread/read response is missing a thread id",
     );
   });
 

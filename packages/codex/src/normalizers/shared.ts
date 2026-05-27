@@ -15,8 +15,11 @@ export function normalizeThread(raw: unknown): AgentThread {
   return {
     ephemeral: Boolean(record.ephemeral),
     id: String(record.id ?? record.threadId ?? record.thread_id),
-    name: stringValue(record.name) ?? stringValue(record.title),
-    path: stringValue(record.path),
+    name:
+      stringValue(record.name) ??
+      stringValue(record.title) ??
+      stringValue(record.preview),
+    path: threadProjectPath(record),
     raw,
   };
 }
@@ -124,4 +127,19 @@ export function optionalStringValue(value: unknown): string | undefined {
   if (typeof value === "string") return value;
   if (typeof value === "number") return String(value);
   return undefined;
+}
+
+function threadProjectPath(rawThread: Record<string, unknown>): string | undefined {
+  const cwd =
+    stringValue(rawThread.cwd) ??
+    stringValue(rawThread.workingDirectory) ??
+    stringValue(rawThread.working_directory);
+  if (cwd) return cwd;
+  const path = stringValue(rawThread.path);
+  return path && !isInternalCodexSessionPath(path) ? path : undefined;
+}
+
+function isInternalCodexSessionPath(path: string): boolean {
+  const normalized = path.replace(/\\/g, "/");
+  return normalized.includes("/.codex/sessions/") || normalized.endsWith(".jsonl");
 }

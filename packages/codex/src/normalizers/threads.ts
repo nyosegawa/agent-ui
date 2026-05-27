@@ -1,6 +1,7 @@
 import type { AgentEvent } from "@nyosegawa/agent-ui-core";
 import {
   asRecord,
+  normalizeItem,
   normalizeThread,
   normalizeThreadStatus,
   normalizeTurn,
@@ -84,6 +85,82 @@ export function normalizeThreadNotification(
   }
 }
 
+export function normalizeThreadReadResponse(
+  response: unknown,
+  options: { activate?: boolean } = {},
+): AgentEvent[] {
+  const rawThread = threadReadThread(response);
+  if (!rawThreadId(rawThread)) throw new Error("thread/read response is missing a thread id");
+
+  const thread = normalizeThread(rawThread);
+  const rawTurns = Array.isArray(rawThread.turns) ? rawThread.turns : undefined;
+  const turns = rawTurns?.map((turn) => normalizeTurn(turn, thread.id)) ?? [];
+  const status = snapshotStatus(rawThread.status, rawTurns?.length ?? 0);
+  const events: AgentEvent[] = [
+    {
+      status,
+      thread,
+      snapshot: true,
+      ...(rawTurns ? { turns } : {}),
+      type: options.activate === false ? "thread/upserted" : "thread/started",
+    },
+  ];
+
+  for (const rawTurn of rawTurns ?? []) {
+    const turn = normalizeTurn(rawTurn, thread.id);
+    const rawTurnRecord = asRecord(rawTurn);
+    const items = Array.isArray(rawTurnRecord?.items) ? rawTurnRecord.items : [];
+    const itemStatus = turn.status === "completed" ? "completed" : undefined;
+    events.push({
+      items: items.map((item) =>
+        itemStatus
+          ? normalizeItem(item, { threadId: thread.id, turnId: turn.id }, itemStatus)
+          : normalizeItem(item, { threadId: thread.id, turnId: turn.id }),
+      ),
+      snapshot: true,
+      threadId: thread.id,
+      turn,
+      type: "turn/completed",
+    });
+
+    for (const item of items) {
+      const record = asRecord(item);
+      if (!record) continue;
+      const itemId = String(record.id ?? record.itemId ?? record.item_id);
+      if (
+        record.type === "commandExecution" &&
+        typeof record.aggregatedOutput === "string"
+      ) {
+        events.push({
+          delta: record.aggregatedOutput,
+          itemId,
+          threadId: thread.id,
+          turnId: turn.id,
+          type: "item/commandOutput/delta",
+        });
+      }
+      if (record.type === "fileChange") {
+        events.push({
+          itemId,
+          patch: record.changes ?? record,
+          threadId: thread.id,
+          turnId: turn.id,
+          type: "item/filePatch/updated",
+        });
+      }
+    }
+  }
+
+  events.push({
+    status,
+    snapshot: true,
+    threadId: thread.id,
+    type: "thread/status/changed",
+  });
+
+  return events;
+}
+
 function normalizeTokenUsage(params: Record<string, unknown>): AgentEvent {
   const tokenUsage = asRecord(params.tokenUsage);
   const totalUsage = asRecord(tokenUsage?.total) ?? tokenUsage;
@@ -138,4 +215,22 @@ function normalizeTokenUsage(params: Record<string, unknown>): AgentEvent {
       raw: params,
     },
   };
+}
+
+function threadReadThread(response: unknown): Record<string, unknown> {
+  const responseRecord = asRecord(response);
+  const thread = asRecord(responseRecord?.thread) ?? responseRecord;
+  return thread ?? {};
+}
+
+function rawThreadId(rawThread: Record<string, unknown>): string | undefined {
+  const value = rawThread.id ?? rawThread.threadId ?? rawThread.thread_id;
+  if (typeof value === "string" && value.trim()) return value;
+  if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  return undefined;
+}
+
+function snapshotStatus(value: unknown, turnCount: number): string {
+  const status = normalizeThreadStatus(value);
+  return status === "notLoaded" && turnCount > 0 ? "loaded" : status;
 }
