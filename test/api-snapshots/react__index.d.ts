@@ -3,6 +3,7 @@ import * as _nyosegawa_agent_ui_core from '@nyosegawa/agent-ui-core';
 import { AgentEvent, AgentSessionState, AgentTransport, ThreadId, ExecutionModeId, RequestId, AgentApp, AgentModel, ReasoningEffort, ThreadState, ThreadTokenUsage, PendingServerRequest, AgentItemState, TurnState, AgentThread, AgentItemBlock } from '@nyosegawa/agent-ui-core';
 import * as React$1 from 'react';
 import React__default, { PropsWithChildren } from 'react';
+import { TurnStartParams, ThreadListParams, AppsListParams, HooksListParams, SkillsListParams, SkillsConfigWriteParams, ThreadResumeParams, ThreadStartParams, ThreadForkParams } from '@nyosegawa/agent-ui-codex/stable-types';
 
 interface AgentContextValue {
     dispatch: (event: AgentEvent) => void;
@@ -65,28 +66,20 @@ interface QueuedFollowUpAttachment {
     value: string;
 }
 
+type ThreadForkOptions = Omit<ThreadForkParams, "threadId">;
+type ThreadResumeOptions = Omit<ThreadResumeParams, "threadId">;
+type TurnStartOptions = Partial<Omit<TurnStartParams, "input" | "threadId">>;
 interface AgentExecutionMode {
     id: ExecutionModeId;
     label: string;
     description: string;
-    turnParams: Record<string, unknown>;
+    turnParams: TurnStartOptions;
 }
-type AgentRequestParams = Record<string, unknown>;
-type AgentListRequestParams = AgentRequestParams & {
-    cursor?: string | null;
-    cwds?: string[];
-    threadId?: string;
-};
-type AgentSkillConfigParams = AgentRequestParams & {
-    enabled: boolean;
-    name?: string | null;
-    path?: string | null;
-};
 declare const AGENT_EXECUTION_MODES: AgentExecutionMode[];
 declare function useAgentThread(threadId?: ThreadId): {
-    resumeThread: (id: ThreadId, params?: Record<string, unknown>) => Promise<unknown>;
-    startThread: (params?: Record<string, unknown>) => Promise<unknown>;
-    startThreadWithInput: (input: string | AgentUserInput[], params?: Record<string, unknown>) => Promise<unknown>;
+    resumeThread: (id: ThreadId, params?: ThreadResumeOptions) => Promise<unknown>;
+    startThread: (params?: ThreadStartParams) => Promise<unknown>;
+    startThreadWithInput: (input: string | AgentUserInput[], params?: ThreadStartParams) => Promise<unknown>;
     thread: ThreadState | undefined;
     threadId: string | undefined;
     turns: (_nyosegawa_agent_ui_core.TurnState | undefined)[];
@@ -95,7 +88,7 @@ declare const useAgentThreadController: typeof useAgentThread;
 declare function useAgentThreadActions(threadId?: ThreadId): {
     archiveThread: () => Promise<unknown>;
     compactThread: () => Promise<unknown>;
-    forkThread: (params?: AgentRequestParams) => Promise<unknown>;
+    forkThread: (params?: ThreadForkOptions) => Promise<unknown>;
     renameThread: (name: string) => Promise<unknown>;
     rollbackThread: (numTurns?: number) => Promise<unknown>;
     threadId: string | undefined;
@@ -106,11 +99,7 @@ declare function useAgentThreads(): {
     setActiveThread: (threadId?: ThreadId) => void;
     threads: ThreadState[];
 };
-interface ThreadHistoryParams {
-    cursor?: string | null;
-    limit?: number;
-    searchTerm?: string;
-}
+type ThreadHistoryParams = ThreadListParams;
 declare function useAgentThreadHistory(): {
     cursor: string | null | undefined;
     error: Error | undefined;
@@ -126,7 +115,7 @@ declare function useAgentThreadReader(): {
 };
 declare function useAgentTurn(threadId?: ThreadId): {
     interruptTurn: (turnId: string) => Promise<unknown>;
-    startTurn: (input: string | AgentUserInput[], params?: Record<string, unknown>) => Promise<unknown>;
+    startTurn: (input: string | AgentUserInput[], params?: TurnStartOptions) => Promise<unknown>;
     steerTurn: (expectedTurnId: string, input: string | AgentUserInput[]) => Promise<unknown>;
 };
 declare const useAgentTurnController: typeof useAgentTurn;
@@ -197,7 +186,7 @@ declare function useAgentUsage(): {
     refreshUsage: () => Promise<unknown>;
 };
 declare function useAgentSkills(cwd?: string): {
-    refreshSkills: (params?: AgentListRequestParams) => Promise<{
+    refreshSkills: (params?: SkillsListParams) => Promise<{
         cwd: string;
         skills: {
             enabled: boolean | undefined;
@@ -206,12 +195,12 @@ declare function useAgentSkills(cwd?: string): {
             raw: any;
         }[];
     }[]>;
-    setSkillEnabled: (params: AgentSkillConfigParams) => Promise<unknown>;
+    setSkillEnabled: (params: SkillsConfigWriteParams) => Promise<unknown>;
     skills: _nyosegawa_agent_ui_core.AgentSkill[];
 };
 declare function useAgentHooks(cwd?: string): {
     hooks: _nyosegawa_agent_ui_core.AgentHook[];
-    refreshHooks: (params?: AgentListRequestParams) => Promise<{
+    refreshHooks: (params?: HooksListParams) => Promise<{
         cwd: string;
         hooks: {
             enabled: boolean | undefined;
@@ -228,7 +217,7 @@ declare function useAgentApps(threadId?: string): {
         nextCursor: string | null;
     } | undefined>;
     nextCursor: string | null | undefined;
-    refreshApps: (params?: AgentListRequestParams) => Promise<{
+    refreshApps: (params?: AppsListParams) => Promise<{
         apps: AgentApp[];
         nextCursor: string | null;
     }>;
