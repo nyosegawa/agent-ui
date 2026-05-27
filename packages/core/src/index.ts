@@ -5,6 +5,7 @@ export * from "./reducer";
 export * from "./retention";
 export * from "./selectors";
 export * from "./state";
+export * from "./stores/apps";
 export * from "./stores/connection";
 export * from "./stores/item";
 export * from "./stores/server-request";

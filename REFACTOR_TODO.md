@@ -75,7 +75,7 @@ Acceptance:
 - [x] Add `turnStore`.
 - [x] Add `itemStore`.
 - [x] Add `serverRequestStore`.
-- [ ] Add `appsStore`.
+- [x] Add `appsStore`.
 - [ ] Add `diagnosticsStore`.
 - [ ] Add `usageStore`.
 - [ ] Add selectors for thread, turn, item, approvals, apps, diagnostics, and

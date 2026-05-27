@@ -106,7 +106,8 @@ thread's ordered turn collection, and focused turn updates inside a thread
 entity. `itemStore` owns item insertion, streaming item deltas, retained command
 output and file patches, and normalized transcript block synthesis for stored
 items. `serverRequestStore` owns pending server request maps, FIFO approval
-queues, and thread-scoped pending request checks.
+queues, and thread-scoped pending request checks. `appsStore` owns App
+connector list initialization and scoped global/thread update semantics.
 
 ## Reducer Rules
 
