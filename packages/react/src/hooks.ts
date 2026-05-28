@@ -4,11 +4,8 @@ export {
   useAgentUsage,
   type AgentBootstrapState,
 } from "./hooks/account";
-export {
-  useAgentApps,
-  useAgentHooks,
-  useAgentSkills,
-} from "./hooks/connectors";
+export { useAgentApps } from "./hooks/apps";
+export { useAgentHooks, useAgentSkills } from "./hooks/connectors";
 export { useAgentModels } from "./hooks/models";
 export { useAgentApprovals, useAgentServerRequests } from "./hooks/approvals";
 export {

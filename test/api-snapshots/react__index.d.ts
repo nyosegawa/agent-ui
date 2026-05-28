@@ -69,6 +69,19 @@ declare function useAgentUsage(): {
     refreshUsage: () => Promise<unknown>;
 };
 
+declare function useAgentApps(threadId?: string): {
+    apps: AgentApp[];
+    loadMoreApps: () => Promise<{
+        apps: AgentApp[];
+        nextCursor: string | null;
+    } | undefined>;
+    nextCursor: string | null | undefined;
+    refreshApps: (params?: AppsListParams) => Promise<{
+        apps: AgentApp[];
+        nextCursor: string | null;
+    }>;
+};
+
 declare function useAgentSkills(cwd?: string): {
     refreshSkills: (params?: SkillsListParams) => Promise<{
         cwd: string;
@@ -93,18 +106,6 @@ declare function useAgentHooks(cwd?: string): {
             raw: any;
         }[];
     }[]>;
-};
-declare function useAgentApps(threadId?: string): {
-    apps: AgentApp[];
-    loadMoreApps: () => Promise<{
-        apps: AgentApp[];
-        nextCursor: string | null;
-    } | undefined>;
-    nextCursor: string | null | undefined;
-    refreshApps: (params?: AppsListParams) => Promise<{
-        apps: AgentApp[];
-        nextCursor: string | null;
-    }>;
 };
 
 declare function useAgentModels(): {
