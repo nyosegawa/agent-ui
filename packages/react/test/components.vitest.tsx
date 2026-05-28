@@ -30,7 +30,7 @@ import {
   AgentLocaleSelect,
   AgentSkillsPanel,
   AgentAppsPanel,
-  useAgentAuth,
+  useAgentAccount,
   useAgentServerRequests,
   useAgentSkills,
   useAgentContext,
@@ -1627,7 +1627,7 @@ describe("AgentChat", () => {
       },
     });
     function LogoutProbe() {
-      const { account, logout } = useAgentAuth();
+      const { account, logout } = useAgentAccount();
       return (
         <div>
           <span>{account.status}</span>

@@ -4,7 +4,7 @@ import { useAgentContext } from "../provider";
 import { useCodexSession } from "./codex-session";
 import { useAgentModels } from "./connectors";
 
-export function useAgentAuth() {
+export function useAgentAccount() {
   const { dispatch, state } = useAgentContext();
   const codex = useCodexSession();
   const readAccount = useCallback(async () => {
@@ -62,7 +62,7 @@ export interface AgentBootstrapState {
 
 export function useAgentBootstrap(): AgentBootstrapState {
   const { state } = useAgentContext();
-  const { readAccount } = useAgentAuth();
+  const { readAccount } = useAgentAccount();
   const { refreshUsage } = useAgentUsage();
   const { refreshModels } = useAgentModels();
   const accountRateLimits = selectAccountRateLimits(state);

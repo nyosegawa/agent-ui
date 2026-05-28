@@ -35,7 +35,7 @@ Agent UI provides these authentication primitives:
 Implemented surface:
 
 - `useAgentBootstrap()` calls `account/read` after the transport connects and stores the normalized account state.
-- `useAgentAuth()` exposes `readAccount`, `login`, and `logout`.
+- `useAgentAccount()` exposes `readAccount`, `login`, and `logout`.
 - `login()` calls `account/login/start` with stable params `{ type: "chatgptDeviceCode" }`.
 - Device-code login state stores `loginId`, `verificationUrl`, and `userCode`; `loginId` is used only for `account/login/cancel`.
 - `cancelLogin()` calls `account/login/cancel` with stable params `{ loginId }`.

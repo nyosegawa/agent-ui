@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useAgentAuth } from "../hooks";
+import { useAgentAccount } from "../hooks";
 import { useAgentI18n } from "../i18n";
 import {
   IconChevronDown,
@@ -17,7 +17,7 @@ export function AgentAccountControl({
   statusText: string;
 }) {
   const { t } = useAgentI18n();
-  const { logout } = useAgentAuth();
+  const { logout } = useAgentAccount();
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);

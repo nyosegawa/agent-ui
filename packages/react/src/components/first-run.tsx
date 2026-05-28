@@ -1,6 +1,6 @@
 import type React from "react";
 import { useCallback, useRef, useState } from "react";
-import { useAgentAuth } from "../hooks";
+import { useAgentAccount } from "../hooks";
 import { useAgentI18n } from "../i18n";
 import { IconSend, buttonClass } from "../components-internal";
 import { useAgentContext } from "../provider";
@@ -19,7 +19,7 @@ export function AgentFirstRun({
   onStartThread: (prompt?: string) => Promise<void> | void;
 }) {
   const { t } = useAgentI18n();
-  const { account, cancelLogin, login } = useAgentAuth();
+  const { account, cancelLogin, login } = useAgentAccount();
   const { state } = useAgentContext();
   const [prompt, setPrompt] = useState("");
   const [error, setError] = useState<string | undefined>();

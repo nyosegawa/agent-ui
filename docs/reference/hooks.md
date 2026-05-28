@@ -88,7 +88,7 @@ active or supplied thread. `useAgentApprovals()` adds stable `approve()` and
 
 ```tsx
 const bootstrap = useAgentBootstrap();
-const auth = useAgentAuth();
+const account = useAgentAccount();
 const models = useAgentModels();
 const usage = useAgentUsage();
 ```
@@ -96,7 +96,7 @@ const usage = useAgentUsage();
 `useAgentBootstrap()` performs local startup reads after the transport connects:
 `account/read`, `model/list`, and authenticated `account/rateLimits/read`.
 
-`useAgentAuth()` starts and cancels ChatGPT device-code login while storing only
+`useAgentAccount()` starts and cancels ChatGPT device-code login while storing only
 normalized account/login state.
 
 `useAgentUsage().refreshUsage()` calls `account/rateLimits/read` and stores the

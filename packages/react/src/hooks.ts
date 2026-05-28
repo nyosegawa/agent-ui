@@ -1,5 +1,5 @@
 export {
-  useAgentAuth,
+  useAgentAccount,
   useAgentBootstrap,
   useAgentUsage,
   type AgentBootstrapState,

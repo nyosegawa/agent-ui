@@ -1,7 +1,7 @@
 import type React from "react";
 import { selectDiagnosticErrors, selectDiagnosticWarnings } from "@nyosegawa/agent-ui-core";
 import type { useAgentBootstrap } from "../hooks";
-import { useAgentAuth } from "../hooks";
+import { useAgentAccount } from "../hooks";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import { IconHistory, buttonClass } from "../components-internal";
 import { useAgentContext } from "../provider";
@@ -28,7 +28,7 @@ export function AgentStatusBar({
 } = {}) {
   const { t } = useAgentI18n();
   const { state } = useAgentContext();
-  const { account, cancelLogin, login } = useAgentAuth();
+  const { account, cancelLogin, login } = useAgentAccount();
   const statusText =
     account.status === "unknown"
       ? state.connection.status === "connected"
