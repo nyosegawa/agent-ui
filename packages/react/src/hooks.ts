@@ -7,9 +7,9 @@ export {
 export {
   useAgentApps,
   useAgentHooks,
-  useAgentModels,
   useAgentSkills,
 } from "./hooks/connectors";
+export { useAgentModels } from "./hooks/models";
 export { useAgentApprovals, useAgentServerRequests } from "./hooks/approvals";
 export {
   useAgentComposer,

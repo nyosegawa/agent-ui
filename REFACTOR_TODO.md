@@ -140,7 +140,7 @@ Acceptance:
 - [x] Add or refine `useAgentComposer`.
 - [x] Add or refine `useAgentApprovals`.
 - [x] Add or refine `useAgentAccount`.
-- [ ] Add or refine `useAgentModels`.
+- [x] Add or refine `useAgentModels`.
 - [ ] Add or refine `useAgentApps`.
 - [ ] Add or refine `useAgentDiagnostics`.
 - [ ] Add or refine `useAgentUsage`.

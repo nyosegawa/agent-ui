@@ -2,7 +2,7 @@ import { selectAccountRateLimits } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAgentContext } from "../provider";
 import { useCodexSession } from "./codex-session";
-import { useAgentModels } from "./connectors";
+import { useAgentModels } from "./models";
 
 export function useAgentAccount() {
   const { dispatch, state } = useAgentContext();

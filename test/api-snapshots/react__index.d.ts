@@ -106,6 +106,7 @@ declare function useAgentApps(threadId?: string): {
         nextCursor: string | null;
     }>;
 };
+
 declare function useAgentModels(): {
     models: AgentModel[];
     refreshModels: () => Promise<AgentModel[]>;
