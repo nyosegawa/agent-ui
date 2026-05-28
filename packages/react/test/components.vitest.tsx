@@ -4244,6 +4244,109 @@ describe("AgentChat", () => {
     );
   });
 
+  it("renders stored history transcript activity as readable transcript blocks", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-rich-history",
+                name: "Rich stored session",
+                status: { type: "notLoaded" },
+                turns: [],
+                updatedAt: 1778000000,
+              },
+            ],
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-rich-history",
+              name: "Rich stored session",
+              status: { type: "idle" },
+              turns: [
+                {
+                  id: "turn-rich-history",
+                  items: [
+                    {
+                      content: [{ text: "Please validate stored transcript rendering.", type: "text" }],
+                      id: "item-user-history",
+                      type: "userMessage",
+                    },
+                    {
+                      id: "item-command-history",
+                      aggregatedOutput: "first passing line\nsecond passing line\n",
+                      command: "bun test --watch=false",
+                      status: "completed",
+                      type: "commandExecution",
+                    },
+                    {
+                      changes: [
+                        {
+                          diff: "diff --git a/src/history.ts b/src/history.ts\n@@\n-export const value = 1;\n+export const value = 2;\n",
+                          kind: "update",
+                          path: "src/history.ts",
+                        },
+                      ],
+                      id: "item-file-history",
+                      status: "completed",
+                      type: "fileChange",
+                    },
+                    {
+                      id: "item-agent-history",
+                      text: "Stored transcript stays readable after loading.",
+                      type: "agentMessage",
+                    },
+                  ],
+                  status: "completed",
+                },
+              ],
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /Rich stored session/ }));
+
+    expect(
+      await screen.findByText("Please validate stored transcript rendering."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("Stored transcript stays readable after loading."),
+    ).toBeInTheDocument();
+    expect(document.querySelector("[class*=work][class*=trace]")).not.toBeInTheDocument();
+
+    const command = screen.getByLabelText("Command output");
+    expect(command).toHaveTextContent("bun test --watch=false");
+    expect(command).toHaveTextContent("completed · 2 lines");
+    expect(command).toHaveTextContent("first passing line");
+    expect(screen.queryByText("second passing line")).not.toBeInTheDocument();
+    await user.click(within(command).getByText("bun test --watch=false"));
+    expect(screen.getByText(/second passing line/)).toBeInTheDocument();
+
+    const diff = screen.getByLabelText("Diff preview");
+    expect(diff).toHaveTextContent("1 file changed");
+    expect(screen.queryByText("src/history.ts")).not.toBeInTheDocument();
+    expect(screen.queryByText(/export const value = 2/)).not.toBeInTheDocument();
+    await user.click(within(diff).getByText("1 file changed"));
+    expect(screen.getAllByText("src/history.ts").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/export const value = 2/).length).toBeGreaterThan(0);
+
+    expect(screen.getByText("Preview")).toBeInTheDocument();
+    expect(screen.getByLabelText("Message")).toBeDisabled();
+  });
+
   it("does not expose a manual resume button for stored threads", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({

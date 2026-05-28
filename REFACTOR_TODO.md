@@ -180,7 +180,7 @@ Acceptance:
 - [x] Add tests for MCP/dynamic/collab tool blocks.
 - [x] Add tests for reasoning and compaction items.
 - [x] Add tests for approval placement and resolution.
-- [ ] Add tests for stored-history transcript rendering.
+- [x] Add tests for stored-history transcript rendering.
 - [ ] Add mobile hit-test coverage for composer and approval actions.
 
 Acceptance:
