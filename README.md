@@ -109,7 +109,7 @@ details of that stylesheet, not public host import paths or styling contracts.
   mandatory side rails.
 - Attachments are host-resolved. Images use `localImage` paths; arbitrary
   files are uploaded by the host and sent as explicit `Attached file:
-  /absolute/path` text because App Server has no generic local-file input type.
+/absolute/path` text because App Server has no generic local-file input type.
 
 ## Documentation
 
@@ -137,6 +137,7 @@ Key pages:
 - [React Components](./docs/reference/react-components.md)
 - [Hooks](./docs/reference/hooks.md)
 - [Testing](./docs/architecture/testing.md)
+- [Browser Verification](./docs/guides/browser-verification.md)
 - [Security](./docs/architecture/security.md)
 
 ## Examples
