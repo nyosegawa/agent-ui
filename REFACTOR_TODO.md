@@ -166,7 +166,7 @@ Acceptance:
 ## Phase 5: Transcript And UI Split
 
 - [ ] Split `packages/react/src/timeline.tsx`.
-- [ ] Move pure transcript block synthesis into focused modules.
+- [x] Move pure transcript block synthesis into focused modules.
 - [ ] Move item renderers into focused modules.
 - [ ] Move scroll-follow behavior into focused modules.
 - [ ] Move windowing behavior into focused modules.
