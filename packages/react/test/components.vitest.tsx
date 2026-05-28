@@ -781,6 +781,63 @@ describe("AgentChat", () => {
     expect(screen.getByText(/ENOENT/)).toBeInTheDocument();
   });
 
+  it("renders collab tool blocks with thread metadata inline", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-collab-tool"] = {
+      orderedTurnIds: ["turn-collab-tool"],
+      status: "loaded",
+      thread: { id: "thread-collab-tool", name: "Collab tool" },
+      turns: {
+        "turn-collab-tool": {
+          blocksByItemId: {
+            "collab-1": {
+              id: "collab-1",
+              kind: "collabToolCall",
+              metadata: {
+                newThreadId: "new-1",
+                receiverThreadId: "receiver-1",
+                senderThreadId: "sender-1",
+              },
+              status: "completed",
+              text: "Sub-agent completed review.",
+              tool: "delegate_review",
+            },
+          },
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["collab-1"],
+          items: {
+            "collab-1": {
+              id: "collab-1",
+              kind: "collabToolCall",
+              status: "completed",
+              threadId: "thread-collab-tool",
+              turnId: "turn-collab-tool",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-collab-tool", threadId: "thread-collab-tool" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList thread={initialState.threads["thread-collab-tool"]!} />
+      </AgentProvider>,
+    );
+
+    const collab = screen.getByLabelText("Collab tool");
+    expect(collab).toHaveTextContent("delegate_review");
+    expect(collab).toHaveTextContent("Sub-agent completed review.");
+    expect(collab).toHaveTextContent("From");
+    expect(collab).toHaveTextContent("sender-1");
+    expect(collab).toHaveTextContent("To");
+    expect(collab).toHaveTextContent("receiver-1");
+    expect(collab).toHaveTextContent("Thread");
+    expect(collab).toHaveTextContent("new-1");
+  });
+
   it("keeps thread list title and metadata visible for stored threads", () => {
     const storedThread = {
       orderedTurnIds: ["turn-stored"],
