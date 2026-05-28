@@ -920,6 +920,16 @@ declare function AgentDiffViewer({ patch }: {
     patch: unknown;
 }): react_jsx_runtime.JSX.Element;
 
+interface ApprovalAnchors {
+    afterTurn: PendingServerRequest[];
+    byItemId: Record<string, PendingServerRequest[]>;
+    renderApprovalAnchor: (approval: PendingServerRequest) => React__default.ReactNode;
+}
+interface TranscriptApprovalAnchors {
+    requests: PendingServerRequest[];
+    renderApprovalAnchor: (approval: PendingServerRequest) => React__default.ReactNode;
+}
+
 declare function AgentMessageList({ footer, approvalAnchors, renderItem, scrollKey, thread, }: {
     /**
      * Trailing transcript content rendered as the final scroll-area item.
@@ -941,15 +951,6 @@ declare function AgentTurn({ approvals, renderItem, threadStatus, turn, visibleI
     turn: TurnState;
     visibleItemIds?: string[];
 }): react_jsx_runtime.JSX.Element;
-interface ApprovalAnchors {
-    afterTurn: PendingServerRequest[];
-    byItemId: Record<string, PendingServerRequest[]>;
-    renderApprovalAnchor: (approval: PendingServerRequest) => React__default.ReactNode;
-}
-interface TranscriptApprovalAnchors {
-    requests: PendingServerRequest[];
-    renderApprovalAnchor: (approval: PendingServerRequest) => React__default.ReactNode;
-}
 declare function AgentContentBlockView({ block, output, patch, }: {
     block: AgentItemBlock;
     output?: string;

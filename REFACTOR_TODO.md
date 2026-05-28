@@ -170,7 +170,7 @@ Acceptance:
 - [ ] Move item renderers into focused modules.
 - [ ] Move scroll-follow behavior into focused modules.
 - [ ] Move windowing behavior into focused modules.
-- [ ] Move approval anchoring into focused modules.
+- [x] Move approval anchoring into focused modules.
 - [ ] Keep user and assistant messages readable inline.
 - [ ] Use disclosure for heavy command output, diffs, tool bodies, and verbose
   diagnostics.
