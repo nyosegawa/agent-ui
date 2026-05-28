@@ -64,6 +64,7 @@
       "name": "@nyosegawa/agent-ui-example-local-react-vite",
       "version": "0.0.0",
       "dependencies": {
+        "@nyosegawa/agent-ui-codex": "workspace:*",
         "@nyosegawa/agent-ui-core": "workspace:*",
         "@nyosegawa/agent-ui-react": "workspace:*",
         "react": "19.2.6",
@@ -137,6 +138,7 @@
       "dependencies": {
         "@codemirror/state": "^6.6.0",
         "@codemirror/view": "^6.42.1",
+        "@nyosegawa/agent-ui-codex": "workspace:*",
         "@nyosegawa/agent-ui-core": "workspace:*",
       },
       "devDependencies": {
