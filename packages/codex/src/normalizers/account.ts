@@ -36,6 +36,9 @@ export function normalizeAccountNotification(
 function accountStatus(account: unknown): "unauthenticated" | "authenticated" {
   if (account == null) return "unauthenticated";
   const record = asRecord(account);
+  if (record && "authMode" in record && record.authMode == null) {
+    return "unauthenticated";
+  }
   if (record && "authMethod" in record && record.authMethod == null) {
     return "unauthenticated";
   }

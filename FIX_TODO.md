@@ -4,16 +4,16 @@
 
 ### Account Normalization
 
-- [ ] Inspect `packages/codex/src/normalizers/account.ts`.
-- [ ] Treat explicit `authMode: null` as unauthenticated.
-- [ ] Preserve legacy `authMethod: null` unauthenticated compatibility.
-- [ ] Treat non-null `authMode` as authenticated.
-- [ ] Preserve `planType` and raw payload.
-- [ ] Add protocol test for `{ authMode: null, planType: null }`.
-- [ ] Add protocol test for `{ authMode: "chatgpt", planType: "plus" }`.
-- [ ] Review and update `fixtures/app-server/v2-jsonrpc/account-login-rate-limit.jsonl`.
-- [ ] Run `bun run test:protocol`.
-- [ ] Run focused React account/status test if display behavior changes.
+- [x] Inspect `packages/codex/src/normalizers/account.ts`.
+- [x] Treat explicit `authMode: null` as unauthenticated.
+- [x] Preserve legacy `authMethod: null` unauthenticated compatibility.
+- [x] Treat non-null `authMode` as authenticated.
+- [x] Preserve `planType` and raw payload.
+- [x] Add protocol test for `{ authMode: null, planType: null }`.
+- [x] Add protocol test for `{ authMode: "chatgpt", planType: "plus" }`.
+- [x] Review and update `fixtures/app-server/v2-jsonrpc/account-login-rate-limit.jsonl`.
+- [x] Run `bun run test:protocol`.
+- [x] Run focused React account/status test if display behavior changes.
 
 ### One-Shot RPC Method Policy
 

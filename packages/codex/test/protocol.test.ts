@@ -569,6 +569,32 @@ describe("Codex protocol metadata", () => {
 
     expect(
       normalizeCodexServerMessage({
+        method: "account/updated",
+        params: { authMode: null, planType: null },
+      }),
+    ).toEqual([
+      {
+        account: { authMode: null, planType: null },
+        status: "unauthenticated",
+        type: "account/updated",
+      },
+    ]);
+
+    expect(
+      normalizeCodexServerMessage({
+        method: "account/updated",
+        params: { authMode: "chatgpt", planType: "plus" },
+      }),
+    ).toEqual([
+      {
+        account: { authMode: "chatgpt", planType: "plus" },
+        status: "authenticated",
+        type: "account/updated",
+      },
+    ]);
+
+    expect(
+      normalizeCodexServerMessage({
         method: "account/rateLimits/updated",
         params: { rateLimits: { planType: "plus" } },
       }),

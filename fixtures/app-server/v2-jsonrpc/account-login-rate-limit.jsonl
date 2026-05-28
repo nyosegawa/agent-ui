@@ -1,4 +1,4 @@
-{"method":"account/updated","params":{"account":{"email":"user@example.com","planType":"pro"}}}
-{"method":"account/login/completed","params":{"loginId":"login-raw","success":true,"account":{"email":"user@example.com","planType":"pro"}}}
+{"method":"account/updated","params":{"authMode":"chatgpt","planType":"pro"}}
+{"method":"account/login/completed","params":{"loginId":"login-raw","success":true,"account":{"authMode":"chatgpt","planType":"pro"}}}
 {"method":"account/rateLimits/updated","params":{"rateLimits":{"primary":{"percentUsed":42,"resetsAt":"2026-05-18T00:00:00Z"}}}}
 {"method":"configWarning","params":{"path":"/tmp/config.toml","summary":"Config warning","details":"token=secret-value"}}
