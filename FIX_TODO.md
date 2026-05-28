@@ -293,16 +293,16 @@
 
 ### Composer Refactor
 
-- [ ] Inspect `packages/react/src/components/composer.tsx`.
-- [ ] Extract attachment state and preview URL lifecycle.
-- [ ] Extract drag/drop handling.
-- [ ] Extract mention attachment handling if useful.
-- [ ] Extract submit mode decision for normal versus steer.
-- [ ] Extract IME-aware Enter key handling if useful.
-- [ ] Preserve attachment restore behavior for queued follow-up editing.
-- [ ] Add focused tests for extracted attachment lifecycle.
-- [ ] Add focused tests for submit/key semantics.
-- [ ] Run relevant React component tests.
+- [x] Inspect `packages/react/src/components/composer.tsx`.
+- [x] Extract attachment state and preview URL lifecycle.
+- [x] Extract drag/drop handling.
+- [x] Extract mention attachment handling if useful.
+- [x] Extract submit mode decision for normal versus steer.
+- [x] Extract IME-aware Enter key handling if useful.
+- [x] Preserve attachment restore behavior for queued follow-up editing.
+- [x] Add focused tests for extracted attachment lifecycle.
+- [x] Add focused tests for submit/key semantics.
+- [x] Run relevant React component tests.
 
 ### Status Refactor
 

@@ -1,9 +1,8 @@
 import type React from "react";
 import type { ThreadState, ThreadTokenUsage } from "@nyosegawa/agent-ui-core";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAgentComposer, type AgentComposerController } from "../hooks";
 import { useAgentI18n } from "../i18n";
-import type { AgentUserInput } from "../agent-input";
 import {
   IconAlert,
   IconApp,
@@ -19,14 +18,17 @@ import { ComposerRunSettings } from "./run-settings";
 import { deferAction } from "./shared";
 import { AgentContextUsageIndicator } from "./context-usage";
 import { QueuedFollowUpList } from "./follow-up-queue";
+import { useComposerAttachmentState } from "./composer-attachment-state";
+import { useComposerDropZone } from "./composer-drag-drop";
+import { useComposerMentionActions } from "./composer-mentions";
+import {
+  composerSubmitModeForEnter,
+  shouldSubmitOnComposerEnter,
+  type ComposerSubmitMode,
+} from "./composer-submit-semantics";
 import {
   composerAttachmentInput,
-  fileExtension,
-  formatFileSize,
-  isImageFile,
-  type AgentComposerMentionAttachment,
   type AgentComposerMentionResolver,
-  type AgentLocalAttachmentKind,
   type AgentLocalAttachmentResolver,
   type ComposerAttachment,
 } from "./composer-attachments";
@@ -80,101 +82,31 @@ function AgentComposerForm({
   ) => void;
 }) {
   const { t } = useAgentI18n();
-  const [attachments, setAttachments] = useState<ComposerAttachment[]>([]);
-  const [attachmentError, setAttachmentError] = useState<string | undefined>();
   const [isFocused, setFocused] = useState(false);
-  const [isDragOver, setDragOver] = useState(false);
-  const attachmentsRef = useRef<ComposerAttachment[]>([]);
-  const dragCounter = useRef(0);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const revokePreview = useCallback((attachment: ComposerAttachment) => {
-    if (attachment.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
-  }, []);
-
-  const addAttachment = useCallback((attachment: ComposerAttachment) => {
-    setAttachments((current) => [...current, attachment]);
-  }, []);
-  const removeAttachment = useCallback(
-    (id: string) => {
-      setAttachments((current) => {
-        const removed = current.find((attachment) => attachment.id === id);
-        if (removed) revokePreview(removed);
-        return current.filter((attachment) => attachment.id !== id);
-      });
-    },
-    [revokePreview],
-  );
-  const restoreAttachments = useCallback(
-    (restoredAttachments: ComposerAttachment[]) => {
-      setAttachments((current) => {
-        for (const attachment of current) revokePreview(attachment);
-        return restoredAttachments;
-      });
-    },
-    [revokePreview],
-  );
-  const addLocalFiles = useCallback(
-    async (files: FileList | File[]) => {
-      if (!resolveLocalAttachment) return;
-      const list = Array.from(files);
-      if (list.length === 0) return;
-      let rejected = 0;
-      for (const file of list) {
-        const kind: AgentLocalAttachmentKind = isImageFile(file) ? "image" : "file";
-        let input: AgentUserInput | AgentUserInput[] | null | undefined;
-        try {
-          input = await resolveLocalAttachment(file, kind);
-        } catch (error) {
-          console.warn("AgentComposer attachment resolver failed", error);
-          setAttachmentError(error instanceof Error ? error.message : String(error));
-          input = null;
-        }
-        if (!input) {
-          rejected += 1;
-          continue;
-        }
-        const previewUrl = kind === "image" ? URL.createObjectURL(file) : undefined;
-        addAttachment({
-          extension: fileExtension(file.name),
-          id: `${kind}:${file.name}:${file.size}:${Date.now()}:${Math.random()
-            .toString(36)
-            .slice(2, 7)}`,
-          input,
-          kind,
-          label: file.name || kind,
-          previewUrl,
-          sizeLabel: formatFileSize(file.size),
-          value: file.name,
-        });
-      }
-      setAttachmentError(
-        rejected > 0
-          ? t("composer.attachmentRejected", {
-              count: rejected,
-              file: rejected === 1 ? "file" : "files",
-            })
-          : undefined,
-      );
-    },
-    [addAttachment, resolveLocalAttachment, t],
-  );
-
-  useEffect(() => {
-    attachmentsRef.current = attachments;
-  }, [attachments]);
-
-  useEffect(() => {
-    onRegisterAttachmentRestore?.(restoreAttachments);
-  }, [onRegisterAttachmentRestore, restoreAttachments]);
-
-  useEffect(
-    () => () => {
-      for (const attachment of attachmentsRef.current) revokePreview(attachment);
-    },
-    [revokePreview],
-  );
+  const {
+    addAttachment,
+    addLocalFiles,
+    attachmentError,
+    attachments,
+    clearSubmittedAttachments,
+    removeAttachment,
+  } = useComposerAttachmentState({
+    onRegisterAttachmentRestore,
+    resolveLocalAttachment,
+    t,
+  });
+  const dropZone = useComposerDropZone({
+    addLocalFiles,
+    disabled,
+    enabled: Boolean(resolveLocalAttachment),
+  });
+  const handleMention = useComposerMentionActions({
+    addAttachment,
+    onRequestAppMention,
+    onRequestPluginMention,
+  });
 
   // Auto-resize textarea up to a max height.
   useEffect(() => {
@@ -184,7 +116,7 @@ function AgentComposerForm({
     el.style.height = `${Math.min(el.scrollHeight, 220)}px`;
   }, [composer.value]);
 
-  const submit = (mode: "normal" | "steer" = "normal") => {
+  const submit = (mode: ComposerSubmitMode = "normal") => {
     if (disabled) return;
     if (!composer.value.trim() && attachments.length === 0) {
       if (composer.isRunning) deferAction(() => composer.stop());
@@ -199,28 +131,33 @@ function AgentComposerForm({
             ? await composer.steerNow(input)
             : await composer.submit(input, { attachments: pendingAttachments });
         if (result !== "sent" && mode !== "steer") {
-          setAttachments((current) =>
-            current.filter((attachment) => !pendingAttachments.includes(attachment)),
-          );
+          clearSubmittedAttachments(pendingAttachments);
           return;
         }
       } catch {
         return;
       }
-      for (const attachment of pendingAttachments) revokePreview(attachment);
-      setAttachments((current) =>
-        current.filter((attachment) => !pendingAttachments.includes(attachment)),
-      );
+      clearSubmittedAttachments(pendingAttachments, { revokePreview: true });
     });
   };
 
   const isComposing = useRef(false);
   const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (event) => {
-    if (event.key === "Enter" && !event.shiftKey && !isComposing.current) {
+    if (
+      shouldSubmitOnComposerEnter({
+        isComposing: isComposing.current,
+        key: event.key,
+        shiftKey: event.shiftKey,
+      })
+    ) {
       event.preventDefault();
-      const wantsImmediateFollowUp =
-        composer.isRunning && (event.metaKey || event.ctrlKey);
-      submit(wantsImmediateFollowUp ? "steer" : "normal");
+      submit(
+        composerSubmitModeForEnter({
+          ctrlKey: event.ctrlKey,
+          isRunning: composer.isRunning,
+          metaKey: event.metaKey,
+        }),
+      );
     }
   };
 
@@ -232,68 +169,17 @@ function AgentComposerForm({
     !composer.isSubmitting &&
     !composer.isInterrupting;
 
-  const handleMention = useCallback(
-    async (kind: "app" | "plugin") => {
-      const resolver = kind === "app" ? onRequestAppMention : onRequestPluginMention;
-      if (!resolver) return;
-      let result: AgentComposerMentionAttachment | null | undefined;
-      try {
-        result = await Promise.resolve(resolver());
-      } catch (error) {
-        console.warn(`AgentComposer ${kind} mention resolver failed`, error);
-        return;
-      }
-      if (!result) return;
-      const label = result.label?.trim();
-      const value = result.value?.trim();
-      if (!label && !value) return;
-      const finalLabel = label || value || kind;
-      const finalValue = value || label || kind;
-      addAttachment({
-        id: result.id ?? `${kind}:${finalValue}:${Date.now()}`,
-        input: result.input,
-        kind,
-        label: finalLabel,
-        value: finalValue,
-      });
-    },
-    [addAttachment, onRequestAppMention, onRequestPluginMention],
-  );
-
   return (
     <form
       aria-label={t("aria.composerAttachments")}
       className="aui-composer"
       data-disabled={disabled ? "true" : undefined}
       data-focused={isFocused ? "true" : undefined}
-      data-drag={isDragOver ? "true" : undefined}
-      onDragEnter={(event) => {
-        if (!resolveLocalAttachment || disabled) return;
-        event.preventDefault();
-        dragCounter.current += 1;
-        if (dragCounter.current === 1) setDragOver(true);
-      }}
-      onDragLeave={(event) => {
-        if (!resolveLocalAttachment || disabled) return;
-        event.preventDefault();
-        dragCounter.current -= 1;
-        if (dragCounter.current <= 0) {
-          dragCounter.current = 0;
-          setDragOver(false);
-        }
-      }}
-      onDragOver={(event) => {
-        if (!resolveLocalAttachment || disabled) return;
-        event.preventDefault();
-      }}
-      onDrop={(event) => {
-        if (!resolveLocalAttachment || disabled) return;
-        event.preventDefault();
-        dragCounter.current = 0;
-        setDragOver(false);
-        const files = event.dataTransfer.files;
-        if (files && files.length > 0) void addLocalFiles(files);
-      }}
+      data-drag={dropZone.isDragOver ? "true" : undefined}
+      onDragEnter={dropZone.onDragEnter}
+      onDragLeave={dropZone.onDragLeave}
+      onDragOver={dropZone.onDragOver}
+      onDrop={dropZone.onDrop}
       onSubmit={(event) => {
         event.preventDefault();
         if (composer.isRunning) deferAction(() => composer.stop());
