@@ -172,7 +172,7 @@ Acceptance:
 - [x] Move windowing behavior into focused modules.
 - [x] Move approval anchoring into focused modules.
 - [x] Keep user and assistant messages readable inline.
-- [ ] Use disclosure for heavy command output, diffs, tool bodies, and verbose
+- [x] Use disclosure for heavy command output, diffs, tool bodies, and verbose
   diagnostics.
 - [ ] Keep approvals inline in transcript and backed by server-request state.
 - [ ] Add tests for command execution blocks.

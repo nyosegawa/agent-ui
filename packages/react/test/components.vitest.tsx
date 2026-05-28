@@ -792,7 +792,9 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("Status summary")).toHaveTextContent(
       "1 warning · 2 total",
     );
-    expect(screen.getByLabelText("Status details")).toHaveTextContent("Model rerouted");
+    const statusDetails = screen.getByLabelText("Status details");
+    expect(statusDetails).toHaveTextContent("Model rerouted");
+    expect(statusDetails.querySelector("details")).not.toHaveAttribute("open");
     expect(screen.getByLabelText("Usage summary")).toHaveTextContent("55%");
   });
 
@@ -1683,7 +1685,10 @@ describe("AgentChat", () => {
         /WARN codex_app_server bridge recovered after stderr warning/,
       ),
     ).toBeInTheDocument();
-    expect(screen.getByText("Diagnostics")).toBeInTheDocument();
+    const diagnostics = screen.getByLabelText("Diagnostics");
+    expect(diagnostics).toHaveTextContent("Diagnostics");
+    expect(diagnostics.tagName).toBe("DETAILS");
+    expect(diagnostics).not.toHaveAttribute("open");
   });
 
   it("does not retain raw transport events for diagnostics", async () => {
