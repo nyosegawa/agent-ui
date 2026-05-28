@@ -231,6 +231,7 @@ function useThreadUrlRouting(
   activeThreadId?: string,
 ): void {
   const { state } = useAgentContext();
+  const { resumeThread } = useAgentThread();
   const { readThread } = useAgentThreadReader();
   const { setActiveThread, threads } = useAgentThreads();
   const lastPathRef = useRef<string | undefined>(undefined);
@@ -244,12 +245,16 @@ function useThreadUrlRouting(
     const initialThreadId = threadIdFromPath(window.location.pathname, basePath);
     if (!initialThreadId || initialUrlThreadReadRef.current === initialThreadId) return;
     initialUrlThreadReadRef.current = initialThreadId;
-    void readThread(initialThreadId, { activate: true, includeTurns: true }).catch(() => {
+    const openThread = async () => {
+      await readThread(initialThreadId, { activate: true, includeTurns: true });
+      await resumeThread(initialThreadId);
+    };
+    void openThread().catch(() => {
       if (initialUrlThreadReadRef.current === initialThreadId) {
         initialUrlThreadReadRef.current = undefined;
       }
     });
-  }, [basePath, enabled, readThread, state.connection.status]);
+  }, [basePath, enabled, readThread, resumeThread, state.connection.status]);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined" || !activeThreadId) return;

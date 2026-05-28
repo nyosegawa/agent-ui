@@ -251,38 +251,38 @@ Acceptance:
 
 ## Phase 8: E2E And Browser Verification
 
-- [ ] Restructure fixture e2e by durable contract, not route/file size.
-- [ ] Add fixture smoke and blank-page checks.
-- [ ] Add fixture visual layout and viewport containment checks.
-- [ ] Add fixture composer/sidebar/menu reachability checks.
-- [ ] Add fixture closeup checks for real component rendering.
-- [ ] Add fixture approval hit-test checks.
-- [ ] Add fixture design-system invariant checks.
-- [ ] Keep screenshot capture as opt-in only.
-- [ ] Restructure real-local e2e by App Server integration contract.
-- [ ] Add real-local thread lifecycle and routing coverage.
-- [ ] Add real-local attachments coverage.
-- [ ] Add real-local follow-up/interruption/scrolling coverage.
-- [ ] Move shared Playwright helpers under the correct `e2e/support/`
+- [x] Restructure fixture e2e by durable contract, not route/file size.
+- [x] Add fixture smoke and blank-page checks.
+- [x] Add fixture visual layout and viewport containment checks.
+- [x] Add fixture composer/sidebar/menu reachability checks.
+- [x] Add fixture closeup checks for real component rendering.
+- [x] Add fixture approval hit-test checks.
+- [x] Add fixture design-system invariant checks.
+- [x] Keep screenshot capture as opt-in only.
+- [x] Restructure real-local e2e by App Server integration contract.
+- [x] Add real-local thread lifecycle and routing coverage.
+- [x] Add real-local attachments coverage.
+- [x] Add real-local follow-up/interruption/scrolling coverage.
+- [x] Move shared Playwright helpers under the correct `e2e/support/`
   directory.
-- [ ] Keep Playwright helpers thin: app open, readiness, viewport, durable
+- [x] Keep Playwright helpers thin: app open, readiness, viewport, durable
   accessibility queries.
-- [ ] Keep readiness retries at app-open boundaries only.
-- [ ] Use agent-browser or browser verification for fixture gallery desktop.
-- [ ] Use agent-browser or browser verification for rich transcript desktop.
-- [ ] Use agent-browser or browser verification for usage-only mobile.
-- [ ] Use agent-browser or browser verification for real local web desktop.
+- [x] Keep readiness retries at app-open boundaries only.
+- [x] Use agent-browser or browser verification for fixture gallery desktop.
+- [x] Use agent-browser or browser verification for rich transcript desktop.
+- [x] Use agent-browser or browser verification for usage-only mobile.
+- [x] Use agent-browser or browser verification for real local web desktop.
 
 Acceptance:
 
-- [ ] `bun run test:e2e:clean-ports` passes.
-- [ ] `bun run test:e2e:playwright` passes.
-- [ ] A failing e2e file clearly identifies the broken product contract.
-- [ ] No timeout increase is used as the primary flaky-test fix.
-- [ ] Accessibility snapshots expose composer, approvals, menus, and main
+- [x] `bun run test:e2e:clean-ports` passes.
+- [x] `bun run test:e2e:playwright` passes.
+- [x] A failing e2e file clearly identifies the broken product contract.
+- [x] No timeout increase is used as the primary flaky-test fix.
+- [x] Accessibility snapshots expose composer, approvals, menus, and main
   transcript where relevant.
-- [ ] Mobile composer remains visible.
-- [ ] Approval actions are clickable.
+- [x] Mobile composer remains visible.
+- [x] Approval actions are clickable.
 
 ## Phase 9: Docs And Screenshots
 

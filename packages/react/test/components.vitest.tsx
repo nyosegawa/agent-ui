@@ -4719,6 +4719,16 @@ describe("AgentChat", () => {
     expect(
       await screen.findByRole("heading", { name: "Thread target" }),
     ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(
+        transport.requests.some(
+          (request) =>
+            request.method === "thread/resume" &&
+            (request.params as { threadId?: string }).threadId === "thread-target",
+        ),
+      ).toBe(true),
+    );
+    expect(screen.getByLabelText("Message")).toBeEnabled();
     expect(
       screen.queryByRole("heading", { name: "Thread other" }),
     ).not.toBeInTheDocument();

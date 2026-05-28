@@ -190,6 +190,8 @@ The deterministic fixture Playwright files are split by contract ownership:
 - `design-system-contract.e2e.ts` owns concrete token-backed UI contracts such
   as shared control heights, composer typography, icon button sizes, thread
   metadata alignment, and the absence of decorative left rails.
+- `accessibility-contract.e2e.ts` owns ARIA snapshot coverage for the transcript,
+  approvals, composer, and menu surfaces that must remain discoverable.
 - `capture-docs-screenshots.e2e.ts` is opt-in and only refreshes docs images
   when `CAPTURE_DOCS_SCREENSHOTS=1`.
 
