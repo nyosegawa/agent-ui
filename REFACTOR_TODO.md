@@ -134,10 +134,10 @@ Acceptance:
 
 ## Phase 4: React Hooks And Controllers
 
-- [ ] Split `packages/react/src/hooks.ts` into domain hooks.
-- [ ] Add or refine `useAgentThread`.
+- [x] Split `packages/react/src/hooks.ts` into domain hooks.
+- [x] Add or refine `useAgentThread`.
 - [x] Add or refine `useAgentTurn`.
-- [ ] Add or refine `useAgentComposer`.
+- [x] Add or refine `useAgentComposer`.
 - [x] Add or refine `useAgentApprovals`.
 - [ ] Add or refine `useAgentAccount`.
 - [ ] Add or refine `useAgentModels`.

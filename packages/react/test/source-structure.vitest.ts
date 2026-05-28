@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 
 const reactSrc = join(__dirname, "..", "src");
 const componentDir = join(reactSrc, "components");
+const hookDir = join(reactSrc, "hooks");
 const styleDir = join(reactSrc, "styles");
 const maxResponsibilitySizedLines = 560;
 
@@ -30,6 +31,16 @@ describe("React package source structure", () => {
     expect(barrel).toContain('export * from "./components/run-settings";');
   });
 
+  it("keeps hooks.ts as a public barrel over domain hook modules", () => {
+    const barrel = readFileSync(join(reactSrc, "hooks.ts"), "utf8");
+    expect(barrel).toContain('from "./hooks/thread";');
+    expect(barrel).toContain('from "./hooks/composer";');
+    expect(barrel).toContain('from "./hooks/approvals";');
+    expect(barrel).toContain('from "./hooks/connectors";');
+    expect(barrel).not.toContain("export function useAgent");
+    expect(barrel).not.toContain("useCallback");
+  });
+
   it("keeps component modules responsibility-sized", () => {
     for (const name of readdirSync(componentDir)) {
       if (!name.endsWith(".tsx")) continue;
@@ -38,6 +49,16 @@ describe("React package source structure", () => {
         lineCount,
         responsibilitySizeFailure(name, lineCount, "component"),
       ).toBeLessThanOrEqual(maxResponsibilitySizedLines);
+    }
+  });
+
+  it("keeps hook modules responsibility-sized", () => {
+    for (const name of readdirSync(hookDir)) {
+      if (!name.endsWith(".ts")) continue;
+      const lineCount = readFileSync(join(hookDir, name), "utf8").split("\n").length;
+      expect(lineCount, responsibilitySizeFailure(name, lineCount, "hook")).toBeLessThanOrEqual(
+        maxResponsibilitySizedLines,
+      );
     }
   });
 
@@ -72,14 +93,16 @@ describe("React package source structure", () => {
 function responsibilitySizeFailure(
   name: string,
   lineCount: number,
-  kind: "component" | "style",
+  kind: "component" | "hook" | "style",
 ): string {
   return [
     `${name} has ${lineCount} lines; source modules must stay at or below ${maxResponsibilitySizedLines} lines.`,
     "Do not satisfy this gate by minifying, one-line CSS rules, inlining unrelated logic, or doing a mechanical split.",
     kind === "style"
       ? "Read the CSS chunk, identify the visual ownership boundaries, delete stale selectors, and move coherent surfaces into purpose-named style chunks."
-      : "Read the component, identify the UI/state ownership boundaries, delete stale paths, and move coherent behavior into purpose-named component modules.",
+      : kind === "hook"
+        ? "Read the hook module, identify the state/controller boundary, delete stale paths, and move coherent behavior into purpose-named hook modules."
+        : "Read the component, identify the UI/state ownership boundaries, delete stale paths, and move coherent behavior into purpose-named component modules.",
     "If the file is still large after real cleanup, add a focused module with tests/docs that explain the new responsibility boundary.",
   ].join("\n");
 }
