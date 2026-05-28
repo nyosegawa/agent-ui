@@ -181,15 +181,15 @@ Acceptance:
 - [x] Add tests for reasoning and compaction items.
 - [x] Add tests for approval placement and resolution.
 - [x] Add tests for stored-history transcript rendering.
-- [ ] Add mobile hit-test coverage for composer and approval actions.
+- [x] Add mobile hit-test coverage for composer and approval actions.
 
 Acceptance:
 
-- [ ] The transcript remains the primary reading surface.
-- [ ] Normal messages are not hidden behind disclosure.
-- [ ] Heavy bodies are inspectable without creating nested scroll traps.
-- [ ] Desktop and mobile approval actions are reachable.
-- [ ] React component and transcript tests pass.
+- [x] The transcript remains the primary reading surface.
+- [x] Normal messages are not hidden behind disclosure.
+- [x] Heavy bodies are inspectable without creating nested scroll traps.
+- [x] Desktop and mobile approval actions are reachable.
+- [x] React component and transcript tests pass.
 
 ## Phase 6: Design System And CSS
 

@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import {
   desktopViewport,
   expectActuallyClickable,
+  expectActuallyHitTestable,
   firstApprovalActionButtons,
   mobileViewport,
 } from "./support/visual-contracts";
@@ -34,6 +35,26 @@ test("approval queue keeps additional pending requests as compact picker rows", 
   expect(await compactRows.count()).toBe(2);
   await compactRows.first().click();
   await expect(page.locator(".aui-approval")).toHaveCount(1);
+});
+
+test("mobile keeps composer and approval actions hit-testable in the transcript", async ({
+  page,
+}) => {
+  await page.setViewportSize(mobileViewport);
+  await page.goto("/rich-transcript");
+  await expect(page.locator(".aui-thread-surface").first()).toBeVisible();
+
+  const approval = page.locator(".aui-approval").first();
+  await approval.scrollIntoViewIfNeeded();
+  await expect(approval).toBeVisible();
+  for (const button of firstApprovalActionButtons(approval)) {
+    await button.scrollIntoViewIfNeeded();
+    await expectActuallyClickable(button);
+  }
+
+  const send = page.locator(".aui-composer button[aria-label='Send']").first();
+  await send.scrollIntoViewIfNeeded();
+  await expectActuallyHitTestable(send);
 });
 
 for (const viewport of [
