@@ -1,13 +1,7 @@
 import type { AgentItemState, ThreadState, TurnState } from "@nyosegawa/agent-ui-core";
 import type React from "react";
-import { useMemo, useState } from "react";
 import { useAgentI18n } from "./i18n";
-import {
-  DEFAULT_TRANSCRIPT_ITEM_LIMIT,
-  TRANSCRIPT_ITEM_INCREMENT,
-  transcriptItemIds,
-  visibleTranscriptWindow,
-} from "./transcript-window";
+import { transcriptItemIds } from "./transcript-window";
 import {
   anchoredApprovalNodes,
   approvalAnchorsForTurn,
@@ -25,6 +19,7 @@ import {
   localizedItemLabel,
 } from "./timeline/item-renderers";
 import { useTranscriptFollowScroll } from "./timeline/scroll-follow";
+import { useTranscriptWindowing } from "./timeline/windowing";
 
 export type { TranscriptApprovalAnchors } from "./timeline/approval-anchors";
 export {
@@ -63,19 +58,8 @@ export function AgentMessageList({
     threadId: thread.thread.id,
     turnCount: thread.orderedTurnIds.length,
   });
-  const [visibleItemState, setVisibleItemState] = useState({
-    limit: DEFAULT_TRANSCRIPT_ITEM_LIMIT,
-    threadId: thread.thread.id,
-  });
-  const visibleItemLimit =
-    visibleItemState.threadId === thread.thread.id
-      ? visibleItemState.limit
-      : DEFAULT_TRANSCRIPT_ITEM_LIMIT;
-  const visibleTurnItems = useMemo(
-    () => visibleTranscriptWindow(thread, visibleItemLimit),
-    [thread, visibleItemLimit],
-  );
-  const hiddenItemCount = Math.max(0, visibleTurnItems.totalItemCount - visibleTurnItems.visibleItemCount);
+  const { hiddenItemCount, showEarlierItems, visibleTurnItems } =
+    useTranscriptWindowing(thread);
   return (
     <div className="aui-message-list-wrap">
       <ol className="aui-message-list" onScroll={handleScroll} ref={listRef}>
@@ -83,12 +67,7 @@ export function AgentMessageList({
           <li className="aui-transcript-pagination">
             <button
               className="aui-btn aui-btn-subtle aui-btn-sm"
-              onClick={() =>
-                setVisibleItemState({
-                  limit: visibleItemLimit + TRANSCRIPT_ITEM_INCREMENT,
-                  threadId: thread.thread.id,
-                })
-              }
+              onClick={showEarlierItems}
               type="button"
             >
               {t("timeline.showEarlier")}

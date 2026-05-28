@@ -100,6 +100,16 @@ describe("React package source structure", () => {
     expect(scrollFollow).toContain("new MutationObserver");
   });
 
+  it("keeps transcript windowing behavior in a focused timeline module", () => {
+    const timeline = readFileSync(join(reactSrc, "timeline.tsx"), "utf8");
+    const windowing = readFileSync(join(timelineDir, "windowing.ts"), "utf8");
+    expect(timeline).toContain('from "./timeline/windowing";');
+    expect(timeline).not.toContain("DEFAULT_TRANSCRIPT_ITEM_LIMIT");
+    expect(timeline).not.toContain("setVisibleItemState");
+    expect(windowing).toContain("function useTranscriptWindowing");
+    expect(windowing).toContain("visibleTranscriptWindow");
+  });
+
   it("keeps Codex generated request params out of the React public API", () => {
     const snapshot = readFileSync(reactApiSnapshot, "utf8");
     expect(snapshot).not.toContain("@nyosegawa/agent-ui-codex/stable-types");
