@@ -449,6 +449,67 @@ describe("AgentChat", () => {
     expect(screen.getByText(/second passing line/)).toBeInTheDocument();
   });
 
+  it("renders file change blocks with a closed summary and lazy diff body", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    const change = {
+      diff: "diff --git a/src/app.ts b/src/app.ts\n@@\n-old value\n+new value\n",
+      kind: "update",
+      path: "src/app.ts",
+    };
+    initialState.threads["thread-file-block"] = {
+      orderedTurnIds: ["turn-file-block"],
+      status: "loaded",
+      thread: { id: "thread-file-block", name: "File block" },
+      turns: {
+        "turn-file-block": {
+          blocksByItemId: {
+            "file-1": {
+              changes: [change],
+              id: "file-1",
+              kind: "fileChange",
+              status: "completed",
+            },
+          },
+          commandOutputByItemId: {},
+          filePatchByItemId: {
+            "file-1": { changes: [change] },
+          },
+          itemOrder: ["file-1"],
+          items: {
+            "file-1": {
+              id: "file-1",
+              kind: "fileChange",
+              raw: { changes: [change] },
+              status: "completed",
+              threadId: "thread-file-block",
+              turnId: "turn-file-block",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-file-block", threadId: "thread-file-block" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList thread={initialState.threads["thread-file-block"]!} />
+      </AgentProvider>,
+    );
+
+    const diff = screen.getByLabelText("Diff preview");
+    expect(diff).toHaveTextContent("1 file changed");
+    expect(diff).toHaveTextContent("completed");
+    expect(screen.queryByText("src/app.ts")).not.toBeInTheDocument();
+    expect(screen.queryByText(/new value/)).not.toBeInTheDocument();
+
+    await user.click(within(diff).getByText("1 file changed"));
+    expect(screen.getAllByText("src/app.ts").length).toBeGreaterThan(0);
+    expect(screen.getByLabelText("CodeMirror patch viewer")).toBeInTheDocument();
+    expect(screen.getAllByText(/new value/).length).toBeGreaterThan(0);
+  });
+
   it("keeps execution context visible when a stored turn ends with file changes", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();
