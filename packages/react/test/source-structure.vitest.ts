@@ -8,8 +8,13 @@ const hookDir = join(reactSrc, "hooks");
 const timelineDir = join(reactSrc, "timeline");
 const repoRoot = join(__dirname, "..", "..", "..");
 const examplesDir = join(repoRoot, "examples");
+const codexLocalWebSrc = join(examplesDir, "codex-local-web", "src");
+const docsSiteSrc = join(examplesDir, "docs-site", "src");
 const localReactViteDir = join(examplesDir, "local-react-vite");
 const localReactViteSrc = join(localReactViteDir, "src");
+const nextRpcRouteApp = join(examplesDir, "next-rpc-route", "app");
+const nextWithBridgeSidecarApp = join(examplesDir, "next-with-bridge-sidecar", "app");
+const recipesSrc = join(examplesDir, "recipes", "src");
 const reactApiSnapshot = join(
   __dirname,
   "..",
@@ -177,6 +182,23 @@ describe("React package source structure", () => {
     ]) {
       expect(localReactViteSource).toContain(route);
     }
+  });
+
+  it("keeps retained examples on public package imports", () => {
+    const exampleSource = sourceTextUnder(
+      codexLocalWebSrc,
+      docsSiteSrc,
+      localReactViteSrc,
+      nextRpcRouteApp,
+      nextWithBridgeSidecarApp,
+      recipesSrc,
+    );
+    expect(exampleSource).not.toContain("/packages/react/src/");
+    expect(exampleSource).not.toContain("/packages/core/src/");
+    expect(exampleSource).not.toContain("/packages/codex/src/");
+    expect(exampleSource).not.toContain("/packages/server/src/");
+    expect(exampleSource).not.toContain("@nyosegawa/agent-ui-react/src");
+    expect(exampleSource).toContain("@nyosegawa/agent-ui-react");
   });
 });
 

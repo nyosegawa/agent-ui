@@ -227,26 +227,26 @@ Acceptance:
 - [x] Keep `/host-workflow-recipe` only if it remains generic host composition.
 - [x] Delete or replace obsolete route handoff README folders.
 - [x] Rebuild fixture data with purpose-based names.
-- [ ] Rebuild `examples/codex-local-web` after core bridge/UI APIs settle.
-- [ ] Keep codex-local-web focused on same-origin WebSocket bridge behavior.
-- [ ] Keep codex-local-web focused on real/fake Codex App Server lifecycle.
-- [ ] Keep codex-local-web focused on thread URL routing.
-- [ ] Keep codex-local-web focused on upload persistence.
-- [ ] Keep codex-local-web focused on running-turn follow-up semantics.
-- [ ] Keep codex-local-web focused on approvals and usage restoration.
-- [ ] Update `examples/next-rpc-route` after server API changes.
-- [ ] Update `examples/next-with-bridge-sidecar` after server API changes.
-- [ ] Update `examples/recipes` after React/server public APIs settle.
-- [ ] Decide whether `examples/docs-site` remains executable, merges into docs,
+- [x] Rebuild `examples/codex-local-web` after core bridge/UI APIs settle.
+- [x] Keep codex-local-web focused on same-origin WebSocket bridge behavior.
+- [x] Keep codex-local-web focused on real/fake Codex App Server lifecycle.
+- [x] Keep codex-local-web focused on thread URL routing.
+- [x] Keep codex-local-web focused on upload persistence.
+- [x] Keep codex-local-web focused on running-turn follow-up semantics.
+- [x] Keep codex-local-web focused on approvals and usage restoration.
+- [x] Update `examples/next-rpc-route` after server API changes.
+- [x] Update `examples/next-with-bridge-sidecar` after server API changes.
+- [x] Update `examples/recipes` after React/server public APIs settle.
+- [x] Decide whether `examples/docs-site` remains executable, merges into docs,
   or is deleted.
 
 Acceptance:
 
-- [ ] Each retained example has a current purpose.
-- [ ] Examples consume public package exports as a host would.
-- [ ] No retained example exists only to preserve an obsolete API shape.
-- [ ] Fixture app has no blank retained route.
-- [ ] Example desktop and mobile routes have no document-level horizontal
+- [x] Each retained example has a current purpose.
+- [x] Examples consume public package exports as a host would.
+- [x] No retained example exists only to preserve an obsolete API shape.
+- [x] Fixture app has no blank retained route.
+- [x] Example desktop and mobile routes have no document-level horizontal
   overflow.
 
 ## Phase 8: E2E And Browser Verification

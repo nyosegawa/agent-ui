@@ -65,6 +65,7 @@ need exact contracts.
 - [Fixture Gallery and Local Vite](./examples/local-react-vite.md)
 - [Next RPC Route](./examples/next-rpc-route.md)
 - [Next WebSocket Sidecar](./examples/next-with-bridge-sidecar.md)
+- [Docs Site Example](./examples/docs-site.md)
 - [Recipes](./examples/recipes.md)
 
 ## Design Rule
