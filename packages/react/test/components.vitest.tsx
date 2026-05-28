@@ -2158,6 +2158,68 @@ describe("AgentChat", () => {
     expect(screen.getByRole("img", { name: "/tmp/agent-ui.png" })).toBeInTheDocument();
   });
 
+  it("renders reasoning in disclosure and compaction items inline", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-reasoning-compaction"] = {
+      orderedTurnIds: ["turn-reasoning-compaction"],
+      status: "loaded",
+      thread: { id: "thread-reasoning-compaction", name: "Reasoning" },
+      turns: {
+        "turn-reasoning-compaction": {
+          blocksByItemId: {
+            "reasoning-1": {
+              content: "Full hidden reasoning trace",
+              id: "reasoning-1",
+              kind: "thinking",
+              summary: "Reviewing renderer taxonomy",
+            },
+          },
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["reasoning-1", "compaction-1"],
+          items: {
+            "compaction-1": {
+              id: "compaction-1",
+              kind: "contextCompaction",
+              status: "completed",
+              text: "Earlier transcript context was compacted.",
+              threadId: "thread-reasoning-compaction",
+              turnId: "turn-reasoning-compaction",
+            },
+            "reasoning-1": {
+              id: "reasoning-1",
+              kind: "reasoning",
+              status: "completed",
+              threadId: "thread-reasoning-compaction",
+              turnId: "turn-reasoning-compaction",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-reasoning-compaction", threadId: "thread-reasoning-compaction" },
+        },
+      },
+    };
+
+    const { container } = render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList thread={initialState.threads["thread-reasoning-compaction"]!} />
+      </AgentProvider>,
+    );
+
+    const reasoning = screen.getByText("Reviewing renderer taxonomy").closest("details");
+    expect(reasoning).toHaveTextContent("Thinking");
+    expect(reasoning).toHaveTextContent("Full hidden reasoning trace");
+    expect(reasoning).not.toHaveAttribute("open");
+    await user.click(screen.getByText("Reviewing renderer taxonomy"));
+    expect(reasoning).toHaveAttribute("open");
+
+    const compaction = container.querySelector('[data-kind="contextCompaction"]');
+    expect(compaction).toHaveTextContent("Compaction");
+    expect(compaction).toHaveTextContent("Earlier transcript context was compacted.");
+    expect(compaction?.querySelector("details")).toBeNull();
+  });
+
   it("keeps the running composer editable and stops the active turn from the primary button", async () => {
     const user = userEvent.setup();
     const initialState = runningComposerState();
