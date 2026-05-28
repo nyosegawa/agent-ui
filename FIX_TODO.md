@@ -306,16 +306,16 @@
 
 ### Status Refactor
 
-- [ ] Inspect `packages/react/src/components/status.tsx`.
-- [ ] Extract status notice normalization.
-- [ ] Extract rate-limit severity parsing.
-- [ ] Extract diagnostics title logic.
-- [ ] Fix fallback i18n coverage for exported helpers.
-- [ ] Prefer shared English fallback dictionary or shared fallback adapter.
-- [ ] Keep status UI components presentation-focused.
-- [ ] Add focused tests for status notice normalization.
-- [ ] Add focused tests for exported fallback helper output.
-- [ ] Run relevant React component tests.
+- [x] Inspect `packages/react/src/components/status.tsx`.
+- [x] Extract status notice normalization.
+- [x] Extract rate-limit severity parsing.
+- [x] Extract diagnostics title logic.
+- [x] Fix fallback i18n coverage for exported helpers.
+- [x] Prefer shared English fallback dictionary or shared fallback adapter.
+- [x] Keep status UI components presentation-focused.
+- [x] Add focused tests for status notice normalization.
+- [x] Add focused tests for exported fallback helper output.
+- [x] Run relevant React component tests.
 
 ## Documentation Updates
 
