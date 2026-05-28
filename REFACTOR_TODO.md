@@ -153,15 +153,15 @@ Acceptance:
 - [x] Preserve routing behavior where `/` is no-thread start state.
 - [x] Preserve direct `/threads/<id>` open behavior.
 - [x] Keep stored history readable without forcing resume semantics.
-- [ ] Update React hook docs.
-- [ ] Update React hook tests.
+- [x] Update React hook docs.
+- [x] Update React hook tests.
 
 Acceptance:
 
-- [ ] React hooks are grouped by product domain.
-- [ ] React can be used with a host-provided Codex session/controller.
-- [ ] Composer keyboard and running-state behavior matches App Server semantics.
-- [ ] Usage/status can be rendered without assuming full chat shell usage.
+- [x] React hooks are grouped by product domain.
+- [x] React can be used with a host-provided Codex session/controller.
+- [x] Composer keyboard and running-state behavior matches App Server semantics.
+- [x] Usage/status can be rendered without assuming full chat shell usage.
 
 ## Phase 5: Transcript And UI Split
 
