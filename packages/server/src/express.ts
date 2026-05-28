@@ -1,4 +1,11 @@
+import { jsonRpcErrorPayload } from "@nyosegawa/agent-ui-codex";
 import { createCodexAppServerBridge, type CodexAppServerBridgeOptions } from "./bridge";
+import {
+  isOneShotRpcMethodAllowed,
+  oneShotRpcInvalidRequestError,
+  oneShotRpcMethodNotAllowedError,
+  type OneShotRpcMethodPolicyOptions,
+} from "./one-shot-rpc-policy";
 
 export interface MinimalExpressRequest {
   body?: { method?: string; params?: unknown };
@@ -9,24 +16,34 @@ export interface MinimalExpressResponse {
   status(code: number): MinimalExpressResponse;
 }
 
-export function createAgentUiExpressMiddleware(options: CodexAppServerBridgeOptions = {}) {
+export type AgentUiExpressMiddlewareOptions = CodexAppServerBridgeOptions &
+  OneShotRpcMethodPolicyOptions;
+
+export function createAgentUiExpressMiddleware(
+  options: AgentUiExpressMiddlewareOptions = {},
+) {
   return async function agentUiExpressMiddleware(
     req: MinimalExpressRequest,
     res: MinimalExpressResponse,
   ) {
-    const bridge = createCodexAppServerBridge(options);
+    const { allowedMethods, ...bridgeOptions } = options;
+    const method = req.body?.method;
+    if (typeof method !== "string") {
+      res.status(400).json({ error: oneShotRpcInvalidRequestError("Missing or invalid method") });
+      return;
+    }
+    if (!isOneShotRpcMethodAllowed(method, { allowedMethods })) {
+      res.status(403).json({ error: oneShotRpcMethodNotAllowedError(method) });
+      return;
+    }
+    const bridge = createCodexAppServerBridge(bridgeOptions);
     try {
       await bridge.transport.connect();
-      const method = req.body?.method;
-      if (!method) {
-        res.status(400).json({ error: { message: "Missing method" } });
-        return;
-      }
       const result = await bridge.transport.request(method, req.body?.params);
       res.json({ result });
     } catch (error) {
       res.status(500).json({
-        error: { message: error instanceof Error ? error.message : String(error) },
+        error: jsonRpcErrorPayload(error),
       });
     } finally {
       await bridge.close();

@@ -1,73 +1,70 @@
 import { PassThrough } from "node:stream";
 import { describe, expect, it } from "vitest";
-import { createAgentUiNextRpcRoute, type CodexChildProcess } from "../src";
+import {
+  createAgentUiExpressMiddleware,
+  type CodexChildProcess,
+  type MinimalExpressResponse,
+} from "../src";
 
-describe("createAgentUiNextRpcRoute", () => {
+describe("createAgentUiExpressMiddleware", () => {
   it("handles an allowed productized request and closes the App Server process", async () => {
     const child = createFakeChildProcess();
-    const route = createAgentUiNextRpcRoute({ spawn: () => child.process });
-    const responsePromise = route(
-      new Request("http://localhost/api/agent-ui", {
-        body: JSON.stringify({ method: "model/list", params: {} }),
-        method: "POST",
-      }),
-    );
+    const middleware = createAgentUiExpressMiddleware({ spawn: () => child.process });
+    const response = createResponse();
+    const pending = middleware({ body: { method: "model/list", params: {} } }, response);
 
     await waitFor(() => child.writes.some((line) => JSON.parse(line).method === "model/list"));
     const request = child.writes
       .map((line) => JSON.parse(line))
       .find((line) => line.method === "model/list");
     child.stdout.write(`${JSON.stringify({ id: request.id, result: { data: [] } })}\n`);
+    await pending;
 
-    await expect(responsePromise.then((response) => response.json())).resolves.toEqual({
-      result: { data: [] },
-    });
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual({ result: { data: [] } });
     expect(child.killed()).toBe(true);
   });
 
   it("rejects host-only methods before spawning the App Server process", async () => {
     let spawnCount = 0;
-    const route = createAgentUiNextRpcRoute({
+    const middleware = createAgentUiExpressMiddleware({
       spawn: () => {
         spawnCount += 1;
         return createFakeChildProcess().process;
       },
     });
-    const response = await route(
-      new Request("http://localhost/api/agent-ui", {
-        body: JSON.stringify({ method: "fs/readFile", params: { path: "/tmp/secret" } }),
-        method: "POST",
-      }),
+    const response = createResponse();
+
+    await middleware(
+      { body: { method: "fs/readFile", params: { path: "/tmp/secret" } } },
+      response,
     );
 
-    await expect(response.json()).resolves.toEqual({
+    expect(response.statusCode).toBe(403);
+    expect(response.body).toEqual({
       error: {
         code: -32601,
         data: { method: "fs/readFile" },
         message: "Codex method is not allowed: fs/readFile",
       },
     });
-    expect(response.status).toBe(403);
     expect(spawnCount).toBe(0);
   });
 
   it("rejects command execution by default", async () => {
     let spawnCount = 0;
-    const route = createAgentUiNextRpcRoute({
+    const middleware = createAgentUiExpressMiddleware({
       spawn: () => {
         spawnCount += 1;
         return createFakeChildProcess().process;
       },
     });
-    const response = await route(
-      new Request("http://localhost/api/agent-ui", {
-        body: JSON.stringify({ method: "command/exec", params: { command: "pwd" } }),
-        method: "POST",
-      }),
-    );
+    const response = createResponse();
 
-    expect(response.status).toBe(403);
-    await expect(response.json()).resolves.toMatchObject({
+    await middleware({ body: { method: "command/exec", params: { command: "pwd" } } }, response);
+
+    expect(response.statusCode).toBe(403);
+    expect(response.body).toMatchObject({
       error: { code: -32601, data: { method: "command/exec" } },
     });
     expect(spawnCount).toBe(0);
@@ -75,21 +72,18 @@ describe("createAgentUiNextRpcRoute", () => {
 
   it("rejects missing or invalid methods before spawning", async () => {
     let spawnCount = 0;
-    const route = createAgentUiNextRpcRoute({
+    const middleware = createAgentUiExpressMiddleware({
       spawn: () => {
         spawnCount += 1;
         return createFakeChildProcess().process;
       },
     });
-    const response = await route(
-      new Request("http://localhost/api/agent-ui", {
-        body: JSON.stringify({ params: {} }),
-        method: "POST",
-      }),
-    );
+    const response = createResponse();
 
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toEqual({
+    await middleware({ body: { params: {} } }, response);
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toEqual({
       error: {
         code: -32600,
         message: "Missing or invalid method",
@@ -98,17 +92,16 @@ describe("createAgentUiNextRpcRoute", () => {
     expect(spawnCount).toBe(0);
   });
 
-  it("allows explicit unsafe all-method routing", async () => {
+  it("allows a host-provided method allowlist", async () => {
     const child = createFakeChildProcess();
-    const route = createAgentUiNextRpcRoute({
-      allowedMethods: "all",
+    const middleware = createAgentUiExpressMiddleware({
+      allowedMethods: ["fs/readFile"],
       spawn: () => child.process,
     });
-    const responsePromise = route(
-      new Request("http://localhost/api/agent-ui", {
-        body: JSON.stringify({ method: "fs/readFile", params: { path: "/tmp/data" } }),
-        method: "POST",
-      }),
+    const response = createResponse();
+    const pending = middleware(
+      { body: { method: "fs/readFile", params: { path: "/tmp/data" } } },
+      response,
     );
 
     await waitFor(() => child.writes.some((line) => JSON.parse(line).method === "fs/readFile"));
@@ -116,13 +109,29 @@ describe("createAgentUiNextRpcRoute", () => {
       .map((line) => JSON.parse(line))
       .find((line) => line.method === "fs/readFile");
     child.stdout.write(`${JSON.stringify({ id: request.id, result: { content: "ok" } })}\n`);
+    await pending;
 
-    await expect(responsePromise.then((response) => response.json())).resolves.toEqual({
-      result: { content: "ok" },
-    });
+    expect(response.body).toEqual({ result: { content: "ok" } });
     expect(child.killed()).toBe(true);
   });
 });
+
+function createResponse(): MinimalExpressResponse & {
+  body: unknown;
+  statusCode: number;
+} {
+  return {
+    body: undefined,
+    json(value: unknown) {
+      this.body = value;
+    },
+    status(code: number) {
+      this.statusCode = code;
+      return this;
+    },
+    statusCode: 200,
+  };
+}
 
 function createFakeChildProcess(): {
   killed: () => boolean;

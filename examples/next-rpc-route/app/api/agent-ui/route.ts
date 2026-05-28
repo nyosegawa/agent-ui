@@ -3,6 +3,7 @@ import { createAgentUiNextRpcRoute } from "@nyosegawa/agent-ui-server";
 export const runtime = "nodejs";
 
 export const POST = createAgentUiNextRpcRoute({
+  allowedMethods: ["account/read", "model/list"],
   initialize: {
     capabilities: {
       experimentalApi: false,

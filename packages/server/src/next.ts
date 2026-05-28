@@ -1,6 +1,14 @@
+import { jsonRpcErrorPayload } from "@nyosegawa/agent-ui-codex";
 import { createCodexAppServerBridge, type CodexAppServerBridgeOptions } from "./bridge";
+import {
+  isOneShotRpcMethodAllowed,
+  oneShotRpcInvalidRequestError,
+  oneShotRpcMethodNotAllowedError,
+  type OneShotRpcMethodPolicyOptions,
+} from "./one-shot-rpc-policy";
 
-export type AgentUiNextRpcRouteOptions = CodexAppServerBridgeOptions;
+export type AgentUiNextRpcRouteOptions = CodexAppServerBridgeOptions &
+  OneShotRpcMethodPolicyOptions;
 
 /**
  * Create a Next.js Route Handler for exactly one Codex App Server request.
@@ -11,19 +19,50 @@ export type AgentUiNextRpcRouteOptions = CodexAppServerBridgeOptions;
  */
 export function createAgentUiNextRpcRoute(options: AgentUiNextRpcRouteOptions = {}) {
   return async function POST(request: Request): Promise<Response> {
-    const bridge = createCodexAppServerBridge(options);
+    const { allowedMethods, ...bridgeOptions } = options;
+    let body: unknown;
+    try {
+      body = await request.json();
+    } catch (error) {
+      return Response.json(
+        {
+          error: oneShotRpcInvalidRequestError("Invalid JSON request body", {
+            message: error instanceof Error ? error.message : String(error),
+          }),
+        },
+        { status: 400 },
+      );
+    }
+    if (!isRecord(body) || typeof body.method !== "string") {
+      return Response.json(
+        {
+          error: oneShotRpcInvalidRequestError("Missing or invalid method"),
+        },
+        { status: 400 },
+      );
+    }
+    if (!isOneShotRpcMethodAllowed(body.method, { allowedMethods })) {
+      return Response.json(
+        { error: oneShotRpcMethodNotAllowedError(body.method) },
+        { status: 403 },
+      );
+    }
+    const bridge = createCodexAppServerBridge(bridgeOptions);
     try {
       await bridge.transport.connect();
-      const { method, params } = (await request.json()) as { method: string; params?: unknown };
-      const result = await bridge.transport.request(method, params);
+      const result = await bridge.transport.request(body.method, body.params);
       return Response.json({ result });
     } catch (error) {
       return Response.json(
-        { error: { message: error instanceof Error ? error.message : String(error) } },
+        { error: jsonRpcErrorPayload(error) },
         { status: 500 },
       );
     } finally {
       await bridge.close();
     }
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

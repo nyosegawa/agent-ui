@@ -17,26 +17,26 @@
 
 ### One-Shot RPC Method Policy
 
-- [ ] Inspect `packages/server/src/next.ts`.
-- [ ] Inspect `packages/server/src/express.ts`.
-- [ ] Define shared one-shot RPC method policy.
-- [ ] Default one-shot helpers to productized App Server methods only.
-- [ ] Add `allowedMethods` option.
-- [ ] Decide whether to support an explicit unsafe `"all"` escape hatch.
-- [ ] Validate method/body shape before spawning bridge where possible.
-- [ ] Return clear disallowed-method error for host-only methods.
-- [ ] Add Next route test allowing `model/list`.
-- [ ] Add Next route test rejecting `fs/readFile`.
-- [ ] Add Next route test rejecting `command/exec`.
-- [ ] Add Next route test for missing/invalid method.
-- [ ] Add Express middleware tests matching the Next route policy.
-- [ ] Confirm rejected methods are not written to App Server stdin.
-- [ ] Confirm bridge closes after allowed and rejected requests.
-- [ ] Update `docs/reference/server-bridge.md`.
-- [ ] Update `docs/examples/next-rpc-route.md`.
-- [ ] Review `examples/next-rpc-route/app/api/agent-ui/route.ts`.
-- [ ] Run `bun --filter @nyosegawa/agent-ui-server test`.
-- [ ] Run `bun run typecheck`.
+- [x] Inspect `packages/server/src/next.ts`.
+- [x] Inspect `packages/server/src/express.ts`.
+- [x] Define shared one-shot RPC method policy.
+- [x] Default one-shot helpers to productized App Server methods only.
+- [x] Add `allowedMethods` option.
+- [x] Decide whether to support an explicit unsafe `"all"` escape hatch.
+- [x] Validate method/body shape before spawning bridge where possible.
+- [x] Return clear disallowed-method error for host-only methods.
+- [x] Add Next route test allowing `model/list`.
+- [x] Add Next route test rejecting `fs/readFile`.
+- [x] Add Next route test rejecting `command/exec`.
+- [x] Add Next route test for missing/invalid method.
+- [x] Add Express middleware tests matching the Next route policy.
+- [x] Confirm rejected methods are not written to App Server stdin.
+- [x] Confirm bridge closes after allowed and rejected requests.
+- [x] Update `docs/reference/server-bridge.md`.
+- [x] Update `docs/examples/next-rpc-route.md`.
+- [x] Review `examples/next-rpc-route/app/api/agent-ui/route.ts`.
+- [x] Run `bun --filter @nyosegawa/agent-ui-server test`.
+- [x] Run `bun run typecheck`.
 
 ### Pending Server Request Lifecycle
 

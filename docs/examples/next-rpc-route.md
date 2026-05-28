@@ -10,7 +10,7 @@ Purpose:
 
 - demonstrate `createAgentUiNextRpcRoute()`
 - expose one App Server request per HTTP `POST`
-- support host-owned metadata calls such as `account/read` or `model/list`
+- support allowlisted metadata calls such as `account/read` or `model/list`
 
 Run:
 
@@ -25,3 +25,6 @@ POST /api/agent-ui
 ```
 
 This example is not a chat bridge. Use the WebSocket sidecar for full chat.
+The helper rejects host-only methods such as `fs/readFile`, `command/exec`, and
+`mcpServer/tool/call` by default. Keep `allowedMethods` scoped to the calls this
+route actually needs.

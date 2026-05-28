@@ -193,6 +193,23 @@ the bounded permissions returned by the callback are granted; `undefined`,
 HTTP RPC helpers. They are useful for calls such as `account/read`,
 `model/list`, or a host-owned administrative request.
 
+One-shot helpers validate the requested method before spawning App Server. By
+default they allow only Agent UI productized methods, matching the WebSocket
+bridge's default browser posture. Host-only methods such as `fs/readFile`,
+`command/exec`, `mcpServer/tool/call`, and configuration writes are rejected
+with a JSON-RPC style `-32601` error. Pass `allowedMethods` to narrow or expand
+the explicit allowlist:
+
+```ts
+createAgentUiNextRpcRoute({
+  allowedMethods: ["account/read", "model/list"],
+});
+```
+
+`allowedMethods: "all"` is an unsafe escape hatch for authenticated,
+host-owned routes only. Do not expose it from a browser-copyable route without
+separate authorization and audit controls.
+
 They are not chat bridges because a single HTTP response cannot represent:
 
 - streaming App Server notifications
@@ -214,3 +231,5 @@ Use `examples/next-rpc-route` for one-shot RPC. Use
   keys, token fields, passwords, secrets, and device/user codes.
 - Use one process/session/workspace boundary per user for multi-user hosts.
 - Keep API keys server-side only.
+- Keep one-shot `allowedMethods` narrow. Treat `allowedMethods: "all"` like a
+  host admin endpoint, not a browser UI convenience.

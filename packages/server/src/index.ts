@@ -3,6 +3,7 @@ export * from "./dynamic-tools";
 export * from "./express";
 export * from "./host-events";
 export * from "./next";
+export * from "./one-shot-rpc-policy";
 export * from "./redaction";
 export * from "./server-request-policy";
 export * from "./upload";
