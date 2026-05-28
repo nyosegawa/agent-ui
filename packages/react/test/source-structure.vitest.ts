@@ -164,6 +164,10 @@ describe("React package source structure", () => {
     const main = readFileSync(join(localReactViteSrc, "main.tsx"), "utf8");
     expect(main).not.toContain('pathname === "/qa"');
     const localReactViteSource = sourceTextUnder(localReactViteSrc);
+    expect(localReactViteSource).not.toContain("thread-history-demo");
+    expect(localReactViteSource).not.toContain("turn-history-demo");
+    expect(localReactViteSource).not.toContain("docs/testing.md");
+    expect(localReactViteSource).not.toContain("agent-ui-rich-transcript-check");
     for (const route of [
       "/app-connectors",
       "/fixture-gallery",

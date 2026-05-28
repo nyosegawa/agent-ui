@@ -1,5 +1,9 @@
-export type DemoState = "default" | "empty" | "unauth" | "bridge-error";
-export type DemoScenario = DemoState | "rich-transcript";
+export type FixtureScenario =
+  | "default"
+  | "empty"
+  | "unauth"
+  | "bridge-error"
+  | "rich-transcript";
 
 export type FixtureGroup = "core" | "states" | "primitives";
 

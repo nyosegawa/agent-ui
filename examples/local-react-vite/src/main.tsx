@@ -41,16 +41,16 @@ import {
 } from "./closeups/ComponentCloseupGallery";
 import { FixturePreview } from "./closeups/FixturePreview";
 import {
-  createDemoInitialState,
-  createDemoTransport,
+  createFixtureInitialState,
+  createFixtureTransport,
   createRichTranscriptInitialState,
-  demoRateLimits,
+  fixtureRateLimits,
 } from "./fixtures/demo-state";
 import {
   fixtureGroupLabels,
   groupFixtures,
   visualQaStates,
-  type DemoScenario,
+  type FixtureScenario,
 } from "./fixtures/gallery";
 
 declare global {
@@ -69,11 +69,11 @@ function DemoApp() {
 }
 
 function AgentDemo() {
-  const demoState = useMemo(() => demoScenarioFromLocation(), []);
+  const scenario = useMemo(() => fixtureScenarioFromLocation(), []);
   const [locale, setLocale] = useState<AgentLocale>(() => localeFromLocation());
   const [theme, setTheme] = useState<AgentTheme>(() => themeFromLocation());
-  const initialState = useMemo(() => createDemoInitialState(demoState), [demoState]);
-  const transport = useMemo(() => createDemoTransport(demoState), [demoState]);
+  const initialState = useMemo(() => createFixtureInitialState(scenario), [scenario]);
+  const transport = useMemo(() => createFixtureTransport(scenario), [scenario]);
 
   return (
     <AgentProvider initialState={initialState} transport={transport}>
@@ -213,7 +213,7 @@ function UsageOnlyExample() {
       account: { email: "fixture@example.com", planType: "pro" },
       status: "authenticated",
     };
-    state.usage.accountRateLimits = demoRateLimits();
+    state.usage.accountRateLimits = fixtureRateLimits();
     return state;
   }, []);
   return (
@@ -397,7 +397,7 @@ function AppConnectorsExample() {
 
 function HostWorkflowRecipe() {
   const initialState = useMemo(() => createRichTranscriptInitialState(), []);
-  const transport = useMemo(() => createDemoTransport("rich-transcript"), []);
+  const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
   return (
     <AgentProvider initialState={initialState} transport={transport}>
       <HostWorkflowComposition />
@@ -631,7 +631,7 @@ function ExampleFrame({
   );
 }
 
-function demoScenarioFromLocation(): DemoScenario {
+function fixtureScenarioFromLocation(): FixtureScenario {
   if (window.location.pathname === "/rich-transcript") return "rich-transcript";
   const state = new URLSearchParams(window.location.search).get("state");
   if (

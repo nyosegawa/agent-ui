@@ -226,7 +226,7 @@ Acceptance:
 - [x] Keep `/app-connectors` as the Apps/connectors surface.
 - [x] Keep `/host-workflow-recipe` only if it remains generic host composition.
 - [x] Delete or replace obsolete route handoff README folders.
-- [ ] Rebuild fixture data with purpose-based names.
+- [x] Rebuild fixture data with purpose-based names.
 - [ ] Rebuild `examples/codex-local-web` after core bridge/UI APIs settle.
 - [ ] Keep codex-local-web focused on same-origin WebSocket bridge behavior.
 - [ ] Keep codex-local-web focused on real/fake Codex App Server lifecycle.

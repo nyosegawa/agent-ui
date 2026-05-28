@@ -18,8 +18,8 @@ import {
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import {
   createRichTranscriptInitialState,
-  demoModels,
-  demoRateLimits,
+  fixtureModels,
+  fixtureRateLimits,
 } from "../fixtures/demo-state";
 
 export function ComponentCloseupGallery() {
@@ -110,8 +110,8 @@ function CloseupComposerProvider({ children }: { children: ReactNode }) {
       account: { email: "fixture@example.com", planType: "pro" },
       status: "authenticated",
     };
-    state.usage.accountRateLimits = demoRateLimits();
-    state.models = { models: demoModels(), selectedModelId: "fixture-demo-model" };
+    state.usage.accountRateLimits = fixtureRateLimits();
+    state.models = { models: fixtureModels(), selectedModelId: "fixture-demo-model" };
     state.threadRegistry.activeThreadId = "thread-closeup";
     state.threadRegistry.liveThreadIds = ["thread-closeup"];
     state.threads["thread-closeup"] = {
@@ -544,7 +544,7 @@ function CloseupUsagePanel() {
       account: { email: "fixture@example.com", planType: "pro" },
       status: "authenticated",
     };
-    state.usage.accountRateLimits = demoRateLimits();
+    state.usage.accountRateLimits = fixtureRateLimits();
     return state;
   }, []);
   return (

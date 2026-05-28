@@ -10,40 +10,40 @@ import {
   type PendingServerRequest,
 } from "@nyosegawa/agent-ui-core";
 import demoFixture from "../../../../fixtures/app-server/demo-session.json";
-import type { DemoScenario } from "./gallery";
+import type { FixtureScenario } from "./gallery";
 
-export function createDemoInitialState(demoState: DemoScenario): AgentSessionState {
-  if (demoState === "default") return runEventFixture(demoFixture as FixtureStep[]);
-  if (demoState === "rich-transcript") return createRichTranscriptInitialState();
+export function createFixtureInitialState(scenario: FixtureScenario): AgentSessionState {
+  if (scenario === "default") return runEventFixture(demoFixture as FixtureStep[]);
+  if (scenario === "rich-transcript") return createRichTranscriptInitialState();
   const state = createInitialAgentState();
-  if (demoState === "unauth") {
+  if (scenario === "unauth") {
     state.account = { status: "unauthenticated" };
     return state;
   }
-  if (demoState === "empty") {
+  if (scenario === "empty") {
     state.account = {
       account: { email: "fixture@example.com", planType: "pro" },
       status: "authenticated",
     };
-    state.usage.accountRateLimits = demoRateLimits();
-    state.models = { models: demoModels() };
+    state.usage.accountRateLimits = fixtureRateLimits();
+    state.models = { models: fixtureModels() };
     return state;
   }
   return state;
 }
 
-export function createDemoTransport(demoState: DemoScenario): AgentTransport {
-  if (demoState === "bridge-error") return new FailingTransport();
+export function createFixtureTransport(scenario: FixtureScenario): AgentTransport {
+  if (scenario === "bridge-error") return new FailingTransport();
   return new FakeAgentTransport({
     onRequest(request) {
-      return handleDemoRequest(request, demoState);
+      return handleFixtureRequest(request, scenario);
     },
   });
 }
 
-function handleDemoRequest(request: FakeTransportRequest, demoState: DemoScenario) {
+function handleFixtureRequest(request: FakeTransportRequest, scenario: FixtureScenario) {
   if (request.method === "account/read") {
-    return demoState === "unauth"
+    return scenario === "unauth"
       ? {}
       : { account: { email: "fixture@example.com", planType: "pro" } };
   }
@@ -55,8 +55,8 @@ function handleDemoRequest(request: FakeTransportRequest, demoState: DemoScenari
     };
   }
   if (request.method === "account/login/cancel") return { status: "cancelled" };
-  if (request.method === "model/list") return { data: demoModels() };
-  if (request.method === "account/rateLimits/read") return demoRateLimits();
+  if (request.method === "model/list") return { data: fixtureModels() };
+  if (request.method === "account/rateLimits/read") return fixtureRateLimits();
   if (request.method === "thread/start") {
     return {
       thread: {
@@ -67,11 +67,11 @@ function handleDemoRequest(request: FakeTransportRequest, demoState: DemoScenari
     };
   }
   if (request.method === "thread/list") {
-    if (demoState === "empty" || demoState === "unauth") return { data: [] };
+    if (scenario === "empty" || scenario === "unauth") return { data: [] };
     return {
       data: [
         {
-          id: "thread-history-demo",
+          id: "thread-stored-preview",
           name: "Stored session",
           preview: "Review a stored session",
           status: { type: "notLoaded" },
@@ -83,13 +83,13 @@ function handleDemoRequest(request: FakeTransportRequest, demoState: DemoScenari
   if (request.method === "thread/read") {
     return {
       thread: {
-        id: "thread-history-demo",
+        id: "thread-stored-preview",
         name: "Stored session",
         path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
         status: { type: "notLoaded" },
         turns: [
           {
-            id: "turn-history-demo",
+            id: "turn-stored-preview",
             items: [
               {
                 content: [{ text: "Show me a stored session.", type: "text" }],
@@ -111,7 +111,7 @@ function handleDemoRequest(request: FakeTransportRequest, demoState: DemoScenari
   if (request.method === "thread/resume") {
     return {
       thread: {
-        id: "thread-history-demo",
+        id: "thread-stored-preview",
         name: "Stored session",
         path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
         status: { type: "idle" },
@@ -128,8 +128,8 @@ export function createRichTranscriptInitialState(): AgentSessionState {
     account: { email: "fixture@example.com", planType: "pro" },
     status: "authenticated",
   };
-  state.usage.accountRateLimits = demoRateLimits();
-  state.models = { models: demoModels(), selectedModelId: "fixture-demo-model" };
+  state.usage.accountRateLimits = fixtureRateLimits();
+  state.models = { models: fixtureModels(), selectedModelId: "fixture-demo-model" };
   state.threadRegistry.activeThreadId = "thread-rich-transcript";
   state.threadRegistry.liveThreadIds = ["thread-rich-transcript"];
   state.diagnostics.banners = [
@@ -243,8 +243,8 @@ export function createRichTranscriptInitialState(): AgentSessionState {
           },
           "item-file": {
             changes: [
-              { kind: "update", path: "packages/react/src/timeline.tsx" },
-              { kind: "update", path: "docs/testing.md" },
+              { kind: "update", path: "packages/react/src/timeline/item-renderers.tsx" },
+              { kind: "update", path: "docs/architecture/testing.md" },
             ],
             id: "item-file",
             kind: "fileChange",
@@ -270,7 +270,7 @@ export function createRichTranscriptInitialState(): AgentSessionState {
           "item-image": {
             id: "item-image",
             kind: "image",
-            path: "/tmp/agent-ui-rich-transcript-check.png",
+            path: "/tmp/agent-ui-fixture-rich-transcript.png",
             status: "completed",
           },
           "item-system": {
@@ -384,7 +384,7 @@ export function createRichTranscriptInitialState(): AgentSessionState {
   return state;
 }
 
-export function demoModels() {
+export function fixtureModels() {
   return [
     {
       defaultReasoningEffort: "medium",
@@ -395,7 +395,7 @@ export function demoModels() {
   ];
 }
 
-export function demoRateLimits() {
+export function fixtureRateLimits() {
   return {
     rateLimits: {
       limitName: "fixture-demo-model",
