@@ -174,7 +174,7 @@ Acceptance:
 - [x] Keep user and assistant messages readable inline.
 - [x] Use disclosure for heavy command output, diffs, tool bodies, and verbose
   diagnostics.
-- [ ] Keep approvals inline in transcript and backed by server-request state.
+- [x] Keep approvals inline in transcript and backed by server-request state.
 - [ ] Add tests for command execution blocks.
 - [ ] Add tests for file change blocks.
 - [ ] Add tests for MCP/dynamic/collab tool blocks.
