@@ -10,16 +10,18 @@ export function reduceServerRequestEvent(
 ): AgentSessionState {
   switch (event.type) {
     case "serverRequest/created":
-      return threadEntityStore.update(
-        {
-          ...state,
-          serverRequestQueue: serverRequestStore.enqueue(
-            state.serverRequestQueue,
-            event.request,
-          ),
-        },
-        event.request.threadId ?? "",
-        (thread) => ({ ...thread, status: "waitingForInput" }),
+      return threadEntityStore.pruneSnapshots(
+        threadEntityStore.setStatus(
+          {
+            ...state,
+            serverRequestQueue: serverRequestStore.enqueue(
+              state.serverRequestQueue,
+              event.request,
+            ),
+          },
+          event.request.threadId ?? "",
+          "waitingForInput",
+        ),
       );
     case "serverRequest/resolved": {
       const requestId = String(event.requestId);
@@ -42,10 +44,11 @@ export function reduceServerRequestEvent(
         return threadEntityStore.pruneSnapshots(nextState);
       }
       return threadEntityStore.pruneSnapshots(
-        threadEntityStore.update(nextState, request.threadId, (thread) =>
-          thread.status === "waitingForInput"
-            ? { ...thread, status: "running" }
-            : thread,
+        threadEntityStore.setStatus(
+          nextState,
+          request.threadId,
+          "running",
+          { onlyIf: "waitingForInput" },
         ),
       );
     }
@@ -73,10 +76,11 @@ export function reduceServerRequestEvent(
         return threadEntityStore.pruneSnapshots(nextState);
       }
       return threadEntityStore.pruneSnapshots(
-        threadEntityStore.update(nextState, request.threadId, (thread) =>
-          thread.status === "waitingForInput"
-            ? { ...thread, status: "running" }
-            : thread,
+        threadEntityStore.setStatus(
+          nextState,
+          request.threadId,
+          "running",
+          { onlyIf: "waitingForInput" },
         ),
       );
     }

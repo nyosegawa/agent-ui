@@ -40,35 +40,35 @@
 
 ### Pending Server Request Lifecycle
 
-- [ ] Inspect `packages/core/src/reducer/server-requests.ts`.
-- [ ] Inspect `packages/core/src/reducer/connection.ts`.
-- [ ] Inspect `packages/core/src/stores/thread-index.ts`.
-- [ ] Identify a single helper path for thread status plus registry updates.
-- [ ] On `serverRequest/created`, set thread status to `waitingForInput`.
-- [ ] On `serverRequest/created`, update `ThreadState.registryStatus`.
-- [ ] On `serverRequest/created`, update `threadRegistry` bucket membership.
-- [ ] On `serverRequest/resolved`, keep waiting state if the thread has another pending request.
-- [ ] On `serverRequest/resolved`, restore thread status when no pending request remains.
-- [ ] On `serverRequest/resolved`, sync `ThreadState.registryStatus`.
-- [ ] On `serverRequest/resolved`, sync `threadRegistry`.
-- [ ] On `serverRequest/rejected`, keep waiting state if the thread has another pending request.
-- [ ] On `serverRequest/rejected`, restore thread status when no pending request remains.
-- [ ] On `serverRequest/rejected`, sync `ThreadState.registryStatus`.
-- [ ] On `serverRequest/rejected`, sync `threadRegistry`.
-- [ ] Before `connection/closed` queue clearing, collect pending request thread IDs.
-- [ ] On `connection/closed`, clear pending server requests.
-- [ ] On `connection/closed`, move affected `waitingForInput` threads to a non-waiting state.
-- [ ] On `connection/closed`, sync affected registry entries.
-- [ ] Decide exact `connection/error` pending-request behavior.
-- [ ] On `connection/error`, reconcile pending requests and affected waiting threads consistently.
-- [ ] Add reducer test for server request create registry sync.
-- [ ] Add reducer test for server request resolve registry sync.
-- [ ] Add reducer test for server request reject registry sync.
-- [ ] Add reducer test for multiple pending requests on one thread.
-- [ ] Extend disconnect test to assert thread status recovery.
-- [ ] Extend disconnect test to assert registry recovery.
-- [ ] Add connection error lifecycle test.
-- [ ] Run `bun test packages/core/test/reducer.test.ts`.
+- [x] Inspect `packages/core/src/reducer/server-requests.ts`.
+- [x] Inspect `packages/core/src/reducer/connection.ts`.
+- [x] Inspect `packages/core/src/stores/thread-index.ts`.
+- [x] Identify a single helper path for thread status plus registry updates.
+- [x] On `serverRequest/created`, set thread status to `waitingForInput`.
+- [x] On `serverRequest/created`, update `ThreadState.registryStatus`.
+- [x] On `serverRequest/created`, update `threadRegistry` bucket membership.
+- [x] On `serverRequest/resolved`, keep waiting state if the thread has another pending request.
+- [x] On `serverRequest/resolved`, restore thread status when no pending request remains.
+- [x] On `serverRequest/resolved`, sync `ThreadState.registryStatus`.
+- [x] On `serverRequest/resolved`, sync `threadRegistry`.
+- [x] On `serverRequest/rejected`, keep waiting state if the thread has another pending request.
+- [x] On `serverRequest/rejected`, restore thread status when no pending request remains.
+- [x] On `serverRequest/rejected`, sync `ThreadState.registryStatus`.
+- [x] On `serverRequest/rejected`, sync `threadRegistry`.
+- [x] Before `connection/closed` queue clearing, collect pending request thread IDs.
+- [x] On `connection/closed`, clear pending server requests.
+- [x] On `connection/closed`, move affected `waitingForInput` threads to a non-waiting state.
+- [x] On `connection/closed`, sync affected registry entries.
+- [x] Decide exact `connection/error` pending-request behavior.
+- [x] On `connection/error`, reconcile pending requests and affected waiting threads consistently.
+- [x] Add reducer test for server request create registry sync.
+- [x] Add reducer test for server request resolve registry sync.
+- [x] Add reducer test for server request reject registry sync.
+- [x] Add reducer test for multiple pending requests on one thread.
+- [x] Extend disconnect test to assert thread status recovery.
+- [x] Extend disconnect test to assert registry recovery.
+- [x] Add connection error lifecycle test.
+- [x] Run `bun test packages/core/test/reducer.test.ts`.
 
 ### Approval Visibility And Ordering
 

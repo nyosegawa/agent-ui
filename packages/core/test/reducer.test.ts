@@ -287,20 +287,29 @@ describe("agentReducer", () => {
     expect(selectPendingApprovals(state, "thread-1")).toHaveLength(0);
   });
 
-  it("clears pending server requests on disconnect", () => {
+  it("clears pending server requests on disconnect and recovers waiting threads", () => {
     const state = runEventFixture([
+      { event: { thread: { id: "thread-disconnect" }, type: "thread/started" } },
       {
         event: {
-          request: { id: "r1", kind: "fileChangeApproval", payload: {} },
+          request: {
+            id: "r1",
+            kind: "fileChangeApproval",
+            payload: {},
+            threadId: "thread-disconnect",
+          },
           type: "serverRequest/created",
         },
       },
       { event: { type: "connection/closed" } },
     ]);
     expect(state.serverRequestQueue).toEqual({ byId: {}, order: [] });
+    expect(state.threads["thread-disconnect"]?.status).toBe("running");
+    expect(state.threads["thread-disconnect"]?.registryStatus).toBe("live");
+    expect(selectThreadRegistry(state).liveThreadIds).toContain("thread-disconnect");
   });
 
-  it("marks a thread as waiting while approval is pending", () => {
+  it("syncs thread registry while an approval is created and resolved", () => {
     const state = runEventFixture([
       { event: { thread: { id: "thread-approval" }, type: "thread/started" } },
       {
@@ -316,6 +325,8 @@ describe("agentReducer", () => {
       },
     ]);
     expect(state.threads["thread-approval"]?.status).toBe("waitingForInput");
+    expect(state.threads["thread-approval"]?.registryStatus).toBe("live");
+    expect(selectThreadRegistry(state).liveThreadIds).toContain("thread-approval");
     expect(selectServerRequestQueue(state, "thread-approval").map((request) => request.id)).toEqual([
       "approval-1",
     ]);
@@ -336,7 +347,82 @@ describe("agentReducer", () => {
       { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
     ]);
     expect(resolved.threads["thread-approval"]?.status).toBe("running");
+    expect(resolved.threads["thread-approval"]?.registryStatus).toBe("live");
+    expect(selectThreadRegistry(resolved).liveThreadIds).toContain("thread-approval");
     expect(selectServerRequestQueue(resolved, "thread-approval")).toEqual([]);
+  });
+
+  it("keeps a thread waiting until all pending server requests resolve or reject", () => {
+    const firstResolved = runEventFixture([
+      { event: { thread: { id: "thread-multi" }, type: "thread/started" } },
+      {
+        event: {
+          request: {
+            id: "approval-1",
+            kind: "commandApproval",
+            payload: {},
+            threadId: "thread-multi",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "approval-2",
+            kind: "fileChangeApproval",
+            payload: {},
+            threadId: "thread-multi",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
+    ]);
+    expect(firstResolved.threads["thread-multi"]?.status).toBe("waitingForInput");
+    expect(selectServerRequestQueue(firstResolved, "thread-multi").map((request) => request.id)).toEqual([
+      "approval-2",
+    ]);
+    expect(selectThreadRegistry(firstResolved).liveThreadIds).toContain("thread-multi");
+
+    const secondRejected = agentReducer(firstResolved, {
+      error: { message: "declined" },
+      requestId: "approval-2",
+      type: "serverRequest/rejected",
+    });
+    expect(secondRejected.threads["thread-multi"]?.status).toBe("running");
+    expect(secondRejected.threads["thread-multi"]?.registryStatus).toBe("live");
+    expect(selectServerRequestQueue(secondRejected, "thread-multi")).toEqual([]);
+    expect(selectDiagnostics(secondRejected).errors[0]?.message).toBe("declined");
+  });
+
+  it("reconciles pending server requests on connection errors", () => {
+    const state = runEventFixture([
+      { event: { thread: { id: "thread-error" }, type: "thread/started" } },
+      {
+        event: {
+          request: {
+            id: "approval-error",
+            kind: "commandApproval",
+            payload: {},
+            threadId: "thread-error",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          error: { message: "transport failed" },
+          type: "connection/error",
+        },
+      },
+    ]);
+
+    expect(state.serverRequestQueue).toEqual({ byId: {}, order: [] });
+    expect(state.threads["thread-error"]?.status).toBe("running");
+    expect(state.threads["thread-error"]?.registryStatus).toBe("live");
+    expect(selectThreadRegistry(state).liveThreadIds).toContain("thread-error");
+    expect(selectDiagnostics(state).errors[0]?.message).toBe("transport failed");
   });
 
   it("keeps duplicate server request resolution idempotent", () => {

@@ -2,8 +2,10 @@ import type {
   AgentSessionState,
   AgentThread,
   ThreadId,
+  ThreadStatus,
   ThreadState,
 } from "../state";
+import { threadIndexStore } from "./thread-index";
 
 export type ThreadEntityState = Record<ThreadId, ThreadState>;
 
@@ -11,6 +13,12 @@ export interface ThreadEntityStore {
   createInitialState(): ThreadEntityState;
   createThreadState(thread: AgentThread): ThreadState;
   getOrCreate(threads: ThreadEntityState, thread: AgentThread): ThreadState;
+  setStatus(
+    state: AgentSessionState,
+    threadId: ThreadId,
+    status: ThreadStatus,
+    options?: { onlyIf?: ThreadStatus },
+  ): AgentSessionState;
   update(
     state: AgentSessionState,
     threadId: ThreadId,
@@ -24,6 +32,7 @@ export const threadEntityStore: ThreadEntityStore = {
   createThreadState,
   getOrCreate: getOrCreateThreadState,
   pruneSnapshots: pruneThreadSnapshots,
+  setStatus: setThreadStatus,
   update: updateThreadEntity,
 };
 
@@ -60,6 +69,40 @@ export function updateThreadEntity(
     threads: {
       ...state.threads,
       [threadId]: updater(thread),
+    },
+  };
+}
+
+export function setThreadStatus(
+  state: AgentSessionState,
+  threadId: ThreadId,
+  status: ThreadStatus,
+  options: { onlyIf?: ThreadStatus } = {},
+): AgentSessionState {
+  const thread = state.threads[threadId];
+  if (!thread || (options.onlyIf !== undefined && thread.status !== options.onlyIf)) {
+    return state;
+  }
+  const registryStatus = threadIndexStore.classifyStatus(
+    status,
+    thread.orderedTurnIds
+      .map((turnId) => thread.turns[turnId]?.turn)
+      .filter((turn) => turn != null),
+  );
+  return {
+    ...state,
+    threadRegistry: threadIndexStore.upsert(
+      state.threadRegistry,
+      threadId,
+      registryStatus,
+    ),
+    threads: {
+      ...state.threads,
+      [threadId]: {
+        ...thread,
+        registryStatus,
+        status,
+      },
     },
   };
 }
