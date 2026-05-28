@@ -231,7 +231,6 @@ function useThreadUrlRouting(
   activeThreadId?: string,
 ): void {
   const { state } = useAgentContext();
-  const { resumeThread } = useAgentThread();
   const { readThread } = useAgentThreadReader();
   const { setActiveThread, threads } = useAgentThreads();
   const lastPathRef = useRef<string | undefined>(undefined);
@@ -245,12 +244,12 @@ function useThreadUrlRouting(
     const initialThreadId = threadIdFromPath(window.location.pathname, basePath);
     if (!initialThreadId || initialUrlThreadReadRef.current === initialThreadId) return;
     initialUrlThreadReadRef.current = initialThreadId;
-    void resumeThread(initialThreadId).catch(() => {
+    void readThread(initialThreadId, { activate: true, includeTurns: true }).catch(() => {
       if (initialUrlThreadReadRef.current === initialThreadId) {
         initialUrlThreadReadRef.current = undefined;
       }
     });
-  }, [basePath, enabled, resumeThread, state.connection.status]);
+  }, [basePath, enabled, readThread, state.connection.status]);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined" || !activeThreadId) return;
@@ -276,9 +275,7 @@ function useThreadUrlRouting(
         setActiveThread(threadId);
         return;
       }
-      const openThread = existingThread
-        ? resumeThread(threadId)
-        : readThread(threadId, { activate: true, includeTurns: true });
+      const openThread = readThread(threadId, { activate: true, includeTurns: true });
       void openThread.catch(() => {
         if (existingThread) setActiveThread(threadId);
         else setActiveThread(undefined);
@@ -286,7 +283,7 @@ function useThreadUrlRouting(
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, [basePath, enabled, readThread, resumeThread, setActiveThread, threads]);
+  }, [basePath, enabled, readThread, setActiveThread, threads]);
 }
 
 function threadPath(threadId: string, basePath: string): string {

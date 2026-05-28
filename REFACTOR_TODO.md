@@ -150,9 +150,9 @@ Acceptance:
 - [x] Implement composer controller semantics:
   idle submit uses `turn/start`; running follow-up queues or uses validated
   `turn/steer`; Stop uses `turn/interrupt`.
-- [ ] Preserve routing behavior where `/` is no-thread start state.
-- [ ] Preserve direct `/threads/<id>` open behavior.
-- [ ] Keep stored history readable without forcing resume semantics.
+- [x] Preserve routing behavior where `/` is no-thread start state.
+- [x] Preserve direct `/threads/<id>` open behavior.
+- [x] Keep stored history readable without forcing resume semantics.
 - [ ] Update React hook docs.
 - [ ] Update React hook tests.
 

@@ -15,7 +15,8 @@ const turns = useAgentTurnController(threadId);
 
 `useAgentThreadController()` is the preferred name for `useAgentThread()`. It can
 follow the active thread or lock to a supplied `threadId`. Use `startThread()`
-for a new Codex thread and `resumeThread(threadId)` for a stored session.
+for a new Codex thread and `resumeThread(threadId)` only when the host explicitly
+wants to rejoin a stored session.
 
 `useAgentTurnController()` is the preferred name for `useAgentTurn()`. It sends
 `turn/start` with normalized run settings, `turn/steer` for continuing an active
@@ -48,6 +49,10 @@ preferred preview path for stored sessions. Stored turn outcomes remain visible
 on the hydrated turns, but they do not replace the thread-level preview status;
 for example, a stored session whose last turn was interrupted still hydrates as
 a resumable preview instead of an interrupted live thread.
+
+The default `AgentChat` history sidebar and `threadUrlRouting` direct
+`/threads/<id>` opens use `thread/read` for stored history so browsing a transcript
+does not imply `thread/resume`. The root route stays a no-thread start state.
 
 ## Composer And Run Settings
 

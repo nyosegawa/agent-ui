@@ -7,7 +7,7 @@ import {
   IconSearch,
   buttonClass,
 } from "../components-internal";
-import { useAgentThread, useAgentThreadHistory, useAgentThreadReader } from "../hooks";
+import { useAgentThreadHistory, useAgentThreadReader } from "../hooks";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import { useAgentContext } from "../provider";
 import { rawThreadId } from "../thread-history";
@@ -160,7 +160,6 @@ export function AgentThreadSidebar({
   const { cursor, error, isLoading, listThreads } = useAgentThreadHistory();
   const { state } = useAgentContext();
   const { readThread } = useAgentThreadReader();
-  const { resumeThread } = useAgentThread();
   const [searchTerm, setSearchTerm] = useState("");
   const [hasLoaded, setHasLoaded] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>();
@@ -257,19 +256,14 @@ export function AgentThreadSidebar({
   const selectThread = useCallback(
     (threadId: string) => {
       if (compact) onCollapsedChange?.(true);
-      const selectedThread = threads.find((thread) => thread.thread.id === threadId);
-      const shouldResume =
-        selectedThread?.status === "notLoaded" || selectedThread?.status === "loaded";
-      const openThread = shouldResume
-        ? resumeThread(threadId)
-        : readThread(threadId, { activate: true, includeTurns: true });
+      const openThread = readThread(threadId, { activate: true, includeTurns: true });
       void openThread
         .catch(() => undefined)
         .finally(() => {
           onSelectThread?.(threadId);
         });
     },
-    [compact, onCollapsedChange, onSelectThread, readThread, resumeThread, threads],
+    [compact, onCollapsedChange, onSelectThread, readThread],
   );
   const createThread = useCallback(() => {
     if (compact) onCollapsedChange?.(true);

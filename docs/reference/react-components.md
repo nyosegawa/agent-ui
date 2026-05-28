@@ -226,7 +226,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
   `thread/list` cursors with an IntersectionObserver sentinel and keeps the
   visible fallback to a single Load more action. Its optional new-thread action
   is a host navigation callback; it should return the user to the thread-start
-  screen rather than eagerly calling `thread/start`.
+  screen rather than eagerly calling `thread/start`. Selecting stored history
+  uses `thread/read` preview hydration, not `thread/resume`.
 - `AgentThreadSurface`: unopinionated thread column surface for a host-arranged
   header, notices, timeline, and composer. Its grid rows are header, optional
   critical notices, the transcript scroll area, then the composer — pending

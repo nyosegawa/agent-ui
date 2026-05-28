@@ -3639,7 +3639,7 @@ describe("AgentChat", () => {
     });
   });
 
-  it("restores cwd from started and resumed thread responses", async () => {
+  it("restores cwd from started and stored thread preview responses", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
       onRequest(request) {
@@ -3682,18 +3682,6 @@ describe("AgentChat", () => {
             },
           };
         }
-        if (request.method === "thread/resume") {
-          return {
-            thread: {
-              cwd: "/Users/example/old-project",
-              id: "thread-old-cwd",
-              name: "Old project",
-              path: "/Users/example/.codex/sessions/2026/05/10/old.jsonl",
-              status: { type: "idle" },
-              turns: [],
-            },
-          };
-        }
         return {};
       },
     });
@@ -3714,9 +3702,12 @@ describe("AgentChat", () => {
     expect(await screen.findByText("/Users/example/project")).toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: /Old project/ }));
-    expect(await screen.findByText("Ready")).toBeInTheDocument();
+    expect(await screen.findByText("Preview")).toBeInTheDocument();
     expect(await screen.findByText("/Users/example/old-project")).toBeInTheDocument();
     expect(screen.queryByText(/\.codex\/sessions/)).not.toBeInTheDocument();
+    expect(transport.requests.some((request) => request.method === "thread/resume")).toBe(
+      false,
+    );
   });
 
   it("collapses and expands the history sidebar", async () => {
@@ -3845,7 +3836,7 @@ describe("AgentChat", () => {
     ).toEqual({ loginId: "login-123" });
   });
 
-  it("loads persisted session history and resumes an individual thread", async () => {
+  it("loads persisted session history as a readable preview", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
       onRequest(request) {
@@ -3864,14 +3855,26 @@ describe("AgentChat", () => {
             ],
           };
         }
-        if (request.method === "thread/resume") {
+        if (request.method === "thread/read") {
           return {
             thread: {
               id: "thread-history",
               name: "Historical fix",
               path: "/Users/example/.codex/sessions/2026/05/09/rollout-demo.jsonl",
-              status: { type: "idle" },
-              turns: [],
+              status: { type: "notLoaded" },
+              turns: [
+                {
+                  id: "turn-history",
+                  items: [
+                    {
+                      id: "item-history",
+                      text: "Stored transcript stays readable.",
+                      type: "agentMessage",
+                    },
+                  ],
+                  status: "completed",
+                },
+              ],
             },
           };
         }
@@ -3890,20 +3893,21 @@ describe("AgentChat", () => {
     expect(
       await screen.findByRole("heading", { name: "Historical fix" }),
     ).toBeInTheDocument();
+    expect(await screen.findByText("Stored transcript stays readable.")).toBeInTheDocument();
     expect(screen.getByText("Codex session")).toBeInTheDocument();
     expect(screen.queryByText(/rollout-demo\.jsonl/)).not.toBeInTheDocument();
-    expect(await screen.findByText("Ready")).toBeInTheDocument();
-    expect(screen.getByLabelText("Message")).not.toBeDisabled();
+    expect(await screen.findByText("Preview")).toBeInTheDocument();
+    expect(screen.getByLabelText("Message")).toBeDisabled();
     expect(screen.queryByText("notLoaded")).not.toBeInTheDocument();
     expect(transport.requests.map((request) => request.method)).toEqual(
-      expect.arrayContaining(["thread/list", "thread/resume"]),
-    );
-    expect(transport.requests.some((request) => request.method === "thread/read")).toBe(
-      false,
+      expect.arrayContaining(["thread/list", "thread/read"]),
     );
     expect(
-      transport.requests.find((request) => request.method === "thread/resume")?.params,
-    ).toEqual({ threadId: "thread-history" });
+      transport.requests.find((request) => request.method === "thread/read")?.params,
+    ).toEqual({ threadId: "thread-history", includeTurns: true });
+    expect(transport.requests.some((request) => request.method === "thread/resume")).toBe(
+      false,
+    );
   });
 
   it("does not expose a manual resume button for stored threads", async () => {
@@ -3921,8 +3925,8 @@ describe("AgentChat", () => {
             ],
           };
         }
-        if (request.method === "thread/resume") {
-          throw new Error("resume unavailable");
+        if (request.method === "thread/read") {
+          throw new Error("read unavailable");
         }
         return {};
       },
@@ -3937,8 +3941,11 @@ describe("AgentChat", () => {
     await user.click(await screen.findByRole("button", { name: /Needs resume/ }));
     expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
     expect(
-      transport.requests.find((request) => request.method === "thread/resume")?.params,
-    ).toEqual({ threadId: "thread-fail-resume" });
+      transport.requests.find((request) => request.method === "thread/read")?.params,
+    ).toEqual({ threadId: "thread-fail-resume", includeTurns: true });
+    expect(transport.requests.some((request) => request.method === "thread/resume")).toBe(
+      false,
+    );
   });
 
   it("syncs active thread selection to explicit thread URLs", async () => {
@@ -3954,7 +3961,7 @@ describe("AgentChat", () => {
             ],
           };
         }
-        if (request.method === "thread/resume") {
+        if (request.method === "thread/read") {
           const id = String((request.params as { threadId?: string }).threadId);
           return {
             thread: {
@@ -4033,7 +4040,7 @@ describe("AgentChat", () => {
       expect(
         transport.requests.some(
           (request) =>
-            request.method === "thread/resume" &&
+            request.method === "thread/read" &&
             (request.params as { threadId?: string }).threadId === "thread-two",
         ),
       ).toBe(true),
@@ -4089,7 +4096,7 @@ describe("AgentChat", () => {
             ],
           };
         }
-        if (request.method === "thread/resume") {
+        if (request.method === "thread/read") {
           const id = String((request.params as { threadId?: string }).threadId);
           return {
             thread: {
@@ -4125,11 +4132,14 @@ describe("AgentChat", () => {
       await screen.findByRole("heading", { name: "Thread two" }),
     ).toBeInTheDocument();
     expect(
-      transport.requests.filter((request) => request.method === "thread/resume"),
+      transport.requests.filter((request) => request.method === "thread/read"),
     ).toHaveLength(1);
     expect(
-      transport.requests.find((request) => request.method === "thread/resume")?.params,
-    ).toEqual({ threadId: "thread-two" });
+      transport.requests.find((request) => request.method === "thread/read")?.params,
+    ).toEqual({ threadId: "thread-two", includeTurns: true });
+    expect(transport.requests.some((request) => request.method === "thread/resume")).toBe(
+      false,
+    );
   });
 
   it("uses the configured home path when navigating back to the start screen", async () => {
@@ -4148,7 +4158,7 @@ describe("AgentChat", () => {
             ],
           };
         }
-        if (request.method === "thread/resume") {
+        if (request.method === "thread/read") {
           return {
             thread: {
               id: "thread-custom",
@@ -4191,7 +4201,7 @@ describe("AgentChat", () => {
   it("keeps direct URL thread when sidebar history load resolves first", async () => {
     window.history.replaceState(null, "", "/threads/thread-target");
     let resolveThreadTarget: (response: unknown) => void = () => undefined;
-    const threadTargetResume = new Promise((resolve) => {
+    const threadTargetRead = new Promise((resolve) => {
       resolveThreadTarget = resolve;
     });
     const transport = new FakeAgentTransport({
@@ -4208,9 +4218,9 @@ describe("AgentChat", () => {
             ],
           };
         }
-        if (request.method === "thread/resume") {
+        if (request.method === "thread/read") {
           const id = String((request.params as { threadId?: string }).threadId);
-          if (id === "thread-target") return threadTargetResume;
+          if (id === "thread-target") return threadTargetRead;
           return {
             thread: {
               id,
@@ -4266,7 +4276,7 @@ describe("AgentChat", () => {
           turns: [],
         },
       });
-      await threadTargetResume;
+      await threadTargetRead;
     });
 
     expect(
