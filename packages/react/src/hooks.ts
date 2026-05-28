@@ -3,15 +3,12 @@ import {
   selectLatestRunningTurnId,
   selectOrderedThreads,
   selectOrderedTurns,
-  selectPendingApprovals,
   selectRunSettings,
-  selectServerRequestQueue,
   selectThread,
   selectThreadRegistry,
   type AgentModel,
   type ExecutionModeId,
   type ReasoningEffort,
-  type RequestId,
   type ThreadId,
   type ThreadState,
 } from "@nyosegawa/agent-ui-core";
@@ -52,6 +49,7 @@ export {
   useAgentModels,
   useAgentSkills,
 } from "./hooks/connectors";
+export { useAgentApprovals, useAgentServerRequests } from "./hooks/approvals";
 
 type ThreadForkOptions = Omit<ThreadForkParams, "threadId">;
 type ThreadResumeOptions = Omit<ThreadResumeParams, "threadId">;
@@ -461,38 +459,6 @@ export function useAgentTurn(threadId?: ThreadId) {
 }
 
 export const useAgentTurnController = useAgentTurn;
-
-export function useAgentApprovals(threadId?: ThreadId) {
-  const { state, transport } = useAgentContext();
-  const approvals = useMemo(
-    () => selectPendingApprovals(state, threadId),
-    [state, threadId],
-  );
-
-  const approve = useCallback(
-    async (requestId: RequestId, result: unknown = { decision: "accept" }) => {
-      await transport.respond(requestId, result);
-    },
-    [transport],
-  );
-
-  const reject = useCallback(
-    async (requestId: RequestId, message = "Rejected by user") => {
-      const error = { code: -32000, message };
-      await transport.reject(requestId, error);
-    },
-    [transport],
-  );
-
-  return { approvals, approve, reject };
-}
-
-export function useAgentServerRequests(threadId?: ThreadId) {
-  const approvals = useAgentApprovals(threadId);
-  const { state } = useAgentContext();
-  const queue = selectServerRequestQueue(state, threadId);
-  return { ...approvals, requests: queue };
-}
 
 export function useAgentComposer(threadId?: ThreadId) {
   const { t } = useAgentI18n();
