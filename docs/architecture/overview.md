@@ -238,8 +238,8 @@ generated `.aui-*` class names host-facing API.
 
 The Vite fixture app is split by intent. Route composition stays in
 `examples/local-react-vite/src/main.tsx`, visual close-ups live under
-`examples/local-react-vite/src/closeups/`, and deterministic demo state /
-transport fixtures live under `examples/local-react-vite/src/fixtures/`. Keep
+`examples/local-react-vite/src/closeups/`, and deterministic fixture state /
+transport data lives under `examples/local-react-vite/src/fixtures/`. Keep
 this separation so fake visual QA data does not leak into the real
 `examples/codex-local-web` App Server integration. Example CSS is a visual QA
 surface for the library and should use `--aui-*` tokens; recipe CSS may

@@ -286,33 +286,33 @@ Acceptance:
 
 ## Phase 9: Docs And Screenshots
 
-- [ ] Update `README.md`.
-- [ ] Update `docs/README.md`.
-- [ ] Update `docs/getting-started.md`.
-- [ ] Update `docs/architecture/overview.md`.
-- [ ] Update `docs/architecture/product-boundary.md`.
-- [ ] Update `docs/architecture/testing.md`.
-- [ ] Update `docs/architecture/toolchain.md`.
-- [ ] Update `docs/guides/browser-verification.md`.
-- [ ] Update `docs/guides/theming.md`.
-- [ ] Update `docs/reference/codex-protocol.md`.
-- [ ] Update `docs/reference/package-exports.md`.
-- [ ] Update `docs/reference/react-components.md`.
-- [ ] Update `docs/examples/local-react-vite.md`.
-- [ ] Update `docs/examples/codex-local-web.md`.
-- [ ] Update other `docs/examples/*` pages to match retained examples.
-- [ ] Remove docs for deleted examples/routes.
-- [ ] Regenerate `docs/screenshots/*` only after intentional visual changes.
-- [ ] Remove screenshots for deleted routes.
-- [ ] Ensure screenshot names match current route purposes.
+- [x] Update `README.md`.
+- [x] Update `docs/README.md`.
+- [x] Update `docs/getting-started.md`.
+- [x] Update `docs/architecture/overview.md`.
+- [x] Update `docs/architecture/product-boundary.md`.
+- [x] Update `docs/architecture/testing.md`.
+- [x] Update `docs/architecture/toolchain.md`.
+- [x] Update `docs/guides/browser-verification.md`.
+- [x] Update `docs/guides/theming.md`.
+- [x] Update `docs/reference/codex-protocol.md`.
+- [x] Update `docs/reference/package-exports.md`.
+- [x] Update `docs/reference/react-components.md`.
+- [x] Update `docs/examples/local-react-vite.md`.
+- [x] Update `docs/examples/codex-local-web.md`.
+- [x] Update other `docs/examples/*` pages to match retained examples.
+- [x] Remove docs for deleted examples/routes.
+- [x] Regenerate `docs/screenshots/*` only after intentional visual changes.
+- [x] Remove screenshots for deleted routes.
+- [x] Ensure screenshot names match current route purposes.
 
 Acceptance:
 
-- [ ] Docs describe current implementation state, not migration history.
-- [ ] Documentation entry points route users to current examples and package
+- [x] Docs describe current implementation state, not migration history.
+- [x] Documentation entry points route users to current examples and package
   exports.
-- [ ] Screenshot set exactly matches retained visual QA routes.
-- [ ] No screenshot refresh is required for wording-only docs changes.
+- [x] Screenshot set exactly matches retained visual QA routes.
+- [x] No screenshot refresh is required for wording-only docs changes.
 
 ## Final Validation
 

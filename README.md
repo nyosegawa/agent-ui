@@ -146,6 +146,7 @@ Key pages:
 - [Fixture Gallery and Local Vite](./docs/examples/local-react-vite.md)
 - [Next RPC Route](./docs/examples/next-rpc-route.md)
 - [Next WebSocket Sidecar](./docs/examples/next-with-bridge-sidecar.md)
+- [Docs Site Example](./docs/examples/docs-site.md)
 - [Recipes](./docs/examples/recipes.md)
 
 ## Scope

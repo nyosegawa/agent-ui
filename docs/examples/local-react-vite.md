@@ -48,9 +48,11 @@ Playwright starts its own preview servers for automated checks. Do not rely on
 a manually running 5174 server for `bun run test:e2e:playwright`.
 
 The fixture e2e suite is organized by product contract rather than by route or
-file size. Layout reachability lives in `visual-layout.e2e.ts`, close-up gallery
-coverage lives in `visual-closeups.e2e.ts`, approval behavior lives in
-`visual-approvals.e2e.ts`, and token-backed design-system invariants live in
-`design-system-contract.e2e.ts`. Keep new fixture browser checks in the file
-that owns the contract they protect, and put only thin reusable assertions in
-`e2e/support/`.
+file size. Baseline routing and blank-page protection live in `smoke.e2e.ts`,
+layout reachability lives in `visual-layout.e2e.ts`, close-up gallery coverage
+lives in `visual-closeups.e2e.ts`, approval behavior lives in
+`visual-approvals.e2e.ts`, token-backed design-system invariants live in
+`design-system-contract.e2e.ts`, and discoverability of transcript, approval,
+composer, and menu surfaces lives in `accessibility-contract.e2e.ts`. Keep new
+fixture browser checks in the file that owns the contract they protect, and put
+only thin reusable assertions in `e2e/support/`.

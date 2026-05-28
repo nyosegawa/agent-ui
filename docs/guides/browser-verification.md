@@ -42,7 +42,7 @@ Run examples from the repo root unless a package README says otherwise.
 Start the deterministic fixture app:
 
 ```bash
-bun run --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
+bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 ```
 
 Then inspect representative routes with `agent-browser`:
@@ -50,12 +50,15 @@ Then inspect representative routes with `agent-browser`:
 ```bash
 agent-browser open http://127.0.0.1:5174/fixture-gallery
 agent-browser snapshot -i
+agent-browser eval 'document.documentElement.scrollWidth - document.documentElement.clientWidth'
 agent-browser screenshot /tmp/agent-ui-fixture-gallery-desktop.png
 agent-browser open http://127.0.0.1:5174/rich-transcript
 agent-browser snapshot -i
+agent-browser eval '({ composer: !!document.querySelector(".aui-composer"), approvals: document.querySelectorAll(".aui-approval-card").length })'
 agent-browser set viewport 390 900
 agent-browser open http://127.0.0.1:5174/usage-only
 agent-browser snapshot -i
+agent-browser eval '({ composer: !!document.querySelector(".aui-composer"), usagePanels: document.querySelectorAll(".aui-usage").length })'
 agent-browser screenshot /tmp/agent-ui-usage-only-mobile.png
 agent-browser close
 ```
@@ -73,6 +76,7 @@ Then inspect the app in the same browser session:
 ```bash
 agent-browser open http://127.0.0.1:5175/
 agent-browser snapshot -i
+agent-browser eval '({ composer: !!document.querySelector(".aui-composer"), overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth })'
 agent-browser screenshot /tmp/agent-ui-codex-local-web.png
 agent-browser close
 ```

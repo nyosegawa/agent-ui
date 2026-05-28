@@ -11,6 +11,7 @@ const examplesDir = join(repoRoot, "examples");
 const codexLocalWebSrc = join(examplesDir, "codex-local-web", "src");
 const docsSiteSrc = join(examplesDir, "docs-site", "src");
 const localReactViteDir = join(examplesDir, "local-react-vite");
+const localReactViteE2e = join(localReactViteDir, "e2e");
 const localReactViteSrc = join(localReactViteDir, "src");
 const nextRpcRouteApp = join(examplesDir, "next-rpc-route", "app");
 const nextWithBridgeSidecarApp = join(examplesDir, "next-with-bridge-sidecar", "app");
@@ -199,6 +200,29 @@ describe("React package source structure", () => {
     expect(exampleSource).not.toContain("/packages/server/src/");
     expect(exampleSource).not.toContain("@nyosegawa/agent-ui-react/src");
     expect(exampleSource).toContain("@nyosegawa/agent-ui-react");
+  });
+
+  it("keeps docs screenshot capture aligned with retained visual routes", () => {
+    const capture = readFileSync(
+      join(localReactViteE2e, "capture-docs-screenshots.e2e.ts"),
+      "utf8",
+    );
+    const expectedRoutes = [
+      ["/", "agent-ui-home"],
+      ["/rich-transcript", "agent-ui-rich-transcript"],
+      ["/host-workflow-recipe", "agent-ui-host-workflow"],
+      ["/usage-only", "agent-ui-usage-only"],
+      ["/scoped-thread-pane", "agent-ui-scoped-thread"],
+      ["/app-connectors", "agent-ui-app-connectors"],
+      ["/fixture-gallery", "agent-ui-fixture-gallery"],
+    ] as const;
+    for (const [route, filenameBase] of expectedRoutes) {
+      expect(capture).toContain(`path: "${route}"`);
+      expect(capture).toContain(`${filenameBase}-desktop.png`);
+      expect(capture).toContain(`${filenameBase}-mobile.png`);
+    }
+    expect(capture).not.toContain("/qa");
+    expect(capture).toContain("mkdirSync(outputDir, { recursive: true })");
   });
 });
 

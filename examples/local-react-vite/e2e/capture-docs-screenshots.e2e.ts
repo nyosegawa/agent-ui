@@ -4,6 +4,7 @@
  * Skipped unless `CAPTURE_DOCS_SCREENSHOTS=1` so it does not run in CI.
  */
 import { test } from "@playwright/test";
+import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 const shouldRun = process.env.CAPTURE_DOCS_SCREENSHOTS === "1";
@@ -71,6 +72,7 @@ test("refresh docs/screenshots", async ({ browser }) => {
     !shouldRun,
     "Run with CAPTURE_DOCS_SCREENSHOTS=1 to regenerate docs screenshots",
   );
+  mkdirSync(outputDir, { recursive: true });
   for (const route of routes) {
     for (const size of ["desktop", "mobile"] as const) {
       const context = await browser.newContext({

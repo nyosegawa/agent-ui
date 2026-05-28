@@ -209,13 +209,14 @@ now` on a queued card also sends `turn/steer`; outside a running turn,
   primitives (no iframes) so reviewers can inspect part quality, not just
   layout.
 
-Saved screenshot evidence lives under `docs/screenshots/`. The host workflow
-recipe (`examples/local-react-vite` `/host-workflow-recipe`) is the canonical
-proof that the same primitives compose into a real product surface without the
-preset, and the fixture gallery (`/fixture-gallery`) is the visual QA index for
-every state plus the component-level close-ups. Example CSS is part of that QA
-surface and should use `--aui-*` tokens; recipe CSS may intentionally override
-tokens to demonstrate host theming.
+Documentation screenshots are opt-in release evidence generated under
+`docs/screenshots/`. The host workflow recipe (`examples/local-react-vite`
+`/host-workflow-recipe`) is the canonical proof that the same primitives compose
+into a real product surface without the preset, and the fixture gallery
+(`/fixture-gallery`) is the visual QA index for every state plus the
+component-level close-ups. Example CSS is part of that QA surface and should use
+`--aui-*` tokens; recipe CSS may intentionally override tokens to demonstrate
+host theming.
 
 ## Layout Primitives
 

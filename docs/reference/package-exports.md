@@ -205,8 +205,7 @@ path.
 
 Route-focused fixtures such as `/fixture-gallery`, `/usage-only`,
 `/scoped-thread-pane`, `/app-connectors`, and `/host-workflow-recipe` live inside
-`examples/local-react-vite`; they are documented under `docs/examples/` instead
-of as README-only example directories.
+`examples/local-react-vite` and are documented under `docs/examples/`.
 
 ## Browser Public API
 
