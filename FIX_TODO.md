@@ -331,31 +331,31 @@
 
 ## Validation Checklist
 
-- [ ] Run `bun run typecheck`.
-- [ ] Run `bun run lint`.
-- [ ] Run `bun test packages/core/test/reducer.test.ts`.
-- [ ] Run `bun test packages/codex/test/protocol.test.ts packages/codex/test/session-api.test.ts packages/codex/test/raw-jsonrpc-fixtures.test.ts`.
-- [ ] Run `bun --filter @nyosegawa/agent-ui-server test`.
-- [ ] Run focused React component tests for changed surfaces.
-- [ ] Run `bun run test:styles`.
-- [ ] Run `bun run validate:packages` after package/API changes.
-- [ ] Run `bun run test:api-snapshots` after public declaration changes.
-- [ ] Run `bun run test:package-resolution` after package export changes.
-- [ ] Run `bun run test:node-compat` after package boundary changes.
-- [ ] Run `bun run test:e2e:playwright` after browser-visible behavior changes.
+- [x] Run `bun run typecheck`.
+- [x] Run `bun run lint`.
+- [x] Run `bun test packages/core/test/reducer.test.ts`.
+- [x] Run `bun test packages/codex/test/protocol.test.ts packages/codex/test/session-api.test.ts packages/codex/test/raw-jsonrpc-fixtures.test.ts`.
+- [x] Run `bun --filter @nyosegawa/agent-ui-server test`.
+- [x] Run focused React component tests for changed surfaces.
+- [x] Run `bun run test:styles`.
+- [x] Run `bun run validate:packages` after package/API changes.
+- [x] Run `bun run test:api-snapshots` after public declaration changes.
+- [x] Run `bun run test:package-resolution` after package export changes.
+- [x] Run `bun run test:node-compat` after package boundary changes.
+- [x] Run `bun run test:e2e:playwright` after browser-visible behavior changes.
 
 ## Clean-State Validation
 
-- [ ] Remove package `dist` outputs before clean-state validation.
-- [ ] Remove example `dist` outputs before clean-state validation.
-- [ ] Remove example `.next` outputs before clean-state validation.
-- [ ] Run `node scripts/check-clean-build-output.mjs`.
-- [ ] Run `bun run typecheck` after cleanup.
+- [x] Remove package `dist` outputs before clean-state validation.
+- [x] Remove example `dist` outputs before clean-state validation.
+- [x] Remove example `.next` outputs before clean-state validation.
+- [x] Run `node scripts/check-clean-build-output.mjs`.
+- [x] Run `bun run typecheck` after cleanup.
 
 ## Current Known Baseline
 
 - [x] `bun run typecheck` passes on the current checkout.
 - [x] `bun run test:styles` passes on the current checkout.
 - [x] Focused core/protocol tests pass on the current checkout.
-- [ ] `node scripts/check-clean-build-output.mjs` passes on the current checkout.
-- [ ] `bun run test:api-snapshots` passes on the current checkout.
+- [x] `node scripts/check-clean-build-output.mjs` passes on the current checkout.
+- [x] `bun run test:api-snapshots` passes on the current checkout.
