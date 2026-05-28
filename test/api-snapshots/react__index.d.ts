@@ -930,27 +930,6 @@ interface TranscriptApprovalAnchors {
     renderApprovalAnchor: (approval: PendingServerRequest) => React__default.ReactNode;
 }
 
-declare function AgentMessageList({ footer, approvalAnchors, renderItem, scrollKey, thread, }: {
-    /**
-     * Trailing transcript content rendered as the final scroll-area item.
-     * The default thread view uses it to keep the pending-approval surface
-     * inside the transcript instead of in a separate scroll pane.
-     */
-    footer?: React__default.ReactNode;
-    approvalAnchors?: TranscriptApprovalAnchors;
-    renderItem?: (item: AgentItemState, turn: TurnState) => React__default.ReactNode;
-    /** Changing this value scrolls the transcript to its end (e.g. a new approval). */
-    scrollKey?: string | number;
-    thread: ThreadState;
-}): react_jsx_runtime.JSX.Element;
-declare const AgentTranscript: typeof AgentMessageList;
-declare function AgentTurn({ approvals, renderItem, threadStatus, turn, visibleItemIds, }: {
-    approvals?: ApprovalAnchors;
-    renderItem?: (item: AgentItemState, turn: TurnState) => React__default.ReactNode;
-    threadStatus: ThreadState["status"];
-    turn: TurnState;
-    visibleItemIds?: string[];
-}): react_jsx_runtime.JSX.Element;
 declare function AgentContentBlockView({ block, output, patch, }: {
     block: AgentItemBlock;
     output?: string;
@@ -978,6 +957,28 @@ declare function AgentMessageItem({ text }: {
 }): react_jsx_runtime.JSX.Element;
 declare const AgentCommandOutputItem: typeof AgentCommandItem;
 declare const AgentDiffItem: typeof AgentFileChangeItem;
+
+declare function AgentMessageList({ footer, approvalAnchors, renderItem, scrollKey, thread, }: {
+    /**
+     * Trailing transcript content rendered as the final scroll-area item.
+     * The default thread view uses it to keep the pending-approval surface
+     * inside the transcript instead of in a separate scroll pane.
+     */
+    footer?: React__default.ReactNode;
+    approvalAnchors?: TranscriptApprovalAnchors;
+    renderItem?: (item: AgentItemState, turn: TurnState) => React__default.ReactNode;
+    /** Changing this value scrolls the transcript to its end (e.g. a new approval). */
+    scrollKey?: string | number;
+    thread: ThreadState;
+}): react_jsx_runtime.JSX.Element;
+declare const AgentTranscript: typeof AgentMessageList;
+declare function AgentTurn({ approvals, renderItem, threadStatus, turn, visibleItemIds, }: {
+    approvals?: ApprovalAnchors;
+    renderItem?: (item: AgentItemState, turn: TurnState) => React__default.ReactNode;
+    threadStatus: ThreadState["status"];
+    turn: TurnState;
+    visibleItemIds?: string[];
+}): react_jsx_runtime.JSX.Element;
 
 declare const DEFAULT_TRANSCRIPT_ITEM_LIMIT = 48;
 declare const TRANSCRIPT_ITEM_INCREMENT = 48;
