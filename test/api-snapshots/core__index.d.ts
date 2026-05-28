@@ -519,10 +519,13 @@ declare function runEventFixture(steps: FixtureStep[], initialState?: AgentSessi
 declare function agentReducer(state: AgentSessionState | undefined, event: AgentEvent): AgentSessionState;
 
 declare const AGENT_RETENTION_POLICY: {
+    readonly appScopesMax: 200;
     readonly commandOutputMaxChars: 128000;
     readonly diagnosticsErrorsMax: 50;
     readonly filePatchesPerTurnMax: 40;
+    readonly hooksCwdEntriesMax: 50;
     readonly protocolNotificationsMax: 100;
+    readonly skillsCwdEntriesMax: 50;
     readonly statusBannersMax: 20;
     readonly threadRegistrySnapshotsMax: 200;
     readonly warningsMax: 50;
