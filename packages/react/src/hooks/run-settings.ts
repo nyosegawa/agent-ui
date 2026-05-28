@@ -4,11 +4,11 @@ import {
   type ExecutionModeId,
   type ReasoningEffort,
 } from "@nyosegawa/agent-ui-core";
-import type { TurnStartParams } from "@nyosegawa/agent-ui-codex/stable-types";
 import { useCallback } from "react";
 import { useAgentContext } from "../provider";
+import type { TurnStartOptions } from "../request-options";
 
-export type TurnStartOptions = Partial<Omit<TurnStartParams, "input" | "threadId">>;
+export type { TurnStartOptions } from "../request-options";
 
 export interface AgentExecutionMode {
   id: ExecutionModeId;

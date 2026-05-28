@@ -5,6 +5,15 @@ import { describe, expect, it } from "vitest";
 const reactSrc = join(__dirname, "..", "src");
 const componentDir = join(reactSrc, "components");
 const hookDir = join(reactSrc, "hooks");
+const reactApiSnapshot = join(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "test",
+  "api-snapshots",
+  "react__index.d.ts",
+);
 const styleDir = join(reactSrc, "styles");
 const maxResponsibilitySizedLines = 560;
 
@@ -68,6 +77,16 @@ describe("React package source structure", () => {
     expect(provider).not.toContain("JSON.parse");
     expect(provider).not.toContain("warning/added");
     expect(provider).not.toContain("for await");
+  });
+
+  it("keeps Codex generated request params out of the React public API", () => {
+    const snapshot = readFileSync(reactApiSnapshot, "utf8");
+    expect(snapshot).not.toContain("@nyosegawa/agent-ui-codex/stable-types");
+    expect(snapshot).not.toContain("CodexStableMethodParams");
+    expect(snapshot).not.toContain("ThreadStartParams");
+    expect(snapshot).not.toContain("TurnStartParams");
+    expect(snapshot).not.toContain("AppsListParams");
+    expect(snapshot).not.toContain("SkillsListParams");
   });
 
   it("keeps style chunks responsibility-sized", () => {

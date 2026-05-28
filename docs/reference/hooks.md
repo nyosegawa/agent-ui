@@ -2,8 +2,9 @@
 
 Headless hooks are the stable customization surface for hosts that need custom
 layout, product chrome, fixed thread views, or host-owned panels. Hooks return
-normalized Agent UI state and stable actions; generated Codex App Server
-payloads stay behind request builders and normalizers.
+normalized Agent UI state and stable actions. React exposes Agent UI option
+types for hook inputs; generated Codex App Server params and request builders
+stay inside the Codex package boundary.
 
 ## Thread Controllers
 
@@ -70,8 +71,9 @@ The default `AgentComposerPanel` still blocks submission for approval-waiting
 threads and stored read-only previews.
 
 `useAgentRunSettings()` exposes execution modes, available models, supported
-efforts, cwd, current selections, and setters. Execution modes map to stable App
-Server `approvalPolicy` and `sandboxPolicy` fields.
+efforts, cwd, current selections, and setters. Execution modes map to React-owned
+`TurnStartOptions`; the hook layer converts those options to Codex params before
+calling App Server.
 
 ## Server Requests And Approvals
 
@@ -115,7 +117,7 @@ const apps = useAgentApps(threadId);
 ```
 
 `useAgentSkills()` calls `skills/list`, stores normalized skills, and exposes
-`setSkillEnabled()` through stable `skills/config/write` params.
+`setSkillEnabled()` through React-owned skill config options.
 
 `useAgentHooks()` calls `hooks/list` and stores normalized hook metadata.
 
@@ -128,10 +130,9 @@ Host-specific workflows can compose `useAgentThreadController()`,
 slots. The core library does not own app registries, sidecar storage, plan-only
 turn orchestration, or workflow-specific panel state.
 
-`@nyosegawa/agent-ui-codex/request-builders` also exports structured input
-helpers for skills, mentions, images, and the `agent-browser` verification
-workflow. Hosts can pass the returned `UserInput[]` directly to
-`turnStartParams()` or `useAgentTurn().startTurn()`.
+Hosts that need lower-level Codex protocol construction should use
+`@nyosegawa/agent-ui-codex` directly. The React package keeps generated params
+out of its public API and accepts Agent UI input/options instead.
 
 ## SDK Adapter Notes
 

@@ -9,15 +9,20 @@ import {
   type ThreadState,
 } from "@nyosegawa/agent-ui-core";
 import { useCallback, useMemo, useState } from "react";
-import type {
-  ThreadForkParams,
-  ThreadListParams,
-  ThreadResumeParams,
-  ThreadStartParams,
-} from "@nyosegawa/agent-ui-codex/stable-types";
 import type { AgentUserInput } from "../agent-input";
 import { useAgentComposerQueueStore } from "../composer-queue";
 import { useAgentContext } from "../provider";
+import {
+  codexThreadForkParams,
+  codexThreadHistoryParams,
+  codexThreadResumeParams,
+  codexThreadStartParams,
+  codexTurnStartOptions,
+  type ThreadForkOptions,
+  type ThreadHistoryParams,
+  type ThreadResumeOptions,
+  type ThreadStartOptions,
+} from "../request-options";
 import {
   rawThreadId,
   threadProjectPath,
@@ -28,8 +33,12 @@ import { useCodexSession } from "./codex-session";
 import { AGENT_EXECUTION_MODES } from "./run-settings";
 import { codexReasoningEffort, normalizeTurnInput } from "./turn-input";
 
-type ThreadForkOptions = Omit<ThreadForkParams, "threadId">;
-type ThreadResumeOptions = Omit<ThreadResumeParams, "threadId">;
+export type {
+  ThreadForkOptions,
+  ThreadHistoryParams,
+  ThreadResumeOptions,
+  ThreadStartOptions,
+} from "../request-options";
 
 export function useAgentThread(threadId?: ThreadId) {
   const { dispatch, state } = useAgentContext();
@@ -42,11 +51,11 @@ export function useAgentThread(threadId?: ThreadId) {
   const runSettings = selectRunSettings(state);
 
   const startThread = useCallback(
-    async (params?: ThreadStartParams) => {
+    async (params?: ThreadStartOptions) => {
       const result = await codex.thread.start({
         cwd: runSettings.cwd,
         model: runSettings.modelId,
-        ...params,
+        ...codexThreadStartParams(params),
       });
       const resultRecord = asRecord(result) ?? {};
       const rawThread = resultRecord.thread ?? result;
@@ -72,7 +81,7 @@ export function useAgentThread(threadId?: ThreadId) {
   );
 
   const startThreadWithInput = useCallback(
-    async (input: string | AgentUserInput[], params?: ThreadStartParams) => {
+    async (input: string | AgentUserInput[], params?: ThreadStartOptions) => {
       const result = await startThread(params);
       const rawThread = asRecord(result)?.thread ?? result;
       const rawThreadRecord = asRecord(rawThread);
@@ -86,7 +95,7 @@ export function useAgentThread(threadId?: ThreadId) {
         effort: codexReasoningEffort(runSettings.effort),
         input: normalizeTurnInput(input),
         model: runSettings.modelId,
-        ...executionMode?.turnParams,
+        ...codexTurnStartOptions(executionMode?.turnParams),
         threadId,
       });
       return result;
@@ -103,7 +112,7 @@ export function useAgentThread(threadId?: ThreadId) {
 
   const resumeThread = useCallback(
     async (id: ThreadId, params?: ThreadResumeOptions) => {
-      const result = await codex.thread.resume(id, params);
+      const result = await codex.thread.resume(id, codexThreadResumeParams(params));
       const rawThread = asRecord(result)?.thread ?? result;
       const rawThreadRecord = asRecord(rawThread);
       if (rawThreadRecord && hasThreadId(rawThreadRecord)) {
@@ -168,7 +177,7 @@ export function useAgentThreadActions(threadId?: ThreadId) {
   const forkThread = useCallback(
     async (params: ThreadForkOptions = {}) => {
       const id = requireThreadId();
-      return codex.thread.fork(id, params);
+      return codex.thread.fork(id, codexThreadForkParams(params));
     },
     [codex, requireThreadId],
   );
@@ -208,8 +217,6 @@ export function useAgentThreads() {
   return { activeThreadId, setActiveThread, threads };
 }
 
-export type ThreadHistoryParams = ThreadListParams;
-
 export function useAgentThreadHistory() {
   const { dispatch, state } = useAgentContext();
   const codex = useCodexSession();
@@ -222,7 +229,7 @@ export function useAgentThreadHistory() {
       setIsLoading(true);
       setError(undefined);
       try {
-        const response = await codex.thread.list(params);
+        const response = await codex.thread.list(codexThreadHistoryParams(params));
         const responseRecord = asRecord(response);
         const rawThreads = Array.isArray(responseRecord?.data)
           ? responseRecord.data

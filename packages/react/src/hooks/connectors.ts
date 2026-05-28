@@ -1,11 +1,20 @@
-import type {
-  HooksListParams,
-  SkillsConfigWriteParams,
-  SkillsListParams,
-} from "@nyosegawa/agent-ui-codex/stable-types";
 import { useCallback } from "react";
 import { useAgentContext } from "../provider";
+import {
+  codexHooksListParams,
+  codexSkillsConfigWriteParams,
+  codexSkillsListParams,
+  type AgentHooksRefreshOptions,
+  type AgentSkillConfigWriteOptions,
+  type AgentSkillsRefreshOptions,
+} from "../request-options";
 import { useCodexSession } from "./codex-session";
+
+export type {
+  AgentHooksRefreshOptions,
+  AgentSkillConfigWriteOptions,
+  AgentSkillsRefreshOptions,
+} from "../request-options";
 
 export function useAgentSkills(cwd?: string) {
   const { dispatch, state } = useAgentContext();
@@ -13,9 +22,9 @@ export function useAgentSkills(cwd?: string) {
   const key = cwd ?? "";
   const skills = state.skills.byCwd[key] ?? [];
   const refreshSkills = useCallback(
-    async (params: SkillsListParams = {}) => {
-      const requestParams = cwd && !params.cwds ? { ...params, cwds: [cwd] } : params;
-      const response = await codex.skills.list(requestParams);
+    async (params: AgentSkillsRefreshOptions = {}) => {
+      const requestOptions = cwd && !params.cwds ? { ...params, cwds: [cwd] } : params;
+      const response = await codex.skills.list(codexSkillsListParams(requestOptions));
       const entries = normalizeSkillsList(response, cwd);
       for (const entry of entries) {
         dispatch({ cwd: entry.cwd, skills: entry.skills, type: "skills/updated" });
@@ -25,8 +34,10 @@ export function useAgentSkills(cwd?: string) {
     [codex, cwd, dispatch],
   );
   const setSkillEnabled = useCallback(
-    async (params: SkillsConfigWriteParams) => {
-      const response = await codex.skills.configWrite(params);
+    async (params: AgentSkillConfigWriteOptions) => {
+      const response = await codex.skills.configWrite(
+        codexSkillsConfigWriteParams(params),
+      );
       const targetName = stringValue(params.name);
       const targetPath = stringValue(params.path);
       const updateCwd = cwd ?? key;
@@ -53,9 +64,9 @@ export function useAgentHooks(cwd?: string) {
   const key = cwd ?? "";
   const hooks = state.hooks.byCwd[key] ?? [];
   const refreshHooks = useCallback(
-    async (params: HooksListParams = {}) => {
-      const requestParams = cwd && !params.cwds ? { ...params, cwds: [cwd] } : params;
-      const response = await codex.hooks.list(requestParams);
+    async (params: AgentHooksRefreshOptions = {}) => {
+      const requestOptions = cwd && !params.cwds ? { ...params, cwds: [cwd] } : params;
+      const response = await codex.hooks.list(codexHooksListParams(requestOptions));
       const entries = normalizeHooksList(response, cwd);
       for (const entry of entries) {
         dispatch({ cwd: entry.cwd, hooks: entry.hooks, type: "hooks/updated" });

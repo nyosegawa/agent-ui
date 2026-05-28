@@ -146,7 +146,7 @@ Acceptance:
 - [x] Add or refine `useAgentUsage`.
 - [x] Keep `AgentProvider` responsible for state, transport, and controller
   injection only.
-- [ ] Move request construction out of React public API.
+- [x] Move request construction out of React public API.
 - [ ] Implement composer controller semantics:
   idle submit uses `turn/start`; running follow-up queues or uses validated
   `turn/steer`; Stop uses `turn/interrupt`.

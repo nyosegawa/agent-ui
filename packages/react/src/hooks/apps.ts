@@ -1,23 +1,29 @@
 import type { AgentApp } from "@nyosegawa/agent-ui-core";
 import { selectApps } from "@nyosegawa/agent-ui-core";
-import type { AppsListParams } from "@nyosegawa/agent-ui-codex/stable-types";
 import { useCallback } from "react";
 import { useAgentContext } from "../provider";
+import {
+  codexAppsListParams,
+  type AgentAppsRefreshOptions,
+} from "../request-options";
 import { useCodexSession } from "./codex-session";
+
+export type { AgentAppsRefreshOptions } from "../request-options";
 
 export function useAgentApps(threadId?: string) {
   const { dispatch, state } = useAgentContext();
   const codex = useCodexSession();
   const scopedApps = selectApps(state, threadId);
   const refreshApps = useCallback(
-    async (params: AppsListParams = {}) => {
-      const requestParams = threadId && !params.threadId ? { ...params, threadId } : params;
+    async (params: AgentAppsRefreshOptions = {}) => {
+      const requestOptions = threadId && !params.threadId ? { ...params, threadId } : params;
+      const requestParams = codexAppsListParams(requestOptions);
       const response = await codex.apps.list(requestParams);
       const { apps, nextCursor } = normalizeAppsList(response);
       dispatch({
-        apps: requestParams.cursor ? mergeApps(scopedApps.apps, apps) : apps,
+        apps: requestOptions.cursor ? mergeApps(scopedApps.apps, apps) : apps,
         nextCursor,
-        threadId: requestParams.threadId ?? undefined,
+        threadId: requestOptions.threadId ?? undefined,
         type: "apps/updated",
       });
       return { apps, nextCursor };
