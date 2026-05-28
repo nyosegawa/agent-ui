@@ -4,11 +4,10 @@ import type {
   PendingServerRequest,
   TurnState,
 } from "@nyosegawa/agent-ui-core";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   useAgentBootstrap,
   useAgentThread,
-  useAgentThreadReader,
   useAgentThreads,
 } from "../hooks";
 import {
@@ -17,7 +16,6 @@ import {
   type AgentI18nMessages,
   type AgentLocale,
 } from "../i18n";
-import { useAgentContext } from "../provider";
 import { AgentThreadView } from "./thread";
 import type {
   AgentComposerMentionResolver,
@@ -28,6 +26,13 @@ import type { AgentWorkingDirectoryResolver } from "./run-settings";
 import { AgentThreadSidebar } from "./sidebar";
 import { useCompactLayout } from "./shared";
 import type { AgentTheme } from "./theme";
+import {
+  threadPath,
+  threadUrlRoutingBasePath,
+  threadUrlRoutingHomePath,
+  useThreadUrlRouting,
+  type AgentThreadUrlRoutingOptions,
+} from "./thread-url-routing";
 import {
   AgentDiagnosticsPanel,
   AgentStatusBar,
@@ -56,11 +61,6 @@ export interface AgentChatProps {
   messages?: AgentI18nMessages;
   threadUrlRouting?: boolean | AgentThreadUrlRoutingOptions;
   usage?: boolean;
-}
-
-export interface AgentThreadUrlRoutingOptions {
-  basePath?: string;
-  homePath?: string;
 }
 
 export function AgentChat({
@@ -224,95 +224,6 @@ function AgentChatInner({
       </div>
     </AgentShell>
   );
-}
-
-function useThreadUrlRouting(
-  options: AgentChatProps["threadUrlRouting"],
-  activeThreadId?: string,
-): void {
-  const { state } = useAgentContext();
-  const { resumeThread } = useAgentThread();
-  const { readThread } = useAgentThreadReader();
-  const { setActiveThread, threads } = useAgentThreads();
-  const lastPathRef = useRef<string | undefined>(undefined);
-  const initialUrlThreadReadRef = useRef<string | undefined>(undefined);
-  const enabled = Boolean(options);
-  const basePath = threadUrlRoutingBasePath(options);
-
-  useEffect(() => {
-    if (!enabled || typeof window === "undefined") return;
-    if (state.connection.status !== "connected") return;
-    const initialThreadId = threadIdFromPath(window.location.pathname, basePath);
-    if (!initialThreadId || initialUrlThreadReadRef.current === initialThreadId) return;
-    initialUrlThreadReadRef.current = initialThreadId;
-    const openThread = async () => {
-      await readThread(initialThreadId, { activate: true, includeTurns: true });
-      await resumeThread(initialThreadId);
-    };
-    void openThread().catch(() => {
-      if (initialUrlThreadReadRef.current === initialThreadId) {
-        initialUrlThreadReadRef.current = undefined;
-      }
-    });
-  }, [basePath, enabled, readThread, resumeThread, state.connection.status]);
-
-  useEffect(() => {
-    if (!enabled || typeof window === "undefined" || !activeThreadId) return;
-    const path = threadPath(activeThreadId, basePath);
-    if (window.location.pathname === path || lastPathRef.current === path) return;
-    lastPathRef.current = path;
-    window.history.pushState({ agentUiThreadId: activeThreadId }, "", path);
-  }, [activeThreadId, basePath, enabled]);
-
-  useEffect(() => {
-    if (!enabled || typeof window === "undefined") return;
-    const onPopState = () => {
-      const threadId = threadIdFromPath(window.location.pathname, basePath);
-      lastPathRef.current = threadId
-        ? threadPath(threadId, basePath)
-        : window.location.pathname;
-      if (!threadId) {
-        setActiveThread(undefined);
-        return;
-      }
-      const existingThread = threads.find((thread) => thread.thread.id === threadId);
-      if (existingThread && !isPreviewUrlThread(existingThread.status)) {
-        setActiveThread(threadId);
-        return;
-      }
-      const openThread = readThread(threadId, { activate: true, includeTurns: true });
-      void openThread.catch(() => {
-        if (existingThread) setActiveThread(threadId);
-        else setActiveThread(undefined);
-      });
-    };
-    window.addEventListener("popstate", onPopState);
-    return () => window.removeEventListener("popstate", onPopState);
-  }, [basePath, enabled, readThread, setActiveThread, threads]);
-}
-
-function threadPath(threadId: string, basePath: string): string {
-  const prefix = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
-  return `${prefix}/${encodeURIComponent(threadId)}`;
-}
-
-function threadUrlRoutingBasePath(options: AgentChatProps["threadUrlRouting"]): string {
-  return typeof options === "object" && options.basePath ? options.basePath : "/threads";
-}
-
-function threadUrlRoutingHomePath(options: AgentChatProps["threadUrlRouting"]): string {
-  return typeof options === "object" && options.homePath ? options.homePath : "/";
-}
-
-function threadIdFromPath(pathname: string, basePath: string): string | undefined {
-  const prefix = basePath.endsWith("/") ? basePath.slice(0, -1) : basePath;
-  if (!pathname.startsWith(`${prefix}/`)) return undefined;
-  const encoded = pathname.slice(prefix.length + 1).split("/")[0];
-  return encoded ? decodeURIComponent(encoded) : undefined;
-}
-
-function isPreviewUrlThread(status?: string): boolean {
-  return status === "notLoaded" || status === "loaded";
 }
 
 export interface AgentShellProps extends React.HTMLAttributes<HTMLElement> {

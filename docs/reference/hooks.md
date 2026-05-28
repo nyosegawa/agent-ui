@@ -50,9 +50,12 @@ on the hydrated turns, but they do not replace the thread-level preview status;
 for example, a stored session whose last turn was interrupted still hydrates as
 a resumable preview instead of an interrupted live thread.
 
-The default `AgentChat` history sidebar and `threadUrlRouting` direct
-`/threads/<id>` opens use `thread/read` for stored history so browsing a transcript
-does not imply `thread/resume`. The root route stays a no-thread start state.
+The default `AgentChat` history sidebar uses `thread/read` so browsing a stored
+transcript from the list does not imply `thread/resume`. A direct
+`threadUrlRouting` URL such as `/threads/<id>` first hydrates with
+`thread/read includeTurns: true`, then resumes that thread because direct links
+represent opening the live conversation. The root route stays a no-thread start
+state.
 
 ## Composer And Run Settings
 

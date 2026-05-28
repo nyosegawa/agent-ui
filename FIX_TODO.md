@@ -242,22 +242,22 @@
 
 ### AgentChat URL Routing Extraction
 
-- [ ] Inspect `packages/react/src/components/chat.tsx`.
-- [ ] Extract path helper for thread URL.
-- [ ] Extract path helper for home URL.
-- [ ] Extract parser for thread ID from path.
-- [ ] Create focused routing hook/module.
-- [ ] Move initial direct URL behavior into hook/module.
-- [ ] Move active-thread history push behavior into hook/module.
-- [ ] Move popstate behavior into hook/module.
-- [ ] Clarify direct URL `readThread` versus `resumeThread` semantics.
-- [ ] Update conflicting docs in `docs/reference/hooks.md`.
-- [ ] Add tests for default base path.
-- [ ] Add tests for custom base path.
-- [ ] Add tests for custom home path.
-- [ ] Add tests for browser back/forward.
-- [ ] Add tests for failed direct thread read.
-- [ ] Run relevant React component tests.
+- [x] Inspect `packages/react/src/components/chat.tsx`.
+- [x] Extract path helper for thread URL.
+- [x] Extract path helper for home URL.
+- [x] Extract parser for thread ID from path.
+- [x] Create focused routing hook/module.
+- [x] Move initial direct URL behavior into hook/module.
+- [x] Move active-thread history push behavior into hook/module.
+- [x] Move popstate behavior into hook/module.
+- [x] Clarify direct URL `readThread` versus `resumeThread` semantics.
+- [x] Update conflicting docs in `docs/reference/hooks.md`.
+- [x] Add tests for default base path.
+- [x] Add tests for custom base path.
+- [x] Add tests for custom home path.
+- [x] Add tests for browser back/forward.
+- [x] Add tests for failed direct thread read.
+- [x] Run relevant React component tests.
 
 ### Public Export Surface
 
