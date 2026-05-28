@@ -1,4 +1,5 @@
 import type { SkillsEvent } from "../events";
+import { AGENT_RETENTION_POLICY, boundedRecordEntry } from "../retention";
 import type { AgentSessionState } from "../state";
 
 export function reduceSkillsEvent(
@@ -11,7 +12,12 @@ export function reduceSkillsEvent(
         ...state,
         skills: {
           ...state.skills,
-          byCwd: { ...state.skills.byCwd, [event.cwd]: event.skills },
+          byCwd: boundedRecordEntry(
+            state.skills.byCwd,
+            event.cwd,
+            event.skills,
+            AGENT_RETENTION_POLICY.skillsCwdEntriesMax,
+          ),
         },
       };
     default:

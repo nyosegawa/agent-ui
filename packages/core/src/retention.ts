@@ -1,8 +1,11 @@
 export const AGENT_RETENTION_POLICY = {
+  appScopesMax: 200,
   commandOutputMaxChars: 128_000,
   diagnosticsErrorsMax: 50,
   filePatchesPerTurnMax: 40,
+  hooksCwdEntriesMax: 50,
   protocolNotificationsMax: 100,
+  skillsCwdEntriesMax: 50,
   statusBannersMax: 20,
   threadRegistrySnapshotsMax: 200,
   warningsMax: 50,

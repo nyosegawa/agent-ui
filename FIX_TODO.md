@@ -278,18 +278,18 @@
 
 ### Companion Store Retention
 
-- [ ] Inspect `packages/core/src/stores/apps.ts`.
-- [ ] Inspect `packages/core/src/reducer/skills.ts`.
-- [ ] Inspect `packages/core/src/reducer/hooks.ts`.
-- [ ] Define retention limit for app scopes.
-- [ ] Define retention limit for skills cwd entries.
-- [ ] Define retention limit for hooks cwd entries.
-- [ ] Tie thread-scoped app retention to thread entity retention where possible.
-- [ ] Add tests proving app scope backing map is bounded.
-- [ ] Add tests proving skills cwd backing map is bounded.
-- [ ] Add tests proving hooks cwd backing map is bounded.
-- [ ] Update docs if bounded state claims are broadened.
-- [ ] Run `bun test packages/core/test/reducer.test.ts`.
+- [x] Inspect `packages/core/src/stores/apps.ts`.
+- [x] Inspect `packages/core/src/reducer/skills.ts`.
+- [x] Inspect `packages/core/src/reducer/hooks.ts`.
+- [x] Define retention limit for app scopes.
+- [x] Define retention limit for skills cwd entries.
+- [x] Define retention limit for hooks cwd entries.
+- [x] Tie thread-scoped app retention to thread entity retention where possible.
+- [x] Add tests proving app scope backing map is bounded.
+- [x] Add tests proving skills cwd backing map is bounded.
+- [x] Add tests proving hooks cwd backing map is bounded.
+- [x] Update docs if bounded state claims are broadened.
+- [x] Run `bun test packages/core/test/reducer.test.ts`.
 
 ### Composer Refactor
 

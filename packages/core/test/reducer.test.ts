@@ -84,6 +84,64 @@ describe("agentReducer", () => {
     );
     expect(state.threads["thread-retention"]).toBeDefined();
     expect(state.threads["thread-0"]).toBeUndefined();
+
+    for (let index = 0; index < AGENT_RETENTION_POLICY.appScopesMax + 5; index += 1) {
+      state = agentReducer(state, {
+        apps: [{ id: `app-${index}`, name: `App ${index}`, needsAuth: false }],
+        threadId: `thread-apps-${index}`,
+        type: "apps/updated",
+      });
+    }
+    expect(Object.keys(state.apps.byScope)).toHaveLength(
+      AGENT_RETENTION_POLICY.appScopesMax,
+    );
+    expect(state.apps.byScope["thread-apps-0"]).toBeUndefined();
+    expect(
+      state.apps.byScope[`thread-apps-${AGENT_RETENTION_POLICY.appScopesMax + 4}`]
+        ?.apps[0]?.id,
+    ).toBe(`app-${AGENT_RETENTION_POLICY.appScopesMax + 4}`);
+
+    for (
+      let index = 0;
+      index < AGENT_RETENTION_POLICY.skillsCwdEntriesMax + 5;
+      index += 1
+    ) {
+      state = agentReducer(state, {
+        cwd: `/repo/skills-${index}`,
+        skills: [{ name: `skill-${index}` }],
+        type: "skills/updated",
+      });
+    }
+    expect(Object.keys(state.skills.byCwd)).toHaveLength(
+      AGENT_RETENTION_POLICY.skillsCwdEntriesMax,
+    );
+    expect(state.skills.byCwd["/repo/skills-0"]).toBeUndefined();
+    expect(
+      state.skills.byCwd[
+        `/repo/skills-${AGENT_RETENTION_POLICY.skillsCwdEntriesMax + 4}`
+      ]?.[0]?.name,
+    ).toBe(`skill-${AGENT_RETENTION_POLICY.skillsCwdEntriesMax + 4}`);
+
+    for (
+      let index = 0;
+      index < AGENT_RETENTION_POLICY.hooksCwdEntriesMax + 5;
+      index += 1
+    ) {
+      state = agentReducer(state, {
+        cwd: `/repo/hooks-${index}`,
+        hooks: [{ id: `hook-${index}`, name: `Hook ${index}` }],
+        type: "hooks/updated",
+      });
+    }
+    expect(Object.keys(state.hooks.byCwd)).toHaveLength(
+      AGENT_RETENTION_POLICY.hooksCwdEntriesMax,
+    );
+    expect(state.hooks.byCwd["/repo/hooks-0"]).toBeUndefined();
+    expect(
+      state.hooks.byCwd[
+        `/repo/hooks-${AGENT_RETENTION_POLICY.hooksCwdEntriesMax + 4}`
+      ]?.[0]?.id,
+    ).toBe(`hook-${AGENT_RETENTION_POLICY.hooksCwdEntriesMax + 4}`);
   });
 
   it("prunes evicted cold, preview, and loaded thread entities while retaining active, live, and pending request threads", () => {

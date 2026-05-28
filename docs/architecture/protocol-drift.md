@@ -78,6 +78,11 @@ inspection, docs examples, or host extension points:
   payloads for diagnostics but are bounded by the reducer retention policy.
 - Command output is retained per item with a maximum character window.
 - File patch payloads are retained per turn with a maximum item count.
+- App connector results are retained per scope with a maximum scope count.
+  Thread-scoped app result maps cannot grow indefinitely across long-running
+  browsing sessions.
+- Skill and hook results are retained per cwd with maximum cwd-entry counts so
+  host cwd switching cannot grow the backing maps indefinitely.
 - Thread registry snapshot retention bounds both the registry ID arrays and the
   backing `state.threads` entity map, so hydrated history cannot grow
   indefinitely during long sessions. Cold, preview, and stale loaded snapshots
@@ -87,4 +92,4 @@ inspection, docs examples, or host extension points:
   for approval anchoring.
 
 The policy is implemented in `packages/core/src/retention.ts` and covered by
-reducer tests that assert both registry lengths and backing map size.
+reducer tests that assert both index lengths and backing map sizes.

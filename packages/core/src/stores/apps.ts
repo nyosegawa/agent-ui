@@ -1,4 +1,5 @@
 import type { AppsEvent } from "../events";
+import { AGENT_RETENTION_POLICY, boundedRecordEntry } from "../retention";
 import type { AppsState } from "../state";
 
 export interface AppsStore {
@@ -36,10 +37,12 @@ export function updateAppsState(
   };
   const next = {
     ...current,
-    byScope: {
-      ...current.byScope,
-      [scope]: nextScopeState,
-    },
+    byScope: boundedRecordEntry(
+      current.byScope,
+      scope,
+      nextScopeState,
+      AGENT_RETENTION_POLICY.appScopesMax,
+    ),
   };
   if (!event.threadId) {
     next.apps = event.apps;
