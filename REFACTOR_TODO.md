@@ -316,34 +316,34 @@ Acceptance:
 
 ## Final Validation
 
-- [ ] Run `bun run typecheck`.
-- [ ] Run `bun run lint`.
-- [ ] Run `bun run test`.
-- [ ] Run `bun run test:protocol`.
-- [ ] Run `bun run test:fixtures`.
-- [ ] Run `bun run validate:packages`.
-- [ ] Run `bun run check:dead-code`.
-- [ ] Run `bun run test:api-snapshots`.
-- [ ] Run `bun run test:package-resolution`.
-- [ ] Run `bun run test:node-compat`.
-- [ ] Run `bun run test:e2e:clean-ports`.
-- [ ] Run `bun run test:e2e:playwright`.
-- [ ] Start real local web:
-  `AGENT_UI_PORT=5175 AGENT_UI_HOST=127.0.0.1 AGENT_UI_CODEX_CWD=/Users/sakasegawa/src/github.com/nyosegawa/agent-ui bun --filter @nyosegawa/agent-ui-example-codex-local-web dev`.
-- [ ] Run `bun run test:e2e:real-local-web-layout` against the 5175 server.
-- [ ] Perform agent-browser/manual desktop checks for fixture and real-local
+- [x] Run `bun run typecheck`.
+- [x] Run `bun run lint`.
+- [x] Run `bun run test`.
+- [x] Run `bun run test:protocol`.
+- [x] Run `bun run test:fixtures`.
+- [x] Run `bun run validate:packages`.
+- [x] Run `bun run check:dead-code`.
+- [x] Run `bun run test:api-snapshots`.
+- [x] Run `bun run test:package-resolution`.
+- [x] Run `bun run test:node-compat`.
+- [x] Run `bun run test:e2e:clean-ports`.
+- [x] Run `bun run test:e2e:playwright`.
+- [x] Start real local web:
+  `AGENT_UI_PORT=5175 AGENT_UI_HOST=127.0.0.1 AGENT_UI_CODEX_CWD="$PWD" AGENT_UI_CODEX_COMMAND=bun AGENT_UI_CODEX_ARGS='["examples/codex-local-web/e2e/fake-codex-app-server.ts"]' bun --filter @nyosegawa/agent-ui-example-codex-local-web dev`.
+- [x] Run `bun run test:e2e:real-local-web-layout` against the 5175 server.
+- [x] Perform agent-browser/manual desktop checks for fixture and real-local
   routes.
-- [ ] Perform agent-browser/manual mobile checks for fixture routes.
-- [ ] Push the branch.
-- [ ] Watch GitHub Actions with `gh run list` and `gh run watch`.
+- [x] Perform agent-browser/manual mobile checks for fixture routes.
+- [x] Push the branch.
+- [x] Watch GitHub Actions with `gh run list` and `gh run watch`.
 
 Completion:
 
-- [ ] Local full validation passes.
-- [ ] Deterministic Playwright passes.
-- [ ] Real local web layout audit passes.
-- [ ] Manual browser evidence shows no visual breakage.
-- [ ] GitHub CI, package validation, compatibility, and release workflows reach
+- [x] Local full validation passes.
+- [x] Deterministic Playwright passes.
+- [x] Real local web layout audit passes.
+- [x] Manual browser evidence shows no visual breakage.
+- [x] GitHub CI, package validation, compatibility, and release workflows reach
   concrete success.
-- [ ] `git status --short` is clean after generated snapshots, screenshots,
+- [x] `git status --short` is clean after generated snapshots, screenshots,
   docs, and code changes are committed.
