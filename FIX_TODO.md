@@ -319,15 +319,15 @@
 
 ## Documentation Updates
 
-- [ ] Update `docs/reference/server-bridge.md` after method policy changes.
-- [ ] Update `docs/examples/next-rpc-route.md` after method policy changes.
-- [ ] Update `docs/examples/codex-local-web.md` after non-loopback guard changes.
-- [ ] Update `docs/examples/next-with-bridge-sidecar.md` after non-loopback guard changes.
-- [ ] Update `docs/reference/codex-protocol.md` after protocol normalizer decisions.
-- [ ] Update `docs/architecture/protocol-drift.md` after capability metadata changes.
-- [ ] Update `docs/reference/hooks.md` after URL routing semantics are clarified.
-- [ ] Update `docs/reference/package-exports.md` after export surface changes.
-- [ ] Fix React component attachment example to return App Server-readable absolute paths.
+- [x] Update `docs/reference/server-bridge.md` after method policy changes.
+- [x] Update `docs/examples/next-rpc-route.md` after method policy changes.
+- [x] Update `docs/examples/codex-local-web.md` after non-loopback guard changes.
+- [x] Update `docs/examples/next-with-bridge-sidecar.md` after non-loopback guard changes.
+- [x] Update `docs/reference/codex-protocol.md` after protocol normalizer decisions.
+- [x] Update `docs/architecture/protocol-drift.md` after capability metadata changes.
+- [x] Update `docs/reference/hooks.md` after URL routing semantics are clarified.
+- [x] Update `docs/reference/package-exports.md` after export surface changes.
+- [x] Fix React component attachment example to return App Server-readable absolute paths.
 
 ## Validation Checklist
 

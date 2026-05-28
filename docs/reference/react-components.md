@@ -25,7 +25,10 @@ host-composition primitives; opt into them only when the preset should own that
 secondary chrome.
 
 ```tsx
-import { localImageInput } from "@nyosegawa/agent-ui-codex/request-builders";
+import {
+  localImageInput,
+  textInput,
+} from "@nyosegawa/agent-ui-codex/request-builders";
 
 <AgentChat
   locale="ja"
@@ -36,7 +39,12 @@ import { localImageInput } from "@nyosegawa/agent-ui-codex/request-builders";
   onRequestAppMention={openAppPicker}
   onRequestPluginMention={openPluginPicker}
   onRequestWorkingDirectory={openDirectoryPicker}
-  resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+  resolveLocalAttachment={async (file, kind) => {
+    const path = await uploadAttachmentToLocalPath(file);
+    return kind === "image"
+      ? localImageInput(path)
+      : textInput(`Attached file: ${path}`);
+  }}
   messages={{
     "composer.placeholder": "フォローアップの変更を求める",
   }}
