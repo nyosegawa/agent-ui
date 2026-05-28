@@ -6,6 +6,8 @@ const REACT_SRC = join(__dirname, "..", "src");
 const STYLE_PATH = join(__dirname, "..", "src", "styles.css");
 const STYLE_DIR = join(__dirname, "..", "src", "styles");
 const REPO_ROOT = join(__dirname, "..", "..", "..");
+const DOCS_DIR = join(REPO_ROOT, "docs");
+const REACT_PACKAGE_JSON = join(__dirname, "..", "package.json");
 const EXAMPLE_STYLE_DIRS = [
   join(REPO_ROOT, "examples", "local-react-vite", "src", "styles"),
   join(REPO_ROOT, "examples", "codex-local-web", "src"),
@@ -220,6 +222,28 @@ describe("packages/react styles.css", () => {
       .filter((token) => !definedTokens.has(token))
       .sort();
     expect(undefinedTokens).toEqual([]);
+  });
+
+  it("keeps styles.css as the only public React stylesheet import", () => {
+    const packageJson = JSON.parse(readFileSync(REACT_PACKAGE_JSON, "utf8")) as {
+      exports?: Record<string, unknown>;
+    };
+    const exportKeys = Object.keys(packageJson.exports ?? {});
+    expect(exportKeys.filter((key) => key.includes("style"))).toEqual(["./styles.css"]);
+    expect(exportKeys.filter((key) => key.startsWith("./styles/"))).toEqual([]);
+
+    const sourceText = readTextUnder(
+      DOCS_DIR,
+      join(REPO_ROOT, "examples", "local-react-vite", "src"),
+      join(REPO_ROOT, "examples", "codex-local-web", "src"),
+      join(REPO_ROOT, "examples", "docs-site", "src"),
+      join(REPO_ROOT, "examples", "recipes", "src"),
+      join(REPO_ROOT, "examples", "next-with-bridge-sidecar"),
+    );
+    expect(sourceText).not.toMatch(/@nyosegawa\/agent-ui-react\/styles\//);
+    expect(sourceText).not.toMatch(
+      /import\s+["'][^"']*packages\/react\/src\/styles\//,
+    );
   });
 
   it("keeps distributed component CSS on design-system tokens for color, radius, and tracking", () => {

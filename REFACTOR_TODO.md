@@ -165,7 +165,7 @@ Acceptance:
 
 ## Phase 5: Transcript And UI Split
 
-- [ ] Split `packages/react/src/timeline.tsx`.
+- [x] Split `packages/react/src/timeline.tsx`.
 - [x] Move pure transcript block synthesis into focused modules.
 - [x] Move item renderers into focused modules.
 - [x] Move scroll-follow behavior into focused modules.
@@ -195,25 +195,25 @@ Acceptance:
 
 - [x] Audit `packages/react/src/styles/tokens.css` before adding or changing any
   token.
-- [ ] Audit distributed React CSS for raw colors, raw radii, and private
+- [x] Audit distributed React CSS for raw colors, raw radii, and private
   stylesheet assumptions.
-- [ ] Audit example CSS for token compliance.
-- [ ] Audit docs-site CSS for token compliance or explicitly host-owned theme
+- [x] Audit example CSS for token compliance.
+- [x] Audit docs-site CSS for token compliance or explicitly host-owned theme
   overrides.
-- [ ] Audit visual inline style objects in examples for token compliance.
-- [ ] Keep `@nyosegawa/agent-ui-react/styles.css` as the only public stylesheet
+- [x] Audit visual inline style objects in examples for token compliance.
+- [x] Keep `@nyosegawa/agent-ui-react/styles.css` as the only public stylesheet
   import.
-- [ ] Expand `packages/react/test/style-duplication.vitest.ts` if the rule set
+- [x] Expand `packages/react/test/style-duplication.vitest.ts` if the rule set
   intentionally changes.
-- [ ] Update `docs/guides/theming.md` for token or stylesheet contract changes.
-- [ ] Update screenshots only after intentional visual contract changes.
+- [x] Update `docs/guides/theming.md` for token or stylesheet contract changes.
+- [x] Update screenshots only after intentional visual contract changes.
 
 Acceptance:
 
-- [ ] `bun run test:styles` passes.
-- [ ] No undefined `--aui-*` token is referenced.
-- [ ] Public docs do not mention private CSS chunk imports.
-- [ ] Visual changes are verified in browser-visible routes.
+- [x] `bun run test:styles` passes.
+- [x] No undefined `--aui-*` token is referenced.
+- [x] Public docs do not mention private CSS chunk imports.
+- [x] Visual changes are verified in browser-visible routes.
 
 ## Phase 7: Examples Rebuild
 
