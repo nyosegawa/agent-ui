@@ -1,6 +1,6 @@
 import type { AgentItemState, ThreadState, TurnState } from "@nyosegawa/agent-ui-core";
 import type React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useAgentI18n } from "./i18n";
 import {
   DEFAULT_TRANSCRIPT_ITEM_LIMIT,
@@ -24,6 +24,7 @@ import {
   AgentMessageItem,
   localizedItemLabel,
 } from "./timeline/item-renderers";
+import { useTranscriptFollowScroll } from "./timeline/scroll-follow";
 
 export type { TranscriptApprovalAnchors } from "./timeline/approval-anchors";
 export {
@@ -57,10 +58,11 @@ export function AgentMessageList({
   thread: ThreadState;
 }) {
   const { t } = useAgentI18n();
-  const listRef = useRef<HTMLOListElement | null>(null);
-  const followModeRef = useRef(true);
-  const rafRef = useRef<number | undefined>(undefined);
-  const [showJumpLatest, setShowJumpLatest] = useState(false);
+  const { handleScroll, jumpToLatest, listRef, showJumpLatest } = useTranscriptFollowScroll({
+    scrollKey,
+    threadId: thread.thread.id,
+    turnCount: thread.orderedTurnIds.length,
+  });
   const [visibleItemState, setVisibleItemState] = useState({
     limit: DEFAULT_TRANSCRIPT_ITEM_LIMIT,
     threadId: thread.thread.id,
@@ -74,66 +76,6 @@ export function AgentMessageList({
     [thread, visibleItemLimit],
   );
   const hiddenItemCount = Math.max(0, visibleTurnItems.totalItemCount - visibleTurnItems.visibleItemCount);
-  const scrollToLatest = useCallback((behavior: ScrollBehavior = "auto") => {
-    const list = listRef.current;
-    if (!list) return false;
-    if (typeof list.scrollTo === "function") {
-      list.scrollTo({ behavior, top: list.scrollHeight });
-    } else {
-      list.scrollTop = list.scrollHeight;
-    }
-    // Metadata-free approvals live at the transcript tail. When one is taller
-    // than the viewport, scrolling to the very bottom would clip the primary
-    // decision footer above the fold; pull back just enough so the actions
-    // stay visible without a manual scroll.
-    const actions = list.querySelector<HTMLElement>(
-      ".aui-transcript-tail .aui-approval-actions",
-    );
-    if (actions) {
-      const clippedAbove =
-        list.getBoundingClientRect().top - actions.getBoundingClientRect().top;
-      if (clippedAbove > 0) list.scrollTop -= clippedAbove + 12;
-    }
-    return true;
-  }, []);
-  const scheduleFollowScroll = useCallback((behavior: ScrollBehavior = "smooth") => {
-    if (!followModeRef.current) {
-      setShowJumpLatest(true);
-      return;
-    }
-    if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-    rafRef.current = requestAnimationFrame(() => {
-      rafRef.current = undefined;
-      scrollToLatest(behavior);
-      setShowJumpLatest(false);
-    });
-  }, [scrollToLatest]);
-  useEffect(() => {
-    scheduleFollowScroll("auto");
-    return () => {
-      if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
-    };
-  }, [scheduleFollowScroll, thread.thread.id, thread.orderedTurnIds.length, scrollKey]);
-  useEffect(() => {
-    const list = listRef.current;
-    if (!list) return;
-    const observer = new MutationObserver(() => scheduleFollowScroll("smooth"));
-    observer.observe(list, {
-      attributes: true,
-      characterData: true,
-      childList: true,
-      subtree: true,
-    });
-    return () => observer.disconnect();
-  }, [scheduleFollowScroll, thread.thread.id]);
-  const handleScroll = () => {
-    const list = listRef.current;
-    if (!list) return;
-    const distanceFromBottom = list.scrollHeight - list.scrollTop - list.clientHeight;
-    const shouldFollow = distanceFromBottom <= 80;
-    followModeRef.current = shouldFollow;
-    if (shouldFollow) setShowJumpLatest(false);
-  };
   return (
     <div className="aui-message-list-wrap">
       <ol className="aui-message-list" onScroll={handleScroll} ref={listRef}>
@@ -179,11 +121,7 @@ export function AgentMessageList({
       {showJumpLatest ? (
         <button
           className="aui-btn aui-btn-secondary aui-btn-sm aui-jump-latest"
-          onClick={() => {
-            followModeRef.current = true;
-            setShowJumpLatest(false);
-            scrollToLatest("smooth");
-          }}
+          onClick={jumpToLatest}
           type="button"
         >
           {t("timeline.jumpToLatest")}

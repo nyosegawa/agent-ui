@@ -155,7 +155,7 @@ The default UI keeps the high-traffic surfaces split internally:
 - `components.ts`: public barrel; `components/chat.tsx`, `components/thread.tsx`, `components/composer.tsx`, `components/run-settings.tsx`, `components/status.tsx`, `components/sidebar.tsx`, `components/approvals.tsx`, and `components/locale.tsx`: responsibility-scoped React surfaces
 - `i18n.tsx`: compatibility barrel for the i18n public API
 - `i18n/`: locale normalization, interpolation, provider runtime, i18n types, and built-in locale dictionaries
-- `timeline.tsx`: public transcript primitives and turn ordering; focused modules under `timeline/` own block synthesis, approval anchors, item renderers, formatting, and closed-card previews
+- `timeline.tsx`: public transcript primitives and turn ordering; focused modules under `timeline/` own block synthesis, approval anchors, item renderers, scroll-follow behavior, formatting, and closed-card previews
 - `transcript-window.ts`: large hydrated transcript item ordering and incremental window policy
 - `diff-viewer.tsx`: read-only diff rendering and patch payload normalization
 

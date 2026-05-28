@@ -90,6 +90,16 @@ describe("React package source structure", () => {
     expect(renderers).toContain("function AgentToolCallItem");
   });
 
+  it("keeps transcript scroll-follow behavior in a focused timeline module", () => {
+    const timeline = readFileSync(join(reactSrc, "timeline.tsx"), "utf8");
+    const scrollFollow = readFileSync(join(timelineDir, "scroll-follow.ts"), "utf8");
+    expect(timeline).toContain('from "./timeline/scroll-follow";');
+    expect(timeline).not.toContain("new MutationObserver");
+    expect(timeline).not.toContain("requestAnimationFrame");
+    expect(scrollFollow).toContain("function useTranscriptFollowScroll");
+    expect(scrollFollow).toContain("new MutationObserver");
+  });
+
   it("keeps Codex generated request params out of the React public API", () => {
     const snapshot = readFileSync(reactApiSnapshot, "utf8");
     expect(snapshot).not.toContain("@nyosegawa/agent-ui-codex/stable-types");

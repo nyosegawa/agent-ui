@@ -168,7 +168,7 @@ Acceptance:
 - [ ] Split `packages/react/src/timeline.tsx`.
 - [x] Move pure transcript block synthesis into focused modules.
 - [x] Move item renderers into focused modules.
-- [ ] Move scroll-follow behavior into focused modules.
+- [x] Move scroll-follow behavior into focused modules.
 - [ ] Move windowing behavior into focused modules.
 - [x] Move approval anchoring into focused modules.
 - [ ] Keep user and assistant messages readable inline.
