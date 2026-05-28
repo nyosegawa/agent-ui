@@ -1,6 +1,6 @@
 import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as _nyosegawa_agent_ui_core from '@nyosegawa/agent-ui-core';
-import { AgentEvent, AgentSessionState, AgentTransport, ThreadId, AgentApp, AgentModel, ExecutionModeId, RequestId, ReasoningEffort, ThreadState, ThreadTokenUsage, PendingServerRequest, AgentItemState, TurnState, AgentThread, AgentItemBlock } from '@nyosegawa/agent-ui-core';
+import { AgentEvent, AgentSessionState, AgentTransport, ThreadId, AgentApp, AgentModel, RequestId, ExecutionModeId, ReasoningEffort, ThreadState, ThreadTokenUsage, PendingServerRequest, AgentItemState, TurnState, AgentThread, AgentItemBlock } from '@nyosegawa/agent-ui-core';
 import * as React$1 from 'react';
 import React__default, { PropsWithChildren } from 'react';
 import { AppsListParams, HooksListParams, SkillsListParams, SkillsConfigWriteParams, TurnStartParams, ThreadListParams, ThreadResumeParams, ThreadStartParams, ThreadForkParams } from '@nyosegawa/agent-ui-codex/stable-types';
@@ -130,6 +130,18 @@ declare function useAgentModels(): {
     refreshModels: () => Promise<AgentModel[]>;
 };
 
+declare function useAgentApprovals(threadId?: ThreadId): {
+    approvals: _nyosegawa_agent_ui_core.PendingServerRequest[];
+    approve: (requestId: RequestId, result?: unknown) => Promise<void>;
+    reject: (requestId: RequestId, message?: string) => Promise<void>;
+};
+declare function useAgentServerRequests(threadId?: ThreadId): {
+    requests: (_nyosegawa_agent_ui_core.PendingServerRequest | undefined)[];
+    approvals: _nyosegawa_agent_ui_core.PendingServerRequest[];
+    approve: (requestId: RequestId, result?: unknown) => Promise<void>;
+    reject: (requestId: RequestId, message?: string) => Promise<void>;
+};
+
 type ThreadForkOptions = Omit<ThreadForkParams, "threadId">;
 type ThreadResumeOptions = Omit<ThreadResumeParams, "threadId">;
 type TurnStartOptions = Partial<Omit<TurnStartParams, "input" | "threadId">>;
@@ -183,17 +195,6 @@ declare function useAgentTurn(threadId?: ThreadId): {
     steerTurn: (expectedTurnId: string, input: string | AgentUserInput[]) => Promise<unknown>;
 };
 declare const useAgentTurnController: typeof useAgentTurn;
-declare function useAgentApprovals(threadId?: ThreadId): {
-    approvals: _nyosegawa_agent_ui_core.PendingServerRequest[];
-    approve: (requestId: RequestId, result?: unknown) => Promise<void>;
-    reject: (requestId: RequestId, message?: string) => Promise<void>;
-};
-declare function useAgentServerRequests(threadId?: ThreadId): {
-    requests: (_nyosegawa_agent_ui_core.PendingServerRequest | undefined)[];
-    approvals: _nyosegawa_agent_ui_core.PendingServerRequest[];
-    approve: (requestId: RequestId, result?: unknown) => Promise<void>;
-    reject: (requestId: RequestId, message?: string) => Promise<void>;
-};
 declare function useAgentComposer(threadId?: ThreadId): {
     activeTurnId: string | undefined;
     editQueuedFollowUp: (id: string) => QueuedFollowUp | undefined;
