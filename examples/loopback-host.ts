@@ -25,7 +25,7 @@ export function resolveExampleHost(
   );
 }
 
-export function isLoopbackHost(host: string): boolean {
+function isLoopbackHost(host: string): boolean {
   const normalized = host.trim().toLowerCase();
   return (
     normalized === "localhost" ||
