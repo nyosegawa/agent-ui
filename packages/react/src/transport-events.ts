@@ -42,7 +42,7 @@ export function useAgentTransportEvents(
   }, [dispatch, transport]);
 }
 
-export function normalizeTransportMessages(message: string): string[] {
+function normalizeTransportMessages(message: string): string[] {
   return message
     .split(/\r?\n/)
     .map((line) => line.trim())
