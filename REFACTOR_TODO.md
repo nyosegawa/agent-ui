@@ -217,15 +217,15 @@ Acceptance:
 
 ## Phase 7: Examples Rebuild
 
-- [ ] Rebuild `examples/local-react-vite` after public API changes settle.
-- [ ] Keep `/` only as the transcript-first default shell.
-- [ ] Keep `/rich-transcript` as dense transcript stress coverage.
-- [ ] Keep `/fixture-gallery` as component closeups and route previews.
-- [ ] Keep `/usage-only` as usage/status without chat assumptions.
-- [ ] Keep `/scoped-thread-pane` as scoped thread composition.
-- [ ] Keep `/app-connectors` as the Apps/connectors surface.
-- [ ] Keep `/host-workflow-recipe` only if it remains generic host composition.
-- [ ] Delete or replace obsolete route handoff README folders.
+- [x] Rebuild `examples/local-react-vite` after public API changes settle.
+- [x] Keep `/` only as the transcript-first default shell.
+- [x] Keep `/rich-transcript` as dense transcript stress coverage.
+- [x] Keep `/fixture-gallery` as component closeups and route previews.
+- [x] Keep `/usage-only` as usage/status without chat assumptions.
+- [x] Keep `/scoped-thread-pane` as scoped thread composition.
+- [x] Keep `/app-connectors` as the Apps/connectors surface.
+- [x] Keep `/host-workflow-recipe` only if it remains generic host composition.
+- [x] Delete or replace obsolete route handoff README folders.
 - [ ] Rebuild fixture data with purpose-based names.
 - [ ] Rebuild `examples/codex-local-web` after core bridge/UI APIs settle.
 - [ ] Keep codex-local-web focused on same-origin WebSocket bridge behavior.

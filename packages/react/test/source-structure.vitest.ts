@@ -6,6 +6,10 @@ const reactSrc = join(__dirname, "..", "src");
 const componentDir = join(reactSrc, "components");
 const hookDir = join(reactSrc, "hooks");
 const timelineDir = join(reactSrc, "timeline");
+const repoRoot = join(__dirname, "..", "..", "..");
+const examplesDir = join(repoRoot, "examples");
+const localReactViteDir = join(examplesDir, "local-react-vite");
+const localReactViteSrc = join(localReactViteDir, "src");
 const reactApiSnapshot = join(
   __dirname,
   "..",
@@ -145,6 +149,30 @@ describe("React package source structure", () => {
     expect(text).not.toContain("AgentStatusBanners");
     expect(text).not.toContain("AgentUsage =");
     expect(text).not.toContain("AgentStatusCard");
+  });
+
+  it("keeps route fixtures inside the local React Vite example", () => {
+    for (const name of [
+      "app-connectors",
+      "fixture-gallery",
+      "host-workflow-recipe",
+      "scoped-thread-pane",
+      "usage-only",
+    ]) {
+      expect(existsSync(join(examplesDir, name, "README.md")), name).toBe(false);
+    }
+    const main = readFileSync(join(localReactViteSrc, "main.tsx"), "utf8");
+    expect(main).not.toContain('pathname === "/qa"');
+    const localReactViteSource = sourceTextUnder(localReactViteSrc);
+    for (const route of [
+      "/app-connectors",
+      "/fixture-gallery",
+      "/host-workflow-recipe",
+      "/scoped-thread-pane",
+      "/usage-only",
+    ]) {
+      expect(localReactViteSource).toContain(route);
+    }
   });
 });
 

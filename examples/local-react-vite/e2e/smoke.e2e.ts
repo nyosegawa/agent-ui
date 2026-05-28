@@ -38,8 +38,8 @@ test("renders Agent UI chat", async ({ page }) => {
   await page.getByLabel("Search history").fill("stored");
   await page.getByRole("button", { name: /Stored session/ }).click();
   await expect(page.getByRole("heading", { name: "Stored session" })).toBeVisible();
-  await expect(page.locator(".aui-status-pill")).toContainText("Ready");
-  await expect(page.getByLabel("Message", { exact: true })).toBeEnabled();
+  await expect(page.locator(".aui-status-pill")).toContainText("Preview");
+  await expect(page.getByLabel("Message", { exact: true })).toBeDisabled();
 
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
   await expect(headerDoesNotOverlapTimeline(page)).resolves.toBe(true);
@@ -133,7 +133,7 @@ async function contextUsagePopoverIsNotClippedByComposer(page: Page) {
 }
 
 test("renders deterministic empty, login, and bridge-error states", async ({ page }) => {
-  await page.goto("/qa");
+  await page.goto("/fixture-gallery");
   await expect(page.getByRole("heading", { name: "Agent UI visual QA" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Bridge error/ })).toBeVisible();
 

@@ -203,10 +203,10 @@ path.
 - `examples/recipes`: typed host integration recipes and remote deployment notes.
 - `examples/docs-site`: small package-overview/demo landing page. It is not a markdown documentation renderer.
 
-The route-focused example directories `examples/app-connectors`,
-`examples/fixture-gallery`, `examples/host-workflow-recipe`,
-`examples/scoped-thread-pane`, and `examples/usage-only` contain README
-handoffs for routes implemented by `examples/local-react-vite`.
+Route-focused fixtures such as `/fixture-gallery`, `/usage-only`,
+`/scoped-thread-pane`, `/app-connectors`, and `/host-workflow-recipe` live inside
+`examples/local-react-vite`; they are documented under `docs/examples/` instead
+of as README-only example directories.
 
 ## Browser Public API
 

@@ -63,7 +63,6 @@ function DemoApp() {
   if (window.location.pathname === "/app-connectors") return <AppConnectorsExample />;
   if (window.location.pathname === "/fixture-gallery") return <VisualQaIndex />;
   if (window.location.pathname === "/host-workflow-recipe") return <HostWorkflowRecipe />;
-  if (window.location.pathname === "/qa") return <VisualQaIndex />;
   if (window.location.pathname === "/scoped-thread-pane") return <ScopedThreadPaneExample />;
   if (window.location.pathname === "/usage-only") return <UsageOnlyExample />;
   return <AgentDemo />;
