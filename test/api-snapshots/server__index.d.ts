@@ -62,14 +62,42 @@ type DynamicToolCallOutputContentItem = {
     type: "inputImage";
     imageUrl: string;
 };
+interface McpDynamicToolMapping {
+    namespace: string;
+    server: string;
+    tools: readonly string[] | "all";
+}
+interface McpDynamicToolHandlerOptions {
+    timeoutMs?: number;
+    tools: readonly McpDynamicToolMapping[];
+}
 declare function handleDynamicToolRequest(event: AgentTransportEvent & {
     request: PendingServerRequest;
     requestId: NonNullable<AgentTransportEvent["requestId"]>;
 }, transport: ReturnType<typeof createCodexAppServerBridge>["transport"], handler: DynamicToolHandler$1, getMcpThreadId: () => Promise<string>): Promise<void>;
-declare function defaultDynamicToolHandler(request: DynamicToolRequest, context: DynamicToolHandlerContext): Promise<DynamicToolCallResponse>;
+declare function defaultDynamicToolHandler(request: DynamicToolRequest): Promise<DynamicToolCallResponse>;
+declare function createMcpDynamicToolHandler(options: McpDynamicToolHandlerOptions): DynamicToolHandler$1;
 declare function createDynamicToolHelperThread(transport: ReturnType<typeof createCodexAppServerBridge>["transport"], cwd?: string): Promise<string>;
 declare function maybeResolveHelperThreadRequest(event: AgentTransportEvent, transport: ReturnType<typeof createCodexAppServerBridge>["transport"], helperThreadId: Promise<string> | undefined): Promise<boolean>;
 declare function dynamicToolFailure(error: unknown): DynamicToolCallResponse;
+
+type OneShotRpcAllowedMethods = readonly string[] | "all";
+interface OneShotRpcMethodPolicyOptions {
+    allowedMethods?: OneShotRpcAllowedMethods;
+}
+declare function isOneShotRpcMethodAllowed(method: string, options?: OneShotRpcMethodPolicyOptions): boolean;
+declare function oneShotRpcInvalidRequestError(message: string, data?: unknown): {
+    message: string;
+    data?: {} | null | undefined;
+    code: number;
+};
+declare function oneShotRpcMethodNotAllowedError(method: string): {
+    code: number;
+    data: {
+        method: string;
+    };
+    message: string;
+};
 
 interface MinimalExpressRequest {
     body?: {
@@ -81,7 +109,8 @@ interface MinimalExpressResponse {
     json(value: unknown): void;
     status(code: number): MinimalExpressResponse;
 }
-declare function createAgentUiExpressMiddleware(options?: CodexAppServerBridgeOptions): (req: MinimalExpressRequest, res: MinimalExpressResponse) => Promise<void>;
+type AgentUiExpressMiddlewareOptions = CodexAppServerBridgeOptions & OneShotRpcMethodPolicyOptions;
+declare function createAgentUiExpressMiddleware(options?: AgentUiExpressMiddlewareOptions): (req: MinimalExpressRequest, res: MinimalExpressResponse) => Promise<void>;
 
 interface AgentUiHostEventSink {
     onServerRequest?: (event: AgentTransportEvent) => void;
@@ -92,7 +121,7 @@ interface AgentUiHostEventSink {
 }
 declare function emitHostEvent(sink: AgentUiHostEventSink | undefined, event: AgentTransportEvent): void;
 
-type AgentUiNextRpcRouteOptions = CodexAppServerBridgeOptions;
+type AgentUiNextRpcRouteOptions = CodexAppServerBridgeOptions & OneShotRpcMethodPolicyOptions;
 /**
  * Create a Next.js Route Handler for exactly one Codex App Server request.
  *
@@ -205,4 +234,4 @@ type BrowserMethodPolicy = "productized" | "all" | {
 declare function attachAgentUiWebSocketBridge(options: AgentUiWebSocketServerOptions): WebSocketServer;
 declare function handleAgentUiWebSocketConnection(socket: WebSocket, options?: AgentUiWebSocketBridgeOptions, request?: IncomingMessage): Promise<void>;
 
-export { type AgentUiBridgeAdmissionHook, type AgentUiHostEventSink, type AgentUiNextRpcRouteOptions, type AgentUiUploadHandler, type AgentUiUploadHandlerOptions, type AgentUiWebSocketBridgeOptions, type AgentUiWebSocketInboundLimits, type AgentUiWebSocketServerOptions, type BrowserMethodPolicy, type CodexAppServerBridge, type CodexAppServerBridgeOptions, type CodexBridgeShutdownOptions, type CodexChildProcess, type CodexSpawnOptions, type DynamicToolCallOutputContentItem, type DynamicToolCallResponse, type DynamicToolHandler$1 as DynamicToolHandler, type DynamicToolHandlerContext, type DynamicToolRequest, type MinimalExpressRequest, type MinimalExpressResponse, type PermissionApprovalContext, type PermissionApprovalDecision, type PermissionApprovalPolicy, type ResolvedServerRequestPolicy, type ServerRequestPolicy$1 as ServerRequestPolicy, attachAgentUiWebSocketBridge, createAgentUiExpressMiddleware, createAgentUiLocalUploadHandler, createAgentUiNextRpcRoute, createCodexAppServerBridge, createDynamicToolHelperThread, defaultDynamicToolHandler, dynamicToolFailure, emitHostEvent, handleAgentUiWebSocketConnection, handleDynamicToolRequest, maybeResolveHelperThreadRequest, redactSecrets, redactStructuredValue, redactTransportEvent, resolveServerRequestPolicy, responseForServerRequest };
+export { type AgentUiBridgeAdmissionHook, type AgentUiExpressMiddlewareOptions, type AgentUiHostEventSink, type AgentUiNextRpcRouteOptions, type AgentUiUploadHandler, type AgentUiUploadHandlerOptions, type AgentUiWebSocketBridgeOptions, type AgentUiWebSocketInboundLimits, type AgentUiWebSocketServerOptions, type BrowserMethodPolicy, type CodexAppServerBridge, type CodexAppServerBridgeOptions, type CodexBridgeShutdownOptions, type CodexChildProcess, type CodexSpawnOptions, type DynamicToolCallOutputContentItem, type DynamicToolCallResponse, type DynamicToolHandler$1 as DynamicToolHandler, type DynamicToolHandlerContext, type DynamicToolRequest, type McpDynamicToolHandlerOptions, type McpDynamicToolMapping, type MinimalExpressRequest, type MinimalExpressResponse, type OneShotRpcAllowedMethods, type OneShotRpcMethodPolicyOptions, type PermissionApprovalContext, type PermissionApprovalDecision, type PermissionApprovalPolicy, type ResolvedServerRequestPolicy, type ServerRequestPolicy$1 as ServerRequestPolicy, attachAgentUiWebSocketBridge, createAgentUiExpressMiddleware, createAgentUiLocalUploadHandler, createAgentUiNextRpcRoute, createCodexAppServerBridge, createDynamicToolHelperThread, createMcpDynamicToolHandler, defaultDynamicToolHandler, dynamicToolFailure, emitHostEvent, handleAgentUiWebSocketConnection, handleDynamicToolRequest, isOneShotRpcMethodAllowed, maybeResolveHelperThreadRequest, oneShotRpcInvalidRequestError, oneShotRpcMethodNotAllowedError, redactSecrets, redactStructuredValue, redactTransportEvent, resolveServerRequestPolicy, responseForServerRequest };

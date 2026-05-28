@@ -261,20 +261,20 @@
 
 ### Public Export Surface
 
-- [ ] Inspect `packages/react/src/index.ts`.
-- [ ] Inspect `packages/react/src/components.ts`.
-- [ ] Inspect `packages/core/src/index.ts`.
-- [ ] Inspect `docs/reference/package-exports.md`.
-- [ ] Identify exported helpers that are intended public API.
-- [ ] Identify exported helpers that are internal by accident.
-- [ ] Decide whether `normalizedStatusNotices` should remain public.
-- [ ] Decide whether `statusSummary` should remain public.
-- [ ] Decide whether core store modules should remain root exports.
-- [ ] Move accidental internals behind non-exported modules.
-- [ ] Or document advanced public APIs intentionally.
-- [ ] Update API snapshots intentionally after review.
-- [ ] Run `bun run test:api-snapshots`.
-- [ ] Run `bun run test:node-compat`.
+- [x] Inspect `packages/react/src/index.ts`.
+- [x] Inspect `packages/react/src/components.ts`.
+- [x] Inspect `packages/core/src/index.ts`.
+- [x] Inspect `docs/reference/package-exports.md`.
+- [x] Identify exported helpers that are intended public API.
+- [x] Identify exported helpers that are internal by accident.
+- [x] Decide whether `normalizedStatusNotices` should remain public.
+- [x] Decide whether `statusSummary` should remain public.
+- [x] Decide whether core store modules should remain root exports.
+- [x] Move accidental internals behind non-exported modules.
+- [x] Or document advanced public APIs intentionally.
+- [x] Update API snapshots intentionally after review.
+- [x] Run `bun run test:api-snapshots`.
+- [x] Run `bun run test:node-compat`.
 
 ### Companion Store Retention
 

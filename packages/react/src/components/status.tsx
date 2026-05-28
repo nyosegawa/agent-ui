@@ -236,7 +236,7 @@ export function AgentCriticalNoticeList() {
   );
 }
 
-export function normalizedStatusNotices(
+function normalizedStatusNotices(
   banners: Array<{
     id: string;
     kind: string;
@@ -350,7 +350,7 @@ function percentFromUsedLimit(window: Record<string, unknown>) {
   return (used / limit) * 100;
 }
 
-export function statusSummary(
+function statusSummary(
   total: number,
   warningCount: number,
   criticalCount: number,

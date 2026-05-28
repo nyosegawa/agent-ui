@@ -122,7 +122,7 @@ Responsibilities:
 The package root also exports lower-level surfaces for advanced hosts:
 `AgentStatusBar`, `AgentFirstRun`, `AgentRunControls`, `ComposerRunSettings`,
 `AgentThemeToggle`, `AgentDiffViewer`, thread-history helpers,
-transcript-window helpers, and sidebar/status formatting utilities. The
+transcript-window helpers, and sidebar/status panel primitives. The
 documented components below are the recommended host-facing primitives; these
 helpers remain public because they are re-exported by the package barrel.
 

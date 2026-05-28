@@ -159,7 +159,7 @@ export type ExperimentalUnsupportedMethod =
 export type HostOnlyMethod = (typeof hostOnlyMethods)[number];
 export type StableServerRequestMethod = (typeof stableServerRequestMethods)[number];
 export type StableNotificationMethod = (typeof stableNotificationMethods)[number];
-export type GeneratedExperimentalOnlyClientMethod =
+type GeneratedExperimentalOnlyClientMethod =
   (typeof generatedExperimentalOnlyClientMethods)[number];
 
 export interface CodexCapabilityMetadata {
