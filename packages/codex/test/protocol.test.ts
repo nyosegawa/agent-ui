@@ -768,6 +768,143 @@ describe("Codex protocol metadata", () => {
     ]);
   });
 
+  it("decodes connection-scoped command/exec output deltas from base64", () => {
+    expect(
+      normalizeCodexServerMessage({
+        method: "command/exec/outputDelta",
+        params: {
+          capReached: false,
+          deltaBase64: "aGkK",
+          processId: "process-1",
+          stream: "stdout",
+        },
+      }),
+    ).toEqual([
+      {
+        delta: "hi\n",
+        itemId: "process-1",
+        threadId: "",
+        turnId: "",
+        type: "item/commandOutput/delta",
+      },
+    ]);
+  });
+
+  it("normalizes schema-conformant error notifications", () => {
+    expect(
+      normalizeCodexServerMessage({
+        method: "error",
+        params: {
+          error: {
+            additionalDetails: "Try again later.",
+            codexErrorInfo: { type: "rate_limit" },
+            message: "Model overloaded",
+          },
+          threadId: "thread-error",
+          turnId: "turn-error",
+          willRetry: false,
+        },
+      }),
+    ).toEqual([
+      {
+        error: {
+          data: { type: "rate_limit" },
+          message: "Model overloaded",
+        },
+        type: "error/added",
+      },
+    ]);
+  });
+
+  it("normalizes file change patch updates from top-level changes", () => {
+    const events = [
+      ...normalizeCodexServerMessage({
+        method: "thread/started",
+        params: { thread: { id: "thread-patch" } },
+      }),
+      ...normalizeCodexServerMessage({
+        method: "turn/started",
+        params: { threadId: "thread-patch", turn: { id: "turn-patch" } },
+      }),
+      ...normalizeCodexServerMessage({
+        method: "item/fileChange/patchUpdated",
+        params: {
+          changes: [{ path: "README.md", type: "modify" }],
+          itemId: "item-patch",
+          threadId: "thread-patch",
+          turnId: "turn-patch",
+        },
+      }),
+    ];
+    const state = events.reduce(
+      (current, event) => agentReducer(current, event as AgentEvent),
+      createInitialAgentState(),
+    );
+
+    expect(events.at(-1)).toEqual({
+      itemId: "item-patch",
+      patch: [{ path: "README.md", type: "modify" }],
+      threadId: "thread-patch",
+      turnId: "turn-patch",
+      type: "item/filePatch/updated",
+    });
+    expect(
+      state.threads["thread-patch"]?.turns["turn-patch"]?.filePatchByItemId[
+        "item-patch"
+      ],
+    ).toEqual([{ path: "README.md", type: "modify" }]);
+  });
+
+  it("preserves process notifications as raw protocol notifications", () => {
+    expect(
+      normalizeCodexServerMessage({
+        method: "process/outputDelta",
+        params: {
+          capReached: false,
+          deltaBase64: "aGkK",
+          processHandle: "proc",
+          stream: "stdout",
+        },
+      }),
+    ).toMatchObject([
+      {
+        notification: {
+          method: "process/outputDelta",
+          params: {
+            deltaBase64: "aGkK",
+            processHandle: "proc",
+            stream: "stdout",
+          },
+        },
+        type: "notification/received",
+      },
+    ]);
+    expect(
+      normalizeCodexServerMessage({
+        method: "process/exited",
+        params: {
+          exitCode: 0,
+          processHandle: "proc",
+          stderr: "",
+          stderrCapReached: false,
+          stdout: "hi\n",
+          stdoutCapReached: false,
+        },
+      }),
+    ).toMatchObject([
+      {
+        notification: {
+          method: "process/exited",
+          params: {
+            exitCode: 0,
+            processHandle: "proc",
+          },
+        },
+        type: "notification/received",
+      },
+    ]);
+  });
+
   it("turns unsupported notifications into neutral warnings without raw payloads", () => {
     expect(
       normalizeCodexServerMessage({

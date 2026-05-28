@@ -1,5 +1,5 @@
 import type { AgentEvent } from "@nyosegawa/agent-ui-core";
-import { decodeDelta, normalizeItem } from "./shared";
+import { decodeBase64Delta, decodeDelta, normalizeItem } from "./shared";
 
 export function normalizeItemNotification(
   method: string,
@@ -34,7 +34,10 @@ export function normalizeItemNotification(
       return [
         {
           type: "item/commandOutput/delta",
-          delta: decodeDelta(params.delta ?? params.data ?? params.chunk ?? ""),
+          delta:
+            method === "command/exec/outputDelta"
+              ? decodeBase64Delta(params.deltaBase64)
+              : decodeDelta(params.delta ?? params.data ?? params.chunk ?? ""),
           itemId: String(
             params.itemId ?? params.item_id ?? params.processId ?? "command",
           ),
@@ -47,7 +50,7 @@ export function normalizeItemNotification(
         {
           type: "item/filePatch/updated",
           itemId: String(params.itemId ?? params.item_id ?? "diff"),
-          patch: params.patch ?? params.diff ?? params,
+          patch: params.changes ?? params.patch ?? params.diff ?? params,
           threadId: String(params.threadId ?? params.thread_id ?? ""),
           turnId: String(params.turnId ?? params.turn_id ?? ""),
         },

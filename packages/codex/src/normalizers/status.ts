@@ -1,4 +1,5 @@
 import type { AgentEvent } from "@nyosegawa/agent-ui-core";
+import { asRecord } from "./shared";
 import { joinSummaryDetails, numberValue } from "./status-utils";
 
 export function normalizeStatusNotification(
@@ -17,17 +18,23 @@ export function normalizeStatusNotification(
           },
         },
       ];
-    case "error":
+    case "error": {
+      const error = asRecord(params.error);
       return [
         {
           type: "error/added",
           error: {
-            code: numberValue(params.code),
-            data: params.data,
-            message: String(params.message ?? "Codex error"),
+            code: numberValue(params.code ?? error?.code),
+            data:
+              params.data ??
+              error?.data ??
+              error?.codexErrorInfo ??
+              error?.additionalDetails,
+            message: String(error?.message ?? params.message ?? "Codex error"),
           },
         },
       ];
+    }
     case "skills/changed":
       return [
         {

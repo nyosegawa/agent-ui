@@ -101,6 +101,17 @@ export function decodeDelta(delta: unknown): string {
   return delta;
 }
 
+export function decodeBase64Delta(delta: unknown): string {
+  if (typeof delta !== "string") return "";
+  if (typeof Buffer !== "undefined") {
+    return Buffer.from(delta, "base64").toString("utf8");
+  }
+  const binary = globalThis.atob?.(delta);
+  if (!binary) return "";
+  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+}
+
 export function asRecord(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null
     ? (value as Record<string, unknown>)

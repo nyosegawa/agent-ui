@@ -92,53 +92,53 @@
 
 ### `command/exec/outputDelta`
 
-- [ ] Inspect `packages/codex/src/normalizers/items.ts`.
-- [ ] Inspect `packages/codex/src/normalizers/shared.ts`.
-- [ ] Add explicit base64 decode helper.
-- [ ] Use `params.deltaBase64` for `command/exec/outputDelta`.
-- [ ] Keep plain `delta` behavior for item output notifications.
-- [ ] Decide how to represent connection-scoped `processId` without thread/turn metadata.
-- [ ] Add protocol test with `deltaBase64: "aGkK"`.
-- [ ] Assert decoded output is `hi\n`.
-- [ ] Add raw JSONL fixture if fixture-pack coverage is desired.
-- [ ] Run `bun test packages/codex/test/protocol.test.ts`.
+- [x] Inspect `packages/codex/src/normalizers/items.ts`.
+- [x] Inspect `packages/codex/src/normalizers/shared.ts`.
+- [x] Add explicit base64 decode helper.
+- [x] Use `params.deltaBase64` for `command/exec/outputDelta`.
+- [x] Keep plain `delta` behavior for item output notifications.
+- [x] Decide how to represent connection-scoped `processId` without thread/turn metadata.
+- [x] Add protocol test with `deltaBase64: "aGkK"`.
+- [x] Assert decoded output is `hi\n`.
+- [x] Add raw JSONL fixture if fixture-pack coverage is desired.
+- [x] Run `bun test packages/codex/test/protocol.test.ts`.
 
 ### Error Notification
 
-- [ ] Inspect `packages/codex/src/normalizers/status.ts`.
-- [ ] Read nested `params.error.message`.
-- [ ] Keep top-level `params.message` fallback.
-- [ ] Preserve useful `codexErrorInfo` or `additionalDetails` in raw/data.
-- [ ] Add protocol test for schema-conformant error notification.
-- [ ] Assert diagnostics error message is the nested message.
-- [ ] Run `bun run test:protocol`.
+- [x] Inspect `packages/codex/src/normalizers/status.ts`.
+- [x] Read nested `params.error.message`.
+- [x] Keep top-level `params.message` fallback.
+- [x] Preserve useful `codexErrorInfo` or `additionalDetails` in raw/data.
+- [x] Add protocol test for schema-conformant error notification.
+- [x] Assert diagnostics error message is the nested message.
+- [x] Run `bun run test:protocol`.
 
 ### File Change Patch Updates
 
-- [ ] Inspect `packages/codex/src/normalizers/items.ts`.
-- [ ] Inspect `packages/react/src/timeline/blocks.ts`.
-- [ ] Inspect `packages/react/src/diff-viewer.tsx`.
-- [ ] Prefer top-level `params.changes`.
-- [ ] Store patch data in the shape expected by the diff viewer.
-- [ ] Keep `params.patch` legacy fallback.
-- [ ] Update `fixtures/app-server/v2-jsonrpc/patch-streaming.jsonl` to current schema.
-- [ ] Add protocol test for top-level `changes`.
-- [ ] Assert stored patch data does not include `threadId`, `turnId`, or `itemId` pollution.
-- [ ] Run `bun run test:protocol`.
-- [ ] Run relevant React diff/timeline tests.
+- [x] Inspect `packages/codex/src/normalizers/items.ts`.
+- [x] Inspect `packages/react/src/timeline/blocks.ts`.
+- [x] Inspect `packages/react/src/diff-viewer.tsx`.
+- [x] Prefer top-level `params.changes`.
+- [x] Store patch data in the shape expected by the diff viewer.
+- [x] Keep `params.patch` legacy fallback.
+- [x] Update `fixtures/app-server/v2-jsonrpc/patch-streaming.jsonl` to current schema.
+- [x] Add protocol test for top-level `changes`.
+- [x] Assert stored patch data does not include `threadId`, `turnId`, or `itemId` pollution.
+- [x] Run `bun run test:protocol`.
+- [x] Run relevant React diff/timeline tests.
 
 ### Process Notifications
 
-- [ ] Inspect generated `ProcessOutputDeltaNotification`.
-- [ ] Inspect generated `ProcessExitedNotification`.
-- [ ] Decide whether Agent UI should expose a process store.
-- [ ] If no process store is added, document raw protocol notification preservation.
-- [ ] If no process store is added, add tests asserting process notifications are preserved as raw protocol notifications.
-- [ ] If a process store is added, define process state keyed by `processHandle`.
-- [ ] If a process store is added, decode stdout/stderr output deltas.
-- [ ] If a process store is added, store exit code and final stdout/stderr from `process/exited`.
-- [ ] Update `docs/reference/codex-protocol.md`.
-- [ ] Run `bun run test:protocol`.
+- [x] Inspect generated `ProcessOutputDeltaNotification`.
+- [x] Inspect generated `ProcessExitedNotification`.
+- [x] Decide whether Agent UI should expose a process store.
+- [x] If no process store is added, document raw protocol notification preservation.
+- [x] If no process store is added, add tests asserting process notifications are preserved as raw protocol notifications.
+- [x] If a process store is added, define process state keyed by `processHandle`.
+- [x] If a process store is added, decode stdout/stderr output deltas.
+- [x] If a process store is added, store exit code and final stdout/stderr from `process/exited`.
+- [x] Update `docs/reference/codex-protocol.md`.
+- [x] Run `bun run test:protocol`.
 
 ## Phase 3: Server Runtime Hardening
 

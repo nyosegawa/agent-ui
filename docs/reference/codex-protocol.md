@@ -375,6 +375,13 @@ Notifications:
 - model reroutes, deprecation notices, config warnings, and MCP OAuth/status banners
 - warnings/errors
 
+`process/outputDelta` and `process/exited` are stable App Server
+notifications, but Agent UI does not render a process surface by default. They
+are preserved as raw `notification/received` diagnostics so hosts can inspect
+them without the core library inventing thread or item correlation that the
+protocol does not provide. `command/exec/outputDelta` remains normalized as
+connection-scoped command output and decodes its `deltaBase64` payload.
+
 Deferred:
 
 - remote/multi-user production
