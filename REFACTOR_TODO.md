@@ -179,7 +179,7 @@ Acceptance:
 - [x] Add tests for file change blocks.
 - [x] Add tests for MCP/dynamic/collab tool blocks.
 - [x] Add tests for reasoning and compaction items.
-- [ ] Add tests for approval placement and resolution.
+- [x] Add tests for approval placement and resolution.
 - [ ] Add tests for stored-history transcript rendering.
 - [ ] Add mobile hit-test coverage for composer and approval actions.
 

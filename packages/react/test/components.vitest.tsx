@@ -711,6 +711,99 @@ describe("AgentChat", () => {
     ).toHaveTextContent("Tail fallback");
   });
 
+  it("removes resolved inline approvals and resumes the waiting thread", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.threadRegistry.activeThreadId = "thread-approval-resolution";
+    initialState.threadRegistry.liveThreadIds = ["thread-approval-resolution"];
+    initialState.threads["thread-approval-resolution"] = {
+      orderedTurnIds: ["turn-approval-resolution"],
+      status: "waitingForInput",
+      thread: { id: "thread-approval-resolution", name: "Approval resolution" },
+      turns: {
+        "turn-approval-resolution": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-command"],
+          items: {
+            "item-command": {
+              id: "item-command",
+              kind: "commandExecution",
+              raw: { command: "bun test" },
+              status: "completed",
+              threadId: "thread-approval-resolution",
+              turnId: "turn-approval-resolution",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: {
+            id: "turn-approval-resolution",
+            threadId: "thread-approval-resolution",
+          },
+        },
+      },
+    };
+    initialState.serverRequestQueue = {
+      byId: {
+        "approval-command": {
+          id: "approval-command",
+          itemId: "item-command",
+          kind: "commandApproval",
+          payload: { command: "bun test" },
+          threadId: "thread-approval-resolution",
+          turnId: "turn-approval-resolution",
+        },
+      },
+      order: ["approval-command"],
+    };
+    const transport = new FakeAgentTransport();
+
+    function ApprovalStateProbe() {
+      const { state } = useAgentContext();
+      const thread = state.threads["thread-approval-resolution"];
+      const pending = state.serverRequestQueue.order.join(",") || "none";
+      return <output aria-label="approval state">{`${thread?.status}:${pending}`}</output>;
+    }
+
+    const { container } = render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentThreadView threadId="thread-approval-resolution" />
+        <ApprovalStateProbe />
+      </AgentProvider>,
+    );
+
+    const command = container.querySelector('[data-kind="commandExecution"]');
+    const approvalButton = await screen.findByRole("button", {
+      name: "Approve command request approval-command",
+    });
+    const anchored = approvalButton.closest(".aui-transcript-approval-anchor");
+    expect(command?.nextElementSibling).toBe(anchored);
+    expect(screen.getByLabelText("approval state")).toHaveTextContent(
+      "waitingForInput:approval-command",
+    );
+
+    await user.click(approvalButton);
+    await waitFor(() =>
+      expect(transport.responses.get("approval-command")).toEqual({ decision: "accept" }),
+    );
+
+    act(() => {
+      transport.push({
+        event: { requestId: "approval-command", type: "serverRequest/resolved" },
+        type: "event",
+      });
+    });
+
+    await waitFor(() =>
+      expect(
+        screen.queryByRole("button", {
+          name: "Approve command request approval-command",
+        }),
+      ).not.toBeInTheDocument(),
+    );
+    expect(screen.getByLabelText("approval state")).toHaveTextContent("running:none");
+  });
+
   it("keeps tool cards readable when closed and exposes details when opened", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();
