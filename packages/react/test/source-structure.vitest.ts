@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 const reactSrc = join(__dirname, "..", "src");
 const componentDir = join(reactSrc, "components");
 const hookDir = join(reactSrc, "hooks");
+const timelineDir = join(reactSrc, "timeline");
 const reactApiSnapshot = join(
   __dirname,
   "..",
@@ -77,6 +78,16 @@ describe("React package source structure", () => {
     expect(provider).not.toContain("JSON.parse");
     expect(provider).not.toContain("warning/added");
     expect(provider).not.toContain("for await");
+  });
+
+  it("keeps transcript renderers in focused timeline modules", () => {
+    const timeline = readFileSync(join(reactSrc, "timeline.tsx"), "utf8");
+    const renderers = readFileSync(join(timelineDir, "item-renderers.tsx"), "utf8");
+    expect(timeline).toContain('from "./timeline/item-renderers";');
+    expect(timeline).not.toContain("function AgentCommandItem");
+    expect(timeline).not.toContain("function AgentToolCallItem");
+    expect(renderers).toContain("function AgentCommandItem");
+    expect(renderers).toContain("function AgentToolCallItem");
   });
 
   it("keeps Codex generated request params out of the React public API", () => {

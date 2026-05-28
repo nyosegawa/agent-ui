@@ -219,12 +219,13 @@ items from that same turn remain visible with it even when they fall outside
 the raw item-count window.
 
 The transcript renderer keeps public primitives exported from
-`packages/react/src/timeline.tsx`, while pure internal logic lives under
+`packages/react/src/timeline.tsx`, while focused internal logic lives under
 `packages/react/src/timeline/`: `blocks.ts` synthesizes normalized transcript
-blocks from stored App Server items, `formatters.ts` owns labels/status/text
-formatting, and `previews.ts` owns closed-card previews. This keeps App Server
-item-kind handling centralized instead of scattering it through visual
-components.
+blocks from stored App Server items, `approval-anchors.tsx` places pending
+server requests inline, `item-renderers.tsx` owns command/file/tool/message
+renderers, `formatters.ts` owns labels/status/text formatting, and
+`previews.ts` owns closed-card previews. This keeps App Server item-kind
+handling centralized instead of scattering it through the chat shell.
 
 The React package keeps zero-dependency visual primitives internal. Shared
 icons and the button class helper live in
