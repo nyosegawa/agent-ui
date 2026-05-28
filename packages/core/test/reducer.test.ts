@@ -396,6 +396,32 @@ describe("agentReducer", () => {
     expect(selectDiagnostics(secondRejected).errors[0]?.message).toBe("declined");
   });
 
+  it("selects pending approvals in server request queue order", () => {
+    const state = createInitialAgentState();
+    state.serverRequestQueue = {
+      byId: {
+        "2": {
+          id: "2",
+          kind: "fileChangeApproval",
+          payload: {},
+          threadId: "thread-fifo",
+        },
+        "10": {
+          id: "10",
+          kind: "commandApproval",
+          payload: {},
+          threadId: "thread-fifo",
+        },
+      },
+      order: ["10", "2"],
+    };
+
+    expect(selectPendingApprovals(state, "thread-fifo").map((request) => request.id)).toEqual([
+      "10",
+      "2",
+    ]);
+  });
+
   it("reconciles pending server requests on connection errors", () => {
     const state = runEventFixture([
       { event: { thread: { id: "thread-error" }, type: "thread/started" } },

@@ -111,11 +111,11 @@ export function AgentThreadTimeline({
 }) {
   const approvalThreadId = threadId ?? thread.thread.id;
   const { approvals } = useAgentApprovals(approvalThreadId);
-  const anchoredApprovals = approvals.filter(
-    (approval) => approval.itemId || approval.turnId,
+  const anchoredApprovals = approvals.filter((approval) =>
+    hasTranscriptApprovalAnchor(thread, approval),
   );
   const tailApprovals = approvals.filter(
-    (approval) => !approval.itemId && !approval.turnId,
+    (approval) => !hasTranscriptApprovalAnchor(thread, approval),
   );
   return (
     <AgentMessageList
@@ -147,6 +147,20 @@ export function AgentThreadTimeline({
       thread={thread}
     />
   );
+}
+
+function hasTranscriptApprovalAnchor(
+  thread: ThreadState,
+  approval: PendingServerRequest,
+): boolean {
+  if (!approval.itemId && !approval.turnId) return false;
+  const turn = approval.turnId ? thread.turns[approval.turnId] : undefined;
+  if (approval.turnId && !turn) return false;
+  if (!approval.itemId) return Boolean(turn);
+  const turns = turn
+    ? [turn]
+    : thread.orderedTurnIds.map((turnId) => thread.turns[turnId]).filter((item) => item != null);
+  return turns.some((candidate) => candidate.itemOrder.includes(approval.itemId!));
 }
 
 function AgentThreadActions({

@@ -680,7 +680,6 @@ describe("AgentChat", () => {
           kind: "commandApproval",
           payload: { command: "bun test" },
           threadId: "thread-anchor",
-          turnId: "turn-anchor",
         },
         "approval-tail": {
           id: "approval-tail",
@@ -709,6 +708,73 @@ describe("AgentChat", () => {
     expect(
       container.querySelector(".aui-transcript-tail .aui-approval"),
     ).toHaveTextContent("Tail fallback");
+  });
+
+  it("anchors item-only approvals and falls back when the item is missing", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-item-only"] = {
+      orderedTurnIds: ["turn-item-only"],
+      status: "waitingForInput",
+      thread: { id: "thread-item-only", name: "Item-only approvals" },
+      turns: {
+        "turn-item-only": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-command"],
+          items: {
+            "item-command": {
+              id: "item-command",
+              kind: "commandExecution",
+              raw: { command: "bun test" },
+              status: "completed",
+              threadId: "thread-item-only",
+              turnId: "turn-item-only",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-item-only", threadId: "thread-item-only" },
+        },
+      },
+    };
+    initialState.serverRequestQueue = {
+      byId: {
+        "approval-item-only": {
+          id: "approval-item-only",
+          itemId: "item-command",
+          kind: "commandApproval",
+          payload: { command: "bun test" },
+          threadId: "thread-item-only",
+        },
+        "approval-unmatched": {
+          id: "approval-unmatched",
+          itemId: "missing-item",
+          kind: "commandApproval",
+          payload: { command: "bun lint" },
+          threadId: "thread-item-only",
+        },
+      },
+      order: ["approval-item-only", "approval-unmatched"],
+    };
+
+    const { container } = render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentThreadView
+          renderApproval={(approval) => <span>{String(approval.id)}</span>}
+          threadId="thread-item-only"
+        />
+      </AgentProvider>,
+    );
+
+    const command = container.querySelector('[data-kind="commandExecution"]');
+    const anchored = command?.nextElementSibling;
+    expect(anchored).toHaveClass("aui-transcript-approval-anchor");
+    expect(anchored).toHaveTextContent("approval-item-only");
+    expect(container.querySelector(".aui-transcript-tail")).toHaveTextContent(
+      "approval-unmatched",
+    );
+    expect(container.querySelector(".aui-transcript-tail")).not.toHaveTextContent(
+      "approval-item-only",
+    );
   });
 
   it("removes resolved inline approvals and resumes the waiting thread", async () => {
@@ -5148,20 +5214,20 @@ describe("AgentChat", () => {
     };
     state.serverRequestQueue = {
       byId: {
-        "ap-1": {
-          id: "ap-1",
-          kind: "commandApproval",
-          payload: { command: "bun test" },
-          threadId: "thread-approvals",
-        },
-        "ap-2": {
-          id: "ap-2",
+        "2": {
+          id: "2",
           kind: "fileChangeApproval",
           payload: { path: "src/x.ts" },
           threadId: "thread-approvals",
         },
+        "10": {
+          id: "10",
+          kind: "commandApproval",
+          payload: { command: "bun test" },
+          threadId: "thread-approvals",
+        },
       },
-      order: ["ap-1", "ap-2"],
+      order: ["10", "2"],
     };
     render(
       <AgentProvider initialState={state} transport={new FakeAgentTransport()}>
@@ -5171,18 +5237,18 @@ describe("AgentChat", () => {
 
     expect(screen.getByText("2 decisions need your review")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Approve command request ap-1" }),
+      screen.getByRole("button", { name: "Approve command request 10" }),
     ).toBeInTheDocument();
     const reviewRow = screen.getByRole("button", {
-      name: "Review file-change request ap-2",
+      name: "Review file-change request 2",
     });
     expect(
-      screen.queryByRole("button", { name: "Approve file-change request ap-2" }),
+      screen.queryByRole("button", { name: "Approve file-change request 2" }),
     ).not.toBeInTheDocument();
 
     await user.click(reviewRow);
     expect(
-      screen.getByRole("button", { name: "Approve file-change request ap-2" }),
+      screen.getByRole("button", { name: "Approve file-change request 2" }),
     ).toBeInTheDocument();
   });
 

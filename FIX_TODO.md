@@ -72,21 +72,21 @@
 
 ### Approval Visibility And Ordering
 
-- [ ] Inspect `packages/core/src/selectors.ts`.
-- [ ] Change `selectPendingApprovals()` to respect `serverRequestQueue.order`.
-- [ ] Consider delegating `selectPendingApprovals()` to `selectServerRequestQueue()`.
-- [ ] Add core selector test with request IDs `"10"` then `"2"`.
-- [ ] Inspect `packages/react/src/components/thread.tsx`.
-- [ ] Inspect `packages/react/src/timeline/approval-anchors.tsx`.
-- [ ] Allow itemId-only approvals to anchor to the turn containing the item.
-- [ ] Enforce turnId equality only when `turnId` is present.
-- [ ] Preserve tail fallback for metadata-free approvals.
-- [ ] Preserve or add fallback for anchored approvals whose transcript context is missing.
-- [ ] Add React test for itemId-only approval anchoring after matching item.
-- [ ] Add React test for unmatched itemId fallback if fallback is implemented.
-- [ ] Add React test that approval queue expands the FIFO first request.
-- [ ] Run relevant React component tests.
-- [ ] Run `bun test packages/core/test/reducer.test.ts`.
+- [x] Inspect `packages/core/src/selectors.ts`.
+- [x] Change `selectPendingApprovals()` to respect `serverRequestQueue.order`.
+- [x] Consider delegating `selectPendingApprovals()` to `selectServerRequestQueue()`.
+- [x] Add core selector test with request IDs `"10"` then `"2"`.
+- [x] Inspect `packages/react/src/components/thread.tsx`.
+- [x] Inspect `packages/react/src/timeline/approval-anchors.tsx`.
+- [x] Allow itemId-only approvals to anchor to the turn containing the item.
+- [x] Enforce turnId equality only when `turnId` is present.
+- [x] Preserve tail fallback for metadata-free approvals.
+- [x] Preserve or add fallback for anchored approvals whose transcript context is missing.
+- [x] Add React test for itemId-only approval anchoring after matching item.
+- [x] Add React test for unmatched itemId fallback if fallback is implemented.
+- [x] Add React test that approval queue expands the FIFO first request.
+- [x] Run relevant React component tests.
+- [x] Run `bun test packages/core/test/reducer.test.ts`.
 
 ## Phase 2: Protocol Drift Fixes
 

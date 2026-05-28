@@ -23,10 +23,10 @@ export function approvalAnchorsForTurn(
   const byItemId: Record<string, PendingServerRequest[]> = {};
   const afterTurn: PendingServerRequest[] = [];
   for (const request of anchors.requests) {
-    if (request.turnId !== turn.turn.id) continue;
+    if (request.turnId && request.turnId !== turn.turn.id) continue;
     if (request.itemId && turn.itemOrder.includes(request.itemId)) {
       byItemId[request.itemId] = [...(byItemId[request.itemId] ?? []), request];
-    } else {
+    } else if (request.turnId === turn.turn.id) {
       afterTurn.push(request);
     }
   }

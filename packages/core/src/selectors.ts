@@ -1,4 +1,10 @@
-import type { AgentSessionState, ItemId, ThreadId, TurnId } from "./state";
+import type {
+  AgentSessionState,
+  ItemId,
+  PendingServerRequest,
+  ThreadId,
+  TurnId,
+} from "./state";
 
 export function selectActiveThread(state: AgentSessionState) {
   const threadId = state.threadRegistry.activeThreadId;
@@ -78,15 +84,16 @@ export function selectOrderedThreads(state: AgentSessionState) {
 }
 
 export function selectPendingApprovals(state: AgentSessionState, threadId?: ThreadId) {
-  return Object.values(state.serverRequestQueue.byId).filter((request) => {
-    return threadId == null || request.threadId === threadId;
-  });
+  return selectServerRequestQueue(state, threadId);
 }
 
 export function selectServerRequestQueue(state: AgentSessionState, threadId?: ThreadId) {
   return state.serverRequestQueue.order
     .map((id) => state.serverRequestQueue.byId[id])
-    .filter((request) => request && (threadId == null || request.threadId === threadId));
+    .filter(
+      (request): request is PendingServerRequest =>
+        request != null && (threadId == null || request.threadId === threadId),
+    );
 }
 
 export function selectApps(state: AgentSessionState, threadId?: ThreadId) {
