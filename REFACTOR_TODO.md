@@ -142,7 +142,7 @@ Acceptance:
 - [x] Add or refine `useAgentAccount`.
 - [x] Add or refine `useAgentModels`.
 - [x] Add or refine `useAgentApps`.
-- [ ] Add or refine `useAgentDiagnostics`.
+- [x] Add or refine `useAgentDiagnostics`.
 - [ ] Add or refine `useAgentUsage`.
 - [ ] Keep `AgentProvider` responsible for state, transport, and controller
   injection only.

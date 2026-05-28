@@ -6,6 +6,7 @@ export {
 } from "./hooks/account";
 export { useAgentApps } from "./hooks/apps";
 export { useAgentHooks, useAgentSkills } from "./hooks/connectors";
+export { useAgentDiagnostics } from "./hooks/diagnostics";
 export { useAgentModels } from "./hooks/models";
 export { useAgentApprovals, useAgentServerRequests } from "./hooks/approvals";
 export {

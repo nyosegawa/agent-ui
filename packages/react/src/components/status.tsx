@@ -1,7 +1,6 @@
 import type React from "react";
-import { selectDiagnosticErrors, selectDiagnosticWarnings } from "@nyosegawa/agent-ui-core";
 import type { useAgentBootstrap } from "../hooks";
-import { useAgentAccount } from "../hooks";
+import { useAgentAccount, useAgentDiagnostics } from "../hooks";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import { IconHistory, buttonClass } from "../components-internal";
 import { useAgentContext } from "../provider";
@@ -121,11 +120,11 @@ export function AgentDiagnosticsPanel({
   bootstrap: ReturnType<typeof useAgentBootstrap>;
 }) {
   const { t } = useAgentI18n();
-  const { state } = useAgentContext();
+  const { errors, warnings } = useAgentDiagnostics();
   const messages = [
     ...bootstrap.errors.map((error) => error.message),
-    ...selectDiagnosticErrors(state).map((error) => error.message),
-    ...selectDiagnosticWarnings(state).map((warning) => warning.message),
+    ...errors.map((error) => error.message),
+    ...warnings.map((warning) => warning.message),
   ].filter((message) => message && !isSuppressedDiagnostic(message));
   if (bootstrap.isBootstrapping && messages.length === 0) {
     return (
@@ -168,8 +167,8 @@ interface AgentStatusNotice {
 
 export function AgentStatusSummary() {
   const { t } = useAgentI18n();
-  const { state } = useAgentContext();
-  const notices = normalizedStatusNotices(state.diagnostics.banners);
+  const { banners } = useAgentDiagnostics();
+  const notices = normalizedStatusNotices(banners);
   if (notices.length === 0) return null;
   const criticalCount = notices.filter((notice) => notice.severity === "critical").length;
   const warningCount = notices.filter((notice) => notice.severity === "warning").length;
@@ -183,8 +182,8 @@ export function AgentStatusSummary() {
 
 export function AgentStatusDetails({ includeCritical = false }: { includeCritical?: boolean }) {
   const { t } = useAgentI18n();
-  const { state } = useAgentContext();
-  const notices = normalizedStatusNotices(state.diagnostics.banners)
+  const { banners } = useAgentDiagnostics();
+  const notices = normalizedStatusNotices(banners)
     .filter((notice) => includeCritical || notice.severity !== "critical")
     .slice(-6);
   if (notices.length === 0) return null;
@@ -215,8 +214,8 @@ export function AgentStatusDetails({ includeCritical = false }: { includeCritica
 
 export function AgentCriticalNoticeList() {
   const { t } = useAgentI18n();
-  const { state } = useAgentContext();
-  const notices = normalizedStatusNotices(state.diagnostics.banners).filter(
+  const { banners } = useAgentDiagnostics();
+  const notices = normalizedStatusNotices(banners).filter(
     (notice) => notice.severity === "critical",
   );
   if (notices.length === 0) return null;

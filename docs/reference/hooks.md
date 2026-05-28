@@ -89,6 +89,7 @@ active or supplied thread. `useAgentApprovals()` adds stable `approve()` and
 ```tsx
 const bootstrap = useAgentBootstrap();
 const account = useAgentAccount();
+const diagnostics = useAgentDiagnostics();
 const models = useAgentModels();
 const usage = useAgentUsage();
 ```
@@ -98,6 +99,9 @@ const usage = useAgentUsage();
 
 `useAgentAccount()` starts and cancels ChatGPT device-code login while storing only
 normalized account/login state.
+
+`useAgentDiagnostics()` exposes normalized diagnostic banners, warnings, errors,
+and protocol notifications for host-owned status surfaces.
 
 `useAgentUsage().refreshUsage()` calls `account/rateLimits/read` and stores the
 normalized rate-limit snapshot used by `AgentUsagePanel`.
