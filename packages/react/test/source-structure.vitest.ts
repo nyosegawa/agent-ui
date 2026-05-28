@@ -62,6 +62,14 @@ describe("React package source structure", () => {
     }
   });
 
+  it("keeps AgentProvider focused on state and transport wiring", () => {
+    const provider = readFileSync(join(reactSrc, "provider.tsx"), "utf8");
+    expect(provider).toContain("useAgentTransportEvents(transport, dispatch)");
+    expect(provider).not.toContain("JSON.parse");
+    expect(provider).not.toContain("warning/added");
+    expect(provider).not.toContain("for await");
+  });
+
   it("keeps style chunks responsibility-sized", () => {
     for (const name of readdirSync(styleDir)) {
       if (!name.endsWith(".css")) continue;
