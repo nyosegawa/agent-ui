@@ -128,13 +128,38 @@ function createRedactedStderr(
   onStderr?: (line: string) => void,
 ): Readable {
   const redacted = new PassThrough();
+  const maxCarryChars = 8192;
+  const retainedCarryChars = 4096;
+  let carry = "";
+  const flush = (text: string) => {
+    if (!text) return;
+    const safeText = redactSecrets(text);
+    onStderr?.(safeText);
+    redacted.write(safeText);
+  };
   raw.setEncoding("utf8");
   raw.on("data", (chunk) => {
-    const text = redactSecrets(String(chunk));
-    onStderr?.(text);
-    redacted.write(text);
+    carry += String(chunk);
+    let newlineIndex = carry.search(/\r?\n/);
+    while (newlineIndex >= 0) {
+      const lineEnd = carry[newlineIndex] === "\r" && carry[newlineIndex + 1] === "\n"
+        ? newlineIndex + 2
+        : newlineIndex + 1;
+      flush(carry.slice(0, lineEnd));
+      carry = carry.slice(lineEnd);
+      newlineIndex = carry.search(/\r?\n/);
+    }
+    if (carry.length > maxCarryChars) {
+      const flushLength = carry.length - retainedCarryChars;
+      flush(carry.slice(0, flushLength));
+      carry = carry.slice(flushLength);
+    }
   });
-  raw.on("end", () => redacted.end());
+  raw.on("end", () => {
+    flush(carry);
+    carry = "";
+    redacted.end();
+  });
   raw.on("error", (error) => redacted.destroy(error));
   return redacted;
 }

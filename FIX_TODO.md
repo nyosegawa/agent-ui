@@ -144,84 +144,84 @@
 
 ### Dynamic MCP Tool Mapping
 
-- [ ] Inspect `packages/server/src/dynamic-tools.ts`.
-- [ ] Remove or deprecate regex-derived server-name routing.
-- [ ] Design explicit dynamic MCP tool mapping API.
-- [ ] Consider factory name such as `createMcpDynamicToolHandler`.
-- [ ] Require namespace/server/tool allowlist entries.
-- [ ] Fail unknown namespaces before helper thread creation.
-- [ ] Fail unknown tools before `mcpServer/tool/call`.
-- [ ] Update existing dynamic MCP tests to pass explicit mapping.
-- [ ] Add test for `mcp__rmcp` style namespace.
-- [ ] Add test for `mcp__codex_apps__calendar` style namespace if supported.
-- [ ] Add test for unknown namespace returning dynamic failure.
-- [ ] Add test proving unknown namespace does not call `mcpServer/tool/call`.
-- [ ] Update `docs/reference/server-bridge.md`.
-- [ ] Run `bun --filter @nyosegawa/agent-ui-server test`.
+- [x] Inspect `packages/server/src/dynamic-tools.ts`.
+- [x] Remove or deprecate regex-derived server-name routing.
+- [x] Design explicit dynamic MCP tool mapping API.
+- [x] Consider factory name such as `createMcpDynamicToolHandler`.
+- [x] Require namespace/server/tool allowlist entries.
+- [x] Fail unknown namespaces before helper thread creation.
+- [x] Fail unknown tools before `mcpServer/tool/call`.
+- [x] Update existing dynamic MCP tests to pass explicit mapping.
+- [x] Add test for `mcp__rmcp` style namespace.
+- [x] Add test for `mcp__codex_apps__calendar` style namespace if supported.
+- [x] Add test for unknown namespace returning dynamic failure.
+- [x] Add test proving unknown namespace does not call `mcpServer/tool/call`.
+- [x] Update `docs/reference/server-bridge.md`.
+- [x] Run `bun --filter @nyosegawa/agent-ui-server test`.
 
 ### Chunk-Safe Stderr Redaction
 
-- [ ] Inspect `packages/server/src/bridge.ts`.
-- [ ] Inspect `packages/server/src/redaction.ts`.
-- [ ] Decide line-buffered or bounded rolling-buffer approach.
-- [ ] Cap carry buffer size.
-- [ ] Redact before host `stderr` callback.
-- [ ] Redact before writing to redacted stream.
-- [ ] Flush redacted residual data on stream end.
-- [ ] Preserve stream error behavior.
-- [ ] Add bridge test for split bearer token.
-- [ ] Add bridge test for split `OPENAI_API_KEY`.
-- [ ] Assert callback does not contain full secret.
-- [ ] Assert callback does not contain suffix secret.
-- [ ] Assert transport stream does not contain full secret.
-- [ ] Assert transport stream does not contain suffix secret.
-- [ ] Run `bun --filter @nyosegawa/agent-ui-server test`.
+- [x] Inspect `packages/server/src/bridge.ts`.
+- [x] Inspect `packages/server/src/redaction.ts`.
+- [x] Decide line-buffered or bounded rolling-buffer approach.
+- [x] Cap carry buffer size.
+- [x] Redact before host `stderr` callback.
+- [x] Redact before writing to redacted stream.
+- [x] Flush redacted residual data on stream end.
+- [x] Preserve stream error behavior.
+- [x] Add bridge test for split bearer token.
+- [x] Add bridge test for split `OPENAI_API_KEY`.
+- [x] Assert callback does not contain full secret.
+- [x] Assert callback does not contain suffix secret.
+- [x] Assert transport stream does not contain full secret.
+- [x] Assert transport stream does not contain suffix secret.
+- [x] Run `bun --filter @nyosegawa/agent-ui-server test`.
 
 ### Stdio EOF And Pending Requests
 
-- [ ] Inspect `packages/codex/src/stdio-transport.ts`.
-- [ ] Add handling for readline `close`.
-- [ ] Add handling for stdout `end`.
-- [ ] Add handling for stdout `error`.
-- [ ] Reject all pending requests on unexpected EOF.
-- [ ] Push connection closed/error event on unexpected EOF.
-- [ ] Resolve async iterator waiters on terminal close if appropriate.
-- [ ] Ensure explicit `transport.close()` remains idempotent.
-- [ ] Add stdio transport test for pending request rejected on stdout EOF.
-- [ ] Add stdio transport test for EOF during initialize.
-- [ ] Add stdio transport test for no pending request leak.
-- [ ] Run `bun test packages/codex/test/stdio-transport.test.ts`.
+- [x] Inspect `packages/codex/src/stdio-transport.ts`.
+- [x] Add handling for readline `close`.
+- [x] Add handling for stdout `end`.
+- [x] Add handling for stdout `error`.
+- [x] Reject all pending requests on unexpected EOF.
+- [x] Push connection closed/error event on unexpected EOF.
+- [x] Resolve async iterator waiters on terminal close if appropriate.
+- [x] Ensure explicit `transport.close()` remains idempotent.
+- [x] Add stdio transport test for pending request rejected on stdout EOF.
+- [x] Add stdio transport test for EOF during initialize.
+- [x] Add stdio transport test for no pending request leak.
+- [x] Run `bun test packages/codex/test/stdio-transport.test.ts`.
 
 ### WebSocket Backpressure
 
-- [ ] Inspect `packages/server/src/websocket-backpressure.ts`.
-- [ ] Serialize outbound JSON payload once.
-- [ ] Compute `Buffer.byteLength(payload)`.
-- [ ] Check `bufferedAmount + payloadBytes`.
-- [ ] Close before send if next payload exceeds limit.
-- [ ] Preserve exact-boundary allowed behavior.
-- [ ] Add test for large single payload closing without send.
-- [ ] Add test for exact boundary sending.
-- [ ] Run `bun --filter @nyosegawa/agent-ui-server test`.
+- [x] Inspect `packages/server/src/websocket-backpressure.ts`.
+- [x] Serialize outbound JSON payload once.
+- [x] Compute `Buffer.byteLength(payload)`.
+- [x] Check `bufferedAmount + payloadBytes`.
+- [x] Close before send if next payload exceeds limit.
+- [x] Preserve exact-boundary allowed behavior.
+- [x] Add test for large single payload closing without send.
+- [x] Add test for exact boundary sending.
+- [x] Run `bun --filter @nyosegawa/agent-ui-server test`.
 
 ### Non-Loopback Example Hosts
 
-- [ ] Inspect `examples/codex-local-web/server.ts`.
-- [ ] Inspect `examples/next-with-bridge-sidecar/server.ts`.
-- [ ] Add loopback host resolver or guard.
-- [ ] Permit `127.0.0.1`.
-- [ ] Permit `localhost`.
-- [ ] Consider permitting `::1`.
-- [ ] Reject `0.0.0.0` by default.
-- [ ] Reject LAN IPs by default.
-- [ ] Add explicit unsafe opt-in environment variable.
-- [ ] Suggested env: `AGENT_UI_ALLOW_NON_LOOPBACK=1`.
-- [ ] Print warning when unsafe opt-in is active.
-- [ ] Add tests for loopback hosts.
-- [ ] Add tests for rejected non-loopback hosts.
-- [ ] Add tests for unsafe opt-in.
-- [ ] Update `docs/examples/codex-local-web.md`.
-- [ ] Update `docs/examples/next-with-bridge-sidecar.md`.
+- [x] Inspect `examples/codex-local-web/server.ts`.
+- [x] Inspect `examples/next-with-bridge-sidecar/server.ts`.
+- [x] Add loopback host resolver or guard.
+- [x] Permit `127.0.0.1`.
+- [x] Permit `localhost`.
+- [x] Consider permitting `::1`.
+- [x] Reject `0.0.0.0` by default.
+- [x] Reject LAN IPs by default.
+- [x] Add explicit unsafe opt-in environment variable.
+- [x] Suggested env: `AGENT_UI_ALLOW_NON_LOOPBACK=1`.
+- [x] Print warning when unsafe opt-in is active.
+- [x] Add tests for loopback hosts.
+- [x] Add tests for rejected non-loopback hosts.
+- [x] Add tests for unsafe opt-in.
+- [x] Update `docs/examples/codex-local-web.md`.
+- [x] Update `docs/examples/next-with-bridge-sidecar.md`.
 
 ## Phase 4: Refactor And Design Health
 

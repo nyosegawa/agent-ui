@@ -30,6 +30,17 @@ export type DynamicToolCallOutputContentItem =
   | { type: "inputText"; text: string }
   | { type: "inputImage"; imageUrl: string };
 
+export interface McpDynamicToolMapping {
+  namespace: string;
+  server: string;
+  tools: readonly string[] | "all";
+}
+
+export interface McpDynamicToolHandlerOptions {
+  timeoutMs?: number;
+  tools: readonly McpDynamicToolMapping[];
+}
+
 interface McpServerToolCallResponse {
   content?: unknown[];
   structuredContent?: unknown;
@@ -54,29 +65,46 @@ export async function handleDynamicToolRequest(
 
 export async function defaultDynamicToolHandler(
   request: DynamicToolRequest,
-  context: DynamicToolHandlerContext,
 ): Promise<DynamicToolCallResponse> {
-  const server = mcpServerNameFromDynamicNamespace(request.namespace);
-  if (!server) {
-    return dynamicToolFailure(
-      `Unsupported dynamic tool namespace: ${request.namespace ?? "(none)"}`,
-    );
-  }
-  const threadId = await context.getMcpThreadId();
-  const response = await withTimeout(
-    context.transport.request<
-      { arguments?: unknown; server: string; threadId: string; tool: string },
-      McpServerToolCallResponse
-    >("mcpServer/tool/call", {
-      arguments: request.arguments,
-      server,
-      threadId,
-      tool: request.tool,
-    }),
-    DEFAULT_DYNAMIC_TOOL_TIMEOUT_MS,
-    `Dynamic tool ${request.namespace ?? ""}${request.tool} timed out after ${DEFAULT_DYNAMIC_TOOL_TIMEOUT_MS}ms`,
+  return dynamicToolFailure(
+    `Dynamic tool namespace is not allowlisted: ${request.namespace ?? "(none)"}`,
   );
-  return mcpResponseToDynamicToolResponse(response);
+}
+
+export function createMcpDynamicToolHandler(
+  options: McpDynamicToolHandlerOptions,
+): DynamicToolHandler {
+  const timeoutMs = options.timeoutMs ?? DEFAULT_DYNAMIC_TOOL_TIMEOUT_MS;
+  return async (request, context) => {
+    const mapping = options.tools.find((candidate) => {
+      return candidate.namespace === request.namespace;
+    });
+    if (!mapping) {
+      return dynamicToolFailure(
+        `Dynamic tool namespace is not allowlisted: ${request.namespace ?? "(none)"}`,
+      );
+    }
+    if (mapping.tools !== "all" && !mapping.tools.includes(request.tool)) {
+      return dynamicToolFailure(
+        `Dynamic tool is not allowlisted: ${request.namespace ?? "(none)"}${request.tool}`,
+      );
+    }
+    const threadId = await context.getMcpThreadId();
+    const response = await withTimeout(
+      context.transport.request<
+        { arguments?: unknown; server: string; threadId: string; tool: string },
+        McpServerToolCallResponse
+      >("mcpServer/tool/call", {
+        arguments: request.arguments,
+        server: mapping.server,
+        threadId,
+        tool: request.tool,
+      }),
+      timeoutMs,
+      `Dynamic tool ${request.namespace ?? ""}${request.tool} timed out after ${timeoutMs}ms`,
+    );
+    return mcpResponseToDynamicToolResponse(response);
+  };
 }
 
 export async function createDynamicToolHelperThread(
@@ -176,11 +204,6 @@ function extractThreadId(response: unknown): string | undefined {
   const value =
     thread?.id ?? nestedThread?.id ?? record?.threadId ?? nestedResult?.threadId ?? record?.id;
   return typeof value === "string" ? value : undefined;
-}
-
-function mcpServerNameFromDynamicNamespace(namespace: string | null): string | undefined {
-  const match = namespace?.match(/^mcp__(.+)__$/);
-  return match?.[1]?.replaceAll("_", "-");
 }
 
 function mcpResponseToDynamicToolResponse(

@@ -86,6 +86,40 @@ describe("createCodexAppServerBridge", () => {
     await bridge.close();
   });
 
+  it("redacts bearer tokens split across stderr chunks", async () => {
+    const { bridge, callbackMessages, stderr } = createBridgeWithStderrCallback();
+    await bridge.transport.connect();
+
+    stderr.write("Authorization: Bearer raw.");
+    stderr.write("secret\n");
+    const event = await nextTransportEvent(bridge.transport.events, "stderr");
+
+    expect(callbackMessages.join("")).toContain("Authorization: Bearer [REDACTED]");
+    expect(callbackMessages.join("")).not.toContain("raw.secret");
+    expect(callbackMessages.join("")).not.toContain("secret\n");
+    expect(event.message).toContain("Authorization: Bearer [REDACTED]");
+    expect(event.message).not.toContain("raw.secret");
+    expect(event.message).not.toContain("secret\n");
+    await bridge.close();
+  });
+
+  it("redacts API keys split across stderr chunks", async () => {
+    const { bridge, callbackMessages, stderr } = createBridgeWithStderrCallback();
+    await bridge.transport.connect();
+
+    stderr.write("OPENAI_API_KEY=sk-");
+    stderr.write("raw\n");
+    const event = await nextTransportEvent(bridge.transport.events, "stderr");
+
+    expect(callbackMessages.join("")).toContain("OPENAI_API_KEY=[REDACTED]");
+    expect(callbackMessages.join("")).not.toContain("sk-raw");
+    expect(callbackMessages.join("")).not.toContain("raw\n");
+    expect(event.message).toContain("OPENAI_API_KEY=[REDACTED]");
+    expect(event.message).not.toContain("sk-raw");
+    expect(event.message).not.toContain("raw\n");
+    await bridge.close();
+  });
+
   it("waits after SIGTERM and escalates child shutdown after the grace period", async () => {
     const stdin = new PassThrough();
     const stdout = new PassThrough();
@@ -111,6 +145,26 @@ describe("createCodexAppServerBridge", () => {
     expect(signals).toEqual(["SIGTERM", "SIGKILL"]);
   });
 });
+
+function createBridgeWithStderrCallback() {
+  const stdin = new PassThrough();
+  const stdout = new PassThrough();
+  const stderr = new PassThrough();
+  const callbackMessages: string[] = [];
+  const fakeProcess: CodexChildProcess = {
+    kill: () => true,
+    stderr,
+    stdin,
+    stdout,
+  };
+  const bridge = createCodexAppServerBridge({
+    spawn: () => fakeProcess,
+    stderr(line) {
+      callbackMessages.push(line);
+    },
+  });
+  return { bridge, callbackMessages, stderr };
+}
 
 async function waitFor(predicate: () => boolean): Promise<void> {
   const started = Date.now();

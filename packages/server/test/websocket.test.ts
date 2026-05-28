@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createCodexWebSocketTransport } from "../../codex/src/websocket";
 import {
   attachAgentUiWebSocketBridge,
-  defaultDynamicToolHandler,
+  createMcpDynamicToolHandler,
   type AgentUiWebSocketBridgeOptions,
   type CodexChildProcess,
 } from "../src";
@@ -339,7 +339,15 @@ describe("attachAgentUiWebSocketBridge", () => {
 
   it("handles dynamic MCP tool calls through the app-server bridge", async () => {
     const { stdout, transport, writes } = await createBridgeBackedTransport({
-      dynamicToolHandler: defaultDynamicToolHandler,
+      dynamicToolHandler: createMcpDynamicToolHandler({
+        tools: [
+          {
+            namespace: "mcp__computer_use__",
+            server: "computer-use",
+            tools: ["get_app_state"],
+          },
+        ],
+      }),
     });
 
     const connected = transport.connect();
@@ -429,7 +437,15 @@ describe("attachAgentUiWebSocketBridge", () => {
 
   it("auto-resolves MCP approvals for dynamic tool helper calls", async () => {
     const { stdout, transport, writes } = await createBridgeBackedTransport({
-      dynamicToolHandler: defaultDynamicToolHandler,
+      dynamicToolHandler: createMcpDynamicToolHandler({
+        tools: [
+          {
+            namespace: "mcp__computer_use__",
+            server: "computer-use",
+            tools: ["get_app_state"],
+          },
+        ],
+      }),
     });
 
     const connected = transport.connect();

@@ -138,8 +138,28 @@ only on `mentionInput`.
 
 `attachAgentUiWebSocketBridge()` does not execute dynamic tool requests unless
 the host passes a `dynamicToolHandler`. The exported
-`defaultDynamicToolHandler` is an opt-in local helper for App Server
-dynamic-tool requests. It may create a helper thread with:
+`createMcpDynamicToolHandler()` helper requires explicit namespace, server, and
+tool mappings before it will forward a dynamic request to `mcpServer/tool/call`:
+
+```ts
+attachAgentUiWebSocketBridge({
+  server,
+  dynamicToolHandler: createMcpDynamicToolHandler({
+    tools: [
+      {
+        namespace: "mcp__browser",
+        server: "browser",
+        tools: ["snapshot"],
+      },
+    ],
+  }),
+});
+```
+
+Unknown namespaces or tools fail before Agent UI creates the helper thread or
+calls `mcpServer/tool/call`. The legacy `defaultDynamicToolHandler` no longer
+derives server names from namespace strings; hosts should use the explicit
+factory. Allowed dynamic-tool requests may create a helper thread with:
 
 ```text
 approvalPolicy: "on-request"

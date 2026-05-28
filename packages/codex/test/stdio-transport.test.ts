@@ -164,6 +164,66 @@ describe("Codex stdio transport backpressure", () => {
     stdout.write(`${JSON.stringify({ id: 2, result: { stale: true } })}\n`);
     await transport.close();
   });
+
+  it("rejects pending requests when stdout ends", async () => {
+    const stdin = new PassThrough();
+    const stdout = new PassThrough();
+    const transport = createCodexStdioTransport({ stdin, stdout });
+    const written: string[] = [];
+    stdin.on("data", (chunk) => written.push(String(chunk)));
+    const iterator = transport.events[Symbol.asyncIterator]();
+    await transport.connect();
+    await expect(iterator.next()).resolves.toMatchObject({
+      value: { event: { type: "connection/connected" }, type: "event" },
+    });
+
+    const pending = transport.request("model/list", {});
+    await waitFor(() => written.length === 1);
+    stdout.end();
+
+    await expect(pending).rejects.toThrow("Codex stdio stdout closed");
+    await expect(iterator.next()).resolves.toMatchObject({
+      value: {
+        event: { reason: "stdout closed", type: "connection/closed" },
+        type: "event",
+      },
+    });
+    await expect(iterator.next()).resolves.toMatchObject({ done: true });
+  });
+
+  it("rejects initialize when stdout closes before the response", async () => {
+    const stdin = new PassThrough();
+    const stdout = new PassThrough();
+    const transport = createCodexStdioTransport({
+      initialize: {
+        capabilities: null,
+        clientInfo: { name: "agent_ui_test", title: null, version: "0.0.0" },
+      },
+      stdin,
+      stdout,
+    });
+    const written: string[] = [];
+    stdin.on("data", (chunk) => written.push(String(chunk)));
+
+    const connected = transport.connect();
+    await waitFor(() => written.length === 1);
+    stdout.end();
+
+    await expect(connected).rejects.toThrow("Codex stdio stdout closed");
+  });
+
+  it("does not accept new requests after stdout EOF", async () => {
+    const stdin = new PassThrough();
+    const stdout = new PassThrough();
+    const transport = createCodexStdioTransport({ stdin, stdout });
+    await transport.connect();
+    stdout.end();
+    await nextTick();
+
+    await expect(transport.request("model/list", {})).rejects.toThrow(
+      "Codex stdio transport is closed",
+    );
+  });
 });
 
 async function waitFor(predicate: () => boolean): Promise<void> {
@@ -172,4 +232,8 @@ async function waitFor(predicate: () => boolean): Promise<void> {
     await new Promise((resolve) => setTimeout(resolve, 1));
   }
   throw new Error("timed out waiting for condition");
+}
+
+async function nextTick(): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, 0));
 }

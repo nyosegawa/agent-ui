@@ -9,10 +9,15 @@ import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { createServer as createViteServer } from "vite";
+import { resolveExampleHost } from "../loopback-host";
 import { isSuppressedCodexDiagnostic } from "./src/diagnostics";
 import { isDirectoryPickerCancelError } from "./src/directory-picker";
 
-const host = process.env.AGENT_UI_HOST ?? "127.0.0.1";
+const hostResolution = resolveExampleHost(
+  process.env.AGENT_UI_HOST ?? "127.0.0.1",
+  process.env.AGENT_UI_ALLOW_NON_LOOPBACK === "1",
+);
+const host = hostResolution.host;
 const port = Number(process.env.AGENT_UI_PORT ?? 5175);
 const cwd = process.env.AGENT_UI_CODEX_CWD ?? process.cwd();
 const codexCommand = process.env.AGENT_UI_CODEX_COMMAND;
@@ -104,6 +109,7 @@ attachAgentUiWebSocketBridge({
 });
 
 server.listen(port, host, () => {
+  if (hostResolution.warning) console.warn(hostResolution.warning);
   console.log(`Agent UI Codex local web: http://${host}:${port}`);
   console.log(`Codex working directory: ${cwd}`);
   console.log(`Attachment upload directory: ${uploadHandler.directory}`);

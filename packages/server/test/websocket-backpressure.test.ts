@@ -12,7 +12,7 @@ describe("WebSocket backpressure guard", () => {
     );
   });
 
-  it("sends while the socket buffer is below the configured limit", () => {
+  it("sends while the socket buffer plus payload is below the configured limit", () => {
     const socket = {
       bufferedAmount: 4,
       close: vi.fn(),
@@ -23,7 +23,7 @@ describe("WebSocket backpressure guard", () => {
     expect(
       sendJsonWithBackpressure(
         socket,
-        createWebSocketBackpressureGuard({ maxBufferedBytes: 8 }),
+        createWebSocketBackpressureGuard({ maxBufferedBytes: 16 }),
         { ok: true },
       ),
     ).toBe(true);
@@ -31,9 +31,9 @@ describe("WebSocket backpressure guard", () => {
     expect(socket.close).not.toHaveBeenCalled();
   });
 
-  it("closes slow consumers instead of growing the output queue forever", () => {
+  it("closes slow consumers before sending a payload that would exceed the limit", () => {
     const socket = {
-      bufferedAmount: 9,
+      bufferedAmount: 4,
       close: vi.fn(),
       readyState: 1,
       send: vi.fn(),
@@ -51,6 +51,47 @@ describe("WebSocket backpressure guard", () => {
       1013,
       "Agent UI bridge backpressure limit exceeded",
     );
+  });
+
+  it("closes when a single payload is larger than the limit", () => {
+    const socket = {
+      bufferedAmount: 0,
+      close: vi.fn(),
+      readyState: 1,
+      send: vi.fn(),
+    };
+
+    expect(
+      sendJsonWithBackpressure(
+        socket,
+        createWebSocketBackpressureGuard({ maxBufferedBytes: 8 }),
+        { message: "large" },
+      ),
+    ).toBe(false);
+    expect(socket.send).not.toHaveBeenCalled();
+    expect(socket.close).toHaveBeenCalledWith(
+      1013,
+      "Agent UI bridge backpressure limit exceeded",
+    );
+  });
+
+  it("allows the exact buffer boundary", () => {
+    const socket = {
+      bufferedAmount: 1,
+      close: vi.fn(),
+      readyState: 1,
+      send: vi.fn(),
+    };
+
+    expect(
+      sendJsonWithBackpressure(
+        socket,
+        createWebSocketBackpressureGuard({ maxBufferedBytes: 12 }),
+        { ok: true },
+      ),
+    ).toBe(true);
+    expect(socket.send).toHaveBeenCalledWith('{"ok":true}');
+    expect(socket.close).not.toHaveBeenCalled();
   });
 
   it("can be disabled for host-owned experiments", () => {

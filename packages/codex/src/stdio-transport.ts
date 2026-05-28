@@ -32,6 +32,7 @@ class CodexStdioTransport implements AgentTransport {
   readonly #options: CodexStdioTransportOptions;
   readonly #pending = new Map<string, PendingRequest>();
   #closed = false;
+  #ended = false;
   #events: AgentTransportEvent[] = [];
   #waiters: Array<(value: IteratorResult<AgentTransportEvent>) => void> = [];
   #nextId = 0;
@@ -59,13 +60,11 @@ class CodexStdioTransport implements AgentTransport {
   }
 
   async close(): Promise<void> {
-    this.#closed = true;
     this.#options.stdin.end();
-    for (const pending of this.#pending.values()) {
-      pending.reject(new Error("Codex stdio transport closed"));
-    }
-    this.#pending.clear();
-    this.#push({ event: { type: "connection/closed" }, type: "event" });
+    this.#finish(
+      new Error("Codex stdio transport closed"),
+      { event: { type: "connection/closed" }, type: "event" },
+    );
   }
 
   async request<TParams = unknown, TResult = unknown>(
@@ -171,6 +170,20 @@ class CodexStdioTransport implements AgentTransport {
         });
       }
     });
+    lines.on("close", () => {
+      if (!this.#closed) {
+        this.#finish(
+          new Error("Codex stdio stdout closed"),
+          { event: { type: "connection/closed", reason: "stdout closed" }, type: "event" },
+        );
+      }
+    });
+    this.#options.stdout.on("error", (error) => {
+      this.#finish(error, {
+        event: { error: { message: error.message }, type: "connection/error" },
+        type: "event",
+      });
+    });
   }
 
   #readStderr(): void {
@@ -211,6 +224,7 @@ class CodexStdioTransport implements AgentTransport {
   }
 
   #push(event: AgentTransportEvent): void {
+    if (this.#ended) return;
     const waiter = this.#waiters.shift();
     if (waiter) {
       waiter({ done: false, value: event });
@@ -222,7 +236,22 @@ class CodexStdioTransport implements AgentTransport {
   #nextEvent(): Promise<IteratorResult<AgentTransportEvent>> {
     const event = this.#events.shift();
     if (event) return Promise.resolve({ done: false, value: event });
+    if (this.#ended) return Promise.resolve({ done: true, value: undefined });
     return new Promise((resolve) => this.#waiters.push(resolve));
+  }
+
+  #finish(error: Error, event: AgentTransportEvent): void {
+    if (this.#closed) return;
+    this.#closed = true;
+    for (const pending of this.#pending.values()) {
+      pending.reject(error);
+    }
+    this.#pending.clear();
+    this.#push(event);
+    this.#ended = true;
+    for (const waiter of this.#waiters.splice(0)) {
+      waiter({ done: true, value: undefined });
+    }
   }
 }
 

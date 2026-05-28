@@ -4,8 +4,13 @@ import {
 } from "@nyosegawa/agent-ui-server";
 import { createServer } from "node:http";
 import next from "next";
+import { resolveExampleHost } from "../loopback-host";
 
-const host = process.env.AGENT_UI_HOST ?? "127.0.0.1";
+const hostResolution = resolveExampleHost(
+  process.env.AGENT_UI_HOST ?? "127.0.0.1",
+  process.env.AGENT_UI_ALLOW_NON_LOOPBACK === "1",
+);
+const host = hostResolution.host;
 const port = Number(process.env.AGENT_UI_PORT ?? 5174);
 const dev = process.env.NODE_ENV !== "production";
 const cwd = process.env.AGENT_UI_CODEX_CWD ?? process.cwd();
@@ -44,6 +49,7 @@ attachAgentUiWebSocketBridge({
 });
 
 server.listen(port, host, () => {
+  if (hostResolution.warning) console.warn(hostResolution.warning);
   console.log(`Agent UI Next bridge example: http://${host}:${port}`);
   console.log(`Codex working directory: ${cwd}`);
   console.log(`Attachment upload directory: ${uploadHandler.directory}`);

@@ -26,6 +26,10 @@ bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 ```
 
 The default URL is `http://127.0.0.1:5175/`.
+The server refuses non-loopback `AGENT_UI_HOST` values by default because the
+example exposes unauthenticated bridge, upload, and directory-picker routes. For
+trusted host-owned networks only, set `AGENT_UI_ALLOW_NON_LOOPBACK=1`; the
+server will print a warning before binding.
 
 The host page treats 5175 as a full-width, full-height app. `.agent-ui-local-app`
 owns `width: 100%` and `height: 100dvh`, `AgentChat` consumes that height, and

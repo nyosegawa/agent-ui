@@ -27,13 +27,15 @@ export function sendJsonWithBackpressure(
   value: unknown,
 ): boolean {
   if (socket.readyState !== 1) return false;
+  const payload = JSON.stringify(value);
+  const payloadBytes = Buffer.byteLength(payload);
   if (
     guard.maxBufferedBytes !== false &&
-    socket.bufferedAmount > guard.maxBufferedBytes
+    socket.bufferedAmount + payloadBytes > guard.maxBufferedBytes
   ) {
     socket.close(1013, "Agent UI bridge backpressure limit exceeded");
     return false;
   }
-  socket.send(JSON.stringify(value));
+  socket.send(payload);
   return true;
 }
