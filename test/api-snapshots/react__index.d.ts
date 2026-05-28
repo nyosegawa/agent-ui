@@ -64,10 +64,6 @@ interface AgentBootstrapState {
     status: "idle" | "loading" | "ready" | "error";
 }
 declare function useAgentBootstrap(): AgentBootstrapState;
-declare function useAgentUsage(): {
-    rateLimits: unknown;
-    refreshUsage: () => Promise<unknown>;
-};
 
 declare function useAgentApps(threadId?: string): {
     apps: AgentApp[];
@@ -242,6 +238,11 @@ declare function useAgentTurn(threadId?: ThreadId): {
     steerTurn: (expectedTurnId: string, input: string | AgentUserInput[]) => Promise<unknown>;
 };
 declare const useAgentTurnController: typeof useAgentTurn;
+
+declare function useAgentUsage(): {
+    rateLimits: unknown;
+    refreshUsage: () => Promise<unknown>;
+};
 
 type AgentLocale = "en" | "ja" | "ko" | "zh-CN" | "es" | "fr";
 declare const agentLocales: AgentLocale[];

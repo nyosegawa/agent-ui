@@ -143,7 +143,7 @@ Acceptance:
 - [x] Add or refine `useAgentModels`.
 - [x] Add or refine `useAgentApps`.
 - [x] Add or refine `useAgentDiagnostics`.
-- [ ] Add or refine `useAgentUsage`.
+- [x] Add or refine `useAgentUsage`.
 - [ ] Keep `AgentProvider` responsible for state, transport, and controller
   injection only.
 - [ ] Move request construction out of React public API.

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useAgentContext } from "../provider";
 import { useCodexSession } from "./codex-session";
 import { useAgentModels } from "./models";
+import { useAgentUsage } from "./usage";
 
 export function useAgentAccount() {
   const { dispatch, state } = useAgentContext();
@@ -173,18 +174,6 @@ export function useAgentBootstrap(): AgentBootstrapState {
   ]);
 
   return bootstrap;
-}
-
-export function useAgentUsage() {
-  const { dispatch, state } = useAgentContext();
-  const codex = useCodexSession();
-  const rateLimits = selectAccountRateLimits(state);
-  const refreshUsage = useCallback(async () => {
-    const response = await codex.account.rateLimitsRead();
-    dispatch({ rateLimits: response, type: "account/rateLimits/updated" });
-    return response;
-  }, [codex, dispatch]);
-  return { rateLimits, refreshUsage };
 }
 
 function accountResponseHasAccount(response: unknown): boolean {

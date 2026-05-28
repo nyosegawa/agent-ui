@@ -1,7 +1,6 @@
 export {
   useAgentAccount,
   useAgentBootstrap,
-  useAgentUsage,
   type AgentBootstrapState,
 } from "./hooks/account";
 export { useAgentApps } from "./hooks/apps";
@@ -30,3 +29,4 @@ export {
   type ThreadHistoryParams,
 } from "./hooks/thread";
 export { useAgentTurn, useAgentTurnController } from "./hooks/turn";
+export { useAgentUsage } from "./hooks/usage";
