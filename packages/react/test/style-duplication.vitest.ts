@@ -34,6 +34,22 @@ function readStyles(): string {
   return [readFileSync(STYLE_PATH, "utf8"), ...chunks].join("\n");
 }
 
+function designTokenDefinitions(tokens: string): Set<string> {
+  return new Set(
+    Array.from(tokens.matchAll(/(--aui-[a-zA-Z0-9-]+)\s*:/g)).map(
+      (match) => match[1]!,
+    ),
+  );
+}
+
+function designTokenReferences(text: string): Set<string> {
+  return new Set(
+    Array.from(text.matchAll(/var\((--aui-[a-zA-Z0-9-]+)/g)).map(
+      (match) => match[1]!,
+    ),
+  );
+}
+
 function styleFilesUnder(...dirs: string[]): string[] {
   const files: string[] = [];
   const visit = (dir: string) => {
@@ -186,6 +202,24 @@ describe("packages/react styles.css", () => {
     ]) {
       expect(tokens, token).toContain(token);
     }
+  });
+
+  it("does not reference undefined design-system tokens", () => {
+    const tokens = readFileSync(join(STYLE_DIR, "tokens.css"), "utf8");
+    const definedTokens = designTokenDefinitions(tokens);
+    const tokenText = [
+      readFileSync(STYLE_PATH, "utf8"),
+      ...styleFilesUnder(STYLE_DIR, ...EXAMPLE_STYLE_DIRS).map((file) =>
+        readFileSync(file, "utf8"),
+      ),
+      ...sourceFilesUnder(...VISUAL_SOURCE_DIRS).map((file) =>
+        readFileSync(file, "utf8"),
+      ),
+    ].join("\n");
+    const undefinedTokens = Array.from(designTokenReferences(tokenText))
+      .filter((token) => !definedTokens.has(token))
+      .sort();
+    expect(undefinedTokens).toEqual([]);
   });
 
   it("keeps distributed component CSS on design-system tokens for color, radius, and tracking", () => {

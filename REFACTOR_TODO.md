@@ -193,7 +193,7 @@ Acceptance:
 
 ## Phase 6: Design System And CSS
 
-- [ ] Audit `packages/react/src/styles/tokens.css` before adding or changing any
+- [x] Audit `packages/react/src/styles/tokens.css` before adding or changing any
   token.
 - [ ] Audit distributed React CSS for raw colors, raw radii, and private
   stylesheet assumptions.
