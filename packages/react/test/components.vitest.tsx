@@ -393,6 +393,62 @@ describe("AgentChat", () => {
     expect(screen.getByText("echo 80")).toBeInTheDocument();
   });
 
+  it("renders command execution blocks with a closed summary and lazy output body", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-command-block"] = {
+      orderedTurnIds: ["turn-command-block"],
+      status: "loaded",
+      thread: { id: "thread-command-block", name: "Command block" },
+      turns: {
+        "turn-command-block": {
+          blocksByItemId: {
+            "cmd-1": {
+              command: "bun test packages/react",
+              durationMs: 1250,
+              exitCode: 0,
+              id: "cmd-1",
+              kind: "commandExecution",
+              status: "completed",
+            },
+          },
+          commandOutputByItemId: {
+            "cmd-1": "first passing line\nsecond passing line\n",
+          },
+          filePatchByItemId: {},
+          itemOrder: ["cmd-1"],
+          items: {
+            "cmd-1": {
+              id: "cmd-1",
+              kind: "commandExecution",
+              raw: { command: "bun test packages/react" },
+              status: "completed",
+              threadId: "thread-command-block",
+              turnId: "turn-command-block",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-command-block", threadId: "thread-command-block" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList thread={initialState.threads["thread-command-block"]!} />
+      </AgentProvider>,
+    );
+
+    const command = screen.getByLabelText("Command output");
+    expect(command).toHaveTextContent("bun test packages/react");
+    expect(command).toHaveTextContent("completed · exit 0 · 1.3s · 2 lines");
+    expect(command).toHaveTextContent("first passing line");
+    expect(screen.queryByText("second passing line")).not.toBeInTheDocument();
+
+    await user.click(within(command).getByText("bun test packages/react"));
+    expect(screen.getByText(/second passing line/)).toBeInTheDocument();
+  });
+
   it("keeps execution context visible when a stored turn ends with file changes", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();

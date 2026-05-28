@@ -175,7 +175,7 @@ Acceptance:
 - [x] Use disclosure for heavy command output, diffs, tool bodies, and verbose
   diagnostics.
 - [x] Keep approvals inline in transcript and backed by server-request state.
-- [ ] Add tests for command execution blocks.
+- [x] Add tests for command execution blocks.
 - [ ] Add tests for file change blocks.
 - [ ] Add tests for MCP/dynamic/collab tool blocks.
 - [ ] Add tests for reasoning and compaction items.
