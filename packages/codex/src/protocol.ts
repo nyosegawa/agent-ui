@@ -3,8 +3,8 @@ import type {
   InitializeCapabilities as StableInitializeCapabilities,
   InitializeParams,
 } from "./generated/stable";
+import type { generatedExperimentalOnlyClientMethods } from "./generated/protocol-capabilities";
 import {
-  generatedExperimentalOnlyClientMethods,
   generatedStableClientMethods,
   generatedStableNotificationMethods,
   generatedStableServerRequestMethods,
