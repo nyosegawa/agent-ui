@@ -227,18 +227,18 @@
 
 ### Protocol Capability Metadata
 
-- [ ] Inspect `packages/codex/scripts/import-schema.ts`.
-- [ ] Inspect `packages/codex/src/protocol.ts`.
-- [ ] Decide generated capability manifest shape.
-- [ ] Generate stable method list from schema.
-- [ ] Generate stable notification list from schema.
-- [ ] Generate stable server request list from schema.
-- [ ] Generate experimental method list from schema.
-- [ ] Keep productized method policy manually reviewed.
-- [ ] Keep host-only method policy manually reviewed.
-- [ ] Update protocol tests to compare generated lists and policy overlays.
-- [ ] Update `docs/architecture/protocol-drift.md`.
-- [ ] Run `bun run test:protocol`.
+- [x] Inspect `packages/codex/scripts/import-schema.ts`.
+- [x] Inspect `packages/codex/src/protocol.ts`.
+- [x] Decide generated capability manifest shape.
+- [x] Generate stable method list from schema.
+- [x] Generate stable notification list from schema.
+- [x] Generate stable server request list from schema.
+- [x] Generate experimental method list from schema.
+- [x] Keep productized method policy manually reviewed.
+- [x] Keep host-only method policy manually reviewed.
+- [x] Update protocol tests to compare generated lists and policy overlays.
+- [x] Update `docs/architecture/protocol-drift.md`.
+- [x] Run `bun run test:protocol`.
 
 ### AgentChat URL Routing Extraction
 

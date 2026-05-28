@@ -3,6 +3,12 @@ import type {
   InitializeCapabilities as StableInitializeCapabilities,
   InitializeParams,
 } from "./generated/stable";
+import {
+  generatedExperimentalOnlyClientMethods,
+  generatedStableClientMethods,
+  generatedStableNotificationMethods,
+  generatedStableServerRequestMethods,
+} from "./generated/protocol-capabilities";
 
 export const CODEX_PROTOCOL_COMMIT = "64e340ad2809a4da61ec12535a056bcf58f5d6ef";
 export const CODEX_PROTOCOL_GENERATED_AT = "2026-05-27T18:55:58+09:00";
@@ -14,92 +20,7 @@ export type CodexCapabilityStatus =
   | "experimentalUnsupported"
   | "hostOnly";
 
-export const stableAvailableMethods = [
-  "account/login/cancel",
-  "account/login/start",
-  "account/logout",
-  "account/rateLimits/read",
-  "account/read",
-  "account/sendAddCreditsNudgeEmail",
-  "app/list",
-  "command/exec",
-  "command/exec/resize",
-  "command/exec/terminate",
-  "command/exec/write",
-  "config/batchWrite",
-  "config/mcpServer/reload",
-  "config/read",
-  "config/value/write",
-  "configRequirements/read",
-  "experimentalFeature/enablement/set",
-  "experimentalFeature/list",
-  "externalAgentConfig/detect",
-  "externalAgentConfig/import",
-  "feedback/upload",
-  "fs/copy",
-  "fs/createDirectory",
-  "fs/getMetadata",
-  "fs/readDirectory",
-  "fs/readFile",
-  "fs/remove",
-  "fs/unwatch",
-  "fs/watch",
-  "fs/writeFile",
-  "fuzzyFileSearch",
-  "getAuthStatus",
-  "getConversationSummary",
-  "gitDiffToRemote",
-  "hooks/list",
-  "initialize",
-  "marketplace/add",
-  "marketplace/remove",
-  "marketplace/upgrade",
-  "mcpServer/oauth/login",
-  "mcpServer/resource/read",
-  "mcpServer/tool/call",
-  "mcpServerStatus/list",
-  "model/list",
-  "modelProvider/capabilities/read",
-  "permissionProfile/list",
-  "plugin/install",
-  "plugin/installed",
-  "plugin/list",
-  "plugin/read",
-  "plugin/share/checkout",
-  "plugin/share/delete",
-  "plugin/share/list",
-  "plugin/share/save",
-  "plugin/share/updateTargets",
-  "plugin/skill/read",
-  "plugin/uninstall",
-  "review/start",
-  "skills/config/write",
-  "skills/list",
-  "thread/approveGuardianDeniedAction",
-  "thread/archive",
-  "thread/compact/start",
-  "thread/fork",
-  "thread/goal/clear",
-  "thread/goal/get",
-  "thread/goal/set",
-  "thread/inject_items",
-  "thread/list",
-  "thread/loaded/list",
-  "thread/metadata/update",
-  "thread/name/set",
-  "thread/read",
-  "thread/resume",
-  "thread/rollback",
-  "thread/shellCommand",
-  "thread/start",
-  "thread/unarchive",
-  "thread/unsubscribe",
-  "turn/interrupt",
-  "turn/start",
-  "turn/steer",
-  "windowsSandbox/readiness",
-  "windowsSandbox/setupStart",
-] as const;
+export const stableAvailableMethods = generatedStableClientMethods;
 
 export const stableProductizedMethods = [
   "initialize",
@@ -218,92 +139,15 @@ export const experimentalAvailableMethods = [
   "thread/search",
   "thread/settings/update",
   "thread/turns/list",
-] as const;
+] as const satisfies readonly GeneratedExperimentalOnlyClientMethod[];
 
 export const experimentalUnsupportedMethods = [
   "thread/turns/items/list",
-] as const;
+] as const satisfies readonly GeneratedExperimentalOnlyClientMethod[];
 
-export const stableServerRequestMethods = [
-  "account/chatgptAuthTokens/refresh",
-  "applyPatchApproval",
-  "attestation/generate",
-  "execCommandApproval",
-  "item/commandExecution/requestApproval",
-  "item/fileChange/requestApproval",
-  "item/permissions/requestApproval",
-  "item/tool/call",
-  "item/tool/requestUserInput",
-  "mcpServer/elicitation/request",
-] as const;
+export const stableServerRequestMethods = generatedStableServerRequestMethods;
 
-export const stableNotificationMethods = [
-  "account/login/completed",
-  "account/rateLimits/updated",
-  "account/updated",
-  "app/list/updated",
-  "command/exec/outputDelta",
-  "configWarning",
-  "deprecationNotice",
-  "error",
-  "externalAgentConfig/import/completed",
-  "fs/changed",
-  "fuzzyFileSearch/sessionCompleted",
-  "fuzzyFileSearch/sessionUpdated",
-  "guardianWarning",
-  "hook/completed",
-  "hook/started",
-  "item/agentMessage/delta",
-  "item/autoApprovalReview/completed",
-  "item/autoApprovalReview/started",
-  "item/commandExecution/outputDelta",
-  "item/commandExecution/terminalInteraction",
-  "item/completed",
-  "item/fileChange/outputDelta",
-  "item/fileChange/patchUpdated",
-  "item/mcpToolCall/progress",
-  "item/plan/delta",
-  "item/reasoning/summaryPartAdded",
-  "item/reasoning/summaryTextDelta",
-  "item/reasoning/textDelta",
-  "item/started",
-  "mcpServer/oauthLogin/completed",
-  "mcpServer/startupStatus/updated",
-  "model/rerouted",
-  "model/verification",
-  "process/exited",
-  "process/outputDelta",
-  "rawResponseItem/completed",
-  "remoteControl/status/changed",
-  "serverRequest/resolved",
-  "skills/changed",
-  "thread/archived",
-  "thread/closed",
-  "thread/compacted",
-  "thread/goal/cleared",
-  "thread/goal/updated",
-  "thread/name/updated",
-  "thread/realtime/closed",
-  "thread/realtime/error",
-  "thread/realtime/itemAdded",
-  "thread/realtime/outputAudio/delta",
-  "thread/realtime/sdp",
-  "thread/realtime/started",
-  "thread/realtime/transcript/delta",
-  "thread/realtime/transcript/done",
-  "thread/settings/updated",
-  "thread/started",
-  "thread/status/changed",
-  "thread/tokenUsage/updated",
-  "thread/unarchived",
-  "turn/completed",
-  "turn/diff/updated",
-  "turn/plan/updated",
-  "turn/started",
-  "warning",
-  "windows/worldWritableWarning",
-  "windowsSandbox/setupCompleted",
-] as const;
+export const stableNotificationMethods = generatedStableNotificationMethods;
 
 export const stableClientMethods = stableProductizedMethods;
 
@@ -315,6 +159,8 @@ export type ExperimentalUnsupportedMethod =
 export type HostOnlyMethod = (typeof hostOnlyMethods)[number];
 export type StableServerRequestMethod = (typeof stableServerRequestMethods)[number];
 export type StableNotificationMethod = (typeof stableNotificationMethods)[number];
+export type GeneratedExperimentalOnlyClientMethod =
+  (typeof generatedExperimentalOnlyClientMethods)[number];
 
 export interface CodexCapabilityMetadata {
   method: string;

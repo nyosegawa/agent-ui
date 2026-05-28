@@ -28,12 +28,16 @@ checked-in artifact.
 3. Review generated stable and experimental diffs.
 4. Update `CODEX_PROTOCOL_COMMIT` and `CODEX_PROTOCOL_GENERATED_AT` in
    `packages/codex/src/protocol.ts`. The generation script updates schema
-   files; it does not make the metadata decision for you.
+   files and generated method manifests; it does not make the product policy
+   decision for you.
 5. Update `packages/codex/package.json` and
    `packages/codex/src/generated/README.md` so package metadata and the
    generated artifact record the same upstream commit and generator command.
 6. Update `packages/codex/src/protocol.ts` capability classifications when the
-   generated method surface changes.
+   generated method surface changes. Generated method lists live in
+   `packages/codex/src/generated/protocol-capabilities.ts`; productized,
+   host-only, and unsupported policy overlays stay handwritten in
+   `protocol.ts`.
 7. Update normalizer mappings when notification or request payloads changed.
 8. Run protocol tests and accept method snapshots only after reviewing the App Server change.
 9. Update docs when the public release surface changes.
