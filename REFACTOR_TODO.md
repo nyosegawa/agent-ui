@@ -171,7 +171,7 @@ Acceptance:
 - [x] Move scroll-follow behavior into focused modules.
 - [x] Move windowing behavior into focused modules.
 - [x] Move approval anchoring into focused modules.
-- [ ] Keep user and assistant messages readable inline.
+- [x] Keep user and assistant messages readable inline.
 - [ ] Use disclosure for heavy command output, diffs, tool bodies, and verbose
   diagnostics.
 - [ ] Keep approvals inline in transcript and backed by server-request state.
