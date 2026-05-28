@@ -6,22 +6,15 @@ import {
   selectRunSettings,
   selectThread,
   selectThreadRegistry,
-  type AgentModel,
-  type ExecutionModeId,
-  type ReasoningEffort,
   type ThreadId,
   type ThreadState,
 } from "@nyosegawa/agent-ui-core";
 import { useCallback, useMemo, useState } from "react";
-import { createCodexSession } from "@nyosegawa/agent-ui-codex/session";
 import type {
-  ReasoningEffort as CodexReasoningEffort,
   ThreadForkParams,
   ThreadListParams,
   ThreadResumeParams,
   ThreadStartParams,
-  TurnStartParams,
-  UserInput as CodexUserInput,
 } from "@nyosegawa/agent-ui-codex/stable-types";
 import type { AgentUserInput } from "./agent-input";
 import { useAgentContext } from "./provider";
@@ -36,6 +29,15 @@ import {
   threadUpsertEvent,
 } from "./thread-history";
 import { useAgentI18n, type AgentI18nKey } from "./i18n";
+import { useCodexSession } from "./hooks/codex-session";
+import { AGENT_EXECUTION_MODES } from "./hooks/run-settings";
+import { useAgentTurn } from "./hooks/turn";
+import {
+  codexReasoningEffort,
+  normalizeTurnInput,
+  summarizeUserInput,
+  textAgentInput,
+} from "./hooks/turn-input";
 
 export {
   useAgentAuth,
@@ -50,77 +52,15 @@ export {
   useAgentSkills,
 } from "./hooks/connectors";
 export { useAgentApprovals, useAgentServerRequests } from "./hooks/approvals";
+export {
+  AGENT_EXECUTION_MODES,
+  useAgentRunSettings,
+  type AgentExecutionMode,
+} from "./hooks/run-settings";
+export { useAgentTurn, useAgentTurnController } from "./hooks/turn";
 
 type ThreadForkOptions = Omit<ThreadForkParams, "threadId">;
 type ThreadResumeOptions = Omit<ThreadResumeParams, "threadId">;
-type TurnStartOptions = Partial<Omit<TurnStartParams, "input" | "threadId">>;
-
-export interface AgentExecutionMode {
-  id: ExecutionModeId;
-  label: string;
-  description: string;
-  turnParams: TurnStartOptions;
-}
-
-function useCodexSession() {
-  const { transport } = useAgentContext();
-  return useMemo(() => createCodexSession(transport), [transport]);
-}
-
-function textAgentInput(text: string): AgentUserInput {
-  return { text, text_elements: [], type: "text" };
-}
-
-export const AGENT_EXECUTION_MODES: AgentExecutionMode[] = [
-  {
-    description: "Ask before commands or file changes that need review.",
-    id: "review",
-    label: "Review",
-    turnParams: {
-      approvalPolicy: "on-request",
-      sandboxPolicy: {
-        excludeSlashTmp: false,
-        excludeTmpdirEnvVar: false,
-        networkAccess: false,
-        type: "workspaceWrite",
-        writableRoots: [],
-      },
-    },
-  },
-  {
-    description: "Run in the workspace and ask only after a command fails.",
-    id: "auto",
-    label: "Auto",
-    turnParams: {
-      approvalPolicy: "on-failure",
-      sandboxPolicy: {
-        excludeSlashTmp: false,
-        excludeTmpdirEnvVar: false,
-        networkAccess: false,
-        type: "workspaceWrite",
-        writableRoots: [],
-      },
-    },
-  },
-  {
-    description: "Read files and plan changes without writing to the workspace.",
-    id: "read-only",
-    label: "Read-only",
-    turnParams: {
-      approvalPolicy: "untrusted",
-      sandboxPolicy: { networkAccess: false, type: "readOnly" },
-    },
-  },
-  {
-    description: "Allow full local access for trusted one-off work.",
-    id: "full-access",
-    label: "Full access",
-    turnParams: {
-      approvalPolicy: "never",
-      sandboxPolicy: { type: "dangerFullAccess" },
-    },
-  },
-];
 
 export function useAgentThread(threadId?: ThreadId) {
   const { dispatch, state } = useAgentContext();
@@ -403,63 +343,6 @@ function syncRunSettingsFromRawThread(
   }
 }
 
-export function useAgentTurn(threadId?: ThreadId) {
-  const { state } = useAgentContext();
-  const codex = useCodexSession();
-  const resolvedThreadId = threadId ?? selectThreadRegistry(state).activeThreadId;
-  const runSettings = selectRunSettings(state);
-
-  const startTurn = useCallback(
-    async (input: string | AgentUserInput[], params?: TurnStartOptions) => {
-      if (!resolvedThreadId) throw new Error("No active thread");
-      const executionMode = AGENT_EXECUTION_MODES.find(
-        (mode) => mode.id === runSettings.executionMode,
-      );
-      return codex.turn.start({
-        cwd: runSettings.cwd,
-        effort: codexReasoningEffort(runSettings.effort),
-        input: normalizeTurnInput(input),
-        model: runSettings.modelId,
-        ...executionMode?.turnParams,
-        ...params,
-        threadId: resolvedThreadId,
-      });
-    },
-    [
-      codex,
-      resolvedThreadId,
-      runSettings.cwd,
-      runSettings.effort,
-      runSettings.executionMode,
-      runSettings.modelId,
-    ],
-  );
-
-  const interruptTurn = useCallback(
-    async (turnId: string) => {
-      if (!resolvedThreadId) throw new Error("No active thread");
-      return codex.turn.interrupt(resolvedThreadId, turnId);
-    },
-    [codex, resolvedThreadId],
-  );
-
-  const steerTurn = useCallback(
-    async (expectedTurnId: string, input: string | AgentUserInput[]) => {
-      if (!resolvedThreadId) throw new Error("No active thread");
-      return codex.turn.steer({
-        expectedTurnId,
-        input: normalizeTurnInput(input),
-        threadId: resolvedThreadId,
-      });
-    },
-    [codex, resolvedThreadId],
-  );
-
-  return { interruptTurn, startTurn, steerTurn };
-}
-
-export const useAgentTurnController = useAgentTurn;
-
 export function useAgentComposer(threadId?: ThreadId) {
   const { t } = useAgentI18n();
   const [value, setValue] = useState("");
@@ -688,125 +571,6 @@ function followUpSendPreflightError(
     return t("composer.followUpTurnChanged");
   }
   return undefined;
-}
-
-function normalizeTurnInput(input: string | AgentUserInput[]): string | CodexUserInput[] {
-  return typeof input === "string" ? input : input.map(toCodexUserInput);
-}
-
-function toCodexUserInput(input: AgentUserInput): CodexUserInput {
-  const record = input as Record<string, unknown>;
-  switch (input.type) {
-    case "text": {
-      const text = stringValue(record.text);
-      if (!text) throw new Error("Codex text input requires text");
-      return { text, text_elements: [], type: "text" };
-    }
-    case "image": {
-      const url = stringValue(record.image_url);
-      if (!url) throw new Error("Codex image input requires image_url");
-      return { type: "image", url };
-    }
-    case "localImage": {
-      const path = stringValue(record.path);
-      if (!path) throw new Error("Codex local image input requires path");
-      return { path, type: "localImage" };
-    }
-    case "skill": {
-      const name = stringValue(record.name);
-      const path = stringValue(record.path);
-      if (!name || !path) throw new Error("Codex skill input requires name and path");
-      return { name, path, type: "skill" };
-    }
-    case "mention": {
-      const name = stringValue(record.name);
-      const path = stringValue(record.path);
-      if (!name || !path) throw new Error("Codex mention input requires name and path");
-      return { name, path, type: "mention" };
-    }
-    default:
-      throw new Error(`Unsupported Codex user input type: ${input.type}`);
-  }
-}
-
-function codexReasoningEffort(
-  effort: ReasoningEffort | undefined,
-): CodexReasoningEffort | undefined {
-  switch (effort) {
-    case "none":
-    case "minimal":
-    case "low":
-    case "medium":
-    case "high":
-    case "xhigh":
-      return effort;
-    default:
-      return undefined;
-  }
-}
-
-function summarizeUserInput(input: AgentUserInput[], t: (key: AgentI18nKey) => string): string {
-  const text = input
-    .map((item) => (typeof item === "object" && "text" in item ? item.text : ""))
-    .filter(Boolean)
-    .join("\n")
-    .trim();
-  return text || t("composer.attachedFollowUp");
-}
-
-export function useAgentRunSettings() {
-  const { dispatch, state } = useAgentContext();
-  const runSettings = selectRunSettings(state);
-  const selectedModel =
-    state.models.models.find((model) => model.id === runSettings.modelId) ??
-    state.models.models.find((model) => isDefaultModel(model));
-  const supportedEfforts =
-    selectedModel?.supportedEfforts && selectedModel.supportedEfforts.length > 0
-      ? selectedModel.supportedEfforts
-      : [];
-
-  const setExecutionMode = useCallback(
-    (executionMode: ExecutionModeId) =>
-      dispatch({ executionMode, type: "runSettings/updated" }),
-    [dispatch],
-  );
-  const setModelId = useCallback(
-    (modelId: string) => {
-      const model = state.models.models.find((candidate) => candidate.id === modelId);
-      dispatch({
-        effort: model?.defaultEffort,
-        modelId: modelId || undefined,
-        type: "runSettings/updated",
-      });
-    },
-    [dispatch, state.models.models],
-  );
-  const setEffort = useCallback(
-    (effort: ReasoningEffort) =>
-      dispatch({ effort: effort || undefined, type: "runSettings/updated" }),
-    [dispatch],
-  );
-  const setCwd = useCallback(
-    (cwd: string) =>
-      dispatch({ cwd: cwd.trim() || undefined, type: "runSettings/updated" }),
-    [dispatch],
-  );
-
-  return {
-    executionModes: AGENT_EXECUTION_MODES,
-    models: state.models.models,
-    runSettings,
-    selectedModel,
-    setCwd,
-    setEffort,
-    setExecutionMode,
-    setModelId,
-    supportedEfforts,
-  };
-}
-
-function isDefaultModel(model: AgentModel): boolean {
-  return asRecord(model.raw)?.isDefault === true;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {

@@ -4,20 +4,15 @@ import type {
   ReasoningEffort,
 } from "@nyosegawa/agent-ui-core";
 import { selectApps } from "@nyosegawa/agent-ui-core";
-import { createCodexSession } from "@nyosegawa/agent-ui-codex/session";
 import type {
   AppsListParams,
   HooksListParams,
   SkillsConfigWriteParams,
   SkillsListParams,
 } from "@nyosegawa/agent-ui-codex/stable-types";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useAgentContext } from "../provider";
-
-function useCodexSession() {
-  const { transport } = useAgentContext();
-  return useMemo(() => createCodexSession(transport), [transport]);
-}
+import { useCodexSession } from "./codex-session";
 
 export function useAgentSkills(cwd?: string) {
   const { dispatch, state } = useAgentContext();

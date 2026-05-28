@@ -1,13 +1,8 @@
 import { selectAccountRateLimits } from "@nyosegawa/agent-ui-core";
-import { createCodexSession } from "@nyosegawa/agent-ui-codex/session";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAgentContext } from "../provider";
+import { useCodexSession } from "./codex-session";
 import { useAgentModels } from "./connectors";
-
-function useCodexSession() {
-  const { transport } = useAgentContext();
-  return useMemo(() => createCodexSession(transport), [transport]);
-}
 
 export function useAgentAuth() {
   const { dispatch, state } = useAgentContext();

@@ -142,8 +142,6 @@ declare function useAgentServerRequests(threadId?: ThreadId): {
     reject: (requestId: RequestId, message?: string) => Promise<void>;
 };
 
-type ThreadForkOptions = Omit<ThreadForkParams, "threadId">;
-type ThreadResumeOptions = Omit<ThreadResumeParams, "threadId">;
 type TurnStartOptions = Partial<Omit<TurnStartParams, "input" | "threadId">>;
 interface AgentExecutionMode {
     id: ExecutionModeId;
@@ -152,6 +150,27 @@ interface AgentExecutionMode {
     turnParams: TurnStartOptions;
 }
 declare const AGENT_EXECUTION_MODES: AgentExecutionMode[];
+declare function useAgentRunSettings(): {
+    executionModes: AgentExecutionMode[];
+    models: AgentModel[];
+    runSettings: _nyosegawa_agent_ui_core.RunSettingsState;
+    selectedModel: AgentModel | undefined;
+    setCwd: (cwd: string) => void;
+    setEffort: (effort: ReasoningEffort) => void;
+    setExecutionMode: (executionMode: ExecutionModeId) => void;
+    setModelId: (modelId: string) => void;
+    supportedEfforts: string[];
+};
+
+declare function useAgentTurn(threadId?: ThreadId): {
+    interruptTurn: (turnId: string) => Promise<unknown>;
+    startTurn: (input: string | AgentUserInput[], params?: TurnStartOptions) => Promise<unknown>;
+    steerTurn: (expectedTurnId: string, input: string | AgentUserInput[]) => Promise<unknown>;
+};
+declare const useAgentTurnController: typeof useAgentTurn;
+
+type ThreadForkOptions = Omit<ThreadForkParams, "threadId">;
+type ThreadResumeOptions = Omit<ThreadResumeParams, "threadId">;
 declare function useAgentThread(threadId?: ThreadId): {
     resumeThread: (id: ThreadId, params?: ThreadResumeOptions) => Promise<unknown>;
     startThread: (params?: ThreadStartParams) => Promise<unknown>;
@@ -189,12 +208,6 @@ declare function useAgentThreadReader(): {
         includeTurns?: boolean;
     }) => Promise<unknown>;
 };
-declare function useAgentTurn(threadId?: ThreadId): {
-    interruptTurn: (turnId: string) => Promise<unknown>;
-    startTurn: (input: string | AgentUserInput[], params?: TurnStartOptions) => Promise<unknown>;
-    steerTurn: (expectedTurnId: string, input: string | AgentUserInput[]) => Promise<unknown>;
-};
-declare const useAgentTurnController: typeof useAgentTurn;
 declare function useAgentComposer(threadId?: ThreadId): {
     activeTurnId: string | undefined;
     editQueuedFollowUp: (id: string) => QueuedFollowUp | undefined;
@@ -218,17 +231,6 @@ declare function useAgentComposer(threadId?: ThreadId): {
 };
 
 type AgentComposerController = ReturnType<typeof useAgentComposer>;
-declare function useAgentRunSettings(): {
-    executionModes: AgentExecutionMode[];
-    models: AgentModel[];
-    runSettings: _nyosegawa_agent_ui_core.RunSettingsState;
-    selectedModel: AgentModel | undefined;
-    setCwd: (cwd: string) => void;
-    setEffort: (effort: ReasoningEffort) => void;
-    setExecutionMode: (executionMode: ExecutionModeId) => void;
-    setModelId: (modelId: string) => void;
-    supportedEfforts: string[];
-};
 
 type AgentLocale = "en" | "ja" | "ko" | "zh-CN" | "es" | "fr";
 declare const agentLocales: AgentLocale[];

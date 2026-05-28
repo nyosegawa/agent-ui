@@ -136,7 +136,7 @@ Acceptance:
 
 - [ ] Split `packages/react/src/hooks.ts` into domain hooks.
 - [ ] Add or refine `useAgentThread`.
-- [ ] Add or refine `useAgentTurn`.
+- [x] Add or refine `useAgentTurn`.
 - [ ] Add or refine `useAgentComposer`.
 - [x] Add or refine `useAgentApprovals`.
 - [ ] Add or refine `useAgentAccount`.
