@@ -81,6 +81,13 @@ Server request fails, the bridge preserves the App Server error `code` and
 Browser request `trace` is forwarded as JSON-RPC-lite top-level `trace` to the
 underlying transport.
 
+Server-side redaction helpers are public exports from
+`@nyosegawa/agent-ui-server`: `redactSecrets()`, `redactStructuredValue()`, and
+`redactTransportEvent()`. They are part of the server API snapshot. Any new
+redaction helper added for bridge errors, diagnostics, or structured JSON-RPC
+payloads must either remain package-internal or update the server API snapshot
+in the same change.
+
 When the bridge is configured with `initialize`, the bridge owns App Server
 initialization and sends the `initialize` / `initialized` handshake over stdio
 before forwarding transport events. In that mode, browser `initialize` requests

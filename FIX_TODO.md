@@ -42,7 +42,9 @@ Goal: lock public contracts and failing tests before implementation.
   - Completion: bridge-owned initialize and browser-owned initialize are not both allowed silently.
   - Completion: double initialize expected behavior is captured by a failing test.
 
-- [ ] Decide whether new redaction helpers are public or internal.
+- [x] Decide whether new redaction helpers are public or internal.
+  - Decision: redaction helpers are public server exports when exposed from `@nyosegawa/agent-ui-server`; any new public helper must update the server API snapshot, otherwise it stays package-internal.
+  - Test plan: redaction tests import helpers through the public server entrypoint so root-export drift is caught.
   - Completion: public helpers include server API snapshot updates.
   - Completion: internal helpers are not documented as public API.
 
