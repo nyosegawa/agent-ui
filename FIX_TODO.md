@@ -176,7 +176,7 @@ Goal: fix current reducer bugs within the existing event shape. Do not include `
   - Tests: `selectItemBlock()` works for reasoning, command, file change, MCP/tool, web search, image, and system info blocks from stored items.
   - Docs/API: internal helper only.
 
-- [ ] Fix `boundedRecordEntry()` recency.
+- [x] Fix `boundedRecordEntry()` recency.
   - Implementation: remove existing key, append updated key at the end, then trim to the last `maxEntries`.
   - Tests: helper-level update-then-insert coverage plus at least one reducer-level case for file patches, apps, skills, or hooks.
   - Docs/API: signature unchanged; snapshot unnecessary.

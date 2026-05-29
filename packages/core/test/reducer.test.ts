@@ -9,7 +9,7 @@ import fixture from "../../../fixtures/app-server/text-turn.json" with { type: "
 import { agentReducer } from "../src/reducer";
 import { runEventFixture } from "../src/fixtures";
 import { createInitialAgentState } from "../src/state";
-import { AGENT_RETENTION_POLICY } from "../src/retention";
+import { AGENT_RETENTION_POLICY, boundedRecordEntry } from "../src/retention";
 import {
   selectAccountRateLimits,
   selectApps,
@@ -29,6 +29,14 @@ import {
 import type { FixtureStep } from "../src/fixtures";
 
 describe("agentReducer", () => {
+  it("moves updated bounded record entries to the newest slot before trimming", () => {
+    const updated = boundedRecordEntry({ a: 1, b: 2, c: 3 }, "a", 4, 3);
+    expect(updated).toEqual({ b: 2, c: 3, a: 4 });
+    expect(Object.keys(updated)).toEqual(["b", "c", "a"]);
+
+    expect(boundedRecordEntry(updated, "d", 5, 3)).toEqual({ c: 3, a: 4, d: 5 });
+  });
+
   it("bounds raw diagnostics, command output, file patches, and stale thread snapshot entities", () => {
     let state = createInitialAgentState();
     state = agentReducer(state, {
@@ -68,6 +76,26 @@ describe("agentReducer", () => {
     expect(
       Object.keys(state.threads["thread-retention"]?.turns["turn-retention"]?.filePatchByItemId ?? {}),
     ).toHaveLength(AGENT_RETENTION_POLICY.filePatchesPerTurnMax);
+    state = agentReducer(state, {
+      type: "item/filePatch/updated",
+      threadId: "thread-retention",
+      turnId: "turn-retention",
+      itemId: "patch-5",
+      patch: { refreshed: true },
+    });
+    state = agentReducer(state, {
+      type: "item/filePatch/updated",
+      threadId: "thread-retention",
+      turnId: "turn-retention",
+      itemId: "patch-new",
+      patch: { newest: true },
+    });
+    const retainedPatches =
+      state.threads["thread-retention"]?.turns["turn-retention"]?.filePatchByItemId ?? {};
+    expect(Object.keys(retainedPatches)).toHaveLength(AGENT_RETENTION_POLICY.filePatchesPerTurnMax);
+    expect(retainedPatches["patch-5"]).toEqual({ refreshed: true });
+    expect(retainedPatches["patch-6"]).toBeUndefined();
+    expect(retainedPatches["patch-new"]).toEqual({ newest: true });
 
     for (let index = 0; index < AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax + 5; index += 1) {
       state = agentReducer(state, {
