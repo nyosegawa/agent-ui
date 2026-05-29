@@ -344,11 +344,12 @@ have no `max-height` or `overflow` of their own (the transcript owns scrolling).
 One expanded card plus compact picker rows for any other pending requests at
 the same anchor. Decision actions are limited to `commandApproval`,
 `fileChangeApproval`, `legacyExecApproval`, and `legacyPatchApproval`. Broader
-App Server requests such as user input, MCP elicitation, dynamic tools,
-permissions, auth refresh, and attestation are exposed through
-`useAgentServerRequests()` for host-owned integration UI and do not receive
-generic accept / accept-for-session / decline responses from the default
-approval queue.
+App Server requests such as user input, MCP elicitation, permissions, auth
+refresh, and attestation are exposed through `useAgentServerRequests()` for
+host-owned integration UI and do not receive generic accept /
+accept-for-session / decline responses from the default approval queue. Dynamic
+tool calls are host integration requests too, but they are handled out of band
+and are not retained in the default queue.
 When a pending approval is taller than the transcript viewport, the timeline
 scrolls so the decision footer stays visible on desktop and mobile without a
 manual scroll.

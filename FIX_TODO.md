@@ -18,7 +18,9 @@ Goal: lock public contracts and failing tests before implementation.
   - Completion: clean break path is `requests/respond/reject`, or compatibility path keeps `approve` as a deprecated alias.
   - Completion: docs, migration note, and API snapshot requirements are listed with the decision.
 
-- [ ] Decide the dynamic tool default queue policy.
+- [x] Decide the dynamic tool default queue policy.
+  - Decision: exclude `dynamicTool` from the default core/UI server-request queue; bridge/host integrations handle dynamic tool calls out of band.
+  - Test plan: reducer coverage proves normalized dynamic tool request events do not remain queued; Milestone 2 will add direct transport/bridge path coverage.
   - Completion: `dynamicTool` is either excluded from the default queue, or guaranteed to clean up on respond/reject or matching item completion.
   - Completion: direct transport/custom host regression tests are planned; bridge-only mitigation is not considered sufficient.
 

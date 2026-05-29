@@ -92,8 +92,10 @@ const { approvals, approve } = useAgentApprovals(threadId);
 
 `useAgentServerRequests()` returns the queued normalized server requests for the
 active or supplied thread, including host integration requests such as
-permissions, MCP elicitation, user input, dynamic tools, auth refresh, and
-attestation. It exposes neutral `respond(requestId, result)` and
+permissions, MCP elicitation, user input, auth refresh, and attestation. Dynamic
+tool calls are not retained in the default queue; bridge or host integrations
+must handle them out of band so stale tool calls do not linger in UI state. The
+hook exposes neutral `respond(requestId, result)` and
 `reject(requestId, errorOrMessage)` actions so hosts can send method-specific
 payloads instead of approval-shaped decisions.
 

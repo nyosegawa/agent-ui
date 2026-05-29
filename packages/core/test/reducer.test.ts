@@ -491,6 +491,38 @@ describe("agentReducer", () => {
     ]);
   });
 
+  it("does not retain dynamic tool calls in the default server request queue", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          status: "running",
+          thread: { id: "thread-dynamic-tool" },
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "dynamic-tool-1",
+            kind: "dynamicTool",
+            payload: {
+              callId: "call-1",
+              namespace: "mcp__browser",
+              tool: "get_app_state",
+            },
+            threadId: "thread-dynamic-tool",
+            turnId: "turn-dynamic-tool",
+          },
+          type: "serverRequest/created",
+        },
+      },
+    ]);
+
+    expect(selectServerRequestQueue(state, "thread-dynamic-tool")).toEqual([]);
+    expect(selectPendingApprovals(state, "thread-dynamic-tool")).toEqual([]);
+    expect(state.threads["thread-dynamic-tool"]?.status).toBe("running");
+  });
+
   it("reconciles pending server requests on connection errors", () => {
     const state = runEventFixture([
       { event: { thread: { id: "thread-error" }, type: "thread/started" } },

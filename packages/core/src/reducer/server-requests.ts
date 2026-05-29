@@ -10,6 +10,7 @@ export function reduceServerRequestEvent(
 ): AgentSessionState {
   switch (event.type) {
     case "serverRequest/created":
+      if (event.request.kind === "dynamicTool") return state;
       return threadEntityStore.pruneSnapshots(
         threadEntityStore.setStatus(
           {

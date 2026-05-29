@@ -10,11 +10,13 @@ Approval request families include:
 - file-change approval
 - legacy exec/apply-patch approval requests
 
-Other server requests, including user input, MCP elicitation, permissions,
-dynamic tools, auth refresh, and attestation, are host integration requests.
-Read them through `useAgentServerRequests()` and render method-specific UI in
-the host; the default approval queue does not send generic `{ decision }`
-responses for them.
+Other server requests, including user input, MCP elicitation, permissions, auth
+refresh, and attestation, are host integration requests. Read them through
+`useAgentServerRequests()` and render method-specific UI in the host; the
+default approval queue does not send generic `{ decision }` responses for them.
+Dynamic tool calls are also host integration requests, but the default queue
+does not retain them because they must be handled out of band by the bridge or
+host tool runner.
 
 ## Default Placement
 
