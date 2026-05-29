@@ -509,7 +509,7 @@ Goal: address lower-risk UX/docs/example drift after correctness/security work. 
   - Tests: e2e or docs guard depending on chosen path.
   - Docs/API: docs-only.
 
-- [ ] Resolve upload cleanup docs/example drift.
+- [x] Resolve upload cleanup docs/example drift.
   - Implementation: add idempotent shutdown cleanup in `examples/codex-local-web`, or document TTL cleanup reliance and explicit cleanup hooks accurately.
   - Tests: idempotent shutdown cleanup test if implemented.
   - Docs/API: docs-only.

@@ -12,8 +12,10 @@ turn; Stop uses only `turn/interrupt`. Restored context usage from
 route stays on the start screen; stored threads are opened only through explicit
 selection or `/threads/<id>` direct links.
 Uploads use the local helper's per-session temp directory, validation, size
-limit, TTL cleanup, and explicit cleanup hook. Images become `localImage`
-inputs; non-images become explicit `Attached file: /absolute/path` text.
+limit, TTL cleanup, and explicit cleanup hook. The dev server calls that cleanup
+hook idempotently when the HTTP server closes or receives SIGINT/SIGTERM. Images
+become `localImage` inputs; non-images become explicit
+`Attached file: /absolute/path` text.
 
 Detailed docs: [docs/examples/codex-local-web.md](../../docs/examples/codex-local-web.md).
 

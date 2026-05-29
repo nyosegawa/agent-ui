@@ -12,6 +12,7 @@ import { createServer as createViteServer } from "vite";
 import { resolveExampleHost } from "../loopback-host";
 import { isSuppressedCodexDiagnostic } from "./src/diagnostics";
 import { isDirectoryPickerCancelError } from "./src/directory-picker";
+import { createIdempotentUploadCleanup } from "./src/upload-cleanup";
 
 const hostResolution = resolveExampleHost(
   process.env.AGENT_UI_HOST ?? "127.0.0.1",
@@ -33,6 +34,9 @@ const execFileAsync = promisify(execFile);
 // machine and returns an absolute path the agent can actually open. This is a
 // host responsibility, not something the agent-ui library fakes with blob URLs.
 const uploadHandler = createAgentUiLocalUploadHandler();
+const cleanupUploads = createIdempotentUploadCleanup(uploadHandler, (error) => {
+  console.warn(`Attachment upload cleanup failed: ${String(error)}`);
+});
 
 async function handleUpload(request: IncomingMessage, response: ServerResponse) {
   await uploadHandler.handle(request, response);
@@ -96,6 +100,9 @@ const server = createServer((request, response) => {
     response.end("Not found");
   });
 });
+server.on("close", () => {
+  void cleanupUploads();
+});
 
 attachAgentUiWebSocketBridge({
   ...(codexArgs ? { args: codexArgs } : {}),
@@ -113,4 +120,19 @@ server.listen(port, host, () => {
   console.log(`Agent UI Codex local web: http://${host}:${port}`);
   console.log(`Codex working directory: ${cwd}`);
   console.log(`Attachment upload directory: ${uploadHandler.directory}`);
+});
+
+async function shutdown(signal: NodeJS.Signals) {
+  console.log(`Received ${signal}; closing Agent UI Codex local web server.`);
+  await new Promise<void>((resolve) => server.close(() => resolve()));
+  await vite.close();
+  await cleanupUploads();
+  process.exit(0);
+}
+
+process.once("SIGINT", () => {
+  void shutdown("SIGINT");
+});
+process.once("SIGTERM", () => {
+  void shutdown("SIGTERM");
 });

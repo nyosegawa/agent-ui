@@ -116,4 +116,7 @@ local-file user input.
 The local upload helper writes into a per-session temp directory, validates
 method/content type/filename headers, enforces size limits, preserves arbitrary
 sanitized extensions, exposes a cleanup hook, and runs TTL cleanup for expired
-upload sessions before new writes.
+upload sessions before new writes. This example calls the cleanup hook
+idempotently when the HTTP server closes or receives SIGINT/SIGTERM, so normal
+dev-server shutdown removes the current session directory while TTL cleanup still
+handles abandoned sessions.
