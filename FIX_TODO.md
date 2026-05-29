@@ -424,7 +424,7 @@ Goal: make published surfaces, schema import workflow, and browser validation ga
   - Tests: package-resolution smoke blocks `./src/generated`, `./src/generated/stable`, `./src/generated/experimental`, and representative generated files.
   - Docs/API: update package docs and snapshots if declaration/export paths change.
 
-- [ ] Clean up core root exports deliberately.
+- [x] Clean up core root exports deliberately.
   - Implementation: remove store singletons/interfaces, reducer-internal helpers, and `boundedRecordEntry()` from root public API; add `internal-testing` subpath only if needed.
   - Tests: core public surface allowlist.
   - Docs/API: update `core__index.d.ts` snapshot and package export docs.

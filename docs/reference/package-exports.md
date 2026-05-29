@@ -47,9 +47,11 @@ Responsibilities:
 - fixture utilities
 
 The package root exports these building blocks directly: state/event/transport
-types, reducer and selector helpers, `FakeAgentTransport`, and fixture
-utilities. JSON-RPC framing and generated App Server schema are Codex adapter
-responsibilities, not core responsibilities.
+types, reducer and selector helpers, `FakeAgentTransport`, fixture utilities,
+and the default retention policy constant. Store singletons, store interfaces,
+retention helper internals, and reducer-internal commit/merge helpers are not
+part of the root public API. JSON-RPC framing and generated App Server schema
+are Codex adapter responsibilities, not core responsibilities.
 
 Must not include:
 

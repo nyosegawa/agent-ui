@@ -105,15 +105,9 @@ describe("Core package source structure", () => {
       expect(existsSync(join(coreSrc, "stores", `${store}.ts`))).toBe(true);
     }
 
-    expect(root).toContain('export * from "./stores/connection";');
-    expect(root).toContain('export * from "./stores/apps";');
-    expect(root).toContain('export * from "./stores/diagnostics";');
-    expect(root).toContain('export * from "./stores/item";');
-    expect(root).toContain('export * from "./stores/server-request";');
-    expect(root).toContain('export * from "./stores/thread-entity";');
-    expect(root).toContain('export * from "./stores/thread-index";');
-    expect(root).toContain('export * from "./stores/turn";');
-    expect(root).toContain('export * from "./stores/usage";');
+    for (const store of storeFiles) {
+      expect(root).not.toContain(`export * from "./stores/${store}";`);
+    }
   });
 
   it("keeps core tests protocol-neutral", () => {
