@@ -290,7 +290,7 @@ Goal: mechanically detect drift in generated schema metadata, raw fixtures, serv
   - Tests: same method cannot appear under multiple statuses.
   - Docs/API: no snapshot.
 
-- [ ] Keep actual schema refresh out of this milestone.
+- [x] Keep actual schema refresh out of this milestone.
   - Implementation: defer current upstream stable additions until schema import preflight in Milestone 8.
   - Tests: no generated tree refresh in this milestone.
   - Docs/API: no stable-types snapshot unless generated schema changes.

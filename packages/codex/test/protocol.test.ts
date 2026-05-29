@@ -39,6 +39,7 @@ import { stableNotificationCoverage } from "../src/normalizers/notification-cove
 describe("Codex protocol metadata", () => {
   it("records upstream commit and stable release method surface", () => {
     expect(CODEX_PROTOCOL_COMMIT).toMatch(/^[0-9a-f]{40}$/);
+    expect(CODEX_PROTOCOL_COMMIT).toBe("64e340ad2809a4da61ec12535a056bcf58f5d6ef");
     expect(CODEX_PROTOCOL_GENERATED_AT).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(stableClientMethods).toBe(stableProductizedMethods);
     expect(stableProductizedMethods).toContain("account/rateLimits/read");

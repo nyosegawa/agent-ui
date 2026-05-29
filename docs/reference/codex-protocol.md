@@ -223,6 +223,8 @@ Policy:
   generated constants, package metadata, and the generated README
 - snapshot protocol method lists
 - fail protocol conformance tests when upstream changes break assumptions
+- keep the actual generated schema refresh out of preflight/classification-only
+  work; refresh the generated tree only in the dedicated schema import milestone
 
 Package metadata should include:
 
