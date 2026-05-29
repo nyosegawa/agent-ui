@@ -404,7 +404,7 @@ Goal: make published surfaces, schema import workflow, and browser validation ga
   - Tests: helper tests for missing `CODEX_REPO`, dirty focused path, and metadata rendering if factored.
   - Docs/API: update schema refresh docs; no snapshot for script-only changes.
 
-- [ ] Run actual schema refresh as a separate task after preflight.
+- [x] Run actual schema refresh as a separate task after preflight.
   - Implementation: update generated stable/experimental trees to current upstream.
   - Tests: protocol, fixtures, typecheck, package validation.
   - Docs/API: update stable type API snapshots and protocol drift docs.

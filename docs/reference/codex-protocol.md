@@ -103,7 +103,7 @@ Implementation status:
   model-list normalization.
 - `thread/turns/items/list` is intentionally disabled in the product facade
   until upstream implements it.
-- Protocol metadata records upstream commit `64e340ad2809a4da61ec12535a056bcf58f5d6ef`.
+- Protocol metadata records upstream commit `577ec03bf82fb52e7041fb6b684e694b1e53451a`.
 - Schema refresh requires an explicit upstream checkout:
   `CODEX_REPO=<codex-checkout> bun --filter @nyosegawa/agent-ui-codex generate:schema`.
   The script validates focused App Server paths, rejects dirty imports, and

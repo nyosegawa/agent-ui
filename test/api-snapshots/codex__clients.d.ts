@@ -1,7 +1,7 @@
 import { RequestId, AgentError, AgentRequestOptions, AgentTransport } from '@nyosegawa/agent-ui-core';
 import { AppsListParams, HooksListParams, ModelListParams, SkillsConfigWriteParams, SkillsListParams, ThreadForkParams, ThreadInjectItemsParams, ThreadListParams, ThreadLoadedListParams, ThreadMetadataUpdateParams, ThreadResumeParams, ThreadStartParams, TurnStartParams, TurnSteerParams } from './request-builders.js';
-import { C as CodexInitializeOptions } from './protocol-eUwq-oME.js';
-import { U as UserInput } from './method-params-s6VeRfnU.js';
+import { C as CodexInitializeOptions } from './protocol-iDYFX3vA.js';
+import { U as UserInput } from './method-params-D8LveQNY.js';
 import './InitializeParams-CDX1c2T9.js';
 
 interface CodexClientsOptions {
