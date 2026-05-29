@@ -116,7 +116,7 @@ Goal: keep pending approvals visible and prevent dynamic tool stale queue entrie
   - Tests: source `itemId` outside initial window, `turnId` only with no visible item, and hidden/omitted source item all remain visible.
   - Docs/API: no public API change unless placement behavior is documented in detail.
 
-- [ ] Prefer tail fallback for the first reachability fix.
+- [x] Prefer tail fallback for the first reachability fix.
   - Implementation: do not change transcript window size or scroll behavior; move non-renderable anchors to the tail.
   - Tests: long transcript pending approval appears in the tail instead of disappearing.
   - Docs/API: browser-visible behavior requires fixture e2e.
