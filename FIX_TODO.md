@@ -444,7 +444,7 @@ Goal: make published surfaces, schema import workflow, and browser validation ga
   - Tests: verify local `validate:e2e` and workflow runs.
   - Docs/API: docs and workflows use the same gate wording.
 
-- [ ] Add API snapshot readability / Node-CJS parity / runtime named-export smoke.
+- [x] Add API snapshot readability / Node-CJS parity / runtime named-export smoke.
   - Implementation: separate semantic summary from private declaration chunk churn; add import/require declaration parity; check representative public named exports.
   - Tests: add scripts to package validation ladder.
   - Docs/API: docs update; no snapshot unless public declarations change.

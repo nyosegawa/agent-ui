@@ -4,6 +4,7 @@ import { existsSync } from "node:fs";
 import process from "node:process";
 import { fileURLToPath } from "node:url";
 import { readWorkspacePackageSurfaces } from "./public-package-surface.mjs";
+import { assertRepresentativeNamedExports } from "./runtime-export-policy.mjs";
 
 const require = createRequire(import.meta.url);
 const repoRoot = fileURLToPath(new globalThis.URL("..", import.meta.url));
@@ -12,49 +13,22 @@ const packages = [
   {
     dir: "core",
     name: "core",
-    namedExports: [
-      "agentReducer",
-      "FakeAgentTransport",
-      "createInitialAgentState",
-      "selectServerRequestQueue",
-    ],
   },
   {
     dir: "codex",
     name: "codex",
-    namedExports: [
-      "createCodexSession",
-      "createCodexStdioTransport",
-      "createCodexWebSocketTransport",
-      "normalizeCodexServerMessage",
-    ],
   },
   {
     dir: "react",
     name: "react",
-    namedExports: [
-      "AgentChat",
-      "AgentComposer",
-      "AgentProvider",
-      "AgentThreadTimeline",
-      "useAgentApprovals",
-      "useAgentContext",
-    ],
   },
   {
     dir: "server",
     name: "server",
-    namedExports: [
-      "attachAgentUiWebSocketBridge",
-      "createCodexAppServerBridge",
-      "createAgentUiLocalUploadHandler",
-      "resolveServerRequestPolicy",
-    ],
   },
   {
     dir: "web-components",
     name: "web-components",
-    namedExports: ["AgentChatElement", "defineAgentChatElement"],
   },
 ];
 
@@ -76,14 +50,9 @@ for (const pkg of packages) {
   }
   const esmModule = await import(esm);
   const cjsModule = require(fileURLToPath(cjs));
-  for (const exportName of pkg.namedExports) {
-    if (!(exportName in esmModule)) {
-      throw new Error(`${pkg.name} ESM export missing ${exportName}`);
-    }
-    if (!(exportName in cjsModule)) {
-      throw new Error(`${pkg.name} CJS export missing ${exportName}`);
-    }
-  }
+  const packageSpecifier = `@nyosegawa/agent-ui-${pkg.name}`;
+  assertRepresentativeNamedExports(packageSpecifier, "ESM", esmModule);
+  assertRepresentativeNamedExports(packageSpecifier, "CJS", cjsModule);
   for (const surface of publicSurfaceByPackage.get(`@nyosegawa/agent-ui-${pkg.name}`) ?? []) {
     const importTarget = new globalThis.URL(surface.importTarget.replace(/^\.\//, ""), root);
     const requireTarget = new globalThis.URL(surface.requireTarget.replace(/^\.\//, ""), root);
@@ -91,8 +60,10 @@ for (const pkg of packages) {
       throw new Error(`${surface.specifier} export targets must exist after build`);
     }
     if (!surface.isAsset) {
-      await import(importTarget);
-      require(fileURLToPath(requireTarget));
+      const importModule = await import(importTarget);
+      const requireModule = require(fileURLToPath(requireTarget));
+      assertRepresentativeNamedExports(surface.specifier, "ESM", importModule);
+      assertRepresentativeNamedExports(surface.specifier, "CJS", requireModule);
     }
   }
 }

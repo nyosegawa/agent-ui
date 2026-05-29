@@ -95,5 +95,6 @@ async function fakePackage(root: string, dir: string, name: string, declaration:
     }),
   );
   await writeFile(join(packageRoot, "dist", "index.d.ts"), declaration);
+  await writeFile(join(packageRoot, "dist", "index.d.cts"), declaration);
   await writeFile(join(packageRoot, "dist", "internal-hash.d.ts"), "export const hidden: string;\n");
 }

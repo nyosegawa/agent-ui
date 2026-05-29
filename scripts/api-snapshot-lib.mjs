@@ -7,6 +7,7 @@ export async function checkApiSnapshots({ repoRoot, snapshotRoot, update = false
   await mkdir(snapshotRoot, { recursive: true });
   const declarations = await collectPublicDeclarations(repoRoot);
   assertBuiltDeclarationsExist(declarations, repoRoot);
+  await assertDeclarationConditionParity(declarations, repoRoot);
   const expectedSnapshots = new Set(declarations.map((entry) => entry.snapshotName));
   const existingSnapshots = new Set(
     (await readdir(snapshotRoot)).filter((entry) => entry.endsWith(".d.ts")).sort(),
@@ -19,14 +20,14 @@ export async function checkApiSnapshots({ repoRoot, snapshotRoot, update = false
     .sort();
 
   for (const entry of declarations) {
-    const actual = normalizeDeclarations(await readFile(entry.declarationPath, "utf8"));
+    const actual = normalizeDeclarationSnapshot(await readFile(entry.declarationPath, "utf8"));
     const snapshotPath = join(snapshotRoot, entry.snapshotName);
     if (!existsSync(snapshotPath)) {
       missing.push(entry.snapshotName);
       if (update) await writeFile(snapshotPath, actual);
       continue;
     }
-    const expected = normalizeDeclarations(await readFile(snapshotPath, "utf8"));
+    const expected = normalizeDeclarationSnapshot(await readFile(snapshotPath, "utf8"));
     if (actual !== expected) {
       changed.push(entry.snapshotName);
       if (update) await writeFile(snapshotPath, actual);
@@ -51,7 +52,13 @@ export async function collectPublicDeclarations(repoRoot) {
     .filter((surface) => surface.typesTarget)
     .map((surface) => ({
       declarationPath: join(surface.packageRoot, surface.typesTarget.replace(/^\.\//, "")),
+      importDeclarationPath: surface.importTypesTarget
+        ? join(surface.packageRoot, surface.importTypesTarget.replace(/^\.\//, ""))
+        : undefined,
       packageName: surface.packageName,
+      requireDeclarationPath: surface.requireTypesTarget
+        ? join(surface.packageRoot, surface.requireTypesTarget.replace(/^\.\//, ""))
+        : undefined,
       snapshotName: surface.snapshotName,
       specifier: surface.specifier,
     }))
@@ -84,6 +91,54 @@ function assertBuiltDeclarationsExist(declarations, repoRoot) {
   );
 }
 
-function normalizeDeclarations(value) {
-  return `${value.trim()}\n`;
+async function assertDeclarationConditionParity(declarations, repoRoot) {
+  const mismatches = [];
+  for (const entry of declarations) {
+    if (
+      !entry.importDeclarationPath ||
+      !entry.requireDeclarationPath ||
+      entry.importDeclarationPath === entry.requireDeclarationPath
+    ) {
+      continue;
+    }
+    const importDeclaration = normalizeDeclarationForConditionParity(
+      await readFile(entry.importDeclarationPath, "utf8"),
+    );
+    const requireDeclaration = normalizeDeclarationForConditionParity(
+      await readFile(entry.requireDeclarationPath, "utf8"),
+    );
+    if (importDeclaration !== requireDeclaration) {
+      mismatches.push(
+        `${entry.specifier} -> ${relative(repoRoot, entry.importDeclarationPath)} != ${relative(
+          repoRoot,
+          entry.requireDeclarationPath,
+        )}`,
+      );
+    }
+  }
+  if (mismatches.length === 0) return;
+
+  throw new Error(
+    [
+      "Declaration condition parity failed for public exports.",
+      ...mismatches.map((entry) => `- ${entry}`),
+    ].join("\n"),
+  );
+}
+
+export function normalizeDeclarationSnapshot(value) {
+  return `${normalizePrivateDeclarationChunks(value).trim()}\n`;
+}
+
+function normalizeDeclarationForConditionParity(value) {
+  return normalizeDeclarationSnapshot(value)
+    .replace(/\.d\.cts\b/g, ".d.ts")
+    .replace(/\.cjs\b/g, ".js");
+}
+
+function normalizePrivateDeclarationChunks(value) {
+  return value.replace(
+    /(\.\/[A-Za-z0-9_$-]+-)[A-Za-z0-9_-]{6,}(\.(?:cjs|js))/g,
+    "$1<chunk>$2",
+  );
 }
