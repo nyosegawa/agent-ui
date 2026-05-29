@@ -166,7 +166,7 @@ Goal: fix current reducer bugs within the existing event shape. Do not include `
   - Tests: cold/preview thread becomes live on start; terminal completion keeps status, registry status, and bucket synchronized.
   - Docs/API: no public API change.
 
-- [ ] Update metadata on repeated thread snapshots.
+- [x] Update metadata on repeated thread snapshots.
   - Implementation: latest `name`, `path`, `ephemeral`, and `raw` are merged/replaced while metadata-only updates preserve turns/items/token usage.
   - Tests: repeated `thread/upserted` changes metadata without removing ordered turns.
   - Docs/API: no public API change.

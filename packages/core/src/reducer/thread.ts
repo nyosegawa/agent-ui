@@ -37,6 +37,7 @@ export function reduceThreadEvent(
           {
             ...threadState,
             orderedTurnIds,
+            thread: { ...threadState.thread, ...event.thread },
             status,
             turns,
           },

@@ -782,15 +782,50 @@ describe("agentReducer", () => {
       {
         event: {
           status: "notLoaded",
-          thread: { id: "thread-history" },
+          thread: {
+            ephemeral: false,
+            id: "thread-history",
+            path: "/workspace/history",
+            raw: { version: 1 },
+          },
           turns: [{ id: "turn-history", threadId: "thread-history", status: "completed" }],
           type: "thread/upserted",
         },
       },
       {
         event: {
+          items: [
+            {
+              id: "item-history",
+              kind: "message",
+              status: "completed",
+              text: "history item",
+              threadId: "thread-history",
+              turnId: "turn-history",
+            },
+          ],
+          threadId: "thread-history",
+          turn: { id: "turn-history", threadId: "thread-history", status: "completed" },
+          type: "turn/completed",
+        },
+      },
+      {
+        event: {
+          threadId: "thread-history",
+          tokenUsage: { inputTokens: 10, outputTokens: 5, totalTokens: 15 },
+          type: "thread/tokenUsage/updated",
+        },
+      },
+      {
+        event: {
           status: "notLoaded",
-          thread: { id: "thread-history", name: "History without turns" },
+          thread: {
+            ephemeral: true,
+            id: "thread-history",
+            name: "History without turns",
+            path: "/workspace/history-renamed",
+            raw: { version: 2 },
+          },
           type: "thread/upserted",
         },
       },
@@ -800,6 +835,21 @@ describe("agentReducer", () => {
     expect(state.threads["thread-history"]?.turns["turn-history"]?.turn.status).toBe(
       "completed",
     );
+    expect(state.threads["thread-history"]?.turns["turn-history"]?.itemOrder).toEqual([
+      "item-history",
+    ]);
+    expect(state.threads["thread-history"]?.tokenUsage).toMatchObject({
+      inputTokens: 10,
+      outputTokens: 5,
+      totalTokens: 15,
+    });
+    expect(state.threads["thread-history"]?.thread).toMatchObject({
+      ephemeral: true,
+      id: "thread-history",
+      name: "History without turns",
+      path: "/workspace/history-renamed",
+      raw: { version: 2 },
+    });
     expect(state.threads["thread-history"]?.registryStatus).toBe("preview");
     expect(selectThreadRegistry(state).previewThreadIds).toContain("thread-history");
     expect(selectThreadRegistry(state).coldThreadIds).not.toContain("thread-history");
