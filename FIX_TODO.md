@@ -514,7 +514,7 @@ Goal: address lower-risk UX/docs/example drift after correctness/security work. 
   - Tests: idempotent shutdown cleanup test if implemented.
   - Docs/API: docs-only.
 
-- [ ] Clarify `test:fixtures` naming / runner ownership.
+- [x] Clarify `test:fixtures` naming / runner ownership.
   - Implementation: document that it is a core state/fixture gate, or rename toward `test:core-state` / `test:core-fixtures`.
   - Tests: script/docs consistency.
   - Docs/API: package scripts/docs only.

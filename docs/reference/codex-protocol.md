@@ -185,8 +185,10 @@ readable, for example plain text deltas instead of base64-looking literals.
 
 `bun run test:protocol` parses those lines with the JSON-RPC parser,
 normalizes them through the Codex adapter, and reduces them into core state.
-`bun run test:fixtures` remains core-owned reducer coverage over normalized
-`AgentEvent` fixtures.
+`bun run test:core-fixtures` is the core-owned reducer coverage over normalized
+`AgentEvent` fixtures. `bun run test:fixtures` remains as a compatibility alias
+for that same runner; it is not raw JSON-RPC fixture coverage and not browser
+fixture e2e.
 
 ## Stable and Experimental API
 

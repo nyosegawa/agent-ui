@@ -31,7 +31,9 @@ Canonical validation tiers:
 
 - `bun run validate:fast`: typecheck, lint, and the normal Vitest suite.
 - `bun run validate:protocol`: Codex protocol coverage plus core fixture
-  normalization coverage.
+  normalization coverage. The legacy `bun run test:fixtures` command delegates
+  to `bun run test:core-fixtures`; both are the core reducer/state fixture gate,
+  not browser fixture e2e and not raw JSON-RPC conformance.
 - `bun run validate:packages`: fresh package build, `publint`, and
   `arethetypeswrong` in the required order.
 - `bun run validate:e2e`: clean Playwright ports, then deterministic browser
@@ -95,7 +97,9 @@ Raw App Server JSON-RPC fixture lines from
 `fixtures/app-server/v2-jsonrpc/` are Codex adapter coverage under
 `bun run test:protocol`: the Codex tests parse and normalize the lines before
 reducing them through core state. Core fixture tests stay protocol-neutral and
-consume normalized `AgentEvent` fixtures only.
+consume normalized `AgentEvent` fixtures only. Use
+`bun run test:core-fixtures` for the explicit core-owned runner name;
+`bun run test:fixtures` remains as a compatibility alias.
 
 ## Reducer And Normalizer Tests
 
