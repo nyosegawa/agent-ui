@@ -1,6 +1,6 @@
 import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as _nyosegawa_agent_ui_core from '@nyosegawa/agent-ui-core';
-import { AgentEvent, AgentSessionState, AgentTransport, ReasoningEffort, AgentApp, AgentModel, ThreadId, RequestId, AgentError, ExecutionModeId, ThreadState, ThreadTokenUsage, PendingServerRequest, AgentItemState, TurnState, AgentThread, AgentItemBlock } from '@nyosegawa/agent-ui-core';
+import { AgentEvent, AgentSessionState, AgentTransport, ReasoningEffort as ReasoningEffort$1, AgentApp, AgentModel, ThreadId as ThreadId$1, RequestId, AgentError, ExecutionModeId, ThreadState, ThreadTokenUsage, PendingServerRequest, AgentItemState, TurnState, AgentThread, AgentItemBlock } from '@nyosegawa/agent-ui-core';
 import * as React$1 from 'react';
 import React__default, { PropsWithChildren } from 'react';
 
@@ -46,6 +46,726 @@ interface AgentUnknownUserInput {
     [key: string]: unknown;
 }
 
+type PlanType = "free" | "go" | "plus" | "pro" | "prolite" | "team" | "self_serve_business_usage_based" | "business" | "enterprise_cbp_usage_based" | "enterprise" | "edu" | "unknown";
+
+type Account = {
+    "type": "apiKey";
+} | {
+    "type": "chatgpt";
+    email: string;
+    planType: PlanType;
+} | {
+    "type": "amazonBedrock";
+};
+
+type CreditsSnapshot = {
+    hasCredits: boolean;
+    unlimited: boolean;
+    balance: string | null;
+};
+
+type RateLimitReachedType = "rate_limit_reached" | "workspace_owner_credits_depleted" | "workspace_member_credits_depleted" | "workspace_owner_usage_limit_reached" | "workspace_member_usage_limit_reached";
+
+type RateLimitWindow = {
+    usedPercent: number;
+    windowDurationMins: number | null;
+    resetsAt: number | null;
+};
+
+type RateLimitSnapshot = {
+    limitId: string | null;
+    limitName: string | null;
+    primary: RateLimitWindow | null;
+    secondary: RateLimitWindow | null;
+    credits: CreditsSnapshot | null;
+    planType: PlanType | null;
+    rateLimitReachedType: RateLimitReachedType | null;
+};
+
+/**
+ * A path that is guaranteed to be absolute and normalized (though it is not
+ * guaranteed to be canonicalized or exist on the filesystem).
+ *
+ * IMPORTANT: When deserializing an `AbsolutePathBuf`, a base path must be set
+ * using [AbsolutePathBufGuard::new]. If no base path is set, the
+ * deserialization will fail unless the path being deserialized is already
+ * absolute.
+ */
+type AbsolutePathBuf = string;
+
+type JsonValue = number | string | boolean | Array<JsonValue> | {
+    [key in string]?: JsonValue;
+} | null;
+
+/**
+ * Configures who approval requests are routed to for review. Examples
+ * include sandbox escapes, blocked network access, MCP approval prompts, and
+ * ARC escalations. Defaults to `user`. `auto_review` uses a carefully
+ * prompted subagent to gather relevant context and apply a risk-based
+ * decision framework before approving or denying the request.
+ */
+type ApprovalsReviewer = "user" | "auto_review" | "guardian_subagent";
+
+type AskForApproval = "untrusted" | "on-failure" | "on-request" | {
+    "granular": {
+        sandbox_approval: boolean;
+        rules: boolean;
+        skill_approval: boolean;
+        request_permissions: boolean;
+        mcp_elicitations: boolean;
+    };
+} | "never";
+
+type ByteRange = {
+    start: number;
+    end: number;
+};
+
+type NonSteerableTurnKind = "review" | "compact";
+
+/**
+ * This translation layer make sure that we expose codex error code in camel case.
+ *
+ * When an upstream HTTP status is available (for example, from the Responses API or a provider),
+ * it is forwarded in `httpStatusCode` on the relevant `codexErrorInfo` variant.
+ */
+type CodexErrorInfo = "contextWindowExceeded" | "usageLimitExceeded" | "serverOverloaded" | "cyberPolicy" | {
+    "httpConnectionFailed": {
+        httpStatusCode: number | null;
+    };
+} | {
+    "responseStreamConnectionFailed": {
+        httpStatusCode: number | null;
+    };
+} | "internalServerError" | "unauthorized" | "badRequest" | "threadRollbackFailed" | "sandboxError" | {
+    "responseStreamDisconnected": {
+        httpStatusCode: number | null;
+    };
+} | {
+    "responseTooManyFailedAttempts": {
+        httpStatusCode: number | null;
+    };
+} | {
+    "activeTurnNotSteerable": {
+        turnKind: NonSteerableTurnKind;
+    };
+} | "other";
+
+type CollabAgentStatus = "pendingInit" | "running" | "interrupted" | "completed" | "errored" | "shutdown" | "notFound";
+
+type CollabAgentState = {
+    status: CollabAgentStatus;
+    message: string | null;
+};
+
+type CollabAgentTool = "spawnAgent" | "sendInput" | "resumeAgent" | "wait" | "closeAgent";
+
+type CollabAgentToolCallStatus = "inProgress" | "completed" | "failed";
+
+/**
+ * See https://platform.openai.com/docs/guides/reasoning?api-mode=responses#get-started-with-reasoning
+ */
+type ReasoningEffort = "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
+
+type CommandAction = {
+    "type": "read";
+    command: string;
+    name: string;
+    path: AbsolutePathBuf;
+} | {
+    "type": "listFiles";
+    command: string;
+    path: string | null;
+} | {
+    "type": "search";
+    command: string;
+    query: string | null;
+    path: string | null;
+} | {
+    "type": "unknown";
+    command: string;
+};
+
+type NetworkAccess = "restricted" | "enabled";
+
+type SandboxPolicy = {
+    "type": "dangerFullAccess";
+} | {
+    "type": "readOnly";
+    networkAccess: boolean;
+} | {
+    "type": "externalSandbox";
+    networkAccess: NetworkAccess;
+} | {
+    "type": "workspaceWrite";
+    writableRoots: Array<AbsolutePathBuf>;
+    networkAccess: boolean;
+    excludeTmpdirEnvVar: boolean;
+    excludeSlashTmp: boolean;
+};
+
+type CommandExecutionSource = "agent" | "userShell" | "unifiedExecStartup" | "unifiedExecInteraction";
+
+type CommandExecutionStatus = "inProgress" | "completed" | "failed" | "declined";
+
+type DynamicToolCallOutputContentItem = {
+    "type": "inputText";
+    text: string;
+} | {
+    "type": "inputImage";
+    imageUrl: string;
+};
+
+type DynamicToolCallStatus = "inProgress" | "completed" | "failed";
+
+type TurnError = {
+    message: string;
+    codexErrorInfo: CodexErrorInfo | null;
+    additionalDetails: string | null;
+};
+
+type PatchChangeKind = {
+    "type": "add";
+} | {
+    "type": "delete";
+} | {
+    "type": "update";
+    move_path: string | null;
+};
+
+type FileUpdateChange = {
+    path: string;
+    kind: PatchChangeKind;
+    diff: string;
+};
+
+type GetAccountRateLimitsResponse = {
+    /**
+     * Backward-compatible single-bucket view; mirrors the historical payload.
+     */
+    rateLimits: RateLimitSnapshot;
+    /**
+     * Multi-bucket view keyed by metered `limit_id` (for example, `codex`).
+     */
+    rateLimitsByLimitId: {
+        [key in string]?: RateLimitSnapshot;
+    } | null;
+};
+
+type GetAccountResponse = {
+    account: Account | null;
+    requiresOpenaiAuth: boolean;
+};
+
+type GitInfo = {
+    sha: string | null;
+    branch: string | null;
+    originUrl: string | null;
+};
+
+type HookPromptFragment = {
+    text: string;
+    hookRunId: string;
+};
+
+/**
+ * Classifies an assistant message as interim commentary or final answer text.
+ *
+ * Providers do not emit this consistently, so callers must treat `None` as
+ * "phase unknown" and keep compatibility behavior for legacy models.
+ */
+type MessagePhase = "commentary" | "final_answer";
+
+type McpToolCallError = {
+    message: string;
+};
+
+type McpToolCallResult = {
+    content: Array<JsonValue>;
+    structuredContent: JsonValue | null;
+    _meta: JsonValue | null;
+};
+
+type McpToolCallStatus = "inProgress" | "completed" | "failed";
+
+type MemoryCitationEntry = {
+    path: string;
+    lineStart: number;
+    lineEnd: number;
+    note: string;
+};
+
+type MemoryCitation = {
+    entries: Array<MemoryCitationEntry>;
+    threadIds: Array<string>;
+};
+
+type PatchApplyStatus = "inProgress" | "completed" | "failed" | "declined";
+
+type ImageDetail = "auto" | "low" | "high" | "original";
+
+type TextElement = {
+    /**
+     * Byte range in the parent `text` buffer that this element occupies.
+     */
+    byteRange: ByteRange;
+    /**
+     * Optional human-readable placeholder for the element, displayed in the UI.
+     */
+    placeholder: string | null;
+};
+
+type UserInput = {
+    "type": "text";
+    text: string;
+    /**
+     * UI-defined spans within `text` used to render or persist special elements.
+     */
+    text_elements: Array<TextElement>;
+} | {
+    "type": "image";
+    detail?: ImageDetail;
+    url: string;
+} | {
+    "type": "localImage";
+    detail?: ImageDetail;
+    path: string;
+} | {
+    "type": "skill";
+    name: string;
+    path: string;
+} | {
+    "type": "mention";
+    name: string;
+    path: string;
+};
+
+type WebSearchAction = {
+    "type": "search";
+    query: string | null;
+    queries: Array<string> | null;
+} | {
+    "type": "openPage";
+    url: string | null;
+} | {
+    "type": "findInPage";
+    url: string | null;
+    pattern: string | null;
+} | {
+    "type": "other";
+};
+
+type ThreadItem = {
+    "type": "userMessage";
+    id: string;
+    content: Array<UserInput>;
+} | {
+    "type": "hookPrompt";
+    id: string;
+    fragments: Array<HookPromptFragment>;
+} | {
+    "type": "agentMessage";
+    id: string;
+    text: string;
+    phase: MessagePhase | null;
+    memoryCitation: MemoryCitation | null;
+} | {
+    "type": "plan";
+    id: string;
+    text: string;
+} | {
+    "type": "reasoning";
+    id: string;
+    summary: Array<string>;
+    content: Array<string>;
+} | {
+    "type": "commandExecution";
+    id: string;
+    /**
+     * The command to be executed.
+     */
+    command: string;
+    /**
+     * The command's working directory.
+     */
+    cwd: AbsolutePathBuf;
+    /**
+     * Identifier for the underlying PTY process (when available).
+     */
+    processId: string | null;
+    source: CommandExecutionSource;
+    status: CommandExecutionStatus;
+    /**
+     * A best-effort parsing of the command to understand the action(s) it will perform.
+     * This returns a list of CommandAction objects because a single shell command may
+     * be composed of many commands piped together.
+     */
+    commandActions: Array<CommandAction>;
+    /**
+     * The command's output, aggregated from stdout and stderr.
+     */
+    aggregatedOutput: string | null;
+    /**
+     * The command's exit code.
+     */
+    exitCode: number | null;
+    /**
+     * The duration of the command execution in milliseconds.
+     */
+    durationMs: number | null;
+} | {
+    "type": "fileChange";
+    id: string;
+    changes: Array<FileUpdateChange>;
+    status: PatchApplyStatus;
+} | {
+    "type": "mcpToolCall";
+    id: string;
+    server: string;
+    tool: string;
+    status: McpToolCallStatus;
+    arguments: JsonValue;
+    mcpAppResourceUri?: string;
+    pluginId: string | null;
+    result: McpToolCallResult | null;
+    error: McpToolCallError | null;
+    /**
+     * The duration of the MCP tool call in milliseconds.
+     */
+    durationMs: number | null;
+} | {
+    "type": "dynamicToolCall";
+    id: string;
+    namespace: string | null;
+    tool: string;
+    arguments: JsonValue;
+    status: DynamicToolCallStatus;
+    contentItems: Array<DynamicToolCallOutputContentItem> | null;
+    success: boolean | null;
+    /**
+     * The duration of the dynamic tool call in milliseconds.
+     */
+    durationMs: number | null;
+} | {
+    "type": "collabAgentToolCall";
+    /**
+     * Unique identifier for this collab tool call.
+     */
+    id: string;
+    /**
+     * Name of the collab tool that was invoked.
+     */
+    tool: CollabAgentTool;
+    /**
+     * Current status of the collab tool call.
+     */
+    status: CollabAgentToolCallStatus;
+    /**
+     * Thread ID of the agent issuing the collab request.
+     */
+    senderThreadId: string;
+    /**
+     * Thread ID of the receiving agent, when applicable. In case of spawn operation,
+     * this corresponds to the newly spawned agent.
+     */
+    receiverThreadIds: Array<string>;
+    /**
+     * Prompt text sent as part of the collab tool call, when available.
+     */
+    prompt: string | null;
+    /**
+     * Model requested for the spawned agent, when applicable.
+     */
+    model: string | null;
+    /**
+     * Reasoning effort requested for the spawned agent, when applicable.
+     */
+    reasoningEffort: ReasoningEffort | null;
+    /**
+     * Last known status of the target agents, when available.
+     */
+    agentsStates: {
+        [key in string]?: CollabAgentState;
+    };
+} | {
+    "type": "webSearch";
+    id: string;
+    query: string;
+    action: WebSearchAction | null;
+} | {
+    "type": "imageView";
+    id: string;
+    path: AbsolutePathBuf;
+} | {
+    "type": "imageGeneration";
+    id: string;
+    status: string;
+    revisedPrompt: string | null;
+    result: string;
+    savedPath?: AbsolutePathBuf;
+} | {
+    "type": "enteredReviewMode";
+    id: string;
+    review: string;
+} | {
+    "type": "exitedReviewMode";
+    id: string;
+    review: string;
+} | {
+    "type": "contextCompaction";
+    id: string;
+};
+
+type LogoutAccountResponse = Record<string, never>;
+
+type TurnItemsView = "notLoaded" | "summary" | "full";
+
+type TurnStatus = "completed" | "interrupted" | "failed" | "inProgress";
+
+type Turn = {
+    id: string;
+    /**
+     * Thread items currently included in this turn payload.
+     */
+    items: Array<ThreadItem>;
+    /**
+     * Describes how much of `items` has been loaded for this turn.
+     */
+    itemsView: TurnItemsView;
+    status: TurnStatus;
+    /**
+     * Only populated when the Turn's status is failed.
+     */
+    error: TurnError | null;
+    /**
+     * Unix timestamp (in seconds) when the turn started.
+     */
+    startedAt: number | null;
+    /**
+     * Unix timestamp (in seconds) when the turn completed.
+     */
+    completedAt: number | null;
+    /**
+     * Duration between turn start and completion in milliseconds, if known.
+     */
+    durationMs: number | null;
+};
+
+type AgentPath = string;
+
+type ThreadId = string;
+
+type SubAgentSource = "review" | "compact" | {
+    "thread_spawn": {
+        parent_thread_id: ThreadId;
+        depth: number;
+        agent_path: AgentPath | null;
+        agent_nickname: string | null;
+        agent_role: string | null;
+    };
+} | "memory_consolidation" | {
+    "other": string;
+};
+
+type SessionSource = "cli" | "vscode" | "exec" | "appServer" | {
+    "custom": string;
+} | {
+    "subAgent": SubAgentSource;
+} | "unknown";
+
+type SkillsConfigWriteResponse = {
+    effectiveEnabled: boolean;
+};
+
+type ThreadSource = "user" | "subagent" | "memory_consolidation";
+
+type ThreadActiveFlag = "waitingOnApproval" | "waitingOnUserInput";
+
+type ThreadStatus = {
+    "type": "notLoaded";
+} | {
+    "type": "idle";
+} | {
+    "type": "systemError";
+} | {
+    "type": "active";
+    activeFlags: Array<ThreadActiveFlag>;
+};
+
+type Thread = {
+    id: string;
+    /**
+     * Session id shared by threads that belong to the same session tree.
+     */
+    sessionId: string;
+    /**
+     * Source thread id when this thread was created by forking another thread.
+     */
+    forkedFromId: string | null;
+    /**
+     * Usually the first user message in the thread, if available.
+     */
+    preview: string;
+    /**
+     * Whether the thread is ephemeral and should not be materialized on disk.
+     */
+    ephemeral: boolean;
+    /**
+     * Model provider used for this thread (for example, 'openai').
+     */
+    modelProvider: string;
+    /**
+     * Unix timestamp (in seconds) when the thread was created.
+     */
+    createdAt: number;
+    /**
+     * Unix timestamp (in seconds) when the thread was last updated.
+     */
+    updatedAt: number;
+    /**
+     * Current runtime status for the thread.
+     */
+    status: ThreadStatus;
+    /**
+     * [UNSTABLE] Path to the thread on disk.
+     */
+    path: string | null;
+    /**
+     * Working directory captured for the thread.
+     */
+    cwd: AbsolutePathBuf;
+    /**
+     * Version of the CLI that created the thread.
+     */
+    cliVersion: string;
+    /**
+     * Origin of the thread (CLI, VSCode, codex exec, codex app-server, etc.).
+     */
+    source: SessionSource;
+    /**
+     * Optional analytics source classification for this thread.
+     */
+    threadSource: ThreadSource | null;
+    /**
+     * Optional random unique nickname assigned to an AgentControl-spawned sub-agent.
+     */
+    agentNickname: string | null;
+    /**
+     * Optional role (agent_role) assigned to an AgentControl-spawned sub-agent.
+     */
+    agentRole: string | null;
+    /**
+     * Optional Git metadata captured when the thread was created.
+     */
+    gitInfo: GitInfo | null;
+    /**
+     * Optional user-facing thread title.
+     */
+    name: string | null;
+    /**
+     * Only populated on `thread/resume`, `thread/rollback`, `thread/fork`, and `thread/read`
+     * (when `includeTurns` is true) responses.
+     * For all other responses and notifications returning a Thread,
+     * the turns field will be an empty list.
+     */
+    turns: Array<Turn>;
+};
+
+type ThreadArchiveResponse = Record<string, never>;
+
+type ThreadCompactStartResponse = Record<string, never>;
+
+type ThreadForkResponse = {
+    thread: Thread;
+    model: string;
+    modelProvider: string;
+    serviceTier: string | null;
+    cwd: AbsolutePathBuf; /**
+     * Instruction source files currently loaded for this thread.
+     */
+    instructionSources: Array<AbsolutePathBuf>;
+    approvalPolicy: AskForApproval; /**
+     * Reviewer currently used for approval requests on this thread.
+     */
+    approvalsReviewer: ApprovalsReviewer; /**
+     * Legacy sandbox policy retained for compatibility. Experimental clients
+     * should prefer `activePermissionProfile` for profile provenance.
+     */
+    sandbox: SandboxPolicy;
+    reasoningEffort: ReasoningEffort | null;
+};
+
+type ThreadReadResponse = {
+    thread: Thread;
+};
+
+type ThreadResumeResponse = {
+    thread: Thread;
+    model: string;
+    modelProvider: string;
+    serviceTier: string | null;
+    cwd: AbsolutePathBuf; /**
+     * Instruction source files currently loaded for this thread.
+     */
+    instructionSources: Array<AbsolutePathBuf>;
+    approvalPolicy: AskForApproval; /**
+     * Reviewer currently used for approval requests on this thread.
+     */
+    approvalsReviewer: ApprovalsReviewer; /**
+     * Legacy sandbox policy retained for compatibility. Experimental clients
+     * should prefer `activePermissionProfile` for profile provenance.
+     */
+    sandbox: SandboxPolicy;
+    reasoningEffort: ReasoningEffort | null;
+};
+
+type ThreadRollbackResponse = {
+    /**
+     * The updated thread after applying the rollback, with `turns` populated.
+     *
+     * The ThreadItems stored in each Turn are lossy since we explicitly do not
+     * persist all agent interactions, such as command executions. This is the same
+     * behavior as `thread/resume`.
+     */
+    thread: Thread;
+};
+
+type ThreadSetNameResponse = Record<string, never>;
+
+type ThreadStartResponse = {
+    thread: Thread;
+    model: string;
+    modelProvider: string;
+    serviceTier: string | null;
+    cwd: AbsolutePathBuf; /**
+     * Instruction source files currently loaded for this thread.
+     */
+    instructionSources: Array<AbsolutePathBuf>;
+    approvalPolicy: AskForApproval; /**
+     * Reviewer currently used for approval requests on this thread.
+     */
+    approvalsReviewer: ApprovalsReviewer; /**
+     * Legacy sandbox policy retained for compatibility. Experimental clients
+     * should prefer `activePermissionProfile` for profile provenance.
+     */
+    sandbox: SandboxPolicy;
+    reasoningEffort: ReasoningEffort | null;
+};
+
+type ThreadUnarchiveResponse = {
+    thread: Thread;
+};
+
+type TurnInterruptResponse = Record<string, never>;
+
+type TurnStartResponse = {
+    turn: Turn;
+};
+
+type TurnSteerResponse = {
+    turnId: string;
+};
+
 declare function useAgentAccount(): {
     account: _nyosegawa_agent_ui_core.AccountState;
     cancelLogin: () => Promise<void>;
@@ -54,8 +774,8 @@ declare function useAgentAccount(): {
         userCode: string | undefined;
         verificationUrl: string | undefined;
     }>;
-    logout: () => Promise<unknown>;
-    readAccount: () => Promise<unknown>;
+    logout: () => Promise<LogoutAccountResponse>;
+    readAccount: () => Promise<GetAccountResponse>;
 };
 interface AgentBootstrapState {
     errors: Error[];
@@ -144,7 +864,7 @@ interface TurnStartOptions {
     approvalPolicy?: AgentApprovalPolicy | null;
     approvalsReviewer?: AgentApprovalsReviewer | null;
     cwd?: string | null;
-    effort?: ReasoningEffort | null;
+    effort?: ReasoningEffort$1 | null;
     model?: string | null;
     outputSchema?: AgentJsonValue | null;
     personality?: AgentPersonality | null;
@@ -194,7 +914,7 @@ declare function useAgentSkills(cwd?: string): {
             raw: any;
         }[];
     }[]>;
-    setSkillEnabled: (params: AgentSkillConfigWriteOptions) => Promise<unknown>;
+    setSkillEnabled: (params: AgentSkillConfigWriteOptions) => Promise<SkillsConfigWriteResponse>;
     skills: _nyosegawa_agent_ui_core.AgentSkill[];
 };
 declare function useAgentHooks(cwd?: string): {
@@ -223,12 +943,12 @@ declare function useAgentModels(): {
     refreshModels: () => Promise<AgentModel[]>;
 };
 
-declare function useAgentApprovals(threadId?: ThreadId): {
+declare function useAgentApprovals(threadId?: ThreadId$1): {
     approvals: _nyosegawa_agent_ui_core.PendingServerRequest[];
     approve: (requestId: RequestId, result?: unknown) => Promise<void>;
     reject: (requestId: RequestId, message?: string) => Promise<void>;
 };
-declare function useAgentServerRequests(threadId?: ThreadId): {
+declare function useAgentServerRequests(threadId?: ThreadId$1): {
     requests: _nyosegawa_agent_ui_core.PendingServerRequest[];
     respond: (requestId: RequestId, result: unknown) => Promise<void>;
     reject: (requestId: RequestId, error: AgentError | string) => Promise<void>;
@@ -240,7 +960,7 @@ interface QueuedFollowUp {
     id: string;
     input: AgentUserInput[];
     text: string;
-    threadId: ThreadId;
+    threadId: ThreadId$1;
 }
 interface QueuedFollowUpAttachment {
     extension?: string;
@@ -253,7 +973,7 @@ interface QueuedFollowUpAttachment {
     value: string;
 }
 
-declare function useAgentComposer(threadId?: ThreadId): {
+declare function useAgentComposer(threadId?: ThreadId$1): {
     activeTurnId: string | undefined;
     editQueuedFollowUp: (id: string) => QueuedFollowUp | undefined;
     error: string | undefined;
@@ -290,33 +1010,33 @@ declare function useAgentRunSettings(): {
     runSettings: _nyosegawa_agent_ui_core.RunSettingsState;
     selectedModel: AgentModel | undefined;
     setCwd: (cwd: string) => void;
-    setEffort: (effort: ReasoningEffort) => void;
+    setEffort: (effort: ReasoningEffort$1) => void;
     setExecutionMode: (executionMode: ExecutionModeId) => void;
     setModelId: (modelId: string) => void;
     supportedEfforts: string[];
 };
 
-declare function useAgentThread(threadId?: ThreadId): {
-    resumeThread: (id: ThreadId, params?: ThreadResumeOptions) => Promise<unknown>;
-    startThread: (params?: ThreadStartOptions) => Promise<unknown>;
-    startThreadWithInput: (input: string | AgentUserInput[], params?: ThreadStartOptions) => Promise<unknown>;
+declare function useAgentThread(threadId?: ThreadId$1): {
+    resumeThread: (id: ThreadId$1, params?: ThreadResumeOptions) => Promise<ThreadResumeResponse>;
+    startThread: (params?: ThreadStartOptions) => Promise<ThreadStartResponse>;
+    startThreadWithInput: (input: string | AgentUserInput[], params?: ThreadStartOptions) => Promise<ThreadStartResponse>;
     thread: ThreadState | undefined;
     threadId: string | undefined;
     turns: (_nyosegawa_agent_ui_core.TurnState | undefined)[];
 };
 declare const useAgentThreadController: typeof useAgentThread;
-declare function useAgentThreadActions(threadId?: ThreadId): {
-    archiveThread: () => Promise<unknown>;
-    compactThread: () => Promise<unknown>;
-    forkThread: (params?: ThreadForkOptions) => Promise<unknown>;
-    renameThread: (name: string) => Promise<unknown>;
-    rollbackThread: (numTurns?: number) => Promise<unknown>;
+declare function useAgentThreadActions(threadId?: ThreadId$1): {
+    archiveThread: () => Promise<ThreadArchiveResponse>;
+    compactThread: () => Promise<ThreadCompactStartResponse>;
+    forkThread: (params?: ThreadForkOptions) => Promise<ThreadForkResponse>;
+    renameThread: (name: string) => Promise<ThreadSetNameResponse>;
+    rollbackThread: (numTurns?: number) => Promise<ThreadRollbackResponse>;
     threadId: string | undefined;
-    unarchiveThread: () => Promise<unknown>;
+    unarchiveThread: () => Promise<ThreadUnarchiveResponse>;
 };
 declare function useAgentThreads(): {
     activeThreadId: string | undefined;
-    setActiveThread: (threadId?: ThreadId) => void;
+    setActiveThread: (threadId?: ThreadId$1) => void;
     threads: ThreadState[];
 };
 declare function useAgentThreadHistory(): {
@@ -327,22 +1047,22 @@ declare function useAgentThreadHistory(): {
     threads: ThreadState[];
 };
 declare function useAgentThreadReader(): {
-    readThread: (threadId: ThreadId, options?: {
+    readThread: (threadId: ThreadId$1, options?: {
         activate?: boolean;
         includeTurns?: boolean;
-    }) => Promise<unknown>;
+    }) => Promise<ThreadReadResponse>;
 };
 
-declare function useAgentTurn(threadId?: ThreadId): {
-    interruptTurn: (turnId: string) => Promise<unknown>;
-    startTurn: (input: string | AgentUserInput[], params?: TurnStartOptions) => Promise<unknown>;
-    steerTurn: (expectedTurnId: string, input: string | AgentUserInput[]) => Promise<unknown>;
+declare function useAgentTurn(threadId?: ThreadId$1): {
+    interruptTurn: (turnId: string) => Promise<TurnInterruptResponse>;
+    startTurn: (input: string | AgentUserInput[], params?: TurnStartOptions) => Promise<TurnStartResponse>;
+    steerTurn: (expectedTurnId: string, input: string | AgentUserInput[]) => Promise<TurnSteerResponse>;
 };
 declare const useAgentTurnController: typeof useAgentTurn;
 
 declare function useAgentUsage(): {
     rateLimits: unknown;
-    refreshUsage: () => Promise<unknown>;
+    refreshUsage: () => Promise<GetAccountRateLimitsResponse>;
 };
 
 type AgentLocale = "en" | "ja" | "ko" | "zh-CN" | "es" | "fr";

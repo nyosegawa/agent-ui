@@ -33,6 +33,7 @@ import {
 } from "./request-builders";
 import type {
   AppsListParams,
+  CodexExperimentalMethodParams,
   CodexStableMethodParams,
   HooksListParams,
   ModelListParams,
@@ -49,6 +50,10 @@ import type {
   TurnSteerParams,
   UserInput,
 } from "./request-builders";
+import type {
+  CodexExperimentalMethodResult,
+  CodexStableMethodResult,
+} from "./method-results";
 import {
   assertCodexExperimentalMethod,
   assertCodexProductizedMethod,
@@ -56,6 +61,7 @@ import {
   isExperimentalUnsupportedMethod,
   stableProductizedMethods,
   type CodexInitializeOptions,
+  type ExperimentalAvailableMethod,
   type StableProductizedMethod,
 } from "./protocol";
 
@@ -81,58 +87,80 @@ export interface CodexConnectionClient {
   initialize(
     options: CodexInitializeOptions,
     requestOptions?: AgentRequestOptions,
-  ): Promise<unknown>;
+  ): Promise<CodexStableMethodResult<"initialize">>;
   initialized(): void;
 }
 
 export interface CodexAccountClient {
-  cancelLogin(loginId: string): Promise<unknown>;
-  loginDeviceCode(): Promise<unknown>;
-  logout(): Promise<unknown>;
-  read(refreshToken?: boolean): Promise<unknown>;
-  rateLimitsRead(): Promise<unknown>;
+  cancelLogin(loginId: string): Promise<CodexStableMethodResult<"account/login/cancel">>;
+  loginDeviceCode(): Promise<CodexStableMethodResult<"account/login/start">>;
+  logout(): Promise<CodexStableMethodResult<"account/logout">>;
+  read(refreshToken?: boolean): Promise<CodexStableMethodResult<"account/read">>;
+  rateLimitsRead(): Promise<CodexStableMethodResult<"account/rateLimits/read">>;
 }
 
 export interface CodexAppsClient {
-  list(params?: AppsListParams): Promise<unknown>;
+  list(params?: AppsListParams): Promise<CodexStableMethodResult<"app/list">>;
 }
 
 export interface CodexHooksClient {
-  list(params?: HooksListParams): Promise<unknown>;
+  list(params?: HooksListParams): Promise<CodexStableMethodResult<"hooks/list">>;
 }
 
 export interface CodexSkillsClient {
-  configWrite(params: SkillsConfigWriteParams): Promise<unknown>;
-  list(params?: SkillsListParams): Promise<unknown>;
+  configWrite(
+    params: SkillsConfigWriteParams,
+  ): Promise<CodexStableMethodResult<"skills/config/write">>;
+  list(params?: SkillsListParams): Promise<CodexStableMethodResult<"skills/list">>;
 }
 
 export interface CodexThreadsClient {
-  archive(threadId: string): Promise<unknown>;
-  compactStart(threadId: string): Promise<unknown>;
-  fork(threadId: string, params?: CodexThreadForkOptions): Promise<unknown>;
+  archive(threadId: string): Promise<CodexStableMethodResult<"thread/archive">>;
+  compactStart(threadId: string): Promise<CodexStableMethodResult<"thread/compact/start">>;
+  fork(
+    threadId: string,
+    params?: CodexThreadForkOptions,
+  ): Promise<CodexStableMethodResult<"thread/fork">>;
   injectItems(
     threadId: string,
     items: ThreadInjectItemsParams["items"],
-  ): Promise<unknown>;
-  list(params?: ThreadListParams): Promise<unknown>;
-  loadedList(params?: ThreadLoadedListParams): Promise<unknown>;
+  ): Promise<CodexStableMethodResult<"thread/inject_items">>;
+  list(params?: ThreadListParams): Promise<CodexStableMethodResult<"thread/list">>;
+  loadedList(
+    params?: ThreadLoadedListParams,
+  ): Promise<CodexStableMethodResult<"thread/loaded/list">>;
   metadataUpdate(
     threadId: string,
     params?: CodexThreadMetadataUpdateOptions,
-  ): Promise<unknown>;
-  read(threadId: string, includeTurns?: boolean): Promise<unknown>;
-  resume(threadId: string, params?: CodexThreadResumeOptions): Promise<unknown>;
-  rollback(threadId: string, numTurns: number): Promise<unknown>;
-  setName(threadId: string, name: string): Promise<unknown>;
-  start(params?: ThreadStartParams): Promise<unknown>;
-  unarchive(threadId: string): Promise<unknown>;
-  unsubscribe(threadId: string): Promise<unknown>;
+  ): Promise<CodexStableMethodResult<"thread/metadata/update">>;
+  read(
+    threadId: string,
+    includeTurns?: boolean,
+  ): Promise<CodexStableMethodResult<"thread/read">>;
+  resume(
+    threadId: string,
+    params?: CodexThreadResumeOptions,
+  ): Promise<CodexStableMethodResult<"thread/resume">>;
+  rollback(
+    threadId: string,
+    numTurns: number,
+  ): Promise<CodexStableMethodResult<"thread/rollback">>;
+  setName(
+    threadId: string,
+    name: string,
+  ): Promise<CodexStableMethodResult<"thread/name/set">>;
+  start(params?: ThreadStartParams): Promise<CodexStableMethodResult<"thread/start">>;
+  unarchive(threadId: string): Promise<CodexStableMethodResult<"thread/unarchive">>;
+  unsubscribe(threadId: string): Promise<CodexStableMethodResult<"thread/unsubscribe">>;
 }
 
 export interface CodexTurnsClient {
-  interrupt(threadId: string, turnId: string): Promise<unknown>;
-  start(params: CodexTurnStartOptions): Promise<unknown>;
-  steer(params: CodexTurnSteerOptions): Promise<unknown>;
+  interrupt(
+    threadId: string,
+    turnId: string,
+  ): Promise<CodexStableMethodResult<"turn/interrupt">>;
+  start(params: CodexTurnStartOptions): Promise<CodexStableMethodResult<"turn/start">>;
+  steer(params: CodexTurnSteerOptions): Promise<CodexStableMethodResult<"turn/steer">>;
 }
 
 export interface CodexApprovalsClient {
@@ -141,7 +169,7 @@ export interface CodexApprovalsClient {
 }
 
 export interface CodexModelsClient {
-  list(params?: ModelListParams): Promise<unknown>;
+  list(params?: ModelListParams): Promise<CodexStableMethodResult<"model/list">>;
 }
 
 export interface CodexClients {
@@ -151,7 +179,11 @@ export interface CodexClients {
   connection: CodexConnectionClient;
   hooks: CodexHooksClient;
   models: CodexModelsClient;
-  requestExperimental<TParams = unknown, TResult = unknown>(
+  requestExperimental<TMethod extends ExperimentalAvailableMethod>(
+    method: TMethod,
+    params: CodexExperimentalMethodParams<TMethod>,
+  ): Promise<CodexExperimentalMethodResult<TMethod>>;
+  requestRaw<TParams = unknown, TResult = unknown>(
     method: string,
     params?: TParams,
   ): Promise<TResult>;
@@ -239,8 +271,12 @@ export function createCodexClients(
         throw new Error(`${method} is disabled until upstream implements it`);
       }
       assertCodexExperimentalMethod(method);
-      return transport.request(method, params);
+      return transport.request<unknown, CodexExperimentalMethodResult<typeof method>>(
+        method,
+        params as unknown,
+      );
     },
+    requestRaw: (method, params) => transport.request(method, params),
     skills: {
       configWrite: (params) =>
         request(transport, "skills/config/write", skillsConfigWriteParams(params)),
@@ -328,11 +364,13 @@ function request<TMethod extends StableProductizedMethod>(
   method: TMethod,
   params?: CodexStableMethodParams<TMethod>,
   options?: AgentRequestOptions,
-): Promise<unknown> {
+): Promise<CodexStableMethodResult<TMethod>> {
   if (params === undefined && options === undefined) {
-    return transport.request(method);
+    return transport.request(method) as Promise<CodexStableMethodResult<TMethod>>;
   }
-  return transport.request(method, params as unknown, options);
+  return transport.request(method, params as unknown, options) as Promise<
+    CodexStableMethodResult<TMethod>
+  >;
 }
 
 function assertCodexClientSurfaceProductized(): void {

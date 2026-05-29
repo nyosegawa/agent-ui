@@ -429,7 +429,7 @@ Goal: make published surfaces, schema import workflow, and browser validation ga
   - Tests: core public surface allowlist.
   - Docs/API: update `core__index.d.ts` snapshot and package export docs.
 
-- [ ] Improve Codex client facade typing.
+- [x] Improve Codex client facade typing.
   - Implementation: derive stable results and experimental params/results from generated types; keep a raw escape hatch if compatibility requires it.
   - Tests: type-level tests for wrong params and non-`unknown` stable responses.
   - Docs/API: update Codex snapshots and docs.

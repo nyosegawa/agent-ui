@@ -98,6 +98,9 @@ generated-schema-backed method-param aliases and input helpers live at
 `@nyosegawa/agent-ui-codex/request-builders`. Request builders are useful for
 hosts that intentionally track protocol drift or construct App Server params
 directly, but they are not re-exported from the package root.
+The client facade returns generated response types for productized stable
+methods, and experimental calls use generated params/results once the host opts
+in. `requestRaw()` is the intentionally untyped escape hatch.
 Protocol capability metadata and guards are exported from the package root so
 hosts can distinguish stable productized, stable host-only, stable available,
 experimental available, and experimental unsupported methods before making

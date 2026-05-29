@@ -1,6 +1,7 @@
 export * from "./clients";
 export * from "./json-rpc";
 export * from "./method-params";
+export * from "./method-results";
 export * from "./normalizer";
 export * from "./protocol";
 export * from "./session";

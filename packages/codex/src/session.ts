@@ -33,6 +33,7 @@ export interface CodexSession {
   hooks: CodexHooksClient;
   models: CodexModelsClient;
   requestExperimental: CodexClients["requestExperimental"];
+  requestRaw: CodexClients["requestRaw"];
   skills: CodexSkillsClient;
   thread: CodexThreadsClient;
   turn: CodexTurnsClient;
@@ -49,6 +50,7 @@ export function createCodexSession(
     hooks: clients.hooks,
     models: clients.models,
     requestExperimental: clients.requestExperimental,
+    requestRaw: clients.requestRaw,
     skills: clients.skills,
     thread: clients.threads,
     turn: clients.turns,

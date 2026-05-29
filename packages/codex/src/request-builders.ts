@@ -2,7 +2,16 @@ import type { UserInput } from "./generated/stable/v2";
 import type { CodexStableMethodParams } from "./method-params";
 
 export type { UserInput } from "./generated/stable/v2";
-export type { CodexStableMethod, CodexStableMethodParams } from "./method-params";
+export type {
+  CodexExperimentalMethod,
+  CodexExperimentalMethodParams,
+  CodexStableMethod,
+  CodexStableMethodParams,
+} from "./method-params";
+export type {
+  CodexExperimentalMethodResult,
+  CodexStableMethodResult,
+} from "./method-results";
 
 export type AppsListParams = CodexStableMethodParams<"app/list">;
 export type CancelLoginAccountParams =

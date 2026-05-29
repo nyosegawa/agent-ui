@@ -1,47 +1,11 @@
-import { A as AbsolutePathBuf, J as JsonValue, R as ReasoningEffort, b as AskForApproval, c as ApprovalsReviewer, S as SandboxMode, d as ReasoningSummary, E as ExternalAgentConfigMigrationItem, U as UserInput, P as PluginSharePrincipalType, e as PluginShareDiscoverability, I as ImageDetail, f as RequestId, T as ThreadId, g as ThreadSource, h as SandboxPolicy, i as ThreadGoalStatus, j as SortDirection, k as Personality, W as WindowsSandboxSetupMode, l as AddCreditsNudgeCreditType, m as AppsListParams$1, B as ByteRange, n as CancelLoginAccountParams, o as CommandExecParams, p as CommandExecResizeParams, q as CommandExecTerminalSize, r as CommandExecTerminateParams, s as CommandExecWriteParams, t as CommandMigration, u as ConfigBatchWriteParams, v as ConfigEdit, w as ConfigReadParams, x as ConfigValueWriteParams, y as ExperimentalFeatureEnablementSetParams, z as ExperimentalFeatureListParams, D as ExternalAgentConfigDetectParams, F as ExternalAgentConfigImportParams, G as ExternalAgentConfigMigrationItemType, H as FeedbackUploadParams, K as FsCopyParams, L as FsCreateDirectoryParams, M as FsGetMetadataParams, N as FsReadDirectoryParams, O as FsReadFileParams, Q as FsRemoveParams, V as FsUnwatchParams, X as FsWatchParams, Y as FsWriteFileParams, Z as GetAccountParams, _ as HookMigration, $ as HooksListParams$1, a0 as ListMcpServerStatusParams, a1 as LoginAccountParams, a2 as MarketplaceAddParams, a3 as MarketplaceRemoveParams, a4 as MarketplaceUpgradeParams, a5 as McpResourceReadParams, a6 as McpServerMigration, a7 as McpServerOauthLoginParams, a8 as McpServerStatusDetail, a9 as McpServerToolCallParams, aa as MergeStrategy, ab as MigrationDetails, ac as ModelListParams, ad as ModelProviderCapabilitiesReadParams, ae as NetworkAccess, af as PermissionProfileListParams, ag as PluginInstallParams, ah as PluginInstalledParams, ai as PluginListMarketplaceKind, aj as PluginListParams, ak as PluginReadParams, al as PluginShareCheckoutParams, am as PluginShareDeleteParams, an as PluginShareListParams, ao as PluginShareSaveParams, ap as PluginShareTarget, aq as PluginShareTargetRole, ar as PluginShareUpdateDiscoverability, as as PluginShareUpdateTargetsParams, at as PluginSkillReadParams, au as PluginUninstallParams, av as PluginsMigration, aw as ReviewDelivery, ax as ReviewStartParams, ay as ReviewTarget, az as SendAddCreditsNudgeEmailParams, aA as SessionMigration, aB as SkillsConfigWriteParams$1, aC as SkillsListParams$1, aD as SubagentMigration, aE as TextElement, aF as ThreadApproveGuardianDeniedActionParams, aG as ThreadArchiveParams, aH as ThreadCompactStartParams, aI as ThreadForkParams$1, aJ as ThreadGoalClearParams, aK as ThreadGoalGetParams, aL as ThreadGoalSetParams, aM as ThreadInjectItemsParams, aN as ThreadListParams$1, aO as ThreadLoadedListParams, aP as ThreadMetadataGitInfoUpdateParams, aQ as ThreadMetadataUpdateParams, aR as ThreadReadParams, aS as ThreadResumeParams$1, aT as ThreadRollbackParams, aU as ThreadSetNameParams, aV as ThreadShellCommandParams, aW as ThreadSortKey, aX as ThreadSourceKind, aY as ThreadStartParams$1, aZ as ThreadStartSource, a_ as ThreadUnarchiveParams, a$ as ThreadUnsubscribeParams, b0 as TurnInterruptParams, b1 as TurnStartParams$1, b2 as TurnSteerParams, b3 as WindowsSandboxSetupStartParams, b4 as ClientRequest, b5 as FuzzyFileSearchParams, b6 as GetAuthStatusParams, b7 as GetConversationSummaryParams, b8 as GitDiffToRemoteParams, C as CodexStableMethodParams } from './method-params-D8LveQNY.js';
-export { a as CodexStableMethod } from './method-params-D8LveQNY.js';
+import { N as RateLimitSnapshot, P as PlanType, O as AbsolutePathBuf, Q as JsonValue, V as AppInfo, W as ReasoningEffort, X as CommandAction, Y as AskForApproval, Z as ApprovalsReviewer, _ as SandboxMode, $ as ReasoningSummary, a0 as DynamicToolCallOutputContentItem, a1 as TurnError, a2 as ExternalAgentConfigMigrationItem, a3 as FileUpdateChange, a4 as HookEventName, a5 as HookHandlerType, a6 as HookSource, a7 as ThreadItem, a8 as PluginSharePrincipalType, a9 as PluginShareDiscoverability, aa as SkillInterface, ab as ImageDetail, ac as MessagePhase, ad as Turn, ae as RequestId, af as ThreadGoalStatus, ag as SortDirection, ah as TurnItemsView, ai as Thread, aj as SandboxPolicy, ak as Personality, al as ThreadStatus, am as WindowsSandboxSetupMode, an as Account, ao as AddCreditsNudgeCreditType, ap as AppBranding, aq as AppMetadata, ar as AppReview, as as AppScreenshot, at as AppsListParams$1, l as AppsListResponse, au as ByteRange, av as CancelLoginAccountParams, i as CancelLoginAccountResponse, aw as CancelLoginAccountStatus, ax as CodexErrorInfo, ay as CollabAgentState, az as CollabAgentStatus, aA as CollabAgentTool, aB as CollabAgentToolCallStatus, aC as CommandExecParams, aD as CommandExecResizeParams, aE as CommandExecTerminalSize, aF as CommandExecTerminateParams, aG as CommandExecWriteParams, aH as CommandExecutionSource, aI as CommandExecutionStatus, aJ as CommandMigration, aK as ConfigBatchWriteParams, aL as ConfigEdit, aM as ConfigReadParams, aN as ConfigValueWriteParams, aO as CreditsSnapshot, aP as DynamicToolCallStatus, aQ as ExperimentalFeatureEnablementSetParams, aR as ExperimentalFeatureListParams, aS as ExternalAgentConfigDetectParams, aT as ExternalAgentConfigImportParams, aU as ExternalAgentConfigMigrationItemType, aV as FeedbackUploadParams, aW as FsCopyParams, aX as FsCreateDirectoryParams, aY as FsGetMetadataParams, aZ as FsReadDirectoryParams, a_ as FsReadFileParams, a$ as FsRemoveParams, b0 as FsUnwatchParams, b1 as FsWatchParams, b2 as FsWriteFileParams, b3 as GetAccountParams, G as GetAccountRateLimitsResponse, k as GetAccountResponse, b4 as GitInfo, b5 as HookErrorInfo, b6 as HookMetadata, b7 as HookMigration, b8 as HookPromptFragment, b9 as HookTrustStatus, ba as HooksListEntry, bb as HooksListParams$1, H as HooksListResponse, bc as ListMcpServerStatusParams, bd as LoginAccountParams, L as LoginAccountResponse, j as LogoutAccountResponse, be as MarketplaceAddParams, bf as MarketplaceRemoveParams, bg as MarketplaceUpgradeParams, bh as McpResourceReadParams, bi as McpServerMigration, bj as McpServerOauthLoginParams, bk as McpServerStatusDetail, bl as McpServerToolCallParams, bm as McpToolCallError, bn as McpToolCallResult, bo as McpToolCallStatus, bp as MemoryCitation, bq as MemoryCitationEntry, br as MergeStrategy, bs as MigrationDetails, bt as Model, bu as ModelAvailabilityNux, bv as ModelListParams, m as ModelListResponse, bw as ModelProviderCapabilitiesReadParams, bx as ModelServiceTier, by as ModelUpgradeInfo, bz as NetworkAccess, bA as NonSteerableTurnKind, bB as PatchApplyStatus, bC as PatchChangeKind, bD as PermissionProfileListParams, bE as PluginInstallParams, bF as PluginInstalledParams, bG as PluginListMarketplaceKind, bH as PluginListParams, bI as PluginReadParams, bJ as PluginShareCheckoutParams, bK as PluginShareDeleteParams, bL as PluginShareListParams, bM as PluginShareSaveParams, bN as PluginShareTarget, bO as PluginShareTargetRole, bP as PluginShareUpdateDiscoverability, bQ as PluginShareUpdateTargetsParams, bR as PluginSkillReadParams, bS as PluginUninstallParams, bT as PluginsMigration, bU as RateLimitReachedType, bV as RateLimitWindow, bW as ReasoningEffortOption, bX as ReviewDelivery, bY as ReviewStartParams, bZ as ReviewTarget, b_ as SendAddCreditsNudgeEmailParams, b$ as SessionMigration, c0 as SessionSource$1, c1 as SkillDependencies, c2 as SkillErrorInfo, c3 as SkillMetadata, c4 as SkillScope, c5 as SkillToolDependency, c6 as SkillsConfigWriteParams$1, S as SkillsConfigWriteResponse, c7 as SkillsListEntry, c8 as SkillsListParams$1, n as SkillsListResponse, c9 as SubagentMigration, ca as TextElement, cb as ThreadActiveFlag, cc as ThreadApproveGuardianDeniedActionParams, cd as ThreadArchiveParams, o as ThreadArchiveResponse, ce as ThreadCompactStartParams, p as ThreadCompactStartResponse, cf as ThreadForkParams$1, q as ThreadForkResponse, cg as ThreadGoalClearParams, ch as ThreadGoalGetParams, ci as ThreadGoalSetParams, cj as ThreadInjectItemsParams, r as ThreadInjectItemsResponse, ck as ThreadListParams$1, s as ThreadListResponse, cl as ThreadLoadedListParams, t as ThreadLoadedListResponse, cm as ThreadMetadataGitInfoUpdateParams, cn as ThreadMetadataUpdateParams, u as ThreadMetadataUpdateResponse, co as ThreadReadParams, w as ThreadReadResponse, cp as ThreadResumeParams$1, x as ThreadResumeResponse, cq as ThreadRollbackParams, y as ThreadRollbackResponse, cr as ThreadSetNameParams, v as ThreadSetNameResponse, cs as ThreadShellCommandParams, ct as ThreadSortKey, cu as ThreadSource, cv as ThreadSourceKind, cw as ThreadStartParams$1, z as ThreadStartResponse, cx as ThreadStartSource, cy as ThreadUnarchiveParams, B as ThreadUnarchiveResponse, cz as ThreadUnsubscribeParams, D as ThreadUnsubscribeResponse, cA as ThreadUnsubscribeStatus, cB as TurnInterruptParams, E as TurnInterruptResponse, cC as TurnStartParams$1, F as TurnStartResponse, cD as TurnStatus, cE as TurnSteerParams, K as TurnSteerResponse, U as UserInput, cF as WebSearchAction$1, cG as WindowsSandboxSetupStartParams, cH as ThreadId, cI as SubAgentSource, cJ as AgentPath, cK as ClientRequest, cL as FuzzyFileSearchParams, cM as GetAuthStatusParams, cN as GetConversationSummaryParams, cO as GitDiffToRemoteParams, I as InitializeResponse, cP as InputModality, c as CodexStableMethodParams } from './method-params-Cp7iY5rD.js';
+export { b as CodexStableMethod } from './method-params-Cp7iY5rD.js';
 import { C as ClientInfo, a as InitializeCapabilities, I as InitializeParams } from './InitializeParams-CDX1c2T9.js';
-
-type PlanType = "free" | "go" | "plus" | "pro" | "prolite" | "team" | "self_serve_business_usage_based" | "business" | "enterprise_cbp_usage_based" | "enterprise" | "edu" | "unknown";
-
-type Account = {
-    "type": "apiKey";
-} | {
-    "type": "chatgpt";
-    email: string;
-    planType: PlanType;
-} | {
-    "type": "amazonBedrock";
-};
 
 type AccountLoginCompletedNotification = {
     loginId: string | null;
     success: boolean;
     error: string | null;
-};
-
-type CreditsSnapshot = {
-    hasCredits: boolean;
-    unlimited: boolean;
-    balance: string | null;
-};
-
-type RateLimitReachedType = "rate_limit_reached" | "workspace_owner_credits_depleted" | "workspace_member_credits_depleted" | "workspace_owner_usage_limit_reached" | "workspace_member_usage_limit_reached";
-
-type RateLimitWindow = {
-    usedPercent: number;
-    windowDurationMins: number | null;
-    resetsAt: number | null;
-};
-
-type RateLimitSnapshot = {
-    limitId: string | null;
-    limitName: string | null;
-    primary: RateLimitWindow | null;
-    secondary: RateLimitWindow | null;
-    credits: CreditsSnapshot | null;
-    planType: PlanType | null;
-    rateLimitReachedType: RateLimitReachedType | null;
 };
 
 type AccountRateLimitsUpdatedNotification = {
@@ -156,72 +120,6 @@ type AnalyticsConfig = {
 });
 
 /**
- * EXPERIMENTAL - app metadata returned by app-list APIs.
- */
-type AppBranding = {
-    category: string | null;
-    developer: string | null;
-    website: string | null;
-    privacyPolicy: string | null;
-    termsOfService: string | null;
-    isDiscoverableApp: boolean;
-};
-
-type AppReview = {
-    status: string;
-};
-
-type AppScreenshot = {
-    url: string | null;
-    fileId: string | null;
-    userPrompt: string;
-};
-
-type AppMetadata = {
-    review: AppReview | null;
-    categories: Array<string> | null;
-    subCategories: Array<string> | null;
-    seoDescription: string | null;
-    screenshots: Array<AppScreenshot> | null;
-    developer: string | null;
-    version: string | null;
-    versionId: string | null;
-    versionNotes: string | null;
-    firstPartyType: string | null;
-    firstPartyRequiresInstall: boolean | null;
-    showInComposerWhenUnlinked: boolean | null;
-};
-
-/**
- * EXPERIMENTAL - app metadata returned by app-list APIs.
- */
-type AppInfo = {
-    id: string;
-    name: string;
-    description: string | null;
-    logoUrl: string | null;
-    logoUrlDark: string | null;
-    distributionChannel: string | null;
-    branding: AppBranding | null;
-    appMetadata: AppMetadata | null;
-    labels: {
-        [key in string]?: string;
-    } | null;
-    installUrl: string | null;
-    isAccessible: boolean;
-    /**
-     * Whether this app is enabled in config.toml.
-     * Example:
-     * ```toml
-     * [apps.bad_app]
-     * enabled = false
-     * ```
-     */
-    isEnabled: boolean;
-    pluginDisplayNames: Array<string>;
-};
-
-/**
  * EXPERIMENTAL - notification emitted when the app list changes.
  */
 type AppListUpdatedNotification = {
@@ -267,18 +165,6 @@ type AppsConfig = {
     };
 });
 
-/**
- * EXPERIMENTAL - app list response.
- */
-type AppsListResponse = {
-    data: Array<AppInfo>;
-    /**
-     * Opaque cursor to pass to the next call to continue after the last item.
-     * If None, there are no more items to return.
-     */
-    nextCursor: string | null;
-};
-
 type AttestationGenerateParams = Record<string, never>;
 
 type AttestationGenerateResponse = {
@@ -292,12 +178,6 @@ type AttestationGenerateResponse = {
  * [UNSTABLE] Source that produced a terminal approval auto-review decision.
  */
 type AutoReviewDecisionSource = "agent";
-
-type CancelLoginAccountStatus = "canceled" | "notFound";
-
-type CancelLoginAccountResponse = {
-    status: CancelLoginAccountStatus;
-};
 
 type ChatgptAuthTokensRefreshReason = "unauthorized";
 
@@ -321,47 +201,6 @@ type ChatgptAuthTokensRefreshResponse = {
     chatgptPlanType: string | null;
 };
 
-type NonSteerableTurnKind = "review" | "compact";
-
-/**
- * This translation layer make sure that we expose codex error code in camel case.
- *
- * When an upstream HTTP status is available (for example, from the Responses API or a provider),
- * it is forwarded in `httpStatusCode` on the relevant `codexErrorInfo` variant.
- */
-type CodexErrorInfo = "contextWindowExceeded" | "usageLimitExceeded" | "serverOverloaded" | "cyberPolicy" | {
-    "httpConnectionFailed": {
-        httpStatusCode: number | null;
-    };
-} | {
-    "responseStreamConnectionFailed": {
-        httpStatusCode: number | null;
-    };
-} | "internalServerError" | "unauthorized" | "badRequest" | "threadRollbackFailed" | "sandboxError" | {
-    "responseStreamDisconnected": {
-        httpStatusCode: number | null;
-    };
-} | {
-    "responseTooManyFailedAttempts": {
-        httpStatusCode: number | null;
-    };
-} | {
-    "activeTurnNotSteerable": {
-        turnKind: NonSteerableTurnKind;
-    };
-} | "other";
-
-type CollabAgentStatus = "pendingInit" | "running" | "interrupted" | "completed" | "errored" | "shutdown" | "notFound";
-
-type CollabAgentState = {
-    status: CollabAgentStatus;
-    message: string | null;
-};
-
-type CollabAgentTool = "spawnAgent" | "sendInput" | "resumeAgent" | "wait" | "closeAgent";
-
-type CollabAgentToolCallStatus = "inProgress" | "completed" | "failed";
-
 /**
  * Initial collaboration mode to use when the TUI starts.
  */
@@ -375,25 +214,6 @@ type CollaborationModeMask = {
     mode: ModeKind | null;
     model: string | null;
     reasoning_effort: ReasoningEffort | null | null;
-};
-
-type CommandAction = {
-    "type": "read";
-    command: string;
-    name: string;
-    path: AbsolutePathBuf;
-} | {
-    "type": "listFiles";
-    command: string;
-    path: string | null;
-} | {
-    "type": "search";
-    command: string;
-    query: string | null;
-    path: string | null;
-} | {
-    "type": "unknown";
-    command: string;
 };
 
 /**
@@ -540,10 +360,6 @@ type CommandExecutionRequestApprovalParams = {
 type CommandExecutionRequestApprovalResponse = {
     decision: CommandExecutionApprovalDecision;
 };
-
-type CommandExecutionSource = "agent" | "userShell" | "unifiedExecStartup" | "unifiedExecInteraction";
-
-type CommandExecutionStatus = "inProgress" | "completed" | "failed" | "declined";
 
 type ComputerUseRequirements = {
     allowLockedComputerUse: boolean | null;
@@ -799,14 +615,6 @@ type DeprecationNoticeNotification = {
     details: string | null;
 };
 
-type DynamicToolCallOutputContentItem = {
-    "type": "inputText";
-    text: string;
-} | {
-    "type": "inputImage";
-    imageUrl: string;
-};
-
 type DynamicToolCallParams = {
     threadId: string;
     turnId: string;
@@ -821,20 +629,12 @@ type DynamicToolCallResponse = {
     success: boolean;
 };
 
-type DynamicToolCallStatus = "inProgress" | "completed" | "failed";
-
 type DynamicToolSpec = {
     namespace?: string;
     name: string;
     description: string;
     inputSchema: JsonValue;
     deferLoading?: boolean;
-};
-
-type TurnError = {
-    message: string;
-    codexErrorInfo: CodexErrorInfo | null;
-    additionalDetails: string | null;
 };
 
 type ErrorNotification = {
@@ -922,21 +722,6 @@ type FileChangeOutputDeltaNotification = {
     turnId: string;
     itemId: string;
     delta: string;
-};
-
-type PatchChangeKind = {
-    "type": "add";
-} | {
-    "type": "delete";
-} | {
-    "type": "update";
-    move_path: string | null;
-};
-
-type FileUpdateChange = {
-    path: string;
-    kind: PatchChangeKind;
-    diff: string;
 };
 
 type FileChangePatchUpdatedNotification = {
@@ -1082,30 +867,6 @@ type FsWatchResponse = {
  */
 type FsWriteFileResponse = Record<string, never>;
 
-type GetAccountRateLimitsResponse = {
-    /**
-     * Backward-compatible single-bucket view; mirrors the historical payload.
-     */
-    rateLimits: RateLimitSnapshot;
-    /**
-     * Multi-bucket view keyed by metered `limit_id` (for example, `codex`).
-     */
-    rateLimitsByLimitId: {
-        [key in string]?: RateLimitSnapshot;
-    } | null;
-};
-
-type GetAccountResponse = {
-    account: Account | null;
-    requiresOpenaiAuth: boolean;
-};
-
-type GitInfo = {
-    sha: string | null;
-    branch: string | null;
-    originUrl: string | null;
-};
-
 type GrantedPermissionProfile = {
     network?: AdditionalNetworkPermissions;
     fileSystem?: AdditionalFileSystemPermissions;
@@ -1190,11 +951,7 @@ type GuardianWarningNotification = {
     message: string;
 };
 
-type HookEventName = "preToolUse" | "permissionRequest" | "postToolUse" | "preCompact" | "postCompact" | "sessionStart" | "userPromptSubmit" | "subagentStart" | "subagentStop" | "stop";
-
 type HookExecutionMode = "sync" | "async";
-
-type HookHandlerType = "command" | "prompt" | "agent";
 
 type HookOutputEntryKind = "warning" | "stop" | "feedback" | "context" | "error";
 
@@ -1206,8 +963,6 @@ type HookOutputEntry = {
 type HookRunStatus = "running" | "completed" | "failed" | "blocked" | "stopped";
 
 type HookScope = "thread" | "turn";
-
-type HookSource = "system" | "user" | "project" | "mdm" | "sessionFlags" | "plugin" | "cloudRequirements" | "legacyManagedConfigFile" | "legacyManagedConfigMdm" | "unknown";
 
 type HookRunSummary = {
     id: string;
@@ -1232,261 +987,10 @@ type HookCompletedNotification = {
     run: HookRunSummary;
 };
 
-type HookErrorInfo = {
-    path: string;
-    message: string;
-};
-
-type HookTrustStatus = "managed" | "untrusted" | "trusted" | "modified";
-
-type HookMetadata = {
-    key: string;
-    eventName: HookEventName;
-    handlerType: HookHandlerType;
-    matcher: string | null;
-    command: string | null;
-    timeoutSec: bigint;
-    statusMessage: string | null;
-    sourcePath: AbsolutePathBuf;
-    source: HookSource;
-    pluginId: string | null;
-    displayOrder: bigint;
-    enabled: boolean;
-    isManaged: boolean;
-    currentHash: string;
-    trustStatus: HookTrustStatus;
-};
-
-type HookPromptFragment = {
-    text: string;
-    hookRunId: string;
-};
-
 type HookStartedNotification = {
     threadId: string;
     turnId: string | null;
     run: HookRunSummary;
-};
-
-type HooksListEntry = {
-    cwd: string;
-    hooks: Array<HookMetadata>;
-    warnings: Array<string>;
-    errors: Array<HookErrorInfo>;
-};
-
-type HooksListResponse = {
-    data: Array<HooksListEntry>;
-};
-
-/**
- * Classifies an assistant message as interim commentary or final answer text.
- *
- * Providers do not emit this consistently, so callers must treat `None` as
- * "phase unknown" and keep compatibility behavior for legacy models.
- */
-type MessagePhase = "commentary" | "final_answer";
-
-type McpToolCallError = {
-    message: string;
-};
-
-type McpToolCallResult = {
-    content: Array<JsonValue>;
-    structuredContent: JsonValue | null;
-    _meta: JsonValue | null;
-};
-
-type McpToolCallStatus = "inProgress" | "completed" | "failed";
-
-type MemoryCitationEntry = {
-    path: string;
-    lineStart: number;
-    lineEnd: number;
-    note: string;
-};
-
-type MemoryCitation = {
-    entries: Array<MemoryCitationEntry>;
-    threadIds: Array<string>;
-};
-
-type PatchApplyStatus = "inProgress" | "completed" | "failed" | "declined";
-
-type WebSearchAction$1 = {
-    "type": "search";
-    query: string | null;
-    queries: Array<string> | null;
-} | {
-    "type": "openPage";
-    url: string | null;
-} | {
-    "type": "findInPage";
-    url: string | null;
-    pattern: string | null;
-} | {
-    "type": "other";
-};
-
-type ThreadItem = {
-    "type": "userMessage";
-    id: string;
-    content: Array<UserInput>;
-} | {
-    "type": "hookPrompt";
-    id: string;
-    fragments: Array<HookPromptFragment>;
-} | {
-    "type": "agentMessage";
-    id: string;
-    text: string;
-    phase: MessagePhase | null;
-    memoryCitation: MemoryCitation | null;
-} | {
-    "type": "plan";
-    id: string;
-    text: string;
-} | {
-    "type": "reasoning";
-    id: string;
-    summary: Array<string>;
-    content: Array<string>;
-} | {
-    "type": "commandExecution";
-    id: string;
-    /**
-     * The command to be executed.
-     */
-    command: string;
-    /**
-     * The command's working directory.
-     */
-    cwd: AbsolutePathBuf;
-    /**
-     * Identifier for the underlying PTY process (when available).
-     */
-    processId: string | null;
-    source: CommandExecutionSource;
-    status: CommandExecutionStatus;
-    /**
-     * A best-effort parsing of the command to understand the action(s) it will perform.
-     * This returns a list of CommandAction objects because a single shell command may
-     * be composed of many commands piped together.
-     */
-    commandActions: Array<CommandAction>;
-    /**
-     * The command's output, aggregated from stdout and stderr.
-     */
-    aggregatedOutput: string | null;
-    /**
-     * The command's exit code.
-     */
-    exitCode: number | null;
-    /**
-     * The duration of the command execution in milliseconds.
-     */
-    durationMs: number | null;
-} | {
-    "type": "fileChange";
-    id: string;
-    changes: Array<FileUpdateChange>;
-    status: PatchApplyStatus;
-} | {
-    "type": "mcpToolCall";
-    id: string;
-    server: string;
-    tool: string;
-    status: McpToolCallStatus;
-    arguments: JsonValue;
-    mcpAppResourceUri?: string;
-    pluginId: string | null;
-    result: McpToolCallResult | null;
-    error: McpToolCallError | null;
-    /**
-     * The duration of the MCP tool call in milliseconds.
-     */
-    durationMs: number | null;
-} | {
-    "type": "dynamicToolCall";
-    id: string;
-    namespace: string | null;
-    tool: string;
-    arguments: JsonValue;
-    status: DynamicToolCallStatus;
-    contentItems: Array<DynamicToolCallOutputContentItem> | null;
-    success: boolean | null;
-    /**
-     * The duration of the dynamic tool call in milliseconds.
-     */
-    durationMs: number | null;
-} | {
-    "type": "collabAgentToolCall";
-    /**
-     * Unique identifier for this collab tool call.
-     */
-    id: string;
-    /**
-     * Name of the collab tool that was invoked.
-     */
-    tool: CollabAgentTool;
-    /**
-     * Current status of the collab tool call.
-     */
-    status: CollabAgentToolCallStatus;
-    /**
-     * Thread ID of the agent issuing the collab request.
-     */
-    senderThreadId: string;
-    /**
-     * Thread ID of the receiving agent, when applicable. In case of spawn operation,
-     * this corresponds to the newly spawned agent.
-     */
-    receiverThreadIds: Array<string>;
-    /**
-     * Prompt text sent as part of the collab tool call, when available.
-     */
-    prompt: string | null;
-    /**
-     * Model requested for the spawned agent, when applicable.
-     */
-    model: string | null;
-    /**
-     * Reasoning effort requested for the spawned agent, when applicable.
-     */
-    reasoningEffort: ReasoningEffort | null;
-    /**
-     * Last known status of the target agents, when available.
-     */
-    agentsStates: {
-        [key in string]?: CollabAgentState;
-    };
-} | {
-    "type": "webSearch";
-    id: string;
-    query: string;
-    action: WebSearchAction$1 | null;
-} | {
-    "type": "imageView";
-    id: string;
-    path: AbsolutePathBuf;
-} | {
-    "type": "imageGeneration";
-    id: string;
-    status: string;
-    revisedPrompt: string | null;
-    result: string;
-    savedPath?: AbsolutePathBuf;
-} | {
-    "type": "enteredReviewMode";
-    id: string;
-    review: string;
-} | {
-    "type": "exitedReviewMode";
-    id: string;
-    review: string;
-} | {
-    "type": "contextCompaction";
-    id: string;
 };
 
 type ItemCompletedNotification = {
@@ -1654,32 +1158,6 @@ type ListMcpServerStatusResponse = {
      */
     nextCursor: string | null;
 };
-
-type LoginAccountResponse = {
-    "type": "apiKey";
-} | {
-    "type": "chatgpt";
-    loginId: string;
-    /**
-     * URL the client should open in a browser to initiate the OAuth flow.
-     */
-    authUrl: string;
-} | {
-    "type": "chatgptDeviceCode";
-    loginId: string;
-    /**
-     * URL the client should open in a browser to complete device code authorization.
-     */
-    verificationUrl: string;
-    /**
-     * One-time code the user must enter after signing in.
-     */
-    userCode: string;
-} | {
-    "type": "chatgptAuthTokens";
-};
-
-type LogoutAccountResponse = Record<string, never>;
 
 type ManagedHooksRequirements = {
     managedDir: string | null;
@@ -1947,67 +1425,6 @@ type McpToolCallProgressNotification = {
     message: string;
 };
 
-/**
- * Canonical user-input modality tags advertised by a model.
- */
-type InputModality = "text" | "image";
-
-type ModelAvailabilityNux = {
-    message: string;
-};
-
-type ModelServiceTier = {
-    id: string;
-    name: string;
-    description: string;
-};
-
-type ModelUpgradeInfo = {
-    model: string;
-    upgradeCopy: string | null;
-    modelLink: string | null;
-    migrationMarkdown: string | null;
-};
-
-type ReasoningEffortOption = {
-    reasoningEffort: ReasoningEffort;
-    description: string;
-};
-
-type Model = {
-    id: string;
-    model: string;
-    upgrade: string | null;
-    upgradeInfo: ModelUpgradeInfo | null;
-    availabilityNux: ModelAvailabilityNux | null;
-    displayName: string;
-    description: string;
-    hidden: boolean;
-    supportedReasoningEfforts: Array<ReasoningEffortOption>;
-    defaultReasoningEffort: ReasoningEffort;
-    inputModalities: Array<InputModality>;
-    supportsPersonality: boolean;
-    /**
-     * Deprecated: use `serviceTiers` instead.
-     */
-    additionalSpeedTiers: Array<string>;
-    serviceTiers: Array<ModelServiceTier>;
-    /**
-     * Catalog default service tier id for this model, when one is configured.
-     */
-    defaultServiceTier: string | null;
-    isDefault: boolean;
-};
-
-type ModelListResponse = {
-    data: Array<Model>;
-    /**
-     * Opaque cursor to pass to the next call to continue after the last item.
-     * If None, there are no more items to return.
-     */
-    nextCursor: string | null;
-};
-
 type ModelProviderCapabilitiesReadResponse = {
     namespaceTools: boolean;
     imageGeneration: boolean;
@@ -2244,15 +1661,6 @@ type PluginSummary = {
     availability: PluginAvailability;
     interface: PluginInterface | null;
     keywords: Array<string>;
-};
-
-type SkillInterface = {
-    displayName?: string;
-    shortDescription?: string;
-    iconSmall?: AbsolutePathBuf;
-    iconLarge?: AbsolutePathBuf;
-    brandColor?: string;
-    defaultPrompt?: string;
 };
 
 type SkillSummary = {
@@ -2613,39 +2021,6 @@ type RemoteControlStatusChangedNotification = {
     environmentId: string | null;
 };
 
-type TurnItemsView = "notLoaded" | "summary" | "full";
-
-type TurnStatus = "completed" | "interrupted" | "failed" | "inProgress";
-
-type Turn = {
-    id: string;
-    /**
-     * Thread items currently included in this turn payload.
-     */
-    items: Array<ThreadItem>;
-    /**
-     * Describes how much of `items` has been loaded for this turn.
-     */
-    itemsView: TurnItemsView;
-    status: TurnStatus;
-    /**
-     * Only populated when the Turn's status is failed.
-     */
-    error: TurnError | null;
-    /**
-     * Unix timestamp (in seconds) when the turn started.
-     */
-    startedAt: number | null;
-    /**
-     * Unix timestamp (in seconds) when the turn completed.
-     */
-    completedAt: number | null;
-    /**
-     * Duration between turn start and completion in milliseconds, if known.
-     */
-    durationMs: number | null;
-};
-
 type ReviewStartResponse = {
     turn: Turn;
     /**
@@ -2666,60 +2041,6 @@ type ServerRequestResolvedNotification = {
     requestId: RequestId;
 };
 
-type AgentPath = string;
-
-type SubAgentSource = "review" | "compact" | {
-    "thread_spawn": {
-        parent_thread_id: ThreadId;
-        depth: number;
-        agent_path: AgentPath | null;
-        agent_nickname: string | null;
-        agent_role: string | null;
-    };
-} | "memory_consolidation" | {
-    "other": string;
-};
-
-type SessionSource$1 = "cli" | "vscode" | "exec" | "appServer" | {
-    "custom": string;
-} | {
-    "subAgent": SubAgentSource;
-} | "unknown";
-
-type SkillToolDependency = {
-    type: string;
-    value: string;
-    description?: string;
-    transport?: string;
-    command?: string;
-    url?: string;
-};
-
-type SkillDependencies = {
-    tools: Array<SkillToolDependency>;
-};
-
-type SkillErrorInfo = {
-    path: string;
-    message: string;
-};
-
-type SkillScope = "user" | "repo" | "system" | "admin";
-
-type SkillMetadata = {
-    name: string;
-    description: string;
-    /**
-     * Legacy short_description from SKILL.md. Prefer SKILL.json interface.short_description.
-     */
-    shortDescription?: string;
-    interface?: SkillInterface;
-    dependencies?: SkillDependencies;
-    path: AbsolutePathBuf;
-    scope: SkillScope;
-    enabled: boolean;
-};
-
 /**
  * Notification emitted when watched local skill files change.
  *
@@ -2727,20 +2048,6 @@ type SkillMetadata = {
  * client's current parameters when refreshed skill metadata is needed.
  */
 type SkillsChangedNotification = Record<string, never>;
-
-type SkillsConfigWriteResponse = {
-    effectiveEnabled: boolean;
-};
-
-type SkillsListEntry = {
-    cwd: string;
-    skills: Array<SkillMetadata>;
-    errors: Array<SkillErrorInfo>;
-};
-
-type SkillsListResponse = {
-    data: Array<SkillsListEntry>;
-};
 
 type TerminalInteractionNotification = {
     threadId: string;
@@ -2750,101 +2057,7 @@ type TerminalInteractionNotification = {
     stdin: string;
 };
 
-type ThreadActiveFlag = "waitingOnApproval" | "waitingOnUserInput";
-
-type ThreadStatus = {
-    "type": "notLoaded";
-} | {
-    "type": "idle";
-} | {
-    "type": "systemError";
-} | {
-    "type": "active";
-    activeFlags: Array<ThreadActiveFlag>;
-};
-
-type Thread = {
-    id: string;
-    /**
-     * Session id shared by threads that belong to the same session tree.
-     */
-    sessionId: string;
-    /**
-     * Source thread id when this thread was created by forking another thread.
-     */
-    forkedFromId: string | null;
-    /**
-     * Usually the first user message in the thread, if available.
-     */
-    preview: string;
-    /**
-     * Whether the thread is ephemeral and should not be materialized on disk.
-     */
-    ephemeral: boolean;
-    /**
-     * Model provider used for this thread (for example, 'openai').
-     */
-    modelProvider: string;
-    /**
-     * Unix timestamp (in seconds) when the thread was created.
-     */
-    createdAt: number;
-    /**
-     * Unix timestamp (in seconds) when the thread was last updated.
-     */
-    updatedAt: number;
-    /**
-     * Current runtime status for the thread.
-     */
-    status: ThreadStatus;
-    /**
-     * [UNSTABLE] Path to the thread on disk.
-     */
-    path: string | null;
-    /**
-     * Working directory captured for the thread.
-     */
-    cwd: AbsolutePathBuf;
-    /**
-     * Version of the CLI that created the thread.
-     */
-    cliVersion: string;
-    /**
-     * Origin of the thread (CLI, VSCode, codex exec, codex app-server, etc.).
-     */
-    source: SessionSource$1;
-    /**
-     * Optional analytics source classification for this thread.
-     */
-    threadSource: ThreadSource | null;
-    /**
-     * Optional random unique nickname assigned to an AgentControl-spawned sub-agent.
-     */
-    agentNickname: string | null;
-    /**
-     * Optional role (agent_role) assigned to an AgentControl-spawned sub-agent.
-     */
-    agentRole: string | null;
-    /**
-     * Optional Git metadata captured when the thread was created.
-     */
-    gitInfo: GitInfo | null;
-    /**
-     * Optional user-facing thread title.
-     */
-    name: string | null;
-    /**
-     * Only populated on `thread/resume`, `thread/rollback`, `thread/fork`, and `thread/read`
-     * (when `includeTurns` is true) responses.
-     * For all other responses and notifications returning a Thread,
-     * the turns field will be an empty list.
-     */
-    turns: Array<Turn>;
-};
-
 type ThreadApproveGuardianDeniedActionResponse = Record<string, never>;
-
-type ThreadArchiveResponse = Record<string, never>;
 
 type ThreadArchivedNotification = {
     threadId: string;
@@ -2852,28 +2065,6 @@ type ThreadArchivedNotification = {
 
 type ThreadClosedNotification = {
     threadId: string;
-};
-
-type ThreadCompactStartResponse = Record<string, never>;
-
-type ThreadForkResponse = {
-    thread: Thread;
-    model: string;
-    modelProvider: string;
-    serviceTier: string | null;
-    cwd: AbsolutePathBuf; /**
-     * Instruction source files currently loaded for this thread.
-     */
-    instructionSources: Array<AbsolutePathBuf>;
-    approvalPolicy: AskForApproval; /**
-     * Reviewer currently used for approval requests on this thread.
-     */
-    approvalsReviewer: ApprovalsReviewer; /**
-     * Legacy sandbox policy retained for compatibility. Experimental clients
-     * should prefer `activePermissionProfile` for profile provenance.
-     */
-    sandbox: SandboxPolicy;
-    reasoningEffort: ReasoningEffort | null;
 };
 
 type ThreadGoal = {
@@ -2909,47 +2100,9 @@ type ThreadGoalUpdatedNotification = {
     goal: ThreadGoal;
 };
 
-type ThreadInjectItemsResponse = Record<string, never>;
-
-type ThreadListResponse = {
-    data: Array<Thread>;
-    /**
-     * Opaque cursor to pass to the next call to continue after the last item.
-     * if None, there are no more items to return.
-     */
-    nextCursor: string | null;
-    /**
-     * Opaque cursor to pass as `cursor` when reversing `sortDirection`.
-     * This is only populated when the page contains at least one thread.
-     * Use it with the opposite `sortDirection`; for timestamp sorts it anchors
-     * at the start of the page timestamp so same-second updates are not skipped.
-     */
-    backwardsCursor: string | null;
-};
-
-type ThreadLoadedListResponse = {
-    /**
-     * Thread ids for sessions currently loaded in memory.
-     */
-    data: Array<string>;
-    /**
-     * Opaque cursor to pass to the next call to continue after the last item.
-     * if None, there are no more items to return.
-     */
-    nextCursor: string | null;
-};
-
-type ThreadMetadataUpdateResponse = {
-    thread: Thread;
-};
-
 type ThreadNameUpdatedNotification = {
     threadId: string;
     threadName?: string;
-};
-
-type ThreadReadResponse = {
-    thread: Thread;
 };
 
 /**
@@ -3069,43 +2222,10 @@ type ThreadResumeInitialTurnsPageParams = {
     itemsView?: TurnItemsView | null;
 };
 
-type ThreadResumeResponse = {
-    thread: Thread;
-    model: string;
-    modelProvider: string;
-    serviceTier: string | null;
-    cwd: AbsolutePathBuf; /**
-     * Instruction source files currently loaded for this thread.
-     */
-    instructionSources: Array<AbsolutePathBuf>;
-    approvalPolicy: AskForApproval; /**
-     * Reviewer currently used for approval requests on this thread.
-     */
-    approvalsReviewer: ApprovalsReviewer; /**
-     * Legacy sandbox policy retained for compatibility. Experimental clients
-     * should prefer `activePermissionProfile` for profile provenance.
-     */
-    sandbox: SandboxPolicy;
-    reasoningEffort: ReasoningEffort | null;
-};
-
-type ThreadRollbackResponse = {
-    /**
-     * The updated thread after applying the rollback, with `turns` populated.
-     *
-     * The ThreadItems stored in each Turn are lossy since we explicitly do not
-     * persist all agent interactions, such as command executions. This is the same
-     * behavior as `thread/resume`.
-     */
-    thread: Thread;
-};
-
 type ThreadSearchResult = {
     thread: Thread;
     snippet: string;
 };
-
-type ThreadSetNameResponse = Record<string, never>;
 
 /**
  * Settings for a collaboration mode.
@@ -3146,26 +2266,6 @@ type ThreadSettingsUpdatedNotification = {
 
 type ThreadShellCommandResponse = Record<string, never>;
 
-type ThreadStartResponse = {
-    thread: Thread;
-    model: string;
-    modelProvider: string;
-    serviceTier: string | null;
-    cwd: AbsolutePathBuf; /**
-     * Instruction source files currently loaded for this thread.
-     */
-    instructionSources: Array<AbsolutePathBuf>;
-    approvalPolicy: AskForApproval; /**
-     * Reviewer currently used for approval requests on this thread.
-     */
-    approvalsReviewer: ApprovalsReviewer; /**
-     * Legacy sandbox policy retained for compatibility. Experimental clients
-     * should prefer `activePermissionProfile` for profile provenance.
-     */
-    sandbox: SandboxPolicy;
-    reasoningEffort: ReasoningEffort | null;
-};
-
 type ThreadStartedNotification = {
     thread: Thread;
 };
@@ -3195,18 +2295,8 @@ type ThreadTokenUsageUpdatedNotification = {
     tokenUsage: ThreadTokenUsage;
 };
 
-type ThreadUnarchiveResponse = {
-    thread: Thread;
-};
-
 type ThreadUnarchivedNotification = {
     threadId: string;
-};
-
-type ThreadUnsubscribeStatus = "notLoaded" | "notSubscribed" | "unsubscribed";
-
-type ThreadUnsubscribeResponse = {
-    status: ThreadUnsubscribeStatus;
 };
 
 /**
@@ -3275,8 +2365,6 @@ type TurnEnvironmentParams = {
     cwd: AbsolutePathBuf;
 };
 
-type TurnInterruptResponse = Record<string, never>;
-
 type TurnPlanStepStatus = "pending" | "inProgress" | "completed";
 
 type TurnPlanStep = {
@@ -3291,17 +2379,9 @@ type TurnPlanUpdatedNotification = {
     plan: Array<TurnPlanStep>;
 };
 
-type TurnStartResponse = {
-    turn: Turn;
-};
-
 type TurnStartedNotification = {
     threadId: string;
     turn: Turn;
-};
-
-type TurnSteerResponse = {
-    turnId: string;
 };
 
 type TurnsPage = {
@@ -3343,7 +2423,7 @@ type WindowsWorldWritableWarningNotification = {
     failedScan: boolean;
 };
 
-type index$1_Account = Account;
+declare const index$1_Account: typeof Account;
 type index$1_AccountLoginCompletedNotification = AccountLoginCompletedNotification;
 type index$1_AccountRateLimitsUpdatedNotification = AccountRateLimitsUpdatedNotification;
 type index$1_AccountUpdatedNotification = AccountUpdatedNotification;
@@ -3357,37 +2437,37 @@ type index$1_AdditionalNetworkPermissions = AdditionalNetworkPermissions;
 type index$1_AdditionalPermissionProfile = AdditionalPermissionProfile;
 type index$1_AgentMessageDeltaNotification = AgentMessageDeltaNotification;
 type index$1_AnalyticsConfig = AnalyticsConfig;
-type index$1_AppBranding = AppBranding;
-type index$1_AppInfo = AppInfo;
+declare const index$1_AppBranding: typeof AppBranding;
+declare const index$1_AppInfo: typeof AppInfo;
 type index$1_AppListUpdatedNotification = AppListUpdatedNotification;
-type index$1_AppMetadata = AppMetadata;
-type index$1_AppReview = AppReview;
-type index$1_AppScreenshot = AppScreenshot;
+declare const index$1_AppMetadata: typeof AppMetadata;
+declare const index$1_AppReview: typeof AppReview;
+declare const index$1_AppScreenshot: typeof AppScreenshot;
 type index$1_AppSummary = AppSummary;
 type index$1_AppToolApproval = AppToolApproval;
 type index$1_AppToolsConfig = AppToolsConfig;
 declare const index$1_ApprovalsReviewer: typeof ApprovalsReviewer;
 type index$1_AppsConfig = AppsConfig;
 type index$1_AppsDefaultConfig = AppsDefaultConfig;
-type index$1_AppsListResponse = AppsListResponse;
+declare const index$1_AppsListResponse: typeof AppsListResponse;
 declare const index$1_AskForApproval: typeof AskForApproval;
 type index$1_AttestationGenerateParams = AttestationGenerateParams;
 type index$1_AttestationGenerateResponse = AttestationGenerateResponse;
 type index$1_AutoReviewDecisionSource = AutoReviewDecisionSource;
 declare const index$1_ByteRange: typeof ByteRange;
 declare const index$1_CancelLoginAccountParams: typeof CancelLoginAccountParams;
-type index$1_CancelLoginAccountResponse = CancelLoginAccountResponse;
-type index$1_CancelLoginAccountStatus = CancelLoginAccountStatus;
+declare const index$1_CancelLoginAccountResponse: typeof CancelLoginAccountResponse;
+declare const index$1_CancelLoginAccountStatus: typeof CancelLoginAccountStatus;
 type index$1_ChatgptAuthTokensRefreshParams = ChatgptAuthTokensRefreshParams;
 type index$1_ChatgptAuthTokensRefreshReason = ChatgptAuthTokensRefreshReason;
 type index$1_ChatgptAuthTokensRefreshResponse = ChatgptAuthTokensRefreshResponse;
-type index$1_CodexErrorInfo = CodexErrorInfo;
-type index$1_CollabAgentState = CollabAgentState;
-type index$1_CollabAgentStatus = CollabAgentStatus;
-type index$1_CollabAgentTool = CollabAgentTool;
-type index$1_CollabAgentToolCallStatus = CollabAgentToolCallStatus;
+declare const index$1_CodexErrorInfo: typeof CodexErrorInfo;
+declare const index$1_CollabAgentState: typeof CollabAgentState;
+declare const index$1_CollabAgentStatus: typeof CollabAgentStatus;
+declare const index$1_CollabAgentTool: typeof CollabAgentTool;
+declare const index$1_CollabAgentToolCallStatus: typeof CollabAgentToolCallStatus;
 type index$1_CollaborationModeMask = CollaborationModeMask;
-type index$1_CommandAction = CommandAction;
+declare const index$1_CommandAction: typeof CommandAction;
 type index$1_CommandExecOutputDeltaNotification = CommandExecOutputDeltaNotification;
 type index$1_CommandExecOutputStream = CommandExecOutputStream;
 declare const index$1_CommandExecParams: typeof CommandExecParams;
@@ -3403,8 +2483,8 @@ type index$1_CommandExecutionApprovalDecision = CommandExecutionApprovalDecision
 type index$1_CommandExecutionOutputDeltaNotification = CommandExecutionOutputDeltaNotification;
 type index$1_CommandExecutionRequestApprovalParams = CommandExecutionRequestApprovalParams;
 type index$1_CommandExecutionRequestApprovalResponse = CommandExecutionRequestApprovalResponse;
-type index$1_CommandExecutionSource = CommandExecutionSource;
-type index$1_CommandExecutionStatus = CommandExecutionStatus;
+declare const index$1_CommandExecutionSource: typeof CommandExecutionSource;
+declare const index$1_CommandExecutionStatus: typeof CommandExecutionStatus;
 declare const index$1_CommandMigration: typeof CommandMigration;
 type index$1_ComputerUseRequirements = ComputerUseRequirements;
 type index$1_Config = Config;
@@ -3423,12 +2503,12 @@ type index$1_ConfigWriteResponse = ConfigWriteResponse;
 type index$1_ConfiguredHookHandler = ConfiguredHookHandler;
 type index$1_ConfiguredHookMatcherGroup = ConfiguredHookMatcherGroup;
 type index$1_ContextCompactedNotification = ContextCompactedNotification;
-type index$1_CreditsSnapshot = CreditsSnapshot;
+declare const index$1_CreditsSnapshot: typeof CreditsSnapshot;
 type index$1_DeprecationNoticeNotification = DeprecationNoticeNotification;
-type index$1_DynamicToolCallOutputContentItem = DynamicToolCallOutputContentItem;
+declare const index$1_DynamicToolCallOutputContentItem: typeof DynamicToolCallOutputContentItem;
 type index$1_DynamicToolCallParams = DynamicToolCallParams;
 type index$1_DynamicToolCallResponse = DynamicToolCallResponse;
-type index$1_DynamicToolCallStatus = DynamicToolCallStatus;
+declare const index$1_DynamicToolCallStatus: typeof DynamicToolCallStatus;
 type index$1_DynamicToolSpec = DynamicToolSpec;
 type index$1_ErrorNotification = ErrorNotification;
 type index$1_ExperimentalFeature = ExperimentalFeature;
@@ -3455,7 +2535,7 @@ type index$1_FileSystemAccessMode = FileSystemAccessMode;
 type index$1_FileSystemPath = FileSystemPath;
 type index$1_FileSystemSandboxEntry = FileSystemSandboxEntry;
 type index$1_FileSystemSpecialPath = FileSystemSpecialPath;
-type index$1_FileUpdateChange = FileUpdateChange;
+declare const index$1_FileUpdateChange: typeof FileUpdateChange;
 type index$1_ForcedChatgptWorkspaceIds = ForcedChatgptWorkspaceIds;
 type index$1_FsChangedNotification = FsChangedNotification;
 declare const index$1_FsCopyParams: typeof FsCopyParams;
@@ -3478,9 +2558,9 @@ type index$1_FsWatchResponse = FsWatchResponse;
 declare const index$1_FsWriteFileParams: typeof FsWriteFileParams;
 type index$1_FsWriteFileResponse = FsWriteFileResponse;
 declare const index$1_GetAccountParams: typeof GetAccountParams;
-type index$1_GetAccountRateLimitsResponse = GetAccountRateLimitsResponse;
-type index$1_GetAccountResponse = GetAccountResponse;
-type index$1_GitInfo = GitInfo;
+declare const index$1_GetAccountRateLimitsResponse: typeof GetAccountRateLimitsResponse;
+declare const index$1_GetAccountResponse: typeof GetAccountResponse;
+declare const index$1_GitInfo: typeof GitInfo;
 type index$1_GrantedPermissionProfile = GrantedPermissionProfile;
 type index$1_GuardianApprovalReview = GuardianApprovalReview;
 type index$1_GuardianApprovalReviewAction = GuardianApprovalReviewAction;
@@ -3490,23 +2570,23 @@ type index$1_GuardianRiskLevel = GuardianRiskLevel;
 type index$1_GuardianUserAuthorization = GuardianUserAuthorization;
 type index$1_GuardianWarningNotification = GuardianWarningNotification;
 type index$1_HookCompletedNotification = HookCompletedNotification;
-type index$1_HookErrorInfo = HookErrorInfo;
-type index$1_HookEventName = HookEventName;
+declare const index$1_HookErrorInfo: typeof HookErrorInfo;
+declare const index$1_HookEventName: typeof HookEventName;
 type index$1_HookExecutionMode = HookExecutionMode;
-type index$1_HookHandlerType = HookHandlerType;
-type index$1_HookMetadata = HookMetadata;
+declare const index$1_HookHandlerType: typeof HookHandlerType;
+declare const index$1_HookMetadata: typeof HookMetadata;
 declare const index$1_HookMigration: typeof HookMigration;
 type index$1_HookOutputEntry = HookOutputEntry;
 type index$1_HookOutputEntryKind = HookOutputEntryKind;
-type index$1_HookPromptFragment = HookPromptFragment;
+declare const index$1_HookPromptFragment: typeof HookPromptFragment;
 type index$1_HookRunStatus = HookRunStatus;
 type index$1_HookRunSummary = HookRunSummary;
 type index$1_HookScope = HookScope;
-type index$1_HookSource = HookSource;
+declare const index$1_HookSource: typeof HookSource;
 type index$1_HookStartedNotification = HookStartedNotification;
-type index$1_HookTrustStatus = HookTrustStatus;
-type index$1_HooksListEntry = HooksListEntry;
-type index$1_HooksListResponse = HooksListResponse;
+declare const index$1_HookTrustStatus: typeof HookTrustStatus;
+declare const index$1_HooksListEntry: typeof HooksListEntry;
+declare const index$1_HooksListResponse: typeof HooksListResponse;
 type index$1_ItemCompletedNotification = ItemCompletedNotification;
 type index$1_ItemGuardianApprovalReviewCompletedNotification = ItemGuardianApprovalReviewCompletedNotification;
 type index$1_ItemGuardianApprovalReviewStartedNotification = ItemGuardianApprovalReviewStartedNotification;
@@ -3514,8 +2594,8 @@ type index$1_ItemStartedNotification = ItemStartedNotification;
 declare const index$1_ListMcpServerStatusParams: typeof ListMcpServerStatusParams;
 type index$1_ListMcpServerStatusResponse = ListMcpServerStatusResponse;
 declare const index$1_LoginAccountParams: typeof LoginAccountParams;
-type index$1_LoginAccountResponse = LoginAccountResponse;
-type index$1_LogoutAccountResponse = LogoutAccountResponse;
+declare const index$1_LoginAccountResponse: typeof LoginAccountResponse;
+declare const index$1_LogoutAccountResponse: typeof LogoutAccountResponse;
 type index$1_ManagedHooksRequirements = ManagedHooksRequirements;
 declare const index$1_MarketplaceAddParams: typeof MarketplaceAddParams;
 type index$1_MarketplaceAddResponse = MarketplaceAddResponse;
@@ -3565,24 +2645,24 @@ declare const index$1_McpServerStatusDetail: typeof McpServerStatusDetail;
 type index$1_McpServerStatusUpdatedNotification = McpServerStatusUpdatedNotification;
 declare const index$1_McpServerToolCallParams: typeof McpServerToolCallParams;
 type index$1_McpServerToolCallResponse = McpServerToolCallResponse;
-type index$1_McpToolCallError = McpToolCallError;
+declare const index$1_McpToolCallError: typeof McpToolCallError;
 type index$1_McpToolCallProgressNotification = McpToolCallProgressNotification;
-type index$1_McpToolCallResult = McpToolCallResult;
-type index$1_McpToolCallStatus = McpToolCallStatus;
-type index$1_MemoryCitation = MemoryCitation;
-type index$1_MemoryCitationEntry = MemoryCitationEntry;
+declare const index$1_McpToolCallResult: typeof McpToolCallResult;
+declare const index$1_McpToolCallStatus: typeof McpToolCallStatus;
+declare const index$1_MemoryCitation: typeof MemoryCitation;
+declare const index$1_MemoryCitationEntry: typeof MemoryCitationEntry;
 declare const index$1_MergeStrategy: typeof MergeStrategy;
 declare const index$1_MigrationDetails: typeof MigrationDetails;
-type index$1_Model = Model;
-type index$1_ModelAvailabilityNux = ModelAvailabilityNux;
+declare const index$1_Model: typeof Model;
+declare const index$1_ModelAvailabilityNux: typeof ModelAvailabilityNux;
 declare const index$1_ModelListParams: typeof ModelListParams;
-type index$1_ModelListResponse = ModelListResponse;
+declare const index$1_ModelListResponse: typeof ModelListResponse;
 declare const index$1_ModelProviderCapabilitiesReadParams: typeof ModelProviderCapabilitiesReadParams;
 type index$1_ModelProviderCapabilitiesReadResponse = ModelProviderCapabilitiesReadResponse;
 type index$1_ModelRerouteReason = ModelRerouteReason;
 type index$1_ModelReroutedNotification = ModelReroutedNotification;
-type index$1_ModelServiceTier = ModelServiceTier;
-type index$1_ModelUpgradeInfo = ModelUpgradeInfo;
+declare const index$1_ModelServiceTier: typeof ModelServiceTier;
+declare const index$1_ModelUpgradeInfo: typeof ModelUpgradeInfo;
 type index$1_ModelVerification = ModelVerification;
 type index$1_ModelVerificationNotification = ModelVerificationNotification;
 declare const index$1_NetworkAccess: typeof NetworkAccess;
@@ -3591,10 +2671,10 @@ type index$1_NetworkApprovalProtocol = NetworkApprovalProtocol;
 type index$1_NetworkDomainPermission = NetworkDomainPermission;
 type index$1_NetworkRequirements = NetworkRequirements;
 type index$1_NetworkUnixSocketPermission = NetworkUnixSocketPermission;
-type index$1_NonSteerableTurnKind = NonSteerableTurnKind;
+declare const index$1_NonSteerableTurnKind: typeof NonSteerableTurnKind;
 type index$1_OverriddenMetadata = OverriddenMetadata;
-type index$1_PatchApplyStatus = PatchApplyStatus;
-type index$1_PatchChangeKind = PatchChangeKind;
+declare const index$1_PatchApplyStatus: typeof PatchApplyStatus;
+declare const index$1_PatchChangeKind: typeof PatchChangeKind;
 type index$1_PermissionGrantScope = PermissionGrantScope;
 declare const index$1_PermissionProfileListParams: typeof PermissionProfileListParams;
 type index$1_PermissionProfileListResponse = PermissionProfileListResponse;
@@ -3648,11 +2728,11 @@ type index$1_ProcessExitedNotification = ProcessExitedNotification;
 type index$1_ProcessOutputDeltaNotification = ProcessOutputDeltaNotification;
 type index$1_ProcessOutputStream = ProcessOutputStream;
 type index$1_ProcessTerminalSize = ProcessTerminalSize;
-type index$1_RateLimitReachedType = RateLimitReachedType;
-type index$1_RateLimitSnapshot = RateLimitSnapshot;
-type index$1_RateLimitWindow = RateLimitWindow;
+declare const index$1_RateLimitReachedType: typeof RateLimitReachedType;
+declare const index$1_RateLimitSnapshot: typeof RateLimitSnapshot;
+declare const index$1_RateLimitWindow: typeof RateLimitWindow;
 type index$1_RawResponseItemCompletedNotification = RawResponseItemCompletedNotification;
-type index$1_ReasoningEffortOption = ReasoningEffortOption;
+declare const index$1_ReasoningEffortOption: typeof ReasoningEffortOption;
 type index$1_ReasoningSummaryPartAddedNotification = ReasoningSummaryPartAddedNotification;
 type index$1_ReasoningSummaryTextDeltaNotification = ReasoningSummaryTextDeltaNotification;
 type index$1_ReasoningTextDeltaNotification = ReasoningTextDeltaNotification;
@@ -3671,34 +2751,34 @@ declare const index$1_SendAddCreditsNudgeEmailParams: typeof SendAddCreditsNudge
 type index$1_SendAddCreditsNudgeEmailResponse = SendAddCreditsNudgeEmailResponse;
 type index$1_ServerRequestResolvedNotification = ServerRequestResolvedNotification;
 declare const index$1_SessionMigration: typeof SessionMigration;
-type index$1_SkillDependencies = SkillDependencies;
-type index$1_SkillErrorInfo = SkillErrorInfo;
-type index$1_SkillInterface = SkillInterface;
-type index$1_SkillMetadata = SkillMetadata;
-type index$1_SkillScope = SkillScope;
+declare const index$1_SkillDependencies: typeof SkillDependencies;
+declare const index$1_SkillErrorInfo: typeof SkillErrorInfo;
+declare const index$1_SkillInterface: typeof SkillInterface;
+declare const index$1_SkillMetadata: typeof SkillMetadata;
+declare const index$1_SkillScope: typeof SkillScope;
 type index$1_SkillSummary = SkillSummary;
-type index$1_SkillToolDependency = SkillToolDependency;
+declare const index$1_SkillToolDependency: typeof SkillToolDependency;
 type index$1_SkillsChangedNotification = SkillsChangedNotification;
-type index$1_SkillsConfigWriteResponse = SkillsConfigWriteResponse;
-type index$1_SkillsListEntry = SkillsListEntry;
-type index$1_SkillsListResponse = SkillsListResponse;
+declare const index$1_SkillsConfigWriteResponse: typeof SkillsConfigWriteResponse;
+declare const index$1_SkillsListEntry: typeof SkillsListEntry;
+declare const index$1_SkillsListResponse: typeof SkillsListResponse;
 declare const index$1_SortDirection: typeof SortDirection;
 declare const index$1_SubagentMigration: typeof SubagentMigration;
 type index$1_TerminalInteractionNotification = TerminalInteractionNotification;
 declare const index$1_TextElement: typeof TextElement;
 type index$1_TextPosition = TextPosition;
 type index$1_TextRange = TextRange;
-type index$1_Thread = Thread;
-type index$1_ThreadActiveFlag = ThreadActiveFlag;
+declare const index$1_Thread: typeof Thread;
+declare const index$1_ThreadActiveFlag: typeof ThreadActiveFlag;
 declare const index$1_ThreadApproveGuardianDeniedActionParams: typeof ThreadApproveGuardianDeniedActionParams;
 type index$1_ThreadApproveGuardianDeniedActionResponse = ThreadApproveGuardianDeniedActionResponse;
 declare const index$1_ThreadArchiveParams: typeof ThreadArchiveParams;
-type index$1_ThreadArchiveResponse = ThreadArchiveResponse;
+declare const index$1_ThreadArchiveResponse: typeof ThreadArchiveResponse;
 type index$1_ThreadArchivedNotification = ThreadArchivedNotification;
 type index$1_ThreadClosedNotification = ThreadClosedNotification;
 declare const index$1_ThreadCompactStartParams: typeof ThreadCompactStartParams;
-type index$1_ThreadCompactStartResponse = ThreadCompactStartResponse;
-type index$1_ThreadForkResponse = ThreadForkResponse;
+declare const index$1_ThreadCompactStartResponse: typeof ThreadCompactStartResponse;
+declare const index$1_ThreadForkResponse: typeof ThreadForkResponse;
 type index$1_ThreadGoal = ThreadGoal;
 declare const index$1_ThreadGoalClearParams: typeof ThreadGoalClearParams;
 type index$1_ThreadGoalClearResponse = ThreadGoalClearResponse;
@@ -3710,17 +2790,17 @@ type index$1_ThreadGoalSetResponse = ThreadGoalSetResponse;
 declare const index$1_ThreadGoalStatus: typeof ThreadGoalStatus;
 type index$1_ThreadGoalUpdatedNotification = ThreadGoalUpdatedNotification;
 declare const index$1_ThreadInjectItemsParams: typeof ThreadInjectItemsParams;
-type index$1_ThreadInjectItemsResponse = ThreadInjectItemsResponse;
-type index$1_ThreadItem = ThreadItem;
-type index$1_ThreadListResponse = ThreadListResponse;
+declare const index$1_ThreadInjectItemsResponse: typeof ThreadInjectItemsResponse;
+declare const index$1_ThreadItem: typeof ThreadItem;
+declare const index$1_ThreadListResponse: typeof ThreadListResponse;
 declare const index$1_ThreadLoadedListParams: typeof ThreadLoadedListParams;
-type index$1_ThreadLoadedListResponse = ThreadLoadedListResponse;
+declare const index$1_ThreadLoadedListResponse: typeof ThreadLoadedListResponse;
 declare const index$1_ThreadMetadataGitInfoUpdateParams: typeof ThreadMetadataGitInfoUpdateParams;
 declare const index$1_ThreadMetadataUpdateParams: typeof ThreadMetadataUpdateParams;
-type index$1_ThreadMetadataUpdateResponse = ThreadMetadataUpdateResponse;
+declare const index$1_ThreadMetadataUpdateResponse: typeof ThreadMetadataUpdateResponse;
 type index$1_ThreadNameUpdatedNotification = ThreadNameUpdatedNotification;
 declare const index$1_ThreadReadParams: typeof ThreadReadParams;
-type index$1_ThreadReadResponse = ThreadReadResponse;
+declare const index$1_ThreadReadResponse: typeof ThreadReadResponse;
 type index$1_ThreadRealtimeAudioChunk = ThreadRealtimeAudioChunk;
 type index$1_ThreadRealtimeClosedNotification = ThreadRealtimeClosedNotification;
 type index$1_ThreadRealtimeErrorNotification = ThreadRealtimeErrorNotification;
@@ -3732,12 +2812,12 @@ type index$1_ThreadRealtimeStartedNotification = ThreadRealtimeStartedNotificati
 type index$1_ThreadRealtimeTranscriptDeltaNotification = ThreadRealtimeTranscriptDeltaNotification;
 type index$1_ThreadRealtimeTranscriptDoneNotification = ThreadRealtimeTranscriptDoneNotification;
 type index$1_ThreadResumeInitialTurnsPageParams = ThreadResumeInitialTurnsPageParams;
-type index$1_ThreadResumeResponse = ThreadResumeResponse;
+declare const index$1_ThreadResumeResponse: typeof ThreadResumeResponse;
 declare const index$1_ThreadRollbackParams: typeof ThreadRollbackParams;
-type index$1_ThreadRollbackResponse = ThreadRollbackResponse;
+declare const index$1_ThreadRollbackResponse: typeof ThreadRollbackResponse;
 type index$1_ThreadSearchResult = ThreadSearchResult;
 declare const index$1_ThreadSetNameParams: typeof ThreadSetNameParams;
-type index$1_ThreadSetNameResponse = ThreadSetNameResponse;
+declare const index$1_ThreadSetNameResponse: typeof ThreadSetNameResponse;
 type index$1_ThreadSettings = ThreadSettings;
 type index$1_ThreadSettingsUpdatedNotification = ThreadSettingsUpdatedNotification;
 declare const index$1_ThreadShellCommandParams: typeof ThreadShellCommandParams;
@@ -3745,19 +2825,19 @@ type index$1_ThreadShellCommandResponse = ThreadShellCommandResponse;
 declare const index$1_ThreadSortKey: typeof ThreadSortKey;
 declare const index$1_ThreadSource: typeof ThreadSource;
 declare const index$1_ThreadSourceKind: typeof ThreadSourceKind;
-type index$1_ThreadStartResponse = ThreadStartResponse;
+declare const index$1_ThreadStartResponse: typeof ThreadStartResponse;
 declare const index$1_ThreadStartSource: typeof ThreadStartSource;
 type index$1_ThreadStartedNotification = ThreadStartedNotification;
-type index$1_ThreadStatus = ThreadStatus;
+declare const index$1_ThreadStatus: typeof ThreadStatus;
 type index$1_ThreadStatusChangedNotification = ThreadStatusChangedNotification;
 type index$1_ThreadTokenUsage = ThreadTokenUsage;
 type index$1_ThreadTokenUsageUpdatedNotification = ThreadTokenUsageUpdatedNotification;
 declare const index$1_ThreadUnarchiveParams: typeof ThreadUnarchiveParams;
-type index$1_ThreadUnarchiveResponse = ThreadUnarchiveResponse;
+declare const index$1_ThreadUnarchiveResponse: typeof ThreadUnarchiveResponse;
 type index$1_ThreadUnarchivedNotification = ThreadUnarchivedNotification;
 declare const index$1_ThreadUnsubscribeParams: typeof ThreadUnsubscribeParams;
-type index$1_ThreadUnsubscribeResponse = ThreadUnsubscribeResponse;
-type index$1_ThreadUnsubscribeStatus = ThreadUnsubscribeStatus;
+declare const index$1_ThreadUnsubscribeResponse: typeof ThreadUnsubscribeResponse;
+declare const index$1_ThreadUnsubscribeStatus: typeof ThreadUnsubscribeStatus;
 type index$1_TokenUsageBreakdown = TokenUsageBreakdown;
 type index$1_ToolRequestUserInputAnswer = ToolRequestUserInputAnswer;
 type index$1_ToolRequestUserInputOption = ToolRequestUserInputOption;
@@ -3765,22 +2845,22 @@ type index$1_ToolRequestUserInputParams = ToolRequestUserInputParams;
 type index$1_ToolRequestUserInputQuestion = ToolRequestUserInputQuestion;
 type index$1_ToolRequestUserInputResponse = ToolRequestUserInputResponse;
 type index$1_ToolsV2 = ToolsV2;
-type index$1_Turn = Turn;
+declare const index$1_Turn: typeof Turn;
 type index$1_TurnCompletedNotification = TurnCompletedNotification;
 type index$1_TurnDiffUpdatedNotification = TurnDiffUpdatedNotification;
 type index$1_TurnEnvironmentParams = TurnEnvironmentParams;
-type index$1_TurnError = TurnError;
+declare const index$1_TurnError: typeof TurnError;
 declare const index$1_TurnInterruptParams: typeof TurnInterruptParams;
-type index$1_TurnInterruptResponse = TurnInterruptResponse;
-type index$1_TurnItemsView = TurnItemsView;
+declare const index$1_TurnInterruptResponse: typeof TurnInterruptResponse;
+declare const index$1_TurnItemsView: typeof TurnItemsView;
 type index$1_TurnPlanStep = TurnPlanStep;
 type index$1_TurnPlanStepStatus = TurnPlanStepStatus;
 type index$1_TurnPlanUpdatedNotification = TurnPlanUpdatedNotification;
-type index$1_TurnStartResponse = TurnStartResponse;
+declare const index$1_TurnStartResponse: typeof TurnStartResponse;
 type index$1_TurnStartedNotification = TurnStartedNotification;
-type index$1_TurnStatus = TurnStatus;
+declare const index$1_TurnStatus: typeof TurnStatus;
 declare const index$1_TurnSteerParams: typeof TurnSteerParams;
-type index$1_TurnSteerResponse = TurnSteerResponse;
+declare const index$1_TurnSteerResponse: typeof TurnSteerResponse;
 type index$1_TurnsPage = TurnsPage;
 declare const index$1_UserInput: typeof UserInput;
 type index$1_WarningNotification = WarningNotification;
@@ -3793,7 +2873,7 @@ type index$1_WindowsSandboxSetupStartResponse = WindowsSandboxSetupStartResponse
 type index$1_WindowsWorldWritableWarningNotification = WindowsWorldWritableWarningNotification;
 type index$1_WriteStatus = WriteStatus;
 declare namespace index$1 {
-  export { type index$1_Account as Account, type index$1_AccountLoginCompletedNotification as AccountLoginCompletedNotification, type index$1_AccountRateLimitsUpdatedNotification as AccountRateLimitsUpdatedNotification, type index$1_AccountUpdatedNotification as AccountUpdatedNotification, type index$1_ActivePermissionProfile as ActivePermissionProfile, index$1_AddCreditsNudgeCreditType as AddCreditsNudgeCreditType, type index$1_AddCreditsNudgeEmailStatus as AddCreditsNudgeEmailStatus, type index$1_AdditionalContextEntry as AdditionalContextEntry, type index$1_AdditionalContextKind as AdditionalContextKind, type index$1_AdditionalFileSystemPermissions as AdditionalFileSystemPermissions, type index$1_AdditionalNetworkPermissions as AdditionalNetworkPermissions, type index$1_AdditionalPermissionProfile as AdditionalPermissionProfile, type index$1_AgentMessageDeltaNotification as AgentMessageDeltaNotification, type index$1_AnalyticsConfig as AnalyticsConfig, type index$1_AppBranding as AppBranding, type index$1_AppInfo as AppInfo, type index$1_AppListUpdatedNotification as AppListUpdatedNotification, type index$1_AppMetadata as AppMetadata, type index$1_AppReview as AppReview, type index$1_AppScreenshot as AppScreenshot, type index$1_AppSummary as AppSummary, type index$1_AppToolApproval as AppToolApproval, type index$1_AppToolsConfig as AppToolsConfig, index$1_ApprovalsReviewer as ApprovalsReviewer, type index$1_AppsConfig as AppsConfig, type index$1_AppsDefaultConfig as AppsDefaultConfig, AppsListParams$1 as AppsListParams, type index$1_AppsListResponse as AppsListResponse, index$1_AskForApproval as AskForApproval, type index$1_AttestationGenerateParams as AttestationGenerateParams, type index$1_AttestationGenerateResponse as AttestationGenerateResponse, type index$1_AutoReviewDecisionSource as AutoReviewDecisionSource, index$1_ByteRange as ByteRange, index$1_CancelLoginAccountParams as CancelLoginAccountParams, type index$1_CancelLoginAccountResponse as CancelLoginAccountResponse, type index$1_CancelLoginAccountStatus as CancelLoginAccountStatus, type index$1_ChatgptAuthTokensRefreshParams as ChatgptAuthTokensRefreshParams, type index$1_ChatgptAuthTokensRefreshReason as ChatgptAuthTokensRefreshReason, type index$1_ChatgptAuthTokensRefreshResponse as ChatgptAuthTokensRefreshResponse, type index$1_CodexErrorInfo as CodexErrorInfo, type index$1_CollabAgentState as CollabAgentState, type index$1_CollabAgentStatus as CollabAgentStatus, type index$1_CollabAgentTool as CollabAgentTool, type index$1_CollabAgentToolCallStatus as CollabAgentToolCallStatus, type index$1_CollaborationModeMask as CollaborationModeMask, type index$1_CommandAction as CommandAction, type index$1_CommandExecOutputDeltaNotification as CommandExecOutputDeltaNotification, type index$1_CommandExecOutputStream as CommandExecOutputStream, index$1_CommandExecParams as CommandExecParams, index$1_CommandExecResizeParams as CommandExecResizeParams, type index$1_CommandExecResizeResponse as CommandExecResizeResponse, type index$1_CommandExecResponse as CommandExecResponse, index$1_CommandExecTerminalSize as CommandExecTerminalSize, index$1_CommandExecTerminateParams as CommandExecTerminateParams, type index$1_CommandExecTerminateResponse as CommandExecTerminateResponse, index$1_CommandExecWriteParams as CommandExecWriteParams, type index$1_CommandExecWriteResponse as CommandExecWriteResponse, type index$1_CommandExecutionApprovalDecision as CommandExecutionApprovalDecision, type index$1_CommandExecutionOutputDeltaNotification as CommandExecutionOutputDeltaNotification, type index$1_CommandExecutionRequestApprovalParams as CommandExecutionRequestApprovalParams, type index$1_CommandExecutionRequestApprovalResponse as CommandExecutionRequestApprovalResponse, type index$1_CommandExecutionSource as CommandExecutionSource, type index$1_CommandExecutionStatus as CommandExecutionStatus, index$1_CommandMigration as CommandMigration, type index$1_ComputerUseRequirements as ComputerUseRequirements, type index$1_Config as Config, index$1_ConfigBatchWriteParams as ConfigBatchWriteParams, index$1_ConfigEdit as ConfigEdit, type index$1_ConfigLayer as ConfigLayer, type index$1_ConfigLayerMetadata as ConfigLayerMetadata, type index$1_ConfigLayerSource as ConfigLayerSource, index$1_ConfigReadParams as ConfigReadParams, type index$1_ConfigReadResponse as ConfigReadResponse, type index$1_ConfigRequirements as ConfigRequirements, type index$1_ConfigRequirementsReadResponse as ConfigRequirementsReadResponse, index$1_ConfigValueWriteParams as ConfigValueWriteParams, type index$1_ConfigWarningNotification as ConfigWarningNotification, type index$1_ConfigWriteResponse as ConfigWriteResponse, type index$1_ConfiguredHookHandler as ConfiguredHookHandler, type index$1_ConfiguredHookMatcherGroup as ConfiguredHookMatcherGroup, type index$1_ContextCompactedNotification as ContextCompactedNotification, type index$1_CreditsSnapshot as CreditsSnapshot, type index$1_DeprecationNoticeNotification as DeprecationNoticeNotification, type index$1_DynamicToolCallOutputContentItem as DynamicToolCallOutputContentItem, type index$1_DynamicToolCallParams as DynamicToolCallParams, type index$1_DynamicToolCallResponse as DynamicToolCallResponse, type index$1_DynamicToolCallStatus as DynamicToolCallStatus, type index$1_DynamicToolSpec as DynamicToolSpec, type index$1_ErrorNotification as ErrorNotification, type ExecPolicyAmendment$1 as ExecPolicyAmendment, type index$1_ExperimentalFeature as ExperimentalFeature, index$1_ExperimentalFeatureEnablementSetParams as ExperimentalFeatureEnablementSetParams, type index$1_ExperimentalFeatureEnablementSetResponse as ExperimentalFeatureEnablementSetResponse, index$1_ExperimentalFeatureListParams as ExperimentalFeatureListParams, type index$1_ExperimentalFeatureListResponse as ExperimentalFeatureListResponse, type index$1_ExperimentalFeatureStage as ExperimentalFeatureStage, index$1_ExternalAgentConfigDetectParams as ExternalAgentConfigDetectParams, type index$1_ExternalAgentConfigDetectResponse as ExternalAgentConfigDetectResponse, type index$1_ExternalAgentConfigImportCompletedNotification as ExternalAgentConfigImportCompletedNotification, index$1_ExternalAgentConfigImportParams as ExternalAgentConfigImportParams, type index$1_ExternalAgentConfigImportResponse as ExternalAgentConfigImportResponse, index$1_ExternalAgentConfigMigrationItem as ExternalAgentConfigMigrationItem, index$1_ExternalAgentConfigMigrationItemType as ExternalAgentConfigMigrationItemType, index$1_FeedbackUploadParams as FeedbackUploadParams, type index$1_FeedbackUploadResponse as FeedbackUploadResponse, type index$1_FileChangeApprovalDecision as FileChangeApprovalDecision, type index$1_FileChangeOutputDeltaNotification as FileChangeOutputDeltaNotification, type index$1_FileChangePatchUpdatedNotification as FileChangePatchUpdatedNotification, type index$1_FileChangeRequestApprovalParams as FileChangeRequestApprovalParams, type index$1_FileChangeRequestApprovalResponse as FileChangeRequestApprovalResponse, type index$1_FileSystemAccessMode as FileSystemAccessMode, type index$1_FileSystemPath as FileSystemPath, type index$1_FileSystemSandboxEntry as FileSystemSandboxEntry, type index$1_FileSystemSpecialPath as FileSystemSpecialPath, type index$1_FileUpdateChange as FileUpdateChange, type index$1_ForcedChatgptWorkspaceIds as ForcedChatgptWorkspaceIds, type index$1_FsChangedNotification as FsChangedNotification, index$1_FsCopyParams as FsCopyParams, type index$1_FsCopyResponse as FsCopyResponse, index$1_FsCreateDirectoryParams as FsCreateDirectoryParams, type index$1_FsCreateDirectoryResponse as FsCreateDirectoryResponse, index$1_FsGetMetadataParams as FsGetMetadataParams, type index$1_FsGetMetadataResponse as FsGetMetadataResponse, type index$1_FsReadDirectoryEntry as FsReadDirectoryEntry, index$1_FsReadDirectoryParams as FsReadDirectoryParams, type index$1_FsReadDirectoryResponse as FsReadDirectoryResponse, index$1_FsReadFileParams as FsReadFileParams, type index$1_FsReadFileResponse as FsReadFileResponse, index$1_FsRemoveParams as FsRemoveParams, type index$1_FsRemoveResponse as FsRemoveResponse, index$1_FsUnwatchParams as FsUnwatchParams, type index$1_FsUnwatchResponse as FsUnwatchResponse, index$1_FsWatchParams as FsWatchParams, type index$1_FsWatchResponse as FsWatchResponse, index$1_FsWriteFileParams as FsWriteFileParams, type index$1_FsWriteFileResponse as FsWriteFileResponse, index$1_GetAccountParams as GetAccountParams, type index$1_GetAccountRateLimitsResponse as GetAccountRateLimitsResponse, type index$1_GetAccountResponse as GetAccountResponse, type index$1_GitInfo as GitInfo, type index$1_GrantedPermissionProfile as GrantedPermissionProfile, type index$1_GuardianApprovalReview as GuardianApprovalReview, type index$1_GuardianApprovalReviewAction as GuardianApprovalReviewAction, type index$1_GuardianApprovalReviewStatus as GuardianApprovalReviewStatus, type index$1_GuardianCommandSource as GuardianCommandSource, type index$1_GuardianRiskLevel as GuardianRiskLevel, type index$1_GuardianUserAuthorization as GuardianUserAuthorization, type index$1_GuardianWarningNotification as GuardianWarningNotification, type index$1_HookCompletedNotification as HookCompletedNotification, type index$1_HookErrorInfo as HookErrorInfo, type index$1_HookEventName as HookEventName, type index$1_HookExecutionMode as HookExecutionMode, type index$1_HookHandlerType as HookHandlerType, type index$1_HookMetadata as HookMetadata, index$1_HookMigration as HookMigration, type index$1_HookOutputEntry as HookOutputEntry, type index$1_HookOutputEntryKind as HookOutputEntryKind, type index$1_HookPromptFragment as HookPromptFragment, type index$1_HookRunStatus as HookRunStatus, type index$1_HookRunSummary as HookRunSummary, type index$1_HookScope as HookScope, type index$1_HookSource as HookSource, type index$1_HookStartedNotification as HookStartedNotification, type index$1_HookTrustStatus as HookTrustStatus, type index$1_HooksListEntry as HooksListEntry, HooksListParams$1 as HooksListParams, type index$1_HooksListResponse as HooksListResponse, type index$1_ItemCompletedNotification as ItemCompletedNotification, type index$1_ItemGuardianApprovalReviewCompletedNotification as ItemGuardianApprovalReviewCompletedNotification, type index$1_ItemGuardianApprovalReviewStartedNotification as ItemGuardianApprovalReviewStartedNotification, type index$1_ItemStartedNotification as ItemStartedNotification, index$1_ListMcpServerStatusParams as ListMcpServerStatusParams, type index$1_ListMcpServerStatusResponse as ListMcpServerStatusResponse, index$1_LoginAccountParams as LoginAccountParams, type index$1_LoginAccountResponse as LoginAccountResponse, type index$1_LogoutAccountResponse as LogoutAccountResponse, type index$1_ManagedHooksRequirements as ManagedHooksRequirements, index$1_MarketplaceAddParams as MarketplaceAddParams, type index$1_MarketplaceAddResponse as MarketplaceAddResponse, type index$1_MarketplaceInterface as MarketplaceInterface, type index$1_MarketplaceLoadErrorInfo as MarketplaceLoadErrorInfo, index$1_MarketplaceRemoveParams as MarketplaceRemoveParams, type index$1_MarketplaceRemoveResponse as MarketplaceRemoveResponse, type index$1_MarketplaceUpgradeErrorInfo as MarketplaceUpgradeErrorInfo, index$1_MarketplaceUpgradeParams as MarketplaceUpgradeParams, type index$1_MarketplaceUpgradeResponse as MarketplaceUpgradeResponse, type index$1_McpAuthStatus as McpAuthStatus, type index$1_McpElicitationArrayType as McpElicitationArrayType, type index$1_McpElicitationBooleanSchema as McpElicitationBooleanSchema, type index$1_McpElicitationBooleanType as McpElicitationBooleanType, type index$1_McpElicitationConstOption as McpElicitationConstOption, type index$1_McpElicitationEnumSchema as McpElicitationEnumSchema, type index$1_McpElicitationLegacyTitledEnumSchema as McpElicitationLegacyTitledEnumSchema, type index$1_McpElicitationMultiSelectEnumSchema as McpElicitationMultiSelectEnumSchema, type index$1_McpElicitationNumberSchema as McpElicitationNumberSchema, type index$1_McpElicitationNumberType as McpElicitationNumberType, type index$1_McpElicitationObjectType as McpElicitationObjectType, type index$1_McpElicitationPrimitiveSchema as McpElicitationPrimitiveSchema, type index$1_McpElicitationSchema as McpElicitationSchema, type index$1_McpElicitationSingleSelectEnumSchema as McpElicitationSingleSelectEnumSchema, type index$1_McpElicitationStringFormat as McpElicitationStringFormat, type index$1_McpElicitationStringSchema as McpElicitationStringSchema, type index$1_McpElicitationStringType as McpElicitationStringType, type index$1_McpElicitationTitledEnumItems as McpElicitationTitledEnumItems, type index$1_McpElicitationTitledMultiSelectEnumSchema as McpElicitationTitledMultiSelectEnumSchema, type index$1_McpElicitationTitledSingleSelectEnumSchema as McpElicitationTitledSingleSelectEnumSchema, type index$1_McpElicitationUntitledEnumItems as McpElicitationUntitledEnumItems, type index$1_McpElicitationUntitledMultiSelectEnumSchema as McpElicitationUntitledMultiSelectEnumSchema, type index$1_McpElicitationUntitledSingleSelectEnumSchema as McpElicitationUntitledSingleSelectEnumSchema, index$1_McpResourceReadParams as McpResourceReadParams, type index$1_McpResourceReadResponse as McpResourceReadResponse, type index$1_McpServerElicitationAction as McpServerElicitationAction, type index$1_McpServerElicitationRequestParams as McpServerElicitationRequestParams, type index$1_McpServerElicitationRequestResponse as McpServerElicitationRequestResponse, index$1_McpServerMigration as McpServerMigration, type index$1_McpServerOauthLoginCompletedNotification as McpServerOauthLoginCompletedNotification, index$1_McpServerOauthLoginParams as McpServerOauthLoginParams, type index$1_McpServerOauthLoginResponse as McpServerOauthLoginResponse, type index$1_McpServerRefreshResponse as McpServerRefreshResponse, type index$1_McpServerStartupState as McpServerStartupState, type index$1_McpServerStatus as McpServerStatus, index$1_McpServerStatusDetail as McpServerStatusDetail, type index$1_McpServerStatusUpdatedNotification as McpServerStatusUpdatedNotification, index$1_McpServerToolCallParams as McpServerToolCallParams, type index$1_McpServerToolCallResponse as McpServerToolCallResponse, type index$1_McpToolCallError as McpToolCallError, type index$1_McpToolCallProgressNotification as McpToolCallProgressNotification, type index$1_McpToolCallResult as McpToolCallResult, type index$1_McpToolCallStatus as McpToolCallStatus, type index$1_MemoryCitation as MemoryCitation, type index$1_MemoryCitationEntry as MemoryCitationEntry, index$1_MergeStrategy as MergeStrategy, index$1_MigrationDetails as MigrationDetails, type index$1_Model as Model, type index$1_ModelAvailabilityNux as ModelAvailabilityNux, index$1_ModelListParams as ModelListParams, type index$1_ModelListResponse as ModelListResponse, index$1_ModelProviderCapabilitiesReadParams as ModelProviderCapabilitiesReadParams, type index$1_ModelProviderCapabilitiesReadResponse as ModelProviderCapabilitiesReadResponse, type index$1_ModelRerouteReason as ModelRerouteReason, type index$1_ModelReroutedNotification as ModelReroutedNotification, type index$1_ModelServiceTier as ModelServiceTier, type index$1_ModelUpgradeInfo as ModelUpgradeInfo, type index$1_ModelVerification as ModelVerification, type index$1_ModelVerificationNotification as ModelVerificationNotification, index$1_NetworkAccess as NetworkAccess, type index$1_NetworkApprovalContext as NetworkApprovalContext, type index$1_NetworkApprovalProtocol as NetworkApprovalProtocol, type index$1_NetworkDomainPermission as NetworkDomainPermission, type NetworkPolicyAmendment$1 as NetworkPolicyAmendment, type NetworkPolicyRuleAction$1 as NetworkPolicyRuleAction, type index$1_NetworkRequirements as NetworkRequirements, type index$1_NetworkUnixSocketPermission as NetworkUnixSocketPermission, type index$1_NonSteerableTurnKind as NonSteerableTurnKind, type index$1_OverriddenMetadata as OverriddenMetadata, type index$1_PatchApplyStatus as PatchApplyStatus, type index$1_PatchChangeKind as PatchChangeKind, type index$1_PermissionGrantScope as PermissionGrantScope, index$1_PermissionProfileListParams as PermissionProfileListParams, type index$1_PermissionProfileListResponse as PermissionProfileListResponse, type index$1_PermissionProfileSummary as PermissionProfileSummary, type index$1_PermissionsRequestApprovalParams as PermissionsRequestApprovalParams, type index$1_PermissionsRequestApprovalResponse as PermissionsRequestApprovalResponse, type index$1_PlanDeltaNotification as PlanDeltaNotification, type index$1_PluginAuthPolicy as PluginAuthPolicy, type index$1_PluginAvailability as PluginAvailability, type index$1_PluginDetail as PluginDetail, type index$1_PluginHookSummary as PluginHookSummary, index$1_PluginInstallParams as PluginInstallParams, type index$1_PluginInstallPolicy as PluginInstallPolicy, type index$1_PluginInstallResponse as PluginInstallResponse, index$1_PluginInstalledParams as PluginInstalledParams, type index$1_PluginInstalledResponse as PluginInstalledResponse, type index$1_PluginInterface as PluginInterface, index$1_PluginListMarketplaceKind as PluginListMarketplaceKind, index$1_PluginListParams as PluginListParams, type index$1_PluginListResponse as PluginListResponse, type index$1_PluginMarketplaceEntry as PluginMarketplaceEntry, index$1_PluginReadParams as PluginReadParams, type index$1_PluginReadResponse as PluginReadResponse, index$1_PluginShareCheckoutParams as PluginShareCheckoutParams, type index$1_PluginShareCheckoutResponse as PluginShareCheckoutResponse, type index$1_PluginShareContext as PluginShareContext, index$1_PluginShareDeleteParams as PluginShareDeleteParams, type index$1_PluginShareDeleteResponse as PluginShareDeleteResponse, index$1_PluginShareDiscoverability as PluginShareDiscoverability, type index$1_PluginShareListItem as PluginShareListItem, index$1_PluginShareListParams as PluginShareListParams, type index$1_PluginShareListResponse as PluginShareListResponse, type index$1_PluginSharePrincipal as PluginSharePrincipal, type index$1_PluginSharePrincipalRole as PluginSharePrincipalRole, index$1_PluginSharePrincipalType as PluginSharePrincipalType, index$1_PluginShareSaveParams as PluginShareSaveParams, type index$1_PluginShareSaveResponse as PluginShareSaveResponse, index$1_PluginShareTarget as PluginShareTarget, index$1_PluginShareTargetRole as PluginShareTargetRole, index$1_PluginShareUpdateDiscoverability as PluginShareUpdateDiscoverability, index$1_PluginShareUpdateTargetsParams as PluginShareUpdateTargetsParams, type index$1_PluginShareUpdateTargetsResponse as PluginShareUpdateTargetsResponse, index$1_PluginSkillReadParams as PluginSkillReadParams, type index$1_PluginSkillReadResponse as PluginSkillReadResponse, type index$1_PluginSource as PluginSource, type index$1_PluginSummary as PluginSummary, index$1_PluginUninstallParams as PluginUninstallParams, type index$1_PluginUninstallResponse as PluginUninstallResponse, index$1_PluginsMigration as PluginsMigration, type index$1_ProcessExitedNotification as ProcessExitedNotification, type index$1_ProcessOutputDeltaNotification as ProcessOutputDeltaNotification, type index$1_ProcessOutputStream as ProcessOutputStream, type index$1_ProcessTerminalSize as ProcessTerminalSize, type index$1_RateLimitReachedType as RateLimitReachedType, type index$1_RateLimitSnapshot as RateLimitSnapshot, type index$1_RateLimitWindow as RateLimitWindow, type index$1_RawResponseItemCompletedNotification as RawResponseItemCompletedNotification, type index$1_ReasoningEffortOption as ReasoningEffortOption, type index$1_ReasoningSummaryPartAddedNotification as ReasoningSummaryPartAddedNotification, type index$1_ReasoningSummaryTextDeltaNotification as ReasoningSummaryTextDeltaNotification, type index$1_ReasoningTextDeltaNotification as ReasoningTextDeltaNotification, type index$1_RemoteControlConnectionStatus as RemoteControlConnectionStatus, type index$1_RemoteControlStatusChangedNotification as RemoteControlStatusChangedNotification, type index$1_RequestPermissionProfile as RequestPermissionProfile, type index$1_ResidencyRequirement as ResidencyRequirement, index$1_ReviewDelivery as ReviewDelivery, index$1_ReviewStartParams as ReviewStartParams, type index$1_ReviewStartResponse as ReviewStartResponse, index$1_ReviewTarget as ReviewTarget, index$1_SandboxMode as SandboxMode, index$1_SandboxPolicy as SandboxPolicy, type index$1_SandboxWorkspaceWrite as SandboxWorkspaceWrite, index$1_SendAddCreditsNudgeEmailParams as SendAddCreditsNudgeEmailParams, type index$1_SendAddCreditsNudgeEmailResponse as SendAddCreditsNudgeEmailResponse, type index$1_ServerRequestResolvedNotification as ServerRequestResolvedNotification, index$1_SessionMigration as SessionMigration, type SessionSource$1 as SessionSource, type index$1_SkillDependencies as SkillDependencies, type index$1_SkillErrorInfo as SkillErrorInfo, type index$1_SkillInterface as SkillInterface, type index$1_SkillMetadata as SkillMetadata, type index$1_SkillScope as SkillScope, type index$1_SkillSummary as SkillSummary, type index$1_SkillToolDependency as SkillToolDependency, type index$1_SkillsChangedNotification as SkillsChangedNotification, SkillsConfigWriteParams$1 as SkillsConfigWriteParams, type index$1_SkillsConfigWriteResponse as SkillsConfigWriteResponse, type index$1_SkillsListEntry as SkillsListEntry, SkillsListParams$1 as SkillsListParams, type index$1_SkillsListResponse as SkillsListResponse, index$1_SortDirection as SortDirection, index$1_SubagentMigration as SubagentMigration, type index$1_TerminalInteractionNotification as TerminalInteractionNotification, index$1_TextElement as TextElement, type index$1_TextPosition as TextPosition, type index$1_TextRange as TextRange, type index$1_Thread as Thread, type index$1_ThreadActiveFlag as ThreadActiveFlag, index$1_ThreadApproveGuardianDeniedActionParams as ThreadApproveGuardianDeniedActionParams, type index$1_ThreadApproveGuardianDeniedActionResponse as ThreadApproveGuardianDeniedActionResponse, index$1_ThreadArchiveParams as ThreadArchiveParams, type index$1_ThreadArchiveResponse as ThreadArchiveResponse, type index$1_ThreadArchivedNotification as ThreadArchivedNotification, type index$1_ThreadClosedNotification as ThreadClosedNotification, index$1_ThreadCompactStartParams as ThreadCompactStartParams, type index$1_ThreadCompactStartResponse as ThreadCompactStartResponse, ThreadForkParams$1 as ThreadForkParams, type index$1_ThreadForkResponse as ThreadForkResponse, type index$1_ThreadGoal as ThreadGoal, index$1_ThreadGoalClearParams as ThreadGoalClearParams, type index$1_ThreadGoalClearResponse as ThreadGoalClearResponse, type index$1_ThreadGoalClearedNotification as ThreadGoalClearedNotification, index$1_ThreadGoalGetParams as ThreadGoalGetParams, type index$1_ThreadGoalGetResponse as ThreadGoalGetResponse, index$1_ThreadGoalSetParams as ThreadGoalSetParams, type index$1_ThreadGoalSetResponse as ThreadGoalSetResponse, index$1_ThreadGoalStatus as ThreadGoalStatus, type index$1_ThreadGoalUpdatedNotification as ThreadGoalUpdatedNotification, index$1_ThreadInjectItemsParams as ThreadInjectItemsParams, type index$1_ThreadInjectItemsResponse as ThreadInjectItemsResponse, type index$1_ThreadItem as ThreadItem, ThreadListParams$1 as ThreadListParams, type index$1_ThreadListResponse as ThreadListResponse, index$1_ThreadLoadedListParams as ThreadLoadedListParams, type index$1_ThreadLoadedListResponse as ThreadLoadedListResponse, index$1_ThreadMetadataGitInfoUpdateParams as ThreadMetadataGitInfoUpdateParams, index$1_ThreadMetadataUpdateParams as ThreadMetadataUpdateParams, type index$1_ThreadMetadataUpdateResponse as ThreadMetadataUpdateResponse, type index$1_ThreadNameUpdatedNotification as ThreadNameUpdatedNotification, index$1_ThreadReadParams as ThreadReadParams, type index$1_ThreadReadResponse as ThreadReadResponse, type index$1_ThreadRealtimeAudioChunk as ThreadRealtimeAudioChunk, type index$1_ThreadRealtimeClosedNotification as ThreadRealtimeClosedNotification, type index$1_ThreadRealtimeErrorNotification as ThreadRealtimeErrorNotification, type index$1_ThreadRealtimeItemAddedNotification as ThreadRealtimeItemAddedNotification, type index$1_ThreadRealtimeOutputAudioDeltaNotification as ThreadRealtimeOutputAudioDeltaNotification, type index$1_ThreadRealtimeSdpNotification as ThreadRealtimeSdpNotification, type index$1_ThreadRealtimeStartTransport as ThreadRealtimeStartTransport, type index$1_ThreadRealtimeStartedNotification as ThreadRealtimeStartedNotification, type index$1_ThreadRealtimeTranscriptDeltaNotification as ThreadRealtimeTranscriptDeltaNotification, type index$1_ThreadRealtimeTranscriptDoneNotification as ThreadRealtimeTranscriptDoneNotification, type index$1_ThreadResumeInitialTurnsPageParams as ThreadResumeInitialTurnsPageParams, ThreadResumeParams$1 as ThreadResumeParams, type index$1_ThreadResumeResponse as ThreadResumeResponse, index$1_ThreadRollbackParams as ThreadRollbackParams, type index$1_ThreadRollbackResponse as ThreadRollbackResponse, type index$1_ThreadSearchResult as ThreadSearchResult, index$1_ThreadSetNameParams as ThreadSetNameParams, type index$1_ThreadSetNameResponse as ThreadSetNameResponse, type index$1_ThreadSettings as ThreadSettings, type index$1_ThreadSettingsUpdatedNotification as ThreadSettingsUpdatedNotification, index$1_ThreadShellCommandParams as ThreadShellCommandParams, type index$1_ThreadShellCommandResponse as ThreadShellCommandResponse, index$1_ThreadSortKey as ThreadSortKey, index$1_ThreadSource as ThreadSource, index$1_ThreadSourceKind as ThreadSourceKind, ThreadStartParams$1 as ThreadStartParams, type index$1_ThreadStartResponse as ThreadStartResponse, index$1_ThreadStartSource as ThreadStartSource, type index$1_ThreadStartedNotification as ThreadStartedNotification, type index$1_ThreadStatus as ThreadStatus, type index$1_ThreadStatusChangedNotification as ThreadStatusChangedNotification, type index$1_ThreadTokenUsage as ThreadTokenUsage, type index$1_ThreadTokenUsageUpdatedNotification as ThreadTokenUsageUpdatedNotification, index$1_ThreadUnarchiveParams as ThreadUnarchiveParams, type index$1_ThreadUnarchiveResponse as ThreadUnarchiveResponse, type index$1_ThreadUnarchivedNotification as ThreadUnarchivedNotification, index$1_ThreadUnsubscribeParams as ThreadUnsubscribeParams, type index$1_ThreadUnsubscribeResponse as ThreadUnsubscribeResponse, type index$1_ThreadUnsubscribeStatus as ThreadUnsubscribeStatus, type index$1_TokenUsageBreakdown as TokenUsageBreakdown, type index$1_ToolRequestUserInputAnswer as ToolRequestUserInputAnswer, type index$1_ToolRequestUserInputOption as ToolRequestUserInputOption, type index$1_ToolRequestUserInputParams as ToolRequestUserInputParams, type index$1_ToolRequestUserInputQuestion as ToolRequestUserInputQuestion, type index$1_ToolRequestUserInputResponse as ToolRequestUserInputResponse, type index$1_ToolsV2 as ToolsV2, type index$1_Turn as Turn, type index$1_TurnCompletedNotification as TurnCompletedNotification, type index$1_TurnDiffUpdatedNotification as TurnDiffUpdatedNotification, type index$1_TurnEnvironmentParams as TurnEnvironmentParams, type index$1_TurnError as TurnError, index$1_TurnInterruptParams as TurnInterruptParams, type index$1_TurnInterruptResponse as TurnInterruptResponse, type index$1_TurnItemsView as TurnItemsView, type index$1_TurnPlanStep as TurnPlanStep, type index$1_TurnPlanStepStatus as TurnPlanStepStatus, type index$1_TurnPlanUpdatedNotification as TurnPlanUpdatedNotification, TurnStartParams$1 as TurnStartParams, type index$1_TurnStartResponse as TurnStartResponse, type index$1_TurnStartedNotification as TurnStartedNotification, type index$1_TurnStatus as TurnStatus, index$1_TurnSteerParams as TurnSteerParams, type index$1_TurnSteerResponse as TurnSteerResponse, type index$1_TurnsPage as TurnsPage, index$1_UserInput as UserInput, type index$1_WarningNotification as WarningNotification, type WebSearchAction$1 as WebSearchAction, type index$1_WindowsSandboxReadiness as WindowsSandboxReadiness, type index$1_WindowsSandboxReadinessResponse as WindowsSandboxReadinessResponse, type index$1_WindowsSandboxSetupCompletedNotification as WindowsSandboxSetupCompletedNotification, index$1_WindowsSandboxSetupMode as WindowsSandboxSetupMode, index$1_WindowsSandboxSetupStartParams as WindowsSandboxSetupStartParams, type index$1_WindowsSandboxSetupStartResponse as WindowsSandboxSetupStartResponse, type index$1_WindowsWorldWritableWarningNotification as WindowsWorldWritableWarningNotification, type index$1_WriteStatus as WriteStatus };
+  export { index$1_Account as Account, type index$1_AccountLoginCompletedNotification as AccountLoginCompletedNotification, type index$1_AccountRateLimitsUpdatedNotification as AccountRateLimitsUpdatedNotification, type index$1_AccountUpdatedNotification as AccountUpdatedNotification, type index$1_ActivePermissionProfile as ActivePermissionProfile, index$1_AddCreditsNudgeCreditType as AddCreditsNudgeCreditType, type index$1_AddCreditsNudgeEmailStatus as AddCreditsNudgeEmailStatus, type index$1_AdditionalContextEntry as AdditionalContextEntry, type index$1_AdditionalContextKind as AdditionalContextKind, type index$1_AdditionalFileSystemPermissions as AdditionalFileSystemPermissions, type index$1_AdditionalNetworkPermissions as AdditionalNetworkPermissions, type index$1_AdditionalPermissionProfile as AdditionalPermissionProfile, type index$1_AgentMessageDeltaNotification as AgentMessageDeltaNotification, type index$1_AnalyticsConfig as AnalyticsConfig, index$1_AppBranding as AppBranding, index$1_AppInfo as AppInfo, type index$1_AppListUpdatedNotification as AppListUpdatedNotification, index$1_AppMetadata as AppMetadata, index$1_AppReview as AppReview, index$1_AppScreenshot as AppScreenshot, type index$1_AppSummary as AppSummary, type index$1_AppToolApproval as AppToolApproval, type index$1_AppToolsConfig as AppToolsConfig, index$1_ApprovalsReviewer as ApprovalsReviewer, type index$1_AppsConfig as AppsConfig, type index$1_AppsDefaultConfig as AppsDefaultConfig, AppsListParams$1 as AppsListParams, index$1_AppsListResponse as AppsListResponse, index$1_AskForApproval as AskForApproval, type index$1_AttestationGenerateParams as AttestationGenerateParams, type index$1_AttestationGenerateResponse as AttestationGenerateResponse, type index$1_AutoReviewDecisionSource as AutoReviewDecisionSource, index$1_ByteRange as ByteRange, index$1_CancelLoginAccountParams as CancelLoginAccountParams, index$1_CancelLoginAccountResponse as CancelLoginAccountResponse, index$1_CancelLoginAccountStatus as CancelLoginAccountStatus, type index$1_ChatgptAuthTokensRefreshParams as ChatgptAuthTokensRefreshParams, type index$1_ChatgptAuthTokensRefreshReason as ChatgptAuthTokensRefreshReason, type index$1_ChatgptAuthTokensRefreshResponse as ChatgptAuthTokensRefreshResponse, index$1_CodexErrorInfo as CodexErrorInfo, index$1_CollabAgentState as CollabAgentState, index$1_CollabAgentStatus as CollabAgentStatus, index$1_CollabAgentTool as CollabAgentTool, index$1_CollabAgentToolCallStatus as CollabAgentToolCallStatus, type index$1_CollaborationModeMask as CollaborationModeMask, index$1_CommandAction as CommandAction, type index$1_CommandExecOutputDeltaNotification as CommandExecOutputDeltaNotification, type index$1_CommandExecOutputStream as CommandExecOutputStream, index$1_CommandExecParams as CommandExecParams, index$1_CommandExecResizeParams as CommandExecResizeParams, type index$1_CommandExecResizeResponse as CommandExecResizeResponse, type index$1_CommandExecResponse as CommandExecResponse, index$1_CommandExecTerminalSize as CommandExecTerminalSize, index$1_CommandExecTerminateParams as CommandExecTerminateParams, type index$1_CommandExecTerminateResponse as CommandExecTerminateResponse, index$1_CommandExecWriteParams as CommandExecWriteParams, type index$1_CommandExecWriteResponse as CommandExecWriteResponse, type index$1_CommandExecutionApprovalDecision as CommandExecutionApprovalDecision, type index$1_CommandExecutionOutputDeltaNotification as CommandExecutionOutputDeltaNotification, type index$1_CommandExecutionRequestApprovalParams as CommandExecutionRequestApprovalParams, type index$1_CommandExecutionRequestApprovalResponse as CommandExecutionRequestApprovalResponse, index$1_CommandExecutionSource as CommandExecutionSource, index$1_CommandExecutionStatus as CommandExecutionStatus, index$1_CommandMigration as CommandMigration, type index$1_ComputerUseRequirements as ComputerUseRequirements, type index$1_Config as Config, index$1_ConfigBatchWriteParams as ConfigBatchWriteParams, index$1_ConfigEdit as ConfigEdit, type index$1_ConfigLayer as ConfigLayer, type index$1_ConfigLayerMetadata as ConfigLayerMetadata, type index$1_ConfigLayerSource as ConfigLayerSource, index$1_ConfigReadParams as ConfigReadParams, type index$1_ConfigReadResponse as ConfigReadResponse, type index$1_ConfigRequirements as ConfigRequirements, type index$1_ConfigRequirementsReadResponse as ConfigRequirementsReadResponse, index$1_ConfigValueWriteParams as ConfigValueWriteParams, type index$1_ConfigWarningNotification as ConfigWarningNotification, type index$1_ConfigWriteResponse as ConfigWriteResponse, type index$1_ConfiguredHookHandler as ConfiguredHookHandler, type index$1_ConfiguredHookMatcherGroup as ConfiguredHookMatcherGroup, type index$1_ContextCompactedNotification as ContextCompactedNotification, index$1_CreditsSnapshot as CreditsSnapshot, type index$1_DeprecationNoticeNotification as DeprecationNoticeNotification, index$1_DynamicToolCallOutputContentItem as DynamicToolCallOutputContentItem, type index$1_DynamicToolCallParams as DynamicToolCallParams, type index$1_DynamicToolCallResponse as DynamicToolCallResponse, index$1_DynamicToolCallStatus as DynamicToolCallStatus, type index$1_DynamicToolSpec as DynamicToolSpec, type index$1_ErrorNotification as ErrorNotification, type ExecPolicyAmendment$1 as ExecPolicyAmendment, type index$1_ExperimentalFeature as ExperimentalFeature, index$1_ExperimentalFeatureEnablementSetParams as ExperimentalFeatureEnablementSetParams, type index$1_ExperimentalFeatureEnablementSetResponse as ExperimentalFeatureEnablementSetResponse, index$1_ExperimentalFeatureListParams as ExperimentalFeatureListParams, type index$1_ExperimentalFeatureListResponse as ExperimentalFeatureListResponse, type index$1_ExperimentalFeatureStage as ExperimentalFeatureStage, index$1_ExternalAgentConfigDetectParams as ExternalAgentConfigDetectParams, type index$1_ExternalAgentConfigDetectResponse as ExternalAgentConfigDetectResponse, type index$1_ExternalAgentConfigImportCompletedNotification as ExternalAgentConfigImportCompletedNotification, index$1_ExternalAgentConfigImportParams as ExternalAgentConfigImportParams, type index$1_ExternalAgentConfigImportResponse as ExternalAgentConfigImportResponse, index$1_ExternalAgentConfigMigrationItem as ExternalAgentConfigMigrationItem, index$1_ExternalAgentConfigMigrationItemType as ExternalAgentConfigMigrationItemType, index$1_FeedbackUploadParams as FeedbackUploadParams, type index$1_FeedbackUploadResponse as FeedbackUploadResponse, type index$1_FileChangeApprovalDecision as FileChangeApprovalDecision, type index$1_FileChangeOutputDeltaNotification as FileChangeOutputDeltaNotification, type index$1_FileChangePatchUpdatedNotification as FileChangePatchUpdatedNotification, type index$1_FileChangeRequestApprovalParams as FileChangeRequestApprovalParams, type index$1_FileChangeRequestApprovalResponse as FileChangeRequestApprovalResponse, type index$1_FileSystemAccessMode as FileSystemAccessMode, type index$1_FileSystemPath as FileSystemPath, type index$1_FileSystemSandboxEntry as FileSystemSandboxEntry, type index$1_FileSystemSpecialPath as FileSystemSpecialPath, index$1_FileUpdateChange as FileUpdateChange, type index$1_ForcedChatgptWorkspaceIds as ForcedChatgptWorkspaceIds, type index$1_FsChangedNotification as FsChangedNotification, index$1_FsCopyParams as FsCopyParams, type index$1_FsCopyResponse as FsCopyResponse, index$1_FsCreateDirectoryParams as FsCreateDirectoryParams, type index$1_FsCreateDirectoryResponse as FsCreateDirectoryResponse, index$1_FsGetMetadataParams as FsGetMetadataParams, type index$1_FsGetMetadataResponse as FsGetMetadataResponse, type index$1_FsReadDirectoryEntry as FsReadDirectoryEntry, index$1_FsReadDirectoryParams as FsReadDirectoryParams, type index$1_FsReadDirectoryResponse as FsReadDirectoryResponse, index$1_FsReadFileParams as FsReadFileParams, type index$1_FsReadFileResponse as FsReadFileResponse, index$1_FsRemoveParams as FsRemoveParams, type index$1_FsRemoveResponse as FsRemoveResponse, index$1_FsUnwatchParams as FsUnwatchParams, type index$1_FsUnwatchResponse as FsUnwatchResponse, index$1_FsWatchParams as FsWatchParams, type index$1_FsWatchResponse as FsWatchResponse, index$1_FsWriteFileParams as FsWriteFileParams, type index$1_FsWriteFileResponse as FsWriteFileResponse, index$1_GetAccountParams as GetAccountParams, index$1_GetAccountRateLimitsResponse as GetAccountRateLimitsResponse, index$1_GetAccountResponse as GetAccountResponse, index$1_GitInfo as GitInfo, type index$1_GrantedPermissionProfile as GrantedPermissionProfile, type index$1_GuardianApprovalReview as GuardianApprovalReview, type index$1_GuardianApprovalReviewAction as GuardianApprovalReviewAction, type index$1_GuardianApprovalReviewStatus as GuardianApprovalReviewStatus, type index$1_GuardianCommandSource as GuardianCommandSource, type index$1_GuardianRiskLevel as GuardianRiskLevel, type index$1_GuardianUserAuthorization as GuardianUserAuthorization, type index$1_GuardianWarningNotification as GuardianWarningNotification, type index$1_HookCompletedNotification as HookCompletedNotification, index$1_HookErrorInfo as HookErrorInfo, index$1_HookEventName as HookEventName, type index$1_HookExecutionMode as HookExecutionMode, index$1_HookHandlerType as HookHandlerType, index$1_HookMetadata as HookMetadata, index$1_HookMigration as HookMigration, type index$1_HookOutputEntry as HookOutputEntry, type index$1_HookOutputEntryKind as HookOutputEntryKind, index$1_HookPromptFragment as HookPromptFragment, type index$1_HookRunStatus as HookRunStatus, type index$1_HookRunSummary as HookRunSummary, type index$1_HookScope as HookScope, index$1_HookSource as HookSource, type index$1_HookStartedNotification as HookStartedNotification, index$1_HookTrustStatus as HookTrustStatus, index$1_HooksListEntry as HooksListEntry, HooksListParams$1 as HooksListParams, index$1_HooksListResponse as HooksListResponse, type index$1_ItemCompletedNotification as ItemCompletedNotification, type index$1_ItemGuardianApprovalReviewCompletedNotification as ItemGuardianApprovalReviewCompletedNotification, type index$1_ItemGuardianApprovalReviewStartedNotification as ItemGuardianApprovalReviewStartedNotification, type index$1_ItemStartedNotification as ItemStartedNotification, index$1_ListMcpServerStatusParams as ListMcpServerStatusParams, type index$1_ListMcpServerStatusResponse as ListMcpServerStatusResponse, index$1_LoginAccountParams as LoginAccountParams, index$1_LoginAccountResponse as LoginAccountResponse, index$1_LogoutAccountResponse as LogoutAccountResponse, type index$1_ManagedHooksRequirements as ManagedHooksRequirements, index$1_MarketplaceAddParams as MarketplaceAddParams, type index$1_MarketplaceAddResponse as MarketplaceAddResponse, type index$1_MarketplaceInterface as MarketplaceInterface, type index$1_MarketplaceLoadErrorInfo as MarketplaceLoadErrorInfo, index$1_MarketplaceRemoveParams as MarketplaceRemoveParams, type index$1_MarketplaceRemoveResponse as MarketplaceRemoveResponse, type index$1_MarketplaceUpgradeErrorInfo as MarketplaceUpgradeErrorInfo, index$1_MarketplaceUpgradeParams as MarketplaceUpgradeParams, type index$1_MarketplaceUpgradeResponse as MarketplaceUpgradeResponse, type index$1_McpAuthStatus as McpAuthStatus, type index$1_McpElicitationArrayType as McpElicitationArrayType, type index$1_McpElicitationBooleanSchema as McpElicitationBooleanSchema, type index$1_McpElicitationBooleanType as McpElicitationBooleanType, type index$1_McpElicitationConstOption as McpElicitationConstOption, type index$1_McpElicitationEnumSchema as McpElicitationEnumSchema, type index$1_McpElicitationLegacyTitledEnumSchema as McpElicitationLegacyTitledEnumSchema, type index$1_McpElicitationMultiSelectEnumSchema as McpElicitationMultiSelectEnumSchema, type index$1_McpElicitationNumberSchema as McpElicitationNumberSchema, type index$1_McpElicitationNumberType as McpElicitationNumberType, type index$1_McpElicitationObjectType as McpElicitationObjectType, type index$1_McpElicitationPrimitiveSchema as McpElicitationPrimitiveSchema, type index$1_McpElicitationSchema as McpElicitationSchema, type index$1_McpElicitationSingleSelectEnumSchema as McpElicitationSingleSelectEnumSchema, type index$1_McpElicitationStringFormat as McpElicitationStringFormat, type index$1_McpElicitationStringSchema as McpElicitationStringSchema, type index$1_McpElicitationStringType as McpElicitationStringType, type index$1_McpElicitationTitledEnumItems as McpElicitationTitledEnumItems, type index$1_McpElicitationTitledMultiSelectEnumSchema as McpElicitationTitledMultiSelectEnumSchema, type index$1_McpElicitationTitledSingleSelectEnumSchema as McpElicitationTitledSingleSelectEnumSchema, type index$1_McpElicitationUntitledEnumItems as McpElicitationUntitledEnumItems, type index$1_McpElicitationUntitledMultiSelectEnumSchema as McpElicitationUntitledMultiSelectEnumSchema, type index$1_McpElicitationUntitledSingleSelectEnumSchema as McpElicitationUntitledSingleSelectEnumSchema, index$1_McpResourceReadParams as McpResourceReadParams, type index$1_McpResourceReadResponse as McpResourceReadResponse, type index$1_McpServerElicitationAction as McpServerElicitationAction, type index$1_McpServerElicitationRequestParams as McpServerElicitationRequestParams, type index$1_McpServerElicitationRequestResponse as McpServerElicitationRequestResponse, index$1_McpServerMigration as McpServerMigration, type index$1_McpServerOauthLoginCompletedNotification as McpServerOauthLoginCompletedNotification, index$1_McpServerOauthLoginParams as McpServerOauthLoginParams, type index$1_McpServerOauthLoginResponse as McpServerOauthLoginResponse, type index$1_McpServerRefreshResponse as McpServerRefreshResponse, type index$1_McpServerStartupState as McpServerStartupState, type index$1_McpServerStatus as McpServerStatus, index$1_McpServerStatusDetail as McpServerStatusDetail, type index$1_McpServerStatusUpdatedNotification as McpServerStatusUpdatedNotification, index$1_McpServerToolCallParams as McpServerToolCallParams, type index$1_McpServerToolCallResponse as McpServerToolCallResponse, index$1_McpToolCallError as McpToolCallError, type index$1_McpToolCallProgressNotification as McpToolCallProgressNotification, index$1_McpToolCallResult as McpToolCallResult, index$1_McpToolCallStatus as McpToolCallStatus, index$1_MemoryCitation as MemoryCitation, index$1_MemoryCitationEntry as MemoryCitationEntry, index$1_MergeStrategy as MergeStrategy, index$1_MigrationDetails as MigrationDetails, index$1_Model as Model, index$1_ModelAvailabilityNux as ModelAvailabilityNux, index$1_ModelListParams as ModelListParams, index$1_ModelListResponse as ModelListResponse, index$1_ModelProviderCapabilitiesReadParams as ModelProviderCapabilitiesReadParams, type index$1_ModelProviderCapabilitiesReadResponse as ModelProviderCapabilitiesReadResponse, type index$1_ModelRerouteReason as ModelRerouteReason, type index$1_ModelReroutedNotification as ModelReroutedNotification, index$1_ModelServiceTier as ModelServiceTier, index$1_ModelUpgradeInfo as ModelUpgradeInfo, type index$1_ModelVerification as ModelVerification, type index$1_ModelVerificationNotification as ModelVerificationNotification, index$1_NetworkAccess as NetworkAccess, type index$1_NetworkApprovalContext as NetworkApprovalContext, type index$1_NetworkApprovalProtocol as NetworkApprovalProtocol, type index$1_NetworkDomainPermission as NetworkDomainPermission, type NetworkPolicyAmendment$1 as NetworkPolicyAmendment, type NetworkPolicyRuleAction$1 as NetworkPolicyRuleAction, type index$1_NetworkRequirements as NetworkRequirements, type index$1_NetworkUnixSocketPermission as NetworkUnixSocketPermission, index$1_NonSteerableTurnKind as NonSteerableTurnKind, type index$1_OverriddenMetadata as OverriddenMetadata, index$1_PatchApplyStatus as PatchApplyStatus, index$1_PatchChangeKind as PatchChangeKind, type index$1_PermissionGrantScope as PermissionGrantScope, index$1_PermissionProfileListParams as PermissionProfileListParams, type index$1_PermissionProfileListResponse as PermissionProfileListResponse, type index$1_PermissionProfileSummary as PermissionProfileSummary, type index$1_PermissionsRequestApprovalParams as PermissionsRequestApprovalParams, type index$1_PermissionsRequestApprovalResponse as PermissionsRequestApprovalResponse, type index$1_PlanDeltaNotification as PlanDeltaNotification, type index$1_PluginAuthPolicy as PluginAuthPolicy, type index$1_PluginAvailability as PluginAvailability, type index$1_PluginDetail as PluginDetail, type index$1_PluginHookSummary as PluginHookSummary, index$1_PluginInstallParams as PluginInstallParams, type index$1_PluginInstallPolicy as PluginInstallPolicy, type index$1_PluginInstallResponse as PluginInstallResponse, index$1_PluginInstalledParams as PluginInstalledParams, type index$1_PluginInstalledResponse as PluginInstalledResponse, type index$1_PluginInterface as PluginInterface, index$1_PluginListMarketplaceKind as PluginListMarketplaceKind, index$1_PluginListParams as PluginListParams, type index$1_PluginListResponse as PluginListResponse, type index$1_PluginMarketplaceEntry as PluginMarketplaceEntry, index$1_PluginReadParams as PluginReadParams, type index$1_PluginReadResponse as PluginReadResponse, index$1_PluginShareCheckoutParams as PluginShareCheckoutParams, type index$1_PluginShareCheckoutResponse as PluginShareCheckoutResponse, type index$1_PluginShareContext as PluginShareContext, index$1_PluginShareDeleteParams as PluginShareDeleteParams, type index$1_PluginShareDeleteResponse as PluginShareDeleteResponse, index$1_PluginShareDiscoverability as PluginShareDiscoverability, type index$1_PluginShareListItem as PluginShareListItem, index$1_PluginShareListParams as PluginShareListParams, type index$1_PluginShareListResponse as PluginShareListResponse, type index$1_PluginSharePrincipal as PluginSharePrincipal, type index$1_PluginSharePrincipalRole as PluginSharePrincipalRole, index$1_PluginSharePrincipalType as PluginSharePrincipalType, index$1_PluginShareSaveParams as PluginShareSaveParams, type index$1_PluginShareSaveResponse as PluginShareSaveResponse, index$1_PluginShareTarget as PluginShareTarget, index$1_PluginShareTargetRole as PluginShareTargetRole, index$1_PluginShareUpdateDiscoverability as PluginShareUpdateDiscoverability, index$1_PluginShareUpdateTargetsParams as PluginShareUpdateTargetsParams, type index$1_PluginShareUpdateTargetsResponse as PluginShareUpdateTargetsResponse, index$1_PluginSkillReadParams as PluginSkillReadParams, type index$1_PluginSkillReadResponse as PluginSkillReadResponse, type index$1_PluginSource as PluginSource, type index$1_PluginSummary as PluginSummary, index$1_PluginUninstallParams as PluginUninstallParams, type index$1_PluginUninstallResponse as PluginUninstallResponse, index$1_PluginsMigration as PluginsMigration, type index$1_ProcessExitedNotification as ProcessExitedNotification, type index$1_ProcessOutputDeltaNotification as ProcessOutputDeltaNotification, type index$1_ProcessOutputStream as ProcessOutputStream, type index$1_ProcessTerminalSize as ProcessTerminalSize, index$1_RateLimitReachedType as RateLimitReachedType, index$1_RateLimitSnapshot as RateLimitSnapshot, index$1_RateLimitWindow as RateLimitWindow, type index$1_RawResponseItemCompletedNotification as RawResponseItemCompletedNotification, index$1_ReasoningEffortOption as ReasoningEffortOption, type index$1_ReasoningSummaryPartAddedNotification as ReasoningSummaryPartAddedNotification, type index$1_ReasoningSummaryTextDeltaNotification as ReasoningSummaryTextDeltaNotification, type index$1_ReasoningTextDeltaNotification as ReasoningTextDeltaNotification, type index$1_RemoteControlConnectionStatus as RemoteControlConnectionStatus, type index$1_RemoteControlStatusChangedNotification as RemoteControlStatusChangedNotification, type index$1_RequestPermissionProfile as RequestPermissionProfile, type index$1_ResidencyRequirement as ResidencyRequirement, index$1_ReviewDelivery as ReviewDelivery, index$1_ReviewStartParams as ReviewStartParams, type index$1_ReviewStartResponse as ReviewStartResponse, index$1_ReviewTarget as ReviewTarget, index$1_SandboxMode as SandboxMode, index$1_SandboxPolicy as SandboxPolicy, type index$1_SandboxWorkspaceWrite as SandboxWorkspaceWrite, index$1_SendAddCreditsNudgeEmailParams as SendAddCreditsNudgeEmailParams, type index$1_SendAddCreditsNudgeEmailResponse as SendAddCreditsNudgeEmailResponse, type index$1_ServerRequestResolvedNotification as ServerRequestResolvedNotification, index$1_SessionMigration as SessionMigration, SessionSource$1 as SessionSource, index$1_SkillDependencies as SkillDependencies, index$1_SkillErrorInfo as SkillErrorInfo, index$1_SkillInterface as SkillInterface, index$1_SkillMetadata as SkillMetadata, index$1_SkillScope as SkillScope, type index$1_SkillSummary as SkillSummary, index$1_SkillToolDependency as SkillToolDependency, type index$1_SkillsChangedNotification as SkillsChangedNotification, SkillsConfigWriteParams$1 as SkillsConfigWriteParams, index$1_SkillsConfigWriteResponse as SkillsConfigWriteResponse, index$1_SkillsListEntry as SkillsListEntry, SkillsListParams$1 as SkillsListParams, index$1_SkillsListResponse as SkillsListResponse, index$1_SortDirection as SortDirection, index$1_SubagentMigration as SubagentMigration, type index$1_TerminalInteractionNotification as TerminalInteractionNotification, index$1_TextElement as TextElement, type index$1_TextPosition as TextPosition, type index$1_TextRange as TextRange, index$1_Thread as Thread, index$1_ThreadActiveFlag as ThreadActiveFlag, index$1_ThreadApproveGuardianDeniedActionParams as ThreadApproveGuardianDeniedActionParams, type index$1_ThreadApproveGuardianDeniedActionResponse as ThreadApproveGuardianDeniedActionResponse, index$1_ThreadArchiveParams as ThreadArchiveParams, index$1_ThreadArchiveResponse as ThreadArchiveResponse, type index$1_ThreadArchivedNotification as ThreadArchivedNotification, type index$1_ThreadClosedNotification as ThreadClosedNotification, index$1_ThreadCompactStartParams as ThreadCompactStartParams, index$1_ThreadCompactStartResponse as ThreadCompactStartResponse, ThreadForkParams$1 as ThreadForkParams, index$1_ThreadForkResponse as ThreadForkResponse, type index$1_ThreadGoal as ThreadGoal, index$1_ThreadGoalClearParams as ThreadGoalClearParams, type index$1_ThreadGoalClearResponse as ThreadGoalClearResponse, type index$1_ThreadGoalClearedNotification as ThreadGoalClearedNotification, index$1_ThreadGoalGetParams as ThreadGoalGetParams, type index$1_ThreadGoalGetResponse as ThreadGoalGetResponse, index$1_ThreadGoalSetParams as ThreadGoalSetParams, type index$1_ThreadGoalSetResponse as ThreadGoalSetResponse, index$1_ThreadGoalStatus as ThreadGoalStatus, type index$1_ThreadGoalUpdatedNotification as ThreadGoalUpdatedNotification, index$1_ThreadInjectItemsParams as ThreadInjectItemsParams, index$1_ThreadInjectItemsResponse as ThreadInjectItemsResponse, index$1_ThreadItem as ThreadItem, ThreadListParams$1 as ThreadListParams, index$1_ThreadListResponse as ThreadListResponse, index$1_ThreadLoadedListParams as ThreadLoadedListParams, index$1_ThreadLoadedListResponse as ThreadLoadedListResponse, index$1_ThreadMetadataGitInfoUpdateParams as ThreadMetadataGitInfoUpdateParams, index$1_ThreadMetadataUpdateParams as ThreadMetadataUpdateParams, index$1_ThreadMetadataUpdateResponse as ThreadMetadataUpdateResponse, type index$1_ThreadNameUpdatedNotification as ThreadNameUpdatedNotification, index$1_ThreadReadParams as ThreadReadParams, index$1_ThreadReadResponse as ThreadReadResponse, type index$1_ThreadRealtimeAudioChunk as ThreadRealtimeAudioChunk, type index$1_ThreadRealtimeClosedNotification as ThreadRealtimeClosedNotification, type index$1_ThreadRealtimeErrorNotification as ThreadRealtimeErrorNotification, type index$1_ThreadRealtimeItemAddedNotification as ThreadRealtimeItemAddedNotification, type index$1_ThreadRealtimeOutputAudioDeltaNotification as ThreadRealtimeOutputAudioDeltaNotification, type index$1_ThreadRealtimeSdpNotification as ThreadRealtimeSdpNotification, type index$1_ThreadRealtimeStartTransport as ThreadRealtimeStartTransport, type index$1_ThreadRealtimeStartedNotification as ThreadRealtimeStartedNotification, type index$1_ThreadRealtimeTranscriptDeltaNotification as ThreadRealtimeTranscriptDeltaNotification, type index$1_ThreadRealtimeTranscriptDoneNotification as ThreadRealtimeTranscriptDoneNotification, type index$1_ThreadResumeInitialTurnsPageParams as ThreadResumeInitialTurnsPageParams, ThreadResumeParams$1 as ThreadResumeParams, index$1_ThreadResumeResponse as ThreadResumeResponse, index$1_ThreadRollbackParams as ThreadRollbackParams, index$1_ThreadRollbackResponse as ThreadRollbackResponse, type index$1_ThreadSearchResult as ThreadSearchResult, index$1_ThreadSetNameParams as ThreadSetNameParams, index$1_ThreadSetNameResponse as ThreadSetNameResponse, type index$1_ThreadSettings as ThreadSettings, type index$1_ThreadSettingsUpdatedNotification as ThreadSettingsUpdatedNotification, index$1_ThreadShellCommandParams as ThreadShellCommandParams, type index$1_ThreadShellCommandResponse as ThreadShellCommandResponse, index$1_ThreadSortKey as ThreadSortKey, index$1_ThreadSource as ThreadSource, index$1_ThreadSourceKind as ThreadSourceKind, ThreadStartParams$1 as ThreadStartParams, index$1_ThreadStartResponse as ThreadStartResponse, index$1_ThreadStartSource as ThreadStartSource, type index$1_ThreadStartedNotification as ThreadStartedNotification, index$1_ThreadStatus as ThreadStatus, type index$1_ThreadStatusChangedNotification as ThreadStatusChangedNotification, type index$1_ThreadTokenUsage as ThreadTokenUsage, type index$1_ThreadTokenUsageUpdatedNotification as ThreadTokenUsageUpdatedNotification, index$1_ThreadUnarchiveParams as ThreadUnarchiveParams, index$1_ThreadUnarchiveResponse as ThreadUnarchiveResponse, type index$1_ThreadUnarchivedNotification as ThreadUnarchivedNotification, index$1_ThreadUnsubscribeParams as ThreadUnsubscribeParams, index$1_ThreadUnsubscribeResponse as ThreadUnsubscribeResponse, index$1_ThreadUnsubscribeStatus as ThreadUnsubscribeStatus, type index$1_TokenUsageBreakdown as TokenUsageBreakdown, type index$1_ToolRequestUserInputAnswer as ToolRequestUserInputAnswer, type index$1_ToolRequestUserInputOption as ToolRequestUserInputOption, type index$1_ToolRequestUserInputParams as ToolRequestUserInputParams, type index$1_ToolRequestUserInputQuestion as ToolRequestUserInputQuestion, type index$1_ToolRequestUserInputResponse as ToolRequestUserInputResponse, type index$1_ToolsV2 as ToolsV2, index$1_Turn as Turn, type index$1_TurnCompletedNotification as TurnCompletedNotification, type index$1_TurnDiffUpdatedNotification as TurnDiffUpdatedNotification, type index$1_TurnEnvironmentParams as TurnEnvironmentParams, index$1_TurnError as TurnError, index$1_TurnInterruptParams as TurnInterruptParams, index$1_TurnInterruptResponse as TurnInterruptResponse, index$1_TurnItemsView as TurnItemsView, type index$1_TurnPlanStep as TurnPlanStep, type index$1_TurnPlanStepStatus as TurnPlanStepStatus, type index$1_TurnPlanUpdatedNotification as TurnPlanUpdatedNotification, TurnStartParams$1 as TurnStartParams, index$1_TurnStartResponse as TurnStartResponse, type index$1_TurnStartedNotification as TurnStartedNotification, index$1_TurnStatus as TurnStatus, index$1_TurnSteerParams as TurnSteerParams, index$1_TurnSteerResponse as TurnSteerResponse, type index$1_TurnsPage as TurnsPage, index$1_UserInput as UserInput, type index$1_WarningNotification as WarningNotification, WebSearchAction$1 as WebSearchAction, type index$1_WindowsSandboxReadiness as WindowsSandboxReadiness, type index$1_WindowsSandboxReadinessResponse as WindowsSandboxReadinessResponse, type index$1_WindowsSandboxSetupCompletedNotification as WindowsSandboxSetupCompletedNotification, index$1_WindowsSandboxSetupMode as WindowsSandboxSetupMode, index$1_WindowsSandboxSetupStartParams as WindowsSandboxSetupStartParams, type index$1_WindowsSandboxSetupStartResponse as WindowsSandboxSetupStartResponse, type index$1_WindowsWorldWritableWarningNotification as WindowsWorldWritableWarningNotification, type index$1_WriteStatus as WriteStatus };
 }
 
 type FileChange = {
@@ -3984,24 +3064,6 @@ type GitSha = string;
 type GitDiffToRemoteResponse = {
     sha: GitSha;
     diff: string;
-};
-
-type InitializeResponse = {
-    userAgent: string;
-    /**
-     * Absolute path to the server's $CODEX_HOME directory.
-     */
-    codexHome: AbsolutePathBuf;
-    /**
-     * Platform family for the running app-server target, for example
-     * `"unix"` or `"windows"`.
-     */
-    platformFamily: string;
-    /**
-     * Operating system for the running app-server target, for example
-     * `"macos"`, `"linux"`, or `"windows"`.
-     */
-    platformOs: string;
 };
 
 type RealtimeOutputModality = "text" | "audio";
@@ -4263,7 +3325,7 @@ type ServerRequest = {
 type ThreadMemoryMode = "enabled" | "disabled";
 
 declare const index_AbsolutePathBuf: typeof AbsolutePathBuf;
-type index_AgentPath = AgentPath;
+declare const index_AgentPath: typeof AgentPath;
 type index_ApplyPatchApprovalParams = ApplyPatchApprovalParams;
 type index_ApplyPatchApprovalResponse = ApplyPatchApprovalResponse;
 type index_AuthMode = AuthMode;
@@ -4298,20 +3360,20 @@ type index_GitSha = GitSha;
 declare const index_ImageDetail: typeof ImageDetail;
 declare const index_InitializeCapabilities: typeof InitializeCapabilities;
 declare const index_InitializeParams: typeof InitializeParams;
-type index_InitializeResponse = InitializeResponse;
-type index_InputModality = InputModality;
+declare const index_InitializeResponse: typeof InitializeResponse;
+declare const index_InputModality: typeof InputModality;
 type index_InternalSessionSource = InternalSessionSource;
 type index_LocalShellAction = LocalShellAction;
 type index_LocalShellExecAction = LocalShellExecAction;
 type index_LocalShellStatus = LocalShellStatus;
 type index_McpServerInfo = McpServerInfo;
-type index_MessagePhase = MessagePhase;
+declare const index_MessagePhase: typeof MessagePhase;
 type index_ModeKind = ModeKind;
 type index_NetworkPolicyAmendment = NetworkPolicyAmendment;
 type index_NetworkPolicyRuleAction = NetworkPolicyRuleAction;
 type index_ParsedCommand = ParsedCommand;
 declare const index_Personality: typeof Personality;
-type index_PlanType = PlanType;
+declare const index_PlanType: typeof PlanType;
 type index_RealtimeConversationVersion = RealtimeConversationVersion;
 type index_RealtimeOutputModality = RealtimeOutputModality;
 type index_RealtimeVoice = RealtimeVoice;
@@ -4330,7 +3392,7 @@ type index_ServerNotification = ServerNotification;
 type index_ServerRequest = ServerRequest;
 type index_SessionSource = SessionSource;
 type index_Settings = Settings;
-type index_SubAgentSource = SubAgentSource;
+declare const index_SubAgentSource: typeof SubAgentSource;
 declare const index_ThreadId: typeof ThreadId;
 type index_ThreadMemoryMode = ThreadMemoryMode;
 type index_Tool = Tool;
@@ -4341,7 +3403,7 @@ type index_WebSearchLocation = WebSearchLocation;
 type index_WebSearchMode = WebSearchMode;
 type index_WebSearchToolConfig = WebSearchToolConfig;
 declare namespace index {
-  export { index_AbsolutePathBuf as AbsolutePathBuf, type index_AgentPath as AgentPath, type index_ApplyPatchApprovalParams as ApplyPatchApprovalParams, type index_ApplyPatchApprovalResponse as ApplyPatchApprovalResponse, type index_AuthMode as AuthMode, type index_AutoCompactTokenLimitScope as AutoCompactTokenLimitScope, index_ClientInfo as ClientInfo, type index_ClientNotification as ClientNotification, index_ClientRequest as ClientRequest, type index_CollaborationMode as CollaborationMode, type index_ContentItem as ContentItem, type index_ConversationGitInfo as ConversationGitInfo, type index_ConversationSummary as ConversationSummary, type index_ExecCommandApprovalParams as ExecCommandApprovalParams, type index_ExecCommandApprovalResponse as ExecCommandApprovalResponse, type index_ExecPolicyAmendment as ExecPolicyAmendment, type index_FileChange as FileChange, type index_ForcedLoginMethod as ForcedLoginMethod, type index_FunctionCallOutputBody as FunctionCallOutputBody, type index_FunctionCallOutputContentItem as FunctionCallOutputContentItem, type index_FuzzyFileSearchMatchType as FuzzyFileSearchMatchType, index_FuzzyFileSearchParams as FuzzyFileSearchParams, type index_FuzzyFileSearchResponse as FuzzyFileSearchResponse, type index_FuzzyFileSearchResult as FuzzyFileSearchResult, type index_FuzzyFileSearchSessionCompletedNotification as FuzzyFileSearchSessionCompletedNotification, type index_FuzzyFileSearchSessionUpdatedNotification as FuzzyFileSearchSessionUpdatedNotification, index_GetAuthStatusParams as GetAuthStatusParams, type index_GetAuthStatusResponse as GetAuthStatusResponse, index_GetConversationSummaryParams as GetConversationSummaryParams, type index_GetConversationSummaryResponse as GetConversationSummaryResponse, index_GitDiffToRemoteParams as GitDiffToRemoteParams, type index_GitDiffToRemoteResponse as GitDiffToRemoteResponse, type index_GitSha as GitSha, index_ImageDetail as ImageDetail, index_InitializeCapabilities as InitializeCapabilities, index_InitializeParams as InitializeParams, type index_InitializeResponse as InitializeResponse, type index_InputModality as InputModality, type index_InternalSessionSource as InternalSessionSource, type index_LocalShellAction as LocalShellAction, type index_LocalShellExecAction as LocalShellExecAction, type index_LocalShellStatus as LocalShellStatus, type index_McpServerInfo as McpServerInfo, type index_MessagePhase as MessagePhase, type index_ModeKind as ModeKind, type index_NetworkPolicyAmendment as NetworkPolicyAmendment, type index_NetworkPolicyRuleAction as NetworkPolicyRuleAction, type index_ParsedCommand as ParsedCommand, index_Personality as Personality, type index_PlanType as PlanType, type index_RealtimeConversationVersion as RealtimeConversationVersion, type index_RealtimeOutputModality as RealtimeOutputModality, type index_RealtimeVoice as RealtimeVoice, type index_RealtimeVoicesList as RealtimeVoicesList, index_ReasoningEffort as ReasoningEffort, type index_ReasoningItemContent as ReasoningItemContent, type index_ReasoningItemReasoningSummary as ReasoningItemReasoningSummary, index_ReasoningSummary as ReasoningSummary, index_RequestId as RequestId, type index_Resource as Resource, type index_ResourceContent as ResourceContent, type index_ResourceTemplate as ResourceTemplate, type index_ResponseItem as ResponseItem, type index_ReviewDecision as ReviewDecision, type index_ServerNotification as ServerNotification, type index_ServerRequest as ServerRequest, type index_SessionSource as SessionSource, type index_Settings as Settings, type index_SubAgentSource as SubAgentSource, index_ThreadId as ThreadId, type index_ThreadMemoryMode as ThreadMemoryMode, type index_Tool as Tool, type index_Verbosity as Verbosity, type index_WebSearchAction as WebSearchAction, type index_WebSearchContextSize as WebSearchContextSize, type index_WebSearchLocation as WebSearchLocation, type index_WebSearchMode as WebSearchMode, type index_WebSearchToolConfig as WebSearchToolConfig, index$1 as v2 };
+  export { index_AbsolutePathBuf as AbsolutePathBuf, index_AgentPath as AgentPath, type index_ApplyPatchApprovalParams as ApplyPatchApprovalParams, type index_ApplyPatchApprovalResponse as ApplyPatchApprovalResponse, type index_AuthMode as AuthMode, type index_AutoCompactTokenLimitScope as AutoCompactTokenLimitScope, index_ClientInfo as ClientInfo, type index_ClientNotification as ClientNotification, index_ClientRequest as ClientRequest, type index_CollaborationMode as CollaborationMode, type index_ContentItem as ContentItem, type index_ConversationGitInfo as ConversationGitInfo, type index_ConversationSummary as ConversationSummary, type index_ExecCommandApprovalParams as ExecCommandApprovalParams, type index_ExecCommandApprovalResponse as ExecCommandApprovalResponse, type index_ExecPolicyAmendment as ExecPolicyAmendment, type index_FileChange as FileChange, type index_ForcedLoginMethod as ForcedLoginMethod, type index_FunctionCallOutputBody as FunctionCallOutputBody, type index_FunctionCallOutputContentItem as FunctionCallOutputContentItem, type index_FuzzyFileSearchMatchType as FuzzyFileSearchMatchType, index_FuzzyFileSearchParams as FuzzyFileSearchParams, type index_FuzzyFileSearchResponse as FuzzyFileSearchResponse, type index_FuzzyFileSearchResult as FuzzyFileSearchResult, type index_FuzzyFileSearchSessionCompletedNotification as FuzzyFileSearchSessionCompletedNotification, type index_FuzzyFileSearchSessionUpdatedNotification as FuzzyFileSearchSessionUpdatedNotification, index_GetAuthStatusParams as GetAuthStatusParams, type index_GetAuthStatusResponse as GetAuthStatusResponse, index_GetConversationSummaryParams as GetConversationSummaryParams, type index_GetConversationSummaryResponse as GetConversationSummaryResponse, index_GitDiffToRemoteParams as GitDiffToRemoteParams, type index_GitDiffToRemoteResponse as GitDiffToRemoteResponse, type index_GitSha as GitSha, index_ImageDetail as ImageDetail, index_InitializeCapabilities as InitializeCapabilities, index_InitializeParams as InitializeParams, index_InitializeResponse as InitializeResponse, index_InputModality as InputModality, type index_InternalSessionSource as InternalSessionSource, type index_LocalShellAction as LocalShellAction, type index_LocalShellExecAction as LocalShellExecAction, type index_LocalShellStatus as LocalShellStatus, type index_McpServerInfo as McpServerInfo, index_MessagePhase as MessagePhase, type index_ModeKind as ModeKind, type index_NetworkPolicyAmendment as NetworkPolicyAmendment, type index_NetworkPolicyRuleAction as NetworkPolicyRuleAction, type index_ParsedCommand as ParsedCommand, index_Personality as Personality, index_PlanType as PlanType, type index_RealtimeConversationVersion as RealtimeConversationVersion, type index_RealtimeOutputModality as RealtimeOutputModality, type index_RealtimeVoice as RealtimeVoice, type index_RealtimeVoicesList as RealtimeVoicesList, index_ReasoningEffort as ReasoningEffort, type index_ReasoningItemContent as ReasoningItemContent, type index_ReasoningItemReasoningSummary as ReasoningItemReasoningSummary, index_ReasoningSummary as ReasoningSummary, index_RequestId as RequestId, type index_Resource as Resource, type index_ResourceContent as ResourceContent, type index_ResourceTemplate as ResourceTemplate, type index_ResponseItem as ResponseItem, type index_ReviewDecision as ReviewDecision, type index_ServerNotification as ServerNotification, type index_ServerRequest as ServerRequest, type index_SessionSource as SessionSource, type index_Settings as Settings, index_SubAgentSource as SubAgentSource, index_ThreadId as ThreadId, type index_ThreadMemoryMode as ThreadMemoryMode, type index_Tool as Tool, type index_Verbosity as Verbosity, type index_WebSearchAction as WebSearchAction, type index_WebSearchContextSize as WebSearchContextSize, type index_WebSearchLocation as WebSearchLocation, type index_WebSearchMode as WebSearchMode, type index_WebSearchToolConfig as WebSearchToolConfig, index$1 as v2 };
 }
 
 type AppsListParams = CodexStableMethodParams<"app/list">;
@@ -4354,4 +3416,4 @@ type ThreadResumeParams = CodexStableMethodParams<"thread/resume">;
 type ThreadStartParams = CodexStableMethodParams<"thread/start">;
 type TurnStartParams = CodexStableMethodParams<"turn/start">;
 
-export { AbsolutePathBuf, type AgentPath, type ApplyPatchApprovalParams, type ApplyPatchApprovalResponse, type AppsListParams, type AuthMode, type AutoCompactTokenLimitScope, ClientInfo, type ClientNotification, ClientRequest, index as CodexStable, CodexStableMethodParams, type CollaborationMode, type ContentItem, type ConversationGitInfo, type ConversationSummary, type ExecCommandApprovalParams, type ExecCommandApprovalResponse, type ExecPolicyAmendment, type FileChange, type ForcedLoginMethod, type FunctionCallOutputBody, type FunctionCallOutputContentItem, type FuzzyFileSearchMatchType, FuzzyFileSearchParams, type FuzzyFileSearchResponse, type FuzzyFileSearchResult, type FuzzyFileSearchSessionCompletedNotification, type FuzzyFileSearchSessionUpdatedNotification, GetAuthStatusParams, type GetAuthStatusResponse, GetConversationSummaryParams, type GetConversationSummaryResponse, GitDiffToRemoteParams, type GitDiffToRemoteResponse, type GitSha, type HooksListParams, ImageDetail, InitializeCapabilities, InitializeParams, type InitializeResponse, type InputModality, type InternalSessionSource, type LocalShellAction, type LocalShellExecAction, type LocalShellStatus, type McpServerInfo, type MessagePhase, type ModeKind, type NetworkPolicyAmendment, type NetworkPolicyRuleAction, type ParsedCommand, Personality, type PlanType, type RealtimeConversationVersion, type RealtimeOutputModality, type RealtimeVoice, type RealtimeVoicesList, ReasoningEffort, type ReasoningItemContent, type ReasoningItemReasoningSummary, ReasoningSummary, RequestId, type Resource, type ResourceContent, type ResourceTemplate, type ResponseItem, type ReviewDecision, type ServerNotification, type ServerRequest, type SessionSource, type Settings, type SkillsConfigWriteParams, type SkillsListParams, type SubAgentSource, type ThreadForkParams, ThreadId, type ThreadListParams, type ThreadMemoryMode, type ThreadResumeParams, type ThreadStartParams, type Tool, type TurnStartParams, UserInput, type Verbosity, type WebSearchAction, type WebSearchContextSize, type WebSearchLocation, type WebSearchMode, type WebSearchToolConfig, index$1 as v2 };
+export { AbsolutePathBuf, AgentPath, type ApplyPatchApprovalParams, type ApplyPatchApprovalResponse, type AppsListParams, type AuthMode, type AutoCompactTokenLimitScope, ClientInfo, type ClientNotification, ClientRequest, index as CodexStable, CodexStableMethodParams, type CollaborationMode, type ContentItem, type ConversationGitInfo, type ConversationSummary, type ExecCommandApprovalParams, type ExecCommandApprovalResponse, type ExecPolicyAmendment, type FileChange, type ForcedLoginMethod, type FunctionCallOutputBody, type FunctionCallOutputContentItem, type FuzzyFileSearchMatchType, FuzzyFileSearchParams, type FuzzyFileSearchResponse, type FuzzyFileSearchResult, type FuzzyFileSearchSessionCompletedNotification, type FuzzyFileSearchSessionUpdatedNotification, GetAuthStatusParams, type GetAuthStatusResponse, GetConversationSummaryParams, type GetConversationSummaryResponse, GitDiffToRemoteParams, type GitDiffToRemoteResponse, type GitSha, type HooksListParams, ImageDetail, InitializeCapabilities, InitializeParams, InitializeResponse, InputModality, type InternalSessionSource, type LocalShellAction, type LocalShellExecAction, type LocalShellStatus, type McpServerInfo, MessagePhase, type ModeKind, type NetworkPolicyAmendment, type NetworkPolicyRuleAction, type ParsedCommand, Personality, PlanType, type RealtimeConversationVersion, type RealtimeOutputModality, type RealtimeVoice, type RealtimeVoicesList, ReasoningEffort, type ReasoningItemContent, type ReasoningItemReasoningSummary, ReasoningSummary, RequestId, type Resource, type ResourceContent, type ResourceTemplate, type ResponseItem, type ReviewDecision, type ServerNotification, type ServerRequest, type SessionSource, type Settings, type SkillsConfigWriteParams, type SkillsListParams, SubAgentSource, type ThreadForkParams, ThreadId, type ThreadListParams, type ThreadMemoryMode, type ThreadResumeParams, type ThreadStartParams, type Tool, type TurnStartParams, UserInput, type Verbosity, type WebSearchAction, type WebSearchContextSize, type WebSearchLocation, type WebSearchMode, type WebSearchToolConfig, index$1 as v2 };

@@ -89,12 +89,14 @@ Implementation status:
   request shapes.
 - `createCodexClients()` groups productized App Server methods by protocol
   primitive: connection, threads, turns, approvals, apps, skills, hooks,
-  models, and account. Its method params use the same generated-schema-derived
-  aliases as the request builders. Client construction validates that this
-  method surface exactly matches the productized stable method classification.
+  models, and account. Its method params and results use generated-schema-derived
+  aliases, so stable reads/lists return method-specific response types instead
+  of `unknown`. Client construction validates that this method surface exactly
+  matches the productized stable method classification.
   Experimental method calls must use `requestExperimental()`, require explicit
   opt-in, and are rejected if the method is stable/productized, host-only,
-  experimental unsupported, or unknown.
+  experimental unsupported, or unknown. `requestRaw()` remains the explicit
+  escape hatch for host-managed protocol calls outside the productized facade.
 - `createCodexSession()` is a compatibility facade over `createCodexClients()`
   for host code that still expects `thread` and `turn` namespaces.
 - `normalizer.ts` is the composition root for App Server notifications and

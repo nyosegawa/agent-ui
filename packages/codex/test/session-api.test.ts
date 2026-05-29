@@ -62,7 +62,6 @@ import type {
 } from "../src/generated/stable/v2";
 import type {
   ThreadTurnsListParams,
-  ThreadTurnsListResponse,
 } from "../src/generated/experimental/v2";
 
 type Equal<TActual, TExpected> =
@@ -387,10 +386,7 @@ describe("Codex session facade", () => {
       threadId: "thread-1",
     } satisfies ThreadTurnsListParams;
 
-    const response = await experimental.requestExperimental<
-      ThreadTurnsListParams,
-      ThreadTurnsListResponse
-    >("thread/turns/list", params);
+    const response = await experimental.requestExperimental("thread/turns/list", params);
 
     expect(response).toEqual({});
     expect(transport.calls).toEqual([
