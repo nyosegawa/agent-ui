@@ -106,7 +106,18 @@ try {
 function blockedSubpathsForPackage(dir) {
   const common = ["./dist/index.js", "./dist/index.cjs", "./src/index.ts"];
   if (dir === "codex") {
-    return [...common, "./src/protocol.ts", "./generated/stable", "./dist/request-builders-bJCKxvYC.js"];
+    return [
+      ...common,
+      "./src/protocol.ts",
+      "./src/generated",
+      "./src/generated/stable",
+      "./src/generated/experimental",
+      "./src/generated/protocol-capabilities.ts",
+      "./src/generated/stable/ClientRequest.ts",
+      "./src/generated/stable/v2/ThreadStartParams.ts",
+      "./generated/stable",
+      "./dist/request-builders-bJCKxvYC.js",
+    ];
   }
   if (dir === "react") {
     const styleChunks = readdirSync(join(repoRoot, "packages", "react", "src", "styles"))

@@ -32,11 +32,10 @@ describe("package packlist policy", () => {
         "package.json",
         "dist/index.js",
         "src/generated/stable/ClientRequest.ts",
-        "src/generated/stable/schema.json",
       ]),
     ).toMatchInlineSnapshot(`
       [
-        "codex packs private generated file src/generated/stable/schema.json",
+        "codex packs private generated file src/generated/stable/ClientRequest.ts",
       ]
     `);
   });

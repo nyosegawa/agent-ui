@@ -33,9 +33,7 @@ export function validatePacklistEntries(packageDir, entries) {
     }
     if (entry === "package.json" || entry.startsWith("dist/")) continue;
     if (packageDir === "codex" && entry.startsWith("src/generated/")) {
-      if (entry.endsWith(".json")) {
-        issues.push(`${packageDir} packs private generated file ${entry}`);
-      }
+      issues.push(`${packageDir} packs private generated file ${entry}`);
       continue;
     }
     if (entry.startsWith("src/")) {

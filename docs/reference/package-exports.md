@@ -65,7 +65,8 @@ Codex App Server adapter.
 
 Responsibilities:
 
-- vendored generated schema
+- vendored generated schema kept in the source repository, not the published
+  package packlist
 - stable protocol type mapping
 - JSON-RPC-lite request correlation
 - stdio transport
@@ -100,7 +101,11 @@ hosts can distinguish stable productized, stable host-only, stable available,
 experimental available, and experimental unsupported methods before making
 dynamic requests.
 Undocumented deep imports such as
+`@nyosegawa/agent-ui-codex/src/generated/stable` and
 `@nyosegawa/agent-ui-codex/generated/stable` are blocked by the export map.
+Generated source files are not published; hosts that need App Server types
+should use `@nyosegawa/agent-ui-codex/stable-types` or the typed client and
+request-builder subpaths.
 
 The SDK adapter is not the primary integration path and does not add an `@openai/codex` runtime dependency.
 

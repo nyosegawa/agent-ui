@@ -73,10 +73,7 @@
   "engines": {
     "node": ">=20"
   },
-  "files": [
-    "dist",
-    "src/generated"
-  ],
+  "files": ["dist"],
   "agentUi": {
     "codexProtocolCommit": "577ec03bf82fb52e7041fb6b684e694b1e53451a",
     "generatedAt": "2026-05-29T03:46:35.928Z"

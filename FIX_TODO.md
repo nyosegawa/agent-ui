@@ -419,7 +419,7 @@ Goal: make published surfaces, schema import workflow, and browser validation ga
   - Tests: script detects unexpected sources, stale artifacts, and private generated files.
   - Docs/API: document packlist gate.
 
-- [ ] Decide and implement Codex generated source publishing policy.
+- [x] Decide and implement Codex generated source publishing policy.
   - Implementation: remove `src/generated` from package `files` if declarations/runtime are self-contained, or document it as package-internal.
   - Tests: package-resolution smoke blocks `./src/generated`, `./src/generated/stable`, `./src/generated/experimental`, and representative generated files.
   - Docs/API: update package docs and snapshots if declaration/export paths change.
