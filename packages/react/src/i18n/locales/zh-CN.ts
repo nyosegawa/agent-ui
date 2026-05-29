@@ -49,6 +49,14 @@ export const zhCN = {
   "locale.ko": "韩语",
   "locale.label": "语言",
   "locale.zh-CN": "中文",
+  "composer.attachmentRejectedMany":
+    "无法为此 Codex 线程附加 {count} 个文件。",
+  "composer.attachmentRejectedOne":
+    "无法为此 Codex 线程附加 {count} 个文件。",
+  "followUp.attachmentsMany": "{count} 个附件",
+  "followUp.attachmentsOne": "{count} 个附件",
+  "followUp.earlierMany": "已为此线程保留 {count} 个较早跟进",
+  "followUp.earlierOne": "已为此线程保留 {count} 个较早跟进",
   "run.cwd.openFolder": "打开文件夹...",
   "run.cwd.recent": "最近",
   "run.cwd.selectFolder": "选择文件夹",

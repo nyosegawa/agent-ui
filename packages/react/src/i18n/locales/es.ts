@@ -49,6 +49,14 @@ export const es = {
   "locale.ko": "Coreano",
   "locale.label": "Idioma",
   "locale.zh-CN": "Chino",
+  "composer.attachmentRejectedMany":
+    "No se pudieron adjuntar {count} archivos a este hilo de Codex.",
+  "composer.attachmentRejectedOne":
+    "No se pudo adjuntar {count} archivo a este hilo de Codex.",
+  "followUp.attachmentsMany": "{count} adjuntos",
+  "followUp.attachmentsOne": "{count} adjunto",
+  "followUp.earlierMany": "{count} seguimientos anteriores conservados para este hilo",
+  "followUp.earlierOne": "{count} seguimiento anterior conservado para este hilo",
   "run.cwd.openFolder": "Abrir carpeta...",
   "run.cwd.recent": "Recientes",
   "run.cwd.selectFolder": "Seleccionar carpeta",

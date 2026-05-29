@@ -122,10 +122,12 @@ export function useComposerAttachmentState({
       }
       setAttachmentError(
         rejected > 0
-          ? t("composer.attachmentRejected", {
-              count: rejected,
-              file: rejected === 1 ? "file" : "files",
-            })
+          ? t(
+              rejected === 1
+                ? "composer.attachmentRejectedOne"
+                : "composer.attachmentRejectedMany",
+              { count: rejected },
+            )
           : undefined,
       );
     },

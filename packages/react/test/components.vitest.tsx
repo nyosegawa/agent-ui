@@ -3165,6 +3165,37 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("Queued follow-ups")).not.toHaveTextContent("queued 3");
   });
 
+  it("keeps queued follow-up and attachment rejection nouns locale-owned", async () => {
+    const user = userEvent.setup();
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+        <AgentChat
+          locale="ja"
+          resolveLocalAttachment={() => null}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "メッセージ" });
+    for (let index = 1; index <= 4; index += 1) {
+      await user.type(message, `キュー ${index}`);
+      await user.keyboard("{Enter}");
+    }
+    const queue = screen.getByLabelText("キュー済みフォローアップ");
+    expect(queue).toHaveTextContent("以前のフォローアップ 1 件を保持しています");
+    expect(queue).not.toHaveTextContent(/follow-up|follow-ups|attachment|attachments/i);
+
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(input, new File(["text"], "reject.txt", { type: "text/plain" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "この Codex スレッドに 1 件のファイルを添付できませんでした。",
+    );
+    expect(screen.getByRole("alert")).not.toHaveTextContent(/\bfile\b|\bfiles\b/i);
+  });
+
   it("restores queued image attachments on Edit and sends them with Cmd+Enter", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({

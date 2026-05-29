@@ -49,6 +49,14 @@ export const ko = {
   "locale.ko": "한국어",
   "locale.label": "언어",
   "locale.zh-CN": "중국어",
+  "composer.attachmentRejectedMany":
+    "이 Codex 스레드에 파일 {count}개를 첨부할 수 없습니다.",
+  "composer.attachmentRejectedOne":
+    "이 Codex 스레드에 파일 {count}개를 첨부할 수 없습니다.",
+  "followUp.attachmentsMany": "첨부 {count}개",
+  "followUp.attachmentsOne": "첨부 {count}개",
+  "followUp.earlierMany": "이 스레드에 이전 후속 항목 {count}개 보관됨",
+  "followUp.earlierOne": "이 스레드에 이전 후속 항목 {count}개 보관됨",
   "run.cwd.openFolder": "폴더 열기...",
   "run.cwd.recent": "최근",
   "run.cwd.selectFolder": "폴더 선택",

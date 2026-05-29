@@ -115,6 +115,10 @@ export const en = {
   "composer.attachedFollowUp": "Attached follow-up",
   "composer.attachmentRejected":
     "{count} {file} could not be attached for this Codex thread.",
+  "composer.attachmentRejectedMany":
+    "{count} files could not be attached for this Codex thread.",
+  "composer.attachmentRejectedOne":
+    "{count} file could not be attached for this Codex thread.",
   "composer.cannotAcceptFollowUp":
     "This active turn cannot accept additional instructions. Wait for it to finish, then send a new message.",
   "composer.couldNotSendAdditional": "Could not send additional instructions: {message}",
@@ -173,7 +177,11 @@ export const en = {
   "firstRun.preparing.title": "Preparing Codex",
   "firstRun.startThread": "Start thread",
   "followUp.attachments": "{count} {label}",
+  "followUp.attachmentsMany": "{count} attachments",
+  "followUp.attachmentsOne": "{count} attachment",
   "followUp.earlier": "{count} earlier {label} kept for this thread",
+  "followUp.earlierMany": "{count} earlier follow-ups kept for this thread",
+  "followUp.earlierOne": "{count} earlier follow-up kept for this thread",
   "followUp.earlierQueued": "Earlier queued follow-ups",
   "followUp.edit": "Edit",
   "followUp.queued": "Queued follow-ups",

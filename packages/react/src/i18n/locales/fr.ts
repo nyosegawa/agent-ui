@@ -49,6 +49,14 @@ export const fr = {
   "locale.ko": "Coréen",
   "locale.label": "Langue",
   "locale.zh-CN": "Chinois",
+  "composer.attachmentRejectedMany":
+    "{count} fichiers n'ont pas pu être joints à ce fil Codex.",
+  "composer.attachmentRejectedOne":
+    "{count} fichier n'a pas pu être joint à ce fil Codex.",
+  "followUp.attachmentsMany": "{count} pièces jointes",
+  "followUp.attachmentsOne": "{count} pièce jointe",
+  "followUp.earlierMany": "{count} suivis précédents conservés pour ce fil",
+  "followUp.earlierOne": "{count} suivi précédent conservé pour ce fil",
   "run.cwd.openFolder": "Ouvrir un dossier...",
   "run.cwd.recent": "Récents",
   "run.cwd.selectFolder": "Sélectionner un dossier",

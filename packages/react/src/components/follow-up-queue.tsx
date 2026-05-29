@@ -32,10 +32,12 @@ export function QueuedFollowUpList({
       {compactItems.length > 0 ? (
         <div className="aui-follow-up-compact-group">
           <div className="aui-follow-up-summary" role="status">
-            {t("followUp.earlier", {
-              count: compactItems.length,
-              label: compactItems.length === 1 ? "follow-up" : "follow-ups",
-            })}
+            {t(
+              compactItems.length === 1
+                ? "followUp.earlierOne"
+                : "followUp.earlierMany",
+              { count: compactItems.length },
+            )}
           </div>
           <ul className="aui-follow-up-compact-list" aria-label={t("followUp.earlierQueued")}>
             {compactItems.map((item) => (
@@ -43,10 +45,12 @@ export function QueuedFollowUpList({
                 <span className="aui-follow-up-compact-text">{item.text}</span>
                 {item.attachments.length > 0 ? (
                   <span className="aui-follow-up-compact-attachments">
-                    {t("followUp.attachments", {
-                      count: item.attachments.length,
-                      label: item.attachments.length === 1 ? "attachment" : "attachments",
-                    })}
+                    {t(
+                      item.attachments.length === 1
+                        ? "followUp.attachmentsOne"
+                        : "followUp.attachmentsMany",
+                      { count: item.attachments.length },
+                    )}
                   </span>
                 ) : null}
                 <FollowUpActions

@@ -117,6 +117,8 @@ export interface AgentI18nDictionary {
   "composer.attachFiles": string;
   "composer.attachedFollowUp": string;
   "composer.attachmentRejected": string;
+  "composer.attachmentRejectedMany": string;
+  "composer.attachmentRejectedOne": string;
   "composer.cannotAcceptFollowUp": string;
   "composer.couldNotSendAdditional": string;
   "composer.couldNotStart": string;
@@ -165,7 +167,11 @@ export interface AgentI18nDictionary {
   "firstRun.preparing.title": string;
   "firstRun.startThread": string;
   "followUp.attachments": string;
+  "followUp.attachmentsMany": string;
+  "followUp.attachmentsOne": string;
   "followUp.earlier": string;
+  "followUp.earlierMany": string;
+  "followUp.earlierOne": string;
   "followUp.earlierQueued": string;
   "followUp.edit": string;
   "followUp.queued": string;

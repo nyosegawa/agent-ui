@@ -49,7 +49,16 @@ export const ja = {
   "common.serverDefault": "サーバーデフォルト",
   "composer.addFollowUp": "フォローアップを追加...",
   "composer.attachFile": "ファイルを添付",
+  "composer.attachFiles": "ファイルを添付",
+  "composer.attachmentRejectedMany":
+    "この Codex スレッドに {count} 件のファイルを添付できませんでした。",
+  "composer.attachmentRejectedOne":
+    "この Codex スレッドに {count} 件のファイルを添付できませんでした。",
   "composer.enterToSend": "Enter で送信",
+  "composer.followUpNoActiveTurn":
+    "操作できるアクティブなターンがありません。スレッド状態を更新してから新しいメッセージを送信してください。",
+  "composer.followUpTurnChanged":
+    "送信前にアクティブなターンが変わりました。キュー済みフォローアップは送信されませんでした。",
   "composer.followUpTurnChangedRefresh": "送信前にアクティブなターンが変わりました。スレッド状態を更新しました。もう一度試してください。",
   "composer.app": "アプリ",
   "composer.placeholder": "このスレッドで Codex に作業を依頼",
@@ -61,6 +70,16 @@ export const ja = {
   "firstRun.form": "Codex スレッドを開始",
   "firstRun.placeholder": "Codex に作業内容を依頼",
   "firstRun.startThread": "スレッドを開始",
+  "followUp.attachmentsMany": "{count} 件の添付",
+  "followUp.attachmentsOne": "{count} 件の添付",
+  "followUp.earlierMany": "以前のフォローアップ {count} 件を保持しています",
+  "followUp.earlierOne": "以前のフォローアップ {count} 件を保持しています",
+  "followUp.earlierQueued": "以前のキュー済みフォローアップ",
+  "followUp.edit": "編集",
+  "followUp.queued": "キュー済みフォローアップ",
+  "followUp.queuedAttachments": "キュー済み添付",
+  "followUp.remove": "削除",
+  "followUp.sendNow": "今すぐ送信",
   "locale.en": "英語",
   "locale.es": "スペイン語",
   "locale.fr": "フランス語",

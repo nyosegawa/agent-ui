@@ -484,7 +484,7 @@ Goal: address lower-risk UX/docs/example drift after correctness/security work. 
   - Tests: focused accessibility tests and fixture e2e/ARIA snapshot.
   - Docs/API: component docs update.
 
-- [ ] Move follow-up / attachment rejection copy into locale-owned phrases.
+- [x] Move follow-up / attachment rejection copy into locale-owned phrases.
   - Implementation: do not pass English nouns such as `follow-up`, `attachments`, `file`, or `files` as interpolation values.
   - Tests: Japanese/non-English render tests contain no English noun leakage.
   - Docs/API: update React API snapshot if dictionary keys change.
