@@ -70,7 +70,7 @@ Goal: stop the P0 correctness bug where default React UI can send invalid positi
   - Tests: focused React hook test proves permissions, MCP elicitation, user input, dynamic tool, auth refresh, and attestation are not returned.
   - Docs/API: update `docs/reference/hooks.md`; no snapshot if return shape is unchanged.
 
-- [ ] Make `useAgentServerRequests()` a broad neutral queue.
+- [x] Make `useAgentServerRequests()` a broad neutral queue.
   - Implementation: return broad `requests`; clean break path exposes `respond(requestId, result)` and `reject(requestId, error)`.
   - Tests: broad hook returns non-approval requests and sends method-specific responses through `respond()`.
   - Docs/API: if the hook shape changes, update `react__index.d.ts` snapshots and add a migration note.
