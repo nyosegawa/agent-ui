@@ -86,7 +86,7 @@ Goal: stop the P0 correctness bug where default React UI can send invalid positi
   - Tests: non-approval kinds show passive host-required context or custom renderer output only.
   - Docs/API: do not add a public `AgentServerRequestQueue` yet.
 
-- [ ] Replace existing wrong-behavior tests.
+- [x] Replace existing wrong-behavior tests.
   - Implementation: remove/update tests that assert non-command server requests send decision-shaped accept/decline.
   - Tests: keep command/file/legacy accept/session/decline coverage.
   - Docs/API: docs migration lands in the same PR.
