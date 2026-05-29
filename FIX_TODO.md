@@ -439,7 +439,7 @@ Goal: make published surfaces, schema import workflow, and browser validation ga
   - Tests: both split commands and aggregate pass.
   - Docs/API: update testing/browser docs.
 
-- [ ] Align browser e2e gate with CI/release/docs.
+- [x] Align browser e2e gate with CI/release/docs.
   - Implementation: add fixture e2e as first PR browser check; classify real-local as PR required, release, scheduled, or local-only.
   - Tests: verify local `validate:e2e` and workflow runs.
   - Docs/API: docs and workflows use the same gate wording.

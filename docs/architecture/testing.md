@@ -39,6 +39,9 @@ Canonical validation tiers:
 - `bun run validate:release`: fast, protocol, packages, dead-code,
   API-snapshot, package-resolution, and Node compatibility gates.
 
+Fixture e2e is the pull request browser gate; real-local e2e is a release and
+local validation gate.
+
 Use `bun run check:clean-build-output` before claiming a clean-state validation
 when package, example, declaration, or TypeScript graph changes should be proven
 without ignored `dist` or `.next` output already present.
@@ -55,6 +58,7 @@ The main CI workflow validates the normal development path:
 - `bun run test:api-snapshots`
 - `bun run test:package-resolution`
 - `bun run test:node-compat`
+- `bun run test:e2e:fixtures`
 
 Package validation repeats build/package checks for publish confidence.
 Compatibility CI covers Node 20, 22, and 24 import/require smoke plus the
@@ -68,6 +72,10 @@ remains the package manager and lockfile owner.
 `bun run test:package-resolution` performs a fresh package build before it
 creates an isolated consumer project, so it cannot pass by resolving stale
 local `dist` artifacts left by an older build.
+
+The release workflow runs `bun run validate:release` and then
+`bun run validate:e2e`, so the real-local fake App Server suite is release
+evidence without blocking every pull request.
 
 ## Protocol Tests
 
