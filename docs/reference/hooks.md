@@ -86,17 +86,25 @@ calling App Server.
 ## Server Requests And Approvals
 
 ```tsx
-const requests = useAgentServerRequests(threadId);
-const approvals = useAgentApprovals(threadId);
+const { requests, respond, reject } = useAgentServerRequests(threadId);
+const { approvals, approve } = useAgentApprovals(threadId);
 ```
 
 `useAgentServerRequests()` returns the queued normalized server requests for the
 active or supplied thread, including host integration requests such as
 permissions, MCP elicitation, user input, dynamic tools, auth refresh, and
-attestation. `useAgentApprovals()` is approval-only: it returns only
-`commandApproval`, `fileChangeApproval`, `legacyExecApproval`, and
-`legacyPatchApproval` requests with stable `approve()` and `reject()` actions for
-decision flows.
+attestation. It exposes neutral `respond(requestId, result)` and
+`reject(requestId, errorOrMessage)` actions so hosts can send method-specific
+payloads instead of approval-shaped decisions.
+
+`useAgentApprovals()` is approval-only: it returns only `commandApproval`,
+`fileChangeApproval`, `legacyExecApproval`, and `legacyPatchApproval` requests
+with stable `approve()` and `reject()` actions for decision flows.
+
+Migration note: broad server-request handling should use
+`useAgentServerRequests().respond()` / `.reject()`. The broad hook no longer
+returns `approvals` or an `approve()` alias, so non-approval requests cannot
+accidentally receive generic `{ decision }` responses.
 
 ## Auth, Models, And Usage
 

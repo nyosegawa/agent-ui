@@ -1457,7 +1457,8 @@ describe("AgentChat", () => {
     });
   });
 
-  it("exposes all queued server requests through useAgentServerRequests", () => {
+  it("exposes all queued server requests through neutral respond and reject actions", async () => {
+    const user = userEvent.setup();
     const initialState = createInitialAgentState();
     initialState.serverRequestQueue = {
       byId: {
@@ -1470,18 +1471,56 @@ describe("AgentChat", () => {
       },
       order: ["request-input"],
     };
+    const transport = new FakeAgentTransport();
+    let hookKeys: string[] = [];
     function Probe() {
-      const { requests } = useAgentServerRequests("thread-1");
-      return <output>{requests.map((request) => request.kind).join(",")}</output>;
+      const serverRequests = useAgentServerRequests("thread-1");
+      hookKeys = Object.keys(serverRequests).sort();
+      return (
+        <>
+          <output>{serverRequests.requests.map((request) => request.kind).join(",")}</output>
+          <button
+            onClick={() =>
+              void serverRequests.respond("request-input", { value: "provided by host" })
+            }
+            type="button"
+          >
+            Respond
+          </button>
+          <button
+            onClick={() =>
+              void serverRequests.reject("request-input", {
+                code: -32001,
+                message: "Host rejected",
+              })
+            }
+            type="button"
+          >
+            Reject
+          </button>
+        </>
+      );
     }
 
     render(
-      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+      <AgentProvider initialState={initialState} transport={transport}>
         <Probe />
       </AgentProvider>,
     );
 
     expect(screen.getByText("userInput")).toBeInTheDocument();
+    expect(hookKeys).toEqual(["reject", "requests", "respond"]);
+
+    await user.click(screen.getByRole("button", { name: "Respond" }));
+    await user.click(screen.getByRole("button", { name: "Reject" }));
+
+    expect(transport.responses.get("request-input")).toEqual({
+      value: "provided by host",
+    });
+    expect(transport.rejections.get("request-input")).toEqual({
+      code: -32001,
+      message: "Host rejected",
+    });
   });
 
   it("renders status banners as first-class shell content", () => {

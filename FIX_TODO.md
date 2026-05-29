@@ -12,7 +12,9 @@ Goal: lock public contracts and failing tests before implementation.
   - Completion: `permissionsApproval`, `mcpElicitation`, `userInput`, `dynamicTool`, `authRefresh`, and `attestation` are documented as broad server requests / host integration requests.
   - Completion: a failing test proves the default UI does not send decision-shaped responses to non-approval requests.
 
-- [ ] Decide the `useAgentServerRequests()` return shape.
+- [x] Decide the `useAgentServerRequests()` return shape.
+  - Decision: take the clean break path: `useAgentServerRequests()` returns `{ requests, respond, reject }` and does not keep approval-named aliases.
+  - API snapshot: React declaration snapshot is updated because the public hook return shape changed.
   - Completion: clean break path is `requests/respond/reject`, or compatibility path keeps `approve` as a deprecated alias.
   - Completion: docs, migration note, and API snapshot requirements are listed with the decision.
 

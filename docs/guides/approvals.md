@@ -42,7 +42,7 @@ Use hooks for custom surfaces:
 
 ```tsx
 const approvals = useAgentApprovals(threadId);
-const requests = useAgentServerRequests(threadId);
+const { requests, respond, reject } = useAgentServerRequests(threadId);
 ```
 
 See [reference/hooks.md](../reference/hooks.md) for hook details and

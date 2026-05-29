@@ -1,6 +1,6 @@
 import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as _nyosegawa_agent_ui_core from '@nyosegawa/agent-ui-core';
-import { AgentEvent, AgentSessionState, AgentTransport, ReasoningEffort, AgentApp, AgentModel, ThreadId, RequestId, ExecutionModeId, ThreadState, ThreadTokenUsage, PendingServerRequest, AgentItemState, TurnState, AgentThread, AgentItemBlock } from '@nyosegawa/agent-ui-core';
+import { AgentEvent, AgentSessionState, AgentTransport, ReasoningEffort, AgentApp, AgentModel, ThreadId, RequestId, AgentError, ExecutionModeId, ThreadState, ThreadTokenUsage, PendingServerRequest, AgentItemState, TurnState, AgentThread, AgentItemBlock } from '@nyosegawa/agent-ui-core';
 import * as React$1 from 'react';
 import React__default, { PropsWithChildren } from 'react';
 
@@ -230,9 +230,8 @@ declare function useAgentApprovals(threadId?: ThreadId): {
 };
 declare function useAgentServerRequests(threadId?: ThreadId): {
     requests: _nyosegawa_agent_ui_core.PendingServerRequest[];
-    approvals: _nyosegawa_agent_ui_core.PendingServerRequest[];
-    approve: (requestId: RequestId, result?: unknown) => Promise<void>;
-    reject: (requestId: RequestId, message?: string) => Promise<void>;
+    respond: (requestId: RequestId, result: unknown) => Promise<void>;
+    reject: (requestId: RequestId, error: AgentError | string) => Promise<void>;
 };
 
 interface QueuedFollowUp {

@@ -1,6 +1,7 @@
 import {
   selectPendingApprovals,
   selectServerRequestQueue,
+  type AgentError,
   type RequestId,
   type ThreadId,
 } from "@nyosegawa/agent-ui-core";
@@ -33,8 +34,27 @@ export function useAgentApprovals(threadId?: ThreadId) {
 }
 
 export function useAgentServerRequests(threadId?: ThreadId) {
-  const approvals = useAgentApprovals(threadId);
-  const { state } = useAgentContext();
-  const queue = selectServerRequestQueue(state, threadId);
-  return { ...approvals, requests: queue };
+  const { state, transport } = useAgentContext();
+  const requests = useMemo(
+    () => selectServerRequestQueue(state, threadId),
+    [state, threadId],
+  );
+  const respond = useCallback(
+    async (requestId: RequestId, result: unknown) => {
+      await transport.respond(requestId, result);
+    },
+    [transport],
+  );
+  const reject = useCallback(
+    async (requestId: RequestId, error: AgentError | string) => {
+      await transport.reject(requestId, normalizeServerRequestError(error));
+    },
+    [transport],
+  );
+  return { requests, respond, reject };
+}
+
+function normalizeServerRequestError(error: AgentError | string): AgentError {
+  if (typeof error === "string") return { code: -32000, message: error };
+  return error;
 }
