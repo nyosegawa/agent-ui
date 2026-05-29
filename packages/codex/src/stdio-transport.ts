@@ -27,6 +27,7 @@ export interface CodexStdioTransportOptions {
   backpressure?: {
     baseDelayMs?: number;
     maxRetries?: number;
+    maxWriteQueueBytes?: number;
   };
 }
 
@@ -42,6 +43,9 @@ class CodexStdioTransport implements AgentTransport {
   #events: AgentTransportEvent[] = [];
   #waiters: Array<(value: IteratorResult<AgentTransportEvent>) => void> = [];
   #nextId = 0;
+  #waitingForDrain = false;
+  #writeQueue: string[] = [];
+  #writeQueueBytes = 0;
 
   constructor(options: CodexStdioTransportOptions) {
     this.#options = options;
@@ -162,7 +166,15 @@ class CodexStdioTransport implements AgentTransport {
 
   #write(message: JsonRpcMessage): void {
     if (this.#closed) throw new Error("Codex stdio transport is closed");
-    this.#options.stdin.write(encodeJsonRpcLine(message));
+    const line = encodeJsonRpcLine(message);
+    if (this.#waitingForDrain) {
+      this.#enqueueWrite(line);
+      return;
+    }
+    if (!this.#options.stdin.write(line)) {
+      this.#waitingForDrain = true;
+      this.#options.stdin.once("drain", () => this.#flushWriteQueue());
+    }
   }
 
   #readStdout(): void {
@@ -250,6 +262,8 @@ class CodexStdioTransport implements AgentTransport {
   #finish(error: Error, event: AgentTransportEvent): void {
     if (this.#closed) return;
     this.#closed = true;
+    this.#writeQueue = [];
+    this.#writeQueueBytes = 0;
     for (const pending of this.#pending.values()) {
       pending.reject(error);
     }
@@ -258,6 +272,30 @@ class CodexStdioTransport implements AgentTransport {
     this.#ended = true;
     for (const waiter of this.#waiters.splice(0)) {
       waiter({ done: true, value: undefined });
+    }
+  }
+
+  #enqueueWrite(line: string): void {
+    const maxBytes = this.#options.backpressure?.maxWriteQueueBytes ?? 1024 * 1024;
+    const nextBytes = this.#writeQueueBytes + Buffer.byteLength(line);
+    if (nextBytes > maxBytes) {
+      throw new Error(`Codex stdio write queue exceeded ${maxBytes} bytes`);
+    }
+    this.#writeQueue.push(line);
+    this.#writeQueueBytes = nextBytes;
+  }
+
+  #flushWriteQueue(): void {
+    if (this.#closed) return;
+    this.#waitingForDrain = false;
+    while (this.#writeQueue.length > 0) {
+      const line = this.#writeQueue.shift()!;
+      this.#writeQueueBytes -= Buffer.byteLength(line);
+      if (!this.#options.stdin.write(line)) {
+        this.#waitingForDrain = true;
+        this.#options.stdin.once("drain", () => this.#flushWriteQueue());
+        return;
+      }
     }
   }
 }

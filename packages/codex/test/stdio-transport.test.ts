@@ -1,4 +1,4 @@
-import { PassThrough } from "node:stream";
+import { PassThrough, Writable } from "node:stream";
 import { describe, expect, it } from "vitest";
 import {
   createCodexStdioTransport,
@@ -183,6 +183,44 @@ describe("Codex stdio transport backpressure", () => {
     await expect(request).resolves.toEqual({ ok: true });
   });
 
+  it("queues writes after stdin backpressure and flushes them in order on drain", async () => {
+    const stdin = new DelayedDrainWritable();
+    const stdout = new PassThrough();
+    const transport = createCodexStdioTransport({ stdin, stdout });
+    await transport.connect();
+
+    transport.notify("first");
+    transport.notify("second");
+    transport.notify("third");
+
+    expect(stdin.lines.map((line) => JSON.parse(line).method)).toEqual(["first"]);
+    stdin.release();
+    await waitFor(() => stdin.lines.length === 3);
+
+    expect(stdin.lines.map((line) => JSON.parse(line).method)).toEqual([
+      "first",
+      "second",
+      "third",
+    ]);
+  });
+
+  it("bounds the queued stdin write backlog while waiting for drain", async () => {
+    const stdin = new DelayedDrainWritable();
+    const stdout = new PassThrough();
+    const transport = createCodexStdioTransport({
+      backpressure: { maxWriteQueueBytes: 20 },
+      stdin,
+      stdout,
+    });
+    await transport.connect();
+
+    transport.notify("first");
+
+    expect(() => transport.notify("second", { payload: "larger than queue" })).toThrow(
+      "write queue exceeded 20 bytes",
+    );
+  });
+
   it("rejects pending requests when stdout ends", async () => {
     const stdin = new PassThrough();
     const stdout = new PassThrough();
@@ -254,6 +292,30 @@ async function waitFor(predicate: () => boolean): Promise<void> {
 
 async function nextTick(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+class DelayedDrainWritable extends Writable {
+  readonly lines: string[] = [];
+  #callbacks: Array<() => void> = [];
+  #released = false;
+
+  constructor() {
+    super({ highWaterMark: 1 });
+  }
+
+  _write(chunk: Buffer, _encoding: BufferEncoding, callback: () => void): void {
+    this.lines.push(String(chunk));
+    if (this.#released) {
+      callback();
+      return;
+    }
+    this.#callbacks.push(callback);
+  }
+
+  release(): void {
+    this.#released = true;
+    for (const callback of this.#callbacks.splice(0)) callback();
+  }
 }
 
 async function notSettled(promise: Promise<unknown>): Promise<"pending" | "settled"> {

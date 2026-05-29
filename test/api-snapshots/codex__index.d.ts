@@ -89,6 +89,8 @@ declare function normalizeTurnsPage(rawTurns: readonly unknown[], options: Norma
 
 declare function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[];
 
+declare function isBackpressureRetrySafeMethod(method: string): boolean;
+
 interface CodexStdioTransportOptions {
     stdin: Writable;
     stdout: Readable;
@@ -97,10 +99,10 @@ interface CodexStdioTransportOptions {
     backpressure?: {
         baseDelayMs?: number;
         maxRetries?: number;
+        maxWriteQueueBytes?: number;
     };
 }
 declare function createCodexStdioTransport(options: CodexStdioTransportOptions): AgentTransport;
-declare function isBackpressureRetrySafeMethod(method: string): boolean;
 
 interface CodexSdkLikeClient {
     readonly events?: AsyncIterable<AgentTransportEvent | AgentEvent | unknown>;

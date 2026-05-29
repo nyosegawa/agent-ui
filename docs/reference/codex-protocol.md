@@ -69,6 +69,8 @@ The default transport:
 - preserves JSON-RPC error `code` and `data` on rejected requests
 - retries App Server overload `-32001` responses for idempotent read methods
   only, with bounded backoff
+- pauses later writes after `stdin.write()` backpressure in a bounded queue until
+  `drain`; `backpressure.maxWriteQueueBytes` controls the queued byte limit
 - exposes stderr logs separately
 - fails fast on process exit
 - rejects pending requests on close
