@@ -25,6 +25,7 @@ export function createCodexSdkTransportAdapter(client: CodexSdkLikeClient): Agen
 
 class CodexSdkTransportAdapter implements AgentTransport {
   #closed = false;
+  #ended = false;
   #events: AgentTransportEvent[] = [];
   #pumpStarted = false;
   #waiters: Array<(value: IteratorResult<AgentTransportEvent>) => void> = [];
@@ -48,7 +49,7 @@ class CodexSdkTransportAdapter implements AgentTransport {
   async close(): Promise<void> {
     this.#closed = true;
     await this.client.close?.();
-    this.#push({ event: { type: "connection/closed" }, type: "event" });
+    this.#finish({ event: { type: "connection/closed" }, type: "event" });
   }
 
   notify(method: string, params?: unknown): void {
@@ -82,6 +83,7 @@ class CodexSdkTransportAdapter implements AgentTransport {
           this.#push(normalizeSdkEvent(event));
         }
       } catch (caught) {
+        if (this.#closed || this.#ended) return;
         this.#push({
           error: caught instanceof Error ? { message: caught.message } : { message: String(caught) },
           type: "error",
@@ -93,16 +95,27 @@ class CodexSdkTransportAdapter implements AgentTransport {
   #nextEvent(): Promise<IteratorResult<AgentTransportEvent>> {
     const event = this.#events.shift();
     if (event) return Promise.resolve({ done: false, value: event });
+    if (this.#ended) return Promise.resolve({ done: true, value: undefined });
     return new Promise((resolve) => this.#waiters.push(resolve));
   }
 
   #push(event: AgentTransportEvent) {
+    if (this.#ended) return;
     const waiter = this.#waiters.shift();
     if (waiter) {
       waiter({ done: false, value: event });
       return;
     }
     this.#events.push(event);
+  }
+
+  #finish(event: AgentTransportEvent) {
+    if (this.#ended) return;
+    this.#push(event);
+    this.#ended = true;
+    for (const waiter of this.#waiters.splice(0)) {
+      waiter({ done: true, value: undefined });
+    }
   }
 }
 

@@ -351,7 +351,7 @@ bun run test:api-snapshots
 
 Goal: align stdio/WebSocket/SDK transports and browser bridge lifecycle contracts after P1 bridge security is fixed.
 
-- [ ] Finish WebSocket / SDK event iterators after close.
+- [x] Finish WebSocket / SDK event iterators after close.
   - Implementation: add stdio-like `ended` and waiter completion behavior.
   - Tests: close event drains, then `iterator.next()` returns `{ done: true }`; pending waiter close resolves.
   - Docs/API: update lifecycle docs; no type change.

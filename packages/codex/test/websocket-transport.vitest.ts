@@ -80,6 +80,27 @@ describe("CodexWebSocketTransport", () => {
     await expect(request).rejects.toThrow("disconnected");
   });
 
+  it("drains the close event and finishes iterators when reconnect is disabled", async () => {
+    const sockets: FakeWebSocket[] = [];
+    const transport = createCodexWebSocketTransport({
+      reconnect: false,
+      url: "ws://localhost/agent-ui",
+      webSocketImpl: fakeWebSocketFactory(sockets) as any,
+    });
+    const iterator = transport.events[Symbol.asyncIterator]();
+    await transport.connect();
+    await waitForEvent(iterator, "connection/connected");
+
+    const waiting = iterator.next();
+    sockets[0]!.emitClose("network");
+
+    await expect(waiting).resolves.toMatchObject({
+      done: false,
+      value: { event: { reason: "network", type: "connection/closed" } },
+    });
+    await expect(iterator.next()).resolves.toEqual({ done: true, value: undefined });
+  });
+
   it("preserves JSON-RPC error code and data", async () => {
     const sockets: FakeWebSocket[] = [];
     const transport = createCodexWebSocketTransport({

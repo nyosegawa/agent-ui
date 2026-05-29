@@ -28,4 +28,29 @@ describe("createCodexSdkTransportAdapter", () => {
     expect((await iterator.next()).value.event?.type).toBe("account/updated");
     expect((await iterator.next()).value).toEqual({ payload: { hello: "raw" }, type: "raw" });
   });
+
+  it("drains the close event and finishes iterators", async () => {
+    let closeCalls = 0;
+    const client: CodexSdkLikeClient = {
+      close: () => {
+        closeCalls += 1;
+      },
+      request: () => ({ ok: true }),
+    };
+    const transport = createCodexSdkTransportAdapter(client);
+    const iterator = transport.events[Symbol.asyncIterator]();
+
+    await transport.connect();
+    expect((await iterator.next()).value.event?.type).toBe("connection/connected");
+
+    const waiting = iterator.next();
+    await transport.close();
+
+    expect(closeCalls).toBe(1);
+    await expect(waiting).resolves.toMatchObject({
+      done: false,
+      value: { event: { type: "connection/closed" } },
+    });
+    await expect(iterator.next()).resolves.toEqual({ done: true, value: undefined });
+  });
 });

@@ -39,6 +39,7 @@ export function createCodexWebSocketTransport(
 class CodexWebSocketTransport implements AgentTransport {
   readonly #options: CodexWebSocketTransportOptions;
   readonly #pending = new Map<string, PendingRequest>();
+  #ended = false;
   #events: AgentTransportEvent[] = [];
   #waiters: Array<(value: IteratorResult<AgentTransportEvent>) => void> = [];
   #manualClose = false;
@@ -69,7 +70,14 @@ class CodexWebSocketTransport implements AgentTransport {
     this.#manualClose = true;
     if (this.#reconnectTimer) clearTimeout(this.#reconnectTimer);
     this.#rejectPending(new Error("Codex websocket transport closed"));
-    this.#socket?.close();
+    if (this.#socket && this.#socket.readyState !== 3) {
+      this.#socket.close();
+      return;
+    }
+    this.#finish(
+      new Error("Codex websocket transport closed"),
+      { event: { type: "connection/closed" }, type: "event" },
+    );
   }
 
   async request<TParams = unknown, TResult = unknown>(
@@ -158,12 +166,13 @@ class CodexWebSocketTransport implements AgentTransport {
       }
     });
     socket.addEventListener("close", (event) => {
-      this.#rejectPending(new Error("Codex websocket transport disconnected"));
-      this.#push({
+      const error = new Error("Codex websocket transport disconnected");
+      const closeEvent: AgentTransportEvent = {
         event: { reason: event.reason, type: "connection/closed" },
         type: "event",
-      });
-      this.#scheduleReconnect();
+      };
+      if (this.#scheduleReconnect(closeEvent, error)) return;
+      this.#finish(error, closeEvent);
     });
     if (this.#options.initialize) {
       await this.request("initialize", codexInitializeParams(this.#options.initialize));
@@ -173,16 +182,19 @@ class CodexWebSocketTransport implements AgentTransport {
     this.#push({ event: { type: "connection/connected" }, type: "event" });
   }
 
-  #scheduleReconnect(): void {
+  #scheduleReconnect(closeEvent?: AgentTransportEvent, error?: Error): boolean {
     if (
+      this.#ended ||
       this.#manualClose ||
       this.#options.reconnect === false ||
       !this.#options.reconnect
     )
-      return;
+      return false;
     const options = this.#options.reconnect;
     const maxAttempts = options.maxAttempts ?? 5;
-    if (this.#reconnectAttempts >= maxAttempts) return;
+    if (this.#reconnectAttempts >= maxAttempts) return false;
+    if (error) this.#rejectPending(error);
+    if (closeEvent) this.#push(closeEvent);
     const initialDelayMs = options.initialDelayMs ?? 500;
     const maxDelayMs = options.maxDelayMs ?? 10_000;
     const multiplier = options.multiplier ?? 2;
@@ -201,6 +213,7 @@ class CodexWebSocketTransport implements AgentTransport {
         this.#scheduleReconnect();
       });
     }, delay);
+    return true;
   }
 
   #rejectPending(error: Error): void {
@@ -252,6 +265,7 @@ class CodexWebSocketTransport implements AgentTransport {
   }
 
   #push(event: AgentTransportEvent): void {
+    if (this.#ended) return;
     const waiter = this.#waiters.shift();
     if (waiter) {
       waiter({ done: false, value: event });
@@ -263,7 +277,18 @@ class CodexWebSocketTransport implements AgentTransport {
   #nextEvent(): Promise<IteratorResult<AgentTransportEvent>> {
     const event = this.#events.shift();
     if (event) return Promise.resolve({ done: false, value: event });
+    if (this.#ended) return Promise.resolve({ done: true, value: undefined });
     return new Promise((resolve) => this.#waiters.push(resolve));
+  }
+
+  #finish(error: Error, event: AgentTransportEvent): void {
+    if (this.#ended) return;
+    this.#rejectPending(error);
+    this.#push(event);
+    this.#ended = true;
+    for (const waiter of this.#waiters.splice(0)) {
+      waiter({ done: true, value: undefined });
+    }
   }
 }
 

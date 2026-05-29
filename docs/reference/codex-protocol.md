@@ -46,6 +46,12 @@ core package also exports domain unions such as `ConnectionEvent`,
 `DiagnosticsEvent`, and `UsageEvent` for hosts that route event handling by
 surface.
 
+Transport event iterators drain queued events before completing. Stdio,
+WebSocket without reconnect, and SDK adapters emit `connection/closed` on close;
+the next iterator read after that close event resolves with `{ done: true }`.
+When WebSocket reconnect is enabled, transient close events do not end the
+iterator because a replacement socket may still emit later events.
+
 ## Stdio Transport
 
 The default transport:
@@ -137,6 +143,8 @@ Implementation status:
   resolves and preserves JSON-RPC error `code` and `data`.
 - Like stdio, WebSocket requests support optional `trace`, abort signals, and
   timeouts. Socket close rejects all pending requests.
+- When reconnect is disabled or exhausted, the WebSocket event iterator drains
+  `connection/closed` and then completes.
 
 ## Raw JSON-RPC Fixtures
 
