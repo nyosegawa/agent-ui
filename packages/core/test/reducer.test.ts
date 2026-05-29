@@ -1264,6 +1264,131 @@ describe("agentReducer", () => {
     expect(blocks?.image).toMatchObject({ kind: "image", path: "/tmp/screenshot.png" });
   });
 
+  it("normalizes stored snapshot items into selectable item blocks", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-stored-blocks" },
+          turns: [{ id: "turn-stored-blocks", threadId: "thread-stored-blocks" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          items: [
+            {
+              id: "stored-reasoning",
+              kind: "reasoning",
+              raw: {
+                content: [{ text: "stored reasoning" }],
+                summary: [{ text: "stored summary" }],
+              },
+              status: "completed",
+              threadId: "thread-stored-blocks",
+              turnId: "turn-stored-blocks",
+            },
+            {
+              id: "stored-command",
+              kind: "commandExecution",
+              raw: { command: "bun test", cwd: "/repo", exitCode: 0 },
+              status: "completed",
+              threadId: "thread-stored-blocks",
+              turnId: "turn-stored-blocks",
+            },
+            {
+              id: "stored-file",
+              kind: "fileChange",
+              raw: { changes: [{ path: "src/app.ts", status: "modified" }] },
+              status: "completed",
+              threadId: "thread-stored-blocks",
+              turnId: "turn-stored-blocks",
+            },
+            {
+              id: "stored-tool",
+              kind: "toolCall",
+              raw: { arguments: { q: "agent-ui" }, result: { ok: true }, tool: "search" },
+              status: "completed",
+              threadId: "thread-stored-blocks",
+              turnId: "turn-stored-blocks",
+            },
+            {
+              id: "stored-mcp",
+              kind: "mcpToolCall",
+              raw: { server: "browser", tool: "snapshot" },
+              status: "completed",
+              threadId: "thread-stored-blocks",
+              turnId: "turn-stored-blocks",
+            },
+            {
+              id: "stored-search",
+              kind: "webSearch",
+              raw: { query: "Codex App Server" },
+              status: "completed",
+              threadId: "thread-stored-blocks",
+              turnId: "turn-stored-blocks",
+            },
+            {
+              id: "stored-image",
+              kind: "imageView",
+              raw: { path: "/tmp/stored.png" },
+              status: "completed",
+              threadId: "thread-stored-blocks",
+              turnId: "turn-stored-blocks",
+            },
+            {
+              id: "stored-system",
+              kind: "systemInfo",
+              raw: { message: "Stored status" },
+              status: "completed",
+              threadId: "thread-stored-blocks",
+              turnId: "turn-stored-blocks",
+            },
+          ],
+          snapshot: true,
+          threadId: "thread-stored-blocks",
+          turn: { id: "turn-stored-blocks", threadId: "thread-stored-blocks" },
+          type: "turn/completed",
+        },
+      },
+    ]);
+
+    expect(
+      selectItemBlock(
+        state,
+        "thread-stored-blocks",
+        "turn-stored-blocks",
+        "stored-reasoning",
+      ),
+    ).toMatchObject({
+      content: "stored reasoning",
+      kind: "thinking",
+      summary: "stored summary",
+    });
+    expect(
+      selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-command"),
+    ).toMatchObject({ command: "bun test", cwd: "/repo", exitCode: 0 });
+    expect(
+      selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-file"),
+    ).toMatchObject({ changes: [{ path: "src/app.ts", status: "modified" }] });
+    expect(
+      selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-tool"),
+    ).toMatchObject({ kind: "toolCall", tool: "search", toolType: "generic" });
+    expect(
+      selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-mcp"),
+    ).toMatchObject({ kind: "mcpToolCall", server: "browser", toolType: "mcp" });
+    expect(
+      selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-search"),
+    ).toMatchObject({ kind: "webSearch", query: "Codex App Server" });
+    expect(
+      selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-image"),
+    ).toMatchObject({ kind: "image", path: "/tmp/stored.png" });
+    expect(
+      selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-system"),
+    ).toMatchObject({ kind: "systemInfo", text: "Stored status" });
+  });
+
   it("loads the device-code login fixture", () => {
     const state = runEventFixture(loginFixture as FixtureStep[]);
     expect(state.account.status).toBe("authenticated");

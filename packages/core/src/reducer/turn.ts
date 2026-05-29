@@ -1,5 +1,6 @@
 import type { TurnEvent } from "../events";
 import type { AgentSessionState } from "../state";
+import { itemStore } from "../stores/item";
 import { turnStore } from "../stores/turn";
 import {
   isCompletedTurnStatus,
@@ -35,22 +36,18 @@ export function reduceTurnEvent(
         const turn =
           next.turns[event.turn.id] ??
           turnStore.createTurnState(event.turn, event.threadId);
-        const items = { ...turn.items };
-        const itemOrder = [...turn.itemOrder];
+        let completedTurn = {
+          ...turn,
+          turn: event.turn,
+        };
         for (const item of event.items ?? []) {
-          items[item.id] = item;
-          if (!itemOrder.includes(item.id)) itemOrder.push(item.id);
+          completedTurn = itemStore.upsert(completedTurn, item);
         }
         return {
           ...next,
           turns: {
             ...next.turns,
-            [event.turn.id]: {
-              ...turn,
-              itemOrder,
-              items,
-              turn: event.turn,
-            },
+            [event.turn.id]: completedTurn,
           },
         };
       })();

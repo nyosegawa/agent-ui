@@ -171,7 +171,7 @@ Goal: fix current reducer bugs within the existing event shape. Do not include `
   - Tests: repeated `thread/upserted` changes metadata without removing ordered turns.
   - Docs/API: no public API change.
 
-- [ ] Normalize stored snapshot items through the live item/block path.
+- [x] Normalize stored snapshot items through the live item/block path.
   - Implementation: replace direct snapshot item assignment with `itemStore.upsert()` / `upsertMany()`-equivalent logic.
   - Tests: `selectItemBlock()` works for reasoning, command, file change, MCP/tool, web search, image, and system info blocks from stored items.
   - Docs/API: internal helper only.
