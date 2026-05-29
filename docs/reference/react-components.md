@@ -140,11 +140,14 @@ quality directly instead of depending on a page-level shell:
   containing attachment chips, an auto-resizing textarea, and an inline
   toolbar. The toolbar carries a single attach button, optional App/Plugin
   mention buttons, the **mode** and **model · effort** menus, and a circular
-  primary Send icon button with an `Enter to send` hint. While a regular turn
-  is running, the textarea remains editable and the primary button becomes
-  Stop. Enter adds a UI-local follow-up card above the composer, Cmd/Ctrl+Enter
-  sends `turn/steer` immediately with the active `expectedTurnId`, and `Send
-now` on a queued card also sends `turn/steer`; outside a running turn,
+  primary Send icon button with an `Enter to send` hint. The standalone form is
+  named "Message composer", the textarea references that visible shortcut hint
+  as its accessible description, and pending attachment chips expose their
+  filenames through list item labels. While a regular turn is running, the
+  textarea remains editable and the primary button becomes Stop. Enter adds a
+  UI-local follow-up card above the composer, Cmd/Ctrl+Enter sends `turn/steer`
+  immediately with the active `expectedTurnId`, and `Send now` on a queued card
+  also sends `turn/steer`; outside a running turn,
   Cmd/Ctrl+Enter starts a normal new turn. Queued cards are scoped to the
   active thread, keep attachment chips restorable through Edit, and compact
   older queued items instead of creating a nested scroll pane. Stop calls only

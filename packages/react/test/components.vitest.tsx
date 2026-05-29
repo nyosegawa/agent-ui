@@ -14,6 +14,7 @@ import {
 } from "@nyosegawa/agent-ui-core";
 import {
   AgentChat,
+  AgentComposer,
   AgentApprovalQueue,
   AgentDiffViewer,
   AgentMessageList,
@@ -1808,8 +1809,8 @@ describe("AgentChat", () => {
     await user.click(screen.getByRole("button", { name: "App" }));
     await user.click(screen.getByRole("button", { name: "Plugin" }));
 
-    expect(screen.getByLabelText("Composer attachments")).toHaveTextContent("Browser");
-    expect(screen.getByLabelText("Composer attachments")).toHaveTextContent(
+    expect(screen.getByLabelText("Pending attachments")).toHaveTextContent("Browser");
+    expect(screen.getByLabelText("Pending attachments")).toHaveTextContent(
       "Browser tools",
     );
     expect(prompt).not.toHaveBeenCalled();
@@ -1966,9 +1967,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    const input = screen
-      .getByLabelText("Composer attachments")
-      .querySelector('input[type="file"]') as HTMLInputElement;
+    const input = screen.getByLabelText("Attach files") as HTMLInputElement;
     await user.upload(input, new File(["image"], "fixture.png", { type: "image/png" }));
     await user.type(screen.getByLabelText("Message"), "inspect this");
     await user.click(screen.getByRole("button", { name: "Send" }));
@@ -1983,6 +1982,29 @@ describe("AgentChat", () => {
         threadId: "thread-compose",
       },
     });
+  });
+
+  it("labels standalone AgentComposer form, shortcuts, and attachments", async () => {
+    const user = userEvent.setup();
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
+        <AgentComposer
+          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          threadId="thread-running"
+        />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByRole("form", { name: "Message composer" })).toBeInTheDocument();
+    const message = screen.getByRole("textbox", { name: "Message" });
+    expect(message).toHaveAccessibleDescription("Enter to send");
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    expect(input).toHaveAttribute("aria-label", "Attach files");
+
+    await user.upload(input, new File(["image"], "fixture.png", { type: "image/png" }));
+
+    expect(screen.getByRole("list", { name: "Pending attachments" })).toBeInTheDocument();
+    expect(screen.getByRole("listitem", { name: /fixture\.png/ })).toBeInTheDocument();
   });
 
   it("does not offer to start a thread before account bootstrap finishes", async () => {

@@ -1,6 +1,6 @@
 import type React from "react";
 import type { ThreadState, ThreadTokenUsage } from "@nyosegawa/agent-ui-core";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useAgentComposer, type AgentComposerController } from "../hooks";
 import { useAgentI18n } from "../i18n";
 import {
@@ -82,6 +82,7 @@ function AgentComposerForm({
   ) => void;
 }) {
   const { t } = useAgentI18n();
+  const shortcutHintId = useId();
   const [isFocused, setFocused] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -171,7 +172,7 @@ function AgentComposerForm({
 
   return (
     <form
-      aria-label={t("aria.composerAttachments")}
+      aria-label={t("aria.messageComposer")}
       className="aui-composer"
       data-disabled={disabled ? "true" : undefined}
       data-focused={isFocused ? "true" : undefined}
@@ -208,6 +209,13 @@ function AgentComposerForm({
         <ul className="aui-composer-chips" aria-label={t("aria.pendingAttachments")}>
           {attachments.map((attachment) => (
             <li
+              aria-label={[
+                attachment.label,
+                attachment.kind === "file" ? attachment.extension : undefined,
+                attachment.kind === "file" ? attachment.sizeLabel : undefined,
+              ]
+                .filter(Boolean)
+                .join(" ")}
               className="aui-composer-chip"
               data-kind={attachment.kind}
               key={attachment.id}
@@ -249,6 +257,7 @@ function AgentComposerForm({
         </ul>
       ) : null}
       <textarea
+        aria-describedby={shortcutHintId}
         aria-label={t("aria.message")}
         className="aui-composer-input"
         disabled={disabled}
@@ -293,6 +302,7 @@ function AgentComposerForm({
                   <IconPaperclip size={16} />
                 </button>
                 <input
+                  aria-label={t("composer.attachFiles")}
                   hidden
                   multiple
                   onChange={(event) => {
@@ -336,7 +346,7 @@ function AgentComposerForm({
         </div>
         <div className="aui-composer-toolbar-end">
           <AgentContextUsageIndicator tokenUsage={tokenUsage} />
-          <span className="aui-composer-hint" aria-hidden="true">
+          <span className="aui-composer-hint" id={shortcutHintId}>
             {t("composer.enterToSend")}
           </span>
           <ComposerSubmitButton canSubmit={canSubmit} isStopAction={isStopAction} />

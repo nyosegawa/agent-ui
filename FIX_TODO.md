@@ -479,7 +479,7 @@ Goal: address lower-risk UX/docs/example drift after correctness/security work. 
   - Tests: non-reconnectable fake transport under `<React.StrictMode>` is not prematurely closed.
   - Docs/API: provider prop/type snapshot and docs if option is added.
 
-- [ ] Fix standalone `AgentComposer` accessible name and shortcut description.
+- [x] Fix standalone `AgentComposer` accessible name and shortcut description.
   - Implementation: message composer label on form/region; attachment labels on file/list/chip surfaces; shortcut hint exposed with `aria-describedby` or equivalent.
   - Tests: focused accessibility tests and fixture e2e/ARIA snapshot.
   - Docs/API: component docs update.
