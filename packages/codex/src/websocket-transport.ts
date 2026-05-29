@@ -4,6 +4,7 @@ import type {
   AgentTransportEvent,
   RequestId,
 } from "@nyosegawa/agent-ui-core";
+import { delay, isBackpressureError, isBackpressureRetrySafeMethod } from "./backpressure";
 import {
   isJsonRpcNotification,
   isJsonRpcRequest,
@@ -82,6 +83,31 @@ class CodexWebSocketTransport implements AgentTransport {
   }
 
   async request<TParams = unknown, TResult = unknown>(
+    method: string,
+    params?: TParams,
+    options?: AgentRequestOptions,
+  ): Promise<TResult> {
+    const maxRetries = 2;
+    const baseDelayMs = 100;
+    let attempt = 0;
+    for (;;) {
+      try {
+        return await this.#sendRequest<TParams, TResult>(method, params, options);
+      } catch (error) {
+        if (
+          !isBackpressureError(error) ||
+          !isBackpressureRetrySafeMethod(method) ||
+          attempt >= maxRetries
+        ) {
+          throw error;
+        }
+        attempt += 1;
+        await delay(baseDelayMs * 2 ** (attempt - 1));
+      }
+    }
+  }
+
+  async #sendRequest<TParams = unknown, TResult = unknown>(
     method: string,
     params?: TParams,
     options?: AgentRequestOptions,

@@ -143,6 +143,9 @@ Implementation status:
   resolves and preserves JSON-RPC error `code` and `data`.
 - Like stdio, WebSocket requests support optional `trace`, abort signals, and
   timeouts. Socket close rejects all pending requests.
+- WebSocket and stdio retry App Server `-32001` overload errors only for
+  retry-safe read/list methods such as `thread/read`; mutating calls such as
+  `turn/start` fail immediately.
 - When reconnect is disabled or exhausted, the WebSocket event iterator drains
   `connection/closed` and then completes.
 

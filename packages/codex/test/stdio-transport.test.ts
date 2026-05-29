@@ -87,6 +87,7 @@ describe("Codex stdio transport backpressure", () => {
 
   it("classifies only idempotent read requests as retry-safe", () => {
     expect(isBackpressureRetrySafeMethod("thread/read")).toBe(true);
+    expect(isBackpressureRetrySafeMethod("thread/turns/list")).toBe(true);
     expect(isBackpressureRetrySafeMethod("skills/list")).toBe(true);
     expect(isBackpressureRetrySafeMethod("turn/start")).toBe(false);
     expect(isBackpressureRetrySafeMethod("thread/archive")).toBe(false);

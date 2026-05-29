@@ -2,6 +2,11 @@ import type { AgentRequestOptions, AgentTransport, AgentTransportEvent, RequestI
 import type { Readable, Writable } from "node:stream";
 import { createInterface } from "node:readline";
 import {
+  delay,
+  isBackpressureError,
+  isBackpressureRetrySafeMethod,
+} from "./backpressure";
+import {
   encodeJsonRpcLine,
   isJsonRpcNotification,
   isJsonRpcRequest,
@@ -276,35 +281,7 @@ function requestPayload(
   };
 }
 
-export function isBackpressureRetrySafeMethod(method: string): boolean {
-  return BACKPRESSURE_RETRY_SAFE_METHODS.has(method);
-}
-
-const BACKPRESSURE_RETRY_SAFE_METHODS = new Set([
-  "account/read",
-  "account/rateLimits/read",
-  "app/list",
-  "hooks/list",
-  "model/list",
-  "skills/list",
-  "thread/list",
-  "thread/loaded/list",
-  "thread/read",
-]);
-
-function isBackpressureError(error: unknown): boolean {
-  return (
-    typeof error === "object" &&
-    error !== null &&
-    "code" in error &&
-    (error as { code?: unknown }).code === -32001
-  );
-}
-
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
+export { isBackpressureRetrySafeMethod } from "./backpressure";
 
 function abortError(): Error {
   const error = new Error("Codex stdio request aborted");

@@ -145,6 +145,33 @@ describe("CodexWebSocketTransport", () => {
     await expect(request).resolves.toEqual({ ok: true });
   });
 
+  it("retries safe reads but not mutating requests on -32001", async () => {
+    const sockets: FakeWebSocket[] = [];
+    const transport = createCodexWebSocketTransport({
+      reconnect: false,
+      url: "ws://localhost/agent-ui",
+      webSocketImpl: fakeWebSocketFactory(sockets) as any,
+    });
+    await transport.connect();
+
+    const read = transport.request("thread/read", { threadId: "thread-1" });
+    sockets[0]!.emitMessage({
+      error: { code: -32001, message: "busy" },
+      id: 0,
+    });
+    await waitFor(() => sockets[0]!.sent.length === 2);
+    sockets[0]!.emitMessage({ id: 1, result: { thread: { id: "thread-1" } } });
+    await expect(read).resolves.toEqual({ thread: { id: "thread-1" } });
+
+    const mutation = transport.request("turn/start", { threadId: "thread-1" });
+    sockets[0]!.emitMessage({
+      error: { code: -32001, message: "busy" },
+      id: 2,
+    });
+    await expect(mutation).rejects.toMatchObject({ code: -32001 });
+    expect(sockets[0]!.sent).toHaveLength(3);
+  });
+
   it("preserves top-level trace and cleans up aborted, timed-out, and closed pending requests", async () => {
     const sockets: FakeWebSocket[] = [];
     const transport = createCodexWebSocketTransport({
@@ -222,6 +249,14 @@ async function waitForEvent(
     if (next.value?.event?.type === type) return;
   }
   throw new Error(`Timed out waiting for ${type}`);
+}
+
+async function waitFor(predicate: () => boolean): Promise<void> {
+  for (let index = 0; index < 250; index += 1) {
+    if (predicate()) return;
+    await new Promise((resolve) => setTimeout(resolve, 1));
+  }
+  throw new Error("timed out waiting for condition");
 }
 
 async function waitForTransportEvent(

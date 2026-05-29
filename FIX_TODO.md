@@ -361,7 +361,7 @@ Goal: align stdio/WebSocket/SDK transports and browser bridge lifecycle contract
   - Tests: string id response does not resolve numeric pending request in stdio/WebSocket transports.
   - Docs/API: no public helper unless intentionally exported.
 
-- [ ] Add WebSocket `-32001` overload retry parity.
+- [x] Add WebSocket `-32001` overload retry parity.
   - Implementation: share stdio retry-safe read/list method policy with WebSocket.
   - Tests: `thread/read` retries; `turn/start` does not; retry option is tested if exposed.
   - Docs/API: public option requires API snapshot.
