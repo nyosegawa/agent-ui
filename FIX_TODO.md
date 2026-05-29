@@ -414,7 +414,7 @@ Goal: make published surfaces, schema import workflow, and browser validation ga
   - Tests: missing-dist smoke/focused script test.
   - Docs/API: update docs; no public API change.
 
-- [ ] Add package packlist validation.
+- [x] Add package packlist validation.
   - Implementation: validate built package dry-run file lists against allowed prefixes.
   - Tests: script detects unexpected sources, stale artifacts, and private generated files.
   - Docs/API: document packlist gate.
