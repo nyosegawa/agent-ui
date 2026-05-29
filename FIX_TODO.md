@@ -504,7 +504,7 @@ Goal: address lower-risk UX/docs/example drift after correctness/security work. 
   - Tests: optional docs guards for missing config paths, personal repo paths, and stale selectors.
   - Docs/API: docs-only.
 
-- [ ] Decide docs-site browser smoke treatment.
+- [x] Decide docs-site browser smoke treatment.
   - Implementation: add tiny docs-site e2e if it remains a browser smoke surface, or weaken wording to compile/style smoke.
   - Tests: e2e or docs guard depending on chosen path.
   - Docs/API: docs-only.

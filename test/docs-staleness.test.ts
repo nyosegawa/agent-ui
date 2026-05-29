@@ -23,6 +23,19 @@ describe("documentation stale references", () => {
 
     expect(staleMatches).toEqual([]);
   });
+
+  it("documents docs-site as compile/style smoke instead of browser smoke", async () => {
+    const files = [
+      join(process.cwd(), "docs", "examples", "docs-site.md"),
+      join(process.cwd(), "examples", "docs-site", "README.md"),
+    ];
+
+    for (const file of files) {
+      const text = await readFile(file, "utf8");
+      expect(text).toContain("compile/style smoke surface");
+      expect(text).not.toMatch(/browser smoke/i);
+    }
+  });
 });
 
 async function collectMarkdownFiles(root: string, entries: string[]): Promise<string[]> {
