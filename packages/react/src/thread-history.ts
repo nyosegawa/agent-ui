@@ -117,6 +117,7 @@ function normalizeRawTurn(rawTurn: unknown, threadId: ThreadId): AgentTurn {
   const record = asRecord(rawTurn) ?? {};
   return {
     id: String(record.id ?? record.turnId ?? record.turn_id),
+    itemsView: itemsViewValue(record.itemsView ?? record.items_view),
     raw: rawTurn,
     status: stringValue(record.status) ?? normalizeThreadStatus(record.status),
     threadId,
@@ -191,6 +192,12 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 
 function stringValue(value: unknown) {
   return typeof value === "string" && value ? value : undefined;
+}
+
+function itemsViewValue(value: unknown): AgentTurn["itemsView"] {
+  return value === "notLoaded" || value === "summary" || value === "full"
+    ? value
+    : undefined;
 }
 
 function isInternalCodexSessionPath(path: string): boolean {

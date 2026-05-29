@@ -883,6 +883,32 @@ describe("agentReducer", () => {
     expect(selectThreadRegistry(state).coldThreadIds).not.toContain("thread-history");
   });
 
+  it("stores turn item view completeness from thread snapshots", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-items-view" },
+          turns: [
+            { id: "turn-not-loaded", itemsView: "notLoaded", threadId: "thread-items-view" },
+            { id: "turn-summary", itemsView: "summary", threadId: "thread-items-view" },
+            { id: "turn-full", itemsView: "full", threadId: "thread-items-view" },
+          ],
+          type: "thread/upserted",
+        },
+      },
+    ]);
+
+    expect(state.threads["thread-items-view"]?.turns["turn-not-loaded"]?.turn.itemsView).toBe(
+      "notLoaded",
+    );
+    expect(state.threads["thread-items-view"]?.turns["turn-summary"]?.turn.itemsView).toBe(
+      "summary",
+    );
+    expect(state.threads["thread-items-view"]?.turns["turn-full"]?.turn.itemsView).toBe("full");
+  });
+
   it("does not downgrade a live thread when a preview snapshot is activated", () => {
     const state = runEventFixture([
       {

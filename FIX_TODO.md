@@ -307,7 +307,7 @@ bun run typecheck
 
 Goal: handle upstream `itemsView` and paged history without data loss. This is P2 and separate from P1 core invariants.
 
-- [ ] Add `itemsView` to `AgentTurn` / turn state.
+- [x] Add `itemsView` to `AgentTurn` / turn state.
   - Implementation: store `itemsView?: "notLoaded" | "summary" | "full"` from upstream turns.
   - Tests: all three values persist in reducer state.
   - Docs/API: update core API snapshots and public state docs.

@@ -36,6 +36,7 @@ export function normalizeTurn(raw: unknown, threadId: string): AgentTurn {
   const record = asRecord(raw) ?? {};
   return {
     id: String(record.id ?? record.turnId ?? record.turn_id),
+    itemsView: itemsViewValue(record.itemsView ?? record.items_view),
     raw,
     status: stringValue(record.status),
     threadId,
@@ -128,6 +129,12 @@ export function numberValue(value: unknown): number | undefined {
 
 export function booleanValue(value: unknown): boolean | undefined {
   return typeof value === "boolean" ? value : undefined;
+}
+
+export function itemsViewValue(value: unknown): AgentTurn["itemsView"] {
+  return value === "notLoaded" || value === "summary" || value === "full"
+    ? value
+    : undefined;
 }
 
 export function requestIdValue(value: unknown): string | number {

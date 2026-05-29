@@ -73,7 +73,7 @@ type ThreadState = {
 };
 
 type TurnState = {
-  turn: AgentTurn;
+  turn: AgentTurn; // includes upstream itemsView: notLoaded | summary | full when present
   itemOrder: string[];
   items: Record<string, AgentItemState>;
   blocksByItemId: Record<string, AgentItemBlock>;

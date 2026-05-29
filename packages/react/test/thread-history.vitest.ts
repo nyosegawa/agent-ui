@@ -125,6 +125,32 @@ describe("thread history normalization", () => {
     expect(events.at(-1)).toMatchObject({ snapshot: true, status: "loaded" });
   });
 
+  it("preserves upstream turn item view completeness", () => {
+    const events = threadSnapshotEvents(
+      {
+        id: "thread-items-view",
+        status: { type: "idle" },
+        turns: [
+          { id: "turn-not-loaded", itemsView: "notLoaded" },
+          { id: "turn-summary", items_view: "summary" },
+          { id: "turn-full", itemsView: "full" },
+        ],
+      },
+      true,
+    );
+
+    expect(events[0]).toMatchObject({
+      turns: [
+        { id: "turn-not-loaded", itemsView: "notLoaded" },
+        { id: "turn-summary", itemsView: "summary" },
+        { id: "turn-full", itemsView: "full" },
+      ],
+    });
+    expect(events[1]).toMatchObject({
+      turn: { id: "turn-not-loaded", itemsView: "notLoaded" },
+    });
+  });
+
   it("preserves omitted turns as omitted snapshot payloads", () => {
     expect(
       threadSnapshotEvents(

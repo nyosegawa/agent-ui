@@ -4,9 +4,12 @@ import type { AgentItemBlock, AgentItemState } from "./item";
 export interface AgentTurn {
   id: TurnId;
   threadId: ThreadId;
+  itemsView?: AgentTurnItemsView;
   status?: string;
   raw?: unknown;
 }
+
+export type AgentTurnItemsView = "notLoaded" | "summary" | "full";
 
 export interface TurnState {
   turn: AgentTurn;
