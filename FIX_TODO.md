@@ -121,7 +121,7 @@ Goal: keep pending approvals visible and prevent dynamic tool stale queue entrie
   - Tests: long transcript pending approval appears in the tail instead of disappearing.
   - Docs/API: browser-visible behavior requires fixture e2e.
 
-- [ ] Prevent `dynamicTool` from stale default queue state.
+- [x] Prevent `dynamicTool` from stale default queue state.
   - Implementation: follow the Milestone 0 policy: exclude from queue, or guarantee cleanup on local respond/reject or matching item completion.
   - Tests: direct stdio/WebSocket/custom host paths cannot leave `dynamicTool` indefinitely queued.
   - Docs/API: if excluded from broad state, document that dynamic tools are host/bridge integration requests handled out of band.

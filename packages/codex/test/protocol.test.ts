@@ -480,6 +480,27 @@ describe("Codex protocol metadata", () => {
     ]);
   });
 
+  it("does not retain normalized dynamic tool requests in core queue state", () => {
+    let state = createInitialAgentState();
+    for (const event of normalizeCodexServerMessage({
+      id: "tool-call-1",
+      method: "item/tool/call",
+      params: {
+        arguments: { app: "Google Chrome" },
+        callId: "call-1",
+        namespace: "mcp__computer_use__",
+        threadId: "thread-1",
+        tool: "get_app_state",
+        turnId: "turn-1",
+      },
+    })) {
+      state = agentReducer(state, event);
+    }
+
+    expect(state.serverRequestQueue.order).toEqual([]);
+    expect(state.serverRequestQueue.byId).toEqual({});
+  });
+
   it("normalizes every productized server request kind", () => {
     const cases = [
       ["item/commandExecution/requestApproval", "commandApproval"],
