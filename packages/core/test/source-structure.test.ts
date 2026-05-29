@@ -132,6 +132,22 @@ describe("Core package source structure", () => {
       }
     }
   });
+
+  it("keeps P1 reducer fixes free of stored-history pagination surfaces", () => {
+    const forbiddenPatterns = [
+      /\bitemsView\b/,
+      /thread\/turns\/list/,
+      /\binitialTurnsPage\b/,
+      /turn\/snapshot/,
+    ];
+
+    for (const file of sourceFiles(coreSrc)) {
+      const source = readFileSync(file, "utf8");
+      for (const pattern of forbiddenPatterns) {
+        expect(source, `${file} must not match ${pattern}`).not.toMatch(pattern);
+      }
+    }
+  });
 });
 
 function sourceFiles(root: string): string[] {

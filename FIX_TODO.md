@@ -181,7 +181,7 @@ Goal: fix current reducer bugs within the existing event shape. Do not include `
   - Tests: helper-level update-then-insert coverage plus at least one reducer-level case for file patches, apps, skills, or hooks.
   - Docs/API: signature unchanged; snapshot unnecessary.
 
-- [ ] Keep P1 core work free of stored-history pagination design.
+- [x] Keep P1 core work free of stored-history pagination design.
   - Implementation: do not add `AgentTurn.itemsView`, `thread/turns/list`, `initialTurnsPage`, `turn/snapshot`, or full replacement/pruning in this milestone.
   - Tests: metadata-only snapshots are non-destructive under the current shape.
   - Docs/API: avoid public shape churn.
