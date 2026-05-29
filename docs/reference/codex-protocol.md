@@ -101,6 +101,9 @@ Implementation status:
 - `packages/codex/src/generated/README.md` records the upstream commit,
   commit date, subject, generated timestamp, and generator command beside the
   generated artifact.
+- Protocol tests require `CODEX_PROTOCOL_COMMIT` and
+  `CODEX_PROTOCOL_GENERATED_AT` to match `packages/codex/package.json`
+  `agentUi` metadata and the generated README.
 
 ## WebSocket Transport
 
@@ -210,8 +213,8 @@ Codex App Server schema is expected to change.
 Policy:
 
 - vendor generated TypeScript schema
-- record upstream Codex commit hash
-- record generation timestamp
+- record upstream Codex commit hash and generation timestamp consistently in
+  generated constants, package metadata, and the generated README
 - snapshot protocol method lists
 - fail protocol conformance tests when upstream changes break assumptions
 

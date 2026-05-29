@@ -8,6 +8,7 @@ import {
 } from "@nyosegawa/agent-ui-core";
 import {
   CODEX_PROTOCOL_COMMIT,
+  CODEX_PROTOCOL_GENERATED_AT,
   assertCodexExperimentalMethod,
   assertCodexProductizedMethod,
   codexCapabilityMetadata,
@@ -37,6 +38,7 @@ import {
 describe("Codex protocol metadata", () => {
   it("records upstream commit and stable release method surface", () => {
     expect(CODEX_PROTOCOL_COMMIT).toMatch(/^[0-9a-f]{40}$/);
+    expect(CODEX_PROTOCOL_GENERATED_AT).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(stableClientMethods).toBe(stableProductizedMethods);
     expect(stableProductizedMethods).toContain("account/rateLimits/read");
     expect(stableProductizedMethods).toContain("skills/list");
@@ -47,6 +49,26 @@ describe("Codex protocol metadata", () => {
     expect(stableServerRequestMethods).toContain("item/commandExecution/requestApproval");
     expect(stableServerRequestMethods).toContain("attestation/generate");
     expect(stableNotificationMethods).toContain("item/agentMessage/delta");
+  });
+
+  it("keeps generated protocol metadata consistent across package records", () => {
+    const packageJson = JSON.parse(
+      readFileSync(fileURLToPath(new URL("../package.json", import.meta.url)), "utf8"),
+    ) as {
+      agentUi?: {
+        codexProtocolCommit?: string;
+        generatedAt?: string;
+      };
+    };
+    const readme = readFileSync(
+      fileURLToPath(new URL("../src/generated/README.md", import.meta.url)),
+      "utf8",
+    );
+
+    expect(packageJson.agentUi?.codexProtocolCommit).toBe(CODEX_PROTOCOL_COMMIT);
+    expect(packageJson.agentUi?.generatedAt).toBe(CODEX_PROTOCOL_GENERATED_AT);
+    expect(readme).toContain(`Upstream commit: \`${CODEX_PROTOCOL_COMMIT}\``);
+    expect(readme).toContain(`Generated at: \`${CODEX_PROTOCOL_GENERATED_AT}\``);
   });
 
   it("keeps capability metadata partitioned without duplicates", () => {

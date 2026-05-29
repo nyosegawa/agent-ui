@@ -253,7 +253,7 @@ bun run test:package-resolution
 
 Goal: mechanically detect drift in generated schema metadata, raw fixtures, server request classification, and capability metadata.
 
-- [ ] Add generated protocol metadata consistency tests.
+- [x] Add generated protocol metadata consistency tests.
   - Implementation: compare `CODEX_PROTOCOL_COMMIT` / `CODEX_PROTOCOL_GENERATED_AT` with `packages/codex/package.json` `agentUi` and `packages/codex/src/generated/README.md`.
   - Tests: `bun run test:protocol` passes with current matching values.
   - Docs/API: update protocol drift docs; snapshot unnecessary.
