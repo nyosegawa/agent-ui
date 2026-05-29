@@ -530,14 +530,14 @@ bun run test:e2e:fixtures
 
 ## Not To Do Early
 
-- [ ] Do not start a broad `AgentApprovalQueue` presentational refactor before the non-approval invalid response bug is fixed.
-- [ ] Do not mix `itemsView`, `thread/turns/list`, `initialTurnsPage`, `turn/snapshot`, or full replacement/pruning into the P1 core reducer fix.
-- [ ] Do not start actual schema regeneration before import preflight, metadata consistency, fixture contract, deprecated fixture cleanup, and test-only experimental classification.
-- [ ] Do not start core root export cleanup, Codex generated publishing cleanup, API snapshot readability, or CJS parity before P0/P1 correctness/security.
-- [ ] Do not make the current all-in-one Playwright config a required PR CI gate; split fixture and real-local first.
-- [ ] Do not document the Agent UI browser bridge as a transparent raw Codex WebSocket proxy.
-- [ ] Do not build full permissions/MCP/user-input/dynamic/auth/attestation UI in P0; first stop generic decision responses.
-- [ ] Do not run schema import from a default macOS path or dirty focused upstream checkout.
+- [x] Do not start a broad `AgentApprovalQueue` presentational refactor before the non-approval invalid response bug is fixed.
+- [x] Do not mix `itemsView`, `thread/turns/list`, `initialTurnsPage`, `turn/snapshot`, or full replacement/pruning into the P1 core reducer fix.
+- [x] Do not start actual schema regeneration before import preflight, metadata consistency, fixture contract, deprecated fixture cleanup, and test-only experimental classification.
+- [x] Do not start core root export cleanup, Codex generated publishing cleanup, API snapshot readability, or CJS parity before P0/P1 correctness/security.
+- [x] Do not make the current all-in-one Playwright config a required PR CI gate; split fixture and real-local first.
+- [x] Do not document the Agent UI browser bridge as a transparent raw Codex WebSocket proxy.
+- [x] Do not build full permissions/MCP/user-input/dynamic/auth/attestation UI in P0; first stop generic decision responses.
+- [x] Do not run schema import from a default macOS path or dirty focused upstream checkout.
 
 ## Validation Ladders
 
