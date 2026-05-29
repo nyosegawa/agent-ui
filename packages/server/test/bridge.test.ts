@@ -144,6 +144,31 @@ describe("createCodexAppServerBridge", () => {
 
     expect(signals).toEqual(["SIGTERM", "SIGKILL"]);
   });
+
+  it("ends transport stdin and rejects pending requests before terminating the child", async () => {
+    const operations: string[] = [];
+    const stdin = new TrackingStdin(() => operations.push("stdin.end"));
+    const stdout = new PassThrough();
+    const fakeProcess: CodexChildProcess = {
+      kill(signal) {
+        operations.push(String(signal));
+        return true;
+      },
+      stderr: new PassThrough(),
+      stdin,
+      stdout,
+    };
+    const bridge = createCodexAppServerBridge({
+      spawn: () => fakeProcess,
+    });
+    await bridge.transport.connect();
+
+    const pending = bridge.transport.request("thread/read", { threadId: "thread-1" });
+    await bridge.close();
+
+    await expect(pending).rejects.toThrow("Codex stdio transport closed");
+    expect(operations).toEqual(["stdin.end", "SIGTERM"]);
+  });
 });
 
 function createBridgeWithStderrCallback() {
@@ -188,4 +213,15 @@ async function nextTransportEvent<T extends { type: string }>(
     throw new Error("transport closed");
   })();
   return Promise.race([next, timeout]);
+}
+
+class TrackingStdin extends PassThrough {
+  constructor(private readonly onEnd: () => void) {
+    super();
+  }
+
+  override end(...args: Parameters<PassThrough["end"]>): ReturnType<PassThrough["end"]> {
+    this.onEnd();
+    return super.end(...args);
+  }
 }

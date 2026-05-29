@@ -371,7 +371,7 @@ Goal: align stdio/WebSocket/SDK transports and browser bridge lifecycle contract
   - Tests: fake writable delayed `drain` preserves order; threshold behavior is explicit.
   - Docs/API: public option requires snapshot.
 
-- [ ] Fix bridge close semantics contract.
+- [x] Fix bridge close semantics contract.
   - Implementation: document current abandon-session cleanup or add explicit graceful stdio-drain mode.
   - Tests: `stdin.end()`/`SIGTERM` order, pending request rejection, and `SIGKILL` escalation are fixed; graceful option tests natural exit if added.
   - Docs/API: new shutdown option requires server API snapshot.
