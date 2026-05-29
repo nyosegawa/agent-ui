@@ -74,7 +74,9 @@ describe("Codex protocol metadata", () => {
 
   it("keeps capability metadata partitioned without duplicates", () => {
     const metadataKeys = codexCapabilityMetadata.map((entry) => `${entry.status}:${entry.method}`);
+    const metadataMethods = codexCapabilityMetadata.map((entry) => entry.method);
     expect(new Set(metadataKeys).size).toBe(metadataKeys.length);
+    expect(new Set(metadataMethods).size).toBe(metadataMethods.length);
     expect(
       codexCapabilityMetadata.filter((entry) => entry.method === "account/rateLimits/read"),
     ).toEqual([{ method: "account/rateLimits/read", status: "stableProductized" }]);

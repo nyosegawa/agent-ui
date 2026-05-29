@@ -285,7 +285,7 @@ Goal: mechanically detect drift in generated schema metadata, raw fixtures, serv
   - Tests: generated experimental coverage includes available + unsupported + test-only; asserting mock method throws.
   - Docs/API: update Codex docs and API snapshots if public arrays/types change.
 
-- [ ] Enforce capability metadata method uniqueness.
+- [x] Enforce capability metadata method uniqueness.
   - Implementation: uniqueness is by method, not by `status:method`.
   - Tests: same method cannot appear under multiple statuses.
   - Docs/API: no snapshot.
