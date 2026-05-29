@@ -13,7 +13,7 @@ import * as dynamicTools from "./dynamic-tools";
 import type { AgentUiHostEventSink } from "./host-events";
 import { emitHostEvent } from "./host-events";
 import * as requestPolicy from "./server-request-policy";
-import { redactStructuredValue, redactTransportEvent } from "./redaction";
+import { redactSecrets, redactStructuredValue, redactTransportEvent } from "./redaction";
 import {
   createWebSocketBackpressureGuard,
   sendJsonWithBackpressure,
@@ -142,7 +142,7 @@ export async function handleAgentUiWebSocketConnection(
   const effectiveServerRequestPolicy =
     requestPolicy.resolveServerRequestPolicy(serverRequestPolicy);
   const log = (message: string) => {
-    bridgeOptions.stderr?.(`[agent-ui] ${message}\n`);
+    bridgeOptions.stderr?.(redactSecrets(`[agent-ui] ${message}\n`));
   };
   let closed = false;
   let dynamicToolHelperThreadId: Promise<string> | undefined;
@@ -248,7 +248,7 @@ export async function handleAgentUiWebSocketConnection(
     })
     .catch((error: unknown) => {
       sendEnvelope(socket, backpressure, {
-        error: { message: error instanceof Error ? error.message : String(error) },
+        error: { message: redactSecrets(error instanceof Error ? error.message : String(error)) },
         type: "error",
       });
       closeBridge();
@@ -271,7 +271,7 @@ export async function handleAgentUiWebSocketConnection(
       bridgeOwnsInitialize,
     ).catch((error: unknown) => {
       sendEnvelope(socket, backpressure, {
-        error: { message: error instanceof Error ? error.message : String(error) },
+        error: { message: redactSecrets(error instanceof Error ? error.message : String(error)) },
         type: "error",
       });
     });

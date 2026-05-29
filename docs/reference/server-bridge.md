@@ -265,6 +265,8 @@ Use `examples/next-rpc-route` for one-shot RPC. Use
   envelopes before forwarding. The redaction policy covers bearer strings, API
   keys, token fields, passwords, secrets, and device/user codes with `=`,
   JSON-field, or colon-separated labels such as `x-api-key: ...`.
+- Redact bridge-owned diagnostics and dynamic-tool failure text before sending
+  them to host stderr callbacks or back to the App Server.
 - Use one process/session/workspace boundary per user for multi-user hosts.
 - Keep API keys server-side only.
 - Keep one-shot `allowedMethods` narrow. Treat `allowedMethods: "all"` like a

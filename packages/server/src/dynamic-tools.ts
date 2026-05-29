@@ -1,6 +1,7 @@
 import { createCodexSession } from "@nyosegawa/agent-ui-codex";
 import type { AgentTransportEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
 import type { createCodexAppServerBridge } from "./bridge";
+import { redactSecrets } from "./redaction";
 
 export type DynamicToolHandler = (
   request: DynamicToolRequest,
@@ -156,9 +157,10 @@ export async function maybeResolveHelperThreadRequest(
 }
 
 export function dynamicToolFailure(error: unknown): DynamicToolCallResponse {
+  const text = error instanceof Error ? error.message : String(error);
   return {
     contentItems: [
-      { text: error instanceof Error ? error.message : String(error), type: "inputText" },
+      { text: redactSecrets(text), type: "inputText" },
     ],
     success: false,
   };

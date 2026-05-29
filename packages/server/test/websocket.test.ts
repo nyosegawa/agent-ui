@@ -472,6 +472,58 @@ describe("attachAgentUiWebSocketBridge", () => {
     await transport.close();
   });
 
+  it("redacts dynamic tool handler failures from host stderr and App Server responses", async () => {
+    const logs: string[] = [];
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      dynamicToolHandler: () => {
+        throw new Error("dynamic failed token: tool-secret api_key: sk-tool");
+      },
+      stderr: (line) => logs.push(line),
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "dynamic-secret",
+        method: "item/tool/call",
+        params: {
+          arguments: {},
+          callId: "call-secret",
+          namespace: "host__secret__",
+          threadId: "thread-1",
+          tool: "leaky",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "dynamic-secret"));
+    const dynamicResponse = writes
+      .map((line) => JSON.parse(line))
+      .find((message) => message.id === "dynamic-secret");
+    expect(dynamicResponse).toEqual({
+      id: "dynamic-secret",
+      result: {
+        contentItems: [
+          {
+            text: "dynamic failed token: [REDACTED] api_key: [REDACTED]",
+            type: "inputText",
+          },
+        ],
+        success: false,
+      },
+    });
+    expect(logs.join("")).toContain("dynamic tool failed id=dynamic-secret");
+    expect(logs.join("")).not.toContain("tool-secret");
+    expect(logs.join("")).not.toContain("sk-tool");
+    await transport.close();
+  });
+
   it("auto-resolves MCP approvals for dynamic tool helper calls", async () => {
     const { stdout, transport, writes } = await createBridgeBackedTransport({
       dynamicToolHandler: createMcpDynamicToolHandler({
@@ -1032,7 +1084,10 @@ describe("attachAgentUiWebSocketBridge", () => {
 });
 
 async function createBridgeBackedTransport(
-  options: Pick<AgentUiWebSocketBridgeOptions, "dynamicToolHandler" | "hostEvents" | "serverRequestPolicy"> = {},
+  options: Pick<
+    AgentUiWebSocketBridgeOptions,
+    "dynamicToolHandler" | "hostEvents" | "serverRequestPolicy" | "stderr"
+  > = {},
 ) {
   const stdin = new PassThrough();
   const stdout = new PassThrough();
@@ -1078,7 +1133,16 @@ async function createBridgeBackedTransport(
 }
 
 async function createBridgeBackedSocket(
-  options: Pick<AgentUiWebSocketBridgeOptions, "browserMethodPolicy" | "dynamicToolHandler" | "hostEvents" | "inbound" | "initialize" | "serverRequestPolicy"> = {},
+  options: Pick<
+    AgentUiWebSocketBridgeOptions,
+    | "browserMethodPolicy"
+    | "dynamicToolHandler"
+    | "hostEvents"
+    | "inbound"
+    | "initialize"
+    | "serverRequestPolicy"
+    | "stderr"
+  > = {},
 ) {
   const stdin = new PassThrough();
   const stdout = new PassThrough();

@@ -215,7 +215,7 @@ Goal: align browser/log confidentiality and inbound resource limits with the doc
   - Tests: error `code` and safe data remain; secret-bearing `message` and `data` are redacted.
   - Docs/API: public redaction helper export requires server API snapshot; internal helper does not.
 
-- [ ] Redact bridge-owned diagnostics and dynamic tool failure text.
+- [x] Redact bridge-owned diagnostics and dynamic tool failure text.
   - Implementation: all bridge-owned stderr/log messages pass through `redactSecrets()`.
   - Implementation: dynamic tool handler failure response text is redacted before returning to App Server when the error text is included.
   - Tests: dynamic tool handler errors containing secrets do not leak to host stderr or failure response.

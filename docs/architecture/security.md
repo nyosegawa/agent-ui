@@ -63,7 +63,7 @@ Device-code login displays only the App Server `verificationUrl` and `userCode` 
 
 ## Diagnostics
 
-`createCodexAppServerBridge()` is the single stderr redaction point for the local App Server process. It consumes raw `child.stderr`, redacts it once, forwards the redacted text to the optional host callback, and passes a redacted stderr stream to the transport. Browser WebSocket events and React diagnostics must therefore only receive redacted stderr.
+`createCodexAppServerBridge()` is the single stderr redaction point for the local App Server process. It consumes raw `child.stderr`, redacts it once, forwards the redacted text to the optional host callback, and passes a redacted stderr stream to the transport. Bridge-owned WebSocket diagnostics and dynamic-tool failure text are redacted before they reach host stderr callbacks or App Server responses. Browser WebSocket events and React diagnostics must therefore only receive redacted stderr.
 
 The default React diagnostics surface keeps App Server warnings out of the primary chat transcript. Known low-value Codex plugin manifest warnings about `interface.defaultPrompt` and skill icon path warnings about `interface.icon_small` / `interface.icon_large` are suppressed from visible diagnostics because they are not actionable from Agent UI. Fatal bridge errors, request errors, and other redacted stderr warnings still surface as visible diagnostics.
 
