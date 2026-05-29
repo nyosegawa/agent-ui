@@ -104,6 +104,16 @@ test("anchors composer to the viewport and uses queued follow-ups, steer, and in
   await expect(queuedFollowUps(page)).toContainText("keep queued after stop", {
     timeout: FAST_EXPECT_TIMEOUT,
   });
+  await expect(sendNowButton(page)).toHaveCount(0, { timeout: FAST_EXPECT_TIMEOUT });
+  await queuedFollowUps(page)
+    .getByRole("button", { name: "Edit" })
+    .click({ timeout: FAST_EXPECT_TIMEOUT });
+  await expect(message).toHaveValue("keep queued after stop", {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(queuedFollowUps(page)).toHaveCount(0, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
   await assertComposerAnchored(page);
 
   await page.setViewportSize({ width: 390, height: 900 });

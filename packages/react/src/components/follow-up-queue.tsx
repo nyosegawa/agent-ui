@@ -1,4 +1,8 @@
-import type { AgentComposerController, QueuedFollowUpAttachment } from "../hooks";
+import type {
+  AgentComposerController,
+  QueuedFollowUp,
+  QueuedFollowUpAttachment,
+} from "../hooks";
 import { useAgentI18n } from "../i18n";
 import {
   IconApp,
@@ -47,7 +51,7 @@ export function QueuedFollowUpList({
                 ) : null}
                 <FollowUpActions
                   composer={composer}
-                  itemId={item.id}
+                  item={item}
                   labelSuffix={item.text}
                   onRestoreAttachments={onRestoreAttachments}
                 />
@@ -72,7 +76,7 @@ export function QueuedFollowUpList({
               ) : null}
               <FollowUpActions
                 composer={composer}
-                itemId={item.id}
+                item={item}
                 onRestoreAttachments={onRestoreAttachments}
               />
             </li>
@@ -116,33 +120,39 @@ function FollowUpAttachments({ attachments }: { attachments: QueuedFollowUpAttac
 
 function FollowUpActions({
   composer,
-  itemId,
+  item,
   labelSuffix,
   onRestoreAttachments,
 }: {
   composer: AgentComposerController;
-  itemId: string;
+  item: QueuedFollowUp;
   labelSuffix?: string;
   onRestoreAttachments?: (attachments: QueuedFollowUpAttachment[]) => void;
 }) {
   const { t } = useAgentI18n();
+  const itemId = item.id;
   const isSending = composer.sendingFollowUpIds.includes(itemId);
+  const canSendNow = Boolean(
+    item.expectedTurnId && item.expectedTurnId === composer.activeTurnId,
+  );
   const suffix = labelSuffix ? ` ${labelSuffix}` : "";
   const sendNow = `${t("followUp.sendNow")}${suffix}`;
   const edit = `${t("followUp.edit")}${suffix}`;
   const remove = `${t("followUp.remove")}${suffix}`;
   return (
     <div className="aui-follow-up-actions">
-      <button
-        aria-label={sendNow}
-        className={buttonClass("primary", { iconOnly: true, size: "sm" })}
-        disabled={isSending}
-        onClick={() => deferAction(() => composer.sendQueuedFollowUp(itemId))}
-        title={sendNow}
-        type="button"
-      >
-        <IconSend size={14} />
-      </button>
+      {canSendNow ? (
+        <button
+          aria-label={sendNow}
+          className={buttonClass("primary", { iconOnly: true, size: "sm" })}
+          disabled={isSending}
+          onClick={() => deferAction(() => composer.sendQueuedFollowUp(itemId))}
+          title={sendNow}
+          type="button"
+        >
+          <IconSend size={14} />
+        </button>
+      ) : null}
       <button
         aria-label={edit}
         className={buttonClass("secondary", { iconOnly: true, size: "sm" })}

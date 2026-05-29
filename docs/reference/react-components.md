@@ -394,6 +394,12 @@ chips render an attachment icon, filename, extension, and size. The resolver
 may return one `AgentUserInput` or multiple input items for each browser
 `File`.
 
+When a turn is running, normal Enter queues follow-ups locally. `Send now`
+appears only while the queued item's expected turn is still the active turn that
+can be steered. If that turn completes, stops, or is replaced before the queued
+item is sent, the item stays visible with Edit and Remove actions so the draft
+and attachments can be recovered instead of sending stale `turn/steer` params.
+
 Codex App Server stable v2 has `text`, `image`, `localImage`, `skill`, and
 `mention` user inputs; it does not have a generic local-file input type.
 Hosts must therefore persist arbitrary files themselves. Images should become

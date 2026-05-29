@@ -469,7 +469,7 @@ bun run test:e2e:real-local
 
 Goal: address lower-risk UX/docs/example drift after correctness/security work. Docs-only quick fixes can land independently, but must not claim new CI behavior.
 
-- [ ] Define queued follow-up post-turn policy.
+- [x] Define queued follow-up post-turn policy.
   - Implementation: show `Send now` only when expected turn is active/steerable; otherwise show edit/move actions and preserve draft data.
   - Tests: focused composer queue tests and real-local e2e for bridge-backed follow-ups.
   - Docs/API: snapshot if hook return state changes.

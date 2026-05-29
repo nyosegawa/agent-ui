@@ -2965,15 +2965,64 @@ describe("AgentChat", () => {
     await user.type(message, "old turn queued");
     await user.keyboard("{Enter}");
     await user.click(screen.getByRole("button", { name: "Start replacement turn" }));
-    await user.click(screen.getByRole("button", { name: "Send now" }));
 
-    await screen.findByText(/active turn changed before this instruction was sent/i);
+    expect(screen.queryByRole("button", { name: "Send now" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove" })).toBeInTheDocument();
     expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
       "old turn queued",
     );
     expect(transport.requests.map((request) => request.method)).not.toContain(
       "turn/steer",
     );
+  });
+
+  it("hides Send now for queued follow-ups after their expected turn completes", async () => {
+    const user = userEvent.setup();
+    function TurnCompleter() {
+      const { dispatch } = useAgentContext();
+      return (
+        <button
+          type="button"
+          onClick={() =>
+            dispatch({
+              threadId: "thread-running",
+              turn: {
+                id: "turn-running",
+                status: "completed",
+                threadId: "thread-running",
+              },
+              type: "turn/completed",
+            })
+          }
+        >
+          Complete turn
+        </button>
+      );
+    }
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={transport}>
+        <TurnCompleter />
+        <AgentThreadView />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "post turn queued");
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("button", { name: "Send now" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Complete turn" }));
+
+    expect(screen.queryByRole("button", { name: "Send now" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Remove" })).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+
+    expect(message).toHaveValue("post turn queued");
+    expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
+    expect(transport.requests.map((request) => request.method)).not.toContain("turn/steer");
   });
 
   it("keeps a queued follow-up and shows item error when Send now fails", async () => {
