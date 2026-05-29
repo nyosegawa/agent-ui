@@ -104,8 +104,11 @@ Implementation status:
 - `thread/turns/items/list` is intentionally disabled in the product facade
   until upstream implements it.
 - Protocol metadata records upstream commit `64e340ad2809a4da61ec12535a056bcf58f5d6ef`.
-- The schema refresh command used for this pass was
-  `bun --filter @nyosegawa/agent-ui-codex generate:schema`.
+- Schema refresh requires an explicit upstream checkout:
+  `CODEX_REPO=<codex-checkout> bun --filter @nyosegawa/agent-ui-codex generate:schema`.
+  The script validates focused App Server paths, rejects dirty imports, and
+  updates generated schema plus protocol metadata from one captured upstream
+  record.
 - `packages/codex/src/generated/README.md` records the upstream commit,
   commit date, subject, generated timestamp, and generator command beside the
   generated artifact.

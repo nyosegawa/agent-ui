@@ -399,7 +399,7 @@ bun run typecheck
 
 Goal: make published surfaces, schema import workflow, and browser validation gates reproducible after P0/P1 work.
 
-- [ ] Add schema import preflight and metadata sync.
+- [x] Add schema import preflight and metadata sync.
   - Implementation: require or platform-safely resolve `CODEX_REPO`; validate upstream paths and focused cleanliness before generation; capture HEAD/date/subject; generate to temp directories; update generated trees and metadata together.
   - Tests: helper tests for missing `CODEX_REPO`, dirty focused path, and metadata rendering if factored.
   - Docs/API: update schema refresh docs; no snapshot for script-only changes.

@@ -21,18 +21,21 @@ checked-in artifact.
 
 ## Update Flow
 
-1. Inspect `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server`.
-2. Run `bun --filter @nyosegawa/agent-ui-codex generate:schema`. By default
-   it reads `/Users/sakasegawa/src/github.com/openai/codex`; set `CODEX_REPO`
-   only when intentionally testing another checkout.
+1. Inspect the upstream Codex checkout you intend to import from.
+2. Run
+   `CODEX_REPO=<codex-checkout> bun --filter @nyosegawa/agent-ui-codex generate:schema`.
+   `CODEX_REPO` is required; the script does not fall back to a personal path.
+   Before generation it validates `codex-rs/app-server` and
+   `codex-rs/app-server-protocol`, rejects dirty focused paths, captures the
+   upstream HEAD/date/subject, and generates into temporary directories before
+   replacing the checked-in schema tree.
 3. Review generated stable and experimental diffs.
-4. Update `CODEX_PROTOCOL_COMMIT` and `CODEX_PROTOCOL_GENERATED_AT` in
-   `packages/codex/src/protocol.ts`. The generation script updates schema
-   files and generated method manifests; it does not make the product policy
-   decision for you.
-5. Update `packages/codex/package.json` and
-   `packages/codex/src/generated/README.md` so package metadata and the
-   generated artifact record the same upstream commit and generator command.
+4. Confirm the generated metadata changes. The generation script updates
+   `CODEX_PROTOCOL_COMMIT`, `CODEX_PROTOCOL_GENERATED_AT`,
+   `packages/codex/package.json` `agentUi`, and
+   `packages/codex/src/generated/README.md` from the same captured upstream
+   record.
+5. Do not hand-edit generated metadata unless the import script itself is wrong.
 6. Update `packages/codex/src/protocol.ts` capability classifications when the
    generated method surface changes. Generated method lists live in
    `packages/codex/src/generated/protocol-capabilities.ts`; productized,
