@@ -3658,7 +3658,8 @@ describe("AgentChat", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders non-approval server requests as passive context without decision actions", () => {
+  it("renders non-approval server requests as passive context without decision actions", async () => {
+    const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     render(
       <AgentProvider transport={transport}>
@@ -3670,6 +3671,36 @@ describe("AgentChat", () => {
               payload: { prompt: "Choose a deployment target", itemId: "item-input" },
               threadId: "thread-approval",
             },
+            {
+              id: "request-permissions",
+              kind: "permissionsApproval",
+              payload: { reason: "Need workspace read access" },
+              threadId: "thread-approval",
+            },
+            {
+              id: "request-mcp",
+              kind: "mcpElicitation",
+              payload: { prompt: "MCP needs a value" },
+              threadId: "thread-approval",
+            },
+            {
+              id: "request-dynamic",
+              kind: "dynamicTool",
+              payload: { namespace: "mcp__browser", tool: "get_app_state" },
+              threadId: "thread-approval",
+            },
+            {
+              id: "request-auth",
+              kind: "authRefresh",
+              payload: {},
+              threadId: "thread-approval",
+            },
+            {
+              id: "request-attestation",
+              kind: "attestation",
+              payload: {},
+              threadId: "thread-approval",
+            },
           ]}
         />
       </AgentProvider>,
@@ -3677,9 +3708,15 @@ describe("AgentChat", () => {
 
     expect(screen.getByText("User input requested")).toBeInTheDocument();
     expect(screen.getByText("Choose a deployment target")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Approve user input request/ })).toBeNull();
-    expect(screen.queryByRole("button", { name: /Decline user input request/ })).toBeNull();
-    expect(transport.responses.get("request-input")).toBeUndefined();
+    expect(screen.queryByRole("button", { name: /^Approve / })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Decline / })).toBeNull();
+
+    for (const reviewButton of screen.getAllByRole("button", { name: /^Review / })) {
+      await user.click(reviewButton);
+      expect(screen.queryByRole("button", { name: /^Approve / })).toBeNull();
+      expect(screen.queryByRole("button", { name: /^Decline / })).toBeNull();
+    }
+    expect(transport.responses.size).toBe(0);
   });
 
   it("approves command and file-change requests for the session", async () => {

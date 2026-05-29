@@ -75,7 +75,7 @@ Goal: stop the P0 correctness bug where default React UI can send invalid positi
   - Tests: broad hook returns non-approval requests and sends method-specific responses through `respond()`.
   - Docs/API: if the hook shape changes, update `react__index.d.ts` snapshots and add a migration note.
 
-- [ ] Limit `AgentApprovalQueue` default actions to approval kinds.
+- [x] Limit `AgentApprovalQueue` default actions to approval kinds.
   - Implementation: show `Approve`, `Approve for session`, and `Decline` only for command/file/legacy approvals.
   - Implementation: remove fallback decision payloads for non-approval kinds.
   - Tests: non-approval requests do not render decision buttons and never send `{ decision: "accept" | "acceptForSession" | "decline" }`.
