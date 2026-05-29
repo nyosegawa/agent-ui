@@ -91,8 +91,12 @@ const approvals = useAgentApprovals(threadId);
 ```
 
 `useAgentServerRequests()` returns the queued normalized server requests for the
-active or supplied thread. `useAgentApprovals()` adds stable `approve()` and
-`reject()` actions for command, file-change, and session approval flows.
+active or supplied thread, including host integration requests such as
+permissions, MCP elicitation, user input, dynamic tools, auth refresh, and
+attestation. `useAgentApprovals()` is approval-only: it returns only
+`commandApproval`, `fileChangeApproval`, `legacyExecApproval`, and
+`legacyPatchApproval` requests with stable `approve()` and `reject()` actions for
+decision flows.
 
 ## Auth, Models, And Usage
 

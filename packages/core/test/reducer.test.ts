@@ -458,6 +458,12 @@ describe("agentReducer", () => {
     const state = createInitialAgentState();
     state.serverRequestQueue = {
       byId: {
+        "1": {
+          id: "1",
+          kind: "userInput",
+          payload: {},
+          threadId: "thread-fifo",
+        },
         "2": {
           id: "2",
           kind: "fileChangeApproval",
@@ -471,11 +477,16 @@ describe("agentReducer", () => {
           threadId: "thread-fifo",
         },
       },
-      order: ["10", "2"],
+      order: ["10", "1", "2"],
     };
 
     expect(selectPendingApprovals(state, "thread-fifo").map((request) => request.id)).toEqual([
       "10",
+      "2",
+    ]);
+    expect(selectServerRequestQueue(state, "thread-fifo").map((request) => request.id)).toEqual([
+      "10",
+      "1",
       "2",
     ]);
   });

@@ -1,19 +1,20 @@
 # Approvals
 
 Codex App Server can pause a turn and ask the client to decide. Agent UI
-normalizes those server requests and renders them through `AgentApprovalQueue`.
+normalizes command, file-change, and legacy exec/apply-patch decision requests
+as approvals for `AgentApprovalQueue`.
 
-Supported request families include:
+Approval request families include:
 
 - command approval
 - file-change approval
-- user-input request
-- MCP elicitation
-- permissions approval
-- dynamic-tool request
-- auth refresh
-- attestation
 - legacy exec/apply-patch approval requests
+
+Other server requests, including user input, MCP elicitation, permissions,
+dynamic tools, auth refresh, and attestation, are host integration requests.
+Read them through `useAgentServerRequests()` and render method-specific UI in
+the host; the default approval queue does not send generic `{ decision }`
+responses for them.
 
 ## Default Placement
 

@@ -83,8 +83,17 @@ export function selectOrderedThreads(state: AgentSessionState) {
   return Object.values(state.threads);
 }
 
+const approvalRequestKinds = new Set<PendingServerRequest["kind"]>([
+  "commandApproval",
+  "fileChangeApproval",
+  "legacyExecApproval",
+  "legacyPatchApproval",
+]);
+
 export function selectPendingApprovals(state: AgentSessionState, threadId?: ThreadId) {
-  return selectServerRequestQueue(state, threadId);
+  return selectServerRequestQueue(state, threadId).filter((request) =>
+    approvalRequestKinds.has(request.kind),
+  );
 }
 
 export function selectServerRequestQueue(state: AgentSessionState, threadId?: ThreadId) {

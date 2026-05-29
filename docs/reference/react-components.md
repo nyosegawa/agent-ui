@@ -334,19 +334,21 @@ images, and system info. This renderer consumes `AgentItemBlock` values from
 core state, so hosts can keep visual components free of generated App Server
 types while still preserving protocol-derived detail in adapters and reducers.
 
-`AgentApprovalQueue` reads pending server requests through
-`useAgentServerRequests()` / `useAgentApprovals()` and renders them as a
-compact pending-decision surface. In `AgentThreadView` and `AgentChat`, pending
-requests with `itemId` or `turnId` metadata render immediately after that
-source context. Requests without source metadata are appended to the end of the
-transcript scroll area. Both placements are transcript items, not rows stacked
-between the transcript and the composer, and have no `max-height` or `overflow`
-of their own (the transcript owns scrolling). One expanded card plus compact
-picker rows for any other pending requests at the same anchor. The expanded
-card shows structured command, cwd, policy, file-change, patch, user-input, MCP
-elicitation, dynamic-tool, permissions, auth-refresh, and attestation context
-before sending the normalized accept / accept-for-session / decline response
-used by the App Server adapter.
+`AgentApprovalQueue` reads pending approvals through `useAgentApprovals()` and
+renders them as a compact pending-decision surface. In `AgentThreadView` and
+`AgentChat`, pending approvals with `itemId` or `turnId` metadata render
+immediately after that source context. Requests without source metadata are
+appended to the end of the transcript scroll area. Both placements are
+transcript items, not rows stacked between the transcript and the composer, and
+have no `max-height` or `overflow` of their own (the transcript owns scrolling).
+One expanded card plus compact picker rows for any other pending requests at
+the same anchor. Decision actions are limited to `commandApproval`,
+`fileChangeApproval`, `legacyExecApproval`, and `legacyPatchApproval`. Broader
+App Server requests such as user input, MCP elicitation, dynamic tools,
+permissions, auth refresh, and attestation are exposed through
+`useAgentServerRequests()` for host-owned integration UI and do not receive
+generic accept / accept-for-session / decline responses from the default
+approval queue.
 When a pending approval is taller than the transcript viewport, the timeline
 scrolls so the decision footer stays visible on desktop and mobile without a
 manual scroll.

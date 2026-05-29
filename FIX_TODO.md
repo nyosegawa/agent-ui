@@ -6,7 +6,8 @@ This TODO follows `FIX_PLAN.md`. Keep P0/P1 correctness and security work ahead 
 
 Goal: lock public contracts and failing tests before implementation.
 
-- [ ] Decide the approval/server-request taxonomy.
+- [x] Decide the approval/server-request taxonomy.
+  - Decision: `approval` is limited to `commandApproval`, `fileChangeApproval`, `legacyExecApproval`, and `legacyPatchApproval`; other App Server server requests are host integration requests surfaced through the broad server-request queue.
   - Completion: `approval` is explicitly limited to `commandApproval`, `fileChangeApproval`, `legacyExecApproval`, and `legacyPatchApproval`.
   - Completion: `permissionsApproval`, `mcpElicitation`, `userInput`, `dynamicTool`, `authRefresh`, and `attestation` are documented as broad server requests / host integration requests.
   - Completion: a failing test proves the default UI does not send decision-shaped responses to non-approval requests.

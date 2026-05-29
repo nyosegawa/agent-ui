@@ -683,8 +683,8 @@ describe("AgentChat", () => {
         },
         "approval-tail": {
           id: "approval-tail",
-          kind: "userInput",
-          payload: { prompt: "Tail fallback" },
+          kind: "commandApproval",
+          payload: { command: "bun lint", reason: "Tail fallback" },
           threadId: "thread-anchor",
         },
       },
@@ -3521,35 +3521,28 @@ describe("AgentChat", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders non-command server requests with specific approval context", async () => {
-    const user = userEvent.setup();
-    const initialState = createInitialAgentState();
-    initialState.serverRequestQueue = {
-      byId: {
-        "request-input": {
-          id: "request-input",
-          kind: "userInput",
-          payload: { prompt: "Choose a deployment target", itemId: "item-input" },
-          threadId: "thread-approval",
-        },
-      },
-      order: ["request-input"],
-    };
+  it("renders non-approval server requests as passive context without decision actions", () => {
     const transport = new FakeAgentTransport();
     render(
-      <AgentProvider initialState={initialState} transport={transport}>
-        <AgentApprovalQueue threadId="thread-approval" />
+      <AgentProvider transport={transport}>
+        <AgentApprovalQueue
+          approvals={[
+            {
+              id: "request-input",
+              kind: "userInput",
+              payload: { prompt: "Choose a deployment target", itemId: "item-input" },
+              threadId: "thread-approval",
+            },
+          ]}
+        />
       </AgentProvider>,
     );
 
     expect(screen.getByText("User input requested")).toBeInTheDocument();
     expect(screen.getByText("Choose a deployment target")).toBeInTheDocument();
-
-    await user.click(
-      screen.getByRole("button", { name: "Decline user input request request-input" }),
-    );
-
-    expect(transport.responses.get("request-input")).toEqual({ decision: "decline" });
+    expect(screen.queryByRole("button", { name: /Approve user input request/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Decline user input request/ })).toBeNull();
+    expect(transport.responses.get("request-input")).toBeUndefined();
   });
 
   it("approves command and file-change requests for the session", async () => {

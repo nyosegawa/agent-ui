@@ -350,15 +350,15 @@ Experimental unsupported methods:
 
 Server requests:
 
-- command approval
-- file change approval
-- user input request
-- MCP elicitation
-- permissions approval
-- dynamic tool call
-- auth refresh
-- attestation
-- legacy `applyPatchApproval` and `execCommandApproval` compatibility requests
+- approval decisions: command approval, file change approval, and legacy
+  `applyPatchApproval` / `execCommandApproval` compatibility requests
+- host integration requests: user input, MCP elicitation, permissions approval,
+  dynamic tool call, auth refresh, and attestation
+
+Default Agent UI approval controls are limited to the approval-decision subset.
+Host integration requests remain available through the broad server-request
+queue so hosts can render method-specific flows without receiving generic
+`{ decision }` responses.
 
 Notifications:
 

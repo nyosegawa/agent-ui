@@ -125,6 +125,7 @@ function ApprovalCard({
   const payload = isRecord(approval.payload) ? approval.payload : {};
   const requestLabel = approvalRequestLabel(approval.kind, t);
   const risk = approvalRisk(approval.kind, payload);
+  const canDecide = isDecisionApprovalKind(approval.kind);
   return (
     <article
       aria-labelledby={`aui-approval-title-${String(approval.id)}`}
@@ -147,44 +148,55 @@ function ApprovalCard({
         </span>
       </header>
       <ApprovalSummary approval={approval} payload={payload} />
-      <footer className="aui-approval-actions">
-        <button
-          aria-label={t("approval.action.approveAria", {
-            id: String(approval.id),
-            label: requestLabel,
-          })}
-          className={buttonClass("primary", { size: "md" })}
-          onClick={onApprove}
-          type="button"
-        >
-          <IconCheck size={14} />
-          <span>{t("approval.action.approve")}</span>
-        </button>
-        <button
-          aria-label={t("approval.action.approveForSessionAria", {
-            id: String(approval.id),
-            label: requestLabel,
-          })}
-          className={buttonClass("secondary", { size: "md" })}
-          onClick={onApproveForSession}
-          type="button"
-        >
-          {t("approval.action.approveForSession")}
-        </button>
-        <button
-          aria-label={t("approval.action.declineAria", {
-            id: String(approval.id),
-            label: requestLabel,
-          })}
-          className={buttonClass("danger", { size: "md" })}
-          onClick={onReject}
-          type="button"
-        >
-          <IconBlock size={14} />
-          <span>{t("approval.action.decline")}</span>
-        </button>
-      </footer>
+      {canDecide ? (
+        <footer className="aui-approval-actions">
+          <button
+            aria-label={t("approval.action.approveAria", {
+              id: String(approval.id),
+              label: requestLabel,
+            })}
+            className={buttonClass("primary", { size: "md" })}
+            onClick={onApprove}
+            type="button"
+          >
+            <IconCheck size={14} />
+            <span>{t("approval.action.approve")}</span>
+          </button>
+          <button
+            aria-label={t("approval.action.approveForSessionAria", {
+              id: String(approval.id),
+              label: requestLabel,
+            })}
+            className={buttonClass("secondary", { size: "md" })}
+            onClick={onApproveForSession}
+            type="button"
+          >
+            {t("approval.action.approveForSession")}
+          </button>
+          <button
+            aria-label={t("approval.action.declineAria", {
+              id: String(approval.id),
+              label: requestLabel,
+            })}
+            className={buttonClass("danger", { size: "md" })}
+            onClick={onReject}
+            type="button"
+          >
+            <IconBlock size={14} />
+            <span>{t("approval.action.decline")}</span>
+          </button>
+        </footer>
+      ) : null}
     </article>
+  );
+}
+
+function isDecisionApprovalKind(kind: string): boolean {
+  return (
+    kind === "commandApproval" ||
+    kind === "fileChangeApproval" ||
+    kind === "legacyExecApproval" ||
+    kind === "legacyPatchApproval"
   );
 }
 
@@ -439,19 +451,16 @@ function MetadataGrid({ rows }: { rows: Array<[string, string | undefined]> }) {
 }
 
 function approvalResult(approval: PendingServerRequest) {
-  if (approval.kind === "fileChangeApproval") return { decision: "accept" };
-  if (approval.kind === "commandApproval") return { decision: "accept" };
-  return { decision: "accept" };
+  if (isDecisionApprovalKind(approval.kind)) return { decision: "accept" };
+  return undefined;
 }
 
 function approvalSessionResult(approval: PendingServerRequest) {
-  if (approval.kind === "fileChangeApproval") return { decision: "acceptForSession" };
-  if (approval.kind === "commandApproval") return { decision: "acceptForSession" };
-  return { decision: "acceptForSession" };
+  if (isDecisionApprovalKind(approval.kind)) return { decision: "acceptForSession" };
+  return undefined;
 }
 
 function declineApprovalResult(approval: PendingServerRequest) {
-  if (approval.kind === "fileChangeApproval") return { decision: "decline" };
-  if (approval.kind === "commandApproval") return { decision: "decline" };
-  return { decision: "decline" };
+  if (isDecisionApprovalKind(approval.kind)) return { decision: "decline" };
+  return undefined;
 }
