@@ -472,6 +472,39 @@ describe("agentReducer", () => {
     expectThreadRegistryMembership(known, "thread-status-known", "preview");
   });
 
+  it("synchronizes thread registry buckets on turn lifecycle events", () => {
+    const running = runEventFixture([
+      {
+        event: {
+          status: "notLoaded",
+          thread: { id: "thread-turn-sync" },
+          turns: [{ id: "turn-turn-sync", threadId: "thread-turn-sync" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          threadId: "thread-turn-sync",
+          turn: { id: "turn-turn-sync", threadId: "thread-turn-sync" },
+          type: "turn/started",
+        },
+      },
+    ]);
+
+    expect(running.threads["thread-turn-sync"]?.status).toBe("running");
+    expectThreadRegistryMembership(running, "thread-turn-sync", "live");
+
+    const completed = agentReducer(running, {
+      items: [],
+      threadId: "thread-turn-sync",
+      turn: { id: "turn-turn-sync", threadId: "thread-turn-sync", status: "completed" },
+      type: "turn/completed",
+    });
+
+    expect(completed.threads["thread-turn-sync"]?.status).toBe("completed");
+    expectThreadRegistryMembership(completed, "thread-turn-sync", "loaded");
+  });
+
   it("keeps a thread waiting until all pending server requests resolve or reject", () => {
     const firstResolved = runEventFixture([
       { event: { thread: { id: "thread-multi" }, type: "thread/started" } },

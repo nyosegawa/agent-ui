@@ -1,23 +1,29 @@
 import type { TurnEvent } from "../events";
 import type { AgentSessionState } from "../state";
-import { threadEntityStore } from "../stores/thread-entity";
 import { turnStore } from "../stores/turn";
 import {
   isCompletedTurnStatus,
   isPreviewThreadStatus,
 } from "./shared";
+import { commitThreadEntity } from "./thread-commit";
 
 export function reduceTurnEvent(
   state: AgentSessionState,
   event: TurnEvent,
 ): AgentSessionState {
   switch (event.type) {
-    case "turn/started":
-      return threadEntityStore.update(state, event.threadId, (thread) =>
+    case "turn/started": {
+      const thread = state.threads[event.threadId];
+      if (!thread) return state;
+      return commitThreadEntity(
+        state,
         turnStore.upsert(thread, event.turn, "running"),
       );
-    case "turn/completed":
-      return threadEntityStore.update(state, event.threadId, (thread) => {
+    }
+    case "turn/completed": {
+      const thread = state.threads[event.threadId];
+      if (!thread) return state;
+      const nextThread = (() => {
         const completedStatus =
           event.snapshot
             ? thread.status
@@ -47,7 +53,9 @@ export function reduceTurnEvent(
             },
           },
         };
-      });
+      })();
+      return commitThreadEntity(state, nextThread);
+    }
     case "turn/plan/updated":
       return turnStore.update(state, event.threadId, event.turnId, (turn) => ({
         ...turn,

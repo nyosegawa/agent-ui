@@ -161,7 +161,7 @@ Goal: fix current reducer bugs within the existing event shape. Do not include `
   - Tests: unknown id creates no entity or dangling registry entry; known thread with turns plus `notLoaded` becomes preview-like, not cold.
   - Docs/API: no public API change.
 
-- [ ] Synchronize registry on `turn/started` and `turn/completed`.
+- [x] Synchronize registry on `turn/started` and `turn/completed`.
   - Implementation: route turn lifecycle reducer paths through the commit helper while preserving existing snapshot/status guards.
   - Tests: cold/preview thread becomes live on start; terminal completion keeps status, registry status, and bucket synchronized.
   - Docs/API: no public API change.
