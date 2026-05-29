@@ -3719,6 +3719,33 @@ describe("AgentChat", () => {
     expect(transport.responses.size).toBe(0);
   });
 
+  it("renders non-approval server requests through custom host rendering only", () => {
+    render(
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <AgentApprovalQueue
+          approvals={[
+            {
+              id: "request-mcp",
+              kind: "mcpElicitation",
+              payload: { prompt: "MCP needs a value" },
+              threadId: "thread-approval",
+            },
+          ]}
+          renderApproval={(request) => (
+            <div data-testid="host-request">{`Host handles ${request.kind}`}</div>
+          )}
+        />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByTestId("host-request")).toHaveTextContent(
+      "Host handles mcpElicitation",
+    );
+    expect(screen.queryByText("MCP input requested")).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Approve / })).toBeNull();
+    expect(screen.queryByRole("button", { name: /^Decline / })).toBeNull();
+  });
+
   it("approves command and file-change requests for the session", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();

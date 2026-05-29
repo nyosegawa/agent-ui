@@ -81,7 +81,7 @@ Goal: stop the P0 correctness bug where default React UI can send invalid positi
   - Tests: non-approval requests do not render decision buttons and never send `{ decision: "accept" | "acceptForSession" | "decline" }`.
   - Docs/API: update `docs/reference/react-components.md`; no snapshot if props stay unchanged.
 
-- [ ] Render non-approval server requests only passively or through custom rendering.
+- [x] Render non-approval server requests only passively or through custom rendering.
   - Implementation: no full permissions/MCP/user-input/dynamic/auth/attestation forms in this milestone.
   - Tests: non-approval kinds show passive host-required context or custom renderer output only.
   - Docs/API: do not add a public `AgentServerRequestQueue` yet.
