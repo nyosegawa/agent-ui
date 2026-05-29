@@ -1174,6 +1174,74 @@ describe("agentReducer", () => {
     expect(turn?.turn.status).toBe("interrupted");
   });
 
+  it("keeps full turn snapshots merge-only until destructive replacement is designed", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          thread: { id: "thread-full-merge-only" },
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          items: [
+            {
+              id: "item-present",
+              kind: "assistantMessage",
+              status: "completed",
+              text: "present",
+              threadId: "thread-full-merge-only",
+              turnId: "turn-full-merge-only",
+            },
+            {
+              id: "item-omitted",
+              kind: "assistantMessage",
+              status: "completed",
+              text: "omitted from later full snapshot",
+              threadId: "thread-full-merge-only",
+              turnId: "turn-full-merge-only",
+            },
+          ],
+          snapshot: true,
+          threadId: "thread-full-merge-only",
+          turn: {
+            id: "turn-full-merge-only",
+            itemsView: "full",
+            threadId: "thread-full-merge-only",
+          },
+          type: "turn/completed",
+        },
+      },
+      {
+        event: {
+          items: [
+            {
+              id: "item-present",
+              kind: "assistantMessage",
+              status: "completed",
+              text: "present refreshed",
+              threadId: "thread-full-merge-only",
+              turnId: "turn-full-merge-only",
+            },
+          ],
+          snapshot: true,
+          threadId: "thread-full-merge-only",
+          turn: {
+            id: "turn-full-merge-only",
+            itemsView: "full",
+            threadId: "thread-full-merge-only",
+          },
+          type: "turn/completed",
+        },
+      },
+    ]);
+    const turn = state.threads["thread-full-merge-only"]?.turns["turn-full-merge-only"];
+
+    expect(turn?.itemOrder).toEqual(["item-present", "item-omitted"]);
+    expect(turn?.items["item-present"]?.text).toBe("present refreshed");
+    expect(turn?.items["item-omitted"]?.text).toBe("omitted from later full snapshot");
+  });
+
   it("keeps thread/read snapshot status when stored history ends with an interrupted turn", () => {
     const state = runEventFixture([
       {

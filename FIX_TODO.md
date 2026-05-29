@@ -333,7 +333,7 @@ Goal: handle upstream `itemsView` and paged history without data loss. This is P
   - Tests: live in-progress turn receiving interrupted snapshot keeps item data and stable ordering.
   - Docs/API: no snapshot.
 
-- [ ] Defer destructive full replacement/pruning.
+- [x] Defer destructive full replacement/pruning.
   - Implementation: full snapshots remain merge-only until a source-strength event design exists.
   - Tests: absent items are not pruned.
   - Docs/API: no `turn/snapshot` API yet.
