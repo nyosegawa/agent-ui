@@ -128,6 +128,23 @@ describe("CodexWebSocketTransport", () => {
     });
   });
 
+  it("does not resolve numeric requests from string response ids", async () => {
+    const sockets: FakeWebSocket[] = [];
+    const transport = createCodexWebSocketTransport({
+      reconnect: false,
+      url: "ws://localhost/agent-ui",
+      webSocketImpl: fakeWebSocketFactory(sockets) as any,
+    });
+    await transport.connect();
+
+    const request = transport.request("thread/read", { threadId: "thread-1" });
+    sockets[0]!.emitMessage({ id: "0", result: { wrong: true } });
+    await expect(notSettled(request)).resolves.toBe("pending");
+    sockets[0]!.emitMessage({ id: 0, result: { ok: true } });
+
+    await expect(request).resolves.toEqual({ ok: true });
+  });
+
   it("preserves top-level trace and cleans up aborted, timed-out, and closed pending requests", async () => {
     const sockets: FakeWebSocket[] = [];
     const transport = createCodexWebSocketTransport({
@@ -225,6 +242,16 @@ function fakeWebSocketFactory(sockets: FakeWebSocket[]) {
       sockets.push(this);
     }
   };
+}
+
+async function notSettled(promise: Promise<unknown>): Promise<"pending" | "settled"> {
+  return Promise.race([
+    promise.then(
+      () => "settled" as const,
+      () => "settled" as const,
+    ),
+    new Promise<"pending">((resolve) => setTimeout(() => resolve("pending"), 5)),
+  ]);
 }
 
 class FakeWebSocket {

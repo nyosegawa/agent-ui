@@ -356,7 +356,7 @@ Goal: align stdio/WebSocket/SDK transports and browser bridge lifecycle contract
   - Tests: close event drains, then `iterator.next()` returns `{ done: true }`; pending waiter close resolves.
   - Docs/API: update lifecycle docs; no type change.
 
-- [ ] Type-tag JSON-RPC request id keys.
+- [x] Type-tag JSON-RPC request id keys.
   - Implementation: shared internal helper distinguishes numeric `1` from string `"1"`.
   - Tests: string id response does not resolve numeric pending request in stdio/WebSocket transports.
   - Docs/API: no public helper unless intentionally exported.

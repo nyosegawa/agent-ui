@@ -165,6 +165,23 @@ describe("Codex stdio transport backpressure", () => {
     await transport.close();
   });
 
+  it("does not resolve numeric requests from string response ids", async () => {
+    const stdin = new PassThrough();
+    const stdout = new PassThrough();
+    const transport = createCodexStdioTransport({ stdin, stdout });
+    const written: string[] = [];
+    stdin.on("data", (chunk) => written.push(String(chunk)));
+    await transport.connect();
+
+    const request = transport.request("thread/read", { threadId: "thread-1" });
+    await waitFor(() => written.length === 1);
+    stdout.write('{"id":"0","result":{"wrong":true}}\n');
+    await expect(notSettled(request)).resolves.toBe("pending");
+    stdout.write('{"id":0,"result":{"ok":true}}\n');
+
+    await expect(request).resolves.toEqual({ ok: true });
+  });
+
   it("rejects pending requests when stdout ends", async () => {
     const stdin = new PassThrough();
     const stdout = new PassThrough();
@@ -236,4 +253,14 @@ async function waitFor(predicate: () => boolean): Promise<void> {
 
 async function nextTick(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
+}
+
+async function notSettled(promise: Promise<unknown>): Promise<"pending" | "settled"> {
+  return Promise.race([
+    promise.then(
+      () => "settled" as const,
+      () => "settled" as const,
+    ),
+    new Promise<"pending">((resolve) => setTimeout(() => resolve("pending"), 5)),
+  ]);
 }

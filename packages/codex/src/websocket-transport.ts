@@ -14,6 +14,7 @@ import {
 } from "./json-rpc";
 import { normalizeCodexServerMessage } from "./normalizer";
 import { codexInitializeParams, type CodexInitializeOptions } from "./protocol";
+import { requestIdKey } from "./request-id-key";
 
 export interface CodexWebSocketTransportOptions {
   initialize?: CodexInitializeOptions;
@@ -89,8 +90,9 @@ class CodexWebSocketTransport implements AgentTransport {
     const id = this.#nextId++;
     return new Promise<TResult>((resolve, reject) => {
       let settled = false;
+      const pendingKey = requestIdKey(id);
       const cleanup = () => {
-        this.#pending.delete(String(id));
+        this.#pending.delete(pendingKey);
         if (timeout) clearTimeout(timeout);
         options?.signal?.removeEventListener("abort", onAbort);
       };
@@ -113,7 +115,7 @@ class CodexWebSocketTransport implements AgentTransport {
           : undefined;
       timeout?.unref?.();
       options?.signal?.addEventListener("abort", onAbort, { once: true });
-      this.#pending.set(String(id), {
+      this.#pending.set(pendingKey, {
         reject: fail,
         resolve: pass,
       });
@@ -235,7 +237,7 @@ class CodexWebSocketTransport implements AgentTransport {
     }
 
     if (isJsonRpcResponse(message)) {
-      const pending = this.#pending.get(String(message.id));
+      const pending = this.#pending.get(requestIdKey(message.id));
       if (!pending) return;
       if ("error" in message) pending.reject(jsonRpcErrorObject(message.error));
       else pending.resolve(message.result);
