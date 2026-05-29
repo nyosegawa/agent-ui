@@ -312,7 +312,7 @@ Goal: handle upstream `itemsView` and paged history without data loss. This is P
   - Tests: all three values persist in reducer state.
   - Docs/API: update core API snapshots and public state docs.
 
-- [ ] Implement completeness rank and non-destructive merge semantics.
+- [x] Implement completeness rank and non-destructive merge semantics.
   - Implementation: `notLoaded < summary < full`.
   - Implementation: `notLoaded` and `summary` do not delete or downgrade existing full item data.
   - Tests: partial views preserve command/file/tool items; `full` can upgrade summary data.

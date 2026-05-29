@@ -7,6 +7,7 @@ import type {
   TurnState,
 } from "../state";
 import { threadEntityStore } from "./thread-entity";
+import { mergeAgentTurn } from "./turn-merge";
 
 export interface TurnStore {
   createTurnState(turn: AgentTurn, threadId: ThreadId): TurnState;
@@ -46,6 +47,7 @@ export function upsertTurn(
   turn: AgentTurn,
   threadStatus: ThreadState["status"],
 ): ThreadState {
+  const existingTurn = thread.turns[turn.id];
   const orderedTurnIds = thread.orderedTurnIds.includes(turn.id)
     ? thread.orderedTurnIds
     : [...thread.orderedTurnIds, turn.id];
@@ -56,8 +58,8 @@ export function upsertTurn(
     turns: {
       ...thread.turns,
       [turn.id]: {
-        ...(thread.turns[turn.id] ?? createTurnState(turn, thread.thread.id)),
-        turn,
+        ...(existingTurn ?? createTurnState(turn, thread.thread.id)),
+        turn: existingTurn ? mergeAgentTurn(existingTurn.turn, turn) : turn,
       },
     },
   };

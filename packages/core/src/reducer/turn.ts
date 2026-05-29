@@ -2,6 +2,7 @@ import type { TurnEvent } from "../events";
 import type { AgentSessionState } from "../state";
 import { itemStore } from "../stores/item";
 import { turnStore } from "../stores/turn";
+import { mergeAgentTurn } from "../stores/turn-merge";
 import {
   isCompletedTurnStatus,
   isPreviewThreadStatus,
@@ -38,7 +39,7 @@ export function reduceTurnEvent(
           turnStore.createTurnState(event.turn, event.threadId);
         let completedTurn = {
           ...turn,
-          turn: event.turn,
+          turn: mergeAgentTurn(turn.turn, event.turn),
         };
         for (const item of event.items ?? []) {
           completedTurn = itemStore.upsert(completedTurn, item);

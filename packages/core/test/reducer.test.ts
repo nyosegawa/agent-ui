@@ -909,6 +909,110 @@ describe("agentReducer", () => {
     expect(state.threads["thread-items-view"]?.turns["turn-full"]?.turn.itemsView).toBe("full");
   });
 
+  it("merges turn item view completeness without downgrading full item data", () => {
+    const full = runEventFixture([
+      { event: { thread: { id: "thread-view-merge" }, type: "thread/started" } },
+      {
+        event: {
+          items: [
+            {
+              id: "item-command-full",
+              kind: "commandExecution",
+              raw: { command: "bun test" },
+              status: "completed",
+              threadId: "thread-view-merge",
+              turnId: "turn-view-merge",
+            },
+            {
+              id: "item-file-full",
+              kind: "fileChange",
+              raw: { changes: [{ path: "src/app.ts", type: "modify" }] },
+              status: "completed",
+              threadId: "thread-view-merge",
+              turnId: "turn-view-merge",
+            },
+            {
+              id: "item-tool-full",
+              kind: "toolCall",
+              raw: { tool: "search" },
+              status: "completed",
+              threadId: "thread-view-merge",
+              turnId: "turn-view-merge",
+            },
+          ],
+          snapshot: true,
+          threadId: "thread-view-merge",
+          turn: { id: "turn-view-merge", itemsView: "full", threadId: "thread-view-merge" },
+          type: "turn/completed",
+        },
+      },
+      {
+        event: {
+          items: [],
+          snapshot: true,
+          threadId: "thread-view-merge",
+          turn: { id: "turn-view-merge", itemsView: "summary", threadId: "thread-view-merge" },
+          type: "turn/completed",
+        },
+      },
+    ]);
+
+    const fullTurn = full.threads["thread-view-merge"]?.turns["turn-view-merge"];
+    expect(fullTurn?.turn.itemsView).toBe("full");
+    expect(fullTurn?.itemOrder).toEqual([
+      "item-command-full",
+      "item-file-full",
+      "item-tool-full",
+    ]);
+    expect(fullTurn?.blocksByItemId["item-command-full"]?.kind).toBe("commandExecution");
+    expect(fullTurn?.blocksByItemId["item-file-full"]?.kind).toBe("fileChange");
+    expect(fullTurn?.blocksByItemId["item-tool-full"]?.kind).toBe("toolCall");
+
+    const upgraded = runEventFixture([
+      { event: { thread: { id: "thread-view-upgrade" }, type: "thread/started" } },
+      {
+        event: {
+          items: [
+            {
+              id: "item-message",
+              kind: "assistantMessage",
+              status: "completed",
+              text: "summary text",
+              threadId: "thread-view-upgrade",
+              turnId: "turn-view-upgrade",
+            },
+          ],
+          snapshot: true,
+          threadId: "thread-view-upgrade",
+          turn: { id: "turn-view-upgrade", itemsView: "summary", threadId: "thread-view-upgrade" },
+          type: "turn/completed",
+        },
+      },
+      {
+        event: {
+          items: [
+            {
+              id: "item-message",
+              kind: "assistantMessage",
+              status: "completed",
+              text: "full text",
+              threadId: "thread-view-upgrade",
+              turnId: "turn-view-upgrade",
+            },
+          ],
+          snapshot: true,
+          threadId: "thread-view-upgrade",
+          turn: { id: "turn-view-upgrade", itemsView: "full", threadId: "thread-view-upgrade" },
+          type: "turn/completed",
+        },
+      },
+    ]);
+
+    const upgradedTurn = upgraded.threads["thread-view-upgrade"]?.turns["turn-view-upgrade"];
+    expect(upgradedTurn?.turn.itemsView).toBe("full");
+    expect(upgradedTurn?.items["item-message"]?.text).toBe("full text");
+  });
+
   it("does not downgrade a live thread when a preview snapshot is activated", () => {
     const state = runEventFixture([
       {

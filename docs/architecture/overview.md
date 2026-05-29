@@ -109,6 +109,10 @@ notification history, warnings, and errors.
 `usageStore` owns usage initialization, host metrics, and account rate-limit
 usage snapshots.
 
+Stored turns track `itemsView` completeness as `notLoaded < summary < full`.
+Lower-completeness snapshots merge without deleting existing item data or
+downgrading a full turn, while full snapshots may update summarized item data.
+
 Selectors expose stable read surfaces for hosts and React hooks across thread,
 turn, item, approval, app, diagnostics, and usage state. Components should use
 selectors instead of reaching through normalized maps when the read represents a
