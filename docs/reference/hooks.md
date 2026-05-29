@@ -139,7 +139,10 @@ const apps = useAgentApps(threadId);
 ```
 
 `useAgentSkills()` calls `skills/list`, stores normalized skills, and exposes
-`setSkillEnabled()` through React-owned skill config options.
+`setSkillEnabled()` through `skills/config/write`. Agent UI treats
+`skills/config/write` as a productized skill toggle surface because it is scoped
+to Codex skill metadata; broader host configuration writes such as
+`config/value/write` and `config/batchWrite` remain host-only protocol methods.
 
 `useAgentHooks()` calls `hooks/list` and stores normalized hook metadata.
 

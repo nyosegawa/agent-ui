@@ -264,6 +264,10 @@ Stable productized methods:
 - `hooks/list`
 - `app/list`
 
+`skills/config/write` is productized only for the skill enablement flow exposed
+by `useAgentSkills().setSkillEnabled()`. It is intentionally distinct from the
+host-only `config/*` write methods below.
+
 Host-only or advanced local tooling:
 
 - `thread/shellCommand`

@@ -80,9 +80,14 @@ describe("Codex protocol metadata", () => {
     expect(isExperimentalAvailableMethod("thread/turns/list")).toBe(true);
     expect(isExperimentalAvailableMethod("thread/turns/items/list")).toBe(false);
     expect(isExperimentalUnsupportedMethod("thread/turns/items/list")).toBe(true);
+    expect(isStableProductizedMethod("skills/config/write")).toBe(true);
+    expect(isHostOnlyMethod("config/value/write")).toBe(true);
+    expect(isHostOnlyMethod("config/batchWrite")).toBe(true);
 
     expect(() => assertCodexProductizedMethod("thread/start")).not.toThrow();
     expect(() => assertCodexProductizedMethod("command/exec")).toThrow("hostOnly");
+    expect(() => assertCodexProductizedMethod("skills/config/write")).not.toThrow();
+    expect(() => assertCodexProductizedMethod("config/value/write")).toThrow("hostOnly");
     expect(() => assertCodexExperimentalMethod("thread/turns/list")).not.toThrow();
     expect(() => assertCodexExperimentalMethod("thread/turns/items/list")).toThrow(
       "experimentalUnsupported",

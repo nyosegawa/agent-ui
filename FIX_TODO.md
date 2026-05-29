@@ -30,7 +30,9 @@ Goal: lock public contracts and failing tests before implementation.
   - Completion: choose strict equality with `CODEX_PROTOCOL_COMMIT`, or flexible `schemaCommit` + `fixtureSourceCommit` + `divergenceReason`.
   - Completion: normal protocol tests do not depend on local upstream ancestry.
 
-- [ ] Decide `skills/config/write` default policy.
+- [x] Decide `skills/config/write` default policy.
+  - Decision: keep `skills/config/write` productized by default for skill enablement through `useAgentSkills().setSkillEnabled()`.
+  - Test plan: protocol classification distinguishes productized `skills/config/write` from host-only `config/value/write` and `config/batchWrite`.
   - Completion: if productized, docs/tests distinguish it from host `config/*` writes.
   - Completion: if host-only, default policies remove it and host opt-in/migration docs are planned.
 
