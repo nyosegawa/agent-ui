@@ -266,7 +266,12 @@ describe("attachAgentUiWebSocketBridge", () => {
         params: { delta: "hi", itemId: "i1", threadId: "t1", turnId: "u1" },
       })}\n`,
     );
-    expect(await nextMessage(client)).toMatchObject({
+    const notification = await nextMessage(client);
+    expect(notification).not.toMatchObject({
+      method: "item/agentMessage/delta",
+      params: { delta: "hi", itemId: "i1", threadId: "t1", turnId: "u1" },
+    });
+    expect(notification).toMatchObject({
       event: {
         event: {
           delta: "hi",

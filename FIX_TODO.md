@@ -381,7 +381,7 @@ Goal: align stdio/WebSocket/SDK transports and browser bridge lifecycle contract
   - Tests: App Server stdin receives initialize once; browser gets rejection in double-initialize scenario.
   - Docs/API: update server bridge, protocol, and package export docs.
 
-- [ ] Test/document Agent UI bridge envelope vs raw Codex wire.
+- [x] Test/document Agent UI bridge envelope vs raw Codex wire.
   - Implementation: App Server notification/request/stderr/error reaches browser as `{ type: "agent-ui/transport-event", event }`; browser request response preserves original id as JSON-RPC response.
   - Tests: raw upstream notification is not forwarded as raw `{ method, params }`.
   - Docs/API: no snapshot.

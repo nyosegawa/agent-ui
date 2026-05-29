@@ -57,8 +57,12 @@ const transport = createCodexWebSocketTransport({
 
 The bridge starts a Codex App Server process, forwards normalized transport
 events to the browser, forwards browser responses for App Server requests, and
-closes the process when the socket closes or the idle timeout expires. Slow
-browser consumers are closed with WebSocket code `1013` when the outbound
+closes the process when the socket closes or the idle timeout expires. It is not
+a transparent raw Codex WebSocket proxy: App Server notifications, requests,
+stderr, and errors are sent to the browser as
+`{ type: "agent-ui/transport-event", event }` envelopes. Browser JSON-RPC
+requests still receive JSON-RPC responses using the original browser request id.
+Slow browser consumers are closed with WebSocket code `1013` when the outbound
 buffer exceeds the configured backpressure limit.
 
 Inbound browser messages are checked before JSON parsing. The default maximum
