@@ -222,8 +222,8 @@ export function AgentAppsPanel({ threadId }: { threadId?: string }) {
           {apps.map((app) => (
             <li key={app.id}>
               <span>{app.name ?? app.id}</span>
-              {app.installed === false ? <small>{t("apps.notInstalled")}</small> : null}
-              {app.needsAuth ? <small>{t("apps.authNeeded")}</small> : null}
+              {app.enabled === false ? <small>{t("apps.disabled")}</small> : null}
+              {app.accessible === false ? <small>{t("apps.unavailable")}</small> : null}
             </li>
           ))}
         </ul>

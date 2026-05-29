@@ -58,18 +58,21 @@ function normalizeAppsList(response: unknown): { apps: AgentApp[]; nextCursor: s
       if (!appRecord) return [];
       return [
         {
-          id: String(appRecord.id ?? appRecord.uri ?? appRecord.name),
-          installed:
-            typeof appRecord.installed === "boolean"
-              ? appRecord.installed
+          accessible:
+            typeof appRecord.accessible === "boolean"
+              ? appRecord.accessible
+              : typeof appRecord.isAccessible === "boolean"
+                ? appRecord.isAccessible
+                : undefined,
+          enabled:
+            typeof appRecord.enabled === "boolean"
+              ? appRecord.enabled
               : typeof appRecord.isEnabled === "boolean"
                 ? appRecord.isEnabled
                 : undefined,
+          id: String(appRecord.id ?? appRecord.uri ?? appRecord.name),
+          installUrl: stringValue(appRecord.installUrl),
           name: stringValue(appRecord.name),
-          needsAuth:
-            typeof appRecord.needsAuth === "boolean"
-              ? appRecord.needsAuth
-              : appRecord.isAccessible === false,
           raw: app,
           uri: stringValue(appRecord.uri) ?? stringValue(appRecord.installUrl),
         },

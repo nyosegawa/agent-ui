@@ -86,10 +86,12 @@ export interface AgentI18nDictionary {
   "aria.usageLimits": string;
   "aria.usageSummary": string;
   "apps.authNeeded": string;
+  "apps.disabled": string;
   "apps.empty": string;
   "apps.label": string;
   "apps.loadMore": string;
   "apps.notInstalled": string;
+  "apps.unavailable": string;
   "common.cancel": string;
   "common.close": string;
   "common.closeMenu": string;

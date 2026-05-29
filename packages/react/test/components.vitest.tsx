@@ -1402,7 +1402,7 @@ describe("AgentChat", () => {
     expect(await screen.findByRole("button", { name: "Disable" })).toBeInTheDocument();
   });
 
-  it("paginates app/list and surfaces install/auth state", async () => {
+  it("paginates app/list and surfaces upstream enabled/accessibility state", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
       onRequest(request) {
@@ -1445,8 +1445,10 @@ describe("AgentChat", () => {
 
     await user.click(screen.getByRole("button", { name: "Refresh" }));
     expect(await screen.findByText("Browser")).toBeInTheDocument();
-    expect(screen.getByText("not installed")).toBeInTheDocument();
-    expect(screen.getByText("auth needed")).toBeInTheDocument();
+    expect(screen.getByText("disabled")).toBeInTheDocument();
+    expect(screen.getByText("unavailable")).toBeInTheDocument();
+    expect(screen.queryByText("not installed")).not.toBeInTheDocument();
+    expect(screen.queryByText("auth needed")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Load more" }));
 
     expect(await screen.findByText("Drive")).toBeInTheDocument();

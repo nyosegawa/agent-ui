@@ -489,7 +489,7 @@ Goal: address lower-risk UX/docs/example drift after correctness/security work. 
   - Tests: Japanese/non-English render tests contain no English noun leakage.
   - Docs/API: update React API snapshot if dictionary keys change.
 
-- [ ] Align Apps normalizer vocabulary with upstream `AppInfo`.
+- [x] Align Apps normalizer vocabulary with upstream `AppInfo`.
   - Implementation: do not treat `isEnabled` as install state or `isAccessible === false` as direct auth truth without explicit docs.
   - Tests: apps normalizer semantic tests.
   - Docs/API: update `AgentApp` snapshots/docs if public type changes.

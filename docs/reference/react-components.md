@@ -281,7 +281,9 @@ Use these primitives when embedding Agent UI into existing product chrome:
   App Server `thread/tokenUsage/updated` totals.
 - `AgentDiagnosticsPanel`: bridge/account/model startup diagnostics.
 - `AgentSkillsPanel`: skill list and enable/disable controls.
-- `AgentAppsPanel`: Codex Apps/connectors list from `app/list`.
+- `AgentAppsPanel`: Codex Apps/connectors list from `app/list`, using upstream
+  enabled/accessibility vocabulary rather than treating connector availability
+  as install or auth state.
 - `AgentWorkspace`: chat plus optional host-owned side panel slot.
 
 ## Composition Examples

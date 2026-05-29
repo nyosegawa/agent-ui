@@ -148,7 +148,11 @@ to Codex skill metadata; broader host configuration writes such as
 
 `useAgentApps()` calls `app/list`, preserves `nextCursor`, scopes state by
 `threadId`, and exposes `loadMoreApps()` so hosts can page through connector/app
-metadata while keeping install/auth state visible.
+metadata. App records keep upstream `AppInfo` vocabulary: `isEnabled` becomes
+`enabled`, `isAccessible` becomes `accessible`, and `installUrl` is preserved as
+an install URL, not interpreted as an installed/not-installed state. An
+inaccessible app is shown as unavailable unless a host has stronger auth
+semantics from its own integration.
 
 Host-specific workflows can compose `useAgentThreadController()`,
 `useAgentTurnController()`, `useAgentServerRequests()`, and `AgentWorkspace`

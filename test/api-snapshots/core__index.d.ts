@@ -22,11 +22,12 @@ interface DeviceCodeLoginState {
 }
 
 interface AgentApp {
+    accessible?: boolean;
+    enabled?: boolean;
     id: string;
+    installUrl?: string;
     name?: string;
     uri?: string;
-    installed?: boolean;
-    needsAuth?: boolean;
     raw?: unknown;
 }
 interface AppsState {
