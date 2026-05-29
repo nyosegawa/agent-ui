@@ -211,6 +211,9 @@ need experimental methods must opt in with
 can normalize its paged response into merge-only snapshot events. Descending
 pages are emitted in chronological turn order, and anchor refetch pages merge
 without duplicating known turns.
+`normalizeThreadResumeResponse()` also understands `initialTurnsPage`; resume
+metadata and the initial page are emitted as non-destructive snapshot events so
+`excludeTurns: true` can add page data without clearing an existing transcript.
 `thread/turns/items/list` is tracked as experimental unsupported and remains
 disabled because it is not implemented upstream. `mock/experimentalMethod` is
 generated test-only schema coverage, so it is excluded from experimental

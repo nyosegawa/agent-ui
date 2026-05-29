@@ -920,6 +920,7 @@ describe("agentReducer", () => {
               kind: "commandExecution",
               raw: { command: "bun test" },
               status: "completed",
+              text: "full command",
               threadId: "thread-view-merge",
               turnId: "turn-view-merge",
             },
@@ -948,7 +949,16 @@ describe("agentReducer", () => {
       },
       {
         event: {
-          items: [],
+          items: [
+            {
+              id: "item-command-full",
+              kind: "commandExecution",
+              status: "completed",
+              text: "summary command",
+              threadId: "thread-view-merge",
+              turnId: "turn-view-merge",
+            },
+          ],
           snapshot: true,
           threadId: "thread-view-merge",
           turn: { id: "turn-view-merge", itemsView: "summary", threadId: "thread-view-merge" },
@@ -965,6 +975,7 @@ describe("agentReducer", () => {
       "item-tool-full",
     ]);
     expect(fullTurn?.blocksByItemId["item-command-full"]?.kind).toBe("commandExecution");
+    expect(fullTurn?.items["item-command-full"]?.text).toBe("full command");
     expect(fullTurn?.blocksByItemId["item-file-full"]?.kind).toBe("fileChange");
     expect(fullTurn?.blocksByItemId["item-tool-full"]?.kind).toBe("toolCall");
 

@@ -323,7 +323,7 @@ Goal: handle upstream `itemsView` and paged history without data loss. This is P
   - Tests: descending pages merge correctly and `backwardsCursor` anchor refetch does not duplicate/misorder turns.
   - Docs/API: snapshot only if new public helper is exported.
 
-- [ ] Add `thread/resume.initialTurnsPage` normalizer.
+- [x] Add `thread/resume.initialTurnsPage` normalizer.
   - Implementation: resume metadata snapshot and initial turns page merge non-destructively.
   - Tests: `excludeTurns: true` with `initialTurnsPage` preserves existing transcript while adding page data.
   - Docs/API: snapshot only if public helper/export changes.

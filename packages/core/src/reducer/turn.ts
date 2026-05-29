@@ -2,7 +2,7 @@ import type { TurnEvent } from "../events";
 import type { AgentSessionState } from "../state";
 import { itemStore } from "../stores/item";
 import { turnStore } from "../stores/turn";
-import { mergeAgentTurn } from "../stores/turn-merge";
+import { mergeAgentTurn, shouldApplyTurnItems } from "../stores/turn-merge";
 import {
   isCompletedTurnStatus,
   isPreviewThreadStatus,
@@ -41,8 +41,10 @@ export function reduceTurnEvent(
           ...turn,
           turn: mergeAgentTurn(turn.turn, event.turn),
         };
-        for (const item of event.items ?? []) {
-          completedTurn = itemStore.upsert(completedTurn, item);
+        if (shouldApplyTurnItems(turn.turn, event.turn)) {
+          for (const item of event.items ?? []) {
+            completedTurn = itemStore.upsert(completedTurn, item);
+          }
         }
         return {
           ...next,

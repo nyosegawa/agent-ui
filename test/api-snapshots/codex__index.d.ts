@@ -73,10 +73,18 @@ interface NormalizedThreadTurnsListResponse extends NormalizedTurnsPage {
     backwardsCursor: string | null;
     nextCursor: string | null;
 }
+interface NormalizeThreadResumeResponseOptions extends NormalizeTurnsPageOptions {
+    activate?: boolean;
+}
+interface NormalizedThreadResumeResponse {
+    events: AgentEvent[];
+    initialTurnsPage?: NormalizedThreadTurnsListResponse;
+}
 declare function normalizeThreadReadResponse(response: unknown, options?: {
     activate?: boolean;
 }): AgentEvent[];
 declare function normalizeThreadTurnsListResponse(response: unknown, options: NormalizeTurnsPageOptions): NormalizedThreadTurnsListResponse;
+declare function normalizeThreadResumeResponse(response: unknown, options?: Partial<NormalizeThreadResumeResponseOptions>): NormalizedThreadResumeResponse;
 declare function normalizeTurnsPage(rawTurns: readonly unknown[], options: NormalizeTurnsPageOptions): NormalizedTurnsPage;
 
 declare function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[];
@@ -115,4 +123,4 @@ interface DeviceCodeLoginStart {
 declare function startDeviceCodeLogin(transport: AgentTransport): Promise<DeviceCodeLoginStart>;
 declare function cancelDeviceCodeLogin(transport: AgentTransport, loginId: string): Promise<void>;
 
-export { CodexInitializeOptions, type CodexSdkLikeClient, type CodexStdioTransportOptions, type DeviceCodeLoginStart, type JsonRpcFailure, type JsonRpcMessage, type JsonRpcNotification, type JsonRpcRequest, type JsonRpcSuccess, cancelDeviceCodeLogin, createCodexSdkTransportAdapter, createCodexStdioTransport, encodeJsonRpcLine, isBackpressureRetrySafeMethod, isJsonRpcNotification, isJsonRpcRequest, isJsonRpcResponse, jsonRpcErrorObject, jsonRpcErrorPayload, normalizeApps, normalizeAppsListResponse, normalizeCodexServerMessage, normalizeModelListResponse, normalizeThreadReadResponse, normalizeThreadTurnsListResponse, normalizeTurnsPage, parseJsonRpcLine, startDeviceCodeLogin };
+export { CodexInitializeOptions, type CodexSdkLikeClient, type CodexStdioTransportOptions, type DeviceCodeLoginStart, type JsonRpcFailure, type JsonRpcMessage, type JsonRpcNotification, type JsonRpcRequest, type JsonRpcSuccess, cancelDeviceCodeLogin, createCodexSdkTransportAdapter, createCodexStdioTransport, encodeJsonRpcLine, isBackpressureRetrySafeMethod, isJsonRpcNotification, isJsonRpcRequest, isJsonRpcResponse, jsonRpcErrorObject, jsonRpcErrorPayload, normalizeApps, normalizeAppsListResponse, normalizeCodexServerMessage, normalizeModelListResponse, normalizeThreadReadResponse, normalizeThreadResumeResponse, normalizeThreadTurnsListResponse, normalizeTurnsPage, parseJsonRpcLine, startDeviceCodeLogin };

@@ -33,6 +33,7 @@ import {
   normalizeCodexServerMessage,
   normalizeModelListResponse,
   normalizeThreadReadResponse,
+  normalizeThreadResumeResponse,
   normalizeThreadTurnsListResponse,
 } from "../src/normalizer";
 import { stableNotificationCoverage } from "../src/normalizers/notification-coverage";
@@ -562,6 +563,85 @@ describe("Codex protocol metadata", () => {
     );
     expect(state.threads["thread-paged"]?.turns["turn-3"]?.items["item-3"]?.text).toBe(
       "third refreshed",
+    );
+  });
+
+  it("normalizes thread/resume initial turns pages without replacing stored transcript data", () => {
+    const existing = normalizeThreadReadResponse({
+      thread: {
+        id: "thread-resume-page",
+        name: "Resume page",
+        status: { type: "idle" },
+        turns: [
+          {
+            id: "turn-existing",
+            items: [
+              {
+                id: "item-existing",
+                text: "full persisted text",
+                type: "agentMessage",
+              },
+            ],
+            itemsView: "full",
+            status: "completed",
+          },
+        ],
+      },
+    });
+    const resume = normalizeThreadResumeResponse({
+      initialTurnsPage: {
+        data: [
+          {
+            id: "turn-new",
+            items: [{ id: "item-new", text: "new summary", type: "agentMessage" }],
+            itemsView: "summary",
+            status: "completed",
+          },
+          {
+            id: "turn-existing",
+            items: [
+              {
+                id: "item-existing",
+                text: "summary text",
+                type: "agentMessage",
+              },
+            ],
+            itemsView: "summary",
+            status: "completed",
+          },
+        ],
+        nextCursor: null,
+      },
+      thread: {
+        id: "thread-resume-page",
+        name: "Resume page updated",
+        status: { type: "active" },
+      },
+    });
+    const state = [...existing, ...resume.events].reduce(
+      (current, event) => agentReducer(current, event as AgentEvent),
+      createInitialAgentState(),
+    );
+
+    expect(resume.initialTurnsPage).toMatchObject({
+      nextCursor: null,
+      sortDirection: "desc",
+      turns: [{ id: "turn-existing" }, { id: "turn-new" }],
+    });
+    expect(state.threads["thread-resume-page"]?.thread.name).toBe("Resume page updated");
+    expect(state.threads["thread-resume-page"]?.status).toBe("running");
+    expect(state.threads["thread-resume-page"]?.orderedTurnIds).toEqual([
+      "turn-existing",
+      "turn-new",
+    ]);
+    expect(
+      state.threads["thread-resume-page"]?.turns["turn-existing"]?.items["item-existing"]?.text,
+    ).toBe("full persisted text");
+    expect(state.threads["thread-resume-page"]?.turns["turn-existing"]?.turn.itemsView).toBe(
+      "full",
+    );
+    expect(state.threads["thread-resume-page"]?.turns["turn-new"]?.items["item-new"]?.text).toBe(
+      "new summary",
     );
   });
 

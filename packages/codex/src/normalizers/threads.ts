@@ -30,6 +30,15 @@ export interface NormalizedThreadTurnsListResponse extends NormalizedTurnsPage {
   nextCursor: string | null;
 }
 
+export interface NormalizeThreadResumeResponseOptions extends NormalizeTurnsPageOptions {
+  activate?: boolean;
+}
+
+export interface NormalizedThreadResumeResponse {
+  events: AgentEvent[];
+  initialTurnsPage?: NormalizedThreadTurnsListResponse;
+}
+
 export function normalizeThreadNotification(
   method: string,
   params: Record<string, unknown>,
@@ -160,6 +169,31 @@ export function normalizeThreadTurnsListResponse(
   };
 }
 
+export function normalizeThreadResumeResponse(
+  response: unknown,
+  options: Partial<NormalizeThreadResumeResponseOptions> = {},
+): NormalizedThreadResumeResponse {
+  const rawThread = threadReadThread(response);
+  const threadId = rawThreadId(rawThread);
+  if (!threadId) throw new Error("thread/resume response is missing a thread id");
+
+  const events = normalizeThreadReadResponse(response, {
+    activate: options.activate,
+  });
+  const initialTurnsPageRecord = initialTurnsPage(response);
+  if (!initialTurnsPageRecord) return { events };
+
+  const page = normalizeThreadTurnsListResponse(initialTurnsPageRecord, {
+    itemsView: options.itemsView,
+    sortDirection: options.sortDirection,
+    threadId,
+  });
+  return {
+    events: [...events, ...page.events],
+    initialTurnsPage: page,
+  };
+}
+
 export function normalizeTurnsPage(
   rawTurns: readonly unknown[],
   options: NormalizeTurnsPageOptions,
@@ -173,7 +207,6 @@ export function normalizeTurnsPage(
     events: [
       {
         snapshot: true,
-        status: "loaded",
         thread: { id: options.threadId },
         turns,
         type: "thread/upserted",
@@ -310,6 +343,11 @@ function turnsListData(response: unknown): unknown[] {
   if (Array.isArray(record?.data)) return record.data;
   if (Array.isArray(record?.turns)) return record.turns;
   return [];
+}
+
+function initialTurnsPage(response: unknown): Record<string, unknown> | undefined {
+  const record = asRecord(response);
+  return asRecord(record?.initialTurnsPage ?? record?.initial_turns_page);
 }
 
 function sortDirectionValue(value: unknown): ThreadTurnsListSortDirection | undefined {

@@ -19,6 +19,7 @@ export { normalizeApps, normalizeAppsListResponse } from "./normalizers/apps";
 export { normalizeModelListResponse } from "./normalizers/models";
 export {
   normalizeThreadReadResponse,
+  normalizeThreadResumeResponse,
   normalizeThreadTurnsListResponse,
   normalizeTurnsPage,
 } from "./normalizers/threads";

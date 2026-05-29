@@ -19,6 +19,13 @@ export function mergeAgentTurn(existing: AgentTurn, incoming: AgentTurn): AgentT
   };
 }
 
+export function shouldApplyTurnItems(existing: AgentTurn, incoming: AgentTurn): boolean {
+  return (
+    incoming.itemsView === undefined ||
+    rankItemsView(incoming.itemsView) >= rankItemsView(existing.itemsView)
+  );
+}
+
 function rankItemsView(itemsView: AgentTurnItemsView | undefined): number {
   return itemsView === undefined ? -1 : itemsViewRank[itemsView];
 }

@@ -133,11 +133,8 @@ describe("Core package source structure", () => {
     }
   });
 
-  it("keeps P1 reducer fixes free of stored-history pagination surfaces", () => {
+  it("keeps stored-history pagination free of destructive snapshot replacement", () => {
     const forbiddenPatterns = [
-      /\bitemsView\b/,
-      /thread\/turns\/list/,
-      /\binitialTurnsPage\b/,
       /turn\/snapshot/,
     ];
 
