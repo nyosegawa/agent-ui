@@ -34,6 +34,7 @@ import {
   normalizeModelListResponse,
   normalizeThreadReadResponse,
 } from "../src/normalizer";
+import { stableNotificationCoverage } from "../src/normalizers/notification-coverage";
 
 describe("Codex protocol metadata", () => {
   it("records upstream commit and stable release method surface", () => {
@@ -169,6 +170,32 @@ describe("Codex protocol metadata", () => {
           id: "unsupported-codex-notification:item/fake/requestApproval",
           message: "Unsupported Codex notification: item/fake/requestApproval",
         },
+      },
+    ]);
+  });
+
+  it("classifies every stable notification by coverage policy", () => {
+    expect(Object.keys(stableNotificationCoverage).sort()).toEqual([
+      ...stableNotificationMethods,
+    ].sort());
+    expect(new Set(Object.values(stableNotificationCoverage))).toEqual(
+      new Set(["mapped", "raw"]),
+    );
+
+    expect(stableNotificationCoverage["item/agentMessage/delta"]).toBe("mapped");
+    expect(stableNotificationCoverage["rawResponseItem/completed"]).toBe("raw");
+    expect(
+      normalizeCodexServerMessage({
+        method: "rawResponseItem/completed",
+        params: { itemId: "raw-item", threadId: "thread-1", turnId: "turn-1" },
+      }),
+    ).toMatchObject([
+      {
+        notification: {
+          method: "rawResponseItem/completed",
+          params: { itemId: "raw-item", threadId: "thread-1", turnId: "turn-1" },
+        },
+        type: "notification/received",
       },
     ]);
   });

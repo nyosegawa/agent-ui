@@ -275,7 +275,7 @@ Goal: mechanically detect drift in generated schema metadata, raw fixtures, serv
   - Tests: every `stableServerRequestMethods` entry has a kind; unknown substring methods do not become `serverRequest/created`.
   - Docs/API: keep table internal unless hosts need it.
 
-- [ ] Add stable notification coverage registry.
+- [x] Add stable notification coverage registry.
   - Implementation: classify generated stable notifications as `mapped`, `raw`, `ignored`, or `unsupported`.
   - Tests: newly generated notifications fail tests until classified.
   - Docs/API: no snapshot if registry is internal.

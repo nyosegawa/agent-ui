@@ -12,7 +12,8 @@ import { asRecord, stringValue } from "./normalizers/shared";
 import { normalizeStatusNotification } from "./normalizers/status";
 import { normalizeThreadNotification } from "./normalizers/threads";
 import { normalizeTurnNotification } from "./normalizers/turns";
-import { stableNotificationMethods } from "./protocol";
+import { stableNotificationCoverage } from "./normalizers/notification-coverage";
+import type { StableNotificationMethod } from "./protocol";
 
 export { normalizeApps, normalizeAppsListResponse } from "./normalizers/apps";
 export { normalizeModelListResponse } from "./normalizers/models";
@@ -39,7 +40,9 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
     if (events) return events;
   }
 
-  if (isStableNotificationMethod(message.method)) {
+  const coverage = stableNotificationCoverage[message.method as StableNotificationMethod];
+  if (coverage === "ignored") return [];
+  if (coverage === "raw") {
     return [
       {
         type: "notification/received",
@@ -61,10 +64,4 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
       },
     },
   ];
-}
-
-function isStableNotificationMethod(
-  method: string,
-): method is (typeof stableNotificationMethods)[number] {
-  return (stableNotificationMethods as readonly string[]).includes(method);
 }
