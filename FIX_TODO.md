@@ -126,7 +126,7 @@ Goal: keep pending approvals visible and prevent dynamic tool stale queue entrie
   - Tests: direct stdio/WebSocket/custom host paths cannot leave `dynamicTool` indefinitely queued.
   - Docs/API: if excluded from broad state, document that dynamic tools are host/bridge integration requests handled out of band.
 
-- [ ] Align browser bridge dynamic tool handling with core policy.
+- [x] Align browser bridge dynamic tool handling with core policy.
   - Implementation: bridge dropping or out-of-band handling is not the only stale-prevention mechanism.
   - Tests: bridge path and direct path both avoid stale queue entries.
   - Docs/API: bridge docs state dynamic tools are not approval decisions.
