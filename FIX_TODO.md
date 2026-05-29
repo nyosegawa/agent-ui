@@ -65,7 +65,7 @@ Goal: stop the P0 correctness bug where default React UI can send invalid positi
   - Tests: include non-approval requests between approvals and assert the approval selector filters them while the broad selector keeps them.
   - Docs/API: no API snapshot if the signature stays the same; document the behavior correction.
 
-- [ ] Make `useAgentApprovals()` approval-only.
+- [x] Make `useAgentApprovals()` approval-only.
   - Implementation: read from `selectPendingApprovals()`.
   - Tests: focused React hook test proves permissions, MCP elicitation, user input, dynamic tool, auth refresh, and attestation are not returned.
   - Docs/API: update `docs/reference/hooks.md`; no snapshot if return shape is unchanged.

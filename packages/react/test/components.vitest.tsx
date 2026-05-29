@@ -31,6 +31,7 @@ import {
   AgentSkillsPanel,
   AgentAppsPanel,
   useAgentAccount,
+  useAgentApprovals,
   useAgentServerRequests,
   useAgentSkills,
   useAgentContext,
@@ -1524,6 +1525,100 @@ describe("AgentChat", () => {
       code: -32001,
       message: "Host rejected",
     });
+  });
+
+  it("exposes only command, file, and legacy approvals through useAgentApprovals", () => {
+    const initialState = createInitialAgentState();
+    initialState.serverRequestQueue = {
+      byId: {
+        "request-command": {
+          id: "request-command",
+          kind: "commandApproval",
+          payload: {},
+          threadId: "thread-1",
+        },
+        "request-file": {
+          id: "request-file",
+          kind: "fileChangeApproval",
+          payload: {},
+          threadId: "thread-1",
+        },
+        "request-legacy-exec": {
+          id: "request-legacy-exec",
+          kind: "legacyExecApproval",
+          payload: {},
+          threadId: "thread-1",
+        },
+        "request-legacy-patch": {
+          id: "request-legacy-patch",
+          kind: "legacyPatchApproval",
+          payload: {},
+          threadId: "thread-1",
+        },
+        "request-permissions": {
+          id: "request-permissions",
+          kind: "permissionsApproval",
+          payload: {},
+          threadId: "thread-1",
+        },
+        "request-mcp": {
+          id: "request-mcp",
+          kind: "mcpElicitation",
+          payload: {},
+          threadId: "thread-1",
+        },
+        "request-input": {
+          id: "request-input",
+          kind: "userInput",
+          payload: {},
+          threadId: "thread-1",
+        },
+        "request-dynamic": {
+          id: "request-dynamic",
+          kind: "dynamicTool",
+          payload: {},
+          threadId: "thread-1",
+        },
+        "request-auth": {
+          id: "request-auth",
+          kind: "authRefresh",
+          payload: {},
+          threadId: "thread-1",
+        },
+        "request-attestation": {
+          id: "request-attestation",
+          kind: "attestation",
+          payload: {},
+          threadId: "thread-1",
+        },
+      },
+      order: [
+        "request-permissions",
+        "request-command",
+        "request-mcp",
+        "request-file",
+        "request-input",
+        "request-legacy-exec",
+        "request-dynamic",
+        "request-legacy-patch",
+        "request-auth",
+        "request-attestation",
+      ],
+    };
+    function Probe() {
+      const { approvals } = useAgentApprovals("thread-1");
+      return <output>{approvals.map((approval) => approval.kind).join(",")}</output>;
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <Probe />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText(
+      "commandApproval,fileChangeApproval,legacyExecApproval,legacyPatchApproval",
+    )).toBeInTheDocument();
   });
 
   it("renders status banners as first-class shell content", () => {
