@@ -376,7 +376,7 @@ Goal: align stdio/WebSocket/SDK transports and browser bridge lifecycle contract
   - Tests: `stdin.end()`/`SIGTERM` order, pending request rejection, and `SIGKILL` escalation are fixed; graceful option tests natural exit if added.
   - Docs/API: new shutdown option requires server API snapshot.
 
-- [ ] Enforce browser bridge initialize ownership.
+- [x] Enforce browser bridge initialize ownership.
   - Implementation: bridge-owned initialize rejects browser `initialize` before forwarding; browser-owned path still works when bridge initialize is absent.
   - Tests: App Server stdin receives initialize once; browser gets rejection in double-initialize scenario.
   - Docs/API: update server bridge, protocol, and package export docs.
