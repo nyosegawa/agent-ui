@@ -8,7 +8,7 @@ Regenerate screenshots only after an intentional visual contract change:
 ```sh
 CAPTURE_DOCS_SCREENSHOTS=1 bunx playwright test \
   examples/local-react-vite/e2e/capture-docs-screenshots.e2e.ts \
-  --config examples/local-react-vite/playwright.config.ts
+  --config playwright.fixtures.config.ts
 ```
 
 The capture script owns the current route and filename set. It should cover the

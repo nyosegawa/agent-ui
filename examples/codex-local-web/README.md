@@ -30,7 +30,7 @@ audit script checks the already-running page and does not start the server:
 ```bash
 AGENT_UI_PORT=5175 \
 AGENT_UI_HOST=127.0.0.1 \
-AGENT_UI_CODEX_CWD=/Users/sakasegawa/src/github.com/nyosegawa/agent-ui \
+AGENT_UI_CODEX_CWD="$PWD" \
 bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 
 bun run test:e2e:real-local-web-layout

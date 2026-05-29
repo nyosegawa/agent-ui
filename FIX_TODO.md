@@ -499,7 +499,7 @@ Goal: address lower-risk UX/docs/example drift after correctness/security work. 
   - Tests: selector tests for chosen behavior.
   - Docs/API: selector docs update.
 
-- [ ] Fix stale docs commands, paths, and selectors.
+- [x] Fix stale docs commands, paths, and selectors.
   - Implementation: remove missing `examples/local-react-vite/playwright.config.ts`; replace personal paths with `AGENT_UI_CODEX_CWD="$PWD"` or `<repo-root>`; use `.aui-approval` instead of `.aui-approval-card`.
   - Tests: optional docs guards for missing config paths, personal repo paths, and stale selectors.
   - Docs/API: docs-only.
