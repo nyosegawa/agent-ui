@@ -24,7 +24,9 @@ Goal: lock public contracts and failing tests before implementation.
   - Completion: `dynamicTool` is either excluded from the default queue, or guaranteed to clean up on respond/reject or matching item completion.
   - Completion: direct transport/custom host regression tests are planned; bridge-only mitigation is not considered sufficient.
 
-- [ ] Decide fixture provenance.
+- [x] Decide fixture provenance.
+  - Decision: use the flexible two-commit contract: `schemaCommit`, `fixtureSourceCommit`, and required `divergenceReason` when they differ.
+  - Test plan: raw JSON-RPC fixture tests assert `schemaCommit === CODEX_PROTOCOL_COMMIT`, SHA-shaped fixture source commit, and divergence reason presence without reading a local upstream checkout.
   - Completion: choose strict equality with `CODEX_PROTOCOL_COMMIT`, or flexible `schemaCommit` + `fixtureSourceCommit` + `divergenceReason`.
   - Completion: normal protocol tests do not depend on local upstream ancestry.
 

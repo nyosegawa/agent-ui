@@ -1,6 +1,8 @@
 {
-  "upstreamCommit": "6a225e4005209f2325ab3c681c7c6beba2907d4d",
-  "source": "/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server/tests/suite/v2 plus app-server outgoing_message.rs shape checks",
+  "schemaCommit": "64e340ad2809a4da61ec12535a056bcf58f5d6ef",
+  "fixtureSourceCommit": "6a225e4005209f2325ab3c681c7c6beba2907d4d",
+  "divergenceReason": "Raw JSON-RPC fixtures are hand-curated from Codex App Server v2 suite coverage and outgoing_message.rs shape checks, while generated Agent UI protocol types track the schema import commit.",
+  "source": "openai/codex codex-rs/app-server/tests/suite/v2 plus app-server outgoing_message.rs shape checks",
   "format": "raw JSON-RPC-lite JSONL, one App Server line per record",
   "fixtures": [
     {

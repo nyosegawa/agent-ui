@@ -142,8 +142,11 @@ Raw App Server conformance fixtures live in
 JSON-RPC-lite lines emitted by the App Server shape, not normalized
 `AgentEvent` fixtures.
 
-The manifest records upstream commit, source reference, method list, and
-purpose for:
+The manifest records the generated schema commit, fixture source commit, source
+reference, method list, and purpose for each fixture. When the fixture source
+commit differs from `CODEX_PROTOCOL_COMMIT`, the manifest must include a
+`divergenceReason`; normal protocol tests validate the recorded commits and do
+not inspect a local upstream checkout.
 
 - `thread-start-basic.jsonl`
 - `turn-text-stream.jsonl`

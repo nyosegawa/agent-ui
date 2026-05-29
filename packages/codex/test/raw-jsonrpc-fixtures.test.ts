@@ -2,14 +2,22 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { agentReducer, createInitialAgentState } from "@nyosegawa/agent-ui-core";
 import { describe, expect, it } from "vitest";
-import { normalizeCodexServerMessage, parseJsonRpcLine } from "../src";
+import {
+  CODEX_PROTOCOL_COMMIT,
+  normalizeCodexServerMessage,
+  parseJsonRpcLine,
+} from "../src";
 
 const fixtureRoot = join(process.cwd(), "fixtures/app-server/v2-jsonrpc");
 
 describe("raw App Server JSON-RPC fixture pack", () => {
   it("records every JSONL fixture in the manifest with upstream source metadata", () => {
     const manifest = JSON.parse(readFileSync(join(fixtureRoot, "manifest.json"), "utf8"));
-    expect(manifest.upstreamCommit).toMatch(/^[0-9a-f]{40}$/);
+    expect(manifest.schemaCommit).toBe(CODEX_PROTOCOL_COMMIT);
+    expect(manifest.fixtureSourceCommit).toMatch(/^[0-9a-f]{40}$/);
+    if (manifest.fixtureSourceCommit !== manifest.schemaCommit) {
+      expect(manifest.divergenceReason).toMatch(/\w/);
+    }
     expect(manifest.source).toContain("codex-rs/app-server");
     const listed = new Set(manifest.fixtures.map((entry: { file: string }) => entry.file));
     const actual = readdirSync(fixtureRoot).filter((file) => file.endsWith(".jsonl"));
