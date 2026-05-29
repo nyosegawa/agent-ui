@@ -104,7 +104,11 @@ export function attachAgentUiWebSocketBridge(
   options: AgentUiWebSocketServerOptions,
 ): WebSocketServer {
   const { path = DEFAULT_PATH, server, ...bridgeOptions } = options;
-  const webSocketServer = new WebSocketServer({ path, server });
+  const webSocketServer = new WebSocketServer({
+    maxPayload: bridgeOptions.inbound?.maxMessageBytes ?? DEFAULT_MAX_INBOUND_MESSAGE_BYTES,
+    path,
+    server,
+  });
   webSocketServer.on("connection", (socket, request) => {
     void handleAgentUiWebSocketConnection(socket, bridgeOptions, request);
   });

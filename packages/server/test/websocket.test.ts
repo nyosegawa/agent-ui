@@ -100,6 +100,19 @@ describe("attachAgentUiWebSocketBridge", () => {
     expect(writes).toHaveLength(0);
   });
 
+  it("applies inbound byte limits to the attached WebSocket server", () => {
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      inbound: { maxMessageBytes: 1234 },
+      server: httpServer,
+      spawn: () => createFakeChildProcess().process,
+    });
+    servers.push(webSocketServer);
+
+    expect((webSocketServer.options as { maxPayload?: number }).maxPayload).toBe(1234);
+  });
+
   it("rate limits abusive browser message bursts", async () => {
     const { socket } = await createBridgeBackedSocket({
       inbound: { rateLimitIntervalMs: 10_000, rateLimitMessages: 1 },

@@ -221,7 +221,7 @@ Goal: align browser/log confidentiality and inbound resource limits with the doc
   - Tests: dynamic tool handler errors containing secrets do not leak to host stderr or failure response.
   - Docs/API: update server bridge/security docs.
 
-- [ ] Apply `ws.maxPayload` in `attachAgentUiWebSocketBridge()`.
+- [x] Apply `ws.maxPayload` in `attachAgentUiWebSocketBridge()`.
   - Implementation: pass `inbound.maxMessageBytes ?? DEFAULT_MAX_INBOUND_MESSAGE_BYTES` to `new WebSocketServer({ maxPayload, path, server })`.
   - Implementation: keep the post-message guard for direct handler usage.
   - Tests: attached-server oversized frame does not reach App Server stdin; assert close code `1009` when stable.

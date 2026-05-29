@@ -62,11 +62,12 @@ browser consumers are closed with WebSocket code `1013` when the outbound
 buffer exceeds the configured backpressure limit.
 
 Inbound browser messages are checked before JSON parsing. The default maximum
-message size is 256 KB; oversized input closes the browser socket with code
-`1009`. Each connection also has a default rate limit of 60 messages per
-second; exceeding it closes the socket with code `1008`. Hosts may tune these
-limits through `inbound.maxMessageBytes`, `inbound.rateLimitMessages`, and
-`inbound.rateLimitIntervalMs`.
+message size is 256 KB and is applied both as `ws.maxPayload` on attached
+servers and as a post-message guard for direct handler usage; oversized input
+closes the browser socket with code `1009`. Each connection also has a default
+rate limit of 60 messages per second; exceeding it closes the socket with code
+`1008`. Hosts may tune these limits through `inbound.maxMessageBytes`,
+`inbound.rateLimitMessages`, and `inbound.rateLimitIntervalMs`.
 
 `admission` runs before the Codex child process is spawned. Use it for
 same-origin, session, or explicit local-token checks on any bridge that is not a
