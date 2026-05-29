@@ -778,6 +778,70 @@ describe("AgentChat", () => {
     );
   });
 
+  it("falls back to the tail when an approval source item is outside the initial window", () => {
+    const initialState = createInitialAgentState();
+    const itemOrder = Array.from({ length: 52 }, (_, index) => `item-${index}`);
+    initialState.threads["thread-windowed-approval"] = {
+      orderedTurnIds: ["turn-windowed-approval"],
+      status: "waitingForInput",
+      thread: { id: "thread-windowed-approval", name: "Windowed approval" },
+      turns: {
+        "turn-windowed-approval": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder,
+          items: Object.fromEntries(
+            itemOrder.map((itemId, index) => [
+              itemId,
+              {
+                id: itemId,
+                kind: "agentMessage",
+                status: "completed",
+                text: `Message ${index}`,
+                threadId: "thread-windowed-approval",
+                turnId: "turn-windowed-approval",
+              },
+            ]),
+          ),
+          streamingTextByItemId: {},
+          turn: {
+            id: "turn-windowed-approval",
+            threadId: "thread-windowed-approval",
+          },
+        },
+      },
+    };
+    initialState.serverRequestQueue = {
+      byId: {
+        "approval-hidden-source": {
+          id: "approval-hidden-source",
+          itemId: "item-0",
+          kind: "commandApproval",
+          payload: { command: "bun test" },
+          threadId: "thread-windowed-approval",
+          turnId: "turn-windowed-approval",
+        },
+      },
+      order: ["approval-hidden-source"],
+    };
+
+    const { container } = render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentThreadView
+          renderApproval={(approval) => <span>{String(approval.id)}</span>}
+          threadId="thread-windowed-approval"
+        />
+      </AgentProvider>,
+    );
+
+    expect(screen.queryByText("Message 0")).not.toBeInTheDocument();
+    expect(screen.getByText("Message 51")).toBeInTheDocument();
+    expect(container.querySelector(".aui-transcript-tail")).toHaveTextContent(
+      "approval-hidden-source",
+    );
+    expect(container.querySelector(".aui-transcript-approval-anchor")).toBeNull();
+  });
+
   it("removes resolved inline approvals and resumes the waiting thread", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();

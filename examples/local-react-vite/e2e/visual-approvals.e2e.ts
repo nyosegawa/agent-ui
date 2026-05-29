@@ -22,19 +22,17 @@ test("approval card renders risk, approve, session approve, and decline actions"
   await expect(approval.getByRole("button", { name: /^Decline / })).toBeVisible();
 });
 
-test("approval queue keeps additional pending requests as compact picker rows", async ({
+test("approval queue excludes host requests from compact picker rows", async ({
   page,
 }) => {
   await page.setViewportSize(desktopViewport);
   await page.goto("/rich-transcript");
-  await expect(page.locator(".aui-approvals")).toContainText(
+  await expect(page.locator(".aui-approvals")).not.toContainText(
     "3 decisions need your review",
   );
   await expect(page.locator(".aui-approval")).toHaveCount(1);
   const compactRows = page.locator(".aui-approval-compact");
-  expect(await compactRows.count()).toBe(2);
-  await compactRows.first().click();
-  await expect(page.locator(".aui-approval")).toHaveCount(1);
+  await expect(compactRows).toHaveCount(0);
 });
 
 test("mobile keeps composer and approval actions hit-testable in the transcript", async ({

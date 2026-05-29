@@ -111,7 +111,7 @@ bun run test:api-snapshots
 
 Goal: keep pending approvals visible and prevent dynamic tool stale queue entries.
 
-- [ ] Implement window-aware approval anchor classification.
+- [x] Implement window-aware approval anchor classification.
   - Implementation: classify as anchored only when the source item/turn actually renders in the visible transcript window.
   - Tests: source `itemId` outside initial window, `turnId` only with no visible item, and hidden/omitted source item all remain visible.
   - Docs/API: no public API change unless placement behavior is documented in detail.

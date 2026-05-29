@@ -11,6 +11,10 @@ import { IconMoreVertical } from "../components-internal";
 import { AgentMessageList } from "../timeline";
 import { AgentApprovalQueue } from "./approvals";
 import {
+  DEFAULT_TRANSCRIPT_ITEM_LIMIT,
+  visibleTranscriptWindow,
+} from "../transcript-window";
+import {
   AgentComposerPanel,
   type AgentComposerMentionResolver,
   type AgentLocalAttachmentResolver,
@@ -111,11 +115,13 @@ export function AgentThreadTimeline({
 }) {
   const approvalThreadId = threadId ?? thread.thread.id;
   const { approvals } = useAgentApprovals(approvalThreadId);
+  const visibleWindow = visibleTranscriptWindow(thread, DEFAULT_TRANSCRIPT_ITEM_LIMIT);
   const anchoredApprovals = approvals.filter((approval) =>
-    hasTranscriptApprovalAnchor(thread, approval),
+    hasVisibleTranscriptApprovalAnchor(thread, approval, visibleWindow.itemIdsByTurnId),
   );
   const tailApprovals = approvals.filter(
-    (approval) => !hasTranscriptApprovalAnchor(thread, approval),
+    (approval) =>
+      !hasVisibleTranscriptApprovalAnchor(thread, approval, visibleWindow.itemIdsByTurnId),
   );
   return (
     <AgentMessageList
@@ -149,18 +155,24 @@ export function AgentThreadTimeline({
   );
 }
 
-function hasTranscriptApprovalAnchor(
+function hasVisibleTranscriptApprovalAnchor(
   thread: ThreadState,
   approval: PendingServerRequest,
+  visibleItemIdsByTurnId: Map<string, string[]>,
 ): boolean {
   if (!approval.itemId && !approval.turnId) return false;
   const turn = approval.turnId ? thread.turns[approval.turnId] : undefined;
   if (approval.turnId && !turn) return false;
-  if (!approval.itemId) return Boolean(turn);
+  if (!approval.itemId) {
+    return Boolean(turn && visibleItemIdsByTurnId.has(turn.turn.id));
+  }
   const turns = turn
     ? [turn]
     : thread.orderedTurnIds.map((turnId) => thread.turns[turnId]).filter((item) => item != null);
-  return turns.some((candidate) => candidate.itemOrder.includes(approval.itemId!));
+  return turns.some((candidate) => {
+    const visibleItemIds = visibleItemIdsByTurnId.get(candidate.turn.id);
+    return Boolean(visibleItemIds?.includes(approval.itemId!));
+  });
 }
 
 function AgentThreadActions({

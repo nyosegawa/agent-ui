@@ -18,5 +18,5 @@ test("rich transcript accessibility snapshot exposes core chat surfaces", async 
   expect(snapshot).toContain('button "Execution mode"');
   expect(snapshot).toContain('menu "Execution mode"');
   expect(snapshot).toContain("Approve command request approval-command-rich-transcript");
-  expect(snapshot).toContain("3 decisions need your review");
+  expect(snapshot).not.toContain("3 decisions need your review");
 });

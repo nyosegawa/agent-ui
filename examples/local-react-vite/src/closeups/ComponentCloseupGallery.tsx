@@ -2,6 +2,7 @@ import {
   createInitialAgentState,
   FakeAgentTransport,
   type AgentSessionState,
+  type PendingServerRequest,
 } from "@nyosegawa/agent-ui-core";
 import {
   localImageInput,
@@ -577,17 +578,20 @@ function CloseupApprovalCommand() {
 }
 
 function CloseupApprovalUserInput() {
-  const initialState = useMemo(
-    () => createSingleApprovalState("approval-input-rich-transcript"),
+  const request = useMemo(
+    () =>
+      createRichTranscriptInitialState().serverRequestQueue.byId[
+        "approval-input-rich-transcript"
+      ] as PendingServerRequest | undefined,
     [],
   );
   return (
     <CloseupFrame
       title="Approval · user input"
-      caption="Low risk, neutral framing, three explicit decisions."
+      caption="Passive host request context without default decision actions."
     >
-      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentApprovalQueue threadId="thread-rich-transcript" />
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <AgentApprovalQueue approvals={request ? [request] : []} />
       </AgentProvider>
     </CloseupFrame>
   );

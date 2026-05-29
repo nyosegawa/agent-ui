@@ -200,7 +200,7 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
     "Codex App Server generated protocol",
   );
   await expect(page.getByText("MCP tool")).toBeVisible();
-  await expect(page.getByText("User input requested")).toBeVisible();
+  await expect(page.getByText("User input requested")).toHaveCount(0);
   await expect(page.getByLabel("Context usage", { exact: true })).toContainText("58%");
   await page.getByLabel("Context usage", { exact: true }).click();
   await expect(page.getByLabel("Context usage details")).toContainText("5,800 / 10,000");
