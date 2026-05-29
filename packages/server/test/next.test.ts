@@ -25,6 +25,45 @@ describe("createAgentUiNextRpcRoute", () => {
     expect(child.killed()).toBe(true);
   });
 
+  it("redacts App Server JSON-RPC errors before returning one-shot responses", async () => {
+    const child = createFakeChildProcess();
+    const route = createAgentUiNextRpcRoute({ spawn: () => child.process });
+    const responsePromise = route(
+      new Request("http://localhost/api/agent-ui", {
+        body: JSON.stringify({ method: "model/list", params: {} }),
+        method: "POST",
+      }),
+    );
+
+    await waitFor(() => child.writes.some((line) => JSON.parse(line).method === "model/list"));
+    const request = child.writes
+      .map((line) => JSON.parse(line))
+      .find((line) => line.method === "model/list");
+    child.stdout.write(
+      `${JSON.stringify({
+        error: {
+          code: -32042,
+          data: { apiKey: "sk-route", retryAfterMs: 250 },
+          message: "failed token: next-secret",
+        },
+        id: request.id,
+      })}\n`,
+    );
+
+    const response = await responsePromise;
+    expect(response.status).toBe(500);
+    const body = await response.json();
+    expect(body).toEqual({
+      error: {
+        code: -32042,
+        data: { apiKey: "[REDACTED]", retryAfterMs: 250 },
+        message: "failed token: [REDACTED]",
+      },
+    });
+    expect(JSON.stringify(body)).not.toContain("next-secret");
+    expect(JSON.stringify(body)).not.toContain("sk-route");
+  });
+
   it("rejects host-only methods before spawning the App Server process", async () => {
     let spawnCount = 0;
     const route = createAgentUiNextRpcRoute({

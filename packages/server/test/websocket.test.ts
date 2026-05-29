@@ -121,7 +121,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     socket.close();
   });
 
-  it("preserves App Server JSON-RPC error code and data for browser requests", async () => {
+  it("preserves safe JSON-RPC error metadata and redacts secrets for browser requests", async () => {
     const { socket, stdout, writes } = await createBridgeBackedSocket();
 
     socket.send(JSON.stringify({ id: 11, method: "model/list", params: {} }));
@@ -133,21 +133,24 @@ describe("attachAgentUiWebSocketBridge", () => {
       `${JSON.stringify({
         error: {
           code: -32042,
-          data: { retryAfterMs: 250, reason: "busy" },
-          message: "App Server is busy",
+          data: { apiKey: "sk-data", retryAfterMs: 250, reason: "busy" },
+          message: "App Server is busy token: raw-token",
         },
         id: forwarded.id,
       })}\n`,
     );
 
-    await expect(nextResponseMessage(socket, 11)).resolves.toEqual({
+    const response = await nextResponseMessage(socket, 11);
+    expect(response).toEqual({
       error: {
         code: -32042,
-        data: { retryAfterMs: 250, reason: "busy" },
-        message: "App Server is busy",
+        data: { apiKey: "[REDACTED]", retryAfterMs: 250, reason: "busy" },
+        message: "App Server is busy token: [REDACTED]",
       },
       id: 11,
     });
+    expect(JSON.stringify(response)).not.toContain("raw-token");
+    expect(JSON.stringify(response)).not.toContain("sk-data");
     socket.close();
   });
 

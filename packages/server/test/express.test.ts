@@ -25,6 +25,40 @@ describe("createAgentUiExpressMiddleware", () => {
     expect(child.killed()).toBe(true);
   });
 
+  it("redacts App Server JSON-RPC errors before returning middleware responses", async () => {
+    const child = createFakeChildProcess();
+    const middleware = createAgentUiExpressMiddleware({ spawn: () => child.process });
+    const response = createResponse();
+    const pending = middleware({ body: { method: "model/list", params: {} } }, response);
+
+    await waitFor(() => child.writes.some((line) => JSON.parse(line).method === "model/list"));
+    const request = child.writes
+      .map((line) => JSON.parse(line))
+      .find((line) => line.method === "model/list");
+    child.stdout.write(
+      `${JSON.stringify({
+        error: {
+          code: -32042,
+          data: { password: "express-password", retryAfterMs: 250 },
+          message: "failed token: express-secret",
+        },
+        id: request.id,
+      })}\n`,
+    );
+    await pending;
+
+    expect(response.statusCode).toBe(500);
+    expect(response.body).toEqual({
+      error: {
+        code: -32042,
+        data: { password: "[REDACTED]", retryAfterMs: 250 },
+        message: "failed token: [REDACTED]",
+      },
+    });
+    expect(JSON.stringify(response.body)).not.toContain("express-secret");
+    expect(JSON.stringify(response.body)).not.toContain("express-password");
+  });
+
   it("rejects host-only methods before spawning the App Server process", async () => {
     let spawnCount = 0;
     const middleware = createAgentUiExpressMiddleware({

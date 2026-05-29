@@ -13,7 +13,7 @@ import * as dynamicTools from "./dynamic-tools";
 import type { AgentUiHostEventSink } from "./host-events";
 import { emitHostEvent } from "./host-events";
 import * as requestPolicy from "./server-request-policy";
-import { redactTransportEvent } from "./redaction";
+import { redactStructuredValue, redactTransportEvent } from "./redaction";
 import {
   createWebSocketBackpressureGuard,
   sendJsonWithBackpressure,
@@ -312,24 +312,18 @@ async function handleClientMessage(
   const message = parseJsonRpcLine(data.toString()) as unknown;
   if (isJsonRpcRequest(message)) {
     if (bridgeOwnsInitialize && message.method === "initialize") {
-      sendJson(socket, backpressure, {
-        error: {
-          code: -32600,
-          data: { method: message.method },
-          message: "Browser initialize is not allowed when the bridge owns initialization",
-        },
-        id: message.id,
+      sendJsonRpcError(socket, backpressure, message.id, {
+        code: -32600,
+        data: { method: message.method },
+        message: "Browser initialize is not allowed when the bridge owns initialization",
       });
       return;
     }
     if (!methodPolicy.requests.has("*") && !methodPolicy.requests.has(message.method)) {
-      sendJson(socket, backpressure, {
-        error: {
-          code: -32601,
-          data: { method: message.method },
-          message: `Browser method is not allowed: ${message.method}`,
-        },
-        id: message.id,
+      sendJsonRpcError(socket, backpressure, message.id, {
+        code: -32601,
+        data: { method: message.method },
+        message: `Browser method is not allowed: ${message.method}`,
       });
       return;
     }
@@ -339,10 +333,7 @@ async function handleClientMessage(
       });
       sendJson(socket, backpressure, { id: message.id, result });
     } catch (error) {
-      sendJson(socket, backpressure, {
-        error: jsonRpcErrorPayload(error),
-        id: message.id,
-      });
+      sendJsonRpcError(socket, backpressure, message.id, jsonRpcErrorPayload(error));
     }
     return;
   }
@@ -360,13 +351,10 @@ async function handleClientMessage(
   }
 
   if (isRecord(message) && "id" in message) {
-    sendJson(socket, backpressure, {
-      error: {
-        code: -32600,
-        data: { message },
-        message: "Invalid JSON-RPC message",
-      },
-      id: message.id,
+    sendJsonRpcError(socket, backpressure, message.id, {
+      code: -32600,
+      data: { message },
+      message: "Invalid JSON-RPC message",
     });
   }
 }
@@ -449,4 +437,16 @@ function sendJson(
   value: unknown,
 ): void {
   sendJsonWithBackpressure(socket, backpressure, value);
+}
+
+function sendJsonRpcError(
+  socket: WebSocket,
+  backpressure: ReturnType<typeof createWebSocketBackpressureGuard>,
+  id: unknown,
+  error: unknown,
+): void {
+  sendJson(socket, backpressure, {
+    error: redactStructuredValue(error),
+    id,
+  });
 }

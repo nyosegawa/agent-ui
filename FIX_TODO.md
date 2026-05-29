@@ -210,7 +210,7 @@ Goal: align browser/log confidentiality and inbound resource limits with the doc
   - Tests: table tests prove raw secrets are absent and existing key-value, JSON field, and bearer redaction still work.
   - Docs/API: update security docs; no signature change.
 
-- [ ] Redact structured JSON-RPC error payloads before browser/HTTP responses.
+- [x] Redact structured JSON-RPC error payloads before browser/HTTP responses.
   - Implementation: WebSocket browser RPC errors, Next one-shot route errors, and Express middleware errors pass through structured redaction.
   - Tests: error `code` and safe data remain; secret-bearing `message` and `data` are redacted.
   - Docs/API: public redaction helper export requires server API snapshot; internal helper does not.

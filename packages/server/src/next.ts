@@ -6,6 +6,7 @@ import {
   oneShotRpcMethodNotAllowedError,
   type OneShotRpcMethodPolicyOptions,
 } from "./one-shot-rpc-policy";
+import { redactStructuredValue } from "./redaction";
 
 export type AgentUiNextRpcRouteOptions = CodexAppServerBridgeOptions &
   OneShotRpcMethodPolicyOptions;
@@ -54,7 +55,7 @@ export function createAgentUiNextRpcRoute(options: AgentUiNextRpcRouteOptions = 
       return Response.json({ result });
     } catch (error) {
       return Response.json(
-        { error: jsonRpcErrorPayload(error) },
+        { error: redactStructuredValue(jsonRpcErrorPayload(error)) },
         { status: 500 },
       );
     } finally {

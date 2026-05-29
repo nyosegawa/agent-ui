@@ -6,6 +6,7 @@ import {
   oneShotRpcMethodNotAllowedError,
   type OneShotRpcMethodPolicyOptions,
 } from "./one-shot-rpc-policy";
+import { redactStructuredValue } from "./redaction";
 
 export interface MinimalExpressRequest {
   body?: { method?: string; params?: unknown };
@@ -43,7 +44,7 @@ export function createAgentUiExpressMiddleware(
       res.json({ result });
     } catch (error) {
       res.status(500).json({
-        error: jsonRpcErrorPayload(error),
+        error: redactStructuredValue(jsonRpcErrorPayload(error)),
       });
     } finally {
       await bridge.close();
