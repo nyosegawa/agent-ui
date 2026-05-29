@@ -258,7 +258,7 @@ Goal: mechanically detect drift in generated schema metadata, raw fixtures, serv
   - Tests: `bun run test:protocol` passes with current matching values.
   - Docs/API: update protocol drift docs; snapshot unnecessary.
 
-- [ ] Migrate raw fixture manifest to a provenance-aware schema.
+- [x] Migrate raw fixture manifest to a provenance-aware schema.
   - Implementation: add `schemaCommit`, `fixtureSourceCommit`, and `divergenceReason` when commits differ.
   - Tests: `schemaCommit === CODEX_PROTOCOL_COMMIT`; `fixtureSourceCommit` is SHA-shaped; divergence reason is required when commits differ.
   - Docs/API: update fixture provenance docs.

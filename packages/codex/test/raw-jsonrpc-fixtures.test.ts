@@ -13,7 +13,9 @@ const fixtureRoot = join(process.cwd(), "fixtures/app-server/v2-jsonrpc");
 describe("raw App Server JSON-RPC fixture pack", () => {
   it("records every JSONL fixture in the manifest with upstream source metadata", () => {
     const manifest = JSON.parse(readFileSync(join(fixtureRoot, "manifest.json"), "utf8"));
+    expect(manifest.upstreamCommit).toBeUndefined();
     expect(manifest.schemaCommit).toBe(CODEX_PROTOCOL_COMMIT);
+    expect(manifest.schemaCommit).toMatch(/^[0-9a-f]{40}$/);
     expect(manifest.fixtureSourceCommit).toMatch(/^[0-9a-f]{40}$/);
     if (manifest.fixtureSourceCommit !== manifest.schemaCommit) {
       expect(manifest.divergenceReason).toMatch(/\w/);
