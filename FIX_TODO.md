@@ -60,7 +60,7 @@ bun run typecheck
 
 Goal: stop the P0 correctness bug where default React UI can send invalid positive responses to non-approval App Server requests.
 
-- [ ] Make `selectPendingApprovals()` approval-only.
+- [x] Make `selectPendingApprovals()` approval-only.
   - Implementation: keep `selectServerRequestQueue()` broad; filter `selectPendingApprovals()` to command/file/legacy approval kinds while preserving queue order.
   - Tests: include non-approval requests between approvals and assert the approval selector filters them while the broad selector keeps them.
   - Docs/API: no API snapshot if the signature stays the same; document the behavior correction.
