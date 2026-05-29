@@ -151,6 +151,10 @@ commit differs from `CODEX_PROTOCOL_COMMIT`, the manifest must include a
 `divergenceReason`; normal protocol tests validate the recorded commits and do
 not inspect a local upstream checkout.
 
+Deprecated protocol notifications are not mixed into current fixture files.
+Compatibility fixtures use a `deprecated-*.jsonl` name and should keep payloads
+readable, for example plain text deltas instead of base64-looking literals.
+
 - `thread-start-basic.jsonl`
 - `turn-text-stream.jsonl`
 - `approvals-command-file.jsonl`

@@ -27,8 +27,13 @@
     },
     {
       "file": "patch-streaming.jsonl",
-      "methods": ["item/fileChange/patchUpdated", "item/fileChange/outputDelta", "item/completed"],
-      "purpose": "file patch update and associated output streaming"
+      "methods": ["item/fileChange/patchUpdated", "item/completed"],
+      "purpose": "current file patch update and completed item snapshot"
+    },
+    {
+      "file": "deprecated-file-change-output-delta.jsonl",
+      "methods": ["item/fileChange/outputDelta"],
+      "purpose": "deprecated compatibility coverage for legacy file-change output delta plain text"
     },
     {
       "file": "thread-resume-usage.jsonl",

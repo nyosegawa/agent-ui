@@ -263,7 +263,7 @@ Goal: mechanically detect drift in generated schema metadata, raw fixtures, serv
   - Tests: `schemaCommit === CODEX_PROTOCOL_COMMIT`; `fixtureSourceCommit` is SHA-shaped; divergence reason is required when commits differ.
   - Docs/API: update fixture provenance docs.
 
-- [ ] Remove or isolate deprecated `item/fileChange/outputDelta` fixture data.
+- [x] Remove or isolate deprecated `item/fileChange/outputDelta` fixture data.
   - Implementation: remove deprecated method from non-deprecated `patch-streaming.jsonl`, or move it to `deprecated-file-change-output-delta.jsonl`.
   - Implementation: deprecated compatibility fixture uses plain text `delta`, not base64-looking literal.
   - Tests: non-deprecated fixtures do not include deprecated method; reduced output is readable text if compatibility fixture remains.

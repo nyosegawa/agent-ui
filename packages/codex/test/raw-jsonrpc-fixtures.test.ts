@@ -30,6 +30,23 @@ describe("raw App Server JSON-RPC fixture pack", () => {
     }
   });
 
+  it("keeps deprecated file-change output delta isolated and readable", () => {
+    const manifest = JSON.parse(readFileSync(join(fixtureRoot, "manifest.json"), "utf8"));
+    for (const entry of manifest.fixtures as Array<{ file: string }>) {
+      const lines = readFileSync(join(fixtureRoot, entry.file), "utf8").trim().split("\n");
+      for (const line of lines) {
+        const message = parseJsonRpcLine(line) as { method?: string; params?: { delta?: string } };
+        if (entry.file !== "deprecated-file-change-output-delta.jsonl") {
+          expect(message.method).not.toBe("item/fileChange/outputDelta");
+          continue;
+        }
+        expect(message.method).toBe("item/fileChange/outputDelta");
+        expect(message.params?.delta).toBe("applied patch\n");
+        expect(message.params?.delta).not.toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
+      }
+    }
+  });
+
   it("normalizes and reduces the raw JSON-RPC lines without relying on AgentEvent fixtures", () => {
     let state = createInitialAgentState();
     const manifest = JSON.parse(readFileSync(join(fixtureRoot, "manifest.json"), "utf8"));
