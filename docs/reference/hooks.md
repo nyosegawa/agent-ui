@@ -37,7 +37,10 @@ const history = useAgentThreadHistory();
 const reader = useAgentThreadReader();
 ```
 
-`useAgentThreads()` returns ordered normalized thread state for navigation.
+`useAgentThreads()` returns normalized thread state in `selectOrderedThreads()`
+order: the active thread first, then registry buckets in live, preview, loaded,
+and cold order. Within each bucket the newest registry entry is returned first;
+unregistered in-memory thread entities are appended last as a fallback.
 
 `useAgentThreadHistory().listThreads()` calls `thread/list`, supports search and
 pagination cursor inputs, tracks the latest cursor, and upserts returned thread

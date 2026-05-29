@@ -282,6 +282,50 @@ describe("agentReducer", () => {
     expect(state.threadRegistry.loadedThreadIds).toEqual(["thread-cold-2"]);
   });
 
+  it("selects ordered threads by active thread, registry bucket, and newest registry entry", () => {
+    const state = createInitialAgentState();
+    state.threadRegistry = {
+      activeThreadId: "thread-preview-old",
+      coldThreadIds: ["thread-cold-old", "thread-cold-new"],
+      liveThreadIds: ["thread-live-old", "thread-live-new"],
+      loadedThreadIds: ["thread-loaded-old", "thread-loaded-new"],
+      previewThreadIds: ["thread-preview-old", "thread-preview-new"],
+    };
+    const threadState = (
+      id: string,
+      registryStatus: "cold" | "preview" | "live" | "loaded",
+    ) => ({
+      orderedTurnIds: [],
+      registryStatus,
+      status: registryStatus === "cold" ? "notLoaded" : "loaded",
+      thread: { id },
+      turns: {},
+    });
+    state.threads = {
+      "thread-cold-new": threadState("thread-cold-new", "cold"),
+      "thread-cold-old": threadState("thread-cold-old", "cold"),
+      "thread-loaded-new": threadState("thread-loaded-new", "loaded"),
+      "thread-loaded-old": threadState("thread-loaded-old", "loaded"),
+      "thread-live-new": threadState("thread-live-new", "live"),
+      "thread-live-old": threadState("thread-live-old", "live"),
+      "thread-orphan": threadState("thread-orphan", "loaded"),
+      "thread-preview-new": threadState("thread-preview-new", "preview"),
+      "thread-preview-old": threadState("thread-preview-old", "preview"),
+    };
+
+    expect(selectOrderedThreads(state).map((thread) => thread.thread.id)).toEqual([
+      "thread-preview-old",
+      "thread-live-new",
+      "thread-live-old",
+      "thread-preview-new",
+      "thread-loaded-new",
+      "thread-loaded-old",
+      "thread-cold-new",
+      "thread-cold-old",
+      "thread-orphan",
+    ]);
+  });
+
   it("bounds backing entity maps when registry and retained turn maps evict stale entries", () => {
     let state = createInitialAgentState();
     const max = AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax;

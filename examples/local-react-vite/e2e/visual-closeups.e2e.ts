@@ -90,7 +90,7 @@ test("focused composer close-up renders the real AgentComposer", async ({ page }
   await expect(focused).toBeVisible();
   await expect(focused.locator('[data-focus-first="true"]')).toBeAttached();
   const composer = focused.locator(".aui-composer");
-  await expect(composer).toHaveAttribute("aria-label", "Composer attachments");
+  await expect(composer).toHaveAttribute("aria-label", "Message composer");
   await expect(focused.locator("textarea.aui-composer-input")).toHaveValue(
     "Apply the renderer audit findings and verify the diff.",
   );

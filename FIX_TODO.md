@@ -494,7 +494,7 @@ Goal: address lower-risk UX/docs/example drift after correctness/security work. 
   - Tests: apps normalizer semantic tests.
   - Docs/API: update `AgentApp` snapshots/docs if public type changes.
 
-- [ ] Decide `selectOrderedThreads()` ordering contract.
+- [x] Decide `selectOrderedThreads()` ordering contract.
   - Implementation: choose registry bucket/recency order, latest authoritative `thread/list` order, or current insertion order.
   - Tests: selector tests for chosen behavior.
   - Docs/API: selector docs update.

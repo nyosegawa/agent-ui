@@ -80,7 +80,22 @@ export function selectItemBlock(
 }
 
 export function selectOrderedThreads(state: AgentSessionState) {
-  return Object.values(state.threads);
+  const registry = state.threadRegistry;
+  const orderedIds = [
+    registry.activeThreadId,
+    ...[...registry.liveThreadIds].reverse(),
+    ...[...registry.previewThreadIds].reverse(),
+    ...[...registry.loadedThreadIds].reverse(),
+    ...[...registry.coldThreadIds].reverse(),
+    ...Object.keys(state.threads),
+  ];
+  const seen = new Set<ThreadId>();
+  return orderedIds.flatMap((threadId) => {
+    if (!threadId || seen.has(threadId)) return [];
+    seen.add(threadId);
+    const thread = state.threads[threadId];
+    return thread ? [thread] : [];
+  });
 }
 
 const approvalRequestKinds = new Set<PendingServerRequest["kind"]>([
