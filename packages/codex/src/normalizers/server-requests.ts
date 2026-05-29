@@ -1,6 +1,22 @@
 import type { AgentEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
+import { stableServerRequestMethods, type StableServerRequestMethod } from "../protocol";
 import type { MethodMessage } from "./shared";
 import { asRecord, optionalStringValue, requestIdValue } from "./shared";
+
+const serverRequestKindByMethod = {
+  "account/chatgptAuthTokens/refresh": "authRefresh",
+  applyPatchApproval: "legacyPatchApproval",
+  "attestation/generate": "attestation",
+  execCommandApproval: "legacyExecApproval",
+  "item/commandExecution/requestApproval": "commandApproval",
+  "item/fileChange/requestApproval": "fileChangeApproval",
+  "item/permissions/requestApproval": "permissionsApproval",
+  "item/tool/call": "dynamicTool",
+  "item/tool/requestUserInput": "userInput",
+  "mcpServer/elicitation/request": "mcpElicitation",
+} as const satisfies Record<StableServerRequestMethod, PendingServerRequest["kind"]>;
+
+const serverRequestMethodSet = new Set<StableServerRequestMethod>(stableServerRequestMethods);
 
 export function normalizeServerRequestCreated(message: MethodMessage): AgentEvent {
   return { type: "serverRequest/created", request: normalizeServerRequest(message) };
@@ -23,16 +39,8 @@ export function normalizeServerRequestNotification(
   }
 }
 
-export function isServerRequestMethod(method: string): boolean {
-  return (
-    method === "account/chatgptAuthTokens/refresh" ||
-    method === "attestation/generate" ||
-    method === "item/tool/call" ||
-    method === "mcpServer/elicitation/request" ||
-    method.includes("requestApproval") ||
-    method.includes("Approval") ||
-    method.includes("requestUserInput")
-  );
+export function isServerRequestMethod(method: string): method is StableServerRequestMethod {
+  return serverRequestMethodSet.has(method as StableServerRequestMethod);
 }
 
 function normalizeServerRequest(message: MethodMessage): PendingServerRequest {
@@ -48,15 +56,7 @@ function normalizeServerRequest(message: MethodMessage): PendingServerRequest {
 }
 
 function requestKind(method: string): PendingServerRequest["kind"] {
-  if (method === "account/chatgptAuthTokens/refresh") return "authRefresh";
-  if (method === "attestation/generate") return "attestation";
-  if (method === "item/tool/call") return "dynamicTool";
-  if (method === "mcpServer/elicitation/request") return "mcpElicitation";
-  if (method === "item/permissions/requestApproval") return "permissionsApproval";
-  if (method === "execCommandApproval") return "legacyExecApproval";
-  if (method === "applyPatchApproval") return "legacyPatchApproval";
-  if (method.includes("command")) return "commandApproval";
-  if (method.includes("fileChange")) return "fileChangeApproval";
-  if (method.includes("requestUserInput")) return "userInput";
-  return "unknown";
+  return isServerRequestMethod(method)
+    ? serverRequestKindByMethod[method]
+    : "unknown";
 }

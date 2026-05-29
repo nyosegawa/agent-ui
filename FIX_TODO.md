@@ -269,7 +269,7 @@ Goal: mechanically detect drift in generated schema metadata, raw fixtures, serv
   - Tests: non-deprecated fixtures do not include deprecated method; reduced output is readable text if compatibility fixture remains.
   - Docs/API: document deprecated fixture policy.
 
-- [ ] Replace server request heuristics with an exact generated table.
+- [x] Replace server request heuristics with an exact generated table.
   - Implementation: use `Record<StableServerRequestMethod, PendingServerRequest["kind"]>`.
   - Implementation: remove substring heuristics for `Approval` and `requestUserInput`.
   - Tests: every `stableServerRequestMethods` entry has a kind; unknown substring methods do not become `serverRequest/created`.

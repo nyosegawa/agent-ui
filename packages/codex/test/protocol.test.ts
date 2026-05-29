@@ -119,6 +119,60 @@ describe("Codex protocol metadata", () => {
     );
   });
 
+  it("normalizes server requests only through the exact generated method table", () => {
+    const expectedKinds = {
+      "account/chatgptAuthTokens/refresh": "authRefresh",
+      applyPatchApproval: "legacyPatchApproval",
+      "attestation/generate": "attestation",
+      execCommandApproval: "legacyExecApproval",
+      "item/commandExecution/requestApproval": "commandApproval",
+      "item/fileChange/requestApproval": "fileChangeApproval",
+      "item/permissions/requestApproval": "permissionsApproval",
+      "item/tool/call": "dynamicTool",
+      "item/tool/requestUserInput": "userInput",
+      "mcpServer/elicitation/request": "mcpElicitation",
+    };
+
+    expect(Object.keys(expectedKinds).sort()).toEqual([...stableServerRequestMethods].sort());
+    for (const method of stableServerRequestMethods) {
+      expect(
+        normalizeCodexServerMessage({
+          id: `request-${method}`,
+          method,
+          params: { itemId: "item-1", threadId: "thread-1", turnId: "turn-1" },
+        }),
+      ).toEqual([
+        {
+          request: {
+            id: `request-${method}`,
+            itemId: "item-1",
+            kind: expectedKinds[method],
+            payload: { itemId: "item-1", threadId: "thread-1", turnId: "turn-1" },
+            threadId: "thread-1",
+            turnId: "turn-1",
+          },
+          type: "serverRequest/created",
+        },
+      ]);
+    }
+
+    expect(
+      normalizeCodexServerMessage({
+        id: "unknown-approval-substring",
+        method: "item/fake/requestApproval",
+        params: {},
+      }),
+    ).toEqual([
+      {
+        type: "warning/added",
+        warning: {
+          id: "unsupported-codex-notification:item/fake/requestApproval",
+          message: "Unsupported Codex notification: item/fake/requestApproval",
+        },
+      },
+    ]);
+  });
+
   it("round trips JSON-RPC-lite lines without jsonrpc header", () => {
     const line = encodeJsonRpcLine({ id: 1, method: "initialize", params: {} });
     expect(line).toBe('{"id":1,"method":"initialize","params":{}}\n');
