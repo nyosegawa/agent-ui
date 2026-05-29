@@ -474,7 +474,7 @@ Goal: address lower-risk UX/docs/example drift after correctness/security work. 
   - Tests: focused composer queue tests and real-local e2e for bridge-backed follow-ups.
   - Docs/API: snapshot if hook return state changes.
 
-- [ ] Make `AgentProvider` transport lifecycle StrictMode-safe.
+- [x] Make `AgentProvider` transport lifecycle StrictMode-safe.
   - Implementation: add `closeTransportOnUnmount` / `transportLifecycle` option or StrictMode-safe deferred close.
   - Tests: non-reconnectable fake transport under `<React.StrictMode>` is not prematurely closed.
   - Docs/API: provider prop/type snapshot and docs if option is added.

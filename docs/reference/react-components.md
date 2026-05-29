@@ -14,7 +14,9 @@ components consume stable Agent UI state.
 ```
 
 `AgentProvider` accepts an `AgentTransport` plus optional `initialState` for
-fixtures, tests, or restored local state.
+fixtures, tests, or restored local state. Transport ownership is scoped to the
+provider lifetime, with close deferred across same-tick remounts so React
+StrictMode probing does not prematurely close non-reconnectable local bridges.
 
 ## Preset Chat
 
