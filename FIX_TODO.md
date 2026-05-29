@@ -151,7 +151,7 @@ bun run test:e2e:playwright
 
 Goal: fix current reducer bugs within the existing event shape. Do not include `itemsView` or paged history here.
 
-- [ ] Add a thread entity + registry commit helper.
+- [x] Add a thread entity + registry commit helper.
   - Implementation: commit thread status, `registryStatus`, and registry bucket together for known threads.
   - Tests: after helper updates, each thread id is in exactly one bucket and matches `registryStatus`.
   - Docs/API: helper remains internal and is not root-exported.

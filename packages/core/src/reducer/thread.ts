@@ -1,12 +1,12 @@
 import type { ThreadEvent } from "../events";
 import type { AgentSessionState } from "../state";
 import { threadEntityStore } from "../stores/thread-entity";
-import { threadIndexStore } from "../stores/thread-index";
 import { turnStore } from "../stores/turn";
 import {
   isPreviewThreadStatus,
   preservesAgainstPreviewSnapshot,
 } from "./shared";
+import { commitThreadEntity } from "./thread-commit";
 
 export function reduceThreadEvent(
   state: AgentSessionState,
@@ -31,34 +31,28 @@ export function reduceThreadEvent(
         turns[turn.id] =
           turns[turn.id] ?? turnStore.createTurnState(turn, event.thread.id);
       }
-      const classificationTurns =
-        event.turns ??
-        orderedTurnIds
-          .map((turnId) => turns[turnId]?.turn)
-          .filter((turn) => turn != null);
-      const registryStatus = threadIndexStore.classifyStatus(status, classificationTurns);
-      return threadEntityStore.pruneSnapshots({
-        ...state,
-        threadRegistry: threadIndexStore.upsert(
-          state.threadRegistry,
-          event.thread.id,
-          registryStatus,
-          event.type === "thread/started" ? event.thread.id : state.threadRegistry.activeThreadId,
-        ),
-        threads: {
-          ...state.threads,
-          [event.thread.id]: {
+      return threadEntityStore.pruneSnapshots(
+        commitThreadEntity(
+          state,
+          {
             ...threadState,
             orderedTurnIds,
-            registryStatus,
             status,
             turns,
           },
-        },
-      });
+          {
+            activeThreadId:
+              event.type === "thread/started"
+                ? event.thread.id
+                : state.threadRegistry.activeThreadId,
+          },
+        ),
+      );
     }
     case "thread/status/changed": {
-      const currentStatus = state.threads[event.threadId]?.status;
+      const currentThread = state.threads[event.threadId];
+      const currentStatus = currentThread?.status;
+      if (!currentThread) return state;
       const status =
         !event.snapshot &&
         currentStatus &&
@@ -66,22 +60,12 @@ export function reduceThreadEvent(
         preservesAgainstPreviewSnapshot(currentStatus)
           ? currentStatus
           : event.status;
-      return threadEntityStore.pruneSnapshots(threadEntityStore.update(
-        {
-          ...state,
-          threadRegistry: threadIndexStore.upsert(
-            state.threadRegistry,
-            event.threadId,
-            threadIndexStore.classifyStatus(status),
-          ),
-        },
-        event.threadId,
-        (thread) => ({
-          ...thread,
-          registryStatus: threadIndexStore.classifyStatus(status),
+      return threadEntityStore.pruneSnapshots(
+        commitThreadEntity(state, {
+          ...currentThread,
           status,
         }),
-      ));
+      );
     }
     case "thread/name/updated":
       return threadEntityStore.update(state, event.threadId, (thread) => ({

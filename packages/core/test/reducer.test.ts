@@ -410,6 +410,29 @@ describe("agentReducer", () => {
     expect(selectServerRequestQueue(resolved, "thread-approval")).toEqual([]);
   });
 
+  it("commits thread entity registry status and bucket membership together", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          status: "notLoaded",
+          thread: { id: "thread-commit" },
+          turns: [{ id: "turn-commit", threadId: "thread-commit" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          status: "running",
+          thread: { id: "thread-commit" },
+          turns: [{ id: "turn-commit", threadId: "thread-commit" }],
+          type: "thread/started",
+        },
+      },
+    ]);
+
+    expectThreadRegistryMembership(state, "thread-commit", "live");
+  });
+
   it("keeps a thread waiting until all pending server requests resolve or reject", () => {
     const firstResolved = runEventFixture([
       { event: { thread: { id: "thread-multi" }, type: "thread/started" } },
@@ -1156,3 +1179,22 @@ describe("agentReducer", () => {
     });
   });
 });
+
+function expectThreadRegistryMembership(
+  state: ReturnType<typeof createInitialAgentState>,
+  threadId: string,
+  expectedStatus: "cold" | "preview" | "live" | "loaded",
+) {
+  const registry = selectThreadRegistry(state);
+  const memberships = [
+    ["cold", registry.coldThreadIds] as const,
+    ["preview", registry.previewThreadIds] as const,
+    ["live", registry.liveThreadIds] as const,
+    ["loaded", registry.loadedThreadIds] as const,
+  ]
+    .filter(([, ids]) => ids.includes(threadId))
+    .map(([status]) => status);
+
+  expect(memberships).toEqual([expectedStatus]);
+  expect(state.threads[threadId]?.registryStatus).toBe(expectedStatus);
+}
