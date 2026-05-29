@@ -137,6 +137,7 @@ export async function handleAgentUiWebSocketConnection(
   const methodPolicy = resolveBrowserMethodPolicy(browserMethodPolicy);
   const inboundGuard = createInboundGuard(inbound);
   const bridge = createCodexAppServerBridge(bridgeOptions);
+  const bridgeOwnsInitialize = bridgeOptions.initialize !== undefined;
   const backpressure = createWebSocketBackpressureGuard({ maxBufferedBytes });
   const effectiveServerRequestPolicy =
     requestPolicy.resolveServerRequestPolicy(serverRequestPolicy);
@@ -261,7 +262,14 @@ export async function handleAgentUiWebSocketConnection(
       closeBridge();
       return;
     }
-    void handleClientMessage(socket, bridge.transport, backpressure, data, methodPolicy).catch((error: unknown) => {
+    void handleClientMessage(
+      socket,
+      bridge.transport,
+      backpressure,
+      data,
+      methodPolicy,
+      bridgeOwnsInitialize,
+    ).catch((error: unknown) => {
       sendEnvelope(socket, backpressure, {
         error: { message: error instanceof Error ? error.message : String(error) },
         type: "error",
@@ -299,9 +307,21 @@ async function handleClientMessage(
   backpressure: ReturnType<typeof createWebSocketBackpressureGuard>,
   data: RawData,
   methodPolicy: ResolvedBrowserMethodPolicy,
+  bridgeOwnsInitialize: boolean,
 ): Promise<void> {
   const message = parseJsonRpcLine(data.toString()) as unknown;
   if (isJsonRpcRequest(message)) {
+    if (bridgeOwnsInitialize && message.method === "initialize") {
+      sendJson(socket, backpressure, {
+        error: {
+          code: -32600,
+          data: { method: message.method },
+          message: "Browser initialize is not allowed when the bridge owns initialization",
+        },
+        id: message.id,
+      });
+      return;
+    }
     if (!methodPolicy.requests.has("*") && !methodPolicy.requests.has(message.method)) {
       sendJson(socket, backpressure, {
         error: {

@@ -1472,13 +1472,14 @@ describe("AgentChat", () => {
       order: ["request-input"],
     };
     const transport = new FakeAgentTransport();
-    let hookKeys: string[] = [];
     function Probe() {
       const serverRequests = useAgentServerRequests("thread-1");
-      hookKeys = Object.keys(serverRequests).sort();
       return (
         <>
           <output>{serverRequests.requests.map((request) => request.kind).join(",")}</output>
+          <output aria-label="server request hook keys">
+            {Object.keys(serverRequests).sort().join(",")}
+          </output>
           <button
             onClick={() =>
               void serverRequests.respond("request-input", { value: "provided by host" })
@@ -1509,7 +1510,9 @@ describe("AgentChat", () => {
     );
 
     expect(screen.getByText("userInput")).toBeInTheDocument();
-    expect(hookKeys).toEqual(["reject", "requests", "respond"]);
+    expect(screen.getByLabelText("server request hook keys")).toHaveTextContent(
+      "reject,requests,respond",
+    );
 
     await user.click(screen.getByRole("button", { name: "Respond" }));
     await user.click(screen.getByRole("button", { name: "Reject" }));

@@ -36,7 +36,9 @@ Goal: lock public contracts and failing tests before implementation.
   - Completion: if productized, docs/tests distinguish it from host `config/*` writes.
   - Completion: if host-only, default policies remove it and host opt-in/migration docs are planned.
 
-- [ ] Decide browser bridge initialize ownership.
+- [x] Decide browser bridge initialize ownership.
+  - Decision: bridge-owned initialize is authoritative when `attachAgentUiWebSocketBridge()` receives `initialize`; browser `initialize` is rejected in that mode, while omitting bridge `initialize` leaves browser-owned initialization available.
+  - Test plan: WebSocket bridge test asserts App Server stdin receives one initialize and browser double-initialize receives a JSON-RPC error.
   - Completion: bridge-owned initialize and browser-owned initialize are not both allowed silently.
   - Completion: double initialize expected behavior is captured by a failing test.
 

@@ -56,6 +56,40 @@ describe("attachAgentUiWebSocketBridge", () => {
     socket.close();
   });
 
+  it("rejects browser initialize when the bridge owns initialization", async () => {
+    const { socket, stdout, writes } = await createBridgeBackedSocket({
+      initialize: {
+        capabilities: {
+          experimentalApi: false,
+          requestAttestation: false,
+        },
+        clientInfo: {
+          name: "agent_ui_bridge_test",
+          title: "Agent UI Bridge Test",
+          version: "0.0.0",
+        },
+      },
+    });
+    await waitFor(() => writes.some((line) => JSON.parse(line).method === "initialize"));
+    const bridgeInitialize = writes
+      .map((line) => JSON.parse(line))
+      .find((message) => message.method === "initialize");
+    stdout.write(
+      `${JSON.stringify({ id: bridgeInitialize.id, result: { userAgent: "test" } })}\n`,
+    );
+
+    socket.send(JSON.stringify({ id: "browser-init", method: "initialize", params: {} }));
+    await expect(nextResponseMessage(socket, "browser-init")).resolves.toMatchObject({
+      error: {
+        code: -32600,
+        data: { method: "initialize" },
+      },
+      id: "browser-init",
+    });
+    expect(writes.map((line) => JSON.parse(line)).filter((message) => message.method === "initialize")).toHaveLength(1);
+    socket.close();
+  });
+
   it("closes oversized browser messages before parsing or forwarding", async () => {
     const { socket, writes } = await createBridgeBackedSocket({
       inbound: { maxMessageBytes: 32 },
@@ -1041,7 +1075,7 @@ async function createBridgeBackedTransport(
 }
 
 async function createBridgeBackedSocket(
-  options: Pick<AgentUiWebSocketBridgeOptions, "browserMethodPolicy" | "dynamicToolHandler" | "hostEvents" | "inbound" | "serverRequestPolicy"> = {},
+  options: Pick<AgentUiWebSocketBridgeOptions, "browserMethodPolicy" | "dynamicToolHandler" | "hostEvents" | "inbound" | "initialize" | "serverRequestPolicy"> = {},
 ) {
   const stdin = new PassThrough();
   const stdout = new PassThrough();

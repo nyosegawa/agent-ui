@@ -81,6 +81,14 @@ Server request fails, the bridge preserves the App Server error `code` and
 Browser request `trace` is forwarded as JSON-RPC-lite top-level `trace` to the
 underlying transport.
 
+When the bridge is configured with `initialize`, the bridge owns App Server
+initialization and sends the `initialize` / `initialized` handshake over stdio
+before forwarding transport events. In that mode, browser `initialize` requests
+are rejected with a JSON-RPC error instead of being forwarded as a second App
+Server initialization. If a host intentionally wants browser-owned
+initialization, omit bridge `initialize` and allow the browser transport to send
+it.
+
 Bridge shutdown is deterministic. Browser socket close, browser socket error,
 idle timeout, App Server transport EOF, or bridge close first closes the
 transport, which rejects pending requests, then sends `SIGTERM` to the Codex
