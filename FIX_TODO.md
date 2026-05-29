@@ -227,7 +227,7 @@ Goal: align browser/log confidentiality and inbound resource limits with the doc
   - Tests: attached-server oversized frame does not reach App Server stdin; assert close code `1009` when stable.
   - Docs/API: update inbound byte-limit docs.
 
-- [ ] Make admission throw/reject deterministic.
+- [x] Make admission throw/reject deterministic.
   - Implementation: run admission before spawn inside `try/catch`.
   - Implementation: `false` closes `1008`; throw/reject closes `1011`; spawn count remains zero; diagnostics are redacted.
   - Tests: sync throw and async reject have no unhandled rejection and no child spawn.

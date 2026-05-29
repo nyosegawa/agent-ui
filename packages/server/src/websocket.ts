@@ -132,7 +132,18 @@ export async function handleAgentUiWebSocketConnection(
     ...bridgeOptions
   } = options;
   if (admission && request) {
-    const accepted = await admission(request);
+    let accepted: boolean;
+    try {
+      accepted = await admission(request);
+    } catch (error) {
+      bridgeOptions.stderr?.(
+        redactSecrets(
+          `[agent-ui] admission failed message=${error instanceof Error ? error.message : String(error)}\n`,
+        ),
+      );
+      socket.close(1011, "Agent UI bridge admission failed");
+      return;
+    }
     if (!accepted) {
       socket.close(1008, "Agent UI bridge admission rejected");
       return;

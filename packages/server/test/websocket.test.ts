@@ -37,8 +37,46 @@ describe("attachAgentUiWebSocketBridge", () => {
     if (!address || typeof address === "string") throw new Error("missing server address");
 
     const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
-    await onceClose(client);
+    const close = await onceCloseWithInfo(client);
+    expect(close.code).toBe(1008);
     expect(spawnCount).toBe(0);
+  });
+
+  it("closes deterministically when admission throws or rejects before spawning", async () => {
+    for (const admission of [
+      () => {
+        throw new Error("token: sync-admission-secret");
+      },
+      () => Promise.reject(new Error("token: async-admission-secret")),
+    ]) {
+      let spawnCount = 0;
+      const logs: string[] = [];
+      const httpServer = createServer();
+      servers.push(httpServer);
+      const webSocketServer = attachAgentUiWebSocketBridge({
+        admission,
+        server: httpServer,
+        spawn: () => {
+          spawnCount += 1;
+          throw new Error("spawn should not run");
+        },
+        stderr: (line) => logs.push(line),
+      });
+      servers.push(webSocketServer);
+
+      await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+      const address = httpServer.address();
+      if (!address || typeof address === "string") throw new Error("missing server address");
+
+      const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
+      const close = await onceCloseWithInfo(client);
+
+      expect(close.code).toBe(1011);
+      expect(spawnCount).toBe(0);
+      expect(logs.join("")).toContain("admission failed");
+      expect(logs.join("")).toContain("token: [REDACTED]");
+      expect(logs.join("")).not.toContain("admission-secret");
+    }
   });
 
   it("rejects host-only browser methods before forwarding to App Server", async () => {
@@ -1190,13 +1228,6 @@ async function createBridgeBackedSocket(
 function onceOpen(socket: WebSocket): Promise<void> {
   return new Promise((resolve, reject) => {
     socket.once("open", () => resolve());
-    socket.once("error", reject);
-  });
-}
-
-function onceClose(socket: WebSocket): Promise<void> {
-  return new Promise((resolve, reject) => {
-    socket.once("close", () => resolve());
     socket.once("error", reject);
   });
 }

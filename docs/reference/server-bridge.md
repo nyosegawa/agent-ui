@@ -69,9 +69,11 @@ rate limit of 60 messages per second; exceeding it closes the socket with code
 `1008`. Hosts may tune these limits through `inbound.maxMessageBytes`,
 `inbound.rateLimitMessages`, and `inbound.rateLimitIntervalMs`.
 
-`admission` runs before the Codex child process is spawned. Use it for
-same-origin, session, or explicit local-token checks on any bridge that is not a
-private loopback-only development endpoint. Browser JSON-RPC requests are
+`admission` runs before the Codex child process is spawned. A `false` result
+closes the socket with `1008`; thrown or rejected admission errors close with
+`1011`, do not spawn the child process, and have diagnostics redacted before
+host stderr callbacks. Use admission for same-origin, session, or explicit
+local-token checks on any bridge that is not a private loopback-only development endpoint. Browser JSON-RPC requests are
 filtered by `browserMethodPolicy`; the default allows only productized UI
 methods such as account/model/thread/turn/skills/hooks/apps calls. Host-only
 methods such as `fs/readFile`, `command/exec`, `mcpServer/tool/call`, and
