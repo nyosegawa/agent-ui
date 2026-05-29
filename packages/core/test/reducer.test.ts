@@ -1080,6 +1080,100 @@ describe("agentReducer", () => {
     expect(preview.threads["thread-preview"]?.status).toBe("loaded");
   });
 
+  it("merges active turn snapshots idempotently without clearing streamed items", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          status: "running",
+          thread: { id: "thread-active-snapshot" },
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          threadId: "thread-active-snapshot",
+          turn: {
+            id: "turn-active-snapshot",
+            status: "running",
+            threadId: "thread-active-snapshot",
+          },
+          type: "turn/started",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "item-streaming",
+            kind: "assistantMessage",
+            status: "inProgress",
+            threadId: "thread-active-snapshot",
+            turnId: "turn-active-snapshot",
+          },
+          threadId: "thread-active-snapshot",
+          turnId: "turn-active-snapshot",
+          type: "item/started",
+        },
+      },
+      {
+        event: {
+          delta: "streamed text",
+          itemId: "item-streaming",
+          threadId: "thread-active-snapshot",
+          turnId: "turn-active-snapshot",
+          type: "item/agentMessage/delta",
+        },
+      },
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-active-snapshot" },
+          turns: [
+            {
+              id: "turn-active-snapshot",
+              itemsView: "summary",
+              status: "interrupted",
+              threadId: "thread-active-snapshot",
+            },
+          ],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          items: [],
+          snapshot: true,
+          threadId: "thread-active-snapshot",
+          turn: {
+            id: "turn-active-snapshot",
+            itemsView: "summary",
+            status: "interrupted",
+            threadId: "thread-active-snapshot",
+          },
+          type: "turn/completed",
+        },
+      },
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          threadId: "thread-active-snapshot",
+          type: "thread/status/changed",
+        },
+      },
+    ]);
+    const turn =
+      state.threads["thread-active-snapshot"]?.turns["turn-active-snapshot"];
+
+    expect(state.threads["thread-active-snapshot"]?.status).toBe("running");
+    expect(state.threads["thread-active-snapshot"]?.orderedTurnIds).toEqual([
+      "turn-active-snapshot",
+    ]);
+    expect(turn?.itemOrder).toEqual(["item-streaming"]);
+    expect(turn?.streamingTextByItemId["item-streaming"]).toBe("streamed text");
+    expect(turn?.turn.status).toBe("interrupted");
+  });
+
   it("keeps thread/read snapshot status when stored history ends with an interrupted turn", () => {
     const state = runEventFixture([
       {

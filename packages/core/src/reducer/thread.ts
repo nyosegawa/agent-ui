@@ -19,7 +19,6 @@ export function reduceThreadEvent(
     case "thread/started": {
       const threadState = threadEntityStore.getOrCreate(state.threads, event.thread);
       const stalePreviewStatus =
-        !event.snapshot &&
         state.threads[event.thread.id] &&
         isPreviewThreadStatus(event.status) &&
         preservesAgainstPreviewSnapshot(threadState.status);
@@ -62,7 +61,6 @@ export function reduceThreadEvent(
       const currentStatus = currentThread?.status;
       if (!currentThread) return state;
       const status =
-        !event.snapshot &&
         currentStatus &&
         isPreviewThreadStatus(event.status) &&
         preservesAgainstPreviewSnapshot(currentStatus)

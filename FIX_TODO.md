@@ -328,7 +328,7 @@ Goal: handle upstream `itemsView` and paged history without data loss. This is P
   - Tests: `excludeTurns: true` with `initialTurnsPage` preserves existing transcript while adding page data.
   - Docs/API: snapshot only if public helper/export changes.
 
-- [ ] Merge active turn snapshots idempotently.
+- [x] Merge active turn snapshots idempotently.
   - Implementation: same turn id merges without duplication; stale interrupted snapshot does not clear streamed items unless full replacement is explicitly designed.
   - Tests: live in-progress turn receiving interrupted snapshot keeps item data and stable ordering.
   - Docs/API: no snapshot.
