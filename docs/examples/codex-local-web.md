@@ -81,6 +81,15 @@ bun run test:e2e:real-local-web-layout
 
 The audit script checks an already-running page; it does not start the server.
 
+For the deterministic real-local Playwright suite:
+
+```sh
+bun run test:e2e:real-local
+```
+
+This command starts `examples/codex-local-web` on port 4174 with the fake Codex
+App Server and runs only the `examples/codex-local-web/e2e` specs.
+
 The deterministic Playwright smoke suite for this example is split by App
 Server integration contract:
 

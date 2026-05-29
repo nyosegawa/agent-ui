@@ -20,7 +20,7 @@ protocol handling:
 
 ```sh
 bun run validate:release
-bun run test:e2e:playwright
+bun run validate:e2e
 ```
 
 `bun run validate:packages` is the ordered package path: build, `publint`, then
@@ -147,8 +147,8 @@ Edit restores queued attachment chips.
 
 ## Fixture Browser Tests
 
-`bun run test:e2e:playwright` starts its own fixture preview servers. Do not
-manually start port 5174 for this command.
+`bun run test:e2e:fixtures` starts its own fixture preview server on port 4173.
+Do not manually start port 5174 for this command.
 The fixture preview server builds `examples/local-react-vite` before previewing
 it, so ignored `dist` output from a previous run cannot satisfy the browser
 gate.
@@ -209,6 +209,11 @@ timeouts so a broken composer, stored-thread resume flow, or transcript state fa
 few seconds instead of waiting for the suite-level timeout.
 
 ## Real Local Web Gate
+
+`bun run test:e2e:real-local` starts `examples/codex-local-web` on port 4174
+with the deterministic fake Codex App Server and runs only the
+`examples/codex-local-web/e2e` specs. `bun run validate:e2e` runs the fixture
+suite first and then this real-local suite.
 
 `bun run test:e2e:real-local-web-layout` audits an already-running
 `examples/codex-local-web` instance. Start it explicitly on port 5175:

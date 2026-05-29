@@ -44,8 +44,9 @@ Routes:
 - `/scoped-thread-pane`: fixed-thread composition.
 - `/app-connectors`: Codex Apps/connectors metadata.
 
-Playwright starts its own preview servers for automated checks. Do not rely on
-a manually running 5174 server for `bun run test:e2e:playwright`.
+`bun run test:e2e:fixtures` starts its own preview server on port 4173 for the
+fixture browser checks. Do not rely on a manually running 5174 server for this
+command.
 
 The fixture e2e suite is organized by product contract rather than by route or
 file size. Baseline routing and blank-page protection live in `smoke.e2e.ts`,

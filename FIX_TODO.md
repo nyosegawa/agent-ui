@@ -434,7 +434,7 @@ Goal: make published surfaces, schema import workflow, and browser validation ga
   - Tests: type-level tests for wrong params and non-`unknown` stable responses.
   - Docs/API: update Codex snapshots and docs.
 
-- [ ] Split e2e execution into fixture and real-local commands.
+- [x] Split e2e execution into fixture and real-local commands.
   - Implementation: add `test:e2e:fixtures`, `test:e2e:real-local`, and aggregate `validate:e2e`; targeted runs should not start unrelated servers.
   - Tests: both split commands and aggregate pass.
   - Docs/API: update testing/browser docs.
