@@ -156,7 +156,7 @@ Goal: fix current reducer bugs within the existing event shape. Do not include `
   - Tests: after helper updates, each thread id is in exactly one bucket and matches `registryStatus`.
   - Docs/API: helper remains internal and is not root-exported.
 
-- [ ] Treat `thread/status/changed` as a known-thread status-only event.
+- [x] Treat `thread/status/changed` as a known-thread status-only event.
   - Implementation: unknown thread id is no-op; known thread classification uses existing turns.
   - Tests: unknown id creates no entity or dangling registry entry; known thread with turns plus `notLoaded` becomes preview-like, not cold.
   - Docs/API: no public API change.

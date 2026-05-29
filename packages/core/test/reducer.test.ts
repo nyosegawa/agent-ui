@@ -433,6 +433,45 @@ describe("agentReducer", () => {
     expectThreadRegistryMembership(state, "thread-commit", "live");
   });
 
+  it("treats thread status changes as known-thread status-only updates", () => {
+    const unknown = runEventFixture([
+      {
+        event: {
+          status: "notLoaded",
+          threadId: "missing-thread",
+          type: "thread/status/changed",
+        },
+      },
+    ]);
+    expect(unknown.threads["missing-thread"]).toBeUndefined();
+    expect(selectThreadRegistry(unknown).coldThreadIds).not.toContain("missing-thread");
+    expect(selectThreadRegistry(unknown).previewThreadIds).not.toContain("missing-thread");
+    expect(selectThreadRegistry(unknown).loadedThreadIds).not.toContain("missing-thread");
+    expect(selectThreadRegistry(unknown).liveThreadIds).not.toContain("missing-thread");
+
+    const known = runEventFixture([
+      {
+        event: {
+          status: "loaded",
+          thread: { id: "thread-status-known" },
+          turns: [{ id: "turn-status-known", threadId: "thread-status-known" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          status: "notLoaded",
+          threadId: "thread-status-known",
+          type: "thread/status/changed",
+        },
+      },
+    ]);
+    expect(known.threads["thread-status-known"]?.orderedTurnIds).toEqual([
+      "turn-status-known",
+    ]);
+    expectThreadRegistryMembership(known, "thread-status-known", "preview");
+  });
+
   it("keeps a thread waiting until all pending server requests resolve or reject", () => {
     const firstResolved = runEventFixture([
       { event: { thread: { id: "thread-multi" }, type: "thread/started" } },
