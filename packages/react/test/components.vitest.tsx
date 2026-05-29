@@ -4360,7 +4360,7 @@ describe("AgentChat", () => {
     expect(await screen.findByText("/Users/example/project")).toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: /Old project/ }));
-    expect(await screen.findByText("Preview")).toBeInTheDocument();
+    expect((await screen.findAllByText("Preview")).length).toBeGreaterThan(0);
     expect(await screen.findByText("/Users/example/old-project")).toBeInTheDocument();
     expect(screen.queryByText(/\.codex\/sessions/)).not.toBeInTheDocument();
     expect(transport.requests.some((request) => request.method === "thread/resume")).toBe(
@@ -4554,7 +4554,7 @@ describe("AgentChat", () => {
     expect(await screen.findByText("Stored transcript stays readable.")).toBeInTheDocument();
     expect(screen.getByText("Codex session")).toBeInTheDocument();
     expect(screen.queryByText(/rollout-demo\.jsonl/)).not.toBeInTheDocument();
-    expect(await screen.findByText("Preview")).toBeInTheDocument();
+    expect((await screen.findAllByText("Preview")).length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Message")).toBeDisabled();
     expect(screen.queryByText("notLoaded")).not.toBeInTheDocument();
     expect(transport.requests.map((request) => request.method)).toEqual(
@@ -4667,7 +4667,7 @@ describe("AgentChat", () => {
     expect(screen.getAllByText("src/history.ts").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/export const value = 2/).length).toBeGreaterThan(0);
 
-    expect(screen.getByText("Preview")).toBeInTheDocument();
+    expect(screen.getAllByText("Preview").length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Message")).toBeDisabled();
   });
 

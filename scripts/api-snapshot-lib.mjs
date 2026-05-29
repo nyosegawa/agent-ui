@@ -1,11 +1,12 @@
 import { mkdir, readFile, readdir, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, relative } from "node:path";
 import { readWorkspacePackageSurfaces } from "./public-package-surface.mjs";
 
 export async function checkApiSnapshots({ repoRoot, snapshotRoot, update = false }) {
   await mkdir(snapshotRoot, { recursive: true });
   const declarations = await collectPublicDeclarations(repoRoot);
+  assertBuiltDeclarationsExist(declarations, repoRoot);
   const expectedSnapshots = new Set(declarations.map((entry) => entry.snapshotName));
   const existingSnapshots = new Set(
     (await readdir(snapshotRoot)).filter((entry) => entry.endsWith(".d.ts")).sort(),
@@ -63,6 +64,24 @@ function formatSnapshotFailure({ changed, missing, stale }) {
   if (changed.length > 0) parts.push(`changed: ${changed.join(", ")}`);
   if (stale.length > 0) parts.push(`stale: ${stale.join(", ")}`);
   return `Built declaration snapshots are out of date (${parts.join("; ")}). Run bun run test:api-snapshots:update intentionally after reviewing the public API.`;
+}
+
+function assertBuiltDeclarationsExist(declarations, repoRoot) {
+  const missing = declarations
+    .filter((entry) => !existsSync(entry.declarationPath))
+    .map((entry) => {
+      const relativePath = relative(repoRoot, entry.declarationPath);
+      return `${entry.specifier} -> ${relativePath}`;
+    });
+  if (missing.length === 0) return;
+
+  throw new Error(
+    [
+      "Built declaration files are missing for public API snapshot checks.",
+      ...missing.map((entry) => `- ${entry}`),
+      "Run bun run build or bun run validate:packages before bun run test:api-snapshots.",
+    ].join("\n"),
+  );
 }
 
 function normalizeDeclarations(value) {

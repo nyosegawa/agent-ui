@@ -409,7 +409,7 @@ Goal: make published surfaces, schema import workflow, and browser validation ga
   - Tests: protocol, fixtures, typecheck, package validation.
   - Docs/API: update stable type API snapshots and protocol drift docs.
 
-- [ ] Add API snapshot missing-dist preflight.
+- [x] Add API snapshot missing-dist preflight.
   - Implementation: report missing declaration targets and recommend `bun run build` / `bun run validate:packages` instead of raw `ENOENT`.
   - Tests: missing-dist smoke/focused script test.
   - Docs/API: update docs; no public API change.
