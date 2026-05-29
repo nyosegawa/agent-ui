@@ -18,6 +18,7 @@
 - Agent UI を host runtime に広げないでください。
 - 既存の未コミット変更を勝手に戻さないでください。
 - commit/push は明示的に依頼されるまで行わないでください。
+- GitHub Actions は usage を使い切っているため監視しないでください。push 後も `gh run list` / `gh run view` / GitHub Actions logs の確認はしないでください。
 - `FIX_TODO.md` の checkbox は、実装・テスト・docs・必要な検証が完了したものだけ `- [x]` にしてください。
 - 条件付き/N/A/Deferred/Decision の項目も未完了のまま残さず、理由を同じ行に追記して `- [x]` にしてください。
 - 1 slice だけで止まらず、未完了 checkbox がなくなるまで継続してください。
