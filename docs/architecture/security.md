@@ -73,11 +73,11 @@ Current redaction covers:
 
 - `Authorization: Bearer ...`
 - bare `Bearer ...`
-- `token=...`
-- `api_key=...` and `OPENAI_API_KEY=...`
-- `password=...`
-- `secret=...`
-- labeled `device_code=...`, `user_code=...`, and `userCode=...`
+- `token=...` and `token: ...`
+- `api_key=...`, `api_key: ...`, `api-key: ...`, `x-api-key: ...`, and `OPENAI_API_KEY: ...`
+- `password=...` and `password: ...`
+- `secret=...` and `secret: ...`
+- labeled `device_code`, `user_code`, and `userCode` values with `=` or `:` separators
 - JSON string fields with token, secret, password, API key, or labeled device-code names
 
 ## Markdown Rendering

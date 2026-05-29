@@ -263,7 +263,8 @@ Use `examples/next-rpc-route` for one-shot RPC. Use
 - Do not put bearer tokens in query strings.
 - Redact stderr, structured host events, and browser-forwarded transport
   envelopes before forwarding. The redaction policy covers bearer strings, API
-  keys, token fields, passwords, secrets, and device/user codes.
+  keys, token fields, passwords, secrets, and device/user codes with `=`,
+  JSON-field, or colon-separated labels such as `x-api-key: ...`.
 - Use one process/session/workspace boundary per user for multi-user hosts.
 - Keep API keys server-side only.
 - Keep one-shot `allowedMethods` narrow. Treat `allowedMethods: "all"` like a

@@ -205,7 +205,7 @@ bunx vitest run packages/react/test/thread-history.vitest.ts
 
 Goal: align browser/log confidentiality and inbound resource limits with the documented contract.
 
-- [ ] Extend `redactSecrets()` to colon-separated credentials.
+- [x] Extend `redactSecrets()` to colon-separated credentials.
   - Implementation: redact `OPENAI_API_KEY:`, `api_key:`, `api-key:`, `x-api-key:`, `token:`, `password:`, `secret:`, `device_code:`, `user_code:`, and `userCode:`.
   - Tests: table tests prove raw secrets are absent and existing key-value, JSON field, and bearer redaction still work.
   - Docs/API: update security docs; no signature change.
