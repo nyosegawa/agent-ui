@@ -86,6 +86,9 @@ describe("Codex protocol metadata", () => {
       method: "thread/turns/items/list",
       status: "experimentalUnsupported",
     });
+    expect(
+      codexCapabilityMetadata.some((entry) => entry.method === "mock/experimentalMethod"),
+    ).toBe(false);
   });
 
   it("classifies methods for product clients and explicit experimental access", () => {
@@ -95,12 +98,14 @@ describe("Codex protocol metadata", () => {
     expect(getCodexCapabilityStatus("thread/turns/items/list")).toBe(
       "experimentalUnsupported",
     );
+    expect(getCodexCapabilityStatus("mock/experimentalMethod")).toBeNull();
     expect(getCodexCapabilityStatus("not/a/method")).toBeNull();
 
     expect(isStableProductizedMethod("thread/start")).toBe(true);
     expect(isStableProductizedMethod("command/exec")).toBe(false);
     expect(isHostOnlyMethod("command/exec")).toBe(true);
     expect(isExperimentalAvailableMethod("thread/turns/list")).toBe(true);
+    expect(isExperimentalAvailableMethod("mock/experimentalMethod")).toBe(false);
     expect(isExperimentalAvailableMethod("thread/turns/items/list")).toBe(false);
     expect(isExperimentalUnsupportedMethod("thread/turns/items/list")).toBe(true);
     expect(isStableProductizedMethod("skills/config/write")).toBe(true);
@@ -114,6 +119,9 @@ describe("Codex protocol metadata", () => {
     expect(() => assertCodexExperimentalMethod("thread/turns/list")).not.toThrow();
     expect(() => assertCodexExperimentalMethod("thread/turns/items/list")).toThrow(
       "experimentalUnsupported",
+    );
+    expect(() => assertCodexExperimentalMethod("mock/experimentalMethod")).toThrow(
+      "unknown",
     );
     expect(() => assertCodexExperimentalMethod("thread/start")).toThrow(
       "stableProductized",
@@ -1308,9 +1316,16 @@ describe("Codex protocol metadata", () => {
     const stable = extractMethods("../src/generated/stable/ClientRequest.ts");
     const experimental = extractMethods("../src/generated/experimental/ClientRequest.ts");
     const experimentalOnly = experimental.filter((method) => !stable.includes(method));
+    const testOnlyExperimentalMethods = ["mock/experimentalMethod"];
     expect(
-      [...experimentalAvailableMethods, ...experimentalUnsupportedMethods].toSorted(),
+      [
+        ...experimentalAvailableMethods,
+        ...experimentalUnsupportedMethods,
+        ...testOnlyExperimentalMethods,
+      ].toSorted(),
     ).toEqual(experimentalOnly.toSorted());
+    expect(experimentalAvailableMethods).not.toContain("mock/experimentalMethod");
+    expect(experimentalUnsupportedMethods).not.toContain("mock/experimentalMethod");
     expect(experimentalOnly).toMatchInlineSnapshot(`
       [
         "collaborationMode/list",

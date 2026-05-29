@@ -119,7 +119,6 @@ export const experimentalAvailableMethods = [
   "fuzzyFileSearch/sessionStop",
   "fuzzyFileSearch/sessionUpdate",
   "memory/reset",
-  "mock/experimentalMethod",
   "process/kill",
   "process/resizePty",
   "process/spawn",
@@ -143,6 +142,10 @@ export const experimentalAvailableMethods = [
 
 export const experimentalUnsupportedMethods = [
   "thread/turns/items/list",
+] as const satisfies readonly GeneratedExperimentalOnlyClientMethod[];
+
+const experimentalTestOnlyMethods = [
+  "mock/experimentalMethod",
 ] as const satisfies readonly GeneratedExperimentalOnlyClientMethod[];
 
 export const stableServerRequestMethods = generatedStableServerRequestMethods;
@@ -196,6 +199,7 @@ const experimentalAvailableMethodSet = new Set<string>(experimentalAvailableMeth
 const experimentalUnsupportedMethodSet = new Set<string>(
   experimentalUnsupportedMethods,
 );
+const experimentalTestOnlyMethodSet = new Set<string>(experimentalTestOnlyMethods);
 const hostOnlyMethodSet = new Set<string>(hostOnlyMethods);
 
 export function getCodexCapabilityStatus(
@@ -210,6 +214,7 @@ export function getCodexCapabilityStatus(
   if (experimentalUnsupportedMethodSet.has(method)) {
     return "experimentalUnsupported";
   }
+  if (experimentalTestOnlyMethodSet.has(method)) return null;
   return null;
 }
 

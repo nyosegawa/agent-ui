@@ -208,7 +208,9 @@ Generated experimental types may exist internally, but they must not appear in d
 need experimental methods must opt in with
 `createCodexSession(transport, { experimental: true })`.
 `thread/turns/items/list` is tracked as experimental unsupported and remains
-disabled because it is not implemented upstream.
+disabled because it is not implemented upstream. `mock/experimentalMethod` is
+generated test-only schema coverage, so it is excluded from experimental
+availability, capability metadata, and `assertCodexExperimentalMethod()`.
 
 ## Schema Drift
 
@@ -337,7 +339,6 @@ Experimental available methods:
 - `fuzzyFileSearch/sessionUpdate`
 - `fuzzyFileSearch/sessionStop`
 - `memory/reset`
-- `mock/experimentalMethod`
 - `process/spawn`
 - `process/writeStdin`
 - `process/resizePty`
@@ -357,6 +358,10 @@ Experimental available methods:
 - `thread/realtime/listVoices`
 - `thread/realtime/stop`
 - `thread/turns/list`
+
+Experimental test-only methods:
+
+- `mock/experimentalMethod`
 
 Experimental unsupported methods:
 

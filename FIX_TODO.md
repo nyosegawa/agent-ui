@@ -280,7 +280,7 @@ Goal: mechanically detect drift in generated schema metadata, raw fixtures, serv
   - Tests: newly generated notifications fail tests until classified.
   - Docs/API: no snapshot if registry is internal.
 
-- [ ] Move `mock/experimentalMethod` to test-only classification.
+- [x] Move `mock/experimentalMethod` to test-only classification.
   - Implementation: exclude it from `experimentalAvailableMethods`, `assertCodexExperimentalMethod()`, and host capability metadata.
   - Tests: generated experimental coverage includes available + unsupported + test-only; asserting mock method throws.
   - Docs/API: update Codex docs and API snapshots if public arrays/types change.
