@@ -318,7 +318,7 @@ Goal: handle upstream `itemsView` and paged history without data loss. This is P
   - Tests: partial views preserve command/file/tool items; `full` can upgrade summary data.
   - Docs/API: document merge rules.
 
-- [ ] Add `thread/turns/list` normalizer.
+- [x] Add `thread/turns/list` normalizer.
   - Implementation: merge response pages with `itemsView`, cursor, and direction into chronological order.
   - Tests: descending pages merge correctly and `backwardsCursor` anchor refetch does not duplicate/misorder turns.
   - Docs/API: snapshot only if new public helper is exported.

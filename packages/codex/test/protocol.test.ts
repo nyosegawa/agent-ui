@@ -33,6 +33,7 @@ import {
   normalizeCodexServerMessage,
   normalizeModelListResponse,
   normalizeThreadReadResponse,
+  normalizeThreadTurnsListResponse,
 } from "../src/normalizer";
 import { stableNotificationCoverage } from "../src/normalizers/notification-coverage";
 
@@ -470,6 +471,97 @@ describe("Codex protocol metadata", () => {
     ]);
     expect(() => normalizeThreadReadResponse({ thread: { name: "Broken" } })).toThrow(
       "thread/read response is missing a thread id",
+    );
+  });
+
+  it("normalizes thread/turns/list pages into chronological non-duplicating snapshots", () => {
+    const firstPage = normalizeThreadTurnsListResponse(
+      {
+        backwardsCursor: "cursor-newer-from-turn-3",
+        data: [
+          {
+            id: "turn-3",
+            items: [{ id: "item-3", text: "third", type: "agentMessage" }],
+            itemsView: "summary",
+            status: "completed",
+          },
+          {
+            id: "turn-2",
+            items: [{ id: "item-2", text: "second", type: "agentMessage" }],
+            itemsView: "summary",
+            status: "completed",
+          },
+        ],
+        nextCursor: "cursor-older-from-turn-2",
+      },
+      { threadId: "thread-paged", sortDirection: "desc" },
+    );
+    const olderAnchorPage = normalizeThreadTurnsListResponse(
+      {
+        data: [
+          {
+            id: "turn-2",
+            items: [{ id: "item-2", text: "second refreshed", type: "agentMessage" }],
+            itemsView: "summary",
+            status: "completed",
+          },
+          {
+            id: "turn-1",
+            items: [{ id: "item-1", text: "first", type: "agentMessage" }],
+            itemsView: "summary",
+            status: "completed",
+          },
+        ],
+        nextCursor: null,
+      },
+      { threadId: "thread-paged", sortDirection: "desc" },
+    );
+    const newerAnchorPage = normalizeThreadTurnsListResponse(
+      {
+        data: [
+          {
+            id: "turn-3",
+            items: [{ id: "item-3", text: "third refreshed", type: "agentMessage" }],
+            itemsView: "summary",
+            status: "completed",
+          },
+          {
+            id: "turn-4",
+            items: [{ id: "item-4", text: "fourth", type: "agentMessage" }],
+            itemsView: "summary",
+            status: "completed",
+          },
+        ],
+      },
+      { threadId: "thread-paged", sortDirection: "asc" },
+    );
+    const state = [
+      ...firstPage.events,
+      ...olderAnchorPage.events,
+      ...newerAnchorPage.events,
+    ].reduce(
+      (current, event) => agentReducer(current, event as AgentEvent),
+      createInitialAgentState(),
+    );
+
+    expect(firstPage).toMatchObject({
+      backwardsCursor: "cursor-newer-from-turn-3",
+      nextCursor: "cursor-older-from-turn-2",
+      sortDirection: "desc",
+      turns: [{ id: "turn-2" }, { id: "turn-3" }],
+    });
+    expect(state.threads["thread-paged"]?.orderedTurnIds).toEqual([
+      "turn-1",
+      "turn-2",
+      "turn-3",
+      "turn-4",
+    ]);
+    expect(state.threads["thread-paged"]?.turns["turn-2"]?.turn.itemsView).toBe("summary");
+    expect(state.threads["thread-paged"]?.turns["turn-2"]?.items["item-2"]?.text).toBe(
+      "second refreshed",
+    );
+    expect(state.threads["thread-paged"]?.turns["turn-3"]?.items["item-3"]?.text).toBe(
+      "third refreshed",
     );
   });
 

@@ -3,6 +3,7 @@ import type { AgentSessionState } from "../state";
 import { threadEntityStore } from "../stores/thread-entity";
 import { turnStore } from "../stores/turn";
 import { mergeAgentTurn } from "../stores/turn-merge";
+import { mergeOrderedTurnIds } from "../stores/turn-order";
 import {
   isPreviewThreadStatus,
   preservesAgainstPreviewSnapshot,
@@ -26,9 +27,12 @@ export function reduceThreadEvent(
         ? threadState.status
         : (event.status ?? threadState.status);
       const turns = { ...threadState.turns };
-      const orderedTurnIds = [...threadState.orderedTurnIds];
+      const incomingTurnIds = (event.turns ?? []).map((turn) => turn.id);
+      const orderedTurnIds = mergeOrderedTurnIds(
+        threadState.orderedTurnIds,
+        incomingTurnIds,
+      );
       for (const turn of event.turns ?? []) {
-        if (!orderedTurnIds.includes(turn.id)) orderedTurnIds.push(turn.id);
         const existingTurn = turns[turn.id];
         turns[turn.id] = existingTurn
           ? { ...existingTurn, turn: mergeAgentTurn(existingTurn.turn, turn) }

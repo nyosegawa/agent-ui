@@ -1,6 +1,7 @@
-import type { AgentEvent } from "@nyosegawa/agent-ui-core";
+import type { AgentEvent, AgentTurn } from "@nyosegawa/agent-ui-core";
 import {
   asRecord,
+  itemsViewValue,
   normalizeItem,
   normalizeThread,
   normalizeThreadStatus,
@@ -8,6 +9,26 @@ import {
   numberValue,
   optionalStringValue,
 } from "./shared";
+
+export type ThreadTurnsListSortDirection = "asc" | "desc";
+
+export interface NormalizeTurnsPageOptions {
+  threadId: string;
+  itemsView?: AgentTurn["itemsView"];
+  sortDirection?: ThreadTurnsListSortDirection;
+}
+
+export interface NormalizedTurnsPage {
+  events: AgentEvent[];
+  itemsView?: AgentTurn["itemsView"];
+  sortDirection: ThreadTurnsListSortDirection;
+  turns: AgentTurn[];
+}
+
+export interface NormalizedThreadTurnsListResponse extends NormalizedTurnsPage {
+  backwardsCursor: string | null;
+  nextCursor: string | null;
+}
 
 export function normalizeThreadNotification(
   method: string,
@@ -106,50 +127,7 @@ export function normalizeThreadReadResponse(
     },
   ];
 
-  for (const rawTurn of rawTurns ?? []) {
-    const turn = normalizeTurn(rawTurn, thread.id);
-    const rawTurnRecord = asRecord(rawTurn);
-    const items = Array.isArray(rawTurnRecord?.items) ? rawTurnRecord.items : [];
-    const itemStatus = turn.status === "completed" ? "completed" : undefined;
-    events.push({
-      items: items.map((item) =>
-        itemStatus
-          ? normalizeItem(item, { threadId: thread.id, turnId: turn.id }, itemStatus)
-          : normalizeItem(item, { threadId: thread.id, turnId: turn.id }),
-      ),
-      snapshot: true,
-      threadId: thread.id,
-      turn,
-      type: "turn/completed",
-    });
-
-    for (const item of items) {
-      const record = asRecord(item);
-      if (!record) continue;
-      const itemId = String(record.id ?? record.itemId ?? record.item_id);
-      if (
-        record.type === "commandExecution" &&
-        typeof record.aggregatedOutput === "string"
-      ) {
-        events.push({
-          delta: record.aggregatedOutput,
-          itemId,
-          threadId: thread.id,
-          turnId: turn.id,
-          type: "item/commandOutput/delta",
-        });
-      }
-      if (record.type === "fileChange") {
-        events.push({
-          itemId,
-          patch: record.changes ?? record,
-          threadId: thread.id,
-          turnId: turn.id,
-          type: "item/filePatch/updated",
-        });
-      }
-    }
-  }
+  events.push(...normalizeTurnSnapshotEvents(rawTurns ?? [], { threadId: thread.id }));
 
   events.push({
     status,
@@ -159,6 +137,53 @@ export function normalizeThreadReadResponse(
   });
 
   return events;
+}
+
+export function normalizeThreadTurnsListResponse(
+  response: unknown,
+  options: NormalizeTurnsPageOptions,
+): NormalizedThreadTurnsListResponse {
+  const record = asRecord(response) ?? {};
+  const sortDirection =
+    sortDirectionValue(record.sortDirection ?? record.sort_direction ?? options.sortDirection) ??
+    "desc";
+  const itemsView = itemsViewValue(record.itemsView ?? record.items_view) ?? options.itemsView;
+  const page = normalizeTurnsPage(turnsListData(response), {
+    ...options,
+    itemsView,
+    sortDirection,
+  });
+  return {
+    ...page,
+    backwardsCursor: cursorValue(record.backwardsCursor ?? record.backwards_cursor),
+    nextCursor: cursorValue(record.nextCursor ?? record.next_cursor),
+  };
+}
+
+export function normalizeTurnsPage(
+  rawTurns: readonly unknown[],
+  options: NormalizeTurnsPageOptions,
+): NormalizedTurnsPage {
+  const sortDirection = options.sortDirection ?? "desc";
+  const orderedRawTurns = sortDirection === "desc" ? [...rawTurns].reverse() : [...rawTurns];
+  const turns = orderedRawTurns.map((rawTurn) =>
+    normalizeTurnWithItemsView(rawTurn, options.threadId, options.itemsView),
+  );
+  return {
+    events: [
+      {
+        snapshot: true,
+        status: "loaded",
+        thread: { id: options.threadId },
+        turns,
+        type: "thread/upserted",
+      },
+      ...normalizeTurnSnapshotEvents(orderedRawTurns, options),
+    ],
+    itemsView: options.itemsView,
+    sortDirection,
+    turns,
+  };
 }
 
 function normalizeTokenUsage(params: Record<string, unknown>): AgentEvent {
@@ -215,6 +240,84 @@ function normalizeTokenUsage(params: Record<string, unknown>): AgentEvent {
       raw: params,
     },
   };
+}
+
+function normalizeTurnSnapshotEvents(
+  rawTurns: readonly unknown[],
+  options: Pick<NormalizeTurnsPageOptions, "itemsView" | "threadId">,
+): AgentEvent[] {
+  const events: AgentEvent[] = [];
+  for (const rawTurn of rawTurns) {
+    const turn = normalizeTurnWithItemsView(rawTurn, options.threadId, options.itemsView);
+    const rawTurnRecord = asRecord(rawTurn);
+    const items = Array.isArray(rawTurnRecord?.items) ? rawTurnRecord.items : [];
+    const itemStatus = turn.status === "completed" ? "completed" : undefined;
+    events.push({
+      items: items.map((item) =>
+        itemStatus
+          ? normalizeItem(item, { threadId: options.threadId, turnId: turn.id }, itemStatus)
+          : normalizeItem(item, { threadId: options.threadId, turnId: turn.id }),
+      ),
+      snapshot: true,
+      threadId: options.threadId,
+      turn,
+      type: "turn/completed",
+    });
+
+    for (const item of items) {
+      const record = asRecord(item);
+      if (!record) continue;
+      const itemId = String(record.id ?? record.itemId ?? record.item_id);
+      if (
+        record.type === "commandExecution" &&
+        typeof record.aggregatedOutput === "string"
+      ) {
+        events.push({
+          delta: record.aggregatedOutput,
+          itemId,
+          threadId: options.threadId,
+          turnId: turn.id,
+          type: "item/commandOutput/delta",
+        });
+      }
+      if (record.type === "fileChange") {
+        events.push({
+          itemId,
+          patch: record.changes ?? record,
+          threadId: options.threadId,
+          turnId: turn.id,
+          type: "item/filePatch/updated",
+        });
+      }
+    }
+  }
+  return events;
+}
+
+function normalizeTurnWithItemsView(
+  rawTurn: unknown,
+  threadId: string,
+  fallbackItemsView?: AgentTurn["itemsView"],
+): AgentTurn {
+  const turn = normalizeTurn(rawTurn, threadId);
+  return turn.itemsView === undefined && fallbackItemsView !== undefined
+    ? { ...turn, itemsView: fallbackItemsView }
+    : turn;
+}
+
+function turnsListData(response: unknown): unknown[] {
+  const record = asRecord(response);
+  if (Array.isArray(record?.data)) return record.data;
+  if (Array.isArray(record?.turns)) return record.turns;
+  return [];
+}
+
+function sortDirectionValue(value: unknown): ThreadTurnsListSortDirection | undefined {
+  return value === "asc" || value === "desc" ? value : undefined;
+}
+
+function cursorValue(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
 }
 
 function threadReadThread(response: unknown): Record<string, unknown> {

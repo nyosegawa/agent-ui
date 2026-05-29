@@ -4,7 +4,7 @@ export { CodexThreadForkOptions, CodexThreadMetadataUpdateOptions, CodexThreadRe
 import './request-builders.js';
 import './method-params-s6VeRfnU.js';
 import './InitializeParams-CDX1c2T9.js';
-import './protocol-DPMAEzJ6.js';
+import './protocol-eUwq-oME.js';
 
 interface CodexSessionOptions extends CodexClientsOptions {
 }

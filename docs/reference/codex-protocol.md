@@ -207,6 +207,10 @@ Generated experimental types may exist internally, but they must not appear in d
 `createCodexSession(transport)` defaults to stable methods only. Hosts that
 need experimental methods must opt in with
 `createCodexSession(transport, { experimental: true })`.
+`thread/turns/list` remains experimental, but `normalizeThreadTurnsListResponse()`
+can normalize its paged response into merge-only snapshot events. Descending
+pages are emitted in chronological turn order, and anchor refetch pages merge
+without duplicating known turns.
 `thread/turns/items/list` is tracked as experimental unsupported and remains
 disabled because it is not implemented upstream. `mock/experimentalMethod` is
 generated test-only schema coverage, so it is excluded from experimental

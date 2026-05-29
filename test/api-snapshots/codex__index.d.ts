@@ -1,8 +1,8 @@
 export { CodexAccountClient, CodexApprovalsClient, CodexAppsClient, CodexClients, CodexClientsOptions, CodexConnectionClient, CodexHooksClient, CodexModelsClient, CodexSkillsClient, CodexThreadForkOptions, CodexThreadMetadataUpdateOptions, CodexThreadResumeOptions, CodexThreadsClient, CodexTurnStartOptions, CodexTurnSteerOptions, CodexTurnsClient, createCodexClients } from './clients.js';
-import { RequestId, AgentError, AgentApp, AgentModel, AgentEvent, AgentTransport, AgentTransportEvent } from '@nyosegawa/agent-ui-core';
+import { RequestId, AgentError, AgentApp, AgentModel, AgentEvent, AgentTurn, AgentTransport, AgentTransportEvent } from '@nyosegawa/agent-ui-core';
 export { a as CodexStableMethod, C as CodexStableMethodParams } from './method-params-s6VeRfnU.js';
-import { C as CodexInitializeOptions } from './protocol-DPMAEzJ6.js';
-export { a as CODEX_PROTOCOL_COMMIT, b as CODEX_PROTOCOL_GENERATED_AT, c as CodexCapabilityMetadata, d as CodexCapabilityStatus, e as CodexClientInfo, f as CodexInitializeCapabilities, E as ExperimentalAvailableMethod, g as ExperimentalUnsupportedMethod, H as HostOnlyMethod, S as StableAvailableMethod, h as StableNotificationMethod, i as StableProductizedMethod, j as StableServerRequestMethod, k as assertCodexExperimentalMethod, l as assertCodexProductizedMethod, m as codexCapabilityMetadata, n as codexInitializeParams, o as experimentalAvailableMethods, p as experimentalUnsupportedMethods, q as getCodexCapabilityStatus, r as hostOnlyMethods, s as isExperimentalAvailableMethod, t as isExperimentalUnsupportedMethod, u as isHostOnlyMethod, v as isStableProductizedMethod, w as stableAvailableMethods, x as stableClientMethods, y as stableNotificationMethods, z as stableProductizedMethods, A as stableServerRequestMethods } from './protocol-DPMAEzJ6.js';
+import { C as CodexInitializeOptions } from './protocol-eUwq-oME.js';
+export { a as CODEX_PROTOCOL_COMMIT, b as CODEX_PROTOCOL_GENERATED_AT, c as CodexCapabilityMetadata, d as CodexCapabilityStatus, e as CodexClientInfo, f as CodexInitializeCapabilities, E as ExperimentalAvailableMethod, g as ExperimentalUnsupportedMethod, H as HostOnlyMethod, S as StableAvailableMethod, h as StableNotificationMethod, i as StableProductizedMethod, j as StableServerRequestMethod, k as assertCodexExperimentalMethod, l as assertCodexProductizedMethod, m as codexCapabilityMetadata, n as codexInitializeParams, o as experimentalAvailableMethods, p as experimentalUnsupportedMethods, q as getCodexCapabilityStatus, r as hostOnlyMethods, s as isExperimentalAvailableMethod, t as isExperimentalUnsupportedMethod, u as isHostOnlyMethod, v as isStableProductizedMethod, w as stableAvailableMethods, x as stableClientMethods, y as stableNotificationMethods, z as stableProductizedMethods, A as stableServerRequestMethods } from './protocol-eUwq-oME.js';
 export { CodexSession, CodexSessionOptions, createCodexSession } from './session.js';
 import { Writable, Readable } from 'node:stream';
 export { CodexWebSocketReconnectOptions, CodexWebSocketTransportOptions, createCodexWebSocketTransport } from './websocket.js';
@@ -57,9 +57,27 @@ declare function normalizeAppsListResponse(response: unknown): {
 
 declare function normalizeModelListResponse(response: unknown): AgentModel[];
 
+type ThreadTurnsListSortDirection = "asc" | "desc";
+interface NormalizeTurnsPageOptions {
+    threadId: string;
+    itemsView?: AgentTurn["itemsView"];
+    sortDirection?: ThreadTurnsListSortDirection;
+}
+interface NormalizedTurnsPage {
+    events: AgentEvent[];
+    itemsView?: AgentTurn["itemsView"];
+    sortDirection: ThreadTurnsListSortDirection;
+    turns: AgentTurn[];
+}
+interface NormalizedThreadTurnsListResponse extends NormalizedTurnsPage {
+    backwardsCursor: string | null;
+    nextCursor: string | null;
+}
 declare function normalizeThreadReadResponse(response: unknown, options?: {
     activate?: boolean;
 }): AgentEvent[];
+declare function normalizeThreadTurnsListResponse(response: unknown, options: NormalizeTurnsPageOptions): NormalizedThreadTurnsListResponse;
+declare function normalizeTurnsPage(rawTurns: readonly unknown[], options: NormalizeTurnsPageOptions): NormalizedTurnsPage;
 
 declare function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[];
 
@@ -97,4 +115,4 @@ interface DeviceCodeLoginStart {
 declare function startDeviceCodeLogin(transport: AgentTransport): Promise<DeviceCodeLoginStart>;
 declare function cancelDeviceCodeLogin(transport: AgentTransport, loginId: string): Promise<void>;
 
-export { CodexInitializeOptions, type CodexSdkLikeClient, type CodexStdioTransportOptions, type DeviceCodeLoginStart, type JsonRpcFailure, type JsonRpcMessage, type JsonRpcNotification, type JsonRpcRequest, type JsonRpcSuccess, cancelDeviceCodeLogin, createCodexSdkTransportAdapter, createCodexStdioTransport, encodeJsonRpcLine, isBackpressureRetrySafeMethod, isJsonRpcNotification, isJsonRpcRequest, isJsonRpcResponse, jsonRpcErrorObject, jsonRpcErrorPayload, normalizeApps, normalizeAppsListResponse, normalizeCodexServerMessage, normalizeModelListResponse, normalizeThreadReadResponse, parseJsonRpcLine, startDeviceCodeLogin };
+export { CodexInitializeOptions, type CodexSdkLikeClient, type CodexStdioTransportOptions, type DeviceCodeLoginStart, type JsonRpcFailure, type JsonRpcMessage, type JsonRpcNotification, type JsonRpcRequest, type JsonRpcSuccess, cancelDeviceCodeLogin, createCodexSdkTransportAdapter, createCodexStdioTransport, encodeJsonRpcLine, isBackpressureRetrySafeMethod, isJsonRpcNotification, isJsonRpcRequest, isJsonRpcResponse, jsonRpcErrorObject, jsonRpcErrorPayload, normalizeApps, normalizeAppsListResponse, normalizeCodexServerMessage, normalizeModelListResponse, normalizeThreadReadResponse, normalizeThreadTurnsListResponse, normalizeTurnsPage, parseJsonRpcLine, startDeviceCodeLogin };
