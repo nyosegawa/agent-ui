@@ -273,8 +273,9 @@ docs, tests, and validation notes are complete.
 - [x] S08.10 Do not create a new `docs/quickstart.md` or
   `docs/guides/host-integration.md` until existing entry, product boundary,
   bridge, security, auth, and remote deployment owners are corrected.
-- [x] S08.11 Do not delete historical `tmp/` audit reports as part of M0; clean
-  them only after unresolved findings are tracked elsewhere.
+- [x] S08.11 Ensure historical `tmp/` audit findings are tracked in durable
+  owners before cleanup; `DOCS_AUDIT.md`, `DOCS_REWRITE_PLAN.md`, and this file
+  now carry the actionable findings.
 - [x] S08.12 Defer roadmap, agent-instruction, changeset, fixture label,
   screenshot filename, and old audit cleanup unless they directly affect public
   docs output or the guard scope selected for this pass.

@@ -7,11 +7,14 @@ stylesheet yourself.
 
 ```ts
 import "@nyosegawa/agent-ui-react/styles.css";
-import { defineAgentChatElement } from "@nyosegawa/agent-ui-web-components";
+import {
+  defineAgentChatElement,
+  type AgentChatWebComponentElement,
+} from "@nyosegawa/agent-ui-web-components";
 
 defineAgentChatElement();
 
-const element = document.querySelector("agent-chat");
+const element = document.querySelector<AgentChatWebComponentElement>("agent-chat")!;
 element.transport = transport;
 ```
 

@@ -8,6 +8,7 @@ Omit the prop when Agent UI should inherit the host application's theme scope.
 ## Import
 
 ```ts
+import { useState } from "react";
 import { AgentChat, AgentThemeToggle, type AgentTheme } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
 ```

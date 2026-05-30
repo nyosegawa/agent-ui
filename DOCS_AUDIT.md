@@ -266,13 +266,9 @@ owner instead of repeating the ladder.
   need token groups, theme scope usage, private selector warnings, and override
   examples.
 
-## Evidence Reports
+## Evidence Source
 
-- `tmp/docs-audit-round11-api-counterreview.md`
-- `tmp/docs-audit-round11-deletion-risk.md`
-- `tmp/docs-audit-round11-docs-tests-feasibility.md`
-- `tmp/docs-audit-round11-priority-scope.md`
-- `tmp/docs-audit-round12-audit-summary.md`
-- `tmp/docs-audit-round12-rewrite-sequence.md`
-- `tmp/docs-audit-round12-todo-input.md`
-- `tmp/docs-audit-round12-validation-plan.md`
+This audit was synthesized from the temporary round 11 and round 12 audit
+reports generated during the documentation review. Those temporary reports were
+not kept as durable repository documentation; the durable follow-up owners are
+this audit, `DOCS_REWRITE_PLAN.md`, and `DOCS_TODO.md`.

@@ -363,10 +363,10 @@ refresh, and attestation are exposed through `useAgentServerRequests()` for
 host-owned integration UI and do not receive generic accept /
 accept-for-session / decline responses from the default approval queue. Dynamic
 tool calls are host integration requests too, but they are handled out of band
-and are not retained in the default queue.
-When a pending approval is taller than the transcript viewport, the timeline
-scrolls so the decision footer stays visible on desktop and mobile without a
-manual scroll.
+and are not retained in the default queue. The pending-approval jump centers the
+anchored card when it is outside the viewport. It is a navigation affordance,
+not a guarantee that every footer in a very tall custom approval remains visible
+without additional scrolling.
 
 Thread actions are exposed through the default header and
 `useAgentThreadActions()`: rename, fork, archive, unarchive, compact, and
@@ -496,8 +496,11 @@ name to the rendered `AgentChat`.
 
 ```ts
 import "@nyosegawa/agent-ui-react/styles.css";
-import { defineAgentChatElement } from "@nyosegawa/agent-ui-web-components";
+import {
+  defineAgentChatElement,
+  type AgentChatWebComponentElement,
+} from "@nyosegawa/agent-ui-web-components";
 
 defineAgentChatElement();
-document.querySelector("agent-chat")!.transport = transport;
+document.querySelector<AgentChatWebComponentElement>("agent-chat")!.transport = transport;
 ```

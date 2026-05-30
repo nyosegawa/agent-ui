@@ -73,6 +73,11 @@ rate limit of 60 messages per second; exceeding it closes the socket with code
 `1008`. Hosts may tune these limits through `inbound.maxMessageBytes`,
 `inbound.rateLimitMessages`, and `inbound.rateLimitIntervalMs`.
 
+The default idle timeout is 30 minutes. When the connection is idle for that
+long, the bridge closes the browser socket with `1000` and shuts down the App
+Server process. Startup failures close with `1011`; admission rejections close
+with `1008`; admission errors close with `1011`.
+
 `admission` runs before the Codex child process is spawned. A `false` result
 closes the socket with `1008`; thrown or rejected admission errors close with
 `1011`, do not spawn the child process, and have diagnostics redacted before

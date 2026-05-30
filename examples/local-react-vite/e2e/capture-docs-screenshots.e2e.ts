@@ -3,7 +3,7 @@
  *
  * Skipped unless `CAPTURE_DOCS_SCREENSHOTS=1` so it does not run in CI.
  */
-import { test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -82,6 +82,11 @@ test("refresh docs/screenshots", async ({ browser }) => {
       const page = await context.newPage();
       await page.goto(route.path, { waitUntil: "domcontentloaded" });
       await page.locator(route.readySelector).waitFor({ state: "visible" });
+      if (route.path === "/app-connectors") {
+        await page.getByRole("button", { name: "Refresh" }).click();
+        await expect(page.getByText("Browser")).toBeVisible();
+        await expect(page.getByText("Drive")).toBeVisible();
+      }
       await page.evaluate(async () => {
         await document.fonts?.ready;
         await new Promise((resolve) => requestAnimationFrame(resolve));
