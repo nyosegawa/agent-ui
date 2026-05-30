@@ -14,7 +14,7 @@ work to a Codex agent or human reviewer.
 
 ## Hard Rules
 
-- Do not modify the upstream Codex checkout.
+- Do not edit files inside `third_party/codex`; update only the submodule pointer.
 - Do not push directly to `main`.
 - Do not publish npm packages.
 - Do not merge the PR created by this skill.
@@ -90,6 +90,7 @@ The PR is ready for review only when:
 - `docs/reference/codex-protocol.md` matches the updated method surface.
 - Generated metadata is consistent across `protocol.ts`, package metadata, and
   generated README.
+- The `third_party/codex` submodule pointer matches `CODEX_PROTOCOL_COMMIT`.
 - Every new method has an explicit owner decision: productized, host-only,
   experimental available, experimental unsupported, or test-only.
 - No automation artifacts or temporary reports are committed unless a reviewer

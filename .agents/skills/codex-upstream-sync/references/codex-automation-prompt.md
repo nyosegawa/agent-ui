@@ -19,7 +19,7 @@ Goal:
   branch, and open a draft pull request.
 - Do not merge the pull request.
 - Do not publish npm packages.
-- Do not modify the upstream Codex checkout.
+- Do not edit files inside the `third_party/codex` submodule.
 
 Required flow:
 1. Confirm the Agent UI working tree is clean.
@@ -50,6 +50,7 @@ Completion standard:
 - Every generated experimental-only method is explicitly classified as available,
   unsupported, or test-only.
 - docs/reference/codex-protocol.md matches protocol metadata.
+- The `third_party/codex` submodule pointer matches `CODEX_PROTOCOL_COMMIT`.
 - The PR is reviewable without temporary local artifacts.
 ```
 

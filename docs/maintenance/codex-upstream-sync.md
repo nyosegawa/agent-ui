@@ -121,4 +121,5 @@ Before merging a Codex upstream sync PR:
 
 Also verify that generated metadata is consistent across
 `packages/codex/src/protocol.ts`, `packages/codex/package.json`, and
-`packages/codex/src/generated/README.md`.
+`packages/codex/src/generated/README.md`, and that the `third_party/codex`
+submodule pointer matches `CODEX_PROTOCOL_COMMIT`.

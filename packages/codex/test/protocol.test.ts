@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import {
@@ -74,6 +75,17 @@ describe("Codex protocol metadata", () => {
     expect(packageJson.agentUi?.generatedAt).toBe(CODEX_PROTOCOL_GENERATED_AT);
     expect(readme).toContain(`Upstream commit: \`${CODEX_PROTOCOL_COMMIT}\``);
     expect(readme).toContain(`Generated at: \`${CODEX_PROTOCOL_GENERATED_AT}\``);
+  });
+
+  it("keeps the Codex submodule pointer aligned with generated protocol metadata", () => {
+    const repoRoot = fileURLToPath(new URL("../../..", import.meta.url));
+    const gitlink = execFileSync("git", ["ls-tree", "HEAD", "third_party/codex"], {
+      cwd: repoRoot,
+      encoding: "utf8",
+    }).trim();
+    const match = /^160000 commit ([0-9a-f]{40})\tthird_party\/codex$/.exec(gitlink);
+
+    expect(match?.[1]).toBe(CODEX_PROTOCOL_COMMIT);
   });
 
   it("keeps capability metadata partitioned without duplicates", () => {
