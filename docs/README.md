@@ -70,6 +70,12 @@ you need exact contracts.
 - [Toolchain](./architecture/toolchain.md): Bun, Node, package validation, and
   release automation.
 
+## Maintenance
+
+- [Codex Upstream Sync](./maintenance/codex-upstream-sync.md): Agent Skill,
+  drift scripts, Codex Automation prompt, and PR review checklist for App Server
+  updates.
+
 ## Examples
 
 - [Real Codex Local Web](./examples/codex-local-web.md)

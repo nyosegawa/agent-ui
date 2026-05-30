@@ -6,8 +6,9 @@
 - Unless explicitly instructed otherwise, create repositories under `nyosegawa/{reponame}`.
 - Use Bun as the package manager and day-to-day runner.
 - Keep published packages and server integrations compatible with Node.js LTS.
-- Use the Codex App Server protocol as the primary integration surface. When protocol behavior, generated schema, stable versus experimental status, or runtime semantics are unclear, inspect `/Users/sakasegawa/src/github.com/openai/codex/codex-rs/app-server`.
-- Do not modify the upstream Codex checkout unless the user explicitly asks for that repository to be changed.
+- Use the Codex App Server protocol as the primary integration surface. When protocol behavior, generated schema, stable versus experimental status, or runtime semantics are unclear, inspect `third_party/codex/codex-rs/app-server`.
+- For Codex App Server schema refreshes, drift checks, or update PRs, use `.agents/skills/codex-upstream-sync`.
+- Do not edit files inside the upstream Codex submodule unless the user explicitly asks for that repository to be changed. Routine sync work may update the submodule pointer through the Codex upstream sync flow.
 
 ## Product Shape
 

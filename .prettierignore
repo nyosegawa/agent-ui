@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.next/
+coverage/
+test-results/
+playwright-report/
+third_party/
+
+packages/*/dist/
+examples/*/dist/
+examples/*/.next/

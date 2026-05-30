@@ -5,15 +5,16 @@
     "playwright.config.ts",
     "playwright.real-local.config.ts",
     "vitest.config.ts",
-    "scripts/*.mjs"
+    "scripts/**/*.mjs"
   ],
   "project": [
     "*.config.{js,ts,mjs}",
-    "scripts/*.mjs"
+    "scripts/**/*.mjs"
   ],
   "ignore": [
     "**/dist/**",
     "**/.next/**",
+    "third_party/**",
     "docs/screenshots/**",
     "packages/codex/src/generated/**",
     "playwright.real-local.config.ts",

@@ -13,14 +13,14 @@ import {
   patchProtocolMetadata,
   readFocusedGitStatus,
   renderGeneratedReadme,
-  resolveCodexRepo,
+  resolveCodexSubmodule,
 } from "./import-schema-lib";
 
 const execFileAsync = promisify(execFile);
 
 const generatedRoot = fileURLToPath(new URL("../src/generated", import.meta.url));
 const codexPackageRoot = fileURLToPath(new URL("..", import.meta.url));
-const codexRepo = resolveCodexRepo(process.env);
+const codexRepo = resolveCodexSubmodule();
 const codexRs = join(codexRepo, "codex-rs");
 
 assertRequiredUpstreamPaths(codexRepo);

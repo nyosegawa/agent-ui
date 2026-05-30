@@ -9,6 +9,7 @@ const publicMarkdownFiles = ["README.md"];
 const stalePatterns = [
   "examples/local-react-vite/playwright.config.ts",
   "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+  "CODEX_REPO",
   ".aui-approval-card",
 ];
 

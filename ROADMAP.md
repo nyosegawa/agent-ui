@@ -70,8 +70,10 @@ Goal: make it routine to follow the latest Codex App Server schema without
 guesswork or large manual audits.
 
 - Add a maintenance guide at `docs/maintenance/codex-upstream-sync.md`.
-- Add a schema-update command that wraps the existing generated-schema flow:
-  `CODEX_REPO=<codex-checkout> bun --filter @nyosegawa/agent-ui-codex generate:schema`.
+- Add `third_party/codex` as the checked-in upstream submodule and make it the
+  only source used by schema-update commands.
+- Add a schema-update command that wraps the generated-schema flow:
+  `bun --filter @nyosegawa/agent-ui-codex generate:schema`.
 - Add a protocol drift report script that summarizes:
   - new, removed, and changed stable methods
   - new, removed, and changed experimental methods
@@ -80,7 +82,6 @@ guesswork or large manual audits.
   - fixture manifest commit drift
 - Keep the method classification reviewable:
   - `stableProductized`
-  - `stableAvailable`
   - `hostOnly`
   - `experimentalAvailable`
   - `experimentalUnsupported`

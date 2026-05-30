@@ -5,7 +5,7 @@ import {
   patchPackageJsonMetadata,
   patchProtocolMetadata,
   renderGeneratedReadme,
-  resolveCodexRepo,
+  resolveCodexSubmodule,
 } from "../scripts/import-schema-lib";
 
 const metadata = {
@@ -13,13 +13,13 @@ const metadata = {
   commit: "0123456789abcdef0123456789abcdef01234567",
   commitDate: "2026-05-29T00:00:00Z",
   generatedAt: "2026-05-29T01:02:03Z",
-  generatorCommand: "CODEX_REPO=/tmp/codex bun --filter @nyosegawa/agent-ui-codex generate:schema",
+  generatorCommand: "bun --filter @nyosegawa/agent-ui-codex generate:schema",
   subject: "update app-server schema",
 };
 
 describe("schema import script preflight", () => {
-  it("requires CODEX_REPO instead of using a personal default checkout", () => {
-    expect(() => resolveCodexRepo({})).toThrow("CODEX_REPO");
+  it("uses the repository Codex submodule as the only schema source", () => {
+    expect(resolveCodexSubmodule()).toMatch(/agent-ui\/third_party\/codex$/);
   });
 
   it("rejects dirty focused upstream protocol paths", () => {
@@ -52,7 +52,7 @@ describe("schema import script preflight", () => {
     });
 
     const readme = renderGeneratedReadme(metadata);
-    expect(readme).toContain(`- Upstream repository: \`${metadata.codexRepo}\``);
+    expect(readme).toMatch(/- Upstream repository: `.*tmp\/codex`/);
     expect(readme).toContain(`- Upstream commit: \`${metadata.commit}\``);
     expect(readme).toContain(`- Generated at: \`${metadata.generatedAt}\``);
   });

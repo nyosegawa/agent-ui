@@ -37,6 +37,7 @@ import {
   normalizeThreadTurnsListResponse,
 } from "../src/normalizer";
 import { stableNotificationCoverage } from "../src/normalizers/notification-coverage";
+import { generatedExperimentalOnlyClientMethods } from "../src/generated/protocol-capabilities";
 
 describe("Codex protocol metadata", () => {
   it("records upstream commit and stable release method surface", () => {
@@ -94,6 +95,27 @@ describe("Codex protocol metadata", () => {
     expect(
       codexCapabilityMetadata.some((entry) => entry.method === "mock/experimentalMethod"),
     ).toBe(false);
+  });
+
+  it("requires every generated client method to have an explicit capability decision", () => {
+    const classifiedStableMethods = new Set<string>([
+      ...stableProductizedMethods,
+      ...hostOnlyMethods,
+    ]);
+    const classifiedExperimentalMethods = new Set<string>([
+      ...experimentalAvailableMethods,
+      ...experimentalUnsupportedMethods,
+      "mock/experimentalMethod",
+    ]);
+
+    expect(stableAvailableMethods.filter((method) => !classifiedStableMethods.has(method))).toEqual(
+      [],
+    );
+    expect(
+      generatedExperimentalOnlyClientMethods.filter(
+        (method) => !classifiedExperimentalMethods.has(method),
+      ),
+    ).toEqual([]);
   });
 
   it("classifies methods for product clients and explicit experimental access", () => {

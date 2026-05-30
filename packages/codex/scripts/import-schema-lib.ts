@@ -1,10 +1,12 @@
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
-import { homedir } from "node:os";
-import { resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 const execFileAsync = promisify(execFile);
+const agentUiRepoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../../..");
+const codexSubmodulePath = resolve(agentUiRepoRoot, "third_party/codex");
 
 export interface SchemaImportMetadata {
   codexRepo: string;
@@ -15,18 +17,8 @@ export interface SchemaImportMetadata {
   subject: string;
 }
 
-export function resolveCodexRepo(
-  env: Pick<NodeJS.ProcessEnv, "CODEX_REPO">,
-  cwd = process.cwd(),
-): string {
-  const raw = env.CODEX_REPO?.trim();
-  if (!raw) {
-    throw new Error(
-      "CODEX_REPO is required for schema import; pass an explicit upstream Codex checkout.",
-    );
-  }
-  const expanded = raw.startsWith("~/") ? `${homedir()}${raw.slice(1)}` : raw;
-  return resolve(cwd, expanded);
+export function resolveCodexSubmodule(): string {
+  return codexSubmodulePath;
 }
 
 export function assertRequiredUpstreamPaths(codexRepo: string): void {
@@ -34,7 +26,7 @@ export function assertRequiredUpstreamPaths(codexRepo: string): void {
   const missing = required.filter((path) => !existsSync(resolve(codexRepo, path)));
   if (missing.length > 0) {
     throw new Error(
-      `CODEX_REPO is missing required App Server paths: ${missing.join(", ")}`,
+      `third_party/codex is missing required App Server paths: ${missing.join(", ")}`,
     );
   }
 }
@@ -51,7 +43,7 @@ export function assertFocusedGitClean(
 
   throw new Error(
     [
-      "CODEX_REPO has uncommitted changes in schema import paths.",
+      "third_party/codex has uncommitted changes in schema import paths.",
       `Focused paths: ${focusedPaths.join(", ")}`,
       ...dirty.map((line) => `- ${line}`),
     ].join("\n"),
@@ -70,7 +62,7 @@ export async function collectSchemaImportMetadata(
     commit,
     commitDate,
     generatedAt,
-    generatorCommand: `CODEX_REPO=${codexRepo} bun --filter @nyosegawa/agent-ui-codex generate:schema`,
+    generatorCommand: "bun --filter @nyosegawa/agent-ui-codex generate:schema",
     subject,
   };
 }
@@ -117,13 +109,14 @@ export function patchPackageJsonMetadata(
 }
 
 export function renderGeneratedReadme(metadata: SchemaImportMetadata): string {
+  const upstreamPath = relative(agentUiRepoRoot, metadata.codexRepo) || metadata.codexRepo;
   return [
     "# Codex App Server Generated Schema",
     "",
     "This directory contains vendored TypeScript schema generated from the upstream",
     "Codex App Server protocol.",
     "",
-    `- Upstream repository: \`${metadata.codexRepo}\``,
+    `- Upstream repository: \`${upstreamPath}\``,
     `- Upstream commit: \`${metadata.commit}\``,
     `- Upstream commit date: \`${metadata.commitDate}\``,
     `- Upstream subject: \`${metadata.subject}\``,

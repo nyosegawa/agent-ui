@@ -24,11 +24,11 @@ checked-in artifact.
 
 ## Update Flow
 
-1. Inspect the upstream Codex checkout you intend to import from.
-2. Run
-   `CODEX_REPO=<codex-checkout> bun --filter @nyosegawa/agent-ui-codex generate:schema`.
-   `CODEX_REPO` is required; the script does not fall back to a personal path.
-   Before generation it validates `codex-rs/app-server` and
+1. Inspect the checked-in upstream Codex submodule at `third_party/codex`.
+2. Run `bun --filter @nyosegawa/agent-ui-codex generate:schema`.
+   The script reads only `third_party/codex`; it does not fall back to a
+   personal checkout or environment variable. Before generation it validates
+   `codex-rs/app-server` and
    `codex-rs/app-server-protocol`, rejects dirty focused paths, captures the
    upstream HEAD/date/subject, and generates into temporary directories before
    replacing the checked-in schema tree.

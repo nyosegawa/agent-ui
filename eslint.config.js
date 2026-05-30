@@ -9,6 +9,7 @@ export default tseslint.config(
       "**/dist/**",
       "**/.next/**",
       "**/node_modules/**",
+      "third_party/**",
       "packages/codex/src/generated/**",
       "test/api-snapshots/**",
       "coverage/**",
