@@ -13,6 +13,8 @@ Browser UI
 
 For the server boundary around this bridge, see
 [Server Bridge](../reference/server-bridge.md).
+The same-origin bridge route is still a host endpoint; same-origin routing and
+upstream `Origin` checks are not authentication.
 
 Login sequence:
 
@@ -61,7 +63,8 @@ Preferred constraints:
 
 - keep App Server bound to loopback when possible
 - use SSH port forwarding when practical
-- use explicit bearer auth for non-loopback WebSocket exposure
+- use explicit host-owned auth and bridge admission for non-loopback WebSocket
+  exposure
 - avoid putting bearer tokens in command-line logs
 
 ## API Key

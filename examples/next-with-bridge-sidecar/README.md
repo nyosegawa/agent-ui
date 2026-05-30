@@ -10,12 +10,16 @@ The browser stays same-origin:
 
 ```text
 Next UI -> /agent-ui/ws -> codex app-server --listen stdio://
-Next UI -> /agent-ui/upload -> temp local path -> localImage / mention input
+Next UI -> POST /agent-ui/upload -> temp local path -> localImage / explicit text input
 ```
 
 Do not implement full chat with a plain Next Route Handler. Route Handlers are
 request/response only; streaming turns, approval requests, and browser approval
 responses require a long-lived WebSocket bridge.
+
+This example has no bridge `admission` hook. It is loopback-first development
+infrastructure; add host-owned auth, admission, upload scoping, isolation,
+resource limits, and audit logging before non-loopback use.
 
 Run:
 

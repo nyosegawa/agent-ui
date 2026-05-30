@@ -1,6 +1,8 @@
 # Multi-User Deployment Recipe
 
-Multi-user deployment is outside the default local release. Use this only for a host application that already owns authentication, authorization, workspace assignment, and audit logging.
+Multi-user deployment is host-owned advanced integration work. Use this only for
+a host application that already owns authentication, authorization, workspace
+assignment, and audit logging.
 
 ## Shape
 
@@ -18,6 +20,8 @@ Required boundaries:
 - one credential context per user
 - one explicit workspace root per bridge
 - host authorization before every bridge connection
+- bridge admission before spawning Codex App Server
+- per-session upload directory scoping and cleanup
 - strict stderr/log redaction before logs leave the host
 - resource limits for process count, wall time, idle time, and output size
 
@@ -28,6 +32,8 @@ Do not share a personal OAuth session across users.
 The host bridge should:
 
 - accept only authenticated same-origin browser sessions
+- treat same-origin routing and `Origin` checks as routing signals, not
+  authentication
 - derive workspace roots server-side
 - start `codex app-server --listen stdio://` server-side
 - expose a narrow JSON-RPC-lite bridge to the browser
@@ -60,4 +66,4 @@ Use aggressive cleanup:
 - child process kill on WebSocket close
 - bounded reconnect attempts from the browser
 
-This keeps remote use closer to the local release bridge semantics.
+This keeps remote use closer to Agent UI's local-first bridge semantics.

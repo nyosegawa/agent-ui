@@ -82,39 +82,39 @@ docs, tests, and validation notes are complete.
 
 ## S03: Security, Bridge, Auth, Uploads
 
-- [ ] S03.01 Make `docs/reference/server-bridge.md` the owner for bridge
+- [x] S03.01 Make `docs/reference/server-bridge.md` the owner for bridge
   defaults, close codes, admission, dynamic tools, server requests, uploads,
   redaction, one-shot RPC, and direct upstream WebSocket warnings.
-- [ ] S03.02 State that same-origin routing and upstream Origin checks are not
+- [x] S03.02 State that same-origin routing and upstream Origin checks are not
   authentication, and that non-loopback bridge or upload exposure requires
   host-owned auth, admission, workspace or session scoping, isolation, resource
   limits, and audit logging.
-- [ ] S03.03 Update `docs/architecture/security.md`,
+- [x] S03.03 Update `docs/architecture/security.md`,
   `docs/guides/authentication.md`, `docs/guides/remote-deployment.md`,
   `docs/guides/nextjs.md`, and affected example pages to link back to the bridge
   reference instead of duplicating risky defaults.
-- [ ] S03.04 Rewrite one-shot RPC docs around the exact default allowlist, exact
+- [x] S03.04 Rewrite one-shot RPC docs around the exact default allowlist, exact
   HTTP request and response envelopes, pre-spawn denial, one process per allowed
   request, and host-owned route authentication.
-- [ ] S03.05 State that one-shot RPC is not chat and has no built-in admission or
+- [x] S03.05 State that one-shot RPC is not chat and has no built-in admission or
   authentication; document that `allowedMethods: "all"` removes the method
   policy.
-- [ ] S03.06 Update upload docs to say missing `content-type` is accepted,
+- [x] S03.06 Update upload docs to say missing `content-type` is accepted,
   present content types are validated against the supported list, the default
   limit is 16 MB, default cleanup TTL is one hour, and custom relative roots can
   produce relative returned paths.
-- [ ] S03.07 Preserve attachment facts: browser `File` values require a host
+- [x] S03.07 Preserve attachment facts: browser `File` values require a host
   resolver, images become `localImageInput(path)`, non-images become explicit
   text such as `Attached file: /absolute/path`, and resolver errors surface
   inline.
-- [ ] S03.08 Fix Next sidecar docs so they describe the custom Node HTTP server,
+- [x] S03.08 Fix Next sidecar docs so they describe the custom Node HTTP server,
   `/agent-ui/ws`, `POST /agent-ui/upload`, lack of admission hook, image versus
   non-image mapping, and upload cleanup behavior.
-- [ ] S03.09 Document dynamic tool execution narrowly: `item/tool/call` is
+- [x] S03.09 Document dynamic tool execution narrowly: `item/tool/call` is
   normalized, handled by the bridge or host integration, not retained in the
   default core server request queue, and disabled for execution unless a handler
   exists.
-- [ ] S03.10 Document permission bounding as two separate surfaces: normal
+- [x] S03.10 Document permission bounding as two separate surfaces: normal
   server request policy is trusted host policy today, while helper-thread dynamic
   permissions need schema-aware bounding before broad bounded claims are safe.
 
@@ -304,7 +304,7 @@ docs, tests, and validation notes are complete.
   docs should present it as an initial or next-render class hook only.
 - [x] D09 Decide whether `@nyosegawa/agent-ui-codex/stable-types` needs an
   explicit type-only runtime export policy exemption.
-- [ ] D10 Decide whether upload directories should be required or normalized as
+- [x] D10 Decide whether upload directories should be required or normalized as
   absolute paths so returned upload path wording can be exact.
 - [ ] D11 Decide whether theming docs should publish exact token values at all,
   or only token names, token groups, theme scopes, and override examples backed

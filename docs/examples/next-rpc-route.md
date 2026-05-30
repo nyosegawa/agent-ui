@@ -28,3 +28,11 @@ This example is not a chat bridge. Use the WebSocket sidecar for full chat.
 The helper rejects host-only methods such as `fs/readFile`, `command/exec`, and
 `mcpServer/tool/call` by default. Keep `allowedMethods` scoped to the calls this
 route actually needs.
+
+The runnable route narrows `allowedMethods` to `account/read` and `model/list`.
+Requests use `{ "method": "...", "params": {} }`; responses are
+`{ "result": ... }` or `{ "error": ... }`. Denied methods are rejected before an
+App Server process is spawned. The helper has no built-in admission or
+authentication, so production routes must add host-owned route authentication.
+`allowedMethods: "all"` removes the method policy and should be treated as a
+host-admin endpoint only.

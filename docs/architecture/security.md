@@ -29,7 +29,7 @@ There are three separate browser-facing boundaries:
   and do not power chat
 
 Do not rely on upstream direct-WebSocket origin rejection to protect an Agent UI
-bridge route.
+bridge route. Same-origin routing and `Origin` checks are not authentication.
 
 ## Shell Commands
 
@@ -118,6 +118,10 @@ Requirements:
 - explicit auth for non-loopback WebSocket
 - TLS when crossing machine boundaries
 - per-user or per-workspace isolation
+- bridge admission before spawning Codex App Server
+- workspace and upload scoping
+- process and output resource limits
+- audit logging for bridge, workspace, approval, and shutdown events
 - no unauthenticated public App Server
 - strict log redaction
 

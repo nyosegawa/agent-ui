@@ -25,5 +25,10 @@ Endpoint:
 POST /api/agent-ui
 ```
 
+The route accepts `{ "method": "...", "params": {} }` and returns
+`{ "result": ... }` or `{ "error": ... }`. It narrows `allowedMethods` to
+`account/read` and `model/list`; denied methods fail before an App Server
+process is spawned.
+
 For full chat, streaming turns, approvals, or attachments, use
 `examples/next-with-bridge-sidecar` instead.

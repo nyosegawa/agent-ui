@@ -1,6 +1,8 @@
 # API-Key Remote Deployment Recipe
 
-API-key remote operation is an advanced host-owned deployment pattern. It is not the local release default. The default remains ChatGPT managed auth through local `codex app-server --listen stdio://`.
+API-key remote operation is an advanced host-owned deployment pattern. It is
+not default Agent UI package behavior. The default remains ChatGPT managed auth
+through local `codex app-server --listen stdio://`.
 
 Use this recipe only when the host application owns the API key, billing boundary, authorization model, and deployment environment.
 
@@ -21,6 +23,8 @@ Rules:
 - prefer short-lived server-side sessions over long-lived bridge tokens
 - redact API-key-shaped values from stdout, stderr, and structured logs
 - isolate workspace roots exactly as in the multi-user recipe
+- use host-owned auth and bridge admission before spawning Codex App Server
+- keep upload directories scoped to the authenticated session or workspace
 
 ## Server Environment
 
@@ -66,7 +70,10 @@ const transport = createCodexWebSocketTransport({
 });
 ```
 
-The host session authenticates the browser. The API key remains on the server.
+The host session authenticates the browser. Same-origin routing and upstream
+`Origin` checks are not authentication. Do not expose direct upstream App
+Server WebSocket as the productized browser path for this recipe. The API key
+remains on the server.
 
 ## Operational Checks
 

@@ -32,6 +32,10 @@ example exposes unauthenticated bridge, upload, and directory-picker routes. It
 does not configure a per-connection bridge `admission` hook before spawning the
 App Server process. For trusted host-owned networks only, set
 `AGENT_UI_ALLOW_NON_LOOPBACK=1`; the server will print a warning before binding.
+Before using that opt-in outside loopback, add host-owned auth, bridge
+admission, workspace and upload scoping, process isolation, resource limits, and
+audit logging. See [Server Bridge](../reference/server-bridge.md) for exact
+bridge defaults.
 
 The host page treats 5175 as a full-width, full-height app. `.agent-ui-local-app`
 owns `width: 100%` and `height: 100dvh`, `AgentChat` consumes that height, and

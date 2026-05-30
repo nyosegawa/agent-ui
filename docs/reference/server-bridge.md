@@ -93,6 +93,15 @@ underlying transport.
 The upstream App Server may reject direct browser WebSocket connections by
 `Origin`, but that does not protect an Agent UI same-origin bridge endpoint.
 The bridge is a host endpoint and must enforce its own admission/session policy.
+Same-origin routing and upstream `Origin` checks are not authentication.
+Non-loopback exposure requires host-owned auth, admission, workspace or session
+scoping, process isolation, resource limits, and audit logging.
+
+`handleAgentUiWebSocketConnection()` is the lower-level handler for hosts that
+do not use `attachAgentUiWebSocketBridge()`. If an `admission` hook needs HTTP
+headers, cookies, or the `Origin` header, pass the original `IncomingMessage` as
+the third argument. Without that request object the handler cannot evaluate
+request-scoped admission before spawning the App Server process.
 
 Server-side redaction helpers are public exports from
 `@nyosegawa/agent-ui-server`: `redactSecrets()`, `redactStructuredValue()`, and
@@ -155,6 +164,11 @@ paths. The library therefore requires a host resolver for attachments.
   cleanup for expired session directories before writes
 - returns JSON `{ "path": "/absolute/local/path" }`
 
+If a host passes a relative `directory`, the returned path can also be relative
+to the host process. Use an absolute upload root when the App Server process
+needs absolute attachment paths. Agent UI does not automatically redact returned
+local paths.
+
 The React composer calls the host's `resolveLocalAttachment(file)` resolver.
 The resolver may upload the file, then return one Codex input or an array of
 Codex inputs. Images should return `localImageInput(path)`. For arbitrary
@@ -166,8 +180,10 @@ only on `mentionInput`.
 
 ## Dynamic Tool Bridge
 
-`attachAgentUiWebSocketBridge()` does not execute dynamic tool requests unless
-the host passes a `dynamicToolHandler`. The exported
+`item/tool/call` requests are normalized by the Codex adapter. The default core
+server request queue does not retain them as normal approval items; they are
+handled out of band by the bridge or by a host integration. The bridge does not
+execute dynamic tool requests unless the host passes a `dynamicToolHandler`. The exported
 `createMcpDynamicToolHandler()` helper requires explicit namespace, server, and
 tool mappings before it will forward a dynamic request to `mcpServer/tool/call`:
 
@@ -256,6 +272,29 @@ pending for the UI.
 HTTP RPC helpers. They are useful for calls such as `account/read`,
 `model/list`, or a host-owned administrative request.
 
+They are not chat bridges and they do not include built-in admission or
+authentication callbacks. The host route must enforce authentication before it
+calls the helper. Each accepted HTTP request starts one App Server process, sends
+one JSON-RPC-lite request, returns one response, and closes the process.
+
+Request body:
+
+```json
+{ "method": "model/list", "params": {} }
+```
+
+Successful response:
+
+```json
+{ "result": {} }
+```
+
+Rejected or failed response:
+
+```json
+{ "error": { "code": -32601, "message": "Codex method is not allowed: fs/readFile" } }
+```
+
 One-shot helpers validate the requested method before spawning App Server. By
 default they allow only read/list/status-shaped methods.
 
@@ -282,9 +321,12 @@ createAgentUiNextRpcRoute({
 });
 ```
 
+The runnable `examples/next-rpc-route` uses exactly `account/read` and
+`model/list`.
+
 `allowedMethods: "all"` is an unsafe escape hatch for authenticated,
-host-owned routes only. Do not expose it from a browser-copyable route without
-separate authorization and audit controls.
+host-owned routes only. It removes the method policy entirely. Do not expose it
+from a browser-copyable route without separate authorization and audit controls.
 
 They are not chat bridges because a single HTTP response cannot represent:
 

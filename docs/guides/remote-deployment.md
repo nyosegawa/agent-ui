@@ -6,6 +6,7 @@ local-first browser UI: a host process starts
 
 The canonical bridge contract is documented in
 [Server Bridge](../reference/server-bridge.md).
+Same-origin routing and upstream `Origin` checks are not authentication.
 
 ## Recommended Local Shape
 
@@ -13,7 +14,7 @@ Use one of these before exposing a network listener:
 
 - local browser UI plus local bridge
 - SSH port forwarding to a loopback bridge
-- host-owned reverse proxy with explicit authentication
+- host-owned reverse proxy with explicit authentication and bridge admission
 
 Do not expose a personal Codex App Server directly to the open network.
 
@@ -58,6 +59,9 @@ For any remote recipe:
 - keep API keys server-side when using the API-key remote pattern
 - do not share a personal OAuth session across users
 - keep workspace filesystem access explicit
+- scope upload directories per user/session/workspace
+- enforce process count, idle time, turn time, and output-size limits
+- audit bridge connection, workspace, approval, and shutdown events
 
 See
 [`examples/recipes/multi-user-deployment.md`](../../examples/recipes/multi-user-deployment.md)
@@ -87,3 +91,4 @@ The package does not provide:
 - multi-user authorization
 - credential storage
 - public production websocket hosting
+- direct upstream App Server WebSocket as the productized browser path
