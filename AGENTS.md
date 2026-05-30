@@ -14,10 +14,10 @@
 Agent UI is a reusable Codex App Server UI component library, not a host application runtime.
 
 - Build general primitives, hooks, adapters, and documented extension points for the Codex App Server UI surface.
-- Keep watcher, skill-with-app, workflow orchestration, app panels, persistence policies, and sidecar lifecycle outside the core library. Host apps compose Agent UI primitives to implement those workflows.
+- Keep host-specific workflows, orchestration layers, app panels, persistence policies, and sidecar lifecycle outside the core library. Host apps compose Agent UI primitives to implement those workflows.
 - Do not add APIs only because one host app currently needs them.
-- Treat `app/list` as Codex Apps/connectors protocol, not as a skill-with-app registry.
-- Do not introduce skill-with-app-specific stores, worker panes, tool names, examples, or public docs into this repo.
+- Treat `app/list` as Codex Apps/connectors protocol, not as a host workflow registry.
+- Do not introduce host-specific stores, worker panes, tool names, examples, or public docs into this repo.
 - Keep usage, status, diagnostics, thread, composer, approvals, apps, and browser-verification surfaces independently composable. `AgentChat` may wire them together, but hosts must be able to render usage-only, scoped-thread, and custom primitive layouts.
 - Default to local-first, single-user, stdio-first, and stable-API-first unless docs explicitly mark a surface as experimental or host-only.
 
