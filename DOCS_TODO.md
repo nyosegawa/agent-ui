@@ -217,36 +217,36 @@ docs, tests, and validation notes are complete.
 
 ## S07: Examples, Browser QA, Recipes
 
-- [ ] S07.01 Keep `docs/examples/local-react-vite.md` as the public route
+- [x] S07.01 Keep `docs/examples/local-react-vite.md` as the public route
   inventory for deterministic fixture review, including `/`, `/rich-transcript`,
   `/?state=empty`, `/?state=unauth`, `/?state=bridge-error`, `/fixture-gallery`,
   `/host-workflow-recipe`, `/usage-only`, `/scoped-thread-pane`, and
   `/app-connectors`.
-- [ ] S07.02 Keep example docs user-facing when maintainer e2e file maps move;
+- [x] S07.02 Keep example docs user-facing when maintainer e2e file maps move;
   they should still explain surfaces demonstrated, commands, ports, and fixture
   versus real-local boundaries.
-- [ ] S07.03 Correct `docs/screenshots/README.md` before consolidating screenshot
+- [x] S07.03 Correct `docs/screenshots/README.md` before consolidating screenshot
   command blocks, including the canonical fixture Playwright config and the
   route/filename set owned by `capture-docs-screenshots.e2e.ts`.
-- [ ] S07.04 State that docs screenshots are opt-in release evidence, not CI
+- [x] S07.04 State that docs screenshots are opt-in release evidence, not CI
   output, and should be regenerated only for intentional visual contract changes.
-- [ ] S07.05 State that screenshot capture covers a retained subset and is not
+- [x] S07.05 State that screenshot capture covers a retained subset and is not
   the complete local React Vite public route inventory.
-- [ ] S07.06 Rewrite public browser verification guidance away from internal
+- [x] S07.06 Rewrite public browser verification guidance away from internal
   selectors and broad DOM shortcuts; prefer roles, labels, text, and public
   user-visible behavior.
-- [ ] S07.07 Keep `examples/docs-site` documented as an executable package
+- [x] S07.07 Keep `examples/docs-site` documented as an executable package
   overview and compile/style smoke surface, not the Markdown documentation source
   and not a host runtime.
-- [ ] S07.08 Keep deployment recipes concrete; do not collapse multi-user and
+- [x] S07.08 Keep deployment recipes concrete; do not collapse multi-user and
   API-key remote deployment recipes into links only.
-- [ ] S07.09 Preserve multi-user recipe requirements: per-user/session/workspace
+- [x] S07.09 Preserve multi-user recipe requirements: per-user/session/workspace
   App Server process, separate credentials, explicit workspace root, host
   authorization, redaction, resource limits, audit events, and cleanup.
-- [ ] S07.10 Preserve API-key remote recipe requirements: keys stay server-side
+- [x] S07.10 Preserve API-key remote recipe requirements: keys stay server-side
   only, never appear in browser URLs or logs, App Server auth support is
   verified, and device-code login remains the fallback when unsupported.
-- [ ] S07.11 Keep `docs/examples/recipes.md` as the recipe index until a later
+- [x] S07.11 Keep `docs/examples/recipes.md` as the recipe index until a later
   `docs/recipes/` tree has settled ownership.
 
 ## S08: Validation And Cleanup
@@ -309,12 +309,12 @@ docs, tests, and validation notes are complete.
 - [x] D11 Decide whether theming docs should publish exact token values at all,
   or only token names, token groups, theme scopes, and override examples backed
   by `tokens.css`.
-- [ ] D12 Decide the canonical screenshot capture command, either direct
+- [x] D12 Decide the canonical screenshot capture command, either direct
   Playwright invocation with fixture config or a package script wrapper.
-- [ ] D13 Decide whether documentation screenshots are intended to be committed
+- [x] D13 Decide whether documentation screenshots are intended to be committed
   artifacts; if yes, route sync can also check file existence.
 - [ ] D14 Decide which snippet group should opt into typecheck first: quickstart
   examples, React guide examples, package export examples, or server bridge
   examples.
-- [ ] D15 Decide whether a future `docs/recipes/` tree is needed after
+- [x] D15 Decide whether a future `docs/recipes/` tree is needed after
   `docs/examples/recipes.md` and existing recipe markdown are normalized.

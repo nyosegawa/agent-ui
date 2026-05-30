@@ -75,6 +75,15 @@ describe("documentation stale references", () => {
       expect(text).not.toMatch(/browser smoke/i);
     }
   });
+
+  it("keeps public browser verification examples on user-visible surfaces", async () => {
+    const guide = await readFile(
+      join(process.cwd(), "docs", "guides", "browser-verification.md"),
+      "utf8",
+    );
+    expect(guide).not.toContain(".aui-");
+    expect(guide).not.toContain("querySelector");
+  });
 });
 
 async function collectMarkdownFiles(root: string, entries: string[]): Promise<string[]> {

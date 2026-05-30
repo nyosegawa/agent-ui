@@ -4,12 +4,12 @@ Typed implementation recipes for host applications.
 
 Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
 
-- `custom-components.tsx`: `AgentChat` slots for custom approval and item rendering.
-- `headless-hooks.tsx`: custom layout built from hooks only.
-- `themed.tsx` and `themed.css`: scoped CSS variable theme override that
+- `src/custom-components.tsx`: `AgentChat` slots for custom approval and item rendering.
+- `src/headless-hooks.tsx`: custom layout built from hooks only.
+- `src/themed.tsx` and `src/themed.css`: scoped CSS variable theme override that
   changes a small set of brand tokens while inheriting the rest of Agent UI's
   light, dark, and system token contract.
-- `websocket-remote-demo.tsx`: optional same-origin WebSocket transport wiring.
+- `src/websocket-remote-demo.tsx`: optional same-origin WebSocket transport wiring.
 - `multi-user-deployment.md`: host-owned multi-user bridge boundaries and audit checklist.
 - `api-key-remote-deployment.md`: server-side API-key bridge constraints.
 
