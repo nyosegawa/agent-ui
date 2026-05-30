@@ -83,10 +83,12 @@
   "engines": {
     "node": ">=20"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "agentUi": {
-    "codexProtocolCommit": "577ec03bf82fb52e7041fb6b684e694b1e53451a",
-    "generatedAt": "2026-05-29T03:46:35.928Z"
+    "codexProtocolCommit": "3e7baa00e43419967d90d6ad9cef40f58d5ac89f",
+    "generatedAt": "2026-05-30T10:05:29.106Z"
   },
   "scripts": {
     "build": "tsup",
