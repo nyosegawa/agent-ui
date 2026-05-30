@@ -38,6 +38,11 @@ The default approval surface shows:
 Hosts can customize approval rendering through component slots, but should not
 hide the context needed to make a safe decision.
 
+`AgentChat.slots.renderApproval` replaces the default approval card and its
+actions for that rendered request. Custom renderers must wire decisions through
+`useAgentApprovals()` or a host-owned response path; otherwise the request will
+remain pending until the App Server resolves or rejects it.
+
 ## Headless Control
 
 Use hooks for custom surfaces:

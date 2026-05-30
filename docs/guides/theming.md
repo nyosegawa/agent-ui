@@ -43,12 +43,12 @@ library-styled switcher in their own chrome. The root default is light, and
 ## Token Groups
 
 The active token source is
-`packages/react/src/styles/tokens.css`. Use the current token names below;
-older `--aui-text`, `--aui-muted`, `--aui-accent`, and
-`--aui-accent-strong` names are not part of the current contract.
+`packages/react/src/styles/tokens.css`. It is the source of truth for exact
+token names and default values. This guide describes the stable token groups and
+override pattern instead of copying the full value catalog.
 
-Agent UI treats tokens as the design-system API. Distributed component CSS and
-the bundled fixture/docs examples use these tokens for color, radius, type
+Agent UI treats `--aui-*` tokens as the design-system API. Distributed component
+CSS and bundled fixture/docs examples use these tokens for color, radius, type
 scale, spacing, control height, motion, and focus styling. Avoid styling host
 surfaces by targeting internal `.aui-*` selectors when a token override or a
 component slot can express the same change.
@@ -57,204 +57,32 @@ The public stylesheet exposes one CSS entry point:
 `@nyosegawa/agent-ui-react/styles.css`. The files copied under
 `dist/styles/*` are private chunks used by that entry point.
 
-Surfaces:
+Current token families:
+
+- Surface and panel colors: `--aui-bg`, `--aui-panel`, and related soft or
+  quiet surface tokens.
+- Text colors: foreground, strong, muted, and faint text tokens.
+- Semantic colors: primary, danger, warning, success, info, and accent tokens.
+- Code surfaces: background, foreground, gutter, hunk, add, and remove tokens.
+- Borders, rules, elevation, overlays, focus rings, and shadows.
+- Radius, spacing, font family, type scale, line height, control height, tap
+  target, motion duration, easing, and letter-spacing tokens.
+
+Small override example:
 
 ```css
 .my-agent-ui {
-  --aui-bg: #f6f7f9;
-  --aui-bg-soft: #eef2f5;
-  --aui-panel: #ffffff;
-  --aui-panel-alt: #f0f3f6;
-  --aui-panel-quiet: #fafbfc;
+  --aui-primary: oklch(0.62 0.15 185);
+  --aui-primary-strong: oklch(0.52 0.14 185);
+  --aui-primary-fg: white;
+  --aui-radius-md: 0.75rem;
+  --aui-control-height-md: 2rem;
 }
 ```
 
-Borders and rules:
-
-```css
-.my-agent-ui {
-  --aui-border: #dfe5eb;
-  --aui-border-soft: #e8edf2;
-  --aui-border-strong: #c7d1db;
-  --aui-rule: #e6ebf0;
-}
-```
-
-Text:
-
-```css
-.my-agent-ui {
-  --aui-fg: #171a1f;
-  --aui-fg-strong: #0b0d10;
-  --aui-fg-muted: #5e6875;
-  --aui-fg-faint: #8a95a3;
-}
-```
-
-Interaction and semantic color:
-
-```css
-.my-agent-ui {
-  --aui-primary: #0d9488;
-  --aui-primary-strong: #0b7a70;
-  --aui-primary-fg: #ffffff;
-  --aui-primary-soft: #d8efed;
-  --aui-primary-border: rgba(13, 148, 136, 0.32);
-  --aui-primary-border-soft: rgba(13, 148, 136, 0.18);
-  --aui-accent-blue: #2563eb;
-  --aui-accent-green: #15803d;
-  --aui-accent-blue-soft: #e3edf7;
-  --aui-accent-blue-border: rgba(37, 99, 235, 0.22);
-  --aui-accent-green-soft: rgba(21, 128, 61, 0.22);
-  --aui-accent-green-fg: #15803d;
-  --aui-danger: #b91c1c;
-  --aui-danger-strong: #991b1b;
-  --aui-danger-soft: #fde8e7;
-  --aui-danger-border: rgba(185, 28, 28, 0.3);
-  --aui-danger-code-fg: #fecaca;
-  --aui-warn: #b45309;
-  --aui-warn-strong: #7a4b00;
-  --aui-warn-soft: #fbeed5;
-  --aui-warn-soft-strong: #fff5e6;
-  --aui-warn-soft-faint: #fff9ee;
-  --aui-warn-border: #f1d6a3;
-  --aui-warn-border-soft: rgba(241, 214, 163, 0.65);
-  --aui-info-soft: #e3edf7;
-  --aui-success: #15803d;
-  --aui-success-strong: #126331;
-  --aui-success-soft: #dcefe1;
-}
-```
-
-Code surfaces:
-
-```css
-.my-agent-ui {
-  --aui-code-bg: #161a20;
-  --aui-code-fg: #e7e5e0;
-  --aui-code-muted: #9aa1ab;
-  --aui-code-rule: #2a3038;
-  --aui-code-gutter-fg: #98a2b3;
-  --aui-code-gutter-rule: #344054;
-  --aui-code-file-fg: #d0d5dd;
-  --aui-code-hunk-bg: rgba(84, 121, 255, 0.22);
-  --aui-code-hunk-fg: #b8c7ff;
-  --aui-code-add-bg: rgba(18, 135, 91, 0.22);
-  --aui-code-add-fg: #a7f3c8;
-  --aui-code-remove-bg: rgba(180, 35, 24, 0.24);
-  --aui-code-remove-fg: #fecaca;
-}
-```
-
-Shape, focus, and elevation:
-
-```css
-.my-agent-ui {
-  --aui-overlay: rgba(15, 14, 12, 0.42);
-  --aui-shadow-card: 0 1px 0 rgba(15, 23, 42, 0.04);
-  --aui-shadow-lift: 0 10px 32px -16px rgba(15, 23, 42, 0.22);
-  --aui-shadow-focus: 0 0 0 3px var(--aui-primary-border-soft);
-  --aui-focus-ring: 0 0 0 3px rgba(13, 148, 136, 0.28);
-  --aui-focus-ring-danger: 0 0 0 3px var(--aui-danger-border);
-  --aui-elevation-1: 0 1px 0 rgba(15, 23, 42, 0.05);
-  --aui-elevation-2: 0 6px 22px -14px rgba(15, 23, 42, 0.22);
-  --aui-control-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --aui-color-scheme: light;
-  --aui-radius: 10px;
-  --aui-radius-xs: 4px;
-  --aui-radius-sm: 6px;
-  --aui-radius-md: 8px;
-  --aui-radius-lg: 12px;
-  --aui-radius-xl: 16px;
-  --aui-radius-2xl: 20px;
-  --aui-radius-pill: 999px;
-}
-```
-
-Spacing:
-
-```css
-.my-agent-ui {
-  --aui-space-0: 0;
-  --aui-space-025: 1px;
-  --aui-space-050: 2px;
-  --aui-space-075: 3px;
-  --aui-space-100: 4px;
-  --aui-space-125: 5px;
-  --aui-space-150: 6px;
-  --aui-space-175: 7px;
-  --aui-space-200: 8px;
-  --aui-space-225: 9px;
-  --aui-space-250: 10px;
-  --aui-space-275: 11px;
-  --aui-space-300: 12px;
-  --aui-space-325: 13px;
-  --aui-space-350: 14px;
-  --aui-space-400: 16px;
-  --aui-space-450: 18px;
-  --aui-space-500: 20px;
-  --aui-space-550: 22px;
-  --aui-space-600: 24px;
-  --aui-space-700: 28px;
-  --aui-space-800: 32px;
-  --aui-space-900: 36px;
-  --aui-space-1000: 40px;
-  --aui-space-1200: 48px;
-  --aui-space-1600: 64px;
-}
-```
-
-Type and controls:
-
-```css
-.my-agent-ui {
-  --aui-font-size-2xs: 10px;
-  --aui-font-size-2xs-plus: 10.5px;
-  --aui-font-size-xs: 11px;
-  --aui-font-size-xs-plus: 11.5px;
-  --aui-font-size-sm: 12px;
-  --aui-font-size-sm-plus: 12.5px;
-  --aui-font-size-md: 13px;
-  --aui-font-size-md-plus: 13.5px;
-  --aui-font-size-lg: 14px;
-  --aui-font-size-lg-plus: 14.5px;
-  --aui-font-size-xl: 15px;
-  --aui-font-size-xl-half: 15.5px;
-  --aui-font-size-xl-plus: 16px;
-  --aui-font-size-2xl: 17px;
-  --aui-font-size-2xl-plus: 19px;
-  --aui-font-size-3xl: 22px;
-  --aui-font-size-4xl: 24px;
-  --aui-line-tight: 1;
-  --aui-line-snug: 1.2;
-  --aui-line-normal: 1.3;
-  --aui-line-relaxed: 1.45;
-  --aui-line-prose: 1.5;
-  --aui-line-loose: 1.55;
-  --aui-line-reading: 1.62;
-  --aui-control-height-xs: 26px;
-  --aui-control-height-sm: 28px;
-  --aui-control-height-md: 30px;
-  --aui-control-height-lg: 36px;
-  --aui-control-height-lg-plus: 38px;
-  --aui-control-height-xl: 40px;
-  --aui-tap-target: var(--aui-control-height-lg);
-  --aui-easing: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --aui-duration-fast: 80ms;
-  --aui-duration-normal: 140ms;
-  --aui-duration-focus: 160ms;
-  --aui-duration-meter: 200ms;
-  --aui-duration-spin: 0.9s;
-  --aui-duration-pulse: 1.4s;
-  --aui-letter-spacing: 0;
-  --aui-letter-spacing-code: 0.005em;
-  --aui-letter-spacing-label: 0.04em;
-  --aui-letter-spacing-meta: 0.06em;
-  --aui-letter-spacing-wide: 0.08em;
-  --aui-font: ui-sans-serif, system-ui, sans-serif;
-  --aui-font-mono: ui-monospace, "SF Mono", monospace;
-}
-```
+Use exact token values from `tokens.css` when reviewing defaults. If docs ever
+need to publish a full exact token table, generate or test that table against
+`tokens.css` rather than copying values by hand.
 
 ## Maintenance Rules
 

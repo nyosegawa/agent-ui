@@ -182,35 +182,35 @@ docs, tests, and validation notes are complete.
 
 ## S06: React, Approvals, Usage, Theming
 
-- [ ] S06.01 Fix invalid React snippets immediately: `AgentWorkspace` is a
+- [x] S06.01 Fix invalid React snippets immediately: `AgentWorkspace` is a
   preset around `AgentChat` plus optional `panel`, not a children-based layout
   surface.
-- [ ] S06.02 Fix standalone diagnostics snippets so `AgentDiagnosticsPanel`
+- [x] S06.02 Fix standalone diagnostics snippets so `AgentDiagnosticsPanel`
   receives `const bootstrap = useAgentBootstrap()` through its required
   `bootstrap` prop.
-- [ ] S06.03 Keep `AgentChat.slots` as the documented slot surface for
+- [x] S06.03 Keep `AgentChat.slots` as the documented slot surface for
   `renderApproval` and `renderItem`.
-- [ ] S06.04 Preserve `docs/reference/react-components.md` as an API and
+- [x] S06.04 Preserve `docs/reference/react-components.md` as an API and
   behavior reference, not only a prop list.
-- [ ] S06.05 Shrink `docs/reference/react-components.md` in phases, moving visual
+- [x] S06.05 Shrink `docs/reference/react-components.md` in phases, moving visual
   QA, screenshot policy, token policy, and attachment depth only after
   replacement owner pages contain the same public contracts.
-- [ ] S06.06 Preserve transcript-first UX facts: approvals embedded in
+- [x] S06.06 Preserve transcript-first UX facts: approvals embedded in
   transcript, no separate approval scroll pane, mobile reachability, mobile
   sidebar drawer, bottom-sheet menus, usage near composer context, and no
   persistent usage or diagnostics rails by default.
-- [ ] S06.07 Preserve composer accessibility facts: form named "Message
+- [x] S06.07 Preserve composer accessibility facts: form named "Message
   composer", textarea described by visible shortcut hint, attachment chips expose
   filenames, mention buttons are hidden unless resolvers exist, and working
   directory is a thread-start setting.
-- [ ] S06.08 Update approvals docs so pending approvals stay reachable at the
+- [x] S06.08 Update approvals docs so pending approvals stay reachable at the
   relevant transcript point and source metadata remains available.
-- [ ] S06.09 Update usage and status docs so token usage stays near active
+- [x] S06.09 Update usage and status docs so token usage stays near active
   conversation and composer context without replacing transcript content.
-- [ ] S06.10 Revise theming docs to prefer token groups, theme scope usage,
+- [x] S06.10 Revise theming docs to prefer token groups, theme scope usage,
   selector warnings, and a small override example instead of a hand-copied exact
   token value catalog unless exact values become generated or tested.
-- [ ] S06.11 Preserve stylesheet facts: `@nyosegawa/agent-ui-react/styles.css` is
+- [x] S06.11 Preserve stylesheet facts: `@nyosegawa/agent-ui-react/styles.css` is
   the only public React stylesheet import, `--aui-*` tokens are the
   design-system API, `tokens.css` is source of truth, internal `.aui-*` selectors
   are private, and recipe CSS may intentionally override tokens.
@@ -306,7 +306,7 @@ docs, tests, and validation notes are complete.
   explicit type-only runtime export policy exemption.
 - [x] D10 Decide whether upload directories should be required or normalized as
   absolute paths so returned upload path wording can be exact.
-- [ ] D11 Decide whether theming docs should publish exact token values at all,
+- [x] D11 Decide whether theming docs should publish exact token values at all,
   or only token names, token groups, theme scopes, and override examples backed
   by `tokens.css`.
 - [ ] D12 Decide the canonical screenshot capture command, either direct

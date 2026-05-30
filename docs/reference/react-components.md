@@ -84,6 +84,10 @@ inline. Authenticated account details, plan, usage windows, and logout are
 available from the account dialog in the status actions so host applications can
 keep personal identity in profile or settings chrome.
 
+`slots.renderApproval` replaces the default approval card and its default
+actions. Custom approval renderers must call `useAgentApprovals()` or a
+host-owned response path to send decisions.
+
 ## Transcript Primitives
 
 `AgentTranscript` / `AgentMessageList` render App Server turn items in order.
@@ -226,14 +230,9 @@ quality directly instead of depending on a page-level shell:
   primitives (no iframes) so reviewers can inspect part quality, not just
   layout.
 
-Documentation screenshots are opt-in release evidence generated under
-`docs/screenshots/`. The host workflow recipe (`examples/local-react-vite`
-`/host-workflow-recipe`) is the canonical proof that the same primitives compose
-into a real product surface without the preset, and the fixture gallery
-(`/fixture-gallery`) is the visual QA index for every state plus the
-component-level close-ups. Example CSS is part of that QA surface and should use
-`--aui-*` tokens; recipe CSS may intentionally override tokens to demonstrate
-host theming.
+Visual QA route ownership lives in [Testing](../architecture/testing.md).
+Screenshot policy lives in [Documentation Screenshots](../screenshots/README.md).
+The token override contract lives in [Theming](../guides/theming.md).
 
 ## Layout Primitives
 
@@ -262,8 +261,9 @@ Use these primitives when embedding Agent UI into existing product chrome:
   command, file-change, tool, web search, image, and system-info blocks.
 - `AgentApprovalQueue`: compact pending-decision surface with one expanded
   approval card plus compact picker rows for any other pending requests.
-  `AgentThreadView` / `AgentChat` embed it at the end of the transcript;
-  hosts can also place it standalone.
+  `AgentThreadView` / `AgentChat` anchor it after source item or turn metadata
+  when available, with a transcript-tail fallback for metadata-free or
+  missing-source requests. Hosts can also place it standalone.
 - `AgentComposerPanel`: turn composer with inline mode / model / effort menus,
   running-turn steering, composer-local Stop, and compact context usage.
 - `AgentRunSettingsPanel`: thread-start settings primitive with model, effort,

@@ -29,6 +29,15 @@ be placed near the thread.
 ## Diagnostics
 
 `AgentDiagnosticsPanel` renders bridge/account/model startup diagnostics after
-redaction. It should not replace the transcript or approval UI.
+redaction. Standalone use requires the bootstrap state returned by
+`useAgentBootstrap()`:
+
+```tsx
+const bootstrap = useAgentBootstrap();
+
+<AgentDiagnosticsPanel bootstrap={bootstrap} />;
+```
+
+Diagnostics should not replace the transcript or approval UI.
 
 For the state model, see [architecture/overview.md](../architecture/overview.md).
