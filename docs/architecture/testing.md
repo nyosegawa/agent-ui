@@ -76,6 +76,11 @@ remains the package manager and lockfile owner.
 creates an isolated consumer project, so it cannot pass by resolving stale
 local `dist` artifacts left by an older build.
 
+Markdown snippet typecheck is deferred until snippets opt in with explicit
+metadata. When that guard is added, start with the React guide examples because
+they cover the most user-facing component wiring and are already backed by
+workspace TypeScript dependencies.
+
 The release workflow runs `bun run validate:release` and then
 `bun run validate:e2e`, so the real-local fake App Server suite is release
 evidence without blocking every pull request.
@@ -294,8 +299,9 @@ Documentation screenshots are opt-in:
 ```sh
 CAPTURE_DOCS_SCREENSHOTS=1 bunx playwright test \
   examples/local-react-vite/e2e/capture-docs-screenshots.e2e.ts \
-  --project=chromium
+  --config playwright.fixtures.config.ts
 ```
 
-Regenerate screenshots only when the visual contract intentionally changes.
-Do not regenerate screenshots for documentation-only wording changes.
+This is direct Playwright capture with the fixture config, not a normal CI gate.
+Regenerate screenshots only when the visual contract intentionally changes. Do
+not regenerate screenshots for documentation-only wording changes.

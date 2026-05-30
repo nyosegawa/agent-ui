@@ -251,31 +251,31 @@ docs, tests, and validation notes are complete.
 
 ## S08: Validation And Cleanup
 
-- [ ] S08.01 Run the focused docs guard tests added in this pass and record the
+- [x] S08.01 Run the focused docs guard tests added in this pass and record the
   exact command names in the implementation PR.
-- [ ] S08.02 Run `bun run typecheck` after docs snippets, examples, package
+- [x] S08.02 Run `bun run typecheck` after docs snippets, examples, package
   exports, or TypeScript-backed docs helpers change.
-- [ ] S08.03 Run `bun run lint` after new docs tests, scripts, or Markdown lint
+- [x] S08.03 Run `bun run lint` after new docs tests, scripts, or Markdown lint
   helpers are added.
-- [ ] S08.04 Run `bun run test:protocol` when protocol method lists, protocol
+- [x] S08.04 Run `bun run test:protocol` when protocol method lists, protocol
   reference semantics, generated metadata, or Codex request builders are touched.
-- [ ] S08.05 Run `bun run test:styles` when theming docs, style import guards,
+- [x] S08.05 Run `bun run test:styles` when theming docs, style import guards,
   token policy, or React stylesheet guidance changes.
-- [ ] S08.06 Run `bun run test:package-resolution` when package exports, package
+- [x] S08.06 Run `bun run test:package-resolution` when package exports, package
   list docs, Web Components docs, or public stylesheet specifiers change.
-- [ ] S08.07 Run `bun run validate:packages` when package manifests, package
+- [x] S08.07 Run `bun run validate:packages` when package manifests, package
   exports, build output expectations, package docs, or public package surface
   tests change.
-- [ ] S08.08 Run focused server tests for one-shot RPC, upload, server request
+- [x] S08.08 Run focused server tests for one-shot RPC, upload, server request
   policy, or dynamic tool docs when those docs are backed by behavior tests.
-- [ ] S08.09 Do not create a large `docs/maintenance/` tree during M0; add it
+- [x] S08.09 Do not create a large `docs/maintenance/` tree during M0; add it
   only when moving concrete operational content out of public references.
-- [ ] S08.10 Do not create a new `docs/quickstart.md` or
+- [x] S08.10 Do not create a new `docs/quickstart.md` or
   `docs/guides/host-integration.md` until existing entry, product boundary,
   bridge, security, auth, and remote deployment owners are corrected.
-- [ ] S08.11 Do not delete historical `tmp/` audit reports as part of M0; clean
+- [x] S08.11 Do not delete historical `tmp/` audit reports as part of M0; clean
   them only after unresolved findings are tracked elsewhere.
-- [ ] S08.12 Defer roadmap, agent-instruction, changeset, fixture label,
+- [x] S08.12 Defer roadmap, agent-instruction, changeset, fixture label,
   screenshot filename, and old audit cleanup unless they directly affect public
   docs output or the guard scope selected for this pass.
 
@@ -313,7 +313,7 @@ docs, tests, and validation notes are complete.
   Playwright invocation with fixture config or a package script wrapper.
 - [x] D13 Decide whether documentation screenshots are intended to be committed
   artifacts; if yes, route sync can also check file existence.
-- [ ] D14 Decide which snippet group should opt into typecheck first: quickstart
+- [x] D14 Decide which snippet group should opt into typecheck first: quickstart
   examples, React guide examples, package export examples, or server bridge
   examples.
 - [x] D15 Decide whether a future `docs/recipes/` tree is needed after
