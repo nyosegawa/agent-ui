@@ -5,21 +5,21 @@ docs, tests, and validation notes are complete.
 
 ## S00: Safety And Style
 
-- [ ] S00.01 Add a public Markdown no-em-dash guard that reports file and line
+- [x] S00.01 Add a public Markdown no-em-dash guard that reports file and line
   number, excludes `tmp/**/*.md`, and covers public docs plus example README and
   recipe Markdown.
-- [ ] S00.02 Remove current public em dash characters from
+- [x] S00.02 Remove current public em dash characters from
   `docs/reference/react-components.md`, `docs/architecture/overview.md`, and any
   other files in the first guard scope.
-- [ ] S00.03 Correct `docs/examples/codex-local-web.md` so it no longer claims
+- [x] S00.03 Correct `docs/examples/codex-local-web.md` so it no longer claims
   the example exercises bridge admission before process spawn unless
   `examples/codex-local-web/server.ts` actually configures `admission`.
-- [ ] S00.04 Correct normal `serverRequestPolicy.permissions` docs so they
+- [x] S00.04 Correct normal `serverRequestPolicy.permissions` docs so they
   describe trusted host policy today, or first implement requested-subset
   bounding before using bounded-permission language.
-- [ ] S00.05 Correct entry-page approval wording so user input is not described
+- [x] S00.05 Correct entry-page approval wording so user input is not described
   as an ordinary approval category.
-- [ ] S00.06 Keep safety corrections narrow and reviewable; do not block them on
+- [x] S00.06 Keep safety corrections narrow and reviewable; do not block them on
   a full docs information-architecture rewrite.
 
 ## S01: Product Boundary
@@ -281,13 +281,13 @@ docs, tests, and validation notes are complete.
 
 ## Decisions Needed
 
-- [ ] D01 Decide whether normal `serverRequestPolicy.permissions` should remain
+- [x] D01 Decide whether normal `serverRequestPolicy.permissions` should remain
   documented as trusted host policy or gain implementation-level requested-subset
   bounding before docs use bounded language.
-- [ ] D02 Decide whether `examples/codex-local-web` should gain an actual
+- [x] D02 Decide whether `examples/codex-local-web` should gain an actual
   admission example or docs should explicitly say it has loopback bind guard and
   method filtering but no configured admission hook.
-- [ ] D03 Decide the first no-em-dash guard scope, especially whether
+- [x] D03 Decide the first no-em-dash guard scope, especially whether
   `.changeset/*.md` is always included or only included when release-note files
   change.
 - [ ] D04 Decide whether `docs/maintenance/` is included in public Markdown lint

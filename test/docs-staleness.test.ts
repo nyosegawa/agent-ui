@@ -1,8 +1,10 @@
 import { readdir, readFile } from "node:fs/promises";
-import { join } from "node:path";
+import { join, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const markdownRoots = ["docs", "examples"];
+const publicMarkdownRoots = ["docs"];
+const publicMarkdownFiles = ["README.md"];
 const stalePatterns = [
   "examples/local-react-vite/playwright.config.ts",
   "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
@@ -22,6 +24,24 @@ describe("documentation stale references", () => {
     }
 
     expect(staleMatches).toEqual([]);
+  });
+
+  it("keeps public Markdown free of em dash characters", async () => {
+    const files = [
+      ...publicMarkdownFiles.map((file) => join(process.cwd(), file)),
+      ...(await collectMarkdownFiles(process.cwd(), publicMarkdownRoots)),
+      ...(await collectExamplePublicMarkdownFiles(process.cwd())),
+    ];
+    const matches: string[] = [];
+
+    for (const file of files) {
+      const text = await readFile(file, "utf8");
+      text.split("\n").forEach((line, index) => {
+        if (line.includes("—")) matches.push(`${file}:${index + 1}: ${line}`);
+      });
+    }
+
+    expect(matches).toEqual([]);
   });
 
   it("documents docs-site as compile/style smoke instead of browser smoke", async () => {
@@ -53,4 +73,12 @@ async function collectMarkdownFiles(root: string, entries: string[]): Promise<st
     }
   }
   return files;
+}
+
+async function collectExamplePublicMarkdownFiles(root: string): Promise<string[]> {
+  const files = await collectMarkdownFiles(root, ["examples"]);
+  const recipePrefix = `${join(root, "examples", "recipes")}${sep}`;
+  return files.filter((file) => {
+    return file.endsWith(`${sep}README.md`) || file.startsWith(recipePrefix);
+  });
 }

@@ -136,7 +136,7 @@ The default stylesheet is warm and typography-led, not card-heavy. Every
 interactive primitive (button, input, composer, approval) owns its visual
 quality directly instead of depending on a page-level shell:
 
-- **Composer**: the primary input surface — a single bordered rounded card
+- **Composer**: the primary input surface, a single bordered rounded card
   containing attachment chips, an auto-resizing textarea, and an inline
   toolbar. The toolbar carries a single attach button, optional App/Plugin
   mention buttons, the **mode** and **model · effort** menus, and a circular
@@ -156,7 +156,7 @@ quality directly instead of depending on a page-level shell:
   appears only when the host wires `resolveLocalAttachment`; image and
   non-image files differ after selection through chip previews and the
   resolved Codex payload. App and Plugin appear only when the host supplies
-  `onRequestAppMention` / `onRequestPluginMention` — the composer mention
+  `onRequestAppMention` / `onRequestPluginMention`; the composer mention
   flow never opens a browser `prompt()` dialog. There is no separate
   "Run settings" disclosure: mode, model, and effort are compact toolbar
   menus (see below). Pending-approval and preview-only states show a warm
@@ -167,7 +167,7 @@ quality directly instead of depending on a page-level shell:
   `icon + label + selected check` items. The menu opens anchored above the
   trigger on desktop and as a bottom sheet on mobile, and supports
   `Esc`, outside-click, focus return, Arrow/Home/End navigation, and internal
-  panel scroll without closing. Working directory is **not** in this menu —
+  panel scroll without closing. Working directory is **not** in this menu;
   cwd is a thread-start setting (see below). Hosts that want a native folder
   picker can pass `AgentChat.onRequestWorkingDirectory`, which must return the
   absolute cwd path selected by the user. `AgentRunControls` uses
@@ -183,7 +183,7 @@ quality directly instead of depending on a page-level shell:
   tokenized shells, leading-icon support, custom chevrons, and refined pressed
   states. None of these read as browser defaults.
 - **Approvals**: `AgentApprovalQueue` is a compact pending-decision surface
-  rendered in the transcript scroll area — not a separate pane stacked between
+  rendered in the transcript scroll area, not a separate pane stacked between
   the transcript and the composer, and never an independent scroll pane.
   Requests with upstream `itemId` or `turnId` metadata are anchored immediately
   after that item or turn, even when that source must be pinned back into a
@@ -193,7 +193,7 @@ quality directly instead of depending on a page-level shell:
   longer exists, render at the transcript tail. The first request in each anchor is an expanded card (shield
   icon, humanized title and one-line reason, `LOW / MED / HIGH` risk pill,
   command on a dark code surface, compact inline metadata that wraps instead
-  of overflowing, and three explicit decisions on a divider footer — green
+  of overflowing, and three explicit decisions on a divider footer: green
   primary `Approve`, secondary `Approve for session`, danger `Decline`). Any
   remaining requests in that same anchor collapse into compact picker rows;
   click a row to expand it. The card colour rail switches with risk.
@@ -204,7 +204,7 @@ quality directly instead of depending on a page-level shell:
   code surface. `COMPLETED` status labels are suppressed on user/assistant
   bubbles so they stop competing with the content.
 - **Sidebar**: a leading-icon search input that loads the first history page
-  without selecting a thread and debounce-filters as you type — there is no
+  without selecting a thread and debounce-filters as you type. There is no
   standalone Load button; pagination is an IntersectionObserver sentinel with a
   single subtle `Load more` fallback. The header includes a `+` new-thread
   action that returns to the start screen without creating a thread. Refined
@@ -248,7 +248,7 @@ Use these primitives when embedding Agent UI into existing product chrome:
   uses `thread/read` preview hydration, not `thread/resume`.
 - `AgentThreadSurface`: unopinionated thread column surface for a host-arranged
   header, notices, timeline, and composer. Its grid rows are header, optional
-  critical notices, the transcript scroll area, then the composer — pending
+  critical notices, the transcript scroll area, then the composer; pending
   approvals are not a row here. Full-height hosts should give the shell a real
   height so the provided transcript area owns reading scroll while the
   composer stays bottom anchored.
@@ -260,7 +260,7 @@ Use these primitives when embedding Agent UI into existing product chrome:
   tail fallback for metadata-free or missing-source requests.
 - `AgentContentBlockView`: standalone renderer for normalized thinking, plan,
   command, file-change, tool, web search, image, and system-info blocks.
-- `AgentApprovalQueue`: compact pending-decision surface — one expanded
+- `AgentApprovalQueue`: compact pending-decision surface with one expanded
   approval card plus compact picker rows for any other pending requests.
   `AgentThreadView` / `AgentChat` embed it at the end of the transcript;
   hosts can also place it standalone.

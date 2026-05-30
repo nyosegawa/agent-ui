@@ -16,8 +16,9 @@ need exact contracts.
 
 - [React](./guides/react.md): compose `AgentProvider`, `AgentChat`, and
   primitives in a host app.
-- [Approvals](./guides/approvals.md): command, file-change, user-input, and
-  other pending decisions.
+- [Approvals](./guides/approvals.md): default command and file-change
+  approvals, plus host-owned handling for broader server requests such as user
+  input.
 - [Attachments](./guides/attachments.md): paste, drag/drop, upload, and local
   path resolution.
 - [Usage and Status](./guides/usage-and-status.md): account rate limits,

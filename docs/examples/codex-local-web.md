@@ -15,9 +15,10 @@ Purpose:
 - persist browser uploads so attachments become App Server-readable inputs
 - mirror the active thread in `/threads/<threadId>` URLs so direct links and
   browser back/forward restore thread selection
-- exercise the same bridge security defaults as host apps: admission before
-  process spawn, browser method filtering, and no dynamic-tool execution unless
-  a host handler is configured
+- exercise the same loopback-first bridge defaults host apps can start from:
+  browser method filtering, inbound limits, idle timeout, backpressure handling,
+  upload and directory-picker routes, and no dynamic-tool execution unless a
+  host handler is configured
 
 Run:
 
@@ -27,9 +28,10 @@ bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
 
 The default URL is `http://127.0.0.1:5175/`.
 The server refuses non-loopback `AGENT_UI_HOST` values by default because the
-example exposes unauthenticated bridge, upload, and directory-picker routes. For
-trusted host-owned networks only, set `AGENT_UI_ALLOW_NON_LOOPBACK=1`; the
-server will print a warning before binding.
+example exposes unauthenticated bridge, upload, and directory-picker routes. It
+does not configure a per-connection bridge `admission` hook before spawning the
+App Server process. For trusted host-owned networks only, set
+`AGENT_UI_ALLOW_NON_LOOPBACK=1`; the server will print a warning before binding.
 
 The host page treats 5175 as a full-width, full-height app. `.agent-ui-local-app`
 owns `width: 100%` and `height: 100dvh`, `AgentChat` consumes that height, and

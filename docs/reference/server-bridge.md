@@ -76,8 +76,9 @@ rate limit of 60 messages per second; exceeding it closes the socket with code
 `admission` runs before the Codex child process is spawned. A `false` result
 closes the socket with `1008`; thrown or rejected admission errors close with
 `1011`, do not spawn the child process, and have diagnostics redacted before
-host stderr callbacks. Use admission for same-origin, session, or explicit
-local-token checks on any bridge that is not a private loopback-only development endpoint. Browser JSON-RPC requests are
+host stderr callbacks. Use admission for session or explicit local-token checks
+on any bridge that is not a private loopback-only development endpoint; an
+Origin comparison alone is not authentication. Browser JSON-RPC requests are
 filtered by `browserMethodPolicy`; the default is the full-chat productized UI
 surface, including account/model/thread/turn/skills/hooks/apps calls needed by
 `AgentChat`. This is intentionally broader than the one-shot HTTP default below.
@@ -204,13 +205,15 @@ the browser UI so the user can decide. The MCP tool approval shortcut only
 accepts elicitations that carry `_meta.codex_approval_kind ===
 "mcp_tool_call"`; generic MCP elicitations stay visible to the host/UI.
 
-Permission approvals are never blanket-granted. Dynamic helper-thread
+Permission approval behavior depends on the surface. Dynamic helper-thread
 permissions default to `dynamicToolHelperPermissions: "manual"`, so the request
 stays visible to the browser/server-request path. Hosts may choose `"deny"`, the
 unsafe explicit opt-in `"grantRequestedForTurn"`, or a callback. Callback grants
-are bounded to the permission families the App Server requested, structured
-filesystem grants must remain within the requested mode/path subset, and grants
-are always turn-scoped in this release.
+are checked against the requested file-system and network families, structured
+filesystem grants are checked against requested modes and paths where the helper
+understands that shape, and grants are always turn-scoped in this release. The
+helper is not a schema-wide permission sanitizer for every generated App Server
+permission shape.
 
 To auto-resolve normal permissions requests for the active browser session, the
 host must provide a `serverRequestPolicy.permissions` callback:
@@ -239,9 +242,11 @@ attachAgentUiWebSocketBridge({
 ```
 
 The callback receives `requestId`, `threadId`, `turnId`, `cwd`, requested
-filesystem/network permissions, and the raw App Server request payload. Only
-the bounded permissions returned by the callback are granted; `undefined`,
-`null`, or `{ action: "manual" }` leaves the request pending for the UI.
+filesystem/network permissions, and the raw App Server request payload. The
+normal policy path treats returned grants as trusted host policy: it drops
+nullish permission families but does not clamp grants to the requested subset.
+Return `undefined`, `null`, or `{ action: "manual" }` to leave the request
+pending for the UI.
 
 ## One-Shot HTTP RPC
 

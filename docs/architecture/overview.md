@@ -209,8 +209,8 @@ Pending approvals are part of that same transcript. `AgentThreadView` and
 App Server metadata provides `itemId` or `turnId`. Metadata-free approvals
 fall back to the transcript tail, so they still read as pending decisions in
 the conversation rather than a separate pane wedged between the transcript and
-the composer. `AgentThreadSurface` therefore has exactly four grid rows —
-header, optional critical notices, transcript, composer — and the transcript
+the composer. `AgentThreadSurface` therefore has exactly four grid rows:
+header, optional critical notices, transcript, and composer. The transcript
 scroll area is the only scroll container. The approval surface never carries
 its own `max-height` or `overflow`.
 
