@@ -66,8 +66,26 @@ Validation target:
 
 ## M1: Automate Codex App Server Updates
 
+Status: Complete.
+
 Goal: make it routine to follow the latest Codex App Server schema without
 guesswork or large manual audits.
+
+Completed work:
+
+- Added `third_party/codex` as the checked-in upstream submodule and made it the
+  source of truth for schema generation.
+- Added `.agents/skills/codex-upstream-sync` with review instructions and a
+  Codex Automation prompt.
+- Added `codex:upstream:info`, `codex:upstream:drift`, and
+  `codex:upstream:prepare` scripts.
+- Added protocol classification and submodule-pointer guard tests.
+- Documented the weekly Sunday 09:00 Japan time automation setup in
+  `docs/maintenance/codex-upstream-sync.md`.
+- Proved the flow with PR #3, which refreshed Codex App Server schema to
+  `3e7baa00e43419967d90d6ad9cef40f58d5ac89f` and merged with CI green.
+
+Original scope:
 
 - Add a maintenance guide at `docs/maintenance/codex-upstream-sync.md`.
 - Add `third_party/codex` as the checked-in upstream submodule and make it the
