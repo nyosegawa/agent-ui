@@ -90,7 +90,19 @@ weekly or manual Codex Automation. The automation should:
 - Make follow-up commits if semantic fixes are clear.
 - Never merge the PR.
 - Never publish npm packages.
-- Never modify the upstream Codex checkout.
+- Never edit files inside the upstream Codex submodule.
+
+Recommended automation configuration:
+
+- Title: `Codex App Server Upstream Sync`
+- Repository: `nyosegawa/agent-ui`
+- Base branch: `main`
+- Schedule: every Sunday at 09:00 Japan time
+- Cron equivalent: `0 0 * * 0` UTC
+- Prompt source:
+  `.agents/skills/codex-upstream-sync/references/codex-automation-prompt.md`
+- Expected result: report only when there is no drift, or open a draft PR when
+  upstream schema drift exists
 
 GitHub Actions remain the validation layer for the PR. The automation is an
 agent workflow, not a replacement for review.
