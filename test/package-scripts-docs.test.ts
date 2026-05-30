@@ -1,18 +1,32 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { DEFAULT_ONE_SHOT_METHODS } from "../packages/server/src/one-shot-rpc-policy";
 
 function readRepoFile(path: string): string {
   return readFileSync(new URL(`../${path}`, import.meta.url), "utf8");
 }
 
-describe("package script documentation", () => {
-  it("keeps test:fixtures documented as the core fixture runner", () => {
-    const packageJson = JSON.parse(readRepoFile("package.json")) as {
-      scripts: Record<string, string>;
-    };
+type PackageJson = {
+  exports?: Record<string, unknown>;
+  name: string;
+  scripts?: Record<string, string>;
+};
 
-    expect(packageJson.scripts["test:core-fixtures"]).toBe("bun test packages/core/test");
-    expect(packageJson.scripts["test:fixtures"]).toBe("bun run test:core-fixtures");
+const validationScripts = [
+  "validate:fast",
+  "validate:protocol",
+  "validate:packages",
+  "validate:e2e",
+  "validate:release",
+];
+
+describe("package script documentation", () => {
+  const packageJson = JSON.parse(readRepoFile("package.json")) as PackageJson;
+
+  it("keeps test:fixtures documented as the core fixture runner", () => {
+    expect(packageJson.scripts?.["test:core-fixtures"]).toBe("bun test packages/core/test");
+    expect(packageJson.scripts?.["test:fixtures"]).toBe("bun run test:core-fixtures");
 
     const testingDocs = readRepoFile("docs/architecture/testing.md");
     const protocolDocs = readRepoFile("docs/reference/codex-protocol.md");
@@ -24,10 +38,7 @@ describe("package script documentation", () => {
   });
 
   it("keeps validate:packages docs aligned with the script order", () => {
-    const packageJson = JSON.parse(readRepoFile("package.json")) as {
-      scripts: Record<string, string>;
-    };
-    expect(packageJson.scripts["validate:packages"]).toBe(
+    expect(packageJson.scripts?.["validate:packages"]).toBe(
       "bun run build && bun run test:packlist && bun run test:node-compat && bun run publint && bun run attw",
     );
 
@@ -40,25 +51,109 @@ describe("package script documentation", () => {
     );
   });
 
-  it("keeps package export docs aligned with canonical public subpaths", () => {
+  it("keeps validation command docs aligned with root package scripts", () => {
+    const testingDocs = readRepoFile("docs/architecture/testing.md");
+    for (const script of validationScripts) {
+      const command = packageJson.scripts?.[script];
+      expect(command, script).toBeTypeOf("string");
+      expect(testingDocs, script).toContain(`bun run ${script}`);
+      for (const child of childBunScripts(command ?? "")) {
+        expect(testingDocs, `${script} -> ${child}`).toContain(child);
+      }
+    }
+  });
+
+  it("keeps package lists aligned with workspace package manifests", () => {
+    const packageNames = publicPackageManifests().map((manifest) => manifest.name);
+    for (const docsPath of [
+      "README.md",
+      "docs/README.md",
+      "docs/reference/package-exports.md",
+    ]) {
+      const docs = readRepoFile(docsPath);
+      for (const packageName of packageNames) {
+        expect(docs, `${docsPath} missing ${packageName}`).toContain(packageName);
+      }
+    }
+  });
+
+  it("keeps package export docs aligned with package export maps", () => {
     const packageExportsDocs = readRepoFile("docs/reference/package-exports.md");
     const listedSubpaths = [...packageExportsDocs.matchAll(/^- `(@nyosegawa\/agent-ui[^`]+)`$/gm)]
       .map((match) => match[1])
       .sort();
 
-    expect(listedSubpaths).toEqual([
-      "@nyosegawa/agent-ui-codex",
-      "@nyosegawa/agent-ui-codex/clients",
-      "@nyosegawa/agent-ui-codex/normalizer",
-      "@nyosegawa/agent-ui-codex/request-builders",
-      "@nyosegawa/agent-ui-codex/session",
-      "@nyosegawa/agent-ui-codex/stable-types",
-      "@nyosegawa/agent-ui-codex/websocket",
-      "@nyosegawa/agent-ui-core",
-      "@nyosegawa/agent-ui-react",
-      "@nyosegawa/agent-ui-react/styles.css",
-      "@nyosegawa/agent-ui-server",
-      "@nyosegawa/agent-ui-web-components",
-    ].sort());
+    expect(listedSubpaths).toEqual(publicExportSpecifiers());
+    expect(packageExportsDocs).toMatch(
+      /type-only surface at `@nyosegawa\/agent-ui-codex\/stable-types`/,
+    );
+  });
+
+  it("keeps one-shot RPC docs aligned with the default allowlist", () => {
+    const serverBridgeDocs = readRepoFile("docs/reference/server-bridge.md");
+    expect(extractDocumentedList(serverBridgeDocs, "Default one-shot methods:")).toEqual(
+      [...DEFAULT_ONE_SHOT_METHODS].sort(),
+    );
+    expect(serverBridgeDocs).toContain("before App Server is spawned");
+  });
+
+  it("keeps upload default docs aligned with user-facing behavior", () => {
+    const serverBridgeDocs = readRepoFile("docs/reference/server-bridge.md");
+    const uploadSource = readRepoFile("packages/server/src/upload.ts");
+
+    expect(uploadSource).toContain("const DEFAULT_MAX_UPLOAD_BYTES = 16 * 1024 * 1024");
+    expect(uploadSource).toContain("const DEFAULT_UPLOAD_TTL_MS = 60 * 60 * 1000");
+    expect(uploadSource).toContain("application\\/octet-stream|image\\/[-+.\\w]+|text\\/plain");
+    expect(uploadSource).toContain("contentType && !isAllowedContentType(contentType)");
+
+    expect(serverBridgeDocs).toContain("missing `content-type` is accepted");
+    expect(serverBridgeDocs).toContain("`application/octet-stream`, `image/*`, or `text/plain`");
+    expect(serverBridgeDocs).toContain("16 MB default limit");
+    expect(serverBridgeDocs).toContain("one hour default TTL");
   });
 });
+
+function publicPackageManifests(): PackageJson[] {
+  const packagesDir = new URL("../packages", import.meta.url);
+  return readdirSync(packagesDir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => {
+      return JSON.parse(
+        readFileSync(join(packagesDir.pathname, entry.name, "package.json"), "utf8"),
+      ) as PackageJson;
+    })
+    .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function publicExportSpecifiers(): string[] {
+  return publicPackageManifests()
+    .flatMap((manifest) => {
+      return Object.keys(manifest.exports ?? {}).map((subpath) => {
+        return subpath === "." ? manifest.name : `${manifest.name}/${subpath.slice(2)}`;
+      });
+    })
+    .sort();
+}
+
+function childBunScripts(command: string): string[] {
+  return [...command.matchAll(/\bbun run ([\w:-]+)/g)]
+    .map((match) => match[1])
+    .filter((script): script is string => Boolean(script))
+    .filter((script) => !validationScripts.includes(script));
+}
+
+function extractDocumentedList(markdown: string, marker: string): string[] {
+  const lines = markdown.split(/\r?\n/);
+  const start = lines.findIndex((line) => line.trim() === marker);
+  if (start === -1) throw new Error(`Missing list marker: ${marker}`);
+  const values: string[] = [];
+  for (const line of lines.slice(start + 1)) {
+    const match = /^- `([^`]+)`/.exec(line.trim());
+    if (match?.[1]) {
+      values.push(match[1]);
+      continue;
+    }
+    if (values.length > 0 && line.trim() !== "") break;
+  }
+  return values.sort();
+}

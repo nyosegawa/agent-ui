@@ -283,14 +283,13 @@ describe("packages/react styles.css", () => {
     expect(exportKeys.filter((key) => key.includes("style"))).toEqual(["./styles.css"]);
     expect(exportKeys.filter((key) => key.startsWith("./styles/"))).toEqual([]);
 
-    const sourceText = readTextUnder(
-      DOCS_DIR,
-      join(REPO_ROOT, "examples", "local-react-vite", "src"),
-      join(REPO_ROOT, "examples", "codex-local-web", "src"),
-      join(REPO_ROOT, "examples", "docs-site", "src"),
-      join(REPO_ROOT, "examples", "recipes", "src"),
-      join(REPO_ROOT, "examples", "next-with-bridge-sidecar"),
-    );
+    const sourceText = [
+      readFileSync(join(REPO_ROOT, "README.md"), "utf8"),
+      readTextUnder(
+        DOCS_DIR,
+        join(REPO_ROOT, "examples"),
+      ),
+    ].join("\n");
     expect(sourceText).not.toMatch(/@nyosegawa\/agent-ui-react\/styles\//);
     expect(sourceText).not.toMatch(
       /(?:import|from)\s+["'][^"']*@nyosegawa\/agent-ui-react\/dist\/styles\//,

@@ -48,35 +48,35 @@ docs, tests, and validation notes are complete.
 
 ## S02: Docs Guards
 
-- [ ] S02.01 Add a local Markdown link check for missing files and missing
+- [x] S02.01 Add a local Markdown link check for missing files and missing
   relative targets in public docs, excluding external URLs and brittle generated
   anchor validation in the first pass.
-- [ ] S02.02 Add package list sync that derives public package names from
+- [x] S02.02 Add package list sync that derives public package names from
   `packages/*/package.json` and checks `README.md`, `docs/README.md`, and
   `docs/reference/package-exports.md`, including
   `@nyosegawa/agent-ui-web-components`.
-- [ ] S02.03 Replace hard-coded package export expectations with
+- [x] S02.03 Replace hard-coded package export expectations with
   manifest-derived expectations from package `exports` maps, including the
   public React `styles.css` subpath and the type-only `stable-types` caveat.
-- [ ] S02.04 Expand validation command sync so `docs/architecture/testing.md`
+- [x] S02.04 Expand validation command sync so `docs/architecture/testing.md`
   stays aligned with root `package.json` for `validate:fast`,
   `validate:protocol`, `validate:packages`, `validate:e2e`, and
   `validate:release`.
-- [ ] S02.05 Preserve or lightly extend the existing protocol method docs sync in
+- [x] S02.05 Preserve or lightly extend the existing protocol method docs sync in
   `packages/codex/test/protocol.test.ts`; do not create a duplicate method-table
   test suite.
-- [ ] S02.06 Add one-shot RPC allowlist sync so `docs/reference/server-bridge.md`
+- [x] S02.06 Add one-shot RPC allowlist sync so `docs/reference/server-bridge.md`
   matches `DEFAULT_ONE_SHOT_METHODS` and mentions denial before App Server spawn.
-- [ ] S02.07 Keep public stylesheet import sync in or near
+- [x] S02.07 Keep public stylesheet import sync in or near
   `packages/react/test/style-duplication.vitest.ts`, and ensure public docs do
   not recommend deep style chunks, `dist/styles/*`, or source style imports.
-- [ ] S02.08 Add upload-default docs sync only for exact user-facing defaults
+- [x] S02.08 Add upload-default docs sync only for exact user-facing defaults
   that are constants or behavior-tested, such as default size limit and accepted
   content types.
-- [ ] S02.09 If `docs/guides/browser-verification.md` is rewritten in this pass,
+- [x] S02.09 If `docs/guides/browser-verification.md` is rewritten in this pass,
   add a targeted guard against public examples that use internal `.aui-*`
   selectors or broad `querySelector` snippets unless marked maintainer-only.
-- [ ] S02.10 Defer snippet typecheck, route sync, screenshot file existence
+- [x] S02.10 Defer snippet typecheck, route sync, screenshot file existence
   checks, workflow sync, and recipe sync until the relevant docs surfaces are
   stable enough to avoid noisy failures.
 
@@ -290,7 +290,7 @@ docs, tests, and validation notes are complete.
 - [x] D03 Decide the first no-em-dash guard scope, especially whether
   `.changeset/*.md` is always included or only included when release-note files
   change.
-- [ ] D04 Decide whether `docs/maintenance/` is included in public Markdown lint
+- [x] D04 Decide whether `docs/maintenance/` is included in public Markdown lint
   scope as soon as it exists.
 - [ ] D05 Decide whether Local Smoke belongs in `docs/architecture/testing.md` or
   a new maintenance runbook for real Codex smoke evidence and release
@@ -302,7 +302,7 @@ docs, tests, and validation notes are complete.
   protocol cleanup.
 - [ ] D08 Decide whether Web Components should observe `chat-class` changes or
   docs should present it as an initial or next-render class hook only.
-- [ ] D09 Decide whether `@nyosegawa/agent-ui-codex/stable-types` needs an
+- [x] D09 Decide whether `@nyosegawa/agent-ui-codex/stable-types` needs an
   explicit type-only runtime export policy exemption.
 - [ ] D10 Decide whether upload directories should be required or normalized as
   absolute paths so returned upload path wording can be exact.

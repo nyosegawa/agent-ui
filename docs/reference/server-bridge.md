@@ -141,12 +141,14 @@ paths. The library therefore requires a host resolver for attachments.
 
 `createAgentUiLocalUploadHandler()` is the local development helper:
 
-- accepts `POST` with `application/octet-stream`, `image/*`, or `text/plain`
+- accepts `POST`; a missing `content-type` is accepted, and a present
+  `content-type` must be `application/octet-stream`, `image/*`, or `text/plain`
 - uses `x-agent-ui-filename` for a sanitized filename suffix and rejects
   malformed percent-encoding or control characters
 - writes into a per-session temp directory under a host temp root, defaulting
   to the OS temp dir
 - enforces a 16 MB default limit
+- runs expired-session cleanup with a one hour default TTL
 - preserves arbitrary sanitized extensions; images and non-images differ only
   in the host's resolver return value
 - exposes `cleanup()` for explicit per-session cleanup and runs best-effort TTL
@@ -255,12 +257,24 @@ HTTP RPC helpers. They are useful for calls such as `account/read`,
 `model/list`, or a host-owned administrative request.
 
 One-shot helpers validate the requested method before spawning App Server. By
-default they allow only read/list/status-shaped methods: `account/read`,
-`account/rateLimits/read`, `model/list`, `thread/list`, `thread/loaded/list`,
-`thread/read`, `skills/list`, `hooks/list`, and `app/list`. `initialize`, auth
-mutations, thread mutations, turn control, configuration writes, and skill
-writes are rejected with a JSON-RPC style `-32601` error before App Server is
-spawned. Pass `allowedMethods` to narrow or expand the explicit allowlist:
+default they allow only read/list/status-shaped methods.
+
+Default one-shot methods:
+
+- `account/read`
+- `account/rateLimits/read`
+- `model/list`
+- `thread/list`
+- `thread/loaded/list`
+- `thread/read`
+- `skills/list`
+- `hooks/list`
+- `app/list`
+
+`initialize`, auth mutations, thread mutations, turn control, configuration
+writes, and skill writes are rejected with a JSON-RPC style `-32601` error
+before App Server is spawned. Pass `allowedMethods` to narrow or expand the
+explicit allowlist:
 
 ```ts
 createAgentUiNextRpcRoute({

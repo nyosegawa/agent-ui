@@ -1,5 +1,6 @@
+import { existsSync, statSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
-import { join, sep } from "node:path";
+import { dirname, join, resolve, sep } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const markdownRoots = ["docs", "examples"];
@@ -27,11 +28,7 @@ describe("documentation stale references", () => {
   });
 
   it("keeps public Markdown free of em dash characters", async () => {
-    const files = [
-      ...publicMarkdownFiles.map((file) => join(process.cwd(), file)),
-      ...(await collectMarkdownFiles(process.cwd(), publicMarkdownRoots)),
-      ...(await collectExamplePublicMarkdownFiles(process.cwd())),
-    ];
+    const files = await collectPublicMarkdownFiles(process.cwd());
     const matches: string[] = [];
 
     for (const file of files) {
@@ -42,6 +39,28 @@ describe("documentation stale references", () => {
     }
 
     expect(matches).toEqual([]);
+  });
+
+  it("keeps local Markdown links pointed at existing files and assets", async () => {
+    const files = await collectPublicMarkdownFiles(process.cwd());
+    const missingTargets: string[] = [];
+
+    for (const file of files) {
+      const text = await readFile(file, "utf8");
+      for (const target of localMarkdownTargets(text)) {
+        const withoutFragment = target.split("#")[0] ?? "";
+        if (!withoutFragment) continue;
+        const resolved = resolve(dirname(file), decodeMarkdownTarget(withoutFragment));
+        if (!existsSync(resolved)) {
+          missingTargets.push(`${file}: ${target}`);
+          continue;
+        }
+        const stats = statSync(resolved);
+        if (!stats.isFile() && !stats.isDirectory()) missingTargets.push(`${file}: ${target}`);
+      }
+    }
+
+    expect(missingTargets).toEqual([]);
   });
 
   it("documents docs-site as compile/style smoke instead of browser smoke", async () => {
@@ -75,10 +94,39 @@ async function collectMarkdownFiles(root: string, entries: string[]): Promise<st
   return files;
 }
 
+async function collectPublicMarkdownFiles(root: string): Promise<string[]> {
+  return [
+    ...publicMarkdownFiles.map((file) => join(root, file)),
+    ...(await collectMarkdownFiles(root, publicMarkdownRoots)),
+    ...(await collectExamplePublicMarkdownFiles(root)),
+  ];
+}
+
 async function collectExamplePublicMarkdownFiles(root: string): Promise<string[]> {
   const files = await collectMarkdownFiles(root, ["examples"]);
   const recipePrefix = `${join(root, "examples", "recipes")}${sep}`;
   return files.filter((file) => {
     return file.endsWith(`${sep}README.md`) || file.startsWith(recipePrefix);
   });
+}
+
+function localMarkdownTargets(markdown: string): string[] {
+  const withoutCodeBlocks = markdown.replace(/```[\s\S]*?```/g, "");
+  return [...withoutCodeBlocks.matchAll(/!?\[[^\]]*]\(([^)\s]+)(?:\s+"[^"]*")?\)/g)]
+    .map((match) => match[1] ?? "")
+    .filter((target) => {
+      return (
+        target !== "" &&
+        !target.startsWith("#") &&
+        !/^[a-z][a-z0-9+.-]*:/i.test(target)
+      );
+    });
+}
+
+function decodeMarkdownTarget(target: string): string {
+  try {
+    return decodeURIComponent(target);
+  } catch {
+    return target;
+  }
 }

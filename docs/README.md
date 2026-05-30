@@ -12,6 +12,14 @@ you need exact contracts.
 - [Installation](./installation.md): packages, peer dependencies, and the
   single public React stylesheet import.
 
+## Public Packages
+
+- `@nyosegawa/agent-ui-core`
+- `@nyosegawa/agent-ui-codex`
+- `@nyosegawa/agent-ui-react`
+- `@nyosegawa/agent-ui-server`
+- `@nyosegawa/agent-ui-web-components`
+
 ## Guides
 
 - [React](./guides/react.md): compose `AgentProvider`, `AgentChat`, and

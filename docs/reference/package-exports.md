@@ -93,8 +93,8 @@ bundle.
 
 Default support is stable App Server API only. Experimental API requires
 explicit opt-in. Generated stable App Server types are an advanced public
-surface at `@nyosegawa/agent-ui-codex/stable-types`; the grouped typed client
-surface lives at `@nyosegawa/agent-ui-codex/clients`; request builders and
+type-only surface at `@nyosegawa/agent-ui-codex/stable-types`; the grouped typed
+client surface lives at `@nyosegawa/agent-ui-codex/clients`; request builders and
 generated-schema-backed method-param aliases and input helpers live at
 `@nyosegawa/agent-ui-codex/request-builders`; and host-owned normalization
 helpers live at `@nyosegawa/agent-ui-codex/normalizer`. Request builders are
