@@ -24,8 +24,9 @@ Files:
 - `multi-user-deployment.md`
 - `api-key-remote-deployment.md`
 
-Recipes show host composition patterns. They should not introduce
-workflow-specific APIs into the core library.
+Recipes show host composition patterns within the
+[Product Boundary](../architecture/product-boundary.md). They should not
+introduce workflow-specific APIs into the core library.
 
 `themed.css` intentionally demonstrates host theming by overriding `--aui-*`
 tokens on a wrapper. It should not be read as permission to import

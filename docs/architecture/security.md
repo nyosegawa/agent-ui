@@ -3,6 +3,8 @@
 ## Security Model
 
 Codex App Server can access powerful filesystem and shell surfaces. Agent UI must make those surfaces explicit and avoid hiding risk behind a friendly chat UI.
+The ownership split between Agent UI and host applications is defined in
+[Product Boundary](./product-boundary.md).
 
 ## Local App Server
 
@@ -31,7 +33,7 @@ bridge route.
 
 ## Shell Commands
 
-`thread/shellCommand` is host-only in the local release.
+`thread/shellCommand` is host-owned and not part of the default UI surface.
 
 Agent UI must not ship a default component that lets arbitrary browser users run shell commands through a generic chat input.
 
@@ -121,9 +123,10 @@ Requirements:
 
 ## Multi-User
 
-Multi-user support is outside the local release.
+Multi-user production hosting is host-owned advanced integration work, not
+default Agent UI package behavior.
 
-Future multi-user support requires:
+Any multi-user host requires:
 
 - separate process/session boundaries
 - separate credentials

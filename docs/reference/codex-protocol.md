@@ -128,7 +128,7 @@ keeps Codex App Server on the default `stdio://` transport.
 
 Rules:
 
-- remote production deployment is not part of the local release
+- remote production deployment is host-owned advanced integration work
 - non-loopback exposure requires explicit auth
 - bearer tokens must not be logged or placed in query strings
 - reconnect is opt-in

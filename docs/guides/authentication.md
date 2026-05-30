@@ -67,8 +67,8 @@ Preferred constraints:
 ## API Key
 
 API-key based remote operation is an advanced host-owned deployment pattern,
-not the local release default. The local browser UI should continue to use the
-Codex App Server's ChatGPT-managed account flow.
+not default Agent UI package behavior. The local browser UI should continue to
+use the Codex App Server's ChatGPT-managed account flow.
 
 Hosts that expose a remote App Server with API-key credentials must:
 
@@ -84,7 +84,8 @@ for the host-owned boundary.
 
 ## Multi-User
 
-Multi-user use is outside the local release.
+Multi-user production hosting is host-owned advanced integration work, not
+default Agent UI package behavior.
 
 Any multi-user host must enforce:
 

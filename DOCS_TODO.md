@@ -24,24 +24,24 @@ docs, tests, and validation notes are complete.
 
 ## S01: Product Boundary
 
-- [ ] S01.01 Rewrite `docs/architecture/product-boundary.md` as the boundary
+- [x] S01.01 Rewrite `docs/architecture/product-boundary.md` as the boundary
   spine for Agent UI ownership, host ownership, local-first scope, bridge helper
   scope, and Codex App Server integration.
-- [ ] S01.02 State that Agent UI is an embeddable Codex App Server UI component
+- [x] S01.02 State that Agent UI is an embeddable Codex App Server UI component
   library, not a hosted Codex service, IDE, credential provider, billing layer,
   app runtime, or generic chatbot.
-- [ ] S01.03 State the primary browser path as browser UI to same-origin host
+- [x] S01.03 State the primary browser path as browser UI to same-origin host
   bridge to `codex app-server --listen stdio://`.
-- [ ] S01.04 Document `app/list` as Codex Apps/connectors metadata, not a host
+- [x] S01.04 Document `app/list` as Codex Apps/connectors metadata, not a host
   workflow registry, and preserve generated `AppInfo` facts without inventing
   `installed` or `needsAuth`.
-- [ ] S01.05 Patch `README.md`, `docs/README.md`, and
+- [x] S01.05 Patch `README.md`, `docs/README.md`, and
   `docs/architecture/overview.md` only where they conflict with the boundary
   spine.
-- [ ] S01.06 Replace public `local release`, `host runtime`, and future
+- [x] S01.06 Replace public `local release`, `host runtime`, and future
   multi-user phrasing with current support boundaries unless the page is
   explicitly describing host-owned deployment responsibilities.
-- [ ] S01.07 Preserve explicit non-goals for remote or multi-user production
+- [x] S01.07 Preserve explicit non-goals for remote or multi-user production
   hosting, realtime audio or voice UX, plugin marketplace administration,
   dynamic MCP resource and tool management, external ChatGPT auth token mode, and
   unsupported `thread/turns/items/list`.

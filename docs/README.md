@@ -1,9 +1,9 @@
 # Agent UI Documentation
 
-Agent UI is an embeddable UI library for applications built on OpenAI Codex App
-Server. The docs are organized for a public library: start by running the local
-app, then choose a guide, then use reference and architecture pages when you
-need exact contracts.
+Agent UI is an embeddable Codex App Server UI component library for host
+applications. The docs are organized for a public library: start by running the
+local app, then choose a guide, then use reference and architecture pages when
+you need exact contracts.
 
 ## Start Here
 
@@ -71,9 +71,11 @@ need exact contracts.
 
 ## Design Rule
 
-Agent UI is not a hosted Codex service. The host application starts or connects
-to Codex App Server using the user's own authentication, then composes Agent UI
-components around that session.
+Agent UI is not a hosted Codex service, host runtime, credential provider, or
+generic chatbot. The host application starts or connects to Codex App Server
+using the user's own authentication, then composes Agent UI components around
+that session. See [Product Boundary](./architecture/product-boundary.md) for
+the canonical ownership split.
 
 ## Release Gates
 

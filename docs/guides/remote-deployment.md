@@ -1,11 +1,13 @@
 # Remote Deployment
 
-Remote deployment is advanced and outside the default local release runtime. The local release remains local-first: a host process starts `codex app-server --listen stdio://` and exposes only the UI surface it owns.
+Remote deployment is advanced host-owned integration work. Agent UI defaults to
+local-first browser UI: a host process starts
+`codex app-server --listen stdio://` and exposes only the UI surface it owns.
 
 The canonical bridge contract is documented in
 [Server Bridge](../reference/server-bridge.md).
 
-## Recommended Local Release Shape
+## Recommended Local Shape
 
 Use one of these before exposing a network listener:
 

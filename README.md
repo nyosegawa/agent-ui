@@ -2,12 +2,13 @@
 
 Embeddable UI components for applications built on OpenAI Codex App Server.
 
-Agent UI provides React components, headless hooks, normalized state,
-transports, and local bridge helpers for building Codex-powered coding-agent
-interfaces inside a host web application.
+Agent UI is a reusable Codex App Server UI component library. It provides React
+components, headless hooks, normalized state, transports, and local bridge
+helpers for building Codex-powered coding-agent interfaces inside a host web
+application.
 
 ```text
-browser UI -> host bridge -> codex app-server --listen stdio://
+browser UI -> same-origin host bridge -> codex app-server --listen stdio://
 ```
 
 `AgentChat` is a convenience preset. The main API is the primitive set that lets
@@ -154,4 +155,6 @@ Key pages:
 Agent UI is a local-first Codex App Server UI library. It is not a hosted Codex
 service, credential provider, billing layer, IDE, or generic chatbot library.
 The host application owns authentication, deployment, workspace access, and any
-product-specific workflow state.
+product-specific workflow state. See
+[Product Boundary](./docs/architecture/product-boundary.md) for the canonical
+ownership split.

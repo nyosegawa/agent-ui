@@ -1,6 +1,9 @@
 # Protocol Drift
 
-Codex App Server schema can change. Agent UI treats drift as expected maintenance, not as an exceptional event.
+Codex App Server schema can change. Agent UI treats drift as expected
+maintenance, not as an exceptional event. Productized, host-managed,
+experimental, and unsupported protocol surfaces must stay aligned with
+[Product Boundary](./product-boundary.md).
 
 ## Recorded Metadata
 

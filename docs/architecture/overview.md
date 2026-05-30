@@ -19,6 +19,8 @@ codex app-server
 - Experimental protocol support is isolated behind explicit opt-in.
 - The local bridge is Node-side only.
 - Optional SDK adapters adapt host-owned clients/runners into `AgentTransport`; they do not replace the App Server protocol as the primary path.
+- Product ownership, host ownership, and bridge helper scope are defined in
+  [Product Boundary](./product-boundary.md).
 
 ## Host Bridges
 
@@ -263,4 +265,4 @@ intentionally override tokens to demonstrate host theming.
 - `AgentThreadSidebar` and its thread-list primitive stay narrow history
   components.
 - Full navigation layouts and host chrome live in examples.
-- `thread/shellCommand` is host-only in the local release.
+- `thread/shellCommand` is host-owned and not part of the default UI surface.
