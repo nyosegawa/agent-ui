@@ -75,6 +75,8 @@ you need exact contracts.
 - [Codex Upstream Sync](./maintenance/codex-upstream-sync.md): Agent Skill,
   drift scripts, Codex Automation prompt, and PR review checklist for App Server
   updates.
+- [Codex Hooks](./maintenance/codex-hooks.md): project-local hook policy,
+  trust/review behavior, and validation for safer repository development.
 
 ## Examples
 

@@ -51,6 +51,20 @@ describe("package script documentation", () => {
     );
   });
 
+  it("keeps Codex hook policy docs aligned with package scripts", () => {
+    expect(packageJson.scripts?.["test:hooks"]).toBe(
+      "vitest run test/codex-hooks-repo-policy.test.ts",
+    );
+
+    const testingDocs = readRepoFile("docs/architecture/testing.md");
+    const hookDocs = readRepoFile("docs/maintenance/codex-hooks.md");
+
+    expect(testingDocs).toContain("bun run test:hooks");
+    expect(hookDocs).toContain("bun run test:hooks");
+    expect(hookDocs).toContain(".codex/hooks.json");
+    expect(hookDocs).toContain("scripts/codex-hooks/repo-policy.mjs");
+  });
+
   it("keeps validation command docs aligned with root package scripts", () => {
     const testingDocs = readRepoFile("docs/architecture/testing.md");
     for (const script of validationScripts) {

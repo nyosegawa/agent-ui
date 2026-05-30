@@ -1,0 +1,106 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/scripts/codex-hooks/repo-policy.mjs\" SessionStart",
+            "timeout": 10,
+            "statusMessage": "Loading Agent UI repository policy"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/scripts/codex-hooks/repo-policy.mjs\" UserPromptSubmit",
+            "timeout": 10,
+            "statusMessage": "Checking Agent UI request boundary"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/scripts/codex-hooks/repo-policy.mjs\" PreToolUse",
+            "timeout": 10,
+            "statusMessage": "Checking Agent UI tool policy"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/scripts/codex-hooks/repo-policy.mjs\" PermissionRequest",
+            "timeout": 10,
+            "statusMessage": "Checking Agent UI permission policy"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash|apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/scripts/codex-hooks/repo-policy.mjs\" PostToolUse",
+            "timeout": 10,
+            "statusMessage": "Checking Agent UI validation reminders"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/scripts/codex-hooks/repo-policy.mjs\" SubagentStart",
+            "timeout": 10,
+            "statusMessage": "Loading Agent UI subagent policy"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/scripts/codex-hooks/repo-policy.mjs\" SubagentStop",
+            "timeout": 10,
+            "statusMessage": "Checking Agent UI subagent stop checklist"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/scripts/codex-hooks/repo-policy.mjs\" Stop",
+            "timeout": 10,
+            "statusMessage": "Checking Agent UI stop checklist"
+          }
+        ]
+      }
+    ]
+  }
+}

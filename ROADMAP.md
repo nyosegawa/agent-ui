@@ -118,62 +118,32 @@ Validation target:
 
 ## M2: Add Codex Hooks For Development Stability
 
-Goal: use Codex hooks to make repeated repository work safer without replacing
-normal validation or review.
+Status: Complete.
 
-Codex hook facts to preserve in docs and implementation:
+Agent UI now has project-local Codex hooks for repository development stability.
+The hook policy is implemented in `.codex/hooks.json` and
+`scripts/codex-hooks/repo-policy.mjs`, with deterministic logic in
+`scripts/codex-hooks/repo-policy-lib.mjs`.
 
-- Hooks are enabled by default and can be disabled with `[features].hooks =
-  false`; `hooks` is the canonical feature key.
-- Codex discovers project-local `hooks.json` or inline `[hooks]` tables under
-  `.codex/`, plus user, managed, and plugin-bundled hooks.
-- Project-local hooks run only after the project `.codex/` layer is trusted.
-  Non-managed command hooks must be reviewed and trusted through `/hooks`.
-- Multiple matching hooks run, and matching command hooks for the same event can
-  run concurrently.
-- Only `type: "command"` handlers run today; `prompt`, `agent`, and async hooks
-  are parsed but skipped or unsupported.
-- Commands receive one JSON object on stdin and run with the session `cwd`.
-- Useful events for this repo include `SessionStart`, `UserPromptSubmit`,
-  `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`,
-  `PostCompact`, `SubagentStart`, `SubagentStop`, and `Stop`.
+Completed behavior:
 
-Planned repo-local hooks:
+- `SessionStart` and `SubagentStart` inject repository-specific development and
+  review context.
+- `UserPromptSubmit` adds context for upstream Codex checkout edits, package
+  publication, and host-runtime boundary requests.
+- `PreToolUse` and `PermissionRequest` block destructive git commands, force
+  pushes, package publishes, non-Bun repository package mutations, direct
+  upstream submodule edits, and direct generated/dist output mutations.
+- `PostToolUse`, `SubagentStop`, and `Stop` inspect dirty paths and recommend
+  focused validation without editing files or forcing continuation.
 
-- `SessionStart`: surface current Agent UI repository rules and remind agents
-  to read `AGENTS.md`, relevant docs, tests, and examples before editing.
-- `UserPromptSubmit`: warn when a request asks for host-runtime behavior inside
-  the core library or asks to modify the upstream Codex checkout.
-- `PreToolUse`: block or warn on destructive git commands, unsafe package
-  publish commands, accidental upstream checkout edits, and direct reads from
-  generated or dist output when a source file should be used.
-- `PermissionRequest`: apply repository policy before elevated shell or file
-  operations are approved.
-- `PostToolUse`: detect changed generated artifacts, package exports, public
-  API snapshots, or CSS token contracts and recommend focused validation.
-- `Stop`: remind agents to report validation, dirty working tree state, and
-  remaining risks before ending substantial work.
-- `SubagentStart` and `SubagentStop`: inject repository-specific review
-  criteria for protocol, React UX, server security, and package boundary
-  subagents.
+Completion artifacts:
 
-Implementation plan:
-
-- Add `.codex/hooks.json` with minimal, documented project-local hooks.
-- Keep hook scripts small, deterministic, and cross-platform where practical.
-- Prefer Node or Bun scripts already compatible with the repository toolchain.
-- Avoid hook behavior that silently edits files.
-- Document trust, review, and disabling behavior in
-  `docs/maintenance/codex-hooks.md`.
-- Add fixture tests for hook scripts where they parse hook stdin or enforce
-  repository policy.
-
-Validation target:
-
-- hook script unit tests
-- `bun run lint`
-- `bun run typecheck`
-- manual `/hooks` review in Codex after hook definitions change
+- `docs/maintenance/codex-hooks.md` documents hook runtime facts, trust/review
+  behavior, installed hook behavior, validation, and maintenance rules.
+- `bun run test:hooks` covers the policy fixtures.
+- `docs/architecture/testing.md` and package script docs mention the focused
+  hook gate.
 
 ## M3: Publish User-Installable Agent UI Skills
 

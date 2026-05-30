@@ -1,3 +1,8 @@
+---
+name: codex-upstream-sync
+description: Maintain Agent UI against upstream OpenAI Codex App Server schema drift. Use for protocol drift checks, schema refreshes, CODEX_PROTOCOL_COMMIT updates, method classification, and upstream sync PR creation.
+---
+
 # Codex Upstream Sync
 
 Use this skill when maintaining Agent UI against upstream OpenAI Codex App

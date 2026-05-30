@@ -42,6 +42,11 @@ Canonical validation tiers:
 - `bun run validate:release`: fast, protocol, packages, dead-code,
   API-snapshot, package-resolution, and Node compatibility gates.
 
+Focused maintenance gates:
+
+- `bun run test:hooks`: Codex repository hook policy fixtures. Run it whenever
+  `.codex/hooks.json` or `scripts/codex-hooks/` changes.
+
 Fixture e2e is the pull request browser gate; real-local e2e is a release and
 local validation gate.
 

@@ -18,6 +18,7 @@
     "docs/screenshots/**",
     "packages/codex/src/generated/**",
     "playwright.real-local.config.ts",
+    "scripts/codex-hooks/repo-policy.mjs",
     "test/api-snapshots/**"
   ],
   "ignoreDependencies": [
