@@ -79,13 +79,21 @@ function HostChrome() {
         />
       }
     >
-      <AgentWorkspace panel={<AgentUsagePanel />}>
-        <AgentChat sidebar={false} usage={false} diagnostics={false} />
-      </AgentWorkspace>
+      <AgentWorkspace
+        panel={<AgentUsagePanel />}
+        sidebar={false}
+        usage={false}
+        diagnostics={false}
+      />
     </AgentShell>
   );
 }
 ```
+
+`AgentWorkspace` is a preset around `AgentChat` with an optional host-owned
+`panel`; it is not a children-based layout wrapper. Use `AgentShell`,
+`AgentThreadSurface`, and the thread primitives when the host wants to place
+every region manually.
 
 `AgentChat threadUrlRouting` keeps direct thread URLs in sync. The root route
 stays on the start screen; selecting a stored thread pushes

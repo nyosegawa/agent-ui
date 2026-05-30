@@ -339,6 +339,7 @@ Goal: make publishing predictable and keep the public surface stable.
   - `@nyosegawa/agent-ui-codex`
   - `@nyosegawa/agent-ui-react`
   - `@nyosegawa/agent-ui-server`
+  - `@nyosegawa/agent-ui-web-components`
 - Decide the package access, provenance, registry, and npm automation token
   strategy before the first public release.
 - Define stable and prerelease channels:

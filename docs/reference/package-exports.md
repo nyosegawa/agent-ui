@@ -198,13 +198,17 @@ Custom element wrapper for host applications that do not want to mount React dir
 Responsibilities:
 
 - define `<agent-chat>` or a caller-supplied tag name
-- accept `transport`, `initialState`, and `slots` as JavaScript properties
+- accept `transport`, `initialState`, `slots`, and `agentOptions` as JavaScript
+  properties
+- pass `agentOptions.className` or the `chat-class` attribute through to the
+  rendered `AgentChat`
 - render the standard React `AgentChat` inside `AgentProvider`
 
 The wrapper does not create transports, spawn Codex, or include CSS
 automatically. Hosts should import `@nyosegawa/agent-ui-react/styles.css`.
 Token overrides on the custom element or a wrapper are the supported styling
-path.
+path. The `chat-class` attribute is read when the element renders; it is not a
+general observed-attribute API for every `AgentChat` option.
 
 ## Examples
 

@@ -65,10 +65,10 @@ bun run test:package-resolution
 bun run test:node-compat
 ```
 
-`validate:packages` is the ordered build, `publint`, and
-`arethetypeswrong` path. Do not run those three in parallel because build
-cleans package `dist/` directories. API snapshots are export-map driven and
-compare public declaration targets only.
+`validate:packages` is the ordered build, `test:packlist`,
+`test:node-compat`, `publint`, and `attw` path. Do not run build, `publint`, or
+`attw` in parallel because build cleans package `dist/` directories. API
+snapshots are export-map driven and compare public declaration targets only.
 
 If package exports or declaration output become hard to maintain, evaluate
 `tsdown`, `unbuild`, or raw `tsc`, but do not switch without evidence.

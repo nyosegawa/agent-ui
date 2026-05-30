@@ -33,16 +33,7 @@ Install dependencies:
 bun install
 ```
 
-Run the real local Codex web app:
-
-```sh
-bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
-```
-
-Open the printed local URL. By default this example uses
-`http://127.0.0.1:5175`.
-
-Run the deterministic fixture app:
+Run the deterministic fixture app first:
 
 ```sh
 bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
@@ -57,6 +48,16 @@ Useful fixture routes:
 - `/usage-only`
 - `/scoped-thread-pane`
 - `/app-connectors`
+
+Run the real local Codex web app after the fixture app if you need App
+Server-backed account, model, thread, turn, upload, and approval behavior:
+
+```sh
+bun --filter @nyosegawa/agent-ui-example-codex-local-web dev
+```
+
+Open the printed local URL. By default this example uses
+`http://127.0.0.1:5175`.
 
 Running-turn follow-ups follow Codex Desktop semantics. App Server has no
 `queue/message` API; Agent UI keeps `queuedFollowUps` as UI-local state. Enter
@@ -89,10 +90,8 @@ The browser transport expects a host-owned WebSocket endpoint. Use
 `@nyosegawa/agent-ui-server` to attach a local bridge to a Node HTTP server.
 
 Import `@nyosegawa/agent-ui-react/styles.css` once for the bundled design
-system. Hosts customize the default UI by overriding `--aui-*` tokens from
-`packages/react/src/styles/tokens.css` on their own theme scope. The copied
-`dist/styles/*` files and internal `.aui-*` selectors are implementation
-details of that stylesheet, not public host import paths or styling contracts.
+system. Hosts customize the default UI by overriding `--aui-*` tokens on their
+own theme scope; see [Theming](./docs/guides/theming.md) for the full contract.
 
 ## Design
 
@@ -118,17 +117,11 @@ Start with [docs/README.md](./docs/README.md).
 
 ## Validation
 
-Package and API boundaries are checked with:
-
-```sh
-bun run validate:packages
-bun run test:api-snapshots
-bun run test:package-resolution
-bun run test:node-compat
-```
-
-`validate:packages` is intentionally ordered: build, `publint`, then
-`arethetypeswrong`.
+Validation tiers and package-output gates are owned by
+[Testing](./docs/architecture/testing.md) and
+[Toolchain](./docs/architecture/toolchain.md). Use `bun run validate:fast` for
+normal local development and `bun run validate:packages` before changing package
+boundaries or publish output.
 
 Key pages:
 

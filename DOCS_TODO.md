@@ -120,30 +120,30 @@ docs, tests, and validation notes are complete.
 
 ## S04: Entry, Package, Web Components
 
-- [ ] S04.01 Triage `README.md` and `docs/README.md` early by removing stale
+- [x] S04.01 Triage `README.md` and `docs/README.md` early by removing stale
   validation ladders and linking to `docs/architecture/testing.md` and
   `docs/architecture/toolchain.md` as owners.
-- [ ] S04.02 Put deterministic fixture exploration before real local Codex
+- [x] S04.02 Put deterministic fixture exploration before real local Codex
   exploration where entry docs guide first readers through examples.
-- [ ] S04.03 Add `@nyosegawa/agent-ui-web-components` to installation, package
+- [x] S04.03 Add `@nyosegawa/agent-ui-web-components` to installation, package
   overview, docs navigation, and current release package lists where the public
   package set is enumerated.
-- [ ] S04.04 Keep package export internals, generated protocol method details,
+- [x] S04.04 Keep package export internals, generated protocol method details,
   and maintenance workflow detail out of entry pages.
-- [ ] S04.05 Update `docs/reference/package-exports.md` so public specifiers are
+- [x] S04.05 Update `docs/reference/package-exports.md` so public specifiers are
   complete: core root, codex root plus documented subpaths, react root plus
   `styles.css`, server root, and web-components root.
-- [ ] S04.06 Document `@nyosegawa/agent-ui-codex/stable-types` as a type-only
+- [x] S04.06 Document `@nyosegawa/agent-ui-codex/stable-types` as a type-only
   public subpath or add an equivalent resolver smoke that does not expect runtime
   named exports.
-- [ ] S04.07 Update Web Components docs to list `transport`, `initialState`,
+- [x] S04.07 Update Web Components docs to list `transport`, `initialState`,
   `slots`, `agentOptions`, `agentOptions.className`, and `chat-class`.
-- [ ] S04.08 State that Web Components require the Web Components package, React
+- [x] S04.08 State that Web Components require the Web Components package, React
   peer dependencies, and the public React stylesheet import; they do not create
   transports, spawn Codex, or import CSS automatically.
-- [ ] S04.09 State that `chat-class` is not a broad reactive attribute API unless
+- [x] S04.09 State that `chat-class` is not a broad reactive attribute API unless
   implementation support is added.
-- [ ] S04.10 Fix `ROADMAP.md` or other release-planning lists that omit Web
+- [x] S04.10 Fix `ROADMAP.md` or other release-planning lists that omit Web
   Components from the current public package set, without treating the package
   export table itself as wrong.
 
@@ -300,7 +300,7 @@ docs, tests, and validation notes are complete.
 - [ ] D07 Decide whether external ChatGPT auth token mode should be documented in
   authentication or remote deployment as an explicit unsupported mode before
   protocol cleanup.
-- [ ] D08 Decide whether Web Components should observe `chat-class` changes or
+- [x] D08 Decide whether Web Components should observe `chat-class` changes or
   docs should present it as an initial or next-render class hook only.
 - [x] D09 Decide whether `@nyosegawa/agent-ui-codex/stable-types` needs an
   explicit type-only runtime export policy exemption.

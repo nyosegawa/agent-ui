@@ -19,6 +19,12 @@ Most React hosts use:
 bun add @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex
 ```
 
+Hosts that use the custom element wrapper also install:
+
+```sh
+bun add @nyosegawa/agent-ui-web-components
+```
+
 Local Node hosts that start or proxy Codex App Server also use:
 
 ```sh
@@ -28,6 +34,8 @@ bun add @nyosegawa/agent-ui-server
 ## React And CSS
 
 React is a peer dependency. The package supports React 18.3+ and React 19.
+`@nyosegawa/agent-ui-web-components` also depends on the React peer packages
+because it renders the React preset inside the custom element.
 
 Import the default stylesheet once:
 

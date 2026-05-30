@@ -24,6 +24,8 @@ you need exact contracts.
 
 - [React](./guides/react.md): compose `AgentProvider`, `AgentChat`, and
   primitives in a host app.
+- [Web Components](./guides/web-components.md): wrap the React preset in a
+  custom element when a host cannot mount React directly.
 - [Approvals](./guides/approvals.md): default command and file-change
   approvals, plus host-owned handling for broader server requests such as user
   input.
@@ -85,26 +87,11 @@ using the user's own authentication, then composes Agent UI components around
 that session. See [Product Boundary](./architecture/product-boundary.md) for
 the canonical ownership split.
 
-## Release Gates
+## Validation Owners
 
-Use the ordered package path for publish checks:
+[Testing](./architecture/testing.md) owns validation tiers and release gates.
+[Toolchain](./architecture/toolchain.md) owns package-output and runtime
+compatibility policy.
 
-```sh
-bun run validate:packages
-bun run test:api-snapshots
-bun run test:package-resolution
-bun run test:node-compat
-```
-
-The React package exposes one public stylesheet entry point:
-`@nyosegawa/agent-ui-react/styles.css`. Design-system tokens in
-`packages/react/src/styles/tokens.css` are the host customization API; copied
-`dist/styles/*` chunks and internal `.aui-*` selectors are private
-implementation details. Fixture and route CSS belongs to examples as visual QA,
-and recipe theming intentionally overrides tokens. Generated stable Codex App
-Server types are available only from the advanced
-`@nyosegawa/agent-ui-codex/stable-types` subpath. Stable method-param aliases
-are derived from the generated `ClientRequest` schema instead of maintained as
-separate hand-written request models. Browser-safe Codex request execution is
-grouped by protocol primitive at `@nyosegawa/agent-ui-codex/clients`; the
-`@nyosegawa/agent-ui-codex/session` subpath remains as a compatibility facade.
+Use [Package Exports](./reference/package-exports.md) for import boundaries and
+[Theming](./guides/theming.md) for the public stylesheet and token contract.
