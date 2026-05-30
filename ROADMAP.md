@@ -20,6 +20,8 @@ recipes around stable Agent UI primitives.
 
 ## M0: Refresh The Documentation Baseline
 
+Status: Complete.
+
 Goal: make the repository documentation reflect the current implementation
 before new roadmap work starts.
 
