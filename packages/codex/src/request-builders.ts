@@ -216,11 +216,10 @@ export function turnSteerParams(options: {
   expectedTurnId: string;
   input: string | UserInput[];
   threadId: string;
-}): TurnSteerParams {
+} & Omit<TurnSteerParams, "input" | "threadId" | "expectedTurnId">): TurnSteerParams {
   return {
-    expectedTurnId: options.expectedTurnId,
+    ...options,
     input: normalizeUserInput(options.input),
-    threadId: options.threadId,
   } satisfies TurnSteerParams;
 }
 

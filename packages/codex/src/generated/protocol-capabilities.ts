@@ -60,6 +60,7 @@ export const generatedStableClientMethods = [
   "plugin/uninstall",
   "review/start",
   "skills/config/write",
+  "skills/extraRoots/set",
   "skills/list",
   "thread/approveGuardianDeniedAction",
   "thread/archive",

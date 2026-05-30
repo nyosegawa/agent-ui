@@ -358,6 +358,7 @@ type WebSearchAction = {
 type ThreadItem = {
     "type": "userMessage";
     id: string;
+    clientId: string | null;
     content: Array<UserInput>;
 } | {
     "type": "hookPrompt";

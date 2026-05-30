@@ -149,12 +149,25 @@ describe("Codex request builders", () => {
       threadId: "thread-1",
     } satisfies TurnStartParams);
     expect(
+      turnStartParams({
+        clientUserMessageId: "client-message-1",
+        input: "hello",
+        threadId: "thread-1",
+      }),
+    ).toEqual({
+      clientUserMessageId: "client-message-1",
+      input: [{ text: "hello", text_elements: [], type: "text" }],
+      threadId: "thread-1",
+    } satisfies TurnStartParams);
+    expect(
       turnSteerParams({
+        clientUserMessageId: "client-message-2",
         expectedTurnId: "turn-1",
         input: "continue",
         threadId: "thread-1",
       }),
     ).toEqual({
+      clientUserMessageId: "client-message-2",
       expectedTurnId: "turn-1",
       input: [{ text: "continue", text_elements: [], type: "text" }],
       threadId: "thread-1",

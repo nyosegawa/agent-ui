@@ -297,6 +297,10 @@ Stable productized methods:
 by `useAgentSkills().setSkillEnabled()`. It is intentionally distinct from the
 host-only `config/*` write methods below.
 
+`turn/start` and `turn/steer` request builders preserve the optional
+`clientUserMessageId` correlation field when a host supplies one; Agent UI does
+not synthesize that id for transcript rendering.
+
 `app/list` and `app/list/updated` normalize connector availability with the App
 Server vocabulary: `isEnabled` becomes `AgentApp.enabled`, `isAccessible`
 becomes `AgentApp.accessible`, and descriptive fields such as `installUrl`,
@@ -352,6 +356,7 @@ Host-only or advanced local tooling:
 - `plugin/share/delete`
 - `plugin/install`
 - `plugin/uninstall`
+- `skills/extraRoots/set`
 - `experimentalFeature/list`
 - `experimentalFeature/enablement/set`
 - `mcpServer/oauth/login`
@@ -364,6 +369,11 @@ Host-only or advanced local tooling:
 - `thread/goal/set`
 - `windowsSandbox/readiness`
 - `windowsSandbox/setupStart`
+
+`skills/extraRoots/set` replaces the App Server process runtime extra
+standalone skill roots. It is host-only because hosts own local filesystem
+selection, persistence, and the policy for exposing generated or external skill
+directories to the App Server process.
 
 Experimental available methods:
 

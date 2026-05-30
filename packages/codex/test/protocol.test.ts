@@ -42,7 +42,7 @@ import { generatedExperimentalOnlyClientMethods } from "../src/generated/protoco
 describe("Codex protocol metadata", () => {
   it("records upstream commit and stable release method surface", () => {
     expect(CODEX_PROTOCOL_COMMIT).toMatch(/^[0-9a-f]{40}$/);
-    expect(CODEX_PROTOCOL_COMMIT).toBe("577ec03bf82fb52e7041fb6b684e694b1e53451a");
+    expect(CODEX_PROTOCOL_COMMIT).toBe("3e7baa00e43419967d90d6ad9cef40f58d5ac89f");
     expect(CODEX_PROTOCOL_GENERATED_AT).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(stableClientMethods).toBe(stableProductizedMethods);
     expect(stableProductizedMethods).toContain("account/rateLimits/read");
@@ -1532,6 +1532,7 @@ describe("Codex protocol metadata", () => {
           "plugin/uninstall",
           "review/start",
           "skills/config/write",
+          "skills/extraRoots/set",
           "skills/list",
           "thread/approveGuardianDeniedAction",
           "thread/archive",
