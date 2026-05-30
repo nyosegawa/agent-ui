@@ -174,6 +174,7 @@ type WebSearchAction = {
 type ThreadItem = {
     "type": "userMessage";
     id: string;
+    clientId: string | null;
     content: Array<UserInput>;
 } | {
     "type": "hookPrompt";
@@ -761,7 +762,7 @@ declare function turnSteerParams(options: {
     expectedTurnId: string;
     input: string | UserInput$1[];
     threadId: string;
-}): TurnSteerParams;
+} & Omit<TurnSteerParams, "input" | "threadId" | "expectedTurnId">): TurnSteerParams;
 declare function skillInput(name: string, path: string): UserInput$1;
 declare function mentionInput(name: string, path: string): UserInput$1;
 declare function localImageInput(path: string): UserInput$1;

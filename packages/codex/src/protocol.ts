@@ -103,6 +103,7 @@ export const hostOnlyMethods = [
   "plugin/skill/read",
   "plugin/uninstall",
   "review/start",
+  "skills/extraRoots/set",
   "thread/approveGuardianDeniedAction",
   "thread/shellCommand",
   "thread/goal/clear",
