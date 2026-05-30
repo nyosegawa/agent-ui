@@ -3,7 +3,7 @@
 Agent UI has two different server integration shapes. Keep them separate:
 
 - full chat bridge: long-lived WebSocket session to a local App Server process
-- one-shot RPC helper: one HTTP request maps to one App Server JSON-RPC request
+- one-shot RPC helper: one HTTP request runs one allowlisted target App Server method
 
 Only the full chat bridge can power `AgentChat`.
 
@@ -100,8 +100,10 @@ scoping, process isolation, resource limits, and audit logging.
 `handleAgentUiWebSocketConnection()` is the lower-level handler for hosts that
 do not use `attachAgentUiWebSocketBridge()`. If an `admission` hook needs HTTP
 headers, cookies, or the `Origin` header, pass the original `IncomingMessage` as
-the third argument. Without that request object the handler cannot evaluate
-request-scoped admission before spawning the App Server process.
+the third argument. When `admission` is configured but no request object is
+passed, the handler skips admission and proceeds to spawn the App Server
+process. Use `attachAgentUiWebSocketBridge()` or always pass the request object
+when admission is the intended security boundary.
 
 Server-side redaction helpers are public exports from
 `@nyosegawa/agent-ui-server`: `redactSecrets()`, `redactStructuredValue()`, and
@@ -275,8 +277,11 @@ HTTP RPC helpers. They are useful for calls such as `account/read`,
 
 They are not chat bridges and they do not include built-in admission or
 authentication callbacks. The host route must enforce authentication before it
-calls the helper. Each accepted HTTP request starts one App Server process, sends
-one JSON-RPC-lite request, returns one response, and closes the process.
+calls the helper. Each accepted HTTP request starts one App Server process,
+connects the transport, runs the requested allowlisted method, returns one
+response, and closes the process. If `initialize` is configured, the transport
+also sends the App Server `initialize` request and `initialized` notification
+before the target method.
 
 Request body:
 

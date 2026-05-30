@@ -9,7 +9,7 @@ examples/next-rpc-route
 Purpose:
 
 - demonstrate `createAgentUiNextRpcRoute()`
-- expose one App Server request per HTTP `POST`
+- expose one allowlisted target App Server method per HTTP `POST`
 - support allowlisted metadata calls such as `account/read` or `model/list`
 
 Run:

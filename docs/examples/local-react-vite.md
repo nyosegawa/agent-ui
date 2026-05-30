@@ -32,7 +32,7 @@ bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 Routes:
 
 - `/`: baseline AgentChat fixture with transcript, approvals, command output,
-  diff, usage, and automatic stored thread resume.
+  diff, usage, and stored thread preview hydration.
 - `/rich-transcript`: intentionally dense transcript and approval stress
   fixture for renderer and interaction review.
 - `/?state=empty`: authenticated first-run workspace with no stored threads.

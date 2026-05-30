@@ -1,6 +1,6 @@
 # Agent UI Next RPC Route Example
 
-This example exposes a Next.js Route Handler for one App Server request per HTTP `POST`.
+This example exposes a Next.js Route Handler for one allowlisted target App Server method per HTTP `POST`.
 
 It is useful for host-owned one-shot calls such as `model/list` or `account/read`. It is not the chat-capable Agent UI bridge because a single HTTP response cannot carry long-lived App Server notifications, server approval requests, or browser approval responses.
 

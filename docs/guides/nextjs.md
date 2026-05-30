@@ -32,11 +32,11 @@ bun --filter @nyosegawa/agent-ui-example-next-with-bridge-sidecar dev
 
 ## One-Shot RPC: Route Handler
 
-Use `examples/next-rpc-route` only for one App Server request per HTTP `POST`,
+Use `examples/next-rpc-route` only for one allowlisted target method per HTTP `POST`,
 such as `account/read` or `model/list`.
 
 ```text
-POST /api/agent-ui -> one App Server request -> one response
+POST /api/agent-ui -> one allowlisted target method -> one response
 ```
 
 It cannot power chat because it cannot represent streaming notifications,
