@@ -8,7 +8,6 @@ import {
   authTokensLoginParams,
   cancelLoginParams,
   chatgptLoginParams,
-  type CodexStableMethodParams,
   deviceCodeLoginParams,
   disabledProductMethods,
   hooksListParams,
@@ -34,7 +33,6 @@ import {
   turnSteerParams,
 } from "../src/request-builders";
 import type { ClientRequest } from "../src/generated/stable";
-import type { ClientRequest as ExperimentalClientRequest } from "../src/generated/experimental";
 import type {
   AppsListParams,
   GetAccountParams,
@@ -64,36 +62,14 @@ import type {
   ThreadTurnsListParams,
 } from "../src/generated/experimental/v2";
 
-type Equal<TActual, TExpected> =
-  (<T>() => T extends TActual ? 1 : 2) extends
-  (<T>() => T extends TExpected ? 1 : 2)
-    ? true
-    : false;
-type Assert<T extends true> = T;
 type GeneratedParams<TMethod extends ClientRequest["method"]> = Extract<
   ClientRequest,
   { method: TMethod }
 >["params"];
-type GeneratedExperimentalParams<TMethod extends ExperimentalClientRequest["method"]> =
-  Extract<ExperimentalClientRequest, { method: TMethod }>["params"];
 type GeneratedRequestParamsCase<TMethod extends ClientRequest["method"]> = {
   method: TMethod;
   params: GeneratedParams<TMethod>;
 };
-
-const generatedParamTypeAssertions: [
-  Assert<
-    Equal<CodexStableMethodParams<"thread/start">, GeneratedParams<"thread/start">>
-  >,
-  Assert<Equal<CodexStableMethodParams<"turn/start">, GeneratedParams<"turn/start">>>,
-  Assert<Equal<CodexStableMethodParams<"app/list">, GeneratedParams<"app/list">>>,
-  Assert<
-    Equal<
-      ThreadTurnsListParams,
-      GeneratedExperimentalParams<"thread/turns/list">
-    >
-  >,
-] = [true, true, true, true];
 
 describe("Codex request builders", () => {
   it("builds stable params against generated App Server request types", () => {
@@ -117,8 +93,19 @@ describe("Codex request builders", () => {
       includeTurns: true,
       threadId: "thread-1",
     } satisfies ThreadReadParams);
-    expect(threadResumeParams("thread-1", { excludeTurns: true })).toEqual({
-      excludeTurns: true,
+    expect(threadResumeParams("thread-1", { cwd: "/repo" })).toEqual({
+      cwd: "/repo",
+      threadId: "thread-1",
+    } satisfies ThreadResumeParams);
+    expect(
+      threadResumeParams("thread-1", {
+        cwd: "/repo",
+        excludeTurns: true,
+        initialTurnsPage: { limit: 10 },
+        path: "/tmp/rollout.json",
+      } as any),
+    ).toEqual({
+      cwd: "/repo",
       threadId: "thread-1",
     } satisfies ThreadResumeParams);
     expect(threadStartParams({ cwd: "/repo", model: "gpt-5.5" })).toEqual({
@@ -196,10 +183,6 @@ describe("Codex request builders", () => {
 
   it("keeps unimplemented thread item pagination out of product APIs", () => {
     expect(disabledProductMethods).toEqual(["thread/turns/items/list"]);
-  });
-
-  it("derives method params from the generated ClientRequest union", () => {
-    expect(generatedParamTypeAssertions).toEqual([true, true, true, true]);
   });
 
   it("emits params accepted by generated ClientRequest method schemas", () => {

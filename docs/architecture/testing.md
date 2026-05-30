@@ -23,9 +23,10 @@ bun run validate:release
 bun run validate:e2e
 ```
 
-`bun run validate:packages` is the ordered package path: build, `publint`, then
-`arethetypeswrong`. Do not run those three in parallel because build cleans
-package `dist/` directories.
+`bun run validate:packages` is the ordered package path: build,
+`test:packlist`, `test:node-compat`, `publint`, then `attw`. Do not run package
+build, `publint`, or `attw` in parallel because build cleans package `dist/`
+directories.
 
 Canonical validation tiers:
 
@@ -34,8 +35,8 @@ Canonical validation tiers:
   normalization coverage. The legacy `bun run test:fixtures` command delegates
   to `bun run test:core-fixtures`; both are the core reducer/state fixture gate,
   not browser fixture e2e and not raw JSON-RPC conformance.
-- `bun run validate:packages`: fresh package build, `publint`, and
-  `arethetypeswrong` in the required order.
+- `bun run validate:packages`: fresh package build, packlist smoke, Node
+  compatibility smoke, `publint`, and `arethetypeswrong` in the required order.
 - `bun run validate:e2e`: clean Playwright ports, then deterministic browser
   e2e.
 - `bun run validate:release`: fast, protocol, packages, dead-code,
@@ -88,6 +89,10 @@ Protocol tests guard the generated App Server boundary:
 - capability metadata derived from generated request/notification/request files
 - schema-backed params for productized methods
 - stable vs experimental drift snapshots
+- compile-only protocol and request-builder assertions under
+  `packages/codex/test/type-tests/`, owned by
+  `packages/codex/tsconfig.type-tests.json` and included in the Codex package
+  typecheck path
 
 Failures usually mean the vendored App Server schema or request builders must
 be reviewed. Do not accept snapshot changes without reading the upstream App
@@ -115,10 +120,12 @@ Reducer tests assert that normalized events keep Codex session data structured:
 - stale/hydrated history state from `thread/read`
 - pending server-request queue cleanup on resolve, reject, or disconnect
 - bounded retention for diagnostics, warnings, raw notifications, command
-  output, file patches, and thread registry snapshots. Thread snapshot tests
-  must assert both the registry ID arrays and the backing `state.threads`
-  entity map, including eviction of stale cold/preview snapshots and retention
-  of active, live, and pending-request threads.
+  output, file patches, and thread registry snapshots. File patch tests must
+  assert patch-only transcript indexes shrink with the retained patch bodies
+  while authored item IDs remain visible. Thread snapshot tests must assert both
+  the registry ID arrays and the backing `state.threads` entity map, including
+  eviction of stale cold/preview snapshots and retention of active, live, and
+  pending-request threads.
 
 Important invariant: `item/completed` and `turn/completed` are authoritative.
 Transient streaming state must not override completed App Server state.
@@ -134,7 +141,8 @@ Component tests cover:
 - heavy command output and diff bodies mounted only when opened
 - no nested vertical scroll traps in normal Markdown/code blocks
 - approvals with `itemId` or `turnId` source metadata anchored after that
-  transcript item or turn, with metadata-free approvals at the transcript tail
+  transcript item or turn, including sources pinned from outside the visible
+  window, with metadata-free or missing-source approvals at the transcript tail
 - approvals embedded in the transcript, not as a separate pane
 - approval actions send responses but keep pending state until upstream
   `serverRequest/resolved`

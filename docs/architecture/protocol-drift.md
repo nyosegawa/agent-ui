@@ -80,7 +80,11 @@ inspection, docs examples, or host extension points:
 - Token usage, status banners, warnings, and protocol notifications keep raw
   payloads for diagnostics but are bounded by the reducer retention policy.
 - Command output is retained per item with a maximum character window.
-- File patch payloads are retained per turn with a maximum item count.
+- File patch payloads are retained per turn with a maximum item count. Evicting
+  a synthetic patch-only body also removes that ID from `turn.itemOrder`; IDs
+  with authored item state, streaming text, command output, or transcript blocks
+  remain visible even if their heavy patch body falls out of the retention
+  window.
 - App connector results are retained per scope with a maximum scope count.
   Thread-scoped app result maps cannot grow indefinitely across long-running
   browsing sessions.
@@ -94,5 +98,6 @@ inspection, docs examples, or host extension points:
   requests are retained because they may still be visible, resumable, or needed
   for approval anchoring.
 
-The policy is implemented in `packages/core/src/retention.ts` and covered by
-reducer tests that assert both index lengths and backing map sizes.
+The policy is implemented in `packages/core/src/retention.ts` and store-specific
+bounded update helpers. Reducer tests assert both index lengths and backing map
+sizes.

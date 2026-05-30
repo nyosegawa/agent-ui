@@ -13,6 +13,11 @@ const EXAMPLE_STYLE_DIRS = [
   join(REPO_ROOT, "examples", "codex-local-web", "src"),
   join(REPO_ROOT, "examples", "docs-site", "src"),
 ];
+const EXAMPLE_HTML_FILES = [
+  join(REPO_ROOT, "examples", "codex-local-web", "index.html"),
+  join(REPO_ROOT, "examples", "local-react-vite", "index.html"),
+  join(REPO_ROOT, "examples", "docs-site", "index.html"),
+];
 const VISUAL_SOURCE_DIRS = [
   REACT_SRC,
   join(REPO_ROOT, "examples", "local-react-vite", "src"),
@@ -50,6 +55,52 @@ function designTokenReferences(text: string): Set<string> {
       (match) => match[1]!,
     ),
   );
+}
+
+function cssBlockContentsAt(css: string, open: number): string | undefined {
+  let depth = 0;
+  for (let index = open; index < css.length; index += 1) {
+    const char = css[index];
+    if (char === "{") depth += 1;
+    if (char === "}") {
+      depth -= 1;
+      if (depth === 0) {
+        return css.slice(open + 1, index);
+      }
+    }
+  }
+  return undefined;
+}
+
+function selectorBlocks(css: string, selector: string): string[] {
+  const blocks: string[] = [];
+  let searchFrom = 0;
+  while (searchFrom < css.length) {
+    const start = css.indexOf(`${selector} {`, searchFrom);
+    if (start === -1) break;
+    const open = css.indexOf("{", start);
+    const block = cssBlockContentsAt(css, open);
+    if (block) blocks.push(block);
+    searchFrom = open + (block?.length ?? 0) + 1;
+  }
+  return blocks;
+}
+
+function mediaBlock(css: string, query: string): string {
+  const start = css.indexOf(`@media ${query}`);
+  if (start === -1) return "";
+  const open = css.indexOf("{", start);
+  return cssBlockContentsAt(css, open) ?? "";
+}
+
+function tokenDeclarationsInBlocks(blocks: string[]): Array<[string, string]> {
+  const declarations = new Map<string, string>();
+  for (const block of blocks) {
+    for (const match of block.matchAll(/(--aui-[\w-]+)\s*:\s*([^;]+);/g)) {
+      declarations.set(match[1]!, match[2]!.trim());
+    }
+  }
+  return [...declarations.entries()].sort(([left], [right]) => left.localeCompare(right));
 }
 
 function styleFilesUnder(...dirs: string[]): string[] {
@@ -242,8 +293,26 @@ describe("packages/react styles.css", () => {
     );
     expect(sourceText).not.toMatch(/@nyosegawa\/agent-ui-react\/styles\//);
     expect(sourceText).not.toMatch(
+      /(?:import|from)\s+["'][^"']*@nyosegawa\/agent-ui-react\/dist\/styles\//,
+    );
+    expect(sourceText).not.toMatch(
       /import\s+["'][^"']*packages\/react\/src\/styles\//,
     );
+  });
+
+  it("keeps dark and system theme token definitions in parity", () => {
+    const tokens = readFileSync(join(STYLE_DIR, "tokens.css"), "utf8");
+    const darkDeclarations = tokenDeclarationsInBlocks(
+      selectorBlocks(tokens, '[data-aui-theme="dark"]'),
+    ).filter(([token]) => token !== "--aui-color-scheme");
+    const systemDarkDeclarations = tokenDeclarationsInBlocks(
+      selectorBlocks(
+        mediaBlock(tokens, "(prefers-color-scheme: dark)"),
+        '[data-aui-theme="system"]',
+      ),
+    );
+
+    expect(systemDarkDeclarations).toEqual(darkDeclarations);
   });
 
   it("keeps distributed component CSS on design-system tokens for color, radius, and tracking", () => {
@@ -297,6 +366,24 @@ describe("packages/react styles.css", () => {
         files,
         /borderRadius:\s*(?:\d+(?:\.\d+)?|["'][^"']*\b\d+(?:\.\d+)?px\b[^"']*["'])/,
         (line) => /borderRadius:\s*(?:0|["']0["'])/.test(line),
+      ),
+    ).toEqual([]);
+    expect(
+      lineViolations(
+        files,
+        /\b(?:fontSize|fontFamily|lineHeight|gap|rowGap|columnGap|padding|margin|outline|outlineOffset|transitionDuration|animationDuration):\s*[^,}]+/,
+        (line) =>
+          /:\s*(?:0|["']0["']|["'][^"']*var\(--aui-[^)]+\)[^"']*["'])/.test(line) ||
+          /styles\.(?:fontSize|fontFamily|lineHeight)/.test(line),
+      ),
+    ).toEqual([]);
+  });
+
+  it("keeps example HTML style blocks on design-system tokens", () => {
+    expect(lineViolations(EXAMPLE_HTML_FILES, rawColorPattern, () => false)).toEqual([]);
+    expect(
+      lineViolations(EXAMPLE_HTML_FILES, /\b(?:padding|margin|gap):\s*[^;]+;/, (line) =>
+        /:\s*(?:0|var\(--aui-[^)]+\)(?: [^;]+)?);/.test(line),
       ),
     ).toEqual([]);
   });

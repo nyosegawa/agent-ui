@@ -27,6 +27,20 @@ describe("raw App Server JSON-RPC fixture pack", () => {
     for (const entry of manifest.fixtures) {
       expect(entry.methods.length).toBeGreaterThan(0);
       expect(entry.purpose).toMatch(/\w/);
+      expect(["current", "deprecated"]).toContain(entry.stability);
+    }
+  });
+
+  it("keeps manifest methods aligned with sorted unique JSONL methods", () => {
+    const manifest = JSON.parse(readFileSync(join(fixtureRoot, "manifest.json"), "utf8"));
+    for (const entry of manifest.fixtures as Array<{ file: string; methods: string[] }>) {
+      const lines = readFileSync(join(fixtureRoot, entry.file), "utf8").trim().split("\n");
+      const methods = new Set<string>();
+      for (const line of lines) {
+        const message = parseJsonRpcLine(line) as { method?: unknown };
+        if (typeof message.method === "string") methods.add(message.method);
+      }
+      expect(entry.methods).toEqual([...methods].sort());
     }
   });
 
@@ -43,6 +57,30 @@ describe("raw App Server JSON-RPC fixture pack", () => {
         expect(message.method).toBe("item/fileChange/outputDelta");
         expect(message.params?.delta).toBe("applied patch\n");
         expect(message.params?.delta).not.toMatch(/^[A-Za-z0-9+/]+={0,2}$/);
+      }
+    }
+  });
+
+  it("keeps current app fixtures on generated AppInfo vocabulary", () => {
+    const manifest = JSON.parse(readFileSync(join(fixtureRoot, "manifest.json"), "utf8"));
+    const currentAppFixtures = manifest.fixtures.filter(
+      (entry: { methods: string[]; stability: string }) =>
+        entry.stability === "current" && entry.methods.includes("app/list/updated"),
+    );
+    for (const entry of currentAppFixtures as Array<{ file: string }>) {
+      const lines = readFileSync(join(fixtureRoot, entry.file), "utf8").trim().split("\n");
+      for (const line of lines) {
+        const message = parseJsonRpcLine(line) as { params?: { data?: unknown } };
+        const apps = Array.isArray(message.params?.data) ? message.params.data : [];
+        for (const app of apps as Array<Record<string, unknown>>) {
+          expect(app).toHaveProperty("logoUrl");
+          expect(app).toHaveProperty("logoUrlDark");
+          expect(app).toHaveProperty("distributionChannel");
+          expect(app).toHaveProperty("appMetadata");
+          expect(app).not.toHaveProperty("uri");
+          expect(app).not.toHaveProperty("installed");
+          expect(app).not.toHaveProperty("needsAuth");
+        }
       }
     }
   });
@@ -66,13 +104,13 @@ describe("raw App Server JSON-RPC fixture pack", () => {
         "item-assistant"
       ],
     ).toBe("Hello there.");
-    expect(state.serverRequestQueue.byId["approval-file-raw"]).toMatchObject({
+    expect(state.serverRequestQueue.byId["string:approval-file-raw"]).toMatchObject({
       itemId: "item-file",
       kind: "fileChangeApproval",
       threadId: "thread-basic",
       turnId: "turn-text",
     });
-    expect(state.serverRequestQueue.byId["approval-command-raw"]).toBeUndefined();
+    expect(state.serverRequestQueue.byId["string:approval-command-raw"]).toBeUndefined();
     expect(state.threads["thread-resume"]?.tokenUsage?.totalTokens).toBe(168);
     expect(state.apps.apps.map((app) => app.id)).toEqual(["gmail", "drive"]);
     expect(state.apps.byScope["thread-basic"]?.apps[0]?.id).toBe("calendar");

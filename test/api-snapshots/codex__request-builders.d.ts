@@ -1,6 +1,7 @@
-import { T as ThreadId, R as RealtimeVoice, A as AbsolutePathBuf, J as JsonValue, d as UserInput, M as MessagePhase, e as ReasoningEffort, f as TurnItemsView, g as ThreadSource, h as ModeKind, b as CodexStableMethod, i as CancelLoginAccountResponse, L as LoginAccountResponse, j as LogoutAccountResponse, G as GetAccountRateLimitsResponse, k as GetAccountResponse, l as AppsListResponse, H as HooksListResponse, I as InitializeResponse, m as ModelListResponse, S as SkillsConfigWriteResponse, n as SkillsListResponse, o as ThreadArchiveResponse, p as ThreadCompactStartResponse, q as ThreadForkResponse, r as ThreadInjectItemsResponse, s as ThreadListResponse, t as ThreadLoadedListResponse, u as ThreadMetadataUpdateResponse, v as ThreadSetNameResponse, w as ThreadReadResponse, x as ThreadResumeResponse, y as ThreadRollbackResponse, z as ThreadStartResponse, B as ThreadUnarchiveResponse, D as ThreadUnsubscribeResponse, E as TurnInterruptResponse, F as TurnStartResponse, K as TurnSteerResponse, a as CodexExperimentalMethod, c as CodexStableMethodParams, U as UserInput$1 } from './method-params-Cp7iY5rD.js';
-export { C as CodexExperimentalMethodParams } from './method-params-Cp7iY5rD.js';
-import './InitializeParams-CDX1c2T9.js';
+import { T as ThreadId, R as RealtimeVoice, A as AbsolutePathBuf, J as JsonValue, d as UserInput, M as MessagePhase, e as ReasoningEffort, f as TurnItemsView, g as ThreadSource, h as ModeKind, b as CodexStableMethod, i as CancelLoginAccountResponse, L as LoginAccountResponse, j as LogoutAccountResponse, G as GetAccountRateLimitsResponse, k as GetAccountResponse, l as AppsListResponse, H as HooksListResponse, I as InitializeResponse, m as ModelListResponse, S as SkillsConfigWriteResponse, n as SkillsListResponse, o as ThreadArchiveResponse, p as ThreadCompactStartResponse, q as ThreadForkResponse, r as ThreadInjectItemsResponse, s as ThreadListResponse, t as ThreadLoadedListResponse, u as ThreadMetadataUpdateResponse, v as ThreadSetNameResponse, w as ThreadReadResponse, x as ThreadResumeResponse, y as ThreadRollbackResponse, z as ThreadStartResponse, B as ThreadUnarchiveResponse, D as ThreadUnsubscribeResponse, E as TurnInterruptResponse, F as TurnStartResponse, K as TurnSteerResponse, a as CodexExperimentalMethod, c as CodexStableMethodParams, U as UserInput$1 } from './method-params-<chunk>.js';
+export { C as CodexExperimentalMethodParams } from './method-params-<chunk>.js';
+import { i as StableProductizedMethod, E as ExperimentalAvailableMethod } from './protocol-<chunk>.js';
+import './InitializeParams-<chunk>.js';
 
 type AgentPath = string;
 
@@ -685,8 +686,15 @@ interface ExperimentalMethodResultMap {
     "thread/settings/update": ThreadSettingsUpdateResponse;
     "thread/turns/list": ThreadTurnsListResponse;
 }
-type CodexStableMethodResult<TMethod extends CodexStableMethod> = TMethod extends keyof StableMethodResultMap ? StableMethodResultMap[TMethod] : unknown;
-type CodexExperimentalMethodResult<TMethod extends CodexExperimentalMethod> = TMethod extends keyof ExperimentalMethodResultMap ? ExperimentalMethodResultMap[TMethod] : unknown;
+type AssertNever<T extends never> = T;
+type StableMethodResultMapCoverage = AssertNever<Exclude<StableProductizedMethod, keyof StableMethodResultMap> | Exclude<keyof StableMethodResultMap, StableProductizedMethod>>;
+type ExperimentalMethodResultMapCoverage = AssertNever<Exclude<ExperimentalAvailableMethod, keyof ExperimentalMethodResultMap> | Exclude<keyof ExperimentalMethodResultMap, ExperimentalAvailableMethod>>;
+type CodexStableMethodResult<TMethod extends CodexStableMethod> = [
+    StableMethodResultMapCoverage
+] extends [never] ? TMethod extends keyof StableMethodResultMap ? StableMethodResultMap[TMethod] : unknown : never;
+type CodexExperimentalMethodResult<TMethod extends CodexExperimentalMethod> = [
+    ExperimentalMethodResultMapCoverage
+] extends [never] ? TMethod extends keyof ExperimentalMethodResultMap ? ExperimentalMethodResultMap[TMethod] : unknown : never;
 
 type AppsListParams = CodexStableMethodParams<"app/list">;
 type CancelLoginAccountParams = CodexStableMethodParams<"account/login/cancel">;

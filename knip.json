@@ -3,6 +3,7 @@
   "entry": [
     "eslint.config.js",
     "playwright.config.ts",
+    "playwright.real-local.config.ts",
     "vitest.config.ts",
     "scripts/*.mjs"
   ],
@@ -15,6 +16,7 @@
     "**/.next/**",
     "docs/screenshots/**",
     "packages/codex/src/generated/**",
+    "playwright.real-local.config.ts",
     "test/api-snapshots/**"
   ],
   "ignoreDependencies": [
@@ -23,11 +25,11 @@
   ],
   "workspaces": {
     "packages/codex": {
-      "entry": ["src/index.ts", "scripts/import-schema.ts", "test/**/*.{ts,tsx}"],
+      "entry": ["src/index.ts", "src/client-type-assertions.ts", "scripts/import-schema.ts", "test/**/*.{ts,tsx}"],
       "project": ["src/**/*.{ts,tsx}", "scripts/**/*.ts", "test/**/*.{ts,tsx}", "tsup.config.ts"]
     },
     "packages/core": {
-      "entry": ["src/index.ts", "test/**/*.{ts,tsx}"],
+      "entry": ["src/index.ts", "src/stores/**/*.ts", "test/**/*.{ts,tsx}"],
       "project": ["src/**/*.{ts,tsx}", "test/**/*.{ts,tsx}", "tsup.config.ts"]
     },
     "packages/react": {

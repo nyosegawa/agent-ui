@@ -14,6 +14,9 @@
       "@nyosegawa/agent-ui-codex/clients": [
         "../../packages/codex/src/clients.ts"
       ],
+      "@nyosegawa/agent-ui-codex/normalizer": [
+        "../../packages/codex/src/normalizer.ts"
+      ],
       "@nyosegawa/agent-ui-codex/request-builders": [
         "../../packages/codex/src/request-builders.ts"
       ],

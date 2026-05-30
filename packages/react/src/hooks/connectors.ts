@@ -128,10 +128,17 @@ function normalizeHooksList(response: unknown, fallbackCwd?: string) {
         hooks: rawHooks.flatMap((hook) => {
           const hookRecord = asRecord(hook);
           if (!hookRecord) return [];
+          const id =
+            stringValue(hookRecord.key) ??
+            stringValue(hookRecord.id) ??
+            stringValue(hookRecord.name) ??
+            stringValue(hookRecord.path);
+          if (!id) return [];
           return [
             {
+              cwd,
               enabled: typeof hookRecord.enabled === "boolean" ? hookRecord.enabled : undefined,
-              id: String(hookRecord.id ?? hookRecord.name ?? hookRecord.path),
+              id,
               name: stringValue(hookRecord.name),
               raw: hook,
             },

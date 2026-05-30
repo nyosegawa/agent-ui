@@ -5,6 +5,7 @@ import {
 import { createServer } from "node:http";
 import next from "next";
 import { resolveExampleHost } from "../loopback-host";
+import { createIdempotentUploadCleanup } from "./upload-cleanup";
 
 const hostResolution = resolveExampleHost(
   process.env.AGENT_UI_HOST ?? "127.0.0.1",
@@ -22,6 +23,11 @@ const codexArgs = process.env.AGENT_UI_CODEX_ARGS
 const app = next({ dev, hostname: host, port });
 const handle = app.getRequestHandler();
 const uploadHandler = createAgentUiLocalUploadHandler();
+const cleanupUploads = createIdempotentUploadCleanup(() => uploadHandler.cleanup(), {
+  onError(error) {
+    console.warn(`Failed to clean Agent UI upload directory: ${String(error)}`);
+  },
+});
 
 await app.prepare();
 
@@ -47,6 +53,18 @@ attachAgentUiWebSocketBridge({
     process.stderr.write(line);
   },
 });
+
+server.on("close", () => {
+  void cleanupUploads();
+});
+
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.once(signal, () => {
+    server.close(() => {
+      void cleanupUploads().finally(() => process.exit(0));
+    });
+  });
+}
 
 server.listen(port, host, () => {
   if (hostResolution.warning) console.warn(hostResolution.warning);

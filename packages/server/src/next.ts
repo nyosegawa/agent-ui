@@ -48,8 +48,9 @@ export function createAgentUiNextRpcRoute(options: AgentUiNextRpcRouteOptions = 
         { status: 403 },
       );
     }
-    const bridge = createCodexAppServerBridge(bridgeOptions);
+    let bridge: ReturnType<typeof createCodexAppServerBridge> | undefined;
     try {
+      bridge = createCodexAppServerBridge(bridgeOptions);
       await bridge.transport.connect();
       const result = await bridge.transport.request(body.method, body.params);
       return Response.json({ result });
@@ -59,7 +60,7 @@ export function createAgentUiNextRpcRoute(options: AgentUiNextRpcRouteOptions = 
         { status: 500 },
       );
     } finally {
-      await bridge.close();
+      await bridge?.close();
     }
   };
 }

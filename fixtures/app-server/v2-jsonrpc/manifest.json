@@ -8,52 +8,62 @@
     {
       "file": "thread-start-basic.jsonl",
       "methods": ["thread/started"],
-      "purpose": "new persistent thread start notification with nullable name and origin metadata"
+      "purpose": "new persistent thread start notification with nullable name and origin metadata",
+      "stability": "current"
     },
     {
       "file": "turn-text-stream.jsonl",
-      "methods": ["turn/started", "item/started", "item/agentMessage/delta", "item/completed", "turn/completed"],
-      "purpose": "basic turn lifecycle and streamed assistant text"
+      "methods": ["item/agentMessage/delta", "item/completed", "item/started", "turn/completed", "turn/started"],
+      "purpose": "basic turn lifecycle and streamed assistant text",
+      "stability": "current"
     },
     {
       "file": "approvals-command-file.jsonl",
       "methods": ["item/commandExecution/requestApproval", "item/fileChange/requestApproval", "serverRequest/resolved"],
-      "purpose": "command and file approvals with thread, turn, and item anchoring metadata"
+      "purpose": "command and file approvals with thread, turn, and item anchoring metadata",
+      "stability": "current"
     },
     {
       "file": "tool-requests.jsonl",
-      "methods": ["item/tool/call", "mcpServer/elicitation/request", "item/tool/requestUserInput"],
-      "purpose": "dynamic tool, MCP elicitation, and user input server requests"
+      "methods": ["item/tool/call", "item/tool/requestUserInput", "mcpServer/elicitation/request"],
+      "purpose": "dynamic tool, MCP elicitation, and user input server requests",
+      "stability": "current"
     },
     {
       "file": "patch-streaming.jsonl",
-      "methods": ["item/fileChange/patchUpdated", "item/completed"],
-      "purpose": "current file patch update and completed item snapshot"
+      "methods": ["item/completed", "item/fileChange/patchUpdated"],
+      "purpose": "current file patch update and completed item snapshot",
+      "stability": "current"
     },
     {
       "file": "deprecated-file-change-output-delta.jsonl",
       "methods": ["item/fileChange/outputDelta"],
-      "purpose": "deprecated compatibility coverage for legacy file-change output delta plain text"
+      "purpose": "deprecated compatibility coverage for legacy file-change output delta plain text",
+      "stability": "deprecated"
     },
     {
       "file": "thread-resume-usage.jsonl",
-      "methods": ["thread/started", "thread/tokenUsage/updated", "thread/status/changed"],
-      "purpose": "resumed thread snapshot and nested token usage"
+      "methods": ["thread/started", "thread/status/changed", "thread/tokenUsage/updated"],
+      "purpose": "resumed thread snapshot and nested token usage",
+      "stability": "current"
     },
     {
       "file": "thread-history-state.jsonl",
-      "methods": ["thread/started", "thread/name/updated", "thread/status/changed", "turn/completed"],
-      "purpose": "stored thread title, status, and completed item hydration"
+      "methods": ["thread/name/updated", "thread/started", "thread/status/changed", "turn/completed"],
+      "purpose": "stored thread title, status, and completed item hydration",
+      "stability": "current"
     },
     {
       "file": "apps-list-updates.jsonl",
       "methods": ["app/list/updated"],
-      "purpose": "global and thread-scoped Codex Apps list updates"
+      "purpose": "global and thread-scoped Codex Apps list updates",
+      "stability": "current"
     },
     {
       "file": "account-login-rate-limit.jsonl",
-      "methods": ["account/updated", "account/login/completed", "account/rateLimits/updated", "configWarning"],
-      "purpose": "account, device login completion, rate limits, and warning diagnostics"
+      "methods": ["account/login/completed", "account/rateLimits/updated", "account/updated", "configWarning"],
+      "purpose": "account, device login completion, rate limits, and warning diagnostics",
+      "stability": "current"
     }
   ]
 }

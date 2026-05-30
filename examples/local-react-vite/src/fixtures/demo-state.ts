@@ -164,8 +164,8 @@ export function createRichTranscriptInitialState(): AgentSessionState {
       message: "Weekly rate-limit usage is below the warning threshold.",
     },
   ];
-  const pendingRequests: Record<string, PendingServerRequest> = {
-    "approval-command-rich-transcript": {
+  const pendingRequests: Record<`string:${string}`, PendingServerRequest> = {
+    "string:approval-command-rich-transcript": {
       id: "approval-command-rich-transcript",
       kind: "commandApproval",
       payload: {
@@ -175,7 +175,7 @@ export function createRichTranscriptInitialState(): AgentSessionState {
       },
       threadId: "thread-rich-transcript",
     },
-    "approval-input-rich-transcript": {
+    "string:approval-input-rich-transcript": {
       id: "approval-input-rich-transcript",
       kind: "userInput",
       payload: {
@@ -183,7 +183,7 @@ export function createRichTranscriptInitialState(): AgentSessionState {
       },
       threadId: "thread-rich-transcript",
     },
-    "approval-tool-rich-transcript": {
+    "string:approval-tool-rich-transcript": {
       id: "approval-tool-rich-transcript",
       kind: "dynamicTool",
       payload: {
@@ -196,9 +196,9 @@ export function createRichTranscriptInitialState(): AgentSessionState {
   state.serverRequestQueue = {
     byId: pendingRequests,
     order: [
-      "approval-command-rich-transcript",
-      "approval-input-rich-transcript",
-      "approval-tool-rich-transcript",
+      "string:approval-command-rich-transcript",
+      "string:approval-input-rich-transcript",
+      "string:approval-tool-rich-transcript",
     ],
   };
   state.threads["thread-rich-transcript"] = {

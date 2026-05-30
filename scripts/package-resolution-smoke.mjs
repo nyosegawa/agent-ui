@@ -98,9 +98,56 @@ try {
   if (!css.includes('@import "./styles/tokens.css";')) {
     throw new Error("dist/styles.css does not reference copied style chunks");
   }
+  await assertWebComponentsConsumerSmoke();
   process.stdout.write(result.stdout);
 } finally {
   await rm(tempRoot, { force: true, recursive: true });
+}
+
+async function assertWebComponentsConsumerSmoke() {
+  const { JSDOM } = await import("jsdom");
+  const dom = new JSDOM("<!doctype html><body></body>", {
+    pretendToBeVisual: true,
+    url: "http://127.0.0.1/",
+  });
+  const previous = {
+    customElements: globalThis.customElements,
+    document: globalThis.document,
+    HTMLElement: globalThis.HTMLElement,
+    navigator: globalThis.navigator,
+    window: globalThis.window,
+  };
+  Object.defineProperties(globalThis, {
+    customElements: { configurable: true, value: dom.window.customElements },
+    document: { configurable: true, value: dom.window.document },
+    HTMLElement: { configurable: true, value: dom.window.HTMLElement },
+    navigator: { configurable: true, value: dom.window.navigator },
+    window: { configurable: true, value: dom.window },
+  });
+  try {
+    const module = await import(
+      new globalThis.URL("../packages/web-components/dist/index.js", import.meta.url)
+    );
+    const ctor = module.defineAgentChatElement();
+    if (!ctor) throw new Error("defineAgentChatElement did not register a custom element");
+    const element = dom.window.document.createElement("agent-chat");
+    dom.window.document.body.append(element);
+    await new Promise((resolve) => globalThis.setTimeout(resolve, 20));
+    if (!dom.window.document.body.textContent?.includes("Agent UI transport is not configured.")) {
+      throw new Error("web-components no-transport render smoke did not render fallback status");
+    }
+    element.remove();
+    await new Promise((resolve) => globalThis.setTimeout(resolve, 20));
+  } finally {
+    dom.window.close();
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) {
+        delete globalThis[key];
+      } else {
+        Object.defineProperty(globalThis, key, { configurable: true, value });
+      }
+    }
+  }
 }
 
 function blockedSubpathsForPackage(dir) {
@@ -138,6 +185,7 @@ function assertCanonicalPublicSpecifiers(surfaces) {
   const expected = [
     "@nyosegawa/agent-ui-codex",
     "@nyosegawa/agent-ui-codex/clients",
+    "@nyosegawa/agent-ui-codex/normalizer",
     "@nyosegawa/agent-ui-codex/request-builders",
     "@nyosegawa/agent-ui-codex/session",
     "@nyosegawa/agent-ui-codex/stable-types",

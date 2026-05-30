@@ -78,15 +78,20 @@ closes the socket with `1008`; thrown or rejected admission errors close with
 `1011`, do not spawn the child process, and have diagnostics redacted before
 host stderr callbacks. Use admission for same-origin, session, or explicit
 local-token checks on any bridge that is not a private loopback-only development endpoint. Browser JSON-RPC requests are
-filtered by `browserMethodPolicy`; the default allows only productized UI
-methods such as account/model/thread/turn/skills/hooks/apps calls. Host-only
-methods such as `fs/readFile`, `command/exec`, `mcpServer/tool/call`, and
-configuration writes require an explicit host policy. Rejected methods return a
-JSON-RPC error with `code: -32601` and `data.method`. When an allowed App
-Server request fails, the bridge preserves the App Server error `code` and
+filtered by `browserMethodPolicy`; the default is the full-chat productized UI
+surface, including account/model/thread/turn/skills/hooks/apps calls needed by
+`AgentChat`. This is intentionally broader than the one-shot HTTP default below.
+Host-only methods such as `fs/readFile`, `command/exec`, `mcpServer/tool/call`,
+and configuration writes require an explicit host policy. Rejected methods
+return a JSON-RPC error with `code: -32601` and `data.method`. When an allowed
+App Server request fails, the bridge preserves the App Server error `code` and
 `data` in the browser response instead of collapsing it to a message string.
 Browser request `trace` is forwarded as JSON-RPC-lite top-level `trace` to the
 underlying transport.
+
+The upstream App Server may reject direct browser WebSocket connections by
+`Origin`, but that does not protect an Agent UI same-origin bridge endpoint.
+The bridge is a host endpoint and must enforce its own admission/session policy.
 
 Server-side redaction helpers are public exports from
 `@nyosegawa/agent-ui-server`: `redactSecrets()`, `redactStructuredValue()`, and
@@ -190,7 +195,8 @@ sandbox: "workspace-write"
 
 This is a host boundary, not a UI convenience. Hosts that do not understand the
 risk should disable or override `dynamicToolHandler`, and production hosts
-should provide explicit authorization, logging, and workspace isolation.
+should provide explicit authorization, audit logging, workspace isolation, and
+resource limits before enabling mapped dynamic tools.
 
 Server request auto-resolution is controlled separately by
 `serverRequestPolicy`. The default policy forwards approval-like requests to
@@ -198,8 +204,16 @@ the browser UI so the user can decide. The MCP tool approval shortcut only
 accepts elicitations that carry `_meta.codex_approval_kind ===
 "mcp_tool_call"`; generic MCP elicitations stay visible to the host/UI.
 
-Permission approvals are never blanket-granted. To auto-resolve a permissions
-request, the host must provide a callback:
+Permission approvals are never blanket-granted. Dynamic helper-thread
+permissions default to `dynamicToolHelperPermissions: "manual"`, so the request
+stays visible to the browser/server-request path. Hosts may choose `"deny"`, the
+unsafe explicit opt-in `"grantRequestedForTurn"`, or a callback. Callback grants
+are bounded to the permission families the App Server requested, structured
+filesystem grants must remain within the requested mode/path subset, and grants
+are always turn-scoped in this release.
+
+To auto-resolve normal permissions requests for the active browser session, the
+host must provide a `serverRequestPolicy.permissions` callback:
 
 ```ts
 attachAgentUiWebSocketBridge({
@@ -236,11 +250,12 @@ HTTP RPC helpers. They are useful for calls such as `account/read`,
 `model/list`, or a host-owned administrative request.
 
 One-shot helpers validate the requested method before spawning App Server. By
-default they allow only Agent UI productized methods, matching the WebSocket
-bridge's default browser posture. Host-only methods such as `fs/readFile`,
-`command/exec`, `mcpServer/tool/call`, and configuration writes are rejected
-with a JSON-RPC style `-32601` error. Pass `allowedMethods` to narrow or expand
-the explicit allowlist:
+default they allow only read/list/status-shaped methods: `account/read`,
+`account/rateLimits/read`, `model/list`, `thread/list`, `thread/loaded/list`,
+`thread/read`, `skills/list`, `hooks/list`, and `app/list`. `initialize`, auth
+mutations, thread mutations, turn control, configuration writes, and skill
+writes are rejected with a JSON-RPC style `-32601` error before App Server is
+spawned. Pass `allowedMethods` to narrow or expand the explicit allowlist:
 
 ```ts
 createAgentUiNextRpcRoute({

@@ -64,6 +64,44 @@ describe("createAgentUiNextRpcRoute", () => {
     expect(JSON.stringify(body)).not.toContain("sk-route");
   });
 
+  it("redacts startup failures before returning one-shot responses", async () => {
+    const route = createAgentUiNextRpcRoute({
+      spawn: () => {
+        throw new Error("missing binary token: next-spawn-secret");
+      },
+    });
+    const response = await route(
+      new Request("http://localhost/api/agent-ui", {
+        body: JSON.stringify({ method: "model/list", params: {} }),
+        method: "POST",
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(JSON.stringify(body)).toContain("[REDACTED]");
+    expect(JSON.stringify(body)).not.toContain("next-spawn-secret");
+  });
+
+  it("cleans up partial child state when stdio streams are missing", async () => {
+    const child = createFakeChildProcess();
+    const route = createAgentUiNextRpcRoute({
+      spawn: () => ({ ...child.process, stdin: null }),
+    });
+    const response = await route(
+      new Request("http://localhost/api/agent-ui", {
+        body: JSON.stringify({ method: "model/list", params: {} }),
+        method: "POST",
+      }),
+    );
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { message: "Codex app-server stdio streams were not created" },
+    });
+    expect(child.killed()).toBe(true);
+  });
+
   it("rejects host-only methods before spawning the App Server process", async () => {
     let spawnCount = 0;
     const route = createAgentUiNextRpcRoute({

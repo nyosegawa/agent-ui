@@ -2,10 +2,20 @@ import type { ThreadId } from "./common";
 
 export interface AgentApp {
   accessible?: boolean;
+  branding?: unknown;
+  description?: string;
   enabled?: boolean;
   id: string;
   installUrl?: string;
+  labels?: unknown;
+  logoUrl?: string;
+  logoUrlDark?: string;
+  logos?: unknown;
+  distributionChannel?: string;
+  appMetadata?: unknown;
+  metadata?: unknown;
   name?: string;
+  pluginDisplayNames?: unknown;
   uri?: string;
   raw?: unknown;
 }

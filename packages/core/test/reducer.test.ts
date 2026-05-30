@@ -93,9 +93,12 @@ describe("agentReducer", () => {
     const retainedPatches =
       state.threads["thread-retention"]?.turns["turn-retention"]?.filePatchByItemId ?? {};
     expect(Object.keys(retainedPatches)).toHaveLength(AGENT_RETENTION_POLICY.filePatchesPerTurnMax);
-    expect(retainedPatches["patch-5"]).toEqual({ refreshed: true });
-    expect(retainedPatches["patch-6"]).toBeUndefined();
+    expect(retainedPatches["patch-5"]).toBeUndefined();
+    expect(retainedPatches["patch-6"]).toEqual({ index: 6 });
     expect(retainedPatches["patch-new"]).toEqual({ newest: true });
+    expect(
+      state.threads["thread-retention"]?.turns["turn-retention"]?.itemOrder,
+    ).not.toContain("patch-5");
 
     for (let index = 0; index < AGENT_RETENTION_POLICY.threadRegistrySnapshotsMax + 5; index += 1) {
       state = agentReducer(state, {
@@ -115,7 +118,7 @@ describe("agentReducer", () => {
 
     for (let index = 0; index < AGENT_RETENTION_POLICY.appScopesMax + 5; index += 1) {
       state = agentReducer(state, {
-        apps: [{ id: `app-${index}`, name: `App ${index}`, needsAuth: false }],
+        apps: [{ enabled: true, id: `app-${index}`, name: `App ${index}` }],
         threadId: `thread-apps-${index}`,
         type: "apps/updated",
       });
@@ -170,6 +173,74 @@ describe("agentReducer", () => {
         `/repo/hooks-${AGENT_RETENTION_POLICY.hooksCwdEntriesMax + 4}`
       ]?.[0]?.id,
     ).toBe(`hook-${AGENT_RETENTION_POLICY.hooksCwdEntriesMax + 4}`);
+  });
+
+  it("bounds patch-only transcript indexes with retained patch bodies", () => {
+    let state = createInitialAgentState();
+    state = agentReducer(state, {
+      status: "running",
+      thread: { id: "thread-patch-bound" },
+      type: "thread/started",
+    });
+
+    for (let index = 0; index < AGENT_RETENTION_POLICY.filePatchesPerTurnMax + 8; index += 1) {
+      state = agentReducer(state, {
+        itemId: `patch-only-${index}`,
+        patch: { index },
+        threadId: "thread-patch-bound",
+        turnId: "turn-patch-bound",
+        type: "item/filePatch/updated",
+      });
+    }
+
+    const turn = state.threads["thread-patch-bound"]?.turns["turn-patch-bound"];
+    const retainedPatchIds = Object.keys(turn?.filePatchByItemId ?? {});
+    expect(retainedPatchIds).toHaveLength(AGENT_RETENTION_POLICY.filePatchesPerTurnMax);
+    expect(turn?.itemOrder).toEqual(retainedPatchIds);
+    expect(turn?.itemOrder).not.toContain("patch-only-0");
+  });
+
+  it("keeps authored transcript ids when patch bodies are evicted", () => {
+    let state = createInitialAgentState();
+    state = agentReducer(state, {
+      status: "running",
+      thread: { id: "thread-authored-patch" },
+      type: "thread/started",
+    });
+    state = agentReducer(state, {
+      item: {
+        id: "authored-file",
+        kind: "fileChange",
+        status: "completed",
+        threadId: "thread-authored-patch",
+        turnId: "turn-authored-patch",
+      },
+      threadId: "thread-authored-patch",
+      turnId: "turn-authored-patch",
+      type: "item/completed",
+    });
+    state = agentReducer(state, {
+      itemId: "authored-file",
+      patch: { authored: true },
+      threadId: "thread-authored-patch",
+      turnId: "turn-authored-patch",
+      type: "item/filePatch/updated",
+    });
+
+    for (let index = 0; index < AGENT_RETENTION_POLICY.filePatchesPerTurnMax; index += 1) {
+      state = agentReducer(state, {
+        itemId: `patch-fill-${index}`,
+        patch: { index },
+        threadId: "thread-authored-patch",
+        turnId: "turn-authored-patch",
+        type: "item/filePatch/updated",
+      });
+    }
+
+    const turn = state.threads["thread-authored-patch"]?.turns["turn-authored-patch"];
+    expect(turn?.filePatchByItemId["authored-file"]).toBeUndefined();
+    expect(turn?.itemOrder).toContain("authored-file");
+    expect(turn?.items["authored-file"]).toMatchObject({ kind: "fileChange" });
   });
 
   it("prunes evicted cold, preview, and loaded thread entities while retaining active, live, and pending request threads", () => {
@@ -625,26 +696,26 @@ describe("agentReducer", () => {
     const state = createInitialAgentState();
     state.serverRequestQueue = {
       byId: {
-        "1": {
+        "string:1": {
           id: "1",
           kind: "userInput",
           payload: {},
           threadId: "thread-fifo",
         },
-        "2": {
+        "string:2": {
           id: "2",
           kind: "fileChangeApproval",
           payload: {},
           threadId: "thread-fifo",
         },
-        "10": {
+        "string:10": {
           id: "10",
           kind: "commandApproval",
           payload: {},
           threadId: "thread-fifo",
         },
       },
-      order: ["10", "1", "2"],
+      order: ["string:10", "string:1", "string:2"],
     };
 
     expect(selectPendingApprovals(state, "thread-fifo").map((request) => request.id)).toEqual([
@@ -753,6 +824,181 @@ describe("agentReducer", () => {
     ]);
     expect(twice.serverRequestQueue).toEqual(once.serverRequestQueue);
     expect(twice.threads["thread-approval"]?.status).toBe("running");
+  });
+
+  it("distinguishes numeric and string server request ids while preserving public ids", () => {
+    const state = runEventFixture([
+      { event: { thread: { id: "thread-ids" }, type: "thread/started" } },
+      {
+        event: {
+          request: {
+            id: 0,
+            kind: "commandApproval",
+            payload: {},
+            threadId: "thread-ids",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "0",
+            kind: "fileChangeApproval",
+            payload: {},
+            threadId: "thread-ids",
+          },
+          type: "serverRequest/created",
+        },
+      },
+    ]);
+
+    expect(state.serverRequestQueue.order).toEqual(["number:0", "string:0"]);
+    expect(state.serverRequestQueue.byId["number:0"]?.id).toBe(0);
+    expect(state.serverRequestQueue.byId["string:0"]?.id).toBe("0");
+    expect(selectServerRequestQueue(state, "thread-ids").map((request) => request.id)).toEqual([
+      0,
+      "0",
+    ]);
+
+    const resolvedNumber = agentReducer(state, {
+      requestId: 0,
+      type: "serverRequest/resolved",
+    });
+    expect(resolvedNumber.serverRequestQueue.order).toEqual(["string:0"]);
+    expect(selectServerRequestQueue(resolvedNumber, "thread-ids").map((request) => request.id)).toEqual([
+      "0",
+    ]);
+  });
+
+  it("dequeues host-seeded server request state with public typed request id keys", () => {
+    const state = createInitialAgentState();
+    state.threads["thread-seeded-request"] = {
+      orderedTurnIds: [],
+      status: "waitingForInput",
+      thread: { id: "thread-seeded-request" },
+      turns: {},
+    };
+    state.serverRequestQueue = {
+      byId: {
+        "string:seeded-request": {
+          id: "seeded-request",
+          kind: "commandApproval",
+          payload: {},
+          threadId: "thread-seeded-request",
+        },
+      },
+      order: ["string:seeded-request"],
+    };
+
+    const resolved = agentReducer(state, {
+      requestId: "seeded-request",
+      type: "serverRequest/resolved",
+    });
+
+    expect(resolved.serverRequestQueue).toEqual({ byId: {}, order: [] });
+    expect(resolved.threads["thread-seeded-request"]?.status).toBe("running");
+  });
+
+  it("refreshes same-thread server request replays and ignores cross-thread duplicates", () => {
+    const replayed = runEventFixture([
+      { event: { thread: { id: "thread-a" }, type: "thread/started" } },
+      {
+        event: {
+          request: {
+            id: "request-replay",
+            kind: "commandApproval",
+            payload: { version: 1 },
+            threadId: "thread-a",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "request-replay",
+            kind: "commandApproval",
+            payload: { version: 2 },
+            threadId: "thread-a",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "request-replay",
+            kind: "fileChangeApproval",
+            payload: { version: 3 },
+            threadId: "thread-b",
+          },
+          type: "serverRequest/created",
+        },
+      },
+    ]);
+
+    expect(replayed.serverRequestQueue.order).toEqual(["string:request-replay"]);
+    expect(replayed.serverRequestQueue.byId["string:request-replay"]).toMatchObject({
+      kind: "commandApproval",
+      payload: { version: 2 },
+      threadId: "thread-a",
+    });
+    expect(selectDiagnostics(replayed).warnings[0]).toMatchObject({
+      id: "server-request-duplicate:string:request-replay",
+    });
+  });
+
+  it("treats unknown server request resolution as a no-op", () => {
+    const state = runEventFixture([
+      { event: { thread: { id: "thread-unknown-resolve" }, type: "thread/started" } },
+      {
+        event: {
+          requestId: "missing",
+          type: "serverRequest/resolved",
+        },
+      },
+    ]);
+
+    expect(state.serverRequestQueue).toEqual({ byId: {}, order: [] });
+    expect(state.threads["thread-unknown-resolve"]?.status).toBe("loaded");
+  });
+
+  it("keeps server request resolution cleanup-only for active turns", () => {
+    const state = runEventFixture([
+      { event: { thread: { id: "thread-cleanup" }, type: "thread/started" } },
+      {
+        event: {
+          threadId: "thread-cleanup",
+          turn: { id: "turn-cleanup", status: "running", threadId: "thread-cleanup" },
+          type: "turn/started",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "request-cleanup",
+            kind: "commandApproval",
+            payload: {},
+            threadId: "thread-cleanup",
+            turnId: "turn-cleanup",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          requestId: "request-cleanup",
+          type: "serverRequest/resolved",
+        },
+      },
+    ]);
+
+    expect(state.serverRequestQueue).toEqual({ byId: {}, order: [] });
+    expect(state.threads["thread-cleanup"]?.status).toBe("running");
+    expect(state.threads["thread-cleanup"]?.turns["turn-cleanup"]?.turn.status).toBe(
+      "running",
+    );
   });
 
   it("orders live deltas even when item start arrives late or is omitted", () => {
@@ -1346,7 +1592,7 @@ describe("agentReducer", () => {
       },
       {
         event: {
-          apps: [{ id: "app://browser", name: "Browser", needsAuth: false }],
+          apps: [{ enabled: true, id: "app://browser", name: "Browser" }],
           nextCursor: null,
           type: "apps/updated",
         },
@@ -1465,6 +1711,47 @@ describe("agentReducer", () => {
       apps: [],
       nextCursor: null,
       threadId: "thread-missing",
+    });
+  });
+
+  it("treats core app updates as scoped full replacements", () => {
+    const state = runEventFixture([
+      {
+        event: {
+          apps: [
+            { id: "app://old", name: "Old" },
+            { id: "app://keep-global", name: "Global" },
+          ],
+          nextCursor: "global-next",
+          type: "apps/updated",
+        },
+      },
+      {
+        event: {
+          apps: [{ id: "app://thread-old", name: "Thread old" }],
+          nextCursor: "thread-next",
+          threadId: "thread-apps",
+          type: "apps/updated",
+        },
+      },
+      {
+        event: {
+          apps: [{ id: "app://new", name: "New" }],
+          nextCursor: null,
+          threadId: "thread-apps",
+          type: "apps/updated",
+        },
+      },
+    ]);
+
+    expect(selectApps(state).apps.map((app) => app.id)).toEqual([
+      "app://old",
+      "app://keep-global",
+    ]);
+    expect(selectApps(state, "thread-apps")).toMatchObject({
+      apps: [{ id: "app://new", name: "New" }],
+      nextCursor: null,
+      threadId: "thread-apps",
     });
   });
 

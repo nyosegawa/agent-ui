@@ -102,7 +102,9 @@ Implementation status:
 - `normalizer.ts` is the composition root for App Server notifications and
   server requests. Protocol-family modules under `packages/codex/src/normalizers`
   own account, thread, turn, item, server-request, apps/connectors, status, and
-  model-list normalization.
+  model-list normalization. Browser-facing packages that need normalized events
+  without Node stdio transport types can import the public
+  `@nyosegawa/agent-ui-codex/normalizer` subpath.
 - `thread/turns/items/list` is intentionally disabled in the product facade
   until upstream implements it.
 - Protocol metadata records upstream commit `577ec03bf82fb52e7041fb6b684e694b1e53451a`.
@@ -164,10 +166,14 @@ JSON-RPC-lite lines emitted by the App Server shape, not normalized
 `AgentEvent` fixtures.
 
 The manifest records the generated schema commit, fixture source commit, source
-reference, method list, and purpose for each fixture. When the fixture source
+reference, sorted unique method list, purpose, and stability for each fixture. When the fixture source
 commit differs from `CODEX_PROTOCOL_COMMIT`, the manifest must include a
 `divergenceReason`; normal protocol tests validate the recorded commits and do
 not inspect a local upstream checkout.
+
+Fixture coverage is protocol evidence only. A method appearing in raw fixtures
+does not by itself mean Agent UI productizes that method in React components,
+browser defaults, or server bridge policies.
 
 Deprecated protocol notifications are not mixed into current fixture files.
 Compatibility fixtures use a `deprecated-*.jsonl` name and should keep payloads
@@ -227,6 +233,13 @@ Generated experimental types may exist internally, but they must not appear in d
 `createCodexSession(transport)` defaults to stable methods only. Hosts that
 need experimental methods must opt in with
 `createCodexSession(transport, { experimental: true })`.
+Field-level experimental request fields on otherwise stable methods remain
+host-managed raw protocol usage. Stable helpers such as
+`threadResumeParams()` and `createCodexSession().thread.resume()` intentionally
+accept only the generated stable request shape; fields such as
+`thread/resume.excludeTurns`, `thread/resume.initialTurnsPage`, and
+path/history resume must be sent through `requestRaw()` by a host that also owns
+the corresponding `experimentalApi` negotiation and pagination behavior.
 `thread/turns/list` remains experimental, but `normalizeThreadTurnsListResponse()`
 can normalize its paged response into merge-only snapshot events. Descending
 pages are emitted in chronological turn order, and anchor refetch pages merge
@@ -306,6 +319,15 @@ Stable productized methods:
 by `useAgentSkills().setSkillEnabled()`. It is intentionally distinct from the
 host-only `config/*` write methods below.
 
+`app/list` and `app/list/updated` normalize connector availability with the App
+Server vocabulary: `isEnabled` becomes `AgentApp.enabled`, `isAccessible`
+becomes `AgentApp.accessible`, and descriptive fields such as `installUrl`,
+description, `logoUrl`, `logoUrlDark`, `distributionChannel`, labels, branding,
+`appMetadata`, normalized `logos`, compatibility `metadata`, and plugin display
+names are preserved. Agent UI does not derive installed/auth-needed state from
+`app/list`; plugin-specific install/auth semantics remain host-owned or plugin
+API state.
+
 Host-only or advanced local tooling:
 
 - `thread/shellCommand`
@@ -329,6 +351,7 @@ Host-only or advanced local tooling:
 - `gitDiffToRemote`
 - `getAuthStatus`
 - `modelProvider/capabilities/read`
+- `permissionProfile/list`
 - `config/read`
 - `config/value/write`
 - `config/batchWrite`
@@ -340,6 +363,7 @@ Host-only or advanced local tooling:
 - `marketplace/add`
 - `marketplace/remove`
 - `marketplace/upgrade`
+- `plugin/installed`
 - `plugin/list`
 - `plugin/read`
 - `plugin/skill/read`
@@ -357,6 +381,9 @@ Host-only or advanced local tooling:
 - `mcpServerStatus/list`
 - `mcpServer/resource/read`
 - `mcpServer/tool/call`
+- `thread/goal/clear`
+- `thread/goal/get`
+- `thread/goal/set`
 - `windowsSandbox/readiness`
 - `windowsSandbox/setupStart`
 
@@ -374,18 +401,18 @@ Experimental available methods:
 - `process/kill`
 - `remoteControl/enable`
 - `remoteControl/disable`
+- `remoteControl/status/read`
 - `thread/backgroundTerminals/clean`
 - `thread/increment_elicitation`
 - `thread/decrement_elicitation`
-- `thread/goal/set`
-- `thread/goal/get`
-- `thread/goal/clear`
 - `thread/memoryMode/set`
 - `thread/realtime/start`
 - `thread/realtime/appendAudio`
 - `thread/realtime/appendText`
 - `thread/realtime/listVoices`
 - `thread/realtime/stop`
+- `thread/search`
+- `thread/settings/update`
 - `thread/turns/list`
 
 Experimental test-only methods:
@@ -464,9 +491,10 @@ turn/completed
 thread/resume after a completed turn is persisted
 ```
 
-The direct real smoke script resumes with `{ threadId }`. The browser UI may
-use `thread/resume` with `excludeTurns: true` when it already hydrated stored
-turns through `thread/read`.
+The direct real smoke script resumes with `{ threadId }`. Hosts that need
+experimental resume fields such as `excludeTurns` after hydrating turns through
+`thread/read` must send that request through `requestRaw()` and own the
+experimental pagination behavior.
 
 Real Codex smoke checks exercise the same protocol path. The covered surfaces are:
 
@@ -474,7 +502,8 @@ Real Codex smoke checks exercise the same protocol path. The covered surfaces ar
 - `account/rateLimits/read` returns primary and secondary account usage windows when the authenticated App Server exposes them.
 - `thread/list` returns stored sessions.
 - `thread/read` with `includeTurns: true` returns persisted turn history without resuming.
-- `thread/resume` succeeds from a stored history id with `excludeTurns: true`.
+- `thread/resume` succeeds from a stored history id using the stable `{ threadId }`
+  request shape.
 - `thread/start` can create an ephemeral thread for smoke verification.
 - `turn/start` streams `item/agentMessage/delta` and emits `turn/completed`.
 - App Server has no `queue/message` method. Agent UI's follow-up queue is local

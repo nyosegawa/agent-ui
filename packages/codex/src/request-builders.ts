@@ -125,7 +125,26 @@ export function threadResumeParams(
   threadId: string,
   params: Omit<ThreadResumeParams, "threadId"> = {},
 ): ThreadResumeParams {
-  return { ...params, threadId } satisfies ThreadResumeParams;
+  return {
+    ...(params.model !== undefined ? { model: params.model } : {}),
+    ...(params.modelProvider !== undefined ? { modelProvider: params.modelProvider } : {}),
+    ...(params.serviceTier !== undefined ? { serviceTier: params.serviceTier } : {}),
+    ...(params.cwd !== undefined ? { cwd: params.cwd } : {}),
+    ...(params.approvalPolicy !== undefined ? { approvalPolicy: params.approvalPolicy } : {}),
+    ...(params.approvalsReviewer !== undefined
+      ? { approvalsReviewer: params.approvalsReviewer }
+      : {}),
+    ...(params.sandbox !== undefined ? { sandbox: params.sandbox } : {}),
+    ...(params.config !== undefined ? { config: params.config } : {}),
+    ...(params.baseInstructions !== undefined
+      ? { baseInstructions: params.baseInstructions }
+      : {}),
+    ...(params.developerInstructions !== undefined
+      ? { developerInstructions: params.developerInstructions }
+      : {}),
+    ...(params.personality !== undefined ? { personality: params.personality } : {}),
+    threadId,
+  } satisfies ThreadResumeParams;
 }
 
 export function threadStartParams(options: ThreadStartParams = {}): ThreadStartParams {

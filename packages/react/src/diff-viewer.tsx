@@ -114,12 +114,12 @@ const diffTheme = EditorView.theme(
     "&": {
       backgroundColor: "transparent",
       color: "var(--aui-code-fg)",
-      fontSize: "12px",
+      fontSize: "var(--aui-font-size-sm)",
     },
     ".cm-content": {
-      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+      fontFamily: "var(--aui-font-mono)",
       minHeight: "100%",
-      padding: "10px 0",
+      padding: "var(--aui-space-250) 0",
     },
     ".cm-gutters": {
       backgroundColor: "transparent",
@@ -127,11 +127,11 @@ const diffTheme = EditorView.theme(
       color: "var(--aui-code-gutter-fg)",
     },
     ".cm-line": {
-      padding: "0 10px",
+      padding: "0 var(--aui-space-250)",
     },
     ".cm-scroller": {
-      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-      lineHeight: "1.5",
+      fontFamily: "var(--aui-font-mono)",
+      lineHeight: "var(--aui-line-prose)",
     },
     ".aui-cm-line-add": {
       backgroundColor: "var(--aui-code-add-bg)",
@@ -151,8 +151,8 @@ const diffTheme = EditorView.theme(
       backgroundColor: "transparent",
     },
     "&.cm-focused": {
-      outline: "2px solid var(--aui-primary)",
-      outlineOffset: "-2px",
+      boxShadow: "var(--aui-focus-ring)",
+      outline: "0",
     },
   },
   { dark: true },

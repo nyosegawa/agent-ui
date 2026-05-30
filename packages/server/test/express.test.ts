@@ -59,6 +59,37 @@ describe("createAgentUiExpressMiddleware", () => {
     expect(JSON.stringify(response.body)).not.toContain("express-password");
   });
 
+  it("redacts spawn startup failures before returning middleware responses", async () => {
+    const middleware = createAgentUiExpressMiddleware({
+      spawn: () => {
+        throw new Error("missing binary token: express-spawn-secret");
+      },
+    });
+    const response = createResponse();
+
+    await middleware({ body: { method: "model/list", params: {} } }, response);
+
+    expect(response.statusCode).toBe(500);
+    expect(JSON.stringify(response.body)).toContain("[REDACTED]");
+    expect(JSON.stringify(response.body)).not.toContain("express-spawn-secret");
+  });
+
+  it("returns generic startup failures when stdio streams are missing", async () => {
+    const child = createFakeChildProcess();
+    const middleware = createAgentUiExpressMiddleware({
+      spawn: () => ({ ...child.process, stdout: null }),
+    });
+    const response = createResponse();
+
+    await middleware({ body: { method: "model/list", params: {} } }, response);
+
+    expect(response.statusCode).toBe(500);
+    expect(response.body).toMatchObject({
+      error: { message: "Codex app-server stdio streams were not created" },
+    });
+    expect(child.killed()).toBe(true);
+  });
+
   it("rejects host-only methods before spawning the App Server process", async () => {
     let spawnCount = 0;
     const middleware = createAgentUiExpressMiddleware({
@@ -102,6 +133,34 @@ describe("createAgentUiExpressMiddleware", () => {
       error: { code: -32601, data: { method: "command/exec" } },
     });
     expect(spawnCount).toBe(0);
+  });
+
+  it("rejects mutation and turn-control one-shot methods before spawning by default", async () => {
+    for (const method of [
+      "initialize",
+      "account/logout",
+      "thread/start",
+      "turn/start",
+      "skills/config/write",
+      "config/value/write",
+    ]) {
+      let spawnCount = 0;
+      const middleware = createAgentUiExpressMiddleware({
+        spawn: () => {
+          spawnCount += 1;
+          return createFakeChildProcess().process;
+        },
+      });
+      const response = createResponse();
+
+      await middleware({ body: { method, params: {} } }, response);
+
+      expect(response.statusCode).toBe(403);
+      expect(response.body).toMatchObject({
+        error: { code: -32601, data: { method } },
+      });
+      expect(spawnCount).toBe(0);
+    }
   });
 
   it("rejects missing or invalid methods before spawning", async () => {

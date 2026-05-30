@@ -32,13 +32,18 @@ import {
   AgentSkillsPanel,
   AgentAppsPanel,
   useAgentAccount,
+  useAgentApps,
   useAgentApprovals,
   useAgentServerRequests,
+  useAgentHooks,
   useAgentSkills,
   useAgentContext,
+  useAgentThread,
+  useAgentThreadReader,
   useAgentThreads,
   useAgentTurn,
 } from "../src";
+import { useTranscriptFollowScroll } from "../src/timeline/scroll-follow";
 
 function localImageInput(path: string) {
   return { path, type: "localImage" as const };
@@ -119,6 +124,48 @@ function ActiveThreadHarness(props: React.ComponentProps<typeof AgentChat>) {
       ) : (
         <div>No active thread</div>
       )}
+    </>
+  );
+}
+
+function ResumeThreadHarness({ requestedId }: { requestedId: string }) {
+  const { state } = useAgentContext();
+  const { resumeThread } = useAgentThread();
+  const activeThreadId = state.threadRegistry.activeThreadId;
+  const activeThread = activeThreadId ? state.threads[activeThreadId] : undefined;
+  const pageItemText = activeThread?.turns["turn-page"]?.items["item-page"]?.text;
+
+  return (
+    <>
+      <button type="button" onClick={() => void resumeThread(requestedId)}>
+        Resume requested thread
+      </button>
+      <output aria-label="active thread">{activeThreadId ?? "none"}</output>
+      <output aria-label="thread status">{activeThread?.status ?? "none"}</output>
+      <output aria-label="thread title">{activeThread?.thread.name ?? "none"}</output>
+      <output aria-label="initial page item">{pageItemText ?? "none"}</output>
+    </>
+  );
+}
+
+function ReadThreadHarness({ threadId }: { threadId: string }) {
+  const { state } = useAgentContext();
+  const { readThread } = useAgentThreadReader();
+  const activeThreadId = state.threadRegistry.activeThreadId;
+  const previewThread = state.threads[threadId];
+  const previewItemText = previewThread?.turns["turn-preview"]?.items["item-preview"]?.text;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => void readThread(threadId, { activate: false, includeTurns: true })}
+      >
+        Read preview thread
+      </button>
+      <output aria-label="active thread">{activeThreadId ?? "none"}</output>
+      <output aria-label="preview thread status">{previewThread?.status ?? "none"}</output>
+      <output aria-label="preview thread item">{previewItemText ?? "none"}</output>
     </>
   );
 }
@@ -289,7 +336,7 @@ describe("AgentChat", () => {
     const onChange = vi.fn();
     render(<AgentLocaleSelect value="en" onChange={onChange} />);
 
-    await user.click(screen.getByRole("button", { name: "Language" }));
+    await user.click(screen.getByRole("button", { name: /Language:/ }));
     await user.click(screen.getByRole("menuitemradio", { name: "French" }));
     expect(onChange).toHaveBeenCalledWith("fr");
   });
@@ -676,21 +723,21 @@ describe("AgentChat", () => {
     };
     initialState.serverRequestQueue = {
       byId: {
-        "approval-anchored": {
+        "string:approval-anchored": {
           id: "approval-anchored",
           itemId: "item-command",
           kind: "commandApproval",
           payload: { command: "bun test" },
           threadId: "thread-anchor",
         },
-        "approval-tail": {
+        "string:approval-tail": {
           id: "approval-tail",
           kind: "commandApproval",
           payload: { command: "bun lint", reason: "Tail fallback" },
           threadId: "thread-anchor",
         },
       },
-      order: ["approval-anchored", "approval-tail"],
+      order: ["string:approval-anchored", "string:approval-tail"],
     };
 
     const { container } = render(
@@ -740,14 +787,14 @@ describe("AgentChat", () => {
     };
     initialState.serverRequestQueue = {
       byId: {
-        "approval-item-only": {
+        "string:approval-item-only": {
           id: "approval-item-only",
           itemId: "item-command",
           kind: "commandApproval",
           payload: { command: "bun test" },
           threadId: "thread-item-only",
         },
-        "approval-unmatched": {
+        "string:approval-unmatched": {
           id: "approval-unmatched",
           itemId: "missing-item",
           kind: "commandApproval",
@@ -755,7 +802,7 @@ describe("AgentChat", () => {
           threadId: "thread-item-only",
         },
       },
-      order: ["approval-item-only", "approval-unmatched"],
+      order: ["string:approval-item-only", "string:approval-unmatched"],
     };
 
     const { container } = render(
@@ -779,7 +826,62 @@ describe("AgentChat", () => {
     );
   });
 
-  it("falls back to the tail when an approval source item is outside the initial window", () => {
+  it("anchors turn-only approvals after the turn source context", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-turn-only"] = {
+      orderedTurnIds: ["turn-turn-only"],
+      status: "waitingForInput",
+      thread: { id: "thread-turn-only", name: "Turn-only approvals" },
+      turns: {
+        "turn-turn-only": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-message"],
+          items: {
+            "item-message": {
+              id: "item-message",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Turn source context",
+              threadId: "thread-turn-only",
+              turnId: "turn-turn-only",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-turn-only", threadId: "thread-turn-only" },
+        },
+      },
+    };
+    initialState.serverRequestQueue = {
+      byId: {
+        "string:approval-turn-only": {
+          id: "approval-turn-only",
+          kind: "commandApproval",
+          payload: { command: "bun test" },
+          threadId: "thread-turn-only",
+          turnId: "turn-turn-only",
+        },
+      },
+      order: ["string:approval-turn-only"],
+    };
+
+    const { container } = render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentThreadView
+          renderApproval={(approval) => <span>{String(approval.id)}</span>}
+          threadId="thread-turn-only"
+        />
+      </AgentProvider>,
+    );
+
+    const source = screen.getByText("Turn source context").closest(".aui-message");
+    const anchored = source?.nextElementSibling;
+    expect(anchored).toHaveClass("aui-transcript-approval-anchor");
+    expect(anchored).toHaveTextContent("approval-turn-only");
+    expect(container.querySelector(".aui-transcript-tail")).toBeNull();
+  });
+
+  it("pins an approval source item that is outside the initial window", () => {
     const initialState = createInitialAgentState();
     const itemOrder = Array.from({ length: 52 }, (_, index) => `item-${index}`);
     initialState.threads["thread-windowed-approval"] = {
@@ -814,7 +916,7 @@ describe("AgentChat", () => {
     };
     initialState.serverRequestQueue = {
       byId: {
-        "approval-hidden-source": {
+        "string:approval-hidden-source": {
           id: "approval-hidden-source",
           itemId: "item-0",
           kind: "commandApproval",
@@ -823,7 +925,7 @@ describe("AgentChat", () => {
           turnId: "turn-windowed-approval",
         },
       },
-      order: ["approval-hidden-source"],
+      order: ["string:approval-hidden-source"],
     };
 
     const { container } = render(
@@ -835,12 +937,153 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(screen.queryByText("Message 0")).not.toBeInTheDocument();
+    const source = screen.getByText("Message 0").closest(".aui-message");
     expect(screen.getByText("Message 51")).toBeInTheDocument();
-    expect(container.querySelector(".aui-transcript-tail")).toHaveTextContent(
-      "approval-hidden-source",
+    const anchored = source?.nextElementSibling;
+    expect(anchored).toHaveClass("aui-transcript-approval-anchor");
+    expect(anchored).toHaveTextContent("approval-hidden-source");
+    expect(container.querySelector(".aui-transcript-tail")).toBeNull();
+  });
+
+  it("offers a distinct jump affordance when a pinned approval is outside the viewport", async () => {
+    const originalRect = HTMLElement.prototype.getBoundingClientRect;
+    const scrollIntoView = vi.fn();
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function () {
+      if (this.classList.contains("aui-message-list")) {
+        return { bottom: 320, height: 320, left: 0, right: 480, top: 0, width: 480, x: 0, y: 0 } as DOMRect;
+      }
+      if (this.classList.contains("aui-transcript-approval-anchor")) {
+        return { bottom: -520, height: 140, left: 0, right: 480, top: -660, width: 480, x: 0, y: -660 } as DOMRect;
+      }
+      return originalRect.call(this);
+    });
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    const initialState = createInitialAgentState();
+    const itemOrder = Array.from({ length: 54 }, (_, index) => `item-${index}`);
+    initialState.threads["thread-hidden-approval-jump"] = {
+      orderedTurnIds: ["turn-hidden-approval-jump"],
+      status: "waitingForInput",
+      thread: { id: "thread-hidden-approval-jump", name: "Hidden approval jump" },
+      turns: {
+        "turn-hidden-approval-jump": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder,
+          items: Object.fromEntries(
+            itemOrder.map((itemId, index) => [
+              itemId,
+              {
+                id: itemId,
+                kind: "agentMessage",
+                status: "completed",
+                text: `Message ${index}`,
+                threadId: "thread-hidden-approval-jump",
+                turnId: "turn-hidden-approval-jump",
+              },
+            ]),
+          ),
+          streamingTextByItemId: {},
+          turn: {
+            id: "turn-hidden-approval-jump",
+            threadId: "thread-hidden-approval-jump",
+          },
+        },
+      },
+    };
+    initialState.serverRequestQueue = {
+      byId: {
+        "string:approval-hidden-jump": {
+          id: "approval-hidden-jump",
+          itemId: "item-0",
+          kind: "commandApproval",
+          payload: { command: "bun run test:e2e:fixtures" },
+          threadId: "thread-hidden-approval-jump",
+          turnId: "turn-hidden-approval-jump",
+        },
+      },
+      order: ["string:approval-hidden-jump"],
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentThreadView threadId="thread-hidden-approval-jump" />
+      </AgentProvider>,
     );
-    expect(container.querySelector(".aui-transcript-approval-anchor")).toBeNull();
+
+    await act(async () => {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    });
+    const jump = await screen.findByRole("button", { name: "Jump to pending approval" });
+    expect(jump).toHaveClass("aui-jump-approval");
+
+    fireEvent.click(jump);
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "center", behavior: "smooth" });
+  });
+
+  it("resets follow-scroll affordances when the thread changes", async () => {
+    function FollowScrollProbe({
+      scrollKey,
+      threadId,
+    }: {
+      scrollKey: number;
+      threadId: string;
+    }) {
+      const { handleScroll, listRef, showJumpLatest } = useTranscriptFollowScroll({
+        scrollKey,
+        threadId,
+        turnCount: 1,
+      });
+      return (
+        <>
+          <ol
+            ref={(node) => {
+              listRef.current = node;
+              if (!node) return;
+              let scrollTop = 0;
+              Object.defineProperties(node, {
+                clientHeight: { configurable: true, get: () => 100 },
+                scrollHeight: { configurable: true, get: () => 1_000 },
+                scrollTop: {
+                  configurable: true,
+                  get: () => scrollTop,
+                  set: (value: number) => {
+                    scrollTop = value;
+                  },
+                },
+              });
+            }}
+          />
+          <button
+            onClick={() => {
+              if (listRef.current) listRef.current.scrollTop = 0;
+              handleScroll();
+            }}
+            type="button"
+          >
+            Mark scrolled
+          </button>
+          {showJumpLatest ? <span>Jump visible</span> : null}
+        </>
+      );
+    }
+
+    const { rerender } = render(<FollowScrollProbe scrollKey={0} threadId="thread-a" />);
+
+    await act(async () => {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Mark scrolled" }));
+    rerender(<FollowScrollProbe scrollKey={1} threadId="thread-a" />);
+    expect(await screen.findByText("Jump visible")).toBeInTheDocument();
+
+    rerender(<FollowScrollProbe scrollKey={2} threadId="thread-b" />);
+
+    await waitFor(() => expect(screen.queryByText("Jump visible")).not.toBeInTheDocument());
   });
 
   it("removes resolved inline approvals and resumes the waiting thread", async () => {
@@ -877,7 +1120,7 @@ describe("AgentChat", () => {
     };
     initialState.serverRequestQueue = {
       byId: {
-        "approval-command": {
+        "string:approval-command": {
           id: "approval-command",
           itemId: "item-command",
           kind: "commandApproval",
@@ -886,7 +1129,7 @@ describe("AgentChat", () => {
           turnId: "turn-approval-resolution",
         },
       },
-      order: ["approval-command"],
+      order: ["string:approval-command"],
     };
     const transport = new FakeAgentTransport();
 
@@ -911,12 +1154,12 @@ describe("AgentChat", () => {
     const anchored = approvalButton.closest(".aui-transcript-approval-anchor");
     expect(command?.nextElementSibling).toBe(anchored);
     expect(screen.getByLabelText("approval state")).toHaveTextContent(
-      "waitingForInput:approval-command",
+      "waitingForInput:string:approval-command",
     );
 
     await user.click(approvalButton);
     await waitFor(() =>
-      expect(transport.responses.get("approval-command")).toEqual({ decision: "accept" }),
+      expect(transport.responses.get("string:approval-command")).toEqual({ decision: "accept" }),
     );
 
     act(() => {
@@ -1402,6 +1645,53 @@ describe("AgentChat", () => {
     expect(await screen.findByRole("button", { name: "Disable" })).toBeInTheDocument();
   });
 
+  it("normalizes upstream hook keys as stable hook ids", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "hooks/list") {
+          return {
+            data: [
+              {
+                cwd: "/repo",
+                hooks: [
+                  { enabled: true, key: "session-start:lint", name: "SessionStart" },
+                  { enabled: false, name: "Missing key" },
+                  { enabled: true },
+                ],
+              },
+            ],
+          };
+        }
+        return {};
+      },
+    });
+    function Probe() {
+      const { hooks, refreshHooks } = useAgentHooks("/repo");
+      return (
+        <>
+          <button onClick={() => void refreshHooks()} type="button">
+            Refresh hooks
+          </button>
+          <output aria-label="hook ids">{hooks.map((hook) => hook.id).join(",")}</output>
+        </>
+      );
+    }
+
+    render(
+      <AgentProvider transport={transport}>
+        <Probe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Refresh hooks" }));
+
+    expect(await screen.findByLabelText("hook ids")).toHaveTextContent(
+      "session-start:lint,Missing key",
+    );
+    expect(screen.getByLabelText("hook ids")).not.toHaveTextContent("undefined");
+  });
+
   it("paginates app/list and surfaces upstream enabled/accessibility state", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
@@ -1426,10 +1716,12 @@ describe("AgentChat", () => {
         return {
           data: [
             {
+              description: "Open browser",
               id: "browser",
               installUrl: "app://browser",
               isAccessible: false,
               isEnabled: false,
+              metadata: { category: "automation" },
               name: "Browser",
             },
           ],
@@ -1437,9 +1729,14 @@ describe("AgentChat", () => {
         };
       },
     });
+    function AppsProbe() {
+      const { apps } = useAgentApps("thread-apps");
+      return <output aria-label="app metadata">{JSON.stringify(apps[0] ?? {})}</output>;
+    }
     render(
       <AgentProvider transport={transport}>
         <AgentAppsPanel threadId="thread-apps" />
+        <AppsProbe />
       </AgentProvider>,
     );
 
@@ -1449,6 +1746,10 @@ describe("AgentChat", () => {
     expect(screen.getByText("unavailable")).toBeInTheDocument();
     expect(screen.queryByText("not installed")).not.toBeInTheDocument();
     expect(screen.queryByText("auth needed")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("app metadata")).toHaveTextContent("Open browser");
+    expect(screen.getByLabelText("app metadata")).toHaveTextContent("automation");
+    expect(screen.getByLabelText("app metadata")).not.toHaveTextContent("needsAuth");
+    expect(screen.getByLabelText("app metadata")).not.toHaveTextContent("installed");
     await user.click(screen.getByRole("button", { name: "Load more" }));
 
     expect(await screen.findByText("Drive")).toBeInTheDocument();
@@ -1530,14 +1831,14 @@ describe("AgentChat", () => {
     const initialState = createInitialAgentState();
     initialState.serverRequestQueue = {
       byId: {
-        "request-input": {
+        "string:request-input": {
           id: "request-input",
           kind: "userInput",
           payload: {},
           threadId: "thread-1",
         },
       },
-      order: ["request-input"],
+      order: ["string:request-input"],
     };
     const transport = new FakeAgentTransport();
     function Probe() {
@@ -1585,10 +1886,10 @@ describe("AgentChat", () => {
     await user.click(screen.getByRole("button", { name: "Respond" }));
     await user.click(screen.getByRole("button", { name: "Reject" }));
 
-    expect(transport.responses.get("request-input")).toEqual({
+    expect(transport.responses.get("string:request-input")).toEqual({
       value: "provided by host",
     });
-    expect(transport.rejections.get("request-input")).toEqual({
+    expect(transport.rejections.get("string:request-input")).toEqual({
       code: -32001,
       message: "Host rejected",
     });
@@ -1598,61 +1899,61 @@ describe("AgentChat", () => {
     const initialState = createInitialAgentState();
     initialState.serverRequestQueue = {
       byId: {
-        "request-command": {
+        "string:request-command": {
           id: "request-command",
           kind: "commandApproval",
           payload: {},
           threadId: "thread-1",
         },
-        "request-file": {
+        "string:request-file": {
           id: "request-file",
           kind: "fileChangeApproval",
           payload: {},
           threadId: "thread-1",
         },
-        "request-legacy-exec": {
+        "string:request-legacy-exec": {
           id: "request-legacy-exec",
           kind: "legacyExecApproval",
           payload: {},
           threadId: "thread-1",
         },
-        "request-legacy-patch": {
+        "string:request-legacy-patch": {
           id: "request-legacy-patch",
           kind: "legacyPatchApproval",
           payload: {},
           threadId: "thread-1",
         },
-        "request-permissions": {
+        "string:request-permissions": {
           id: "request-permissions",
           kind: "permissionsApproval",
           payload: {},
           threadId: "thread-1",
         },
-        "request-mcp": {
+        "string:request-mcp": {
           id: "request-mcp",
           kind: "mcpElicitation",
           payload: {},
           threadId: "thread-1",
         },
-        "request-input": {
+        "string:request-input": {
           id: "request-input",
           kind: "userInput",
           payload: {},
           threadId: "thread-1",
         },
-        "request-dynamic": {
+        "string:request-dynamic": {
           id: "request-dynamic",
           kind: "dynamicTool",
           payload: {},
           threadId: "thread-1",
         },
-        "request-auth": {
+        "string:request-auth": {
           id: "request-auth",
           kind: "authRefresh",
           payload: {},
           threadId: "thread-1",
         },
-        "request-attestation": {
+        "string:request-attestation": {
           id: "request-attestation",
           kind: "attestation",
           payload: {},
@@ -1660,16 +1961,16 @@ describe("AgentChat", () => {
         },
       },
       order: [
-        "request-permissions",
-        "request-command",
-        "request-mcp",
-        "request-file",
-        "request-input",
-        "request-legacy-exec",
-        "request-dynamic",
-        "request-legacy-patch",
-        "request-auth",
-        "request-attestation",
+        "string:request-permissions",
+        "string:request-command",
+        "string:request-mcp",
+        "string:request-file",
+        "string:request-input",
+        "string:request-legacy-exec",
+        "string:request-dynamic",
+        "string:request-legacy-patch",
+        "string:request-auth",
+        "string:request-attestation",
       ],
     };
     function Probe() {
@@ -2081,7 +2382,7 @@ describe("AgentChat", () => {
     expect(within(dialog).getByLabelText("Usage limits")).toHaveTextContent("10%");
     await user.keyboard("{Escape}");
     // The starter composer exposes loaded models through the model/effort menu.
-    await user.click(await screen.findByRole("button", { name: "Model and effort" }));
+    await user.click(await screen.findByRole("button", { name: /Model and effort:/ }));
     expect(
       await screen.findByRole("menuitemradio", { name: /Real Model/ }),
     ).toBeInTheDocument();
@@ -2633,6 +2934,27 @@ describe("AgentChat", () => {
         transport.requests.find((request) => request.method === "turn/interrupt")?.params,
       ).toEqual({ threadId: "thread-running", turnId: "turn-running" }),
     );
+  });
+
+  it("keeps running empty Enter local and does not interrupt the turn", async () => {
+    const user = userEvent.setup();
+    const initialState = runningComposerState();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    screen.getByRole("textbox", { name: "Message" }).focus();
+    await user.keyboard("{Enter}");
+
+    expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/interrupt",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain("turn/start");
+    expect(transport.requests.map((request) => request.method)).not.toContain("turn/steer");
   });
 
   it("queues running Enter submits locally instead of starting or steering", async () => {
@@ -3751,7 +4073,7 @@ describe("AgentChat", () => {
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(screen.getAllByLabelText("CodeMirror patch viewer").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: "Execution mode" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Execution mode:/ })).toBeInTheDocument();
     expect(screen.getByLabelText("Usage limits")).toHaveTextContent(
       "fixture-demo-model 5h",
     );
@@ -3767,7 +4089,7 @@ describe("AgentChat", () => {
       screen.getByRole("button", { name: "Approve file-change request approval-file" }),
     );
 
-    expect(transport.responses.get("approval-file")).toEqual({ decision: "accept" });
+    expect(transport.responses.get("string:approval-file")).toEqual({ decision: "accept" });
     expect(await axe(container)).toHaveNoViolations();
   });
 
@@ -3818,7 +4140,7 @@ describe("AgentChat", () => {
       }),
     );
 
-    expect(transport.responses.get("approval-command")).toEqual({ decision: "decline" });
+    expect(transport.responses.get("string:approval-command")).toEqual({ decision: "decline" });
     expect(
       screen.getByRole("button", {
         name: "Decline command request approval-command",
@@ -3937,10 +4259,10 @@ describe("AgentChat", () => {
       }),
     );
 
-    expect(transport.responses.get("approval-command")).toEqual({
+    expect(transport.responses.get("string:approval-command")).toEqual({
       decision: "acceptForSession",
     });
-    expect(transport.responses.get("approval-file")).toEqual({
+    expect(transport.responses.get("string:approval-file")).toEqual({
       decision: "acceptForSession",
     });
   });
@@ -4093,16 +4415,16 @@ describe("AgentChat", () => {
     );
 
     // Execution mode is a compact menu in the composer toolbar.
-    await user.click(await screen.findByRole("button", { name: "Execution mode" }));
+    await user.click(await screen.findByRole("button", { name: /Execution mode:/ }));
     await user.click(screen.getByRole("menuitemradio", { name: /Read-only/ }));
 
     // Model and effort share a second compact menu; selecting the model first
     // is what unlocks its effort options.
-    await user.click(screen.getByRole("button", { name: "Model and effort" }));
+    await user.click(screen.getByRole("button", { name: /Model and effort:/ }));
     await user.click(
       screen.getByRole("menuitemradio", { name: /fixture-demo-coding-model/ }),
     );
-    await user.click(screen.getByRole("button", { name: "Model and effort" }));
+    await user.click(screen.getByRole("button", { name: /Model and effort:/ }));
     await user.click(screen.getByRole("menuitemradio", { name: "High" }));
 
     await user.type(screen.getByLabelText("Message"), "inspect only");
@@ -4270,7 +4592,7 @@ describe("AgentChat", () => {
         true,
       ),
     );
-    await user.click(screen.getByRole("button", { name: "Model and effort" }));
+    await user.click(screen.getByRole("button", { name: /Model and effort:/ }));
     await user.click(await screen.findByRole("menuitemradio", { name: /Real Model/ }));
     await user.click(screen.getByRole("button", { name: "Open folder" }));
     expect(
@@ -4472,6 +4794,111 @@ describe("AgentChat", () => {
     );
   });
 
+  it("keeps resumed App Server status, canonical id, and initial turns page", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/resume") {
+          return {
+            initialTurnsPage: {
+              data: [
+                {
+                  id: "turn-page",
+                  items: [
+                    {
+                      id: "item-page",
+                      text: "initial resume page item",
+                      type: "agentMessage",
+                    },
+                  ],
+                  itemsView: "summary",
+                  status: "completed",
+                },
+              ],
+              nextCursor: null,
+            },
+            thread: {
+              id: "thread-canonical",
+              name: "Canonical resumed thread",
+              status: { type: "active" },
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <ResumeThreadHarness requestedId="requested-thread-path" />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Resume requested thread" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("active thread")).toHaveTextContent("thread-canonical"),
+    );
+    expect(screen.getByLabelText("thread status")).toHaveTextContent("running");
+    expect(screen.getByLabelText("thread title")).toHaveTextContent("Canonical resumed thread");
+    expect(screen.getByLabelText("initial page item")).toHaveTextContent(
+      "initial resume page item",
+    );
+    expect(
+      transport.requests.find((request) => request.method === "thread/resume")?.params,
+    ).toEqual({ threadId: "requested-thread-path" });
+  });
+
+  it("reads thread previews without replacing the active thread", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-preview",
+              name: "Preview thread",
+              status: { type: "idle" },
+              turns: [
+                {
+                  id: "turn-preview",
+                  items: [
+                    {
+                      id: "item-preview",
+                      text: "preview state updated",
+                      type: "agentMessage",
+                    },
+                  ],
+                  status: "completed",
+                },
+              ],
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={transport}>
+        <ReadThreadHarness threadId="thread-preview" />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("active thread")).toHaveTextContent("thread-running");
+
+    await user.click(await screen.findByRole("button", { name: "Read preview thread" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("preview thread item")).toHaveTextContent(
+        "preview state updated",
+      ),
+    );
+    expect(screen.getByLabelText("preview thread status")).toHaveTextContent("loaded");
+    expect(screen.getByLabelText("active thread")).toHaveTextContent("thread-running");
+    expect(
+      transport.requests.find((request) => request.method === "thread/read")?.params,
+    ).toEqual({ threadId: "thread-preview", includeTurns: true });
+  });
+
   it("collapses and expands the history sidebar", async () => {
     const user = userEvent.setup();
     render(
@@ -4545,11 +4972,11 @@ describe("AgentChat", () => {
     // The starter model/effort menu exposes the model, but reports no
     // selectable effort when the metadata declares no supported efforts
     // instead of fabricating options like "xhigh".
-    await user.click(await screen.findByRole("button", { name: "Model and effort" }));
+    await user.click(await screen.findByRole("button", { name: /Model and effort:/ }));
     await user.click(
       await screen.findByRole("menuitemradio", { name: /Metadata-light model/ }),
     );
-    await user.click(screen.getByRole("button", { name: "Model and effort" }));
+    await user.click(screen.getByRole("button", { name: /Model and effort:/ }));
     expect(
       await screen.findByText("This model exposes no selectable effort."),
     ).toBeInTheDocument();
@@ -5576,20 +6003,20 @@ describe("AgentChat", () => {
     };
     state.serverRequestQueue = {
       byId: {
-        "2": {
+        "string:2": {
           id: "2",
           kind: "fileChangeApproval",
           payload: { path: "src/x.ts" },
           threadId: "thread-approvals",
         },
-        "10": {
+        "string:10": {
           id: "10",
           kind: "commandApproval",
           payload: { command: "bun test" },
           threadId: "thread-approvals",
         },
       },
-      order: ["10", "2"],
+      order: ["string:10", "string:2"],
     };
     render(
       <AgentProvider initialState={state} transport={new FakeAgentTransport()}>

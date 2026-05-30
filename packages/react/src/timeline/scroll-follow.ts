@@ -11,6 +11,7 @@ export function useTranscriptFollowScroll({
 }) {
   const listRef = useRef<HTMLOListElement | null>(null);
   const followModeRef = useRef(true);
+  const previousThreadIdRef = useRef(threadId);
   const rafRef = useRef<number | undefined>(undefined);
   const [showJumpLatest, setShowJumpLatest] = useState(false);
 
@@ -49,6 +50,13 @@ export function useTranscriptFollowScroll({
       setShowJumpLatest(false);
     });
   }, [scrollToLatest]);
+
+  useEffect(() => {
+    if (previousThreadIdRef.current === threadId) return;
+    previousThreadIdRef.current = threadId;
+    followModeRef.current = true;
+    setShowJumpLatest(false);
+  }, [threadId]);
 
   useEffect(() => {
     scheduleFollowScroll("auto");

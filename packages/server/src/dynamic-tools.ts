@@ -42,6 +42,42 @@ export interface McpDynamicToolHandlerOptions {
   tools: readonly McpDynamicToolMapping[];
 }
 
+export type DynamicToolHelperPermissionPolicy =
+  | "manual"
+  | "deny"
+  | "grantRequestedForTurn"
+  | ((context: DynamicToolHelperPermissionContext) => DynamicToolHelperPermissionDecision);
+
+export interface DynamicToolHelperPermissionContext {
+  cwd?: string;
+  payload: unknown;
+  requestId: NonNullable<AgentTransportEvent["requestId"]>;
+  requested: {
+    fileSystem?: unknown;
+    network?: unknown;
+  };
+  threadId?: string;
+  turnId?: string;
+}
+
+export type DynamicToolHelperPermissionDecision =
+  | {
+      action: "grant";
+      permissions: {
+        fileSystem?: unknown;
+        network?: unknown;
+      };
+    }
+  | { action: "deny" }
+  | { action: "manual" }
+  | null
+  | undefined;
+
+type DynamicToolHelperGrantedPermissions = {
+  fileSystem?: unknown;
+  network?: unknown;
+};
+
 interface McpServerToolCallResponse {
   content?: unknown[];
   structuredContent?: unknown;
@@ -126,6 +162,7 @@ export async function maybeResolveHelperThreadRequest(
   event: AgentTransportEvent,
   transport: ReturnType<typeof createCodexAppServerBridge>["transport"],
   helperThreadId: Promise<string> | undefined,
+  permissionPolicy: DynamicToolHelperPermissionPolicy = "manual",
 ): Promise<boolean> {
   if (event.type !== "request" || event.requestId === undefined || !event.request || !helperThreadId) {
     return false;
@@ -145,12 +182,16 @@ export async function maybeResolveHelperThreadRequest(
   }
 
   if (event.request.kind === "permissionsApproval" && isRecord(event.request.payload)) {
-    const permissions = event.request.payload.permissions;
-    await transport.respond(event.requestId, {
-      permissions: isRecord(permissions) ? grantedPermissionsFromRequest(permissions) : {},
-      scope: "turn",
-    });
-    return true;
+    return resolveHelperPermissionRequest(
+      {
+        ...event,
+        request: event.request,
+        requestId: event.requestId,
+      },
+      transport,
+      event.request.payload,
+      permissionPolicy,
+    );
   }
 
   return false;
@@ -254,7 +295,54 @@ function isMcpToolApprovalElicitation(payload: unknown): boolean {
   return meta?.codex_approval_kind === "mcp_tool_call";
 }
 
-function grantedPermissionsFromRequest(permissions: Record<string, unknown>): Record<string, unknown> {
+async function resolveHelperPermissionRequest(
+  event: AgentTransportEvent & {
+    request: PendingServerRequest;
+    requestId: NonNullable<AgentTransportEvent["requestId"]>;
+  },
+  transport: ReturnType<typeof createCodexAppServerBridge>["transport"],
+  payload: Record<string, unknown>,
+  policy: DynamicToolHelperPermissionPolicy,
+): Promise<boolean> {
+  if (policy === "manual") return false;
+  if (policy === "deny") {
+    await transport.reject(event.requestId, {
+      code: -32001,
+      message: "Dynamic tool helper permissions denied by host policy",
+    });
+    return true;
+  }
+  const requested = requestedPermissionsFromPayload(payload);
+  const decision =
+    policy === "grantRequestedForTurn"
+      ? { action: "grant" as const, permissions: requested }
+      : policy({
+          cwd: stringValue(payload.cwd),
+          payload,
+          requestId: event.requestId,
+          requested,
+          threadId: stringValue(payload.threadId),
+          turnId: stringValue(payload.turnId),
+        });
+  if (!decision || decision.action === "manual") return false;
+  if (decision.action === "deny") {
+    await transport.reject(event.requestId, {
+      code: -32001,
+      message: "Dynamic tool helper permissions denied by host policy",
+    });
+    return true;
+  }
+  await transport.respond(event.requestId, {
+    permissions: boundedGrantedPermissions(decision.permissions, requested),
+    scope: "turn",
+  });
+  return true;
+}
+
+function requestedPermissionsFromPayload(
+  payload: Record<string, unknown>,
+): DynamicToolHelperPermissionContext["requested"] {
+  const permissions = isRecord(payload.permissions) ? payload.permissions : {};
   return {
     ...(permissions.fileSystem !== undefined && permissions.fileSystem !== null
       ? { fileSystem: permissions.fileSystem }
@@ -263,6 +351,59 @@ function grantedPermissionsFromRequest(permissions: Record<string, unknown>): Re
       ? { network: permissions.network }
       : {}),
   };
+}
+
+function boundedGrantedPermissions(
+  permissions: DynamicToolHelperGrantedPermissions,
+  requested: DynamicToolHelperPermissionContext["requested"],
+): Record<string, unknown> {
+  const fileSystem = boundedFileSystemPermission(
+    permissions.fileSystem,
+    requested.fileSystem,
+  );
+  const network = boundedGenericPermission(permissions.network, requested.network);
+  return {
+    ...(fileSystem !== undefined ? { fileSystem } : {}),
+    ...(network !== undefined ? { network } : {}),
+  };
+}
+
+function boundedFileSystemPermission(
+  granted: unknown,
+  requested: unknown,
+): unknown {
+  if (granted === undefined || granted === null || requested === undefined) return undefined;
+  if (typeof requested === "string") {
+    if (granted === requested) return granted;
+    if (isRecord(granted) && granted.mode === requested) return granted;
+    return undefined;
+  }
+  if (!isRecord(requested)) return boundedGenericPermission(granted, requested);
+  if (!isRecord(granted)) return undefined;
+  if (
+    typeof requested.mode === "string" &&
+    typeof granted.mode === "string" &&
+    granted.mode !== requested.mode
+  ) {
+    return undefined;
+  }
+  if (Array.isArray(requested.paths)) {
+    if (!Array.isArray(granted.paths)) return undefined;
+    const requestedPaths = new Set(requested.paths.filter((path) => typeof path === "string"));
+    if (!granted.paths.every((path) => typeof path === "string" && requestedPaths.has(path))) {
+      return undefined;
+    }
+  }
+  return granted;
+}
+
+function boundedGenericPermission(granted: unknown, requested: unknown): unknown {
+  if (granted === undefined || granted === null || requested === undefined) return undefined;
+  return JSON.stringify(granted) === JSON.stringify(requested) ? granted : undefined;
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

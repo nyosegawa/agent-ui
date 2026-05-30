@@ -1,5 +1,11 @@
-import type { AgentItemState, ThreadState, TurnState } from "@nyosegawa/agent-ui-core";
+import type {
+  AgentItemState,
+  PendingServerRequest,
+  ThreadState,
+  TurnState,
+} from "@nyosegawa/agent-ui-core";
 import type React from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useAgentI18n } from "./i18n";
 import { transcriptItemIds } from "./transcript-window";
 import {
@@ -58,11 +64,50 @@ export function AgentMessageList({
     threadId: thread.thread.id,
     turnCount: thread.orderedTurnIds.length,
   });
+  const [showJumpApproval, setShowJumpApproval] = useState(false);
+  const pinnedItemIdsByTurnId = pinnedApprovalItemIdsByTurnId(
+    thread,
+    approvalAnchors?.requests,
+  );
+  const anchoredApprovalKey = useMemo(
+    () => approvalAnchors?.requests.map((request) => String(request.id)).join("|") ?? "",
+    [approvalAnchors?.requests],
+  );
+  const updateJumpApproval = useCallback(() => {
+    const list = listRef.current;
+    const anchor = list?.querySelector<HTMLElement>(".aui-transcript-approval-anchor");
+    if (!list || !anchor) {
+      setShowJumpApproval(false);
+      return;
+    }
+    setShowJumpApproval(!isElementFullyVisibleInScrollContainer(list, anchor));
+  }, [listRef]);
+  const jumpToPendingApproval = useCallback(() => {
+    const anchor = listRef.current?.querySelector<HTMLElement>(
+      ".aui-transcript-approval-anchor",
+    );
+    anchor?.scrollIntoView({ block: "center", behavior: "smooth" });
+    setShowJumpApproval(false);
+  }, [listRef]);
+  const handleTranscriptScroll = useCallback(() => {
+    handleScroll();
+    updateJumpApproval();
+  }, [handleScroll, updateJumpApproval]);
+  useEffect(() => {
+    const timer = globalThis.setTimeout(() => {
+      if (!anchoredApprovalKey) {
+        setShowJumpApproval(false);
+        return;
+      }
+      updateJumpApproval();
+    }, 0);
+    return () => globalThis.clearTimeout(timer);
+  }, [anchoredApprovalKey, updateJumpApproval]);
   const { hiddenItemCount, showEarlierItems, visibleTurnItems } =
-    useTranscriptWindowing(thread);
+    useTranscriptWindowing(thread, pinnedItemIdsByTurnId);
   return (
     <div className="aui-message-list-wrap">
-      <ol className="aui-message-list" onScroll={handleScroll} ref={listRef}>
+      <ol className="aui-message-list" onScroll={handleTranscriptScroll} ref={listRef}>
         {hiddenItemCount > 0 ? (
           <li className="aui-transcript-pagination">
             <button
@@ -106,8 +151,63 @@ export function AgentMessageList({
           {t("timeline.jumpToLatest")}
         </button>
       ) : null}
+      {showJumpApproval ? (
+        <button
+          className="aui-btn aui-btn-secondary aui-btn-sm aui-jump-approval"
+          onClick={jumpToPendingApproval}
+          type="button"
+        >
+          {t("timeline.jumpToPendingApproval")}
+        </button>
+      ) : null}
     </div>
   );
+}
+
+function isElementFullyVisibleInScrollContainer(
+  container: HTMLElement,
+  element: HTMLElement,
+): boolean {
+  const containerRect = container.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+  return elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
+}
+
+function pinnedApprovalItemIdsByTurnId(
+  thread: ThreadState,
+  approvals?: PendingServerRequest[],
+): Map<string, string[]> | undefined {
+  if (!approvals?.length) return undefined;
+  const pinned = new Map<string, string[]>();
+  for (const approval of approvals) {
+    const source = pinnedApprovalSource(thread, approval);
+    if (!source?.itemId) continue;
+    const itemIds = pinned.get(source.turnId) ?? [];
+    if (!itemIds.includes(source.itemId)) itemIds.push(source.itemId);
+    pinned.set(source.turnId, itemIds);
+  }
+  return pinned.size > 0 ? pinned : undefined;
+}
+
+function pinnedApprovalSource(
+  thread: ThreadState,
+  approval: PendingServerRequest,
+): { itemId?: string; turnId: string } | undefined {
+  if (!approval.itemId && !approval.turnId) return undefined;
+  const turns = approval.turnId
+    ? [thread.turns[approval.turnId]].filter((turn) => turn != null)
+    : thread.orderedTurnIds.map((turnId) => thread.turns[turnId]).filter((turn) => turn != null);
+  if (turns.length === 0) return undefined;
+  if (approval.itemId) {
+    const turn = turns.find((candidate) =>
+      transcriptItemIds(candidate).includes(approval.itemId!),
+    );
+    return turn ? { itemId: approval.itemId, turnId: turn.turn.id } : undefined;
+  }
+  const turn = turns[0];
+  if (!turn) return undefined;
+  const itemIds = transcriptItemIds(turn);
+  return { itemId: itemIds.at(-1), turnId: turn.turn.id };
 }
 
 export const AgentTranscript = AgentMessageList;

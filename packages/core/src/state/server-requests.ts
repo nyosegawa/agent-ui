@@ -1,4 +1,5 @@
 import type { ItemId, RequestId, ThreadId, TurnId } from "./common";
+import type { RequestIdKey } from "../request-id-key";
 
 export type PendingServerRequestKind =
   | "attestation"
@@ -23,6 +24,6 @@ export interface PendingServerRequest {
 }
 
 export interface ServerRequestQueueState {
-  byId: Record<string, PendingServerRequest>;
-  order: string[];
+  byId: Record<RequestIdKey, PendingServerRequest>;
+  order: RequestIdKey[];
 }

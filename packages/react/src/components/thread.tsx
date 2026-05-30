@@ -1,4 +1,5 @@
 import type React from "react";
+import { useMemo } from "react";
 import type {
   AgentItemState,
   PendingServerRequest,
@@ -11,8 +12,7 @@ import { IconMoreVertical } from "../components-internal";
 import { AgentMessageList } from "../timeline";
 import { AgentApprovalQueue } from "./approvals";
 import {
-  DEFAULT_TRANSCRIPT_ITEM_LIMIT,
-  visibleTranscriptWindow,
+  transcriptItemIds,
 } from "../transcript-window";
 import {
   AgentComposerPanel,
@@ -115,20 +115,16 @@ export function AgentThreadTimeline({
 }) {
   const approvalThreadId = threadId ?? thread.thread.id;
   const { approvals } = useAgentApprovals(approvalThreadId);
-  const visibleWindow = visibleTranscriptWindow(thread, DEFAULT_TRANSCRIPT_ITEM_LIMIT);
-  const anchoredApprovals = approvals.filter((approval) =>
-    hasVisibleTranscriptApprovalAnchor(thread, approval, visibleWindow.itemIdsByTurnId),
-  );
-  const tailApprovals = approvals.filter(
-    (approval) =>
-      !hasVisibleTranscriptApprovalAnchor(thread, approval, visibleWindow.itemIdsByTurnId),
+  const approvalPlacement = useMemo(
+    () => placeTranscriptApprovals(thread, approvals),
+    [approvals, thread],
   );
   return (
     <AgentMessageList
       approvalAnchors={
-        anchoredApprovals.length > 0
+        approvalPlacement.anchored.length > 0
           ? {
-              requests: anchoredApprovals,
+              requests: approvalPlacement.anchored,
               renderApprovalAnchor: (approval) => (
                 <AgentApprovalQueue
                   approvals={[approval]}
@@ -140,9 +136,9 @@ export function AgentThreadTimeline({
           : undefined
       }
       footer={
-        tailApprovals.length > 0 ? (
+        approvalPlacement.tail.length > 0 ? (
           <AgentApprovalQueue
-            approvals={tailApprovals}
+            approvals={approvalPlacement.tail}
             renderApproval={renderApproval}
             threadId={approvalThreadId}
           />
@@ -155,24 +151,46 @@ export function AgentThreadTimeline({
   );
 }
 
-function hasVisibleTranscriptApprovalAnchor(
+function placeTranscriptApprovals(
+  thread: ThreadState,
+  approvals: PendingServerRequest[],
+): {
+  anchored: PendingServerRequest[];
+  tail: PendingServerRequest[];
+} {
+  const anchored: PendingServerRequest[] = [];
+  const tail: PendingServerRequest[] = [];
+  for (const approval of approvals) {
+    const source = transcriptApprovalSource(thread, approval);
+    if (!source) {
+      tail.push(approval);
+      continue;
+    }
+    anchored.push(approval);
+  }
+  return { anchored, tail };
+}
+
+function transcriptApprovalSource(
   thread: ThreadState,
   approval: PendingServerRequest,
-  visibleItemIdsByTurnId: Map<string, string[]>,
-): boolean {
-  if (!approval.itemId && !approval.turnId) return false;
-  const turn = approval.turnId ? thread.turns[approval.turnId] : undefined;
-  if (approval.turnId && !turn) return false;
-  if (!approval.itemId) {
-    return Boolean(turn && visibleItemIdsByTurnId.has(turn.turn.id));
+): { itemId?: string; turnId: string } | undefined {
+  if (!approval.itemId && !approval.turnId) return undefined;
+  const turns = approval.turnId
+    ? [thread.turns[approval.turnId]].filter((turn) => turn != null)
+    : thread.orderedTurnIds.map((turnId) => thread.turns[turnId]).filter((turn) => turn != null);
+  if (turns.length === 0) return undefined;
+  if (approval.itemId) {
+    const turn = turns.find((candidate) =>
+      transcriptItemIds(candidate).includes(approval.itemId!),
+    );
+    return turn ? { itemId: approval.itemId, turnId: turn.turn.id } : undefined;
   }
-  const turns = turn
-    ? [turn]
-    : thread.orderedTurnIds.map((turnId) => thread.turns[turnId]).filter((item) => item != null);
-  return turns.some((candidate) => {
-    const visibleItemIds = visibleItemIdsByTurnId.get(candidate.turn.id);
-    return Boolean(visibleItemIds?.includes(approval.itemId!));
-  });
+  const turn = turns[0];
+  if (!turn) return undefined;
+  const itemIds = transcriptItemIds(turn);
+  if (itemIds.length === 0) return undefined;
+  return { itemId: itemIds.at(-1), turnId: turn.turn.id };
 }
 
 function AgentThreadActions({

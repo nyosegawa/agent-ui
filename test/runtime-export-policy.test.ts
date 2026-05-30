@@ -10,6 +10,9 @@ describe("runtime named export policy", () => {
     expect(representativeNamedExportsBySpecifier).toMatchObject({
       "@nyosegawa/agent-ui-codex": expect.arrayContaining(["createCodexSession"]),
       "@nyosegawa/agent-ui-codex/clients": expect.arrayContaining(["createCodexClients"]),
+      "@nyosegawa/agent-ui-codex/normalizer": expect.arrayContaining([
+        "normalizeThreadResumeResponse",
+      ]),
       "@nyosegawa/agent-ui-codex/request-builders": expect.arrayContaining([
         "threadStartParams",
       ]),

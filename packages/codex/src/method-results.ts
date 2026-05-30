@@ -58,6 +58,10 @@ import type {
   FuzzyFileSearchSessionStopResponse,
   FuzzyFileSearchSessionUpdateResponse,
 } from "./generated/experimental";
+import type {
+  ExperimentalAvailableMethod,
+  StableProductizedMethod,
+} from "./protocol";
 
 interface StableMethodResultMap {
   "account/login/cancel": CancelLoginAccountResponse;
@@ -118,10 +122,26 @@ interface ExperimentalMethodResultMap {
   "thread/turns/list": ThreadTurnsListResponse;
 }
 
+type AssertNever<T extends never> = T;
+type StableMethodResultMapCoverage = AssertNever<
+  | Exclude<StableProductizedMethod, keyof StableMethodResultMap>
+  | Exclude<keyof StableMethodResultMap, StableProductizedMethod>
+>;
+type ExperimentalMethodResultMapCoverage = AssertNever<
+  | Exclude<ExperimentalAvailableMethod, keyof ExperimentalMethodResultMap>
+  | Exclude<keyof ExperimentalMethodResultMap, ExperimentalAvailableMethod>
+>;
+
 export type CodexStableMethodResult<TMethod extends CodexStableMethod> =
-  TMethod extends keyof StableMethodResultMap ? StableMethodResultMap[TMethod] : unknown;
+  [StableMethodResultMapCoverage] extends [never]
+    ? TMethod extends keyof StableMethodResultMap
+      ? StableMethodResultMap[TMethod]
+      : unknown
+    : never;
 
 export type CodexExperimentalMethodResult<TMethod extends CodexExperimentalMethod> =
-  TMethod extends keyof ExperimentalMethodResultMap
-    ? ExperimentalMethodResultMap[TMethod]
-    : unknown;
+  [ExperimentalMethodResultMapCoverage] extends [never]
+    ? TMethod extends keyof ExperimentalMethodResultMap
+      ? ExperimentalMethodResultMap[TMethod]
+      : unknown
+    : never;

@@ -23,10 +23,20 @@ interface DeviceCodeLoginState {
 
 interface AgentApp {
     accessible?: boolean;
+    branding?: unknown;
+    description?: string;
     enabled?: boolean;
     id: string;
     installUrl?: string;
+    labels?: unknown;
+    logoUrl?: string;
+    logoUrlDark?: string;
+    logos?: unknown;
+    distributionChannel?: string;
+    appMetadata?: unknown;
+    metadata?: unknown;
     name?: string;
+    pluginDisplayNames?: unknown;
     uri?: string;
     raw?: unknown;
 }
@@ -112,6 +122,9 @@ interface RunSettingsState {
     cwd?: string;
 }
 
+type RequestIdKey = `${"number" | "string"}:${string}`;
+declare function requestIdKey(requestId: RequestId): RequestIdKey;
+
 type PendingServerRequestKind = "attestation" | "authRefresh" | "commandApproval" | "dynamicTool" | "fileChangeApproval" | "legacyExecApproval" | "legacyPatchApproval" | "mcpElicitation" | "permissionsApproval" | "userInput" | "unknown";
 interface PendingServerRequest {
     id: RequestId;
@@ -122,8 +135,8 @@ interface PendingServerRequest {
     payload: unknown;
 }
 interface ServerRequestQueueState {
-    byId: Record<string, PendingServerRequest>;
-    order: string[];
+    byId: Record<RequestIdKey, PendingServerRequest>;
+    order: RequestIdKey[];
 }
 
 interface AgentSkill {
@@ -558,4 +571,4 @@ declare function selectHostMetrics(state: AgentSessionState): unknown;
 declare function selectThreadRegistry(state: AgentSessionState): ThreadRegistryState;
 declare function selectRunSettings(state: AgentSessionState): RunSettingsState;
 
-export { AGENT_RETENTION_POLICY, type AccountEvent, type AccountState, type AgentApp, type AgentError, type AgentEvent, type AgentHook, type AgentItemBlock, type AgentItemBlockKind, type AgentItemState, type AgentModel, type AgentRequestOptions, type AgentSessionState, type AgentSkill, type AgentThread, type AgentTransport, type AgentTransportEvent, type AgentTurn, type AgentTurnItemsView, type AppsEvent, type AppsState, type ConnectionEvent, type ConnectionState, type DeviceCodeLoginState, type DiagnosticsEvent, type DiagnosticsState, type ExecutionModeId, FakeAgentTransport, type FakeAgentTransportOptions, type FakeTransportRequest, type FixtureStep, type HooksEvent, type HooksState, type ItemEvent, type ItemId, type ModelState, type ModelsEvent, type PendingServerRequest, type PendingServerRequestKind, type ProtocolNotificationState, type ReasoningEffort, type RequestId, type RunSettingsEvent, type RunSettingsState, type ScopedAppsState, type ServerRequestEvent, type ServerRequestQueueState, type SkillsEvent, type SkillsState, type StatusBannerKind, type StatusBannerState, type ThreadEvent, type ThreadId, type ThreadRegistryState, type ThreadRegistryStatus, type ThreadState, type ThreadStatus, type ThreadTokenUsage, type TokenUsageBreakdown, type TurnDiffState, type TurnEvent, type TurnId, type TurnPlanState, type TurnState, type UsageEvent, type UsageState, type WarningState, agentReducer, createInitialAgentState, runEventFixture, selectAccountRateLimits, selectActiveThread, selectApps, selectDiagnosticErrors, selectDiagnosticWarnings, selectDiagnostics, selectHostMetrics, selectItemBlock, selectLatestRunningTurn, selectLatestRunningTurnId, selectOrderedItems, selectOrderedThreads, selectOrderedTurns, selectPendingApprovals, selectProtocolNotifications, selectRunSettings, selectServerRequestQueue, selectStatusBanners, selectThread, selectThreadRegistry, selectTurn, selectTurnItem, selectUsage };
+export { AGENT_RETENTION_POLICY, type AccountEvent, type AccountState, type AgentApp, type AgentError, type AgentEvent, type AgentHook, type AgentItemBlock, type AgentItemBlockKind, type AgentItemState, type AgentModel, type AgentRequestOptions, type AgentSessionState, type AgentSkill, type AgentThread, type AgentTransport, type AgentTransportEvent, type AgentTurn, type AgentTurnItemsView, type AppsEvent, type AppsState, type ConnectionEvent, type ConnectionState, type DeviceCodeLoginState, type DiagnosticsEvent, type DiagnosticsState, type ExecutionModeId, FakeAgentTransport, type FakeAgentTransportOptions, type FakeTransportRequest, type FixtureStep, type HooksEvent, type HooksState, type ItemEvent, type ItemId, type ModelState, type ModelsEvent, type PendingServerRequest, type PendingServerRequestKind, type ProtocolNotificationState, type ReasoningEffort, type RequestId, type RequestIdKey, type RunSettingsEvent, type RunSettingsState, type ScopedAppsState, type ServerRequestEvent, type ServerRequestQueueState, type SkillsEvent, type SkillsState, type StatusBannerKind, type StatusBannerState, type ThreadEvent, type ThreadId, type ThreadRegistryState, type ThreadRegistryStatus, type ThreadState, type ThreadStatus, type ThreadTokenUsage, type TokenUsageBreakdown, type TurnDiffState, type TurnEvent, type TurnId, type TurnPlanState, type TurnState, type UsageEvent, type UsageState, type WarningState, agentReducer, createInitialAgentState, requestIdKey, runEventFixture, selectAccountRateLimits, selectActiveThread, selectApps, selectDiagnosticErrors, selectDiagnosticWarnings, selectDiagnostics, selectHostMetrics, selectItemBlock, selectLatestRunningTurn, selectLatestRunningTurnId, selectOrderedItems, selectOrderedThreads, selectOrderedTurns, selectPendingApprovals, selectProtocolNotifications, selectRunSettings, selectServerRequestQueue, selectStatusBanners, selectThread, selectThreadRegistry, selectTurn, selectTurnItem, selectUsage };

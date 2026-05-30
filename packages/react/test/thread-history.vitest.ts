@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { normalizeThreadReadResponse } from "@nyosegawa/agent-ui-codex/normalizer";
 import {
   threadProjectPath,
   threadSnapshotEvents,
@@ -6,6 +7,29 @@ import {
 } from "../src/thread-history";
 
 describe("thread history normalization", () => {
+  it("keeps public compatibility helpers aligned with the Codex normalizer", () => {
+    const rawThread = {
+      id: "thread-parity",
+      name: "Normalizer parity",
+      status: { type: "idle" },
+      turns: [
+        {
+          id: "turn-parity",
+          items: [{ id: "item-parity", text: "same output", type: "agentMessage" }],
+          itemsView: "full",
+          status: "completed",
+        },
+      ],
+    };
+
+    expect(threadSnapshotEvents(rawThread, true)).toEqual(
+      normalizeThreadReadResponse({ thread: rawThread }, { activate: true }),
+    );
+    expect(threadUpsertEvent(rawThread)).toEqual(
+      normalizeThreadReadResponse({ thread: rawThread }, { activate: false })[0],
+    );
+  });
+
   it("upserts thread/list entries without activating them", () => {
     expect(
       threadUpsertEvent({

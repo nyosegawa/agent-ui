@@ -120,7 +120,7 @@ export function AuiMenu({
       <button
         aria-expanded={open}
         aria-haspopup="menu"
-        aria-label={ariaLabel}
+        aria-label={`${ariaLabel}: ${label}`}
         className={triggerClassName}
         data-active={open ? "true" : undefined}
         disabled={disabled}

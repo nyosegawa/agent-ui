@@ -39,6 +39,16 @@
         "default": "./dist/request-builders.cjs"
       }
     },
+    "./normalizer": {
+      "import": {
+        "types": "./dist/normalizer.d.ts",
+        "default": "./dist/normalizer.js"
+      },
+      "require": {
+        "types": "./dist/normalizer.d.cts",
+        "default": "./dist/normalizer.cjs"
+      }
+    },
     "./session": {
       "import": {
         "types": "./dist/session.d.ts",
@@ -81,7 +91,7 @@
   "scripts": {
     "build": "tsup",
     "generate:schema": "bun run scripts/import-schema.ts",
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.type-tests.json",
     "test": "vitest run --config ../../vitest.config.ts test"
   },
   "dependencies": {

@@ -2,14 +2,15 @@ import type { AgentTransportEvent } from "@nyosegawa/agent-ui-core";
 
 export function redactSecrets(input: string): string {
   return input
-    .replace(/(Authorization:\s*Bearer\s+)[A-Za-z0-9._~+/=-]+/gi, "$1[REDACTED]")
+    .replace(/(^|[\r\n])(Authorization\s*:\s*)[^\r\n]*/gi, "$1$2[REDACTED]")
     .replace(/\b(Bearer\s+)[A-Za-z0-9._~+/=-]+/gi, "$1[REDACTED]")
     .replace(
-      /"((?:access|refresh)?token|secret|password|api[_-]?key|device[_-]?code|user[_-]?code|userCode)"\s*:\s*"[^"]+"/gi,
+      new RegExp(`"(${CREDENTIAL_KEY_SOURCE})"\\s*:\\s*"[^"]+"`, "gi"),
       "\"$1\":\"[REDACTED]\"",
     )
+    .replace(/([?&;])([^=&#;\s]+)=([^&#;\s]*)/g, redactQueryParam)
     .replace(
-      /\b(OPENAI_API_KEY|x-api-key|api[_-]?key|token|password|secret|device[_-]?code|user[_-]?code|userCode)(\s*[:=]\s*)([^&\s]+)/gi,
+      new RegExp(`\\b(OPENAI_API_KEY|${CREDENTIAL_TEXT_KEY_SOURCE})(\\s*[:=]\\s*)([^&;\\s]+)`, "gi"),
       "$1$2[REDACTED]",
     );
 }
@@ -34,7 +35,43 @@ function redactValue(value: unknown): unknown {
 }
 
 function isCredentialKey(key: string): boolean {
-  return /^(authorization|api[_-]?key|token|accessToken|refreshToken|password|secret|device[_-]?code|user[_-]?code|userCode)$/i.test(
-    key,
-  );
+  return CREDENTIAL_KEYS.has(normalizeCredentialKey(key));
+}
+
+const CREDENTIAL_KEY_SOURCE =
+  "authorization|api[_-]?key|x-api-key|token|access[_-]?token|refresh[_-]?token|id[_-]?token|client[_-]?secret|code[_-]?verifier|password|secret|device[_-]?code|user[_-]?code|userCode";
+
+const CREDENTIAL_TEXT_KEY_SOURCE =
+  "api[_-]?key|x-api-key|token|access[_-]?token|refresh[_-]?token|id[_-]?token|client[_-]?secret|code[_-]?verifier|password|secret|device[_-]?code|user[_-]?code|userCode";
+
+const CREDENTIAL_KEYS = new Set([
+  "authorization",
+  "apikey",
+  "xapikey",
+  "token",
+  "accesstoken",
+  "refreshtoken",
+  "idtoken",
+  "clientsecret",
+  "codeverifier",
+  "password",
+  "secret",
+  "devicecode",
+  "usercode",
+]);
+
+function normalizeCredentialKey(key: string): string {
+  return key.replace(/[_-]/g, "").toLowerCase();
+}
+
+function redactQueryParam(match: string, delimiter: string, key: string): string {
+  return isCredentialKey(safeDecodeQueryKey(key)) ? `${delimiter}${key}=[REDACTED]` : match;
+}
+
+function safeDecodeQueryKey(key: string): string {
+  try {
+    return decodeURIComponent(key.replace(/\+/g, " "));
+  } catch {
+    return key;
+  }
 }

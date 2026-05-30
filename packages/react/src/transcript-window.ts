@@ -24,6 +24,9 @@ export function transcriptItemIds(turn: TurnState): string[] {
 export function visibleTranscriptWindow(
   thread: ThreadState,
   visibleItemLimit: number,
+  options?: {
+    pinnedItemIdsByTurnId?: Map<string, string[]>;
+  },
 ): {
   itemIdsByTurnId: Map<string, string[]>;
   totalItemCount: number;
@@ -44,6 +47,16 @@ export function visibleTranscriptWindow(
     ids.add(entry.itemId);
     visibleByTurnId.set(entry.turnId, ids);
   }
+  for (const [turnId, itemIds] of options?.pinnedItemIdsByTurnId ?? []) {
+    const turn = thread.turns[turnId];
+    if (!turn) continue;
+    const transcriptIds = new Set(transcriptItemIds(turn));
+    const ids = visibleByTurnId.get(turnId) ?? new Set<string>();
+    for (const itemId of itemIds) {
+      if (transcriptIds.has(itemId)) ids.add(itemId);
+    }
+    if (ids.size > 0) visibleByTurnId.set(turnId, ids);
+  }
   const itemIdsByTurnId = new Map<string, string[]>();
   for (const turnId of thread.orderedTurnIds) {
     const turn = thread.turns[turnId];
@@ -62,7 +75,10 @@ export function visibleTranscriptWindow(
   return {
     itemIdsByTurnId,
     totalItemCount: allEntries.length,
-    visibleItemCount: visibleEntries.length,
+    visibleItemCount: [...visibleByTurnId.values()].reduce(
+      (total, ids) => total + ids.size,
+      0,
+    ),
   };
 }
 

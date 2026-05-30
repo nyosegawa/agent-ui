@@ -529,7 +529,7 @@ function CloseupBannerStack() {
       caption="Critical / warning / info notices, normalized."
     >
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <div style={{ display: "grid", gap: 10 }}>
+        <div style={{ display: "grid", gap: "var(--aui-space-250)" }}>
           <AgentStatusSummary />
           <AgentStatusDetails />
         </div>
@@ -581,7 +581,7 @@ function CloseupApprovalUserInput() {
   const request = useMemo(
     () =>
       createRichTranscriptInitialState().serverRequestQueue.byId[
-        "approval-input-rich-transcript"
+        "string:approval-input-rich-transcript"
       ] as PendingServerRequest | undefined,
     [],
   );
@@ -630,11 +630,12 @@ function CloseupCommandStage() {
 
 function createSingleApprovalState(id: string): AgentSessionState {
   const state = createRichTranscriptInitialState();
-  const request = state.serverRequestQueue.byId[id];
+  const requestKey = `string:${id}` as const;
+  const request = state.serverRequestQueue.byId[requestKey];
   if (!request) return state;
   state.serverRequestQueue = {
-    byId: { [id]: request },
-    order: [id],
+    byId: { [requestKey]: request },
+    order: [requestKey],
   };
   return state;
 }
@@ -674,7 +675,7 @@ function CloseupSidebarSearch() {
       title="Sidebar search + threads"
       caption="Icon-prefix search, status dot, selected row."
     >
-      <div style={{ display: "grid", gap: 12 }}>
+      <div style={{ display: "grid", gap: "var(--aui-space-300)" }}>
         <form
           className="aui-history-controls"
           onSubmit={(event) => event.preventDefault()}
@@ -731,7 +732,7 @@ function CloseupUsageChips() {
       title="Usage / status chips"
       caption="Pill-shape summaries used in secondary chrome."
     >
-      <div style={{ display: "grid", gap: 8 }}>
+      <div style={{ display: "grid", gap: "var(--aui-space-200)" }}>
         <div className="aui-status-summary" aria-label="Status summary">
           <strong>Status</strong>
           <span data-severity="info">2 background notices</span>
@@ -763,7 +764,7 @@ function CloseupButtonStates() {
       title="Button system"
       caption="primary / secondary / ghost / danger / subtle."
     >
-      <div style={{ display: "grid", gap: 10 }}>
+      <div style={{ display: "grid", gap: "var(--aui-space-250)" }}>
         <div className="aui-closeup-row">
           <button className="aui-btn aui-btn-primary" type="button">
             Approve
@@ -817,7 +818,7 @@ function CloseupInputStates() {
       title="Inputs · selects · segmented"
       caption="Unified shells, focus ring, no browser defaults."
     >
-      <div style={{ display: "grid", gap: 10 }}>
+      <div style={{ display: "grid", gap: "var(--aui-space-250)" }}>
         <label className="aui-field">
           <span>Working directory</span>
           <div className="aui-input-shell aui-input-with-icon">

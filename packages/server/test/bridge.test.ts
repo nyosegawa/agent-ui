@@ -77,10 +77,9 @@ describe("createCodexAppServerBridge", () => {
     stderr.write("Authorization: Bearer raw.token OPENAI_API_KEY=sk-raw userCode=ABCD-EFGH\n");
     const event = await nextTransportEvent(bridge.transport.events, "stderr");
 
-    expect(callbackMessages.join("")).toContain("Authorization: Bearer [REDACTED]");
+    expect(callbackMessages.join("")).toContain("Authorization: [REDACTED]");
     expect(callbackMessages.join("")).not.toContain("raw.token");
-    expect(event.message).toContain("OPENAI_API_KEY=[REDACTED]");
-    expect(event.message).toContain("userCode=[REDACTED]");
+    expect(event.message).toContain("Authorization: [REDACTED]");
     expect(event.message).not.toContain("sk-raw");
     expect(event.message).not.toContain("ABCD-EFGH");
     await bridge.close();
@@ -94,10 +93,10 @@ describe("createCodexAppServerBridge", () => {
     stderr.write("secret\n");
     const event = await nextTransportEvent(bridge.transport.events, "stderr");
 
-    expect(callbackMessages.join("")).toContain("Authorization: Bearer [REDACTED]");
+    expect(callbackMessages.join("")).toContain("Authorization: [REDACTED]");
     expect(callbackMessages.join("")).not.toContain("raw.secret");
     expect(callbackMessages.join("")).not.toContain("secret\n");
-    expect(event.message).toContain("Authorization: Bearer [REDACTED]");
+    expect(event.message).toContain("Authorization: [REDACTED]");
     expect(event.message).not.toContain("raw.secret");
     expect(event.message).not.toContain("secret\n");
     await bridge.close();

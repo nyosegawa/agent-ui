@@ -120,7 +120,6 @@ function AgentComposerForm({
   const submit = (mode: ComposerSubmitMode = "normal") => {
     if (disabled) return;
     if (!composer.value.trim() && attachments.length === 0) {
-      if (composer.isRunning) deferAction(() => composer.stop());
       return;
     }
     const pendingAttachments = attachments;

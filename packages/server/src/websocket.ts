@@ -23,6 +23,7 @@ import {
 export interface AgentUiWebSocketBridgeOptions extends CodexAppServerBridgeOptions {
   admission?: AgentUiBridgeAdmissionHook;
   dynamicToolHandler?: DynamicToolHandler;
+  dynamicToolHelperPermissions?: dynamicTools.DynamicToolHelperPermissionPolicy;
   hostEvents?: AgentUiHostEventSink;
   idleTimeoutMs?: number | false;
   /**
@@ -123,6 +124,7 @@ export async function handleAgentUiWebSocketConnection(
   const {
     admission,
     browserMethodPolicy,
+    dynamicToolHelperPermissions,
     dynamicToolHandler,
     hostEvents,
     inbound,
@@ -151,14 +153,21 @@ export async function handleAgentUiWebSocketConnection(
   }
   const methodPolicy = resolveBrowserMethodPolicy(browserMethodPolicy);
   const inboundGuard = createInboundGuard(inbound);
-  const bridge = createCodexAppServerBridge(bridgeOptions);
+  const log = (message: string) => {
+    bridgeOptions.stderr?.(redactSecrets(`[agent-ui] ${message}\n`));
+  };
+  let bridge: ReturnType<typeof createCodexAppServerBridge>;
+  try {
+    bridge = createCodexAppServerBridge(bridgeOptions);
+  } catch (error) {
+    log(`startup failed message=${error instanceof Error ? error.message : String(error)}`);
+    socket.close(1011, "Agent UI bridge startup failed");
+    return;
+  }
   const bridgeOwnsInitialize = bridgeOptions.initialize !== undefined;
   const backpressure = createWebSocketBackpressureGuard({ maxBufferedBytes });
   const effectiveServerRequestPolicy =
     requestPolicy.resolveServerRequestPolicy(serverRequestPolicy);
-  const log = (message: string) => {
-    bridgeOptions.stderr?.(redactSecrets(`[agent-ui] ${message}\n`));
-  };
   let closed = false;
   let dynamicToolHelperThreadId: Promise<string> | undefined;
   let idleTimer: ReturnType<typeof setTimeout> | undefined;
@@ -214,7 +223,14 @@ export async function handleAgentUiWebSocketConnection(
           );
           continue;
         }
-        if (await dynamicTools.maybeResolveHelperThreadRequest(event, bridge.transport, dynamicToolHelperThreadId)) {
+        if (
+          await dynamicTools.maybeResolveHelperThreadRequest(
+            event,
+            bridge.transport,
+            dynamicToolHelperThreadId,
+            dynamicToolHelperPermissions,
+          )
+        ) {
           log(`auto-resolved helper request id=${event.requestId}`);
           continue;
         }
@@ -262,10 +278,8 @@ export async function handleAgentUiWebSocketConnection(
       }
     })
     .catch((error: unknown) => {
-      sendEnvelope(socket, backpressure, {
-        error: { message: redactSecrets(error instanceof Error ? error.message : String(error)) },
-        type: "error",
-      });
+      log(`startup failed message=${error instanceof Error ? error.message : String(error)}`);
+      socket.close(1011, "Agent UI bridge startup failed");
       closeBridge();
     });
 

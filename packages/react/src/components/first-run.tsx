@@ -87,7 +87,7 @@ export function AgentFirstRun({
           onClick={() => deferAction(cancelLogin)}
           type="button"
         >
-          {t("common.cancel")} login
+          {t("account.cancelLogin")}
         </button>
       </div>
     );

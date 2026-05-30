@@ -1,5 +1,6 @@
 import type { AgentApp } from "@nyosegawa/agent-ui-core";
 import { selectApps } from "@nyosegawa/agent-ui-core";
+import { normalizeAppsListResponse } from "@nyosegawa/agent-ui-codex/normalizer";
 import { useCallback } from "react";
 import { useAgentContext } from "../provider";
 import {
@@ -19,7 +20,7 @@ export function useAgentApps(threadId?: string) {
       const requestOptions = threadId && !params.threadId ? { ...params, threadId } : params;
       const requestParams = codexAppsListParams(requestOptions);
       const response = await codex.apps.list(requestParams);
-      const { apps, nextCursor } = normalizeAppsList(response);
+      const { apps, nextCursor } = normalizeAppsListResponse(response);
       dispatch({
         apps: requestOptions.cursor ? mergeApps(scopedApps.apps, apps) : apps,
         nextCursor,
@@ -43,57 +44,8 @@ export function useAgentApps(threadId?: string) {
   };
 }
 
-function normalizeAppsList(response: unknown): { apps: AgentApp[]; nextCursor: string | null } {
-  const record = asRecord(response);
-  const rawApps = Array.isArray(record?.data)
-    ? record.data
-    : Array.isArray(record?.apps)
-      ? record.apps
-      : Array.isArray(response)
-        ? response
-        : [];
-  return {
-    apps: rawApps.flatMap((app) => {
-      const appRecord = asRecord(app);
-      if (!appRecord) return [];
-      return [
-        {
-          accessible:
-            typeof appRecord.accessible === "boolean"
-              ? appRecord.accessible
-              : typeof appRecord.isAccessible === "boolean"
-                ? appRecord.isAccessible
-                : undefined,
-          enabled:
-            typeof appRecord.enabled === "boolean"
-              ? appRecord.enabled
-              : typeof appRecord.isEnabled === "boolean"
-                ? appRecord.isEnabled
-                : undefined,
-          id: String(appRecord.id ?? appRecord.uri ?? appRecord.name),
-          installUrl: stringValue(appRecord.installUrl),
-          name: stringValue(appRecord.name),
-          raw: app,
-          uri: stringValue(appRecord.uri) ?? stringValue(appRecord.installUrl),
-        },
-      ];
-    }),
-    nextCursor: stringValue(record?.nextCursor) ?? stringValue(record?.next_cursor) ?? null,
-  };
-}
-
 function mergeApps(current: AgentApp[], next: AgentApp[]) {
   const byId = new Map(current.map((app) => [app.id, app]));
   for (const app of next) byId.set(app.id, app);
   return Array.from(byId.values());
-}
-
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return typeof value === "object" && value !== null
-    ? (value as Record<string, unknown>)
-    : undefined;
-}
-
-function stringValue(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }

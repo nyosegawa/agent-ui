@@ -289,6 +289,7 @@ export interface AgentI18nDictionary {
   "timeline.imageGenerated": string;
   "timeline.item": string;
   "timeline.items": string;
+  "timeline.jumpToPendingApproval": string;
   "timeline.jumpToLatest": string;
   "timeline.lines": string;
   "timeline.mcpTool": string;

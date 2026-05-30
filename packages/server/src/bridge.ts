@@ -57,6 +57,7 @@ export function createCodexAppServerBridge(
     });
 
   if (!child.stdin || !child.stdout) {
+    void shutdownChild(child, options.shutdown).catch(() => undefined);
     throw new Error("Codex app-server stdio streams were not created");
   }
 

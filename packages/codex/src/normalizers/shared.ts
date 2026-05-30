@@ -104,8 +104,13 @@ export function decodeDelta(delta: unknown): string {
 
 export function decodeBase64Delta(delta: unknown): string {
   if (typeof delta !== "string") return "";
-  if (typeof Buffer !== "undefined") {
-    return Buffer.from(delta, "base64").toString("utf8");
+  const buffer = (
+    globalThis as {
+      Buffer?: { from(input: string, encoding: "base64"): { toString(encoding: "utf8"): string } };
+    }
+  ).Buffer;
+  if (buffer) {
+    return buffer.from(delta, "base64").toString("utf8");
   }
   const binary = globalThis.atob?.(delta);
   if (!binary) return "";

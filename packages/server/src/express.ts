@@ -37,8 +37,9 @@ export function createAgentUiExpressMiddleware(
       res.status(403).json({ error: oneShotRpcMethodNotAllowedError(method) });
       return;
     }
-    const bridge = createCodexAppServerBridge(bridgeOptions);
+    let bridge: ReturnType<typeof createCodexAppServerBridge> | undefined;
     try {
+      bridge = createCodexAppServerBridge(bridgeOptions);
       await bridge.transport.connect();
       const result = await bridge.transport.request(method, req.body?.params);
       res.json({ result });
@@ -47,7 +48,7 @@ export function createAgentUiExpressMiddleware(
         error: redactStructuredValue(jsonRpcErrorPayload(error)),
       });
     } finally {
-      await bridge.close();
+      await bridge?.close();
     }
   };
 }

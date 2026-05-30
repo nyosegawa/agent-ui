@@ -58,7 +58,7 @@ export const visualQaStates: FixtureState[] = [
   },
   {
     description:
-      "Codex Apps/connectors metadata from app/list, paginated, with install and auth state.",
+      "Codex Apps/connectors metadata from app/list, paginated, with enabled and accessibility state.",
     group: "primitives",
     href: "/app-connectors",
     meta: "primitive · app metadata",

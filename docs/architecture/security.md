@@ -17,6 +17,18 @@ This keeps the initial integration local, process-bound, and single-user.
 Bridge lifecycle and upload/dynamic-tool boundaries are documented in
 [Server Bridge](../reference/server-bridge.md).
 
+There are three separate browser-facing boundaries:
+
+- direct upstream App Server WebSocket, whose own browser `Origin` checks apply
+  only to that upstream endpoint
+- Agent UI's same-origin WebSocket bridge, which is a host endpoint and must use
+  `admission` or equivalent host session checks
+- one-shot HTTP RPC helpers, which default to read/list/status-shaped methods
+  and do not power chat
+
+Do not rely on upstream direct-WebSocket origin rejection to protect an Agent UI
+bridge route.
+
 ## Shell Commands
 
 `thread/shellCommand` is host-only in the local release.
@@ -29,10 +41,10 @@ Reasons:
 - command behavior may not inherit thread sandbox assumptions
 - host applications need their own authorization rules
 
-Dynamic-tool bridge helpers are also privileged. The default helper may create
-a helper thread with no approval prompts and full filesystem access; hosts that
-do not explicitly want that behavior should override or disable the dynamic tool
-handler.
+Dynamic-tool bridge helpers are also privileged. Agent UI does not execute them
+unless the host provides a dynamic tool handler, and helper-thread permission
+requests are manual by default. Hosts that opt into mapped dynamic tools must
+own authorization, workspace isolation, audit logging, and resource limits.
 
 ## Approvals
 

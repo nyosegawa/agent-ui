@@ -7,6 +7,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@nyosegawa/agent-ui-codex/clients": `${repoRoot}/packages/codex/src/clients.ts`,
+      "@nyosegawa/agent-ui-codex/normalizer": `${repoRoot}/packages/codex/src/normalizer.ts`,
       "@nyosegawa/agent-ui-codex/request-builders": `${repoRoot}/packages/codex/src/request-builders.ts`,
       "@nyosegawa/agent-ui-codex/session": `${repoRoot}/packages/codex/src/session.ts`,
       "@nyosegawa/agent-ui-codex/stable-types": `${repoRoot}/packages/codex/src/stable-types.ts`,

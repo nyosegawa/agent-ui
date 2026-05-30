@@ -300,6 +300,7 @@ export const en = {
   "timeline.imageGenerated": "Image generated",
   "timeline.item": "item",
   "timeline.items": "items",
+  "timeline.jumpToPendingApproval": "Jump to pending approval",
   "timeline.jumpToLatest": "Jump to latest",
   "timeline.lines": "lines",
   "timeline.mcpTool": "MCP tool",

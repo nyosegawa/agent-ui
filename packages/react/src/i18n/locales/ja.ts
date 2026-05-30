@@ -120,6 +120,7 @@ export const ja = {
   "timeline.file": "ファイル",
   "timeline.files": "ファイル",
   "timeline.filesChanged": "{count} {label} 変更",
+  "timeline.jumpToPendingApproval": "保留中の承認へ移動",
   "timeline.plan": "計画",
   "timeline.reasoning": "推論",
   "timeline.resultCaptured": "結果を取得済み",

@@ -89,6 +89,10 @@ The reducer keeps normalized stores as the source of truth. Active selection
 lives in `threadRegistry.activeThreadId`, pending approvals and other server
 requests live in `serverRequestQueue`, account rate-limit usage lives in
 `usage.accountRateLimits`, and warnings/errors live in `diagnostics`.
+`serverRequestQueue.byId` and `serverRequestQueue.order` use the public
+`RequestIdKey` storage key (`number:<id>` or `string:<id>`) so numeric JSON-RPC
+request ids and string ids remain distinct while each `PendingServerRequest.id`
+keeps its original `number | string` value for selectors and responses.
 Domain store modules expose reusable state initialization and state-only
 reducers as they are split out of the session reducer. `connectionStore` owns
 `ConnectionState` initialization and `ConnectionEvent` updates; the session
@@ -100,9 +104,10 @@ thread entity map, individual thread entity updates, and pruning stale thread
 snapshots from that map. `turnStore` owns turn creation, insertion into a
 thread's ordered turn collection, and focused turn updates inside a thread
 entity. `itemStore` owns item insertion, streaming item deltas, retained command
-output and file patches, and normalized transcript block synthesis for stored
-items. `serverRequestStore` owns pending server request maps, FIFO approval
-queues, and thread-scoped pending request checks. `appsStore` owns App
+output and file patches, patch-only transcript index pruning, and normalized
+transcript block synthesis for stored items. `serverRequestStore` owns pending
+server request maps, FIFO approval queues, and thread-scoped pending request
+checks. `appsStore` owns App
 connector list initialization and scoped global/thread update semantics.
 `diagnosticsStore` owns diagnostics initialization, status banners, protocol
 notification history, warnings, and errors.

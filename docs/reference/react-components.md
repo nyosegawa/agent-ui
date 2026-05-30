@@ -144,10 +144,11 @@ quality directly instead of depending on a page-level shell:
   named "Message composer", the textarea references that visible shortcut hint
   as its accessible description, and pending attachment chips expose their
   filenames through list item labels. While a regular turn is running, the
-  textarea remains editable and the primary button becomes Stop. Enter adds a
-  UI-local follow-up card above the composer, Cmd/Ctrl+Enter sends `turn/steer`
-  immediately with the active `expectedTurnId`, and `Send now` on a queued card
-  also sends `turn/steer`; outside a running turn,
+  textarea remains editable and the primary button becomes Stop. Enter with
+  non-empty input or attachments adds a UI-local follow-up card above the
+  composer; empty Enter is a no-op. Cmd/Ctrl+Enter sends non-empty input as
+  `turn/steer` immediately with the active `expectedTurnId`, and `Send now` on
+  a queued card also sends `turn/steer`; outside a running turn,
   Cmd/Ctrl+Enter starts a normal new turn. Queued cards are scoped to the
   active thread, keep attachment chips restorable through Edit, and compact
   older queued items instead of creating a nested scroll pane. Stop calls only
@@ -185,8 +186,11 @@ quality directly instead of depending on a page-level shell:
   rendered in the transcript scroll area — not a separate pane stacked between
   the transcript and the composer, and never an independent scroll pane.
   Requests with upstream `itemId` or `turnId` metadata are anchored immediately
-  after that item or turn; only metadata-free requests render at the transcript
-  tail. The first request in each anchor is an expanded card (shield
+  after that item or turn, even when that source must be pinned back into a
+  windowed transcript. If that anchored decision is outside the current scroll
+  viewport, the thread exposes a distinct "Jump to pending approval" affordance
+  instead of relying on "Jump to latest". Metadata-free requests, or requests whose source no
+  longer exists, render at the transcript tail. The first request in each anchor is an expanded card (shield
   icon, humanized title and one-line reason, `LOW / MED / HIGH` risk pill,
   command on a dark code surface, compact inline metadata that wraps instead
   of overflowing, and three explicit decisions on a divider footer — green
@@ -253,7 +257,7 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentThreadHeader`: title, cwd/session context, resume, and thread action menu.
 - `AgentThreadTimeline`: normalized turn and item renderer. Pass `threadId` to
   anchor that thread's pending approvals by source metadata, with transcript
-  tail fallback for metadata-free requests.
+  tail fallback for metadata-free or missing-source requests.
 - `AgentContentBlockView`: standalone renderer for normalized thinking, plan,
   command, file-change, tool, web search, image, and system-info blocks.
 - `AgentApprovalQueue`: compact pending-decision surface — one expanded
@@ -344,8 +348,11 @@ types while still preserving protocol-derived detail in adapters and reducers.
 `AgentApprovalQueue` reads pending approvals through `useAgentApprovals()` and
 renders them as a compact pending-decision surface. In `AgentThreadView` and
 `AgentChat`, pending approvals with `itemId` or `turnId` metadata render
-immediately after that source context. Requests without source metadata are
-appended to the end of the transcript scroll area. Both placements are
+immediately after that source context, including source items outside the
+current visible window. Off-screen anchored decisions expose a pending-approval
+jump control so their actions remain reachable while tail follow-scroll is
+active. Requests without source metadata, or whose source no
+longer exists, are appended to the end of the transcript scroll area. Both placements are
 transcript items, not rows stacked between the transcript and the composer, and
 have no `max-height` or `overflow` of their own (the transcript owns scrolling).
 One expanded card plus compact picker rows for any other pending requests at
@@ -365,7 +372,10 @@ Thread actions are exposed through the default header and
 `useAgentThreadActions()`: rename, fork, archive, unarchive, compact, and
 rollback call generated-method request builders. Stored threads opened from the
 default sidebar or URL routing resume automatically, so the default header does
-not expose a separate manual Resume button.
+not expose a separate manual Resume button. Resume state follows the App Server
+response: active/running status remains running, and if the response contains a
+canonical thread id different from the requested path/id, the returned id becomes
+the active thread.
 
 Composer attachments are represented as visible chips for `app://` and
 `plugin://` mentions. The composer does not invoke `globalThis.prompt` for any
@@ -401,7 +411,8 @@ chips render an attachment icon, filename, extension, and size. The resolver
 may return one `AgentUserInput` or multiple input items for each browser
 `File`.
 
-When a turn is running, normal Enter queues follow-ups locally. `Send now`
+When a turn is running, normal Enter queues non-empty follow-ups locally and
+empty Enter does not interrupt the turn. `Send now`
 appears only while the queued item's expected turn is still the active turn that
 can be steered. If that turn completes, stops, or is replaced before the queued
 item is sent, the item stays visible with Edit and Remove actions so the draft

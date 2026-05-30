@@ -922,6 +922,7 @@ declare function useAgentHooks(cwd?: string): {
     refreshHooks: (params?: AgentHooksRefreshOptions) => Promise<{
         cwd: string;
         hooks: {
+            cwd: string;
             enabled: boolean | undefined;
             id: string;
             name: string | undefined;
@@ -1352,6 +1353,7 @@ interface AgentI18nDictionary {
     "timeline.imageGenerated": string;
     "timeline.item": string;
     "timeline.items": string;
+    "timeline.jumpToPendingApproval": string;
     "timeline.jumpToLatest": string;
     "timeline.lines": string;
     "timeline.mcpTool": string;
@@ -1695,13 +1697,18 @@ declare function AgentTurn({ approvals, renderItem, threadStatus, turn, visibleI
 declare const DEFAULT_TRANSCRIPT_ITEM_LIMIT = 48;
 declare const TRANSCRIPT_ITEM_INCREMENT = 48;
 declare function transcriptItemIds(turn: TurnState): string[];
-declare function visibleTranscriptWindow(thread: ThreadState, visibleItemLimit: number): {
+declare function visibleTranscriptWindow(thread: ThreadState, visibleItemLimit: number, options?: {
+    pinnedItemIdsByTurnId?: Map<string, string[]>;
+}): {
     itemIdsByTurnId: Map<string, string[]>;
     totalItemCount: number;
     visibleItemCount: number;
 };
 
-declare function threadUpsertEvent(rawThread: Record<string, unknown>): AgentEvent;
+type ThreadUpsertEvent = Extract<AgentEvent, {
+    type: "thread/upserted";
+}>;
+declare function threadUpsertEvent(rawThread: Record<string, unknown>): ThreadUpsertEvent;
 declare function threadSnapshotEvents(rawThread: Record<string, unknown>, activate: boolean): AgentEvent[];
 declare function rawThreadId(rawThread: Record<string, unknown>): string | undefined;
 declare function threadProjectPath(rawThread: Record<string, unknown>): string | undefined;

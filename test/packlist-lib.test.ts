@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { validatePacklistEntries } from "../scripts/packlist-lib.mjs";
+import { parseBunPackDryRun, validatePacklistEntries } from "../scripts/packlist-lib.mjs";
 
 describe("package packlist policy", () => {
+  it("parses bun pack dry-run output into sorted package entries", () => {
+    expect(
+      parseBunPackDryRun("packed 12B dist/index.js\nignored line\npacked 8B package.json\n"),
+    ).toEqual(["dist/index.js", "package.json"]);
+  });
+
   it("detects unexpected source files outside allowed package output", () => {
     expect(validatePacklistEntries("core", ["package.json", "dist/index.js", "src/index.ts"]))
       .toMatchInlineSnapshot(`

@@ -6,7 +6,10 @@ import {
   visibleTranscriptWindow,
 } from "../transcript-window";
 
-export function useTranscriptWindowing(thread: ThreadState) {
+export function useTranscriptWindowing(
+  thread: ThreadState,
+  pinnedItemIdsByTurnId?: Map<string, string[]>,
+) {
   const [visibleItemState, setVisibleItemState] = useState({
     limit: DEFAULT_TRANSCRIPT_ITEM_LIMIT,
     threadId: thread.thread.id,
@@ -16,8 +19,8 @@ export function useTranscriptWindowing(thread: ThreadState) {
       ? visibleItemState.limit
       : DEFAULT_TRANSCRIPT_ITEM_LIMIT;
   const visibleTurnItems = useMemo(
-    () => visibleTranscriptWindow(thread, visibleItemLimit),
-    [thread, visibleItemLimit],
+    () => visibleTranscriptWindow(thread, visibleItemLimit, { pinnedItemIdsByTurnId }),
+    [pinnedItemIdsByTurnId, thread, visibleItemLimit],
   );
   const hiddenItemCount = Math.max(
     0,

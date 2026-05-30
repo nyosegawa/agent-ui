@@ -13,15 +13,20 @@ export function AgentContextUsageIndicator({
   const totalTokens = tokenUsage?.totalTokens ?? 0;
   const contextWindow = tokenUsage?.modelContextWindow ?? 0;
   const detailsRef = useRef<HTMLDetailsElement>(null);
+  const summaryRef = useRef<HTMLElement>(null);
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (!open) return;
+    const closeAndRestoreFocus = () => {
+      setOpen(false);
+      summaryRef.current?.focus();
+    };
     const handlePointerDown = (event: PointerEvent) => {
       const details = detailsRef.current;
-      if (details && !details.contains(event.target as Node)) setOpen(false);
+      if (details && !details.contains(event.target as Node)) closeAndRestoreFocus();
     };
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") closeAndRestoreFocus();
     };
     document.addEventListener("pointerdown", handlePointerDown);
     document.addEventListener("keydown", handleKeyDown);
@@ -39,7 +44,7 @@ export function AgentContextUsageIndicator({
       open={open}
       ref={detailsRef}
     >
-      <summary aria-label={t("aria.contextUsage")} title={t("context.title")}>
+      <summary aria-label={t("aria.contextUsage")} ref={summaryRef} title={t("context.title")}>
         <IconGauge size={14} />
         <span>{Math.round(percent)}%</span>
       </summary>

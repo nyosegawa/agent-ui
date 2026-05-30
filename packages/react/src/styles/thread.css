@@ -349,11 +349,16 @@
   position: relative;
 }
 
-.aui-jump-latest {
-  bottom: 14px;
+.aui-jump-latest,
+.aui-jump-approval {
+  bottom: var(--aui-space-350);
   justify-self: center;
   position: absolute;
   z-index: 12;
+}
+
+.aui-jump-approval {
+  bottom: var(--aui-space-1000);
 }
 
 .aui-turn {

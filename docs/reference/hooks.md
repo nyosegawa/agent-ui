@@ -16,7 +16,12 @@ const turns = useAgentTurnController(threadId);
 `useAgentThreadController()` is the preferred name for `useAgentThread()`. It can
 follow the active thread or lock to a supplied `threadId`. Use `startThread()`
 for a new Codex thread and `resumeThread(threadId)` only when the host explicitly
-wants to rejoin a stored session.
+wants to rejoin a stored session. `resumeThread()` dispatches the normalized
+App Server `thread/resume` response in order: the active thread id comes from
+the returned canonical `thread.id`, and upstream active/running status is not
+overwritten to ready. Its React options stay stable-only; experimental resume
+fields such as `excludeTurns`, `initialTurnsPage`, path/history resume, and
+cursor ownership remain host-managed raw protocol usage.
 
 `useAgentTurnController()` is the preferred name for `useAgentTurn()`. It sends
 `turn/start` with normalized run settings, `turn/steer` for continuing an active
@@ -51,14 +56,19 @@ metadata without forcing activation.
 preferred preview path for stored sessions. Stored turn outcomes remain visible
 on the hydrated turns, but they do not replace the thread-level preview status;
 for example, a stored session whose last turn was interrupted still hydrates as
-a resumable preview instead of an interrupted live thread.
+a resumable preview instead of an interrupted live thread. Passing
+`activate: false` keeps the current active thread while still updating the
+requested thread's normalized snapshot state; the hook uses the Codex
+`normalizeThreadReadResponse()` boundary for item aliases, command output, file
+patches, and text extraction.
 
 The default `AgentChat` history sidebar uses `thread/read` so browsing a stored
 transcript from the list does not imply `thread/resume`. A direct
 `threadUrlRouting` URL such as `/threads/<id>` first hydrates with
 `thread/read includeTurns: true`, then resumes that thread because direct links
-represent opening the live conversation. The root route stays a no-thread start
-state.
+represent opening the live conversation. If App Server returns a different
+canonical thread id from `thread/resume`, that returned id becomes active. The
+root route stays a no-thread start state.
 
 ## Composer And Run Settings
 
@@ -148,6 +158,8 @@ to Codex skill metadata; broader host configuration writes such as
 `config/value/write` and `config/batchWrite` remain host-only protocol methods.
 
 `useAgentHooks()` calls `hooks/list` and stores normalized hook metadata.
+Upstream `HookMetadata.key` becomes `AgentHook.id`; hooks without `key`, `id`,
+`name`, or `path` are skipped instead of producing `id: "undefined"`.
 
 `useAgentApps()` calls `app/list`, preserves `nextCursor`, scopes state by
 `threadId`, and exposes `loadMoreApps()` so hosts can page through connector/app
@@ -155,7 +167,10 @@ metadata. App records keep upstream `AppInfo` vocabulary: `isEnabled` becomes
 `enabled`, `isAccessible` becomes `accessible`, and `installUrl` is preserved as
 an install URL, not interpreted as an installed/not-installed state. An
 inaccessible app is shown as unavailable unless a host has stronger auth
-semantics from its own integration.
+semantics from its own integration. The normalizer also preserves description,
+`logoUrl`, `logoUrlDark`, normalized `logos`, labels, branding,
+`distributionChannel`, `appMetadata` / compatibility `metadata`, and plugin
+display metadata when the App Server provides them.
 
 Host-specific workflows can compose `useAgentThreadController()`,
 `useAgentTurnController()`, `useAgentServerRequests()`, and `AgentWorkspace`

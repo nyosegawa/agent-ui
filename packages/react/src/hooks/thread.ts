@@ -8,6 +8,10 @@ import {
   type ThreadId,
   type ThreadState,
 } from "@nyosegawa/agent-ui-core";
+import {
+  normalizeThreadReadResponse,
+  normalizeThreadResumeResponse,
+} from "@nyosegawa/agent-ui-codex/normalizer";
 import { useCallback, useMemo, useState } from "react";
 import type { AgentUserInput } from "../agent-input";
 import { useAgentComposerQueueStore } from "../composer-queue";
@@ -26,7 +30,6 @@ import {
 import {
   rawThreadId,
   threadProjectPath,
-  threadSnapshotEvents,
   threadUpsertEvent,
 } from "../thread-history";
 import { useCodexSession } from "./codex-session";
@@ -113,14 +116,13 @@ export function useAgentThread(threadId?: ThreadId) {
   const resumeThread = useCallback(
     async (id: ThreadId, params?: ThreadResumeOptions) => {
       const result = await codex.thread.resume(id, codexThreadResumeParams(params));
+      const normalized = normalizeThreadResumeResponse(result, { activate: true });
+      for (const event of normalized.events) dispatch(event);
       const rawThread = asRecord(result)?.thread ?? result;
       const rawThreadRecord = asRecord(rawThread);
       if (rawThreadRecord && hasThreadId(rawThreadRecord)) {
-        for (const event of threadSnapshotEvents(rawThreadRecord, true)) dispatch(event);
         syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       }
-      dispatch({ status: "ready", threadId: id, type: "thread/status/changed" });
-      dispatch({ threadId: id, type: "thread/active/set" });
       return result;
     },
     [codex, dispatch],
@@ -275,13 +277,19 @@ export function useAgentThreadReader() {
     ) => {
       const response = await codex.thread.read(threadId, options.includeTurns ?? true);
       const rawThread = asRecord(response)?.thread ?? response;
-      if (!hasThreadId(rawThread)) {
-        throw new Error(`thread/read returned no thread for ${threadId}`);
+      let events;
+      try {
+        events = normalizeThreadReadResponse(response, {
+          activate: options.activate ?? true,
+        });
+      } catch (caught) {
+        if (caught instanceof Error && caught.message.includes("missing a thread id")) {
+          throw new Error(`thread/read returned no thread for ${threadId}`, { cause: caught });
+        }
+        throw caught;
       }
       const rawThreadRecord = rawThread as Record<string, unknown>;
-      for (const event of threadSnapshotEvents(rawThreadRecord, options.activate ?? true)) {
-        dispatch(event);
-      }
+      for (const event of events) dispatch(event);
       syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       return response;
     },

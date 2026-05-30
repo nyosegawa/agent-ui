@@ -133,6 +133,29 @@ describe("Codex protocol metadata", () => {
     );
   });
 
+  it("keeps protocol docs method-list sections aligned with capability metadata", () => {
+    const docs = readFileSync(
+      fileURLToPath(new URL("../../../docs/reference/codex-protocol.md", import.meta.url)),
+      "utf8",
+    );
+
+    expect(extractDocumentedMethods(docs, "Stable productized methods")).toEqual(
+      [...stableProductizedMethods].sort(),
+    );
+    expect(extractDocumentedMethods(docs, "Host-only or advanced local tooling")).toEqual(
+      [...hostOnlyMethods].sort(),
+    );
+    expect(extractDocumentedMethods(docs, "Experimental available methods")).toEqual(
+      [...experimentalAvailableMethods].sort(),
+    );
+    expect(extractDocumentedMethods(docs, "Experimental test-only methods")).toEqual([
+      "mock/experimentalMethod",
+    ]);
+    expect(extractDocumentedMethods(docs, "Experimental unsupported methods")).toEqual(
+      [...experimentalUnsupportedMethods].sort(),
+    );
+  });
+
   it("normalizes server requests only through the exact generated method table", () => {
     const expectedKinds = {
       "account/chatgptAuthTokens/refresh": "authRefresh",
@@ -185,6 +208,40 @@ describe("Codex protocol metadata", () => {
         },
       },
     ]);
+  });
+
+  it("preserves JSON-RPC-lite request id types for stable server request kinds", () => {
+    for (const [index, method] of stableServerRequestMethods.entries()) {
+      const id = index % 2 === 0 ? 0 : "0";
+      expect(
+        normalizeCodexServerMessage({
+          id,
+          method,
+          params: { threadId: "thread-ids" },
+        }),
+      ).toMatchObject([
+        {
+          request: {
+            id,
+            threadId: "thread-ids",
+          },
+          type: "serverRequest/created",
+        },
+      ]);
+    }
+
+    expect(
+      normalizeCodexServerMessage({
+        method: "serverRequest/resolved",
+        params: { requestId: 0 },
+      }),
+    ).toEqual([{ requestId: 0, type: "serverRequest/resolved" }]);
+    expect(
+      normalizeCodexServerMessage({
+        method: "serverRequest/resolved",
+        params: { requestId: "0" },
+      }),
+    ).toEqual([{ requestId: "0", type: "serverRequest/resolved" }]);
   });
 
   it("classifies every stable notification by coverage policy", () => {
@@ -935,10 +992,16 @@ describe("Codex protocol metadata", () => {
         params: {
           data: [
             {
+              description: "Browser automation",
               id: "chrome",
               installUrl: "app://chrome",
               isAccessible: false,
               isEnabled: true,
+              labels: { category: "browser" },
+              logoUrl: "https://example.test/chrome-light.png",
+              logoUrlDark: "https://example.test/chrome-dark.png",
+              distributionChannel: "bundled",
+              appMetadata: { vendor: "google" },
               name: "Chrome",
             },
           ],
@@ -949,10 +1012,22 @@ describe("Codex protocol metadata", () => {
       {
         apps: [
           {
+            accessible: false,
+            description: "Browser automation",
+            distributionChannel: "bundled",
+            enabled: true,
             id: "chrome",
-            installed: true,
+            installUrl: "app://chrome",
+            appMetadata: { vendor: "google" },
+            labels: { category: "browser" },
+            logoUrl: "https://example.test/chrome-light.png",
+            logoUrlDark: "https://example.test/chrome-dark.png",
+            logos: {
+              dark: "https://example.test/chrome-dark.png",
+              light: "https://example.test/chrome-light.png",
+            },
+            metadata: { vendor: "google" },
             name: "Chrome",
-            needsAuth: true,
             uri: "app://chrome",
           },
         ],
@@ -1019,31 +1094,52 @@ describe("Codex protocol metadata", () => {
   });
 
   it("normalizes app/list pagination responses and refresh notifications", () => {
-    expect(
-      normalizeAppsListResponse({
-        data: [
-          {
-            id: "browser",
-            installUrl: "app://browser",
-            isAccessible: false,
-            isEnabled: false,
-            name: "Browser",
-          },
-        ],
-        nextCursor: "page-2",
-      }),
-    ).toMatchObject({
+    const response = normalizeAppsListResponse({
+      data: [
+        {
+          branding: { color: "blue" },
+          description: "Open browser",
+          distributionChannel: "marketplace",
+          id: "browser",
+          installUrl: "app://browser",
+          isAccessible: false,
+          isEnabled: false,
+          appMetadata: { category: "automation" },
+          logoUrl: "https://example.test/browser-light.png",
+          logoUrlDark: "https://example.test/browser-dark.png",
+          name: "Browser",
+          pluginDisplayNames: ["browser-tools"],
+        },
+      ],
+      nextCursor: "page-2",
+    });
+    expect(response).toMatchObject({
       apps: [
         {
+          accessible: false,
+          branding: { color: "blue" },
+          description: "Open browser",
+          distributionChannel: "marketplace",
+          enabled: false,
           id: "browser",
-          installed: false,
+          installUrl: "app://browser",
+          appMetadata: { category: "automation" },
+          logoUrl: "https://example.test/browser-light.png",
+          logoUrlDark: "https://example.test/browser-dark.png",
+          logos: {
+            dark: "https://example.test/browser-dark.png",
+            light: "https://example.test/browser-light.png",
+          },
+          metadata: { category: "automation" },
           name: "Browser",
-          needsAuth: true,
+          pluginDisplayNames: ["browser-tools"],
           uri: "app://browser",
         },
       ],
       nextCursor: "page-2",
     });
+    expect(response.apps[0]).not.toHaveProperty("installed");
+    expect(response.apps[0]).not.toHaveProperty("needsAuth");
 
     expect(
       normalizeCodexServerMessage({
@@ -1051,11 +1147,16 @@ describe("Codex protocol metadata", () => {
         params: {
           apps: [
             {
+              appMetadata: { vendor: "google" },
+              distributionChannel: "bundled",
               id: "drive",
+              installUrl: "app://drive",
               isAccessible: true,
               isEnabled: true,
+              logoUrl: "https://example.test/drive-light.png",
+              logoUrlDark: null,
               name: "Drive",
-              uri: "app://drive",
+              pluginDisplayNames: ["Drive Plugin"],
             },
           ],
           next_cursor: null,
@@ -1066,10 +1167,19 @@ describe("Codex protocol metadata", () => {
       {
         apps: [
           {
+            accessible: true,
+            appMetadata: { vendor: "google" },
+            distributionChannel: "bundled",
+            enabled: true,
             id: "drive",
-            installed: true,
+            installUrl: "app://drive",
+            logoUrl: "https://example.test/drive-light.png",
+            logos: {
+              light: "https://example.test/drive-light.png",
+            },
+            metadata: { vendor: "google" },
             name: "Drive",
-            needsAuth: false,
+            pluginDisplayNames: ["Drive Plugin"],
             uri: "app://drive",
           },
         ],
@@ -1544,4 +1654,23 @@ function extractMethods(relativePath: string): string[] {
     .map((match) => match[1])
     .filter((method): method is string => Boolean(method))
     .sort();
+}
+
+function extractDocumentedMethods(markdown: string, sectionTitle: string): string[] {
+  const lines = markdown.split(/\r?\n/);
+  const startIndex = lines.findIndex((line) => line.trim() === `${sectionTitle}:`);
+  if (startIndex === -1) {
+    throw new Error(`Missing protocol docs section: ${sectionTitle}`);
+  }
+
+  const methods: string[] = [];
+  for (const line of lines.slice(startIndex + 1)) {
+    const match = /^- `([^`]+)`/.exec(line.trim());
+    if (match?.[1]) {
+      methods.push(match[1]);
+      continue;
+    }
+    if (methods.length > 0 && line.trim() !== "") break;
+  }
+  return methods.sort();
 }

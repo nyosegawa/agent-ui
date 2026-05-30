@@ -1,4 +1,5 @@
 import type { AgentTransportEvent } from "./events";
+import { requestIdKey } from "./request-id-key";
 import type { AgentError, RequestId } from "./state";
 import type { AgentRequestOptions, AgentTransport } from "./transport";
 
@@ -19,9 +20,14 @@ export class FakeAgentTransport implements AgentTransport {
   readonly responses = new Map<string, unknown>();
   readonly rejections = new Map<string, AgentError>();
 
+  #closed = true;
   #connected = false;
   #events: AgentTransportEvent[] = [];
-  #waiters: Array<(value: IteratorResult<AgentTransportEvent>) => void> = [];
+  #generation = 0;
+  #waiters: Array<{
+    generation: number;
+    resolve: (value: IteratorResult<AgentTransportEvent>) => void;
+  }> = [];
   #nextId = 0;
   #options: FakeAgentTransportOptions;
 
@@ -30,22 +36,27 @@ export class FakeAgentTransport implements AgentTransport {
   }
 
   get events(): AsyncIterable<AgentTransportEvent> {
+    const generation = this.#generation;
     return {
       [Symbol.asyncIterator]: () => ({
-        next: () => this.#nextEvent(),
+        next: () => this.#nextEvent(generation),
       }),
     };
   }
 
   async connect(): Promise<void> {
+    this.#generation += 1;
+    this.#releaseStaleWaiters();
     this.#events = [];
+    this.#closed = false;
     this.#connected = true;
     this.push({ event: { type: "connection/connected" }, type: "event" });
   }
 
   async close(): Promise<void> {
     this.#connected = false;
-    this.push({ event: { type: "connection/closed" }, type: "event" });
+    this.#closed = true;
+    this.#finishCurrentGeneration({ event: { type: "connection/closed" }, type: "event" });
   }
 
   async request<TParams = unknown, TResult = unknown>(
@@ -67,27 +78,50 @@ export class FakeAgentTransport implements AgentTransport {
   }
 
   async respond(requestId: RequestId, result: unknown): Promise<void> {
-    this.responses.set(String(requestId), result);
+    this.responses.set(requestIdKey(requestId), result);
     this.push({ requestId, type: "response", payload: result });
   }
 
   async reject(requestId: RequestId, error: AgentError): Promise<void> {
-    this.rejections.set(String(requestId), error);
+    this.rejections.set(requestIdKey(requestId), error);
     this.push({ error, requestId, type: "error" });
   }
 
   push(event: AgentTransportEvent): void {
-    const waiter = this.#waiters.shift();
+    const waiterIndex = this.#waiters.findIndex(
+      (candidate) => candidate.generation === this.#generation,
+    );
+    const waiter = waiterIndex >= 0 ? this.#waiters.splice(waiterIndex, 1)[0] : undefined;
     if (waiter) {
-      waiter({ done: false, value: event });
+      waiter.resolve({ done: false, value: event });
       return;
     }
     this.#events.push(event);
   }
 
-  #nextEvent(): Promise<IteratorResult<AgentTransportEvent>> {
+  #nextEvent(generation: number): Promise<IteratorResult<AgentTransportEvent>> {
+    if (generation !== this.#generation) return Promise.resolve({ done: true, value: undefined });
     const event = this.#events.shift();
     if (event) return Promise.resolve({ done: false, value: event });
-    return new Promise((resolve) => this.#waiters.push(resolve));
+    if (this.#closed) return Promise.resolve({ done: true, value: undefined });
+    return new Promise((resolve) => this.#waiters.push({ generation, resolve }));
+  }
+
+  #releaseStaleWaiters(): void {
+    const stale = this.#waiters.filter((waiter) => waiter.generation !== this.#generation);
+    this.#waiters = this.#waiters.filter((waiter) => waiter.generation === this.#generation);
+    for (const waiter of stale) waiter.resolve({ done: true, value: undefined });
+  }
+
+  #finishCurrentGeneration(closingEvent: AgentTransportEvent): void {
+    const current = this.#waiters.filter((waiter) => waiter.generation === this.#generation);
+    this.#waiters = this.#waiters.filter((waiter) => waiter.generation !== this.#generation);
+    if (current.length === 0) {
+      this.#events.push(closingEvent);
+      return;
+    }
+    const [first, ...rest] = current;
+    first?.resolve({ done: false, value: closingEvent });
+    for (const waiter of rest) waiter.resolve({ done: true, value: undefined });
   }
 }

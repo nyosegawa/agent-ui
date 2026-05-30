@@ -5,7 +5,7 @@ import type {
   ItemId,
   TurnState,
 } from "../state";
-import { boundedRecordEntry, boundedStringAppend } from "../retention";
+import { boundedStringAppend } from "../retention";
 
 export interface ItemStore {
   appendCommandOutput(
@@ -84,16 +84,61 @@ export function updateFilePatch(
   patch: unknown,
   maxEntries: number,
 ): TurnState {
+  const filePatchByItemId = boundedFilePatchEntries(
+    turn.filePatchByItemId,
+    itemId,
+    patch,
+    maxEntries,
+  );
+  const evictedPatchIds = Object.keys(turn.filePatchByItemId).filter(
+    (candidate) => filePatchByItemId[candidate] === undefined,
+  );
+  const itemOrder = pruneEvictedPatchOnlyIds(
+    ensureItemOrder(turn.itemOrder, itemId),
+    turn,
+    evictedPatchIds,
+  );
   return {
     ...turn,
-    itemOrder: ensureItemOrder(turn.itemOrder, itemId),
-    filePatchByItemId: boundedRecordEntry(
-      turn.filePatchByItemId,
-      itemId,
-      patch,
-      maxEntries,
-    ),
+    filePatchByItemId,
+    itemOrder,
   };
+}
+
+function boundedFilePatchEntries<T>(
+  record: Record<ItemId, T>,
+  key: ItemId,
+  value: T,
+  maxEntries: number,
+): Record<ItemId, T> {
+  const next = { ...record, [key]: value };
+  for (const staleKey of Object.keys(next).slice(
+    0,
+    Math.max(0, Object.keys(next).length - maxEntries),
+  )) {
+    delete next[staleKey];
+  }
+  return next;
+}
+
+function pruneEvictedPatchOnlyIds(
+  itemOrder: ItemId[],
+  turn: TurnState,
+  evictedPatchIds: ItemId[],
+): ItemId[] {
+  if (evictedPatchIds.length === 0) return itemOrder;
+  const evicted = new Set(evictedPatchIds.filter((itemId) => isPatchOnlyId(turn, itemId)));
+  if (evicted.size === 0) return itemOrder;
+  return itemOrder.filter((itemId) => !evicted.has(itemId));
+}
+
+function isPatchOnlyId(turn: TurnState, itemId: ItemId): boolean {
+  return (
+    turn.items[itemId] === undefined &&
+    turn.blocksByItemId[itemId] === undefined &&
+    turn.commandOutputByItemId[itemId] === undefined &&
+    turn.streamingTextByItemId[itemId] === undefined
+  );
 }
 
 function appendById(
