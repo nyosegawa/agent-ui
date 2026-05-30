@@ -702,6 +702,41 @@ describe("Codex protocol metadata", () => {
     );
   });
 
+  it("normalizes resumed idle threads as ready after stored history hydration", () => {
+    const existing = normalizeThreadReadResponse({
+      thread: {
+        id: "thread-resumed-idle",
+        name: "Resumed idle",
+        status: { type: "notLoaded" },
+        turns: [
+          {
+            id: "turn-existing",
+            items: [{ id: "item-existing", text: "persisted", type: "agentMessage" }],
+            status: "completed",
+          },
+        ],
+      },
+    });
+    const resume = normalizeThreadResumeResponse({
+      thread: {
+        id: "thread-resumed-idle",
+        name: "Resumed idle",
+        status: { type: "idle" },
+      },
+    });
+    const state = [...existing, ...resume.events].reduce(
+      (current, event) => agentReducer(current, event as AgentEvent),
+      createInitialAgentState(),
+    );
+
+    expect(resume.events).toMatchObject([
+      { status: "ready", type: "thread/started" },
+      { status: "ready", type: "thread/status/changed" },
+    ]);
+    expect(state.threads["thread-resumed-idle"]?.status).toBe("ready");
+    expect(state.threads["thread-resumed-idle"]?.orderedTurnIds).toEqual(["turn-existing"]);
+  });
+
   it("normalizes nested token usage notifications", () => {
     expect(
       normalizeCodexServerMessage({

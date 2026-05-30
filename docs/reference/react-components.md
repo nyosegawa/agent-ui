@@ -374,9 +374,9 @@ rollback call generated-method request builders. Stored threads opened from the
 default sidebar use `thread/read` preview hydration, while URL routing hydrates
 and then resumes the conversation. The default header does not expose a separate
 manual Resume button. Resume state follows the App Server response:
-active/running status remains running, and if the response contains a canonical
-thread id different from the requested path/id, the returned id becomes the
-active thread.
+active/running status remains running, idle resumed threads become ready for new
+messages, and if the response contains a canonical thread id different from the
+requested path/id, the returned id becomes the active thread.
 
 Composer attachments are represented as visible chips for `app://` and
 `plugin://` mentions. The composer does not invoke `globalThis.prompt` for any

@@ -177,9 +177,12 @@ export function normalizeThreadResumeResponse(
   const threadId = rawThreadId(rawThread);
   if (!threadId) throw new Error("thread/resume response is missing a thread id");
 
-  const events = normalizeThreadReadResponse(response, {
+  const readEvents = normalizeThreadReadResponse(response, {
     activate: options.activate,
   });
+  const events = isIdleThreadStatus(rawThread.status)
+    ? readEvents.map((event) => markResumedIdleReady(event, threadId))
+    : readEvents;
   const initialTurnsPageRecord = initialTurnsPage(response);
   if (!initialTurnsPageRecord) return { events };
 
@@ -336,6 +339,29 @@ function normalizeTurnWithItemsView(
   return turn.itemsView === undefined && fallbackItemsView !== undefined
     ? { ...turn, itemsView: fallbackItemsView }
     : turn;
+}
+
+function isIdleThreadStatus(value: unknown): boolean {
+  if (typeof value === "string") return value === "idle";
+  return asRecord(value)?.type === "idle";
+}
+
+function markResumedIdleReady(event: AgentEvent, threadId: string): AgentEvent {
+  if (
+    (event.type === "thread/started" || event.type === "thread/upserted") &&
+    event.thread.id === threadId &&
+    event.status === "loaded"
+  ) {
+    return { ...event, status: "ready" };
+  }
+  if (
+    event.type === "thread/status/changed" &&
+    event.threadId === threadId &&
+    event.status === "loaded"
+  ) {
+    return { ...event, status: "ready" };
+  }
+  return event;
 }
 
 function turnsListData(response: unknown): unknown[] {
