@@ -1,5 +1,9 @@
 # Agent UI
 
+[![CI](https://github.com/nyosegawa/agent-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/nyosegawa/agent-ui/actions/workflows/ci.yml)
+[![Package Validation](https://github.com/nyosegawa/agent-ui/actions/workflows/package-validation.yml/badge.svg)](https://github.com/nyosegawa/agent-ui/actions/workflows/package-validation.yml)
+[![Compatibility](https://github.com/nyosegawa/agent-ui/actions/workflows/compatibility.yml/badge.svg)](https://github.com/nyosegawa/agent-ui/actions/workflows/compatibility.yml)
+
 Embeddable UI components for applications built on OpenAI Codex App Server.
 
 Agent UI is a reusable Codex App Server UI component library. It provides React
