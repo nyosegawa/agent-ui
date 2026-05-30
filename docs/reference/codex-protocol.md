@@ -107,18 +107,9 @@ Implementation status:
   `@nyosegawa/agent-ui-codex/normalizer` subpath.
 - `thread/turns/items/list` is intentionally disabled in the product facade
   until upstream implements it.
-- Protocol metadata records upstream commit `577ec03bf82fb52e7041fb6b684e694b1e53451a`.
-- Schema refresh requires an explicit upstream checkout:
-  `CODEX_REPO=<codex-checkout> bun --filter @nyosegawa/agent-ui-codex generate:schema`.
-  The script validates focused App Server paths, rejects dirty imports, and
-  updates generated schema plus protocol metadata from one captured upstream
-  record.
-- `packages/codex/src/generated/README.md` records the upstream commit,
-  commit date, subject, generated timestamp, and generator command beside the
-  generated artifact.
-- Protocol tests require `CODEX_PROTOCOL_COMMIT` and
-  `CODEX_PROTOCOL_GENERATED_AT` to match `packages/codex/package.json`
-  `agentUi` metadata and the generated README.
+- Protocol metadata and schema refresh workflow are owned by
+  [Protocol Drift](../architecture/protocol-drift.md) and the generated schema
+  README.
 
 ## WebSocket Transport
 
@@ -252,30 +243,17 @@ disabled because it is not implemented upstream. `mock/experimentalMethod` is
 generated test-only schema coverage, so it is excluded from experimental
 availability, capability metadata, and `assertCodexExperimentalMethod()`.
 
+Stable `thread/start` and React `ThreadStartOptions` do not expose
+`dynamicTools`. Generated experimental `thread/start` can contain dynamic-tool
+fields, but hosts that opt into that raw protocol path own the experimental API
+negotiation and tool execution policy.
+
 ## Schema Drift
 
-Codex App Server schema is expected to change.
-
-Policy:
-
-- vendor generated TypeScript schema
-- record upstream Codex commit hash and generation timestamp consistently in
-  generated constants, package metadata, and the generated README
-- snapshot protocol method lists
-- fail protocol conformance tests when upstream changes break assumptions
-- keep the actual generated schema refresh out of preflight/classification-only
-  work; refresh the generated tree only in the dedicated schema import milestone
-
-Package metadata should include:
-
-```json
-{
-  "agentUi": {
-    "codexProtocolCommit": "<commit>",
-    "generatedAt": "<iso timestamp>"
-  }
-}
-```
+Codex App Server schema is expected to change. The refresh workflow, generated
+metadata policy, and validation checklist are owned by
+[Protocol Drift](../architecture/protocol-drift.md). This reference only
+describes the currently productized protocol semantics.
 
 ## Release Protocol Surface
 
@@ -437,6 +415,11 @@ receiving generic `{ decision }` responses. Dynamic tool calls are normalized as
 server-request events for transports and bridge handlers, but the default core
 queue does not retain them because tool execution is out-of-band host work.
 
+Stable user input variants are `text`, `image`, `localImage`, `skill`, and
+`mention`. There is no generic local-file user input; hosts should persist
+arbitrary browser files and include explicit text such as
+`Attached file: /absolute/path`.
+
 Notifications:
 
 - thread lifecycle
@@ -459,13 +442,14 @@ them without the core library inventing thread or item correlation that the
 protocol does not provide. `command/exec/outputDelta` remains normalized as
 connection-scoped command output and decodes its `deltaBase64` payload.
 
-Deferred:
+Current protocol non-goals:
 
 - remote/multi-user production
 - realtime/audio and voice UX
 - plugin marketplace administration
 - dynamic MCP resource/tool management as a product surface
 - external ChatGPT auth token mode
+- unsupported `thread/turns/items/list`
 
 Unrecognized notifications are never treated as chat text. The normalizer keeps
 known message, command, file-change, approval, plan, usage, account, warning,
@@ -473,9 +457,10 @@ and error events structured; unknown or deferred App Server messages should
 surface as redacted diagnostics or neutral timeline activity until explicitly
 productized.
 
-## Local Smoke
+## Real Codex Smoke Boundaries
 
-The release smoke path verified locally:
+The real Codex smoke path covers these protocol facts when local Codex auth is
+available:
 
 ```text
 initialize
@@ -496,7 +481,7 @@ experimental resume fields such as `excludeTurns` after hydrating turns through
 `thread/read` must send that request through `requestRaw()` and own the
 experimental pagination behavior.
 
-Real Codex smoke checks exercise the same protocol path. The covered surfaces are:
+The covered surfaces are:
 
 - `model/list` returns the account-visible model collection under `data`.
 - `account/rateLimits/read` returns primary and secondary account usage windows when the authenticated App Server exposes them.

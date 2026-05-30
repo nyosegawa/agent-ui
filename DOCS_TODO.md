@@ -149,35 +149,35 @@ docs, tests, and validation notes are complete.
 
 ## S05: Protocol And Drift
 
-- [ ] S05.01 Keep `docs/reference/codex-protocol.md` focused on productized
+- [x] S05.01 Keep `docs/reference/codex-protocol.md` focused on productized
   semantics, server request categories, running-turn semantics, user input
   variants, Apps/connectors, and direct WebSocket warnings.
-- [ ] S05.02 Preserve Local Smoke facts before moving or deleting that section:
+- [x] S05.02 Preserve Local Smoke facts before moving or deleting that section:
   real Codex auth requirement, `codex app-server --listen stdio://`,
   `initialize`, account/model/rate-limit reads, thread list/read/resume/start,
   streamed assistant deltas, `turn/completed`, approval smoke, and
   account-dependent assertions.
-- [ ] S05.03 Rename or replace the `Deferred:` list only after unsupported or
+- [x] S05.03 Rename or replace the `Deferred:` list only after unsupported or
   host-owned boundaries remain documented, including external ChatGPT auth token
   mode.
-- [ ] S05.04 Correct token usage replay wording so `thread/read` is not
+- [x] S05.04 Correct token usage replay wording so `thread/read` is not
   described as replaying usage notifications; replay belongs to resume, fork,
   and rejoin paths where upstream supports it.
-- [ ] S05.05 State that stable `thread/start` and React `ThreadStartOptions` do
+- [x] S05.05 State that stable `thread/start` and React `ThreadStartOptions` do
   not expose `dynamicTools`, while generated experimental `thread/start` does.
-- [ ] S05.06 Preserve stable user input variants as `text`, `image`,
+- [x] S05.06 Preserve stable user input variants as `text`, `image`,
   `localImage`, `skill`, and `mention`; do not document a generic local-file
   input.
-- [ ] S05.07 Preserve running-turn facts: there is no App Server `queue/message`,
+- [x] S05.07 Preserve running-turn facts: there is no App Server `queue/message`,
   UI follow-ups are local and thread-scoped, normal Enter queues while running,
   `Send now` and Cmd/Ctrl+Enter use `turn/steer`, and Stop uses
   `turn/interrupt`.
-- [ ] S05.08 Keep process notifications documented as diagnostics rather than
+- [x] S05.08 Keep process notifications documented as diagnostics rather than
   chat text.
-- [ ] S05.09 Move schema refresh mechanics and generated metadata workflow only
+- [x] S05.09 Move schema refresh mechanics and generated metadata workflow only
   after an owner exists, either `docs/architecture/protocol-drift.md` or a later
   concrete maintenance runbook.
-- [ ] S05.10 Keep full generated method-table automation out of the first safety
+- [x] S05.10 Keep full generated method-table automation out of the first safety
   pass unless it directly preserves existing protocol sync tests.
 
 ## S06: React, Approvals, Usage, Theming
@@ -292,12 +292,12 @@ docs, tests, and validation notes are complete.
   change.
 - [x] D04 Decide whether `docs/maintenance/` is included in public Markdown lint
   scope as soon as it exists.
-- [ ] D05 Decide whether Local Smoke belongs in `docs/architecture/testing.md` or
+- [x] D05 Decide whether Local Smoke belongs in `docs/architecture/testing.md` or
   a new maintenance runbook for real Codex smoke evidence and release
   interpretation.
-- [ ] D06 Decide whether `Deferred:` protocol items should become current
+- [x] D06 Decide whether `Deferred:` protocol items should become current
   protocol non-goals, `ROADMAP.md` backlog, or a split between both.
-- [ ] D07 Decide whether external ChatGPT auth token mode should be documented in
+- [x] D07 Decide whether external ChatGPT auth token mode should be documented in
   authentication or remote deployment as an explicit unsupported mode before
   protocol cleanup.
 - [x] D08 Decide whether Web Components should observe `chat-class` changes or

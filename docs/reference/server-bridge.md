@@ -139,9 +139,10 @@ is host-owned, not an App Server primitive.
 
 Token usage is streamed independently through `thread/tokenUsage/updated`.
 Current App Server payloads are nested under `tokenUsage.total.*`,
-`tokenUsage.last.*`, and `tokenUsage.modelContextWindow`. `thread/resume`,
-`thread/read`-style hydration, and `thread/fork` can replay restored usage so
-the UI can show context usage before the next turn starts.
+`tokenUsage.last.*`, and `tokenUsage.modelContextWindow`. Resume, fork, and
+rejoin paths can replay restored usage where upstream supports it so the UI can
+show context usage before the next turn starts; `thread/read` should be treated
+as stored history hydration, not token-usage notification replay.
 
 ## Upload Handler
 

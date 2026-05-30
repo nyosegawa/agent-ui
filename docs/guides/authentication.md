@@ -23,8 +23,11 @@ Login sequence:
 2. If unauthenticated, call account/login/start { type: "chatgptDeviceCode" }
 3. Store loginId, display verificationUrl and userCode
 4. Optionally cancel with account/login/cancel { loginId }
-5. Wait for account/login/completed and account/updated
-6. Start or resume a thread
+5. Wait for `account/login/completed`; if `success` is true, re-read
+   `account/read`
+6. Treat `account/updated` as an account-change notification after successful
+   account changes
+7. Start or resume a thread
 ```
 
 Agent UI provides these authentication primitives:
@@ -44,7 +47,9 @@ Implemented surface:
 - `AgentStatusBar` exposes a login action only when account state is confirmed unauthenticated.
 - When authenticated, `AgentStatusBar` keeps the header label to account status and moves email, plan, usage windows, and logout into an account dialog opened from the status actions. Host chrome should follow the same pattern instead of persistently rendering personal account identifiers in the main brand area.
 - `AgentChat` shows a first-run device-code login state for unauthenticated local users.
-- After `account/login/completed`, `AgentChat` re-reads `account/read` and `account/rateLimits/read` so account details and usage windows update without a page refresh.
+- After a successful `account/login/completed`, `AgentChat` re-reads
+  `account/read` and `account/rateLimits/read` so account details and usage
+  windows update without a page refresh.
 - `logout()` calls `account/logout` without params and clears local account state after the request succeeds.
 - The helper does not store or log raw tokens.
 
@@ -52,6 +57,7 @@ Agent UI must not:
 
 - issue OpenAI OAuth tokens
 - store raw ChatGPT tokens
+- accept external ChatGPT auth tokens as a productized browser mode
 - share one user's auth session with another user
 - hide the current account state from the host app
 
