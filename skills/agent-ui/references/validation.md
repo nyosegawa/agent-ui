@@ -15,6 +15,17 @@ Run the closest available commands:
 - local browser smoke against the Agent UI route
 - real Codex App Server smoke when local auth and `codex` are available
 
+Package manager check:
+
+- `bun.lock` means use Bun commands.
+- `package-lock.json` means use npm commands.
+- `pnpm-lock.yaml` means use pnpm commands.
+- `yarn.lock` means use Yarn commands.
+- If no lockfile exists, follow the package manager in `packageManager` or the
+  user's instruction.
+- If you accidentally create the wrong lockfile, remove it before finishing and
+  rerun install with the selected package manager.
+
 For browser-visible work, verify interactions, not only screenshots:
 
 - send a message
@@ -23,6 +34,14 @@ For browser-visible work, verify interactions, not only screenshots:
 - approve and decline a pending approval when available
 - attach image and non-image files when uploads are wired
 - check mobile width for overflow and reachable composer controls
+
+Public boundary check:
+
+- Search changed host files for private React stylesheet deep imports and
+  `.aui-`.
+- Replace private CSS imports with `@nyosegawa/agent-ui-react/styles.css`.
+- Replace internal selector styling with `className`, slots, host wrappers, or
+  `--aui-*` token overrides.
 
 ## Agent UI Repository Checks
 

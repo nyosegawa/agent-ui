@@ -97,6 +97,11 @@ describe("public Agent UI skill", () => {
     expect(allSkillText).toContain(
       "Same-origin routing and upstream `Origin` checks are not authentication.",
     );
+    expect(allSkillText).toContain("Match the existing lockfile");
+    expect(allSkillText).toMatch(/do not\s+create a second lockfile/);
+    expect(allSkillText).toContain("Use published Agent UI packages from the registry");
+    expect(allSkillText).toContain("Do not target internal `.aui-*` selectors");
+    expect(allSkillText).toContain("changed host CSS contains no `.aui-` selectors");
   });
 
   it("keeps public skill docs free of maintainer-only or stale repository assumptions", async () => {

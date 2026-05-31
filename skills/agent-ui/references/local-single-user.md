@@ -7,7 +7,9 @@ Codex App Server.
 
 1. Detect the stack: Next.js App Router, custom Node server, Vite, or another
    React host.
-2. Respect the host package manager. Do not force Bun in external projects.
+2. Respect the host package manager. Match the existing lockfile and do not
+   create a second lockfile. Use published Agent UI packages from the registry
+   unless the user explicitly asks for a local checkout or tarball smoke.
 3. Add the needed packages:
    - `@nyosegawa/agent-ui-react`
    - `@nyosegawa/agent-ui-codex`

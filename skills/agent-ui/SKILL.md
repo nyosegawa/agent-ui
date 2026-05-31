@@ -17,9 +17,10 @@ generic chatbot kit.
    - server bridge, uploads, or dynamic tools
    - custom layout or theme work
    - debugging or upgrading an existing integration
-2. Inspect the host app before changing files. Read package manifests, app
-   routes, server entry points, existing WebSocket or upload routes, auth/session
-   middleware, current Agent UI imports, and project validation commands.
+2. Inspect the host app before changing files. Read package manifests,
+   lockfiles, app routes, server entry points, existing WebSocket or upload
+   routes, auth/session middleware, current Agent UI imports, and project
+   validation commands.
 3. Choose the narrow reference file needed for the job:
    - [integration profiles](references/integration-profiles.md)
    - [local single-user integration](references/local-single-user.md)
@@ -37,9 +38,13 @@ generic chatbot kit.
 5. Implement only after the integration boundary is clear. If a remote or
    multi-user app lacks auth, admission, workspace isolation, or process policy,
    stop and ask for those host decisions before exposing a bridge.
-6. Prefer the host app's existing framework and package manager. This public
-   skill is for external users, so do not assume the Agent UI repository's Bun
-   scripts or maintainer-only workflows apply to their app.
+6. Prefer the host app's existing framework and package manager. Match
+   `bun.lock`, `package-lock.json`, `pnpm-lock.yaml`, or `yarn.lock`; do not
+   create a second lockfile unless the user explicitly asks to switch package
+   managers.
+7. Self-review before finishing: search the changed files for private Agent UI
+   CSS imports, internal `.aui-*` selectors, and package-manager drift. Fix
+   violations instead of only reporting them.
 
 ## Non-Goals
 
@@ -53,6 +58,8 @@ generic chatbot kit.
   explicitly defines a policy for them.
 - Do not use private Agent UI CSS chunks. Import only
   `@nyosegawa/agent-ui-react/styles.css` and customize with `--aui-*` tokens.
+- Do not target internal `.aui-*` selectors from a host app. Use public props
+  such as `className`, slots, host wrappers, and `--aui-*` token overrides.
 - Do not tell production users that Agent UI supplies hosting, accounts,
   credential storage, multi-user authorization, or process orchestration.
 
