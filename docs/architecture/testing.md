@@ -50,6 +50,10 @@ Focused maintenance gates:
   progressive-disclosure references, API terminology, and public-boundary
   guards. Run it whenever `skills/agent-ui/` or
   `docs/maintenance/agent-ui-skills.md` changes.
+- `bun run test:repo-skills`: repository-maintainer skill layout, frontmatter,
+  reference links, role separation, and ownership-boundary guard. Run it
+  whenever `.agents/skills/` or
+  `docs/maintenance/repository-skills.md` changes.
 
 Fixture e2e is the pull request browser gate; real-local e2e is a release and
 local validation gate.

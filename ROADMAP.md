@@ -189,21 +189,31 @@ maintenance instructions into user-installable skills.
 Repository-development skills live under `.agents/skills/<skill-name>/SKILL.md`.
 These are for contributors and maintainers working inside this repository.
 
-Planned development skills:
+Status: Complete.
 
-- `.agents/skills/codex-upstream-sync/SKILL.md`: refresh Codex generated schema,
-  classify protocol changes, update fixtures, and run focused validation.
-- `.agents/skills/protocol-drift-review/SKILL.md`: review upstream schema drift
-  and decide stable, host-only, experimental, or unsupported classification.
-- `.agents/skills/release-validation/SKILL.md`: run the package validation ladder,
-  API snapshots, package-resolution smoke, and release notes checks.
-- `.agents/skills/example-authoring/SKILL.md`: add or update examples while
-  preserving Agent UI package boundaries and design-system tokens.
-- `.agents/skills/browser-qa/SKILL.md`: run browser-visible checks for transcript,
-  composer, approvals, usage, layout, mobile reachability, and overflow.
+Completed development skills:
 
-Internal skills may use repository-specific commands and validation gates.
-User-facing skills should not.
+- `.agents/skills/codex-upstream-sync/SKILL.md`: weekly or manual App Server
+  drift checks, schema refreshes, and draft upstream sync PR creation.
+- `.agents/skills/agent-ui-review/SKILL.md`: repository-specific PR, branch,
+  diff, and generated-change review with findings-first output.
+- `.agents/skills/release-validation/SKILL.md`: release, package boundary, API
+  snapshot, package-resolution, CI, and publish-risk validation.
+- `.agents/skills/example-authoring/SKILL.md`: examples, recipes, fixture routes,
+  docs-site examples, and example docs while preserving package boundaries and
+  design-system tokens.
+- `.agents/skills/browser-qa/SKILL.md`: browser-visible QA with Playwright and
+  agent-browser for transcript, composer, approvals, usage, layout, mobile,
+  focus, hit testing, and overflow.
+
+Completion artifacts:
+
+- `docs/maintenance/repository-skills.md` documents maintainer-only skill
+  purpose, development flow, public skill separation, and validation.
+- `bun run test:repo-skills` guards frontmatter, one-level references, role
+  separation, and ownership-boundary wording.
+- `docs/architecture/testing.md` and package script docs mention the focused
+  repository skill gate.
 
 ## M5: Make The Official Site Useful
 

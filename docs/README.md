@@ -79,6 +79,9 @@ you need exact contracts.
   trust/review behavior, and validation for safer repository development.
 - [Installable Agent UI Skill](./maintenance/agent-ui-skills.md): public
   `skills/agent-ui` layout, install commands, references, and validation.
+- [Repository Development Skills](./maintenance/repository-skills.md):
+  maintainer-only `.agents/skills` for reviews, release validation, examples,
+  and browser QA.
 
 ## Examples
 

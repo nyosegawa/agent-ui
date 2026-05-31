@@ -82,6 +82,22 @@ describe("package script documentation", () => {
     expect(skillDocs).toContain("npx skills add nyosegawa/agent-ui --skill agent-ui");
   });
 
+  it("keeps repository skill docs aligned with package scripts", () => {
+    expect(packageJson.scripts?.["test:repo-skills"]).toBe(
+      "vitest run test/repository-skills.test.ts",
+    );
+
+    const testingDocs = readRepoFile("docs/architecture/testing.md");
+    const skillDocs = readRepoFile("docs/maintenance/repository-skills.md");
+
+    expect(testingDocs).toContain("bun run test:repo-skills");
+    expect(skillDocs).toContain("bun run test:repo-skills");
+    expect(skillDocs).toContain(".agents/skills/agent-ui-review/");
+    expect(skillDocs).toContain(".agents/skills/release-validation/");
+    expect(skillDocs).toContain(".agents/skills/example-authoring/");
+    expect(skillDocs).toContain(".agents/skills/browser-qa/");
+  });
+
   it("keeps validation command docs aligned with root package scripts", () => {
     const testingDocs = readRepoFile("docs/architecture/testing.md");
     for (const script of validationScripts) {
