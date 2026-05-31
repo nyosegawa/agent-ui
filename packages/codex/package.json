@@ -109,6 +109,6 @@
     "test": "vitest run --config ../../vitest.config.ts test"
   },
   "dependencies": {
-    "@nyosegawa/agent-ui-core": "^0.1.0"
+    "@nyosegawa/agent-ui-core": "workspace:^0.1.0"
   }
 }

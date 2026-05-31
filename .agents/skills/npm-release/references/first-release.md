@@ -15,6 +15,8 @@ Confirm:
 - `npm view <package> version` returns `E404` before the first release.
 - package manifests include `license`, `description`, `repository`, `bugs`,
   `homepage`, `publishConfig.access`, `files`, `exports`, and `engines`.
+- internal Agent UI package dependencies use `workspace:^0.1.0`, not
+  `workspace:*`, and packed manifests resolve them to `^0.1.0`.
 - each public package has a README.
 - `NPM_TOKEN` is configured as a GitHub Actions repository secret.
 - release workflow uses trusted `push` to `main` or `workflow_dispatch`, not

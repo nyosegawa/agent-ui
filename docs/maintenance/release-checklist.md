@@ -8,7 +8,8 @@ Use this checklist before publishing Agent UI packages to npm.
 - Confirm the release notes are generated from Changesets.
 - Confirm docs changed with any public API, package boundary, security, example,
   or visual behavior change.
-- Confirm `NPM_TOKEN` exists as a GitHub Actions repository secret.
+- Confirm `NPM_TOKEN` exists as a GitHub Actions repository secret and can
+  publish without an interactive OTP prompt.
 
 ## Local Validation
 
@@ -28,6 +29,9 @@ built and inspected in order.
 - Public package manifests include `publishConfig.access: "public"`.
 - Public package manifests include repository, bugs, homepage, license, exports,
   files, and Node engine metadata.
+- Public package manifests use `workspace:^<version>` for internal Agent UI
+  dependencies so workspace installers link locally and packed packages resolve
+  to the released semver range.
 - Package READMEs are present.
 - `npm view <package>@<version> version` does not already show the target
   version.

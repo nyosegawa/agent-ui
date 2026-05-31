@@ -39,6 +39,9 @@ manual `workflow_dispatch`. It:
 The workflow uses the repository secret `NPM_TOKEN` and grants `id-token: write`
 so npm can attach provenance. Fork pull requests do not receive repository
 secrets by default, and the publish workflow does not run untrusted PR code.
+`NPM_TOKEN` must be an automation-capable token or otherwise able to publish
+without an OTP prompt; a token that requires interactive 2FA fails in GitHub
+Actions with `EOTP`.
 
 `CHANGESETS_GITHUB_TOKEN` is optional. If present, it can be used for version PR
 maintenance; otherwise the workflow falls back to GitHub Actions'
@@ -62,6 +65,9 @@ lint, typecheck, and unit/protocol/fixture tests.
 Each public package should keep:
 
 - `publishConfig.access: "public"`
+- internal Agent UI dependencies as `workspace:^<version>`, never
+  `workspace:*`, so workspace installs use local packages and packed npm
+  manifests resolve to the released semver range
 - `repository.directory`
 - `bugs.url`
 - `homepage`

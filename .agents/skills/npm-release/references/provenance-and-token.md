@@ -9,6 +9,8 @@ Recommended npm granular token:
 - owner account: `sakasegawa`
 - scope: `@nyosegawa`
 - package permission: read and write
+- automation or 2FA-bypass publish capability; a token that requires OTP will
+  fail GitHub Actions with `EOTP`
 - organization permission: no access, or the minimum `nyosegawa` org access npm
   requires for scoped package publishing
 - no IP allowlist for GitHub Actions

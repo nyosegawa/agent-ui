@@ -32,9 +32,8 @@ describe("npm release readiness", () => {
       expect(manifest.exports).toBeDefined();
       expect(existsSync(join(root, workspacePackage.directory, "README.md"))).toBe(true);
       for (const [name, version] of Object.entries(manifest.dependencies ?? {})) {
-        expect(version, `${manifest.name} dependency ${name}`).not.toMatch(/^workspace:/);
         if (name.startsWith("@nyosegawa/agent-ui-")) {
-          expect(version, `${manifest.name} dependency ${name}`).toBe("^0.1.0");
+          expect(version, `${manifest.name} dependency ${name}`).toBe("workspace:^0.1.0");
         }
       }
     }
