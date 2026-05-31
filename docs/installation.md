@@ -19,6 +19,12 @@ Most React hosts use:
 bun add @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex
 ```
 
+With npm:
+
+```sh
+npm install @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex
+```
+
 Hosts that use the custom element wrapper also install:
 
 ```sh

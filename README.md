@@ -3,6 +3,7 @@
 [![CI](https://github.com/nyosegawa/agent-ui/actions/workflows/ci.yml/badge.svg)](https://github.com/nyosegawa/agent-ui/actions/workflows/ci.yml)
 [![Package Validation](https://github.com/nyosegawa/agent-ui/actions/workflows/package-validation.yml/badge.svg)](https://github.com/nyosegawa/agent-ui/actions/workflows/package-validation.yml)
 [![Compatibility](https://github.com/nyosegawa/agent-ui/actions/workflows/compatibility.yml/badge.svg)](https://github.com/nyosegawa/agent-ui/actions/workflows/compatibility.yml)
+[![npm version](https://img.shields.io/npm/v/@nyosegawa/agent-ui-react.svg)](https://www.npmjs.com/package/@nyosegawa/agent-ui-react)
 
 Embeddable UI components for applications built on OpenAI Codex App Server.
 
@@ -29,9 +30,26 @@ diagnostics surfaces inside their own product shell.
 @nyosegawa/agent-ui-web-components
 ```
 
+Install the React package set in a host app:
+
+```sh
+bun add @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex
+```
+
+Use the package manager already owned by the host project. With npm:
+
+```sh
+npm install @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex
+```
+
+Add `@nyosegawa/agent-ui-server` for a local Node bridge, or
+`@nyosegawa/agent-ui-web-components` for the custom element wrapper. See
+[Installation](./docs/installation.md) for package responsibilities and peer
+dependencies.
+
 ## Quickstart
 
-Install dependencies:
+Install repository dependencies:
 
 ```sh
 bun install
