@@ -24,6 +24,7 @@
     "lint": "eslint .",
     "check:dead-code": "knip --include files,exports,dependencies --reporter compact",
     "test": "vitest run",
+    "test:skills": "vitest run test/agent-ui-skill.test.ts",
     "test:hooks": "vitest run test/codex-hooks-repo-policy.test.ts",
     "test:styles": "vitest run packages/react/test/style-duplication.vitest.ts packages/react/test/source-structure.vitest.ts",
     "test:protocol": "vitest run --config vitest.config.ts packages/codex/test",

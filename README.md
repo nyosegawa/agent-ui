@@ -119,6 +119,19 @@ own theme scope; see [Theming](./docs/guides/theming.md) for the full contract.
 
 Start with [docs/README.md](./docs/README.md).
 
+## Installable Skill
+
+External users can install the Agent UI skill to guide integrations in their own
+Codex App Server host apps:
+
+```sh
+gh skill install nyosegawa/agent-ui agent-ui --agent cursor --scope project
+npx skills add nyosegawa/agent-ui --skill agent-ui -a cursor -y
+```
+
+The public skill lives at `skills/agent-ui/SKILL.md`; maintenance notes are in
+[Installable Agent UI Skill](./docs/maintenance/agent-ui-skills.md).
+
 ## Validation
 
 Validation tiers and package-output gates are owned by

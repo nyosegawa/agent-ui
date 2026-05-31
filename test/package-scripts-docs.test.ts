@@ -25,7 +25,9 @@ describe("package script documentation", () => {
   const packageJson = JSON.parse(readRepoFile("package.json")) as PackageJson;
 
   it("keeps test:fixtures documented as the core fixture runner", () => {
-    expect(packageJson.scripts?.["test:core-fixtures"]).toBe("bun test packages/core/test");
+    expect(packageJson.scripts?.["test:core-fixtures"]).toBe(
+      "bun test packages/core/test",
+    );
     expect(packageJson.scripts?.["test:fixtures"]).toBe("bun run test:core-fixtures");
 
     const testingDocs = readRepoFile("docs/architecture/testing.md");
@@ -65,6 +67,21 @@ describe("package script documentation", () => {
     expect(hookDocs).toContain("scripts/codex-hooks/repo-policy.mjs");
   });
 
+  it("keeps public skill docs aligned with package scripts", () => {
+    expect(packageJson.scripts?.["test:skills"]).toBe(
+      "vitest run test/agent-ui-skill.test.ts",
+    );
+
+    const testingDocs = readRepoFile("docs/architecture/testing.md");
+    const skillDocs = readRepoFile("docs/maintenance/agent-ui-skills.md");
+
+    expect(testingDocs).toContain("bun run test:skills");
+    expect(skillDocs).toContain("bun run test:skills");
+    expect(skillDocs).toContain("skills/agent-ui/SKILL.md");
+    expect(skillDocs).toContain("gh skill install nyosegawa/agent-ui agent-ui");
+    expect(skillDocs).toContain("npx skills add nyosegawa/agent-ui --skill agent-ui");
+  });
+
   it("keeps validation command docs aligned with root package scripts", () => {
     const testingDocs = readRepoFile("docs/architecture/testing.md");
     for (const script of validationScripts) {
@@ -93,7 +110,9 @@ describe("package script documentation", () => {
 
   it("keeps package export docs aligned with package export maps", () => {
     const packageExportsDocs = readRepoFile("docs/reference/package-exports.md");
-    const listedSubpaths = [...packageExportsDocs.matchAll(/^- `(@nyosegawa\/agent-ui[^`]+)`$/gm)]
+    const listedSubpaths = [
+      ...packageExportsDocs.matchAll(/^- `(@nyosegawa\/agent-ui[^`]+)`$/gm),
+    ]
       .map((match) => match[1])
       .sort();
 
@@ -117,11 +136,15 @@ describe("package script documentation", () => {
 
     expect(uploadSource).toContain("const DEFAULT_MAX_UPLOAD_BYTES = 16 * 1024 * 1024");
     expect(uploadSource).toContain("const DEFAULT_UPLOAD_TTL_MS = 60 * 60 * 1000");
-    expect(uploadSource).toContain("application\\/octet-stream|image\\/[-+.\\w]+|text\\/plain");
+    expect(uploadSource).toContain(
+      "application\\/octet-stream|image\\/[-+.\\w]+|text\\/plain",
+    );
     expect(uploadSource).toContain("contentType && !isAllowedContentType(contentType)");
 
     expect(serverBridgeDocs).toContain("missing `content-type` is accepted");
-    expect(serverBridgeDocs).toContain("`application/octet-stream`, `image/*`, or `text/plain`");
+    expect(serverBridgeDocs).toContain(
+      "`application/octet-stream`, `image/*`, or `text/plain`",
+    );
     expect(serverBridgeDocs).toContain("16 MB default limit");
     expect(serverBridgeDocs).toContain("one hour default TTL");
   });

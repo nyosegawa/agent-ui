@@ -77,6 +77,8 @@ you need exact contracts.
   updates.
 - [Codex Hooks](./maintenance/codex-hooks.md): project-local hook policy,
   trust/review behavior, and validation for safer repository development.
+- [Installable Agent UI Skill](./maintenance/agent-ui-skills.md): public
+  `skills/agent-ui` layout, install commands, references, and validation.
 
 ## Examples
 

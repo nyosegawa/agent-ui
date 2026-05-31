@@ -150,44 +150,36 @@ Completion artifacts:
 Goal: let users install skills that help an agent integrate Agent UI into their
 own applications.
 
-User-facing skills live under `skills/<skill-name>/SKILL.md`. This layout is
-discoverable by both `npx skills add` and `gh skill install`.
+Status: Complete.
 
-Planned user-facing skills:
+User-facing skills live under `skills/<skill-name>/SKILL.md`; repository
+maintainer skills stay under `.agents/skills/`.
 
-- `skills/integrate-agent-ui/SKILL.md`: inspect a host app and integrate Agent
-  UI packages, CSS, provider setup, transcript, composer, and validation.
-- `skills/add-codex-server-bridge/SKILL.md`: add a local Codex App Server bridge
-  with same-origin WebSocket routing, one-shot RPC policy, upload handling, and
-  safe defaults.
-- `skills/build-agent-ui-nextjs/SKILL.md`: add a Next.js App Router integration
-  using Agent UI React components and server bridge helpers.
-- `skills/customize-agent-ui-theme/SKILL.md`: apply host theming through
-  `--aui-*` tokens without deep CSS imports or raw visual constants.
-- `skills/add-dynamic-tools/SKILL.md`: add host-owned dynamic tools with manual
-  permission review, bounded grants, and focused tests.
-- `skills/upgrade-agent-ui/SKILL.md`: update an existing Agent UI integration
-  across package versions, API snapshots, docs, and validation.
+Completed user-facing skill:
 
-Install examples to support in the docs:
+- `skills/agent-ui/SKILL.md`: orchestrator skill for integrating, customizing,
+  debugging, and upgrading Agent UI in external Codex App Server host apps.
+- `skills/agent-ui/references/`: focused references for integration profiles,
+  local single-user apps, host-owned remote constraints, WebSocket bridge,
+  layout composition, theming, uploads, dynamic tools, debugging, and validation.
+
+Install examples supported by the docs:
 
 ```sh
-npx skills add nyosegawa/agent-ui --skill integrate-agent-ui -a cursor -y
-npx skills add nyosegawa/agent-ui --skill '*' -a cursor
-gh skill install nyosegawa/agent-ui integrate-agent-ui --agent cursor --scope project
-gh skill install nyosegawa/agent-ui skills/integrate-agent-ui/SKILL.md --agent cursor --scope project
+npx skills add nyosegawa/agent-ui --skill agent-ui -a cursor -y
+gh skill install nyosegawa/agent-ui agent-ui --agent cursor --scope project
+gh skill install nyosegawa/agent-ui skills/agent-ui/SKILL.md --agent codex --scope project
 ```
 
-Compatibility notes:
+Completion artifacts:
 
-- `npx skills add` supports GitHub shorthand, GitHub URLs, local paths, direct
-  skill paths, `--skill`, `--agent`, `--global`, `--copy`, `--list`, and `-y`.
-- `gh skill install` supports GitHub repositories, local directories with
-  `--from-local`, exact skill paths, `--agent`, `--scope`, `--pin`, and source
-  tracking for updates.
-- The canonical published layout should remain `skills/*/SKILL.md`.
-- User-facing skills should avoid repo-maintainer assumptions and should work
-  in external SaaS, Next.js, Vite, and custom host applications.
+- `docs/maintenance/agent-ui-skills.md` documents install commands, public
+  skill boundaries, reference files, and validation.
+- `bun run test:skills` guards frontmatter, distribution layout, reference
+  links, current Agent UI public API terminology, and public-skill boundary
+  assumptions.
+- `README.md`, `docs/README.md`, and `docs/architecture/testing.md` link the
+  skill and focused validation gate.
 
 ## M4: Add Repository Development Skills
 

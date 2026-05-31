@@ -46,6 +46,10 @@ Focused maintenance gates:
 
 - `bun run test:hooks`: Codex repository hook policy fixtures. Run it whenever
   `.codex/hooks.json` or `scripts/codex-hooks/` changes.
+- `bun run test:skills`: public Agent UI skill layout, frontmatter,
+  progressive-disclosure references, API terminology, and public-boundary
+  guards. Run it whenever `skills/agent-ui/` or
+  `docs/maintenance/agent-ui-skills.md` changes.
 
 Fixture e2e is the pull request browser gate; real-local e2e is a release and
 local validation gate.
