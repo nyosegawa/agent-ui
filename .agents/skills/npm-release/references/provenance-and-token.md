@@ -36,10 +36,10 @@ permissions:
   id-token: write
 ```
 
-and publish with provenance:
+and publish through Changesets while provenance is enabled in npm config:
 
 ```sh
-bunx changeset publish --provenance
+bunx changeset publish
 ```
 
 Set `NPM_CONFIG_PROVENANCE=true` for the publish step.

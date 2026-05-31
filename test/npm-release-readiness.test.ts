@@ -49,7 +49,7 @@ describe("npm release readiness", () => {
     expect(workflow).toContain("NPM_TOKEN: ${{ secrets.NPM_TOKEN }}");
     expect(workflow).toContain("bun run validate:release");
     expect(workflow).toContain("bun run validate:e2e");
-    expect(workflow).toContain("bunx changeset publish --provenance");
+    expect(workflow).toContain("publish: bunx changeset publish");
     expect(workflow).toContain("NPM_CONFIG_PROVENANCE: true");
     expect(workflow).not.toContain("pull_request_target");
   });
@@ -60,7 +60,7 @@ describe("npm release readiness", () => {
 
     expect(npmRelease).toContain("The first public release is `0.1.0`");
     expect(npmRelease).toContain("Do not increment package versions on every `main` push");
-    expect(npmRelease).toContain("bunx changeset publish --provenance");
+    expect(npmRelease).toContain("bunx changeset publish");
     expect(npmRelease).toContain("post-publish smoke");
     expect(checklist).toContain("NPM_TOKEN");
     expect(checklist).toContain("bun run validate:release");

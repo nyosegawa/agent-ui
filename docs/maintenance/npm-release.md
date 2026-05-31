@@ -33,7 +33,8 @@ manual `workflow_dispatch`. It:
 2. Installs Playwright browser dependencies.
 3. Runs `bun run validate:release`.
 4. Runs `bun run validate:e2e`.
-5. Runs Changesets with `bunx changeset publish --provenance`.
+5. Runs Changesets with `bunx changeset publish` while
+   `NPM_CONFIG_PROVENANCE=true` is set.
 
 The workflow uses the repository secret `NPM_TOKEN` and grants `id-token: write`
 so npm can attach provenance. Fork pull requests do not receive repository
