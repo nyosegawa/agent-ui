@@ -32,6 +32,9 @@ built and inspected in order.
 - Public package manifests use `workspace:^<version>` for internal Agent UI
   dependencies so workspace installers link locally and packed packages resolve
   to the released semver range.
+- Release workflow runs `scripts/prepare-npm-publish-manifests.mjs` before
+  Changesets publish so npm registry manifests do not keep `workspace:`
+  dependency ranges.
 - Package READMEs are present.
 - `npm view <package>@<version> version` does not already show the target
   version.

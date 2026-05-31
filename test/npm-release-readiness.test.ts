@@ -31,9 +31,10 @@ describe("npm release readiness", () => {
       expect(manifest.files).toContain("dist");
       expect(manifest.exports).toBeDefined();
       expect(existsSync(join(root, workspacePackage.directory, "README.md"))).toBe(true);
+      const expectedWorkspaceRange = `workspace:^${manifest.version}`;
       for (const [name, version] of Object.entries(manifest.dependencies ?? {})) {
         if (name.startsWith("@nyosegawa/agent-ui-")) {
-          expect(version, `${manifest.name} dependency ${name}`).toBe("workspace:^0.1.0");
+          expect(version, `${manifest.name} dependency ${name}`).toBe(expectedWorkspaceRange);
         }
       }
     }
@@ -48,7 +49,9 @@ describe("npm release readiness", () => {
     expect(workflow).toContain("NPM_TOKEN: ${{ secrets.NPM_TOKEN }}");
     expect(workflow).toContain("bun run validate:release");
     expect(workflow).toContain("bun run validate:e2e");
-    expect(workflow).toContain("publish: bunx changeset publish");
+    expect(workflow).toContain(
+      "publish: node scripts/prepare-npm-publish-manifests.mjs && bunx changeset publish",
+    );
     expect(workflow).toContain("NPM_CONFIG_PROVENANCE: true");
     expect(workflow).not.toContain("pull_request_target");
   });

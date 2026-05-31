@@ -33,7 +33,7 @@ jobs:
       - run: bun run validate:e2e
       - uses: changesets/action@v1
         with:
-          publish: bunx changeset publish
+          publish: node scripts/prepare-npm-publish-manifests.mjs && bunx changeset publish
           version: bunx changeset version
         env:
           GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN || github.token }}

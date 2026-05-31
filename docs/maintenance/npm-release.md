@@ -33,7 +33,10 @@ manual `workflow_dispatch`. It:
 2. Installs Playwright browser dependencies.
 3. Runs `bun run validate:release`.
 4. Runs `bun run validate:e2e`.
-5. Runs Changesets with `bunx changeset publish` while
+5. Runs `node scripts/prepare-npm-publish-manifests.mjs` as part of the
+   Changesets publish command so internal `workspace:` dependencies are
+   converted to npm semver ranges in the tarball manifests.
+6. Runs Changesets with `bunx changeset publish` while
    `NPM_CONFIG_PROVENANCE=true` is set.
 
 The workflow uses the repository secret `NPM_TOKEN` and grants `id-token: write`
@@ -78,6 +81,10 @@ Each public package should keep:
 
 Package output must continue to pass `publint`, `attw`, and the local packlist
 smoke.
+
+The published npm manifests must not contain `workspace:` dependencies. The
+release workflow handles this immediately before publishing; post-publish
+consumer smoke verifies the registry package can install outside the workspace.
 
 ## Post-Publish Verification
 
