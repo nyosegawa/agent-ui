@@ -18,9 +18,9 @@ Confirm:
 - internal Agent UI package dependencies use `workspace:^<version>`, not
   `workspace:*`, and published manifests resolve them to the matching semver
   range.
-- release workflow runs `scripts/prepare-npm-publish-manifests.mjs` before
-  Changesets publish so published npm manifests never retain `workspace:`
-  ranges.
+- release workflow runs `bun run release:publish`, which normalizes package
+  manifests before Changesets publish so published npm manifests never retain
+  `workspace:` ranges.
 - each public package has a README.
 - `NPM_TOKEN` is configured as a GitHub Actions repository secret.
 - release workflow uses trusted `push` to `main` or `workflow_dispatch`, not

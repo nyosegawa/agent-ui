@@ -19,6 +19,7 @@
     "validate:protocol": "bun run test:protocol && bun run test:fixtures",
     "validate:e2e": "bun run test:e2e:fixtures && bun run test:e2e:real-local",
     "validate:release": "bun run validate:fast && bun run validate:protocol && bun run validate:packages && bun run check:dead-code && bun run test:api-snapshots && bun run test:package-resolution && bun run test:node-compat",
+    "release:publish": "node scripts/publish-npm-packages.mjs",
     "format": "prettier --write .",
     "typecheck": "bun run --workspaces --if-present typecheck",
     "lint": "eslint .",

@@ -33,11 +33,9 @@ manual `workflow_dispatch`. It:
 2. Installs Playwright browser dependencies.
 3. Runs `bun run validate:release`.
 4. Runs `bun run validate:e2e`.
-5. Runs `node scripts/prepare-npm-publish-manifests.mjs` as part of the
-   Changesets publish command so internal `workspace:` dependencies are
-   converted to npm semver ranges in the tarball manifests.
-6. Runs Changesets with `bunx changeset publish` while
-   `NPM_CONFIG_PROVENANCE=true` is set.
+5. Runs `bun run release:publish`, which first normalizes npm publish manifests
+   so internal `workspace:` dependencies become semver ranges, then runs
+   `bunx changeset publish`.
 
 The workflow uses the repository secret `NPM_TOKEN` and grants `id-token: write`
 so npm can attach provenance. Fork pull requests do not receive repository

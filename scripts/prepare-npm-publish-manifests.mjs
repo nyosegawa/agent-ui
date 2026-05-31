@@ -7,7 +7,11 @@ import { workspacePackageDirs } from "./packlist-lib.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
+  await prepareNpmPublishManifests();
+}
+
+export async function prepareNpmPublishManifests() {
   for (const packageDir of workspacePackageDirs) {
     const manifestPath = join(repoRoot, "packages", packageDir, "package.json");
     const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
