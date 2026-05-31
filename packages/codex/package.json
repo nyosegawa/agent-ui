@@ -1,8 +1,17 @@
 {
   "name": "@nyosegawa/agent-ui-codex",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Codex App Server transport and normalizer for Agent UI.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nyosegawa/agent-ui.git",
+    "directory": "packages/codex"
+  },
+  "bugs": {
+    "url": "https://github.com/nyosegawa/agent-ui/issues"
+  },
+  "homepage": "https://github.com/nyosegawa/agent-ui#readme",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -86,6 +95,9 @@
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "agentUi": {
     "codexProtocolCommit": "3e7baa00e43419967d90d6ad9cef40f58d5ac89f",
     "generatedAt": "2026-05-30T10:05:29.106Z"
@@ -97,6 +109,6 @@
     "test": "vitest run --config ../../vitest.config.ts test"
   },
   "dependencies": {
-    "@nyosegawa/agent-ui-core": "workspace:*"
+    "@nyosegawa/agent-ui-core": "^0.1.0"
   }
 }

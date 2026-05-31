@@ -7,8 +7,10 @@
   "fixed": [],
   "ignore": [
     "@nyosegawa/agent-ui-docs-site",
+    "@nyosegawa/agent-ui-example-codex-local-web",
     "@nyosegawa/agent-ui-example-local-react-vite",
-    "@nyosegawa/agent-ui-example-next-local-bridge",
+    "@nyosegawa/agent-ui-example-next-rpc-route",
+    "@nyosegawa/agent-ui-example-next-with-bridge-sidecar",
     "@nyosegawa/agent-ui-example-recipes"
   ],
   "linked": [],

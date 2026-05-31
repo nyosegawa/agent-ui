@@ -10,8 +10,14 @@ describe("package packlist policy", () => {
   });
 
   it("detects unexpected source files outside allowed package output", () => {
-    expect(validatePacklistEntries("core", ["package.json", "dist/index.js", "src/index.ts"]))
-      .toMatchInlineSnapshot(`
+    expect(
+      validatePacklistEntries("core", [
+        "package.json",
+        "README.md",
+        "dist/index.js",
+        "src/index.ts",
+      ]),
+    ).toMatchInlineSnapshot(`
         [
           "core packs unexpected source file src/index.ts",
         ]

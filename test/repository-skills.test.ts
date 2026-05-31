@@ -11,15 +11,17 @@ const m4SkillNames = [
   "example-authoring",
   "release-validation",
 ];
+const releaseOperationSkillNames = ["npm-release"];
+const repositorySkillNames = [...m4SkillNames, ...releaseOperationSkillNames];
 
 describe("repository development skills", () => {
-  it("keeps M4 repository skills discoverable with portable frontmatter", async () => {
+  it("keeps repository skills discoverable with portable frontmatter", async () => {
     const skillNames = await skillDirs();
-    for (const expected of m4SkillNames) {
+    for (const expected of repositorySkillNames) {
       expect(skillNames).toContain(expected);
     }
 
-    for (const skillName of m4SkillNames) {
+    for (const skillName of repositorySkillNames) {
       const skillPath = join(repoSkillsRoot, skillName, "SKILL.md");
       const text = await readFile(skillPath, "utf8");
       const frontmatter = parseFrontmatter(text);
@@ -34,7 +36,7 @@ describe("repository development skills", () => {
   });
 
   it("keeps repository skill references one level deep and resolvable", async () => {
-    for (const skillName of [...m4SkillNames, "codex-upstream-sync"]) {
+    for (const skillName of [...repositorySkillNames, "codex-upstream-sync"]) {
       const skillPath = join(repoSkillsRoot, skillName, "SKILL.md");
       const text = await readFile(skillPath, "utf8");
       for (const target of localMarkdownTargets(text)) {
@@ -50,6 +52,7 @@ describe("repository development skills", () => {
     const release = await readSkillText("release-validation");
     const examples = await readSkillText("example-authoring");
     const browserQa = await readSkillText("browser-qa");
+    const npmRelease = await readSkillText("npm-release");
 
     expect(review).toContain("Lead with findings");
     expect(review).toContain("Host applications own");
@@ -62,6 +65,9 @@ describe("repository development skills", () => {
     expect(browserQa).toContain("agent-browser skills get core");
     expect(browserQa).toContain("Screenshots alone are not enough");
     expect(browserQa).toMatch(/Playwright is the\s+deterministic CI gate/);
+    expect(npmRelease).toContain("first public release is `0.1.0`");
+    expect(npmRelease).toContain("bunx changeset publish --provenance");
+    expect(npmRelease).toMatch(/must not publish packages unless the user\s+explicitly asks/);
   });
 
   it("keeps M4 skills focused on ownership boundaries instead of narrow host names", async () => {

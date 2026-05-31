@@ -31,7 +31,7 @@ export function validatePacklistEntries(packageDir, entries) {
       issues.push(`${packageDir} packs stale artifact ${entry}`);
       continue;
     }
-    if (entry === "package.json" || entry.startsWith("dist/")) continue;
+    if (entry === "package.json" || entry === "README.md" || entry.startsWith("dist/")) continue;
     if (packageDir === "codex" && entry.startsWith("src/generated/")) {
       issues.push(`${packageDir} packs private generated file ${entry}`);
       continue;

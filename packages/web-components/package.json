@@ -1,8 +1,17 @@
 {
   "name": "@nyosegawa/agent-ui-web-components",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Web Components wrapper for Agent UI React components.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nyosegawa/agent-ui.git",
+    "directory": "packages/web-components"
+  },
+  "bugs": {
+    "url": "https://github.com/nyosegawa/agent-ui/issues"
+  },
+  "homepage": "https://github.com/nyosegawa/agent-ui#readme",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.cjs",
@@ -23,15 +32,20 @@
   "engines": {
     "node": ">=20"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run --config ../../vitest.config.ts --environment jsdom test"
   },
   "dependencies": {
-    "@nyosegawa/agent-ui-core": "workspace:*",
-    "@nyosegawa/agent-ui-react": "workspace:*"
+    "@nyosegawa/agent-ui-core": "^0.1.0",
+    "@nyosegawa/agent-ui-react": "^0.1.0"
   },
   "peerDependencies": {
     "react": ">=18.3.0 || >=19.0.0",

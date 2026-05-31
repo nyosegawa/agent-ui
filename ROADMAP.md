@@ -325,23 +325,25 @@ Validation target:
 
 ## M9: Release And Support Operations
 
+Status: Complete for the initial `0.1.0` npm release path.
+
 Goal: make publishing predictable and keep the public surface stable.
 
-- Prepare npm package publishing for:
+- Prepared npm package publishing for:
   - `@nyosegawa/agent-ui-core`
   - `@nyosegawa/agent-ui-codex`
   - `@nyosegawa/agent-ui-react`
   - `@nyosegawa/agent-ui-server`
   - `@nyosegawa/agent-ui-web-components`
-- Decide the package access, provenance, registry, and npm automation token
+- Decided the package access, provenance, registry, and npm automation token
   strategy before the first public release.
-- Define stable and prerelease channels:
+- Defined the first release channel:
   - stable releases for reviewed package updates
-  - prerelease or canary releases for protocol refresh validation
+  - prerelease or canary releases remain out of scope until a future design
   - local package tarball smoke tests before publishing
-- Use Changesets or an equivalent changelog workflow to collect package-scoped
-  release notes during normal development.
-- Document the continuous release path from merged change to npm publish:
+- Uses Changesets to collect package-scoped release notes during normal
+  development.
+- Documented the continuous release path from merged change to npm publish:
   - version planning
   - changelog generation
   - package build
@@ -349,14 +351,14 @@ Goal: make publishing predictable and keep the public surface stable.
   - provenance-enabled publish
   - post-publish package-resolution smoke
   - docs/site update when public behavior changes
-- Define semver policy for:
+- Defined semver policy for:
   - React component props
   - core state and event contracts
   - Codex generated type exposure
   - server bridge behavior
   - CSS token contract
   - behavioral security defaults
-- Add or document release commands:
+- Added and documented release commands:
   - `bun run validate:fast`
   - `bun run validate:protocol`
   - `bun run validate:packages`
@@ -365,11 +367,12 @@ Goal: make publishing predictable and keep the public surface stable.
   - `bun run check:dead-code`
 - Keep `build`, `publint`, and `attw` ordered through
   `bun run validate:packages`.
-- Add a release checklist at `docs/maintenance/release-checklist.md`.
-- Decide whether to use Changesets or a lightweight changelog process.
-- Add `docs/maintenance/npm-release.md` for first release, prerelease, stable
+- Added a release checklist at `docs/maintenance/release-checklist.md`.
+- Added `.agents/skills/npm-release` for release operations, post-publish
+  verification, rollback, and deprecation support.
+- Added `docs/maintenance/npm-release.md` for first release, prerelease, stable
   release, rollback/deprecation, and post-publish verification.
-- Add browser QA expectations for release candidates:
+- Added browser QA expectations for release candidates:
   - desktop transcript and composer
   - mobile composer and approvals
   - long transcript and windowing

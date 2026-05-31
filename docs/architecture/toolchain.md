@@ -77,9 +77,10 @@ If package exports or declaration output become hard to maintain, evaluate
 
 Changesets configuration lives in `.changeset/config.json`. The release
 workflow validates the repo, then creates or updates a Changesets version PR
-when unpublished changesets exist. Publishing requires `NPM_TOKEN`; creating
-the version PR requires `CHANGESETS_GITHUB_TOKEN` when the default
-`GITHUB_TOKEN` cannot open pull requests.
+when unpublished changesets exist, or publishes already-versioned packages.
+Publishing requires `NPM_TOKEN`. `CHANGESETS_GITHUB_TOKEN` is optional when a
+stronger token is needed for version PR maintenance; otherwise the workflow uses
+the default `GITHUB_TOKEN`.
 
 The release workflow grants `id-token: write` and sets
 `NPM_CONFIG_PROVENANCE=true` so npm provenance can be attached when the registry

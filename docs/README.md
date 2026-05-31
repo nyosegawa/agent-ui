@@ -82,6 +82,10 @@ you need exact contracts.
 - [Repository Development Skills](./maintenance/repository-skills.md):
   maintainer-only `.agents/skills` for reviews, release validation, examples,
   and browser QA.
+- [npm Release](./maintenance/npm-release.md): Changesets, provenance-enabled
+  publishing, package metadata, and post-publish verification.
+- [Release Checklist](./maintenance/release-checklist.md): pre-publish,
+  publish, and post-publish gates.
 
 ## Examples
 

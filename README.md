@@ -138,7 +138,9 @@ Validation tiers and package-output gates are owned by
 [Testing](./docs/architecture/testing.md) and
 [Toolchain](./docs/architecture/toolchain.md). Use `bun run validate:fast` for
 normal local development and `bun run validate:packages` before changing package
-boundaries or publish output.
+boundaries or publish output. Use [npm Release](./docs/maintenance/npm-release.md)
+and the [Release Checklist](./docs/maintenance/release-checklist.md) for npm
+publish operations.
 
 Key pages:
 
@@ -148,6 +150,7 @@ Key pages:
 - [React Components](./docs/reference/react-components.md)
 - [Hooks](./docs/reference/hooks.md)
 - [Testing](./docs/architecture/testing.md)
+- [npm Release](./docs/maintenance/npm-release.md)
 - [Browser Verification](./docs/guides/browser-verification.md)
 - [Security](./docs/architecture/security.md)
 
