@@ -107,13 +107,20 @@ describe("package script documentation", () => {
   it("keeps validation command docs aligned with root package scripts", () => {
     const testingDocs = readRepoFile("docs/architecture/testing.md");
     const ciDocs = readRepoFile("docs/maintenance/ci-cd.md");
+    const contributingDocs = readRepoFile("CONTRIBUTING.md");
     const docsReadme = readRepoFile("docs/README.md");
     const rootReadme = readRepoFile("README.md");
 
     expect(ciDocs).toContain("Required PR Checks");
     expect(ciDocs).toContain("Local Fallback");
+    expect(ciDocs).toContain("../../CONTRIBUTING.md");
+    expect(contributingDocs).toContain("## Pull Request Flow");
+    expect(contributingDocs).toContain("## Changesets");
+    expect(contributingDocs).toContain("npm publishing is maintainer-only");
     expect(docsReadme).toContain("./maintenance/ci-cd.md");
+    expect(docsReadme).toContain("../CONTRIBUTING.md");
     expect(rootReadme).toContain("./docs/maintenance/ci-cd.md");
+    expect(rootReadme).toContain("./CONTRIBUTING.md");
 
     for (const script of validationScripts) {
       const command = packageJson.scripts?.[script];

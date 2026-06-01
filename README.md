@@ -137,6 +137,10 @@ own theme scope; see [Theming](./docs/guides/theming.md) for the full contract.
 
 Start with [docs/README.md](./docs/README.md).
 
+Contributing guidance for pull requests, changesets, validation, and
+maintainer-owned release workflows lives in
+[CONTRIBUTING.md](./CONTRIBUTING.md).
+
 ## Installable Skill
 
 External users can install the Agent UI skill to guide integrations in their own

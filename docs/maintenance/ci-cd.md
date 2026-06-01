@@ -14,6 +14,9 @@ Normal development is PR based:
 4. Merge to `main`.
 5. Treat `main` as integrated code, not as an npm release trigger.
 
+For contributor-facing branch, changeset, validation, and PR template guidance,
+see [Contributing](../../CONTRIBUTING.md).
+
 Configure GitHub branch protection outside the repository so direct pushes to
 `main` are avoided and the required checks below must pass before merge.
 
