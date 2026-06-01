@@ -80,6 +80,10 @@ focused jobs:
 - `Package resolution`
 - `Playwright fixtures`
 
+The `API snapshots` job performs a fresh package build before checking
+declaration snapshots because the snapshot script reads `dist` declaration
+output.
+
 Path filters skip expensive jobs for surfaces that cannot be affected by the
 changed files. Docs-only changes run the repository policy gate. Package README
 and changelog changes are package-surface changes, not docs-only changes.

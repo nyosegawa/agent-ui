@@ -33,6 +33,7 @@ describe("CI workflow policy", () => {
     }
 
     expect(ci).toContain("bun run validate:packages");
+    expect(ci).toMatch(/name: API snapshots[\s\S]+bun run build[\s\S]+bun run test:api-snapshots/);
     expect(ci).toContain("bun run test:package-resolution");
     expect(ci).toContain("bun run test:e2e:fixtures");
     expect(ci).toContain("actions/upload-artifact@v4");
