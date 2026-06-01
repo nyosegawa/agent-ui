@@ -6,6 +6,18 @@ function readRepoFile(path: string): string {
 }
 
 describe("CI workflow policy", () => {
+  it("keeps root agent guidance short and delegated to durable docs", () => {
+    const agents = readRepoFile("AGENTS.md");
+
+    expect(agents).toContain("This file is the short, always-read entry point");
+    expect(agents).toContain("CONTRIBUTING.md");
+    expect(agents).toContain("docs/maintenance/ci-cd.md");
+    expect(agents).toContain("docs/architecture/product-boundary.md");
+    expect(agents).toContain("npm-release` skill");
+    expect(agents).toContain("codex-upstream-sync` skill");
+    expect(agents.split(/\r?\n/).length).toBeLessThanOrEqual(85);
+  });
+
   it("keeps PR and main CI split into focused, cancelable, read-only jobs", () => {
     const ci = readRepoFile(".github/workflows/ci.yml");
 
@@ -91,5 +103,25 @@ describe("CI workflow policy", () => {
     expect(codexDocs).toContain("weekly or manual Codex App Automation");
     expect(codexSkill).toContain("Do not merge the PR created by this skill");
     expect(codexSkill).toContain("Do not publish npm packages");
+  });
+
+  it("keeps the pull request template aligned with contributor review gates", () => {
+    const template = readRepoFile(".github/pull_request_template.md");
+
+    for (const heading of [
+      "## Summary",
+      "## Test Plan",
+      "## Release Impact",
+      "## UI Impact",
+      "## Protocol And Upstream Impact",
+      "## Documentation",
+      "## Security And Secrets",
+    ]) {
+      expect(template).toContain(heading);
+    }
+
+    expect(template).toContain("changeset");
+    expect(template).toContain("No secrets, credentials, local `.npmrc` files");
+    expect(template).toContain("Codex upstream sync work; review remains human-owned");
   });
 });

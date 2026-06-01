@@ -11,6 +11,8 @@ you need exact contracts.
   the deterministic fixture app.
 - [Installation](./installation.md): packages, peer dependencies, and the
   single public React stylesheet import.
+- [Contributing](../CONTRIBUTING.md): pull requests, changesets, validation, and
+  maintainer-owned release workflows.
 
 ## Public Packages
 
