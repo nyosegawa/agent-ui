@@ -2,7 +2,9 @@
 
 ## Token
 
-Use a GitHub Actions repository secret named `NPM_TOKEN`.
+Use a GitHub Actions secret named `NPM_TOKEN`. Prefer storing it as an
+Environment secret on the `npm-release` Environment so the publish job cannot
+access it before the Environment approval gate.
 
 Recommended npm granular token:
 
@@ -23,11 +25,20 @@ artifacts.
 
 The publish job must run only from trusted code:
 
-- `push` to `main`
 - `workflow_dispatch`
 
-Do not use `NPM_TOKEN` from `pull_request_target` with untrusted PR code. Fork PR
-workflows do not receive repository secrets by default.
+Do not publish from `push` to `main`. Do not use `NPM_TOKEN` from
+`pull_request_target` with untrusted PR code. Fork PR workflows do not receive
+repository secrets by default.
+
+The publish job should declare:
+
+```yaml
+environment: npm-release
+```
+
+Configure that Environment in GitHub with required reviewers before treating the
+workflow as protected.
 
 ## Provenance
 

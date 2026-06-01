@@ -11,6 +11,8 @@ describe("browser e2e workflow gate", () => {
 
     expect(ci).toContain("bunx playwright install --with-deps chromium");
     expect(ci).toContain("bun run test:e2e:fixtures");
+    expect(ci).toContain("playwright-report/");
+    expect(ci).toContain("test-results/");
     expect(ci).not.toContain("bun run test:e2e:real-local");
     expect(ci).not.toContain("bun run validate:e2e");
   });

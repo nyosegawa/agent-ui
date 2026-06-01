@@ -292,30 +292,35 @@ keeping application orchestration outside the core packages.
 Goal: make hosted validation useful and economical while preserving local-first
 development.
 
-- Keep local validation commands as the source of truth for developers.
+Status: Complete for PR-based development, manual npm release, and Codex App
+Automation-owned upstream drift checks.
+
+- Kept local validation commands as the source of truth for developers.
 - Split CI into focused jobs:
-  - typecheck and lint
+  - repository policy
+  - typecheck
+  - lint
   - unit tests
   - protocol and fixture tests
   - package validation
   - API snapshots
   - package resolution smoke
   - Playwright fixtures
-  - optional real-local App Server checks
-- Add path filters so docs-only, package-only, protocol-only, and UI-only
+- Added path filters so docs-only, package-only, protocol-only, and UI-only
   changes do not always run every expensive job.
-- Add concurrency cancellation for superseded pushes.
-- Cache Bun dependencies, Playwright browsers, and build artifacts where safe.
-- Keep `build`, `publint`, and `attw` ordered; do not parallelize package
-  output validation steps that mutate `dist/`.
-- Upload Playwright traces, screenshots, logs, and package validation output as
-  artifacts on failure.
-- Add scheduled or manually triggered Codex upstream drift checks once CI
-  capacity is available.
-- Add release workflows that run the full release ladder before publish, but
-  keep publish itself explicitly gated.
-- Document which CI checks are required for PRs, releases, and upstream protocol
-  refreshes.
+- Added concurrency cancellation for superseded PR and push validation.
+- Cached Bun dependencies and Playwright browsers while keeping package build
+  output uncached.
+- Kept `build`, `publint`, and `attw` ordered; package output validation remains
+  serialized through `validate:packages`.
+- Uploaded Playwright traces, screenshots, logs, release logs, package
+  validation logs, and package resolution logs as artifacts on failure.
+- Kept weekly Codex upstream drift checks owned by Codex App Automation; review
+  and merge remain human-owned.
+- Changed npm release to manual workflow dispatch with separate prepare and
+  publish modes. Publish is gated by the `npm-release` Environment.
+- Documented required CI checks, manual release flow, artifacts, Codex
+  Automation ownership, and local fallback.
 
 Validation target:
 

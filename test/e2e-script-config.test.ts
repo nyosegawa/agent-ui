@@ -23,8 +23,12 @@ describe("e2e script configuration", () => {
     const realLocalConfig = readRepoFile("playwright.real-local.config.ts");
 
     expect(fixtureConfig).toContain("examples/local-react-vite");
+    expect(fixtureConfig).toContain('outputDir: "test-results/fixtures"');
+    expect(fixtureConfig).toContain('["html", { open: "never" }]');
     expect(fixtureConfig).not.toContain("examples/codex-local-web");
     expect(realLocalConfig).toContain("examples/codex-local-web");
+    expect(realLocalConfig).toContain('outputDir: "test-results/real-local"');
+    expect(realLocalConfig).toContain('["html", { open: "never" }]');
     expect(realLocalConfig).not.toContain("examples/local-react-vite");
   });
 });

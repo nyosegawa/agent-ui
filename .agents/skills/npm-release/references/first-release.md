@@ -1,6 +1,6 @@
 # First Release
 
-The M9 target is the first public npm release:
+The M9 target was the first public npm release:
 
 - `@nyosegawa/agent-ui-core@0.1.0`
 - `@nyosegawa/agent-ui-codex@0.1.0`
@@ -22,9 +22,9 @@ Confirm:
   manifests before Changesets publish so published npm manifests never retain
   `workspace:` ranges.
 - each public package has a README.
-- `NPM_TOKEN` is configured as a GitHub Actions repository secret.
-- release workflow uses trusted `push` to `main` or `workflow_dispatch`, not
-  untrusted pull request code.
+- `NPM_TOKEN` is configured for GitHub Actions.
+- release workflow uses trusted manual `workflow_dispatch`, not untrusted pull
+  request code.
 
 ## Required Validation
 
@@ -44,8 +44,9 @@ bun run test:package-resolution
 
 ## Publish
 
-Prefer the release workflow. It validates the repo, then uses Changesets to
-publish with provenance from GitHub Actions.
+Prefer the manual release workflow. It validates the repo, waits for the
+`npm-release` Environment approval, then uses Changesets to publish with
+provenance from GitHub Actions.
 
 Local publish is allowed only when the user explicitly requests it and accepts
 that provenance or token behavior may differ from the workflow.

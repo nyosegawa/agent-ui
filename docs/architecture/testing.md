@@ -40,7 +40,10 @@ Canonical validation tiers:
 - `bun run validate:e2e`: clean Playwright ports, then deterministic browser
   e2e.
 - `bun run validate:release`: fast, protocol, packages, dead-code,
-  API-snapshot, package-resolution, and Node compatibility gates.
+  API-snapshot, and package-resolution gates. `validate:release` does not repeat
+  `test:node-compat` after `validate:packages` because the package gate already
+  includes Node compatibility smoke. The explicit non-tier child gates are
+  `check:dead-code`, `test:api-snapshots`, and `test:package-resolution`.
 
 Focused maintenance gates:
 
@@ -64,26 +67,36 @@ without ignored `dist` or `.next` output already present.
 
 ## CI Coverage
 
-The main CI workflow validates the normal development path:
+The main CI workflow validates the normal PR and `main` integration path with
+focused jobs:
 
-- install with the repo-pinned Bun version
-- `bun run validate:fast`
-- `bun run validate:protocol`
-- `bun run validate:packages`
-- `bun run check:dead-code`
-- `bun run test:api-snapshots`
-- `bun run test:package-resolution`
-- `bun run test:node-compat`
-- `bun run test:e2e:fixtures`
+- `Repository policy`
+- `Typecheck`
+- `Lint`
+- `Unit tests`
+- `Protocol and fixtures`
+- `Package validation`
+- `API snapshots`
+- `Package resolution`
+- `Playwright fixtures`
 
-Package validation repeats build/package checks for publish confidence.
-Compatibility CI covers Node 20, 22, and 24 import/require smoke plus the
-package-resolution smoke. The API snapshot gate is driven by package export
-maps: missing, changed, and stale public declaration snapshots fail unless
+The `API snapshots` job performs a fresh package build before checking
+declaration snapshots because the snapshot script reads `dist` declaration
+output.
+
+Path filters skip expensive jobs for surfaces that cannot be affected by the
+changed files. Docs-only changes run the repository policy gate. Package README
+and changelog changes are package-surface changes, not docs-only changes.
+
+The manual `Package Validation` workflow repeats build/package checks for
+publish confidence without duplicating every PR run. Compatibility CI covers
+Node 20, 22, and 24 import/require smoke plus pnpm workspace smoke when changes
+are not docs-only. The API snapshot gate is driven by package export maps:
+missing, changed, and stale public declaration snapshots fail unless
 `bun run test:api-snapshots:update` is run intentionally after reviewing the
 public API change. Bundler implementation chunks are not snapshots unless an
-export map points to them. pnpm compatibility is a smoke target only; Bun
-remains the package manager and lockfile owner.
+export map points to them. pnpm compatibility is a smoke target only; Bun remains
+the package manager and lockfile owner.
 
 `bun run test:package-resolution` performs a fresh package build before it
 creates an isolated consumer project, so it cannot pass by resolving stale
@@ -94,9 +107,10 @@ metadata. When that guard is added, start with the React guide examples because
 they cover the most user-facing component wiring and are already backed by
 workspace TypeScript dependencies.
 
-The release workflow runs `bun run validate:release` and then
+The manual release workflow runs `bun run validate:release` and then
 `bun run validate:e2e`, so the real-local fake App Server suite is release
-evidence without blocking every pull request.
+evidence without blocking every pull request. npm publish is a separate
+Environment-gated job after release validation.
 
 ## Protocol Tests
 

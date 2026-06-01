@@ -23,6 +23,8 @@ work to a Codex agent or human reviewer.
 - Do not push directly to `main`.
 - Do not publish npm packages.
 - Do not merge the PR created by this skill.
+- Do not replace the weekly Codex App Automation cadence with a scheduled
+  GitHub Actions workflow unless the user explicitly asks for that change.
 - Treat generated schema changes as the beginning of review, not the completed
   update.
 - Classify every new stable and experimental method before calling the PR done.

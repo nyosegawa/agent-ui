@@ -43,6 +43,9 @@ describe("package script documentation", () => {
     expect(packageJson.scripts?.["validate:packages"]).toBe(
       "bun run build && bun run test:packlist && bun run test:node-compat && bun run publint && bun run attw",
     );
+    expect(packageJson.scripts?.["validate:release"]).toBe(
+      "bun run validate:fast && bun run validate:protocol && bun run validate:packages && bun run check:dead-code && bun run test:api-snapshots && bun run test:package-resolution",
+    );
 
     const testingDocs = readRepoFile("docs/architecture/testing.md");
     expect(testingDocs).toContain(
@@ -50,6 +53,9 @@ describe("package script documentation", () => {
     );
     expect(testingDocs).toContain(
       "packlist smoke, Node\n  compatibility smoke, `publint`, and `arethetypeswrong`",
+    );
+    expect(testingDocs).toMatch(
+      /`validate:release` does not repeat\s+`test:node-compat` after `validate:packages`/,
     );
   });
 
@@ -100,6 +106,15 @@ describe("package script documentation", () => {
 
   it("keeps validation command docs aligned with root package scripts", () => {
     const testingDocs = readRepoFile("docs/architecture/testing.md");
+    const ciDocs = readRepoFile("docs/maintenance/ci-cd.md");
+    const docsReadme = readRepoFile("docs/README.md");
+    const rootReadme = readRepoFile("README.md");
+
+    expect(ciDocs).toContain("Required PR Checks");
+    expect(ciDocs).toContain("Local Fallback");
+    expect(docsReadme).toContain("./maintenance/ci-cd.md");
+    expect(rootReadme).toContain("./docs/maintenance/ci-cd.md");
+
     for (const script of validationScripts) {
       const command = packageJson.scripts?.[script];
       expect(command, script).toBeTypeOf("string");
