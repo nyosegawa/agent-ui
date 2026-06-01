@@ -43,9 +43,15 @@ built and inspected in order.
 
 ## Publish
 
-Use the `Release` GitHub Actions workflow from trusted `main` or
-`workflow_dispatch`. Confirm the workflow completed the validation steps before
-Changesets publish runs.
+Use `.agents/skills/npm-release/` for the release flow.
+
+1. Run the `Release` GitHub Actions workflow in `prepare` mode when changesets
+   should become a version PR.
+2. Review and merge the version PR after required checks pass.
+3. Run the `Release` workflow in `publish` mode from `main`.
+4. Confirm the workflow completed validation before approving the `npm-release`
+   Environment.
+5. Approve the Environment only for the intended commit and package versions.
 
 ## Post-Publish
 

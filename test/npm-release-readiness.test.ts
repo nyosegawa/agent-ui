@@ -42,14 +42,18 @@ describe("npm release readiness", () => {
 
   it("keeps release automation provenance-enabled and token-scoped", async () => {
     const workflow = await readFile(join(root, ".github", "workflows", "release.yml"), "utf8");
-    expect(workflow).toContain("push:");
-    expect(workflow).toContain("branches: [main]");
     expect(workflow).toContain("workflow_dispatch:");
+    expect(workflow).toContain("type: choice");
+    expect(workflow).toContain("- prepare");
+    expect(workflow).toContain("- publish");
+    expect(workflow).not.toContain("push:");
     expect(workflow).toContain("id-token: write");
     expect(workflow).toContain("NPM_TOKEN: ${{ secrets.NPM_TOKEN }}");
     expect(workflow).toContain("bun run validate:release");
     expect(workflow).toContain("bun run validate:e2e");
+    expect(workflow).toContain("version: bunx changeset version");
     expect(workflow).toContain("publish: bun run release:publish");
+    expect(workflow).toContain("environment: npm-release");
     expect(workflow).toContain("NPM_CONFIG_PROVENANCE: true");
     expect(workflow).not.toContain("pull_request_target");
   });
@@ -58,8 +62,10 @@ describe("npm release readiness", () => {
     const npmRelease = await readFile(join(root, "docs", "maintenance", "npm-release.md"), "utf8");
     const checklist = await readFile(join(root, "docs", "maintenance", "release-checklist.md"), "utf8");
 
-    expect(npmRelease).toContain("The first public release is `0.1.0`");
+    expect(npmRelease).toContain("first public release was `0.1.0`");
     expect(npmRelease).toContain("Do not increment package versions on every `main` push");
+    expect(npmRelease).toContain("manual");
+    expect(npmRelease).toContain("npm-release");
     expect(npmRelease).toContain("bunx changeset publish");
     expect(npmRelease).toContain("post-publish smoke");
     expect(checklist).toContain("NPM_TOKEN");

@@ -83,7 +83,9 @@ decisions.
 
 Use the prompt in
 `.agents/skills/codex-upstream-sync/references/codex-automation-prompt.md` for a
-weekly or manual Codex Automation. The automation should:
+weekly or manual Codex App Automation. Do not replace this cadence with a
+scheduled GitHub Actions workflow unless the project explicitly changes the
+maintenance model. The automation should:
 
 - Run the drift check.
 - Open a draft PR only when drift exists.

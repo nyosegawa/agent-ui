@@ -12,8 +12,9 @@ installable user skills under `skills/`.
   generated-change review.
 - `.agents/skills/release-validation/`: package, API snapshot, build output,
   release, CI, and publish-risk validation.
-- `.agents/skills/npm-release/`: Changesets versioning, npm publish,
-  provenance, post-publish smoke, rollback, and deprecation operations.
+- `.agents/skills/npm-release/`: Changesets versioning, manual release
+  workflow operation, npm publish, provenance, post-publish smoke, rollback,
+  and deprecation operations.
 - `.agents/skills/example-authoring/`: examples, recipes, fixture routes,
   docs-site examples, and example docs.
 - `.agents/skills/browser-qa/`: Playwright and agent-browser QA for
@@ -25,9 +26,10 @@ browser verification is needed.
 
 ## Development Flow
 
-The weekly upstream flow remains owned by `codex-upstream-sync`: automation
-checks drift and opens a draft PR when needed. M4 skills cover review and daily
-maintenance around that flow.
+The weekly upstream flow remains owned by `codex-upstream-sync`: Codex App
+Automation checks drift and opens a draft PR when needed. GitHub Actions are not
+the scheduler for this flow. M4 skills cover review and daily maintenance around
+that flow.
 
 Use `agent-ui-review` when reviewing a PR, branch, diff, or generated update.
 It should lead with findings and judge whether changes preserve Agent UI as a
@@ -37,8 +39,8 @@ Use `release-validation` before release, before publish, after package export or
 declaration changes, when CI/package validation fails, or when a PR needs
 merge-readiness validation.
 
-Use `npm-release` when preparing a Changesets release, operating the npm publish
-workflow, verifying `NPM_TOKEN` and provenance behavior, or handling
+Use `npm-release` when preparing a Changesets release, operating the manual npm
+publish workflow, verifying `NPM_TOKEN` and provenance behavior, or handling
 post-publish support tasks.
 
 Use `example-authoring` when changing `examples/`, `docs/examples/`, recipes,

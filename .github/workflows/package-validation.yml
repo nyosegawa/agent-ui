@@ -1,19 +1,46 @@
 name: Package Validation
 
 on:
-  pull_request:
-  push:
-    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: package-validation-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   package-validation:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.13
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
+          restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-      - run: bun run validate:packages
-      - run: bun run test:api-snapshots
-      - run: bun run test:package-resolution
+      - name: Validate packages
+        shell: bash
+        run: |
+          set -o pipefail
+          bun run validate:packages 2>&1 | tee package-validation.log
+      - name: API snapshots
+        run: bun run test:api-snapshots
+      - name: Package resolution smoke
+        shell: bash
+        run: |
+          set -o pipefail
+          bun run test:package-resolution 2>&1 | tee package-resolution.log
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: package-validation-${{ github.run_id }}
+          path: |
+            package-validation.log
+            package-resolution.log
+          if-no-files-found: ignore

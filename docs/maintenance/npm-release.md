@@ -8,8 +8,8 @@ Agent UI publishes public npm packages under the `@nyosegawa` organization:
 - `@nyosegawa/agent-ui-server`
 - `@nyosegawa/agent-ui-web-components`
 
-The first public release is `0.1.0`. Releases use Changesets for versioning and
-GitHub Actions for provenance-enabled publishing.
+The first public release was `0.1.0`. Releases use Changesets for versioning and
+manual GitHub Actions dispatch for provenance-enabled publishing.
 
 ## Versioning Policy
 
@@ -26,23 +26,32 @@ Before `1.0`, use:
 
 ## Release Workflow
 
-The `Release` GitHub Actions workflow runs on trusted `push` to `main` and
-manual `workflow_dispatch`. It:
+The `Release` GitHub Actions workflow is manual. `main` push does not publish
+npm packages.
+
+Use `prepare` mode to:
 
 1. Installs Bun with the pinned repository version.
 2. Installs Playwright browser dependencies.
 3. Runs `bun run validate:release`.
 4. Runs `bun run validate:e2e`.
-5. Runs `bun run release:publish`, which first normalizes npm publish manifests
+5. Creates or updates the Changesets version PR.
+
+Use `publish` mode after the reviewed version PR has merged to:
+
+1. Run the same release validation ladder.
+2. Wait for the `npm-release` GitHub Environment approval.
+3. Run `bun run release:publish`, which first normalizes npm publish manifests
    so internal `workspace:` dependencies become semver ranges, then runs
    `bunx changeset publish`.
 
-The workflow uses the repository secret `NPM_TOKEN` and grants `id-token: write`
-so npm can attach provenance. Fork pull requests do not receive repository
-secrets by default, and the publish workflow does not run untrusted PR code.
-`NPM_TOKEN` must be an automation-capable token or otherwise able to publish
-without an OTP prompt; a token that requires interactive 2FA fails in GitHub
-Actions with `EOTP`.
+The publish job uses `NPM_TOKEN` and grants `id-token: write` so npm can attach
+provenance. Prefer storing `NPM_TOKEN` as an `npm-release` Environment secret and
+configuring required reviewers on that Environment. Fork pull requests do not
+receive repository secrets by default, and the publish workflow does not run
+untrusted PR code. `NPM_TOKEN` must be an automation-capable token or otherwise
+able to publish without an OTP prompt; a token that requires interactive 2FA
+fails in GitHub Actions with `EOTP`.
 
 `CHANGESETS_GITHUB_TOKEN` is optional. If present, it can be used for version PR
 maintenance; otherwise the workflow falls back to GitHub Actions'
@@ -89,11 +98,11 @@ consumer smoke verifies the registry package can install outside the workspace.
 After the workflow publishes, verify the registry:
 
 ```sh
-npm view @nyosegawa/agent-ui-core@0.1.0 version
-npm view @nyosegawa/agent-ui-codex@0.1.0 version
-npm view @nyosegawa/agent-ui-react@0.1.0 version
-npm view @nyosegawa/agent-ui-server@0.1.0 version
-npm view @nyosegawa/agent-ui-web-components@0.1.0 version
+npm view @nyosegawa/agent-ui-core@<version> version
+npm view @nyosegawa/agent-ui-codex@<version> version
+npm view @nyosegawa/agent-ui-react@<version> version
+npm view @nyosegawa/agent-ui-server@<version> version
+npm view @nyosegawa/agent-ui-web-components@<version> version
 ```
 
 Then install the published packages in a temporary project outside the

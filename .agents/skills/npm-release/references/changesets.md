@@ -5,6 +5,8 @@ Agent UI uses Changesets for package versioning and changelogs.
 ## Policy
 
 - Do not bump versions on every `main` push.
+- Do not publish automatically from `main` push. Run the release workflow
+  manually when a reviewed release commit should be published.
 - Add a changeset only when a package behavior or public surface should be
   released.
 - Normal changes accumulate until a version PR or explicit release commit.
@@ -21,11 +23,12 @@ Agent UI uses Changesets for package versioning and changelogs.
 
 ## Workflow
 
-Changesets can either:
+The manual Release workflow can either:
 
 - create a version PR when changeset files exist on `main`, or
 - publish when versioned package manifests and changelogs are already committed
   and no unpublished changesets remain.
 
 When using the workflow, ensure `GITHUB_TOKEN` or `CHANGESETS_GITHUB_TOKEN` can
-create/update pull requests and `NPM_TOKEN` can publish `@nyosegawa` packages.
+create/update pull requests and the `npm-release` Environment provides
+`NPM_TOKEN` for publishing `@nyosegawa` packages.
