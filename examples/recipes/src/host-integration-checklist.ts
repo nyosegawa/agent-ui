@@ -1,10 +1,10 @@
-export interface MigrationVNextStep {
+export interface HostIntegrationStep {
   detail: string;
   owner: "agent-ui" | "host";
   title: string;
 }
 
-export const migrationVNextSteps: MigrationVNextStep[] = [
+export const hostIntegrationSteps: HostIntegrationStep[] = [
   {
     detail:
       "Use Codex App Server productized methods for browser transports; keep experimental and unsupported methods behind host-owned policy.",

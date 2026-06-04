@@ -6,12 +6,12 @@ normalized Agent UI state and stable actions. React exposes Agent UI option
 types for hook inputs; generated Codex App Server params and request builders
 stay inside the Codex package boundary.
 
-vNext treats the exported hooks below as the public controller layer when their
-return values are raw-free view models and stable host actions. Controllers that
-still expose reducer reconciliation, optimistic operation maps, queued
-attachment restore internals, collection request sequencing, or raw generated
-protocol payloads stay source-level until examples, tests, docs, API snapshots,
-and package-resolution gates prove the boundary. `AgentThreadScope` and other
+The exported hooks below are the public controller layer when their return
+values are raw-free view models and stable host actions. Controllers that still
+expose reducer reconciliation, optimistic operation maps, queued attachment
+restore internals, collection request sequencing, or raw generated protocol
+payloads stay source-level until examples, tests, docs, API snapshots, and
+package-resolution gates prove the boundary. `AgentThreadScope` and other
 view-state keys are Agent UI UI metadata only; hosts still own tenant,
 workspace, project, authorization, persistence, and routing policy.
 

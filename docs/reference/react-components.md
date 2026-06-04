@@ -28,14 +28,14 @@ secondary chrome.
 
 The public preset customization API is `AgentChatProps.components:
 AgentComponents`, plus the exported default map `defaultAgentComponents`. The
-old slot-oriented shape is not part of the vNext public contract. Replacement
+old slot-oriented shape is not part of the public contract. Replacement
 components should import from `@nyosegawa/agent-ui-react`, not from source
 modules, and receive a `Default` renderer for the surface they replace. `Shell`,
 `Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are the
 raw-free preset replacement targets for this gate. `Item` remains a legacy
 replacement point that currently receives `AgentItemState` and `TurnState`
 from core, including `raw?: unknown` fields; do not treat that shape as the
-final vNext item renderer contract. Moving item replacement to raw-free
+final item renderer contract. Moving item replacement to raw-free
 transcript view-model props is part of the later API stabilization gate.
 Internal component state, CSS implementation selectors, attachment mutation
 objects, transcript window bookkeeping, and generated protocol payloads stay

@@ -3430,12 +3430,12 @@ Phase 10 notes:
 
 ## Phase 17: Current Design Language And Agent Skills Freshness
 
-- [ ] Treat the host integration model as the current design, not a future
+- [x] Treat the host integration model as the current design, not a future
   vNext migration, because this PR does not need backwards compatibility.
-- [ ] Remove public-facing vNext terminology from docs, examples, recipes,
+- [x] Remove public-facing vNext terminology from docs, examples, recipes,
   changesets, and PR wording. Keep only unavoidable factual branch/checkpoint
   references in internal notes.
-- [ ] Rename vNext-specific doc and recipe files to current-design names, then
+- [x] Rename vNext-specific doc and recipe files to current-design names, then
   update docs-staleness coverage and links.
 - [ ] Re-check Agent Skills guidance against the latest official Codex manual.
 - [ ] Update public Agent UI skill docs and repository skill docs for the
@@ -3464,6 +3464,36 @@ Phase 10 notes:
   - Existing public skill docs still emphasize older install commands and need
     to be reframed around current Codex skill discovery, local installation
     through `$skill-installer`, and plugin-based distribution.
+- 2026-06-04 current design language slice:
+  - Renamed `docs/architecture/vnext-design-gates.md` to
+    `docs/architecture/host-integration-design-gates.md`,
+    `docs/migrations/vnext-host-consumers.md` to
+    `docs/guides/host-integration.md`, and
+    `examples/recipes/src/migration-vnext.ts` to
+    `examples/recipes/src/host-integration-checklist.ts`.
+  - Removed public-facing `vNext` terminology from docs, examples, recipes,
+    and the package-boundary changeset so the PR presents the host integration
+    model as the current design.
+  - Design note:
+    - what remains internal: generated schema, dist output, source-level
+      controller internals, raw normalized entities, local media serving
+      internals, bridge process lifecycle, and implementation CSS selectors.
+    - what becomes public: host integration guide, host integration design
+      gates, public package exports, documented controller/component/resource
+      surfaces, and the host integration checklist recipe.
+    - what host responsibility is intentionally not handled: hosted auth,
+      persistence, tenant/workspace isolation, process supervision, upload or
+      static authorization, billing, audit storage, and deployment policy.
+    - which example proves the design:
+      `examples/recipes/src/host-integration-checklist.ts` plus the default
+      `AgentChat` sidebar and `examples/recipes/src/scoped-thread-list.tsx`.
+    - which tests protect the contract:
+      `bunx vitest run test/docs-staleness.test.ts`, `bun run --cwd
+      examples/recipes typecheck`, `bun run test:styles`, `bun run lint`, and
+      `bun run typecheck`.
+  - Focused validation passed: `bunx vitest run test/docs-staleness.test.ts`,
+    `bun run --cwd examples/recipes typecheck`, `bun run test:styles`, `bun run
+    lint`, and `bun run typecheck`.
 
 ## Completion Criteria
 

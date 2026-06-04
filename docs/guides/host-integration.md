@@ -1,12 +1,13 @@
-# vNext Host Consumer Migration
+# Host Integration
 
-This guide is for host applications that embed Agent UI packages during the
-breaking vNext work. vNext may remove or rename unshipped branch surfaces, but
-it does not move hosted runtime policy into Agent UI core.
+This guide is for host applications that embed Agent UI packages. Agent UI
+provides reusable Codex App Server UI components and integration helpers, but it
+does not move hosted runtime policy into core.
 
-## Who Must Migrate
+## Who Should Read This
 
-Migrate if your host imports Agent UI packages and does any of the following:
+Use this guide if your host imports Agent UI packages and does any of the
+following:
 
 - imports source modules or package `dist/*` files instead of package exports
 - depends on the old `AgentChat` slot shape
@@ -17,7 +18,7 @@ Migrate if your host imports Agent UI packages and does any of the following:
 - exposes a bridge endpoint beyond private loopback
 - handles server requests as generic approvals
 
-## Package Breaking Changes
+## Package Boundaries
 
 - `@nyosegawa/agent-ui-core`: treat normalized state as reducer state unless a
   selector or documented view model is named public. Do not build host workflow
@@ -26,8 +27,7 @@ Migrate if your host imports Agent UI packages and does any of the following:
   generated params, request builders, stable types, normalizers, clients, and
   WebSocket transport on their documented subpaths.
 - `@nyosegawa/agent-ui-react`: use public controllers, primitives, and the
-  `components` replacement map. `components.Item` still exposes legacy core
-  item/turn state in this draft; prefer `components.blocks` or transcript
+  `components` replacement map. Prefer `components.blocks` or transcript
   controllers for raw-free rendering.
 - `@nyosegawa/agent-ui-server`: keep bridge admission, browser method policy,
   one-shot RPC method policy, dynamic-tool policy, local media serving,
@@ -112,7 +112,7 @@ attachAgentUiWebSocketBridge({
 Do not use `createAgentUiNextRpcRoute()` for chat. It is a one-shot HTTP RPC
 helper for one allowlisted method per request.
 
-## Local Media Helper Migration
+## Local Media Helper
 
 Before:
 
@@ -142,7 +142,7 @@ The host owns upload authorization, static serving, persistence, cleanup, and
 tenant/workspace scoping. Agent UI owns browser metadata and explicit Codex
 input plumbing.
 
-## First Message Optimistic Migration
+## First Message Optimistic State
 
 Do not call source-level first-message helpers from host code. Start empty
 threads through `useAgentThreadController().startThread()` or submit the first
@@ -151,7 +151,7 @@ owns pending first-message retry/cancel state without exposing operation maps.
 
 ## Validation Checklist
 
-- Run docs validation for migration docs:
+- Run docs validation for host integration docs:
   `bunx vitest run test/docs-staleness.test.ts`.
 - For package/export changes, run `bun run validate:packages`,
   `bun run test:api-snapshots`, and `bun run test:package-resolution`.

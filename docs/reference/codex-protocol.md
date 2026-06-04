@@ -273,9 +273,9 @@ Stable `thread/start` and React `ThreadStartOptions` do not expose
 fields, but hosts that opt into that raw protocol path own the experimental API
 negotiation and tool execution policy.
 
-## vNext Lifecycle Classification Gate
+## Lifecycle Classification Gate
 
-vNext core lifecycle state must be derived from classified App Server protocol
+Core lifecycle state must be derived from classified App Server protocol
 surfaces before React behavior is published. Agent UI may add UI-owned pending,
 collection, preview, and failure state, but those states must not be presented
 as durable App Server semantics.
@@ -353,7 +353,7 @@ Unsupported or test-only surfaces:
 
 Thread close handling is notification-only in the current stable generated
 surface: `thread/closed` is mapped, but there is no productized stable
-`thread/close` client method. vNext can model closed availability from the
+`thread/close` client method. Agent UI can model closed availability from the
 notification and stored snapshots, but a default React close action must wait
 for an upstream stable method or be explicitly labeled host-owned.
 Archive lifecycle is status-only in core: `thread/archived` maps to archived
@@ -362,7 +362,7 @@ availability, `thread/unarchived` maps back to available loaded state, and
 close method.
 
 `clientUserMessageId` is a stable correlation field on `turn/start` and
-`turn/steer`. vNext should use it for optimistic first-message reconciliation,
+`turn/steer`. Agent UI uses it for optimistic first-message reconciliation
 while keeping temporary operation IDs and duplicate-prevention bookkeeping
 inside Agent UI state.
 

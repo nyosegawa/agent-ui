@@ -12,12 +12,11 @@
 
 Packages are split by responsibility, but the local bridge is included in the official package set.
 
-## vNext Freeze Policy
+## Export Freeze Policy
 
-The export map is not frozen while vNext is still proving controller,
-resource, bridge, and diagnostics boundaries. Breaking removals and renames are
-allowed for unshipped branch work, but each promoted public export must have all
-of the following before it becomes part of the package contract:
+The export map should change only when controller, resource, bridge, and
+diagnostics boundaries have been proven together. Each promoted public export
+must have all of the following before it becomes part of the package contract:
 
 - an intentional export-map entry or package-root barrel export
 - a canonical reference doc in this page or the package-specific reference page
@@ -37,12 +36,11 @@ still own non-loopback bridge admission, hosted auth, persistence, tenant and
 workspace isolation, audit sinks, upload/static authorization, process
 supervision, billing, and deployment policy.
 
-## vNext Draft Export Inventory
+## Export Inventory
 
 This inventory was regenerated from `test/api-snapshots/*__index.d.ts` with
-`bun run test:api-snapshots:update` on 2026-06-03. It is a draft review note
-for the breaking vNext work; the final export map should be frozen only after
-internal boundaries, examples, tests, and migration docs agree.
+`bun run test:api-snapshots:update` on 2026-06-03. Freeze the export map only
+after internal boundaries, examples, tests, and host integration docs agree.
 
 ### `@nyosegawa/agent-ui-core`
 
@@ -60,7 +58,7 @@ audience-filtered diagnostics, items, running turns, ordered items/turns,
 pending approvals, protocol notifications, run settings, server requests,
 status banners, thread, turn, and usage.
 
-Replaced in vNext API draft: registry-bucket public shapes
+Replaced by the current API: registry-bucket public shapes
 (`ThreadRegistryState`, `ThreadRegistryStatus`, and `selectThreadRegistry`)
 were removed in favor of explicit thread lifecycle state, scoped collections,
 active-thread selectors, pending operation selectors, and the separate public
@@ -75,8 +73,8 @@ Make private: reducer-internal registry/retention helper behavior and any
 canonical-ID reconciliation detail that is not part of an explicit diagnostic
 surface.
 
-Remove: no root exports are removed at this draft gate beyond replacing the
-registry bucket model with the vNext collection model.
+Remove: no root exports are removed at this gate beyond replacing the registry
+bucket model with the current collection model.
 
 ### `@nyosegawa/agent-ui-codex`
 
@@ -101,7 +99,7 @@ types should stay on `stable-types`, `clients`, `request-builders`, or
 `normalizeCodexServerMessage` are host-owned lower-level helpers and should be
 imported from `@nyosegawa/agent-ui-codex/normalizer`.
 
-Replace with vNext API: lifecycle-dependent normalizer contracts that still
+Replace with current API: lifecycle-dependent normalizer contracts that still
 produce old registry status names should be updated after protocol
 classification.
 
@@ -129,7 +127,7 @@ with user/developer/audit diagnostic views,
 `useAgentTranscriptScrollController` if their return shapes stay view-model
 based.
 
-Replace with vNext API: `AgentChatSlots` has been removed in favor of the
+Replace with current API: `AgentChatSlots` has been removed in favor of the
 single `AgentComponents` map and `defaultAgentComponents`. The accepted
 replacement points are `Shell`, `Sidebar`, `EmptyState`, `ComposerPanel`,
 `Approval`, preset transcript `Item`, and transcript `blocks`. Lower-level
@@ -143,7 +141,7 @@ normalization remain internal/source-level boundaries;
 `AgentThreadSidebar`, and `AgentWorkspace` are rebuilt on explicit session,
 active-thread, thread-list, composer, transcript, scroll, server-request, and
 diagnostics controllers. `startThreadWithInput()` has been removed from the
-thread hook in the vNext draft; first-message start behavior now lives on the
+thread hook; first-message start behavior now lives on the
 source-level internal composer controller as `startWithMessage()`.
 
 Move to subpath or keep internal: transcript-window utilities
@@ -194,7 +192,7 @@ explicit `createMcpDynamicToolHandler()` mapping helper.
 Keep public: `defineAgentChatElement`, `AgentChatElement`,
 `AgentChatElementOptions`, and `AgentChatWebComponentElement`.
 
-Replace with vNext API: `AgentChatElementOptions.components` follows the React
+Replace with current API: `AgentChatElementOptions.components` follows the React
 `components` replacement map.
 
 Move to subpath: none at this gate.
@@ -221,8 +219,8 @@ Docs that describe soon-to-change APIs: `docs/reference/hooks.md`,
 `docs/examples/*` pages that explain `AgentChat`, sidebar history, or
 attachments.
 
-Resource resolution exports are kept at the React root while vNext proves the
-attachment boundary: `AgentResolvedResource`, `AgentResourceKind`,
+Resource resolution exports are kept at the React root as the attachment
+boundary: `AgentResolvedResource`, `AgentResourceKind`,
 `AgentFileResourceRequest`, `AgentLocalMediaResourceRequest`,
 `AgentResourceRequest`, `AgentResourceResolution`, `AgentResourceResolver`,
 `AgentLocalMediaUrlResolver`, `AgentResolvedLocalAttachment`, `agentResourceUrl`, and

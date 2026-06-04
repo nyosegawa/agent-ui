@@ -23,8 +23,8 @@ authentication, workspace selection, upload storage, and deployment topology.
 Agent UI's server package offers opt-in helpers for that host-owned bridge. The
 helpers do not make Agent UI a managed hosting layer.
 
-Package exports, examples, and migration docs must preserve this split.
-Breaking vNext API work may remove or rename surfaces, but it should not move
+Package exports, examples, and host integration docs must preserve this split.
+Breaking API work may remove or rename surfaces, but it should not move
 host runtime, hosted service, authentication, persistence, tenant isolation, or
 deployment policy into Agent UI core.
 

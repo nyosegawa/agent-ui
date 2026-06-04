@@ -3,11 +3,10 @@
 Agent UI is an embeddable Codex App Server UI component library for host
 applications. The docs are organized for a public library: start by running the
 local app, then choose a guide, then use reference and architecture pages when
-you need exact contracts. During the breaking vNext work, use
-[Package Exports](./reference/package-exports.md) and
-[vNext Design Gates](./architecture/vnext-design-gates.md) together: exports
-are not final until internal boundaries, examples, tests, and migration docs
-agree.
+you need exact contracts. Use [Package Exports](./reference/package-exports.md)
+and [Host Integration Design Gates](./architecture/host-integration-design-gates.md)
+together when promoting public surfaces: exports are not final until internal
+boundaries, examples, tests, and host integration docs agree.
 
 ## Start Here
 
@@ -52,9 +51,8 @@ agree.
   multi-user, and API-key constraints.
 - [Browser Verification](./guides/browser-verification.md): local visual QA
   with `agent-browser`.
-- [vNext Host Consumer Migration](./migrations/vnext-host-consumers.md):
-  package, React, bridge, local media, first-message, and validation migration
-  checklist.
+- [Host Integration](./guides/host-integration.md): package, React, bridge,
+  local media, first-message, and validation checklist for host consumers.
 
 ## Reference
 
@@ -77,9 +75,9 @@ agree.
 - [Security](./architecture/security.md): shell, filesystem, auth, remote, and
   multi-user constraints.
 - [Testing](./architecture/testing.md): validation matrix and release gates.
-- [vNext Design Gates](./architecture/vnext-design-gates.md): review notes for
-  internal versus public boundaries, host responsibilities, examples, and
-  tests.
+- [Host Integration Design Gates](./architecture/host-integration-design-gates.md):
+  review notes for internal versus public boundaries, host responsibilities,
+  examples, and tests.
 - [Protocol Drift](./architecture/protocol-drift.md): schema refresh workflow.
 - [Toolchain](./architecture/toolchain.md): Bun, Node, package validation, and
   release automation.

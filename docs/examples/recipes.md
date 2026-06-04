@@ -16,7 +16,7 @@ Purpose:
 - host-owned composer controls
 - local media upload/static resolution
 - bridge policy and diagnostics composition
-- vNext migration checklist
+- host integration checklist
 - theming
 - optional same-origin WebSocket transport wiring
 - advanced deployment notes
@@ -32,7 +32,7 @@ Files:
 - `src/local-media-helper.tsx`
 - `src/bridge-policy.ts`
 - `src/diagnostics-panel.tsx`
-- `src/migration-vnext.ts`
+- `src/host-integration-checklist.ts`
 - `src/themed.tsx`
 - `src/themed.css`
 - `src/websocket-remote-demo.tsx`

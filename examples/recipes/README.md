@@ -17,7 +17,8 @@ Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
   attachment and transcript media resolvers.
 - `src/bridge-policy.ts`: loopback bridge policy and host health-event logging.
 - `src/diagnostics-panel.tsx`: standalone diagnostics rail composition.
-- `src/migration-vnext.ts`: host migration checklist for vNext boundaries.
+- `src/host-integration-checklist.ts`: host integration checklist for Agent UI
+  boundaries.
 - `src/themed.tsx` and `src/themed.css`: scoped CSS variable theme override that
   changes a small set of brand tokens while inheriting the rest of Agent UI's
   light, dark, and system token contract.

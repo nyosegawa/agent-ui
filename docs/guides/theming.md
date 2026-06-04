@@ -120,7 +120,7 @@ constrain height with normal CSS:
 
 Use the `AgentChat.components` map when token changes are not enough.
 `Approval`, `ComposerPanel`, `EmptyState`, `Shell`, `Sidebar`, and `blocks`
-are the preferred replacement points for vNext customization. `Item` remains a
+are the preferred replacement points for current customization. `Item` remains a
 legacy replacement point whose props still expose core item/turn state in this
 draft, so prefer `blocks` or transcript controllers for raw-free custom
 rendering. Keep approval decisions explicit and keep command, tool, and

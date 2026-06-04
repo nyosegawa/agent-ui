@@ -1,8 +1,8 @@
-# vNext Design Gates
+# Host Integration Design Gates
 
-This note records the Phase 1 review gates for the breaking vNext host
-integration work. It should be updated as each gate moves from draft to
-implemented API.
+This note records the review gates for Agent UI's current host integration
+model. Update it whenever a gate moves from source-level implementation detail
+to documented public API.
 
 ## Public Thread View Model Versus Internal Normalized Entity
 
@@ -67,7 +67,7 @@ implemented API.
 - Host responsibility intentionally not handled: workflow state machines,
   routing, persistence, account/workspace policy, and custom tool registries.
 - Example that proves the design: the default `AgentChat` sidebar plus
-  `examples/recipes/src/headless-hooks.tsx` once rebuilt on vNext controllers.
+  `examples/recipes/src/headless-hooks.tsx` built on public controllers.
 - Tests that protect the contract: controller unit tests, React component
   tests for scoped lists/resume/history sync, API snapshots, and docs
   snippet/API import tests.

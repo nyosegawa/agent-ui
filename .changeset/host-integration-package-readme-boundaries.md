@@ -6,5 +6,5 @@
 "@nyosegawa/agent-ui-web-components": patch
 ---
 
-Document vNext package boundaries, public integration points, and host-owned
+Document current package boundaries, public integration points, and host-owned
 responsibilities for npm consumers.
