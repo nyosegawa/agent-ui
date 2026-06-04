@@ -2,7 +2,9 @@ import type { ThreadEvent } from "../events";
 import type {
   AgentOperationView,
   AgentSessionState,
+  AgentThread,
   AgentThreadScope,
+  AgentTurn,
   ThreadId,
   ThreadState,
 } from "../state";
@@ -81,9 +83,14 @@ export function reduceThreadEvent(
     }
     case "thread/upserted":
     case "thread/started": {
-      const threadState = threadEntityStore.getOrCreate(state.threads, event.thread);
+      const threadId = canonicalThreadId(state, event.thread.id);
+      const incomingThread = canonicalThread(event.thread, threadId);
+      const incomingTurns = (event.turns ?? []).map((turn) =>
+        canonicalTurn(turn, threadId),
+      );
+      const threadState = threadEntityStore.getOrCreate(state.threads, incomingThread);
       const stalePreviewStatus =
-        state.threads[event.thread.id] &&
+        state.threads[threadId] &&
         isPreviewThreadStatus(event.status) &&
         preservesAgainstPreviewSnapshot(threadState.status) &&
         !isArchivedToLoadedStatus(threadState.status, event.status);
@@ -91,16 +98,16 @@ export function reduceThreadEvent(
         ? threadState.status
         : (event.status ?? threadState.status);
       const turns = { ...threadState.turns };
-      const incomingTurnIds = (event.turns ?? []).map((turn) => turn.id);
+      const incomingTurnIds = incomingTurns.map((turn) => turn.id);
       const orderedTurnIds = mergeOrderedTurnIds(
         threadState.orderedTurnIds,
         incomingTurnIds,
       );
-      for (const turn of event.turns ?? []) {
+      for (const turn of incomingTurns) {
         const existingTurn = turns[turn.id];
         turns[turn.id] = existingTurn
           ? { ...existingTurn, turn: mergeAgentTurn(existingTurn.turn, turn) }
-          : turnStore.createTurnState(turn, event.thread.id);
+          : turnStore.createTurnState(turn, threadId);
       }
       return threadEntityStore.pruneSnapshots(
         commitThreadEntity(
@@ -108,21 +115,22 @@ export function reduceThreadEvent(
           {
             ...threadState,
             orderedTurnIds,
-            thread: { ...threadState.thread, ...event.thread },
+            thread: { ...threadState.thread, ...incomingThread },
             status,
             turns,
           },
           {
             activeThreadId:
               event.type === "thread/started"
-                ? event.thread.id
+                ? threadId
                 : state.threadLifecycle.activeThreadId,
           },
         ),
       );
     }
     case "thread/status/changed": {
-      const currentThread = state.threads[event.threadId];
+      const threadId = canonicalThreadId(state, event.threadId);
+      const currentThread = state.threads[threadId];
       const currentStatus = currentThread?.status;
       if (!currentThread) return state;
       const status =
@@ -287,6 +295,14 @@ function canonicalizeOperation(
   return operation.threadId
     ? { ...operation, threadId: canonicalThreadId(state, operation.threadId) }
     : operation;
+}
+
+function canonicalThread(thread: AgentThread, threadId: ThreadId): AgentThread {
+  return thread.id === threadId ? thread : { ...thread, id: threadId };
+}
+
+function canonicalTurn(turn: AgentTurn, threadId: ThreadId): AgentTurn {
+  return turn.threadId === threadId ? turn : { ...turn, threadId };
 }
 
 function reconcileThread(

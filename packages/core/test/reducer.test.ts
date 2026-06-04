@@ -912,6 +912,68 @@ describe("agentReducer", () => {
     });
   });
 
+  it("canonicalizes stale thread lifecycle events after optimistic thread reconciliation", () => {
+    let state = createInitialAgentState();
+    state = agentReducer(state, {
+      operation: {
+        id: "op-stale-thread",
+        kind: "optimisticThread",
+        status: "pending",
+        threadId: "pending-thread",
+      },
+      status: "running",
+      thread: { id: "pending-thread", name: "Pending local thread" },
+      type: "thread/optimistic/created",
+    });
+    state = agentReducer(state, {
+      canonicalThreadId: "thread-canonical",
+      threadId: "pending-thread",
+      type: "thread/reconciled",
+    });
+
+    state = agentReducer(state, {
+      status: "running",
+      thread: { id: "pending-thread", name: "Delayed start" },
+      turns: [{ id: "turn-stale-start", threadId: "pending-thread" }],
+      type: "thread/started",
+    });
+    state = agentReducer(state, {
+      status: "loaded",
+      thread: { id: "pending-thread", name: "Delayed upsert" },
+      turns: [{ id: "turn-stale-upsert", threadId: "pending-thread" }],
+      type: "thread/upserted",
+    });
+    state = agentReducer(state, {
+      status: "waitingForInput",
+      threadId: "pending-thread",
+      type: "thread/status/changed",
+    });
+
+    const thread = state.threads["thread-canonical"];
+    expect(state.threads["pending-thread"]).toBeUndefined();
+    expect(selectActiveThread(state)?.id).toBe("thread-canonical");
+    expect(thread?.thread).toMatchObject({
+      id: "thread-canonical",
+      name: "Delayed upsert",
+    });
+    expect(thread?.status).toBe("waitingForInput");
+    expect(thread?.orderedTurnIds).toEqual([
+      "turn-stale-start",
+      "turn-stale-upsert",
+    ]);
+    expect(thread?.turns["turn-stale-start"]?.turn.threadId).toBe(
+      "thread-canonical",
+    );
+    expect(thread?.turns["turn-stale-upsert"]?.turn.threadId).toBe(
+      "thread-canonical",
+    );
+    expect(selectThreadView(state, "pending-thread")).toMatchObject({
+      id: "thread-canonical",
+      needsInput: true,
+      title: "Delayed upsert",
+    });
+  });
+
   it("preserves optimistic turns and operations when reconciliation meets an existing canonical entity", () => {
     let state = createInitialAgentState();
     state = agentReducer(state, {
