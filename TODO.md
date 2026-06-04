@@ -3428,6 +3428,43 @@ Phase 10 notes:
   - GitHub Actions on the pushed PR head passed: CI and Compatibility both
     completed successfully. There were no CI failures to resolve.
 
+## Phase 17: Current Design Language And Agent Skills Freshness
+
+- [ ] Treat the host integration model as the current design, not a future
+  vNext migration, because this PR does not need backwards compatibility.
+- [ ] Remove public-facing vNext terminology from docs, examples, recipes,
+  changesets, and PR wording. Keep only unavoidable factual branch/checkpoint
+  references in internal notes.
+- [ ] Rename vNext-specific doc and recipe files to current-design names, then
+  update docs-staleness coverage and links.
+- [ ] Re-check Agent Skills guidance against the latest official Codex manual.
+- [ ] Update public Agent UI skill docs and repository skill docs for the
+  current Codex skill/plugin model.
+- [ ] Update focused tests that protect skill docs, repository skill docs, and
+  docs/package script alignment.
+- [ ] Record a design note covering:
+  - [ ] what remains internal
+  - [ ] what becomes public
+  - [ ] what host responsibility is intentionally not handled
+  - [ ] which example proves the design
+  - [ ] which tests protect the contract
+- [ ] Run focused validation for docs, skills, examples, package/API surfaces
+  touched by the rename and skill refresh.
+- [ ] Commit in small units, spawn an `agent-ui-review` subagent for each commit
+  unit, fix review findings, push, and watch GitHub Actions to a concrete
+  pass/fail state.
+
+### Phase 17 Notes
+
+- 2026-06-04 planning checkpoint:
+  - Latest Codex manual was refreshed with the `openai-docs` skill. Current
+    guidance treats skills as reusable workflow directories with `SKILL.md`,
+    repo-scoped skills under `.agents/skills`, optional `agents/openai.yaml`
+    metadata, and plugin distribution for shared reusable bundles.
+  - Existing public skill docs still emphasize older install commands and need
+    to be reframed around current Codex skill discovery, local installation
+    through `$skill-installer`, and plugin-based distribution.
+
 ## Completion Criteria
 
 - [x] `AgentChat` remains polished without host customization.
@@ -3443,8 +3480,10 @@ Phase 10 notes:
 - [x] Preview reads do not mutate active thread run settings.
 - [x] Server request policy is context-rich and default-safe.
 - [x] Bridge health and diagnostics are structured and redacted.
-- [x] All examples demonstrate the intended vNext integration shape.
-- [x] All relevant docs are updated.
-- [x] Migration docs are sufficient for host consumers.
-- [x] Unit, package, e2e, and browser validations pass.
-- [x] GitHub Actions pass.
+- [ ] All examples demonstrate the intended current host integration shape.
+- [ ] Public docs do not inherit vNext framing for this now-current design.
+- [ ] Agent Skills docs match the latest official Codex skill/plugin model.
+- [ ] All relevant docs are updated.
+- [ ] Host integration docs are sufficient for host consumers.
+- [ ] Unit, package, e2e, and browser validations pass.
+- [ ] GitHub Actions pass.
