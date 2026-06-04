@@ -3611,6 +3611,11 @@ Phase 10 notes:
     canonical thread after reconciliation without resurrecting the pending alias.
     Focused validation: `bun test packages/core/test/reducer.test.ts` pass;
     `bun run typecheck` pass.
+  - P2 stale alias coverage follow-up: added regression coverage that delayed
+    alias `loaded` / `notLoaded` snapshots do not downgrade a live canonical
+    thread after reconciliation. Focused validation:
+    `bun test packages/core/test/reducer.test.ts` pass; `bun run lint` pass;
+    `bun run typecheck` pass.
   - P1 changeset fix: all public packages now use pre-1.0 `minor` for this
     package-surface change, and the changeset body documents the public API,
     package boundary, migration, and host-owned responsibilities.

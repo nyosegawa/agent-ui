@@ -974,6 +974,60 @@ describe("agentReducer", () => {
     });
   });
 
+  it("preserves live canonical status from stale alias preview snapshots after reconciliation", () => {
+    let state = createInitialAgentState();
+    state = agentReducer(state, {
+      status: "running",
+      thread: { id: "thread-canonical", name: "Canonical live thread" },
+      type: "thread/started",
+    });
+    state = agentReducer(state, {
+      operation: {
+        id: "op-stale-preview",
+        kind: "optimisticThread",
+        status: "pending",
+        threadId: "pending-thread",
+      },
+      status: "running",
+      thread: { id: "pending-thread", name: "Pending local thread" },
+      type: "thread/optimistic/created",
+    });
+    state = agentReducer(state, {
+      canonicalThreadId: "thread-canonical",
+      threadId: "pending-thread",
+      type: "thread/reconciled",
+    });
+
+    state = agentReducer(state, {
+      status: "loaded",
+      thread: { id: "pending-thread", name: "Delayed loaded start" },
+      type: "thread/started",
+    });
+    state = agentReducer(state, {
+      status: "notLoaded",
+      thread: { id: "pending-thread", name: "Delayed preview upsert" },
+      type: "thread/upserted",
+    });
+    state = agentReducer(state, {
+      status: "loaded",
+      threadId: "pending-thread",
+      type: "thread/status/changed",
+    });
+
+    const thread = state.threads["thread-canonical"];
+    expect(state.threads["pending-thread"]).toBeUndefined();
+    expect(thread?.status).toBe("running");
+    expect(thread?.thread).toMatchObject({
+      id: "thread-canonical",
+      name: "Delayed preview upsert",
+    });
+    expect(selectThreadView(state, "pending-thread")).toMatchObject({
+      id: "thread-canonical",
+      isPreview: false,
+      isRunning: true,
+    });
+  });
+
   it("preserves optimistic turns and operations when reconciliation meets an existing canonical entity", () => {
     let state = createInitialAgentState();
     state = agentReducer(state, {
