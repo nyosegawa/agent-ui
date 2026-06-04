@@ -1,6 +1,6 @@
 {
   "name": "@nyosegawa/agent-ui-web-components",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Web Components wrapper for Agent UI React components.",
   "license": "MIT",
   "repository": {
@@ -44,8 +44,8 @@
     "test": "vitest run --config ../../vitest.config.ts --environment jsdom test"
   },
   "dependencies": {
-    "@nyosegawa/agent-ui-core": "workspace:^0.2.0",
-    "@nyosegawa/agent-ui-react": "workspace:^0.2.0"
+    "@nyosegawa/agent-ui-core": "workspace:^0.2.1",
+    "@nyosegawa/agent-ui-react": "workspace:^0.2.1"
   },
   "peerDependencies": {
     "react": ">=18.3.0 || >=19.0.0",

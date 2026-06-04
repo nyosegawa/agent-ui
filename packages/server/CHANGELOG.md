@@ -1,5 +1,19 @@
 # @nyosegawa/agent-ui-server
 
+## 0.2.1
+
+### Patch Changes
+
+- 47922d2: Fix npm release packaging so published tarballs include built `dist` artifacts.
+
+  The release publish script now builds the workspace inside the publish job before
+  running Changesets publish, and packlist validation checks the npm packlist for
+  missing `dist` entries.
+
+- Updated dependencies [47922d2]
+  - @nyosegawa/agent-ui-core@0.2.1
+  - @nyosegawa/agent-ui-codex@0.2.1
+
 ## 0.2.0
 
 ### Minor Changes
