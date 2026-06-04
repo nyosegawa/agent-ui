@@ -377,7 +377,8 @@ function firstMarkupElementName(body: Buffer): string | undefined {
     if (/^<!doctype\b/i.test(rest)) {
       const end = findDoctypeEnd(text, index + 2);
       if (end === -1) return undefined;
-      if (text.slice(index, end + 1).toLowerCase().includes("svg")) return "svg";
+      const doctypeRootName = doctypeRootElementName(text.slice(index, end + 1));
+      if (doctypeRootName?.split(":").pop() === "svg") return "svg";
       index = end + 1;
       continue;
     }
@@ -385,6 +386,10 @@ function firstMarkupElementName(body: Buffer): string | undefined {
     return match?.[1]?.toLowerCase();
   }
   return undefined;
+}
+
+function doctypeRootElementName(doctype: string): string | undefined {
+  return /^<!doctype\s+([a-zA-Z][\w:.-]*)\b/i.exec(doctype)?.[1]?.toLowerCase();
 }
 
 function findDoctypeEnd(text: string, start: number): number {
