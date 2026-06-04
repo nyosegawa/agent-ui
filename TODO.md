@@ -3569,7 +3569,7 @@ Phase 10 notes:
 
 ## Phase 18: Review Follow-Up Hardening
 
-- [ ] Fix P1 changeset release level and package-facing description.
+- [x] Fix P1 changeset release level and package-facing description.
 - [x] Fix P1 post-reconcile stale alias turn/item event handling.
 - [x] Add regression tests for stale pending-thread alias `turn/started`,
   streaming delta, completion, and failure events after `thread/reconciled`.
@@ -3606,3 +3606,6 @@ Phase 10 notes:
     / failures update the canonical turn after reconciliation.
   - Focused validation: `bun test packages/core/test/reducer.test.ts` pass;
     `bun run typecheck` pass.
+  - P1 changeset fix: all public packages now use pre-1.0 `minor` for this
+    package-surface change, and the changeset body documents the public API,
+    package boundary, migration, and host-owned responsibilities.
