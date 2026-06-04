@@ -49,6 +49,7 @@ export function upsertTurn(
   threadStatus: ThreadState["status"],
 ): ThreadState {
   const existingTurn = thread.turns[turn.id];
+  const canonicalTurn = { ...turn, threadId: thread.thread.id };
   const orderedTurnIds = mergeOrderedTurnIds(thread.orderedTurnIds, [turn.id]);
   return {
     ...thread,
@@ -57,8 +58,10 @@ export function upsertTurn(
     turns: {
       ...thread.turns,
       [turn.id]: {
-        ...(existingTurn ?? createTurnState(turn, thread.thread.id)),
-        turn: existingTurn ? mergeAgentTurn(existingTurn.turn, turn) : turn,
+        ...(existingTurn ?? createTurnState(canonicalTurn, thread.thread.id)),
+        turn: existingTurn
+          ? mergeAgentTurn(existingTurn.turn, canonicalTurn)
+          : canonicalTurn,
       },
     },
   };
@@ -71,9 +74,13 @@ export function updateTurn(
   updater: (turn: TurnState) => TurnState,
 ): AgentSessionState {
   return threadEntityStore.update(state, threadId, (thread) => {
+    const canonicalThreadId = thread.thread.id;
     const turn =
       thread.turns[turnId] ??
-      createTurnState({ id: turnId, threadId, status: "running" }, threadId);
+      createTurnState(
+        { id: turnId, threadId: canonicalThreadId, status: "running" },
+        canonicalThreadId,
+      );
     return {
       ...thread,
       orderedTurnIds: thread.orderedTurnIds.includes(turnId)

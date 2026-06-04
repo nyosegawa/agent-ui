@@ -12,6 +12,7 @@ import {
   threadMetadataFromThread,
   threadStorageFromThread,
 } from "./thread-lifecycle";
+import { canonicalThreadId } from "../thread-alias";
 
 export type ThreadEntityState = Record<ThreadId, ThreadState>;
 
@@ -73,13 +74,27 @@ export function updateThreadEntity(
   threadId: ThreadId,
   updater: (thread: ThreadState) => ThreadState,
 ): AgentSessionState {
-  const thread = state.threads[threadId];
+  const canonicalId = canonicalThreadId(state, threadId);
+  const thread = state.threads[canonicalId];
   if (!thread) return state;
+  const updated = updater(thread);
+  const nextId = updated.id;
+  if (nextId !== canonicalId) {
+    const { [canonicalId]: _removed, ...rest } = state.threads;
+    void _removed;
+    return {
+      ...state,
+      threads: {
+        ...rest,
+        [nextId]: updated,
+      },
+    };
+  }
   return {
     ...state,
     threads: {
       ...state.threads,
-      [threadId]: updater(thread),
+      [canonicalId]: updated,
     },
   };
 }
@@ -90,7 +105,8 @@ export function setThreadStatus(
   status: ThreadStatus,
   options: { onlyIf?: ThreadStatus } = {},
 ): AgentSessionState {
-  const thread = state.threads[threadId];
+  const canonicalId = canonicalThreadId(state, threadId);
+  const thread = state.threads[canonicalId];
   if (!thread || (options.onlyIf !== undefined && thread.status !== options.onlyIf)) {
     return state;
   }
@@ -106,7 +122,7 @@ export function setThreadStatus(
     }),
     threads: {
       ...state.threads,
-      [threadId]: {
+      [canonicalId]: {
         ...thread,
         activity,
         availability,

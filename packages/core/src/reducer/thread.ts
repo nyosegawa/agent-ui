@@ -14,6 +14,7 @@ import {
 import { turnStore } from "../stores/turn";
 import { mergeAgentTurn } from "../stores/turn-merge";
 import { mergeOrderedTurnIds } from "../stores/turn-order";
+import { canonicalThreadId } from "../thread-alias";
 import {
   isPreviewThreadStatus,
   preservesAgainstPreviewSnapshot,
@@ -286,16 +287,6 @@ function canonicalizeOperation(
   return operation.threadId
     ? { ...operation, threadId: canonicalThreadId(state, operation.threadId) }
     : operation;
-}
-
-function canonicalThreadId(state: AgentSessionState, threadId: ThreadId): ThreadId {
-  let current = threadId;
-  const seen = new Set<ThreadId>();
-  while (state.threadLifecycle.aliasById[current] && !seen.has(current)) {
-    seen.add(current);
-    current = state.threadLifecycle.aliasById[current]!;
-  }
-  return current;
 }
 
 function reconcileThread(

@@ -1,9 +1,10 @@
 import type { ServerRequestEvent } from "../events";
-import type { AgentSessionState, PendingServerRequest, ThreadId } from "../state";
+import type { AgentSessionState, PendingServerRequest } from "../state";
 import { requestIdKey } from "../request-id-key";
 import { diagnosticsStore } from "../stores/diagnostics";
 import { serverRequestStore } from "../stores/server-request";
 import { threadEntityStore } from "../stores/thread-entity";
+import { canonicalThreadId } from "../thread-alias";
 
 export function reduceServerRequestEvent(
   state: AgentSessionState,
@@ -122,16 +123,6 @@ function canonicalizeServerRequest(
   return request.threadId
     ? { ...request, threadId: canonicalThreadId(state, request.threadId) }
     : request;
-}
-
-function canonicalThreadId(state: AgentSessionState, threadId: ThreadId): ThreadId {
-  let current = threadId;
-  const seen = new Set<ThreadId>();
-  while (state.threadLifecycle.aliasById[current] && !seen.has(current)) {
-    seen.add(current);
-    current = state.threadLifecycle.aliasById[current]!;
-  }
-  return current;
 }
 
 function assertNever(value: never): never {

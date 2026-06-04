@@ -3566,3 +3566,43 @@ Phase 10 notes:
 - [x] Host integration docs are sufficient for host consumers.
 - [x] Unit, package, e2e, and browser validations pass.
 - [x] GitHub Actions pass.
+
+## Phase 18: Review Follow-Up Hardening
+
+- [ ] Fix P1 changeset release level and package-facing description.
+- [x] Fix P1 post-reconcile stale alias turn/item event handling.
+- [x] Add regression tests for stale pending-thread alias `turn/started`,
+  streaming delta, completion, and failure events after `thread/reconciled`.
+- [ ] Fix P2 dynamic helper permission bounding for protocol-shaped filesystem
+  permissions by sharing server-request policy bounding behavior.
+- [ ] Add dynamic helper permission tests that reject broadening grants.
+- [ ] Fix P2 local media SVG/active image serving hardening and add
+  `nosniff`.
+- [ ] Add upload/local media tests for SVG rejection or safe serving headers.
+- [ ] Clean current-design docs drift in `PLAN.md`, `TODO.md`,
+  `docs/reference/package-exports.md`, and `docs/guides/host-integration.md`.
+- [ ] Record design note covering:
+  - [ ] what remains internal
+  - [ ] what becomes public
+  - [ ] what host responsibility is intentionally not handled
+  - [ ] which example proves the design
+  - [ ] which tests protect the contract
+- [ ] Run focused validation for core reducer, server security, docs staleness,
+  package/API/release gates touched by the fixes.
+- [ ] Commit in small units, spawn an `agent-ui-review` subagent for each commit
+  unit, fix review findings, push, and watch GitHub Actions to a concrete
+  pass/fail state.
+
+### Phase 18 Notes
+
+- 2026-06-04 review intake:
+  - External review reported P1 changeset severity mismatch, P1 stale alias
+    turn/item event drops after optimistic thread reconciliation, P2 dynamic
+    helper permission broadening, P2 local media SVG/same-origin serving
+    hardening, and P2 stale current-design docs.
+  - P1 stale alias fix: canonical thread aliases are now resolved in shared
+    core state updates, turn starts/completions persist canonical turn ids, item
+    starts/completions persist canonical item thread ids, and stale alias deltas
+    / failures update the canonical turn after reconciliation.
+  - Focused validation: `bun test packages/core/test/reducer.test.ts` pass;
+    `bun run typecheck` pass.

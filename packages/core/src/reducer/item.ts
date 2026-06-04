@@ -8,6 +8,7 @@ import {
 } from "../stores/item";
 import { threadEntityStore } from "../stores/thread-entity";
 import { turnStore } from "../stores/turn";
+import { canonicalThreadId } from "../thread-alias";
 
 export function reduceItemEvent(
   state: AgentSessionState,
@@ -56,24 +57,27 @@ function upsertItemEvent(
   state: AgentSessionState,
   event: Extract<ItemEvent, { type: "item/started" | "item/completed" }>,
 ): AgentSessionState {
+  const threadId = canonicalThreadId(state, event.threadId);
+  const item =
+    event.item.threadId === threadId ? event.item : { ...event.item, threadId };
   const clientId =
-    event.item.kind === "userMessage"
-      ? clientUserMessageId(event.item.raw)
+    item.kind === "userMessage"
+      ? clientUserMessageId(item.raw)
       : undefined;
   if (!clientId) {
-    return turnStore.update(state, event.threadId, event.turnId, (turn) =>
-      itemStore.upsert(turn, event.item),
+    return turnStore.update(state, threadId, event.turnId, (turn) =>
+      itemStore.upsert(turn, item),
     );
   }
-  const thread = state.threads[event.threadId];
+  const thread = state.threads[threadId];
   const match = thread ? findClientUserMessage(thread, clientId) : undefined;
   if (!match || match.turnId === event.turnId) {
-    return turnStore.update(state, event.threadId, event.turnId, (turn) =>
-      itemStore.upsert(turn, event.item),
+    return turnStore.update(state, threadId, event.turnId, (turn) =>
+      itemStore.upsert(turn, item),
     );
   }
-  return threadEntityStore.update(state, event.threadId, (currentThread) =>
-    moveReconciledUserMessage(currentThread, event, match),
+  return threadEntityStore.update(state, threadId, (currentThread) =>
+    moveReconciledUserMessage(currentThread, { ...event, item, threadId }, match),
   );
 }
 

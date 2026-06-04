@@ -794,6 +794,124 @@ describe("agentReducer", () => {
     expect(state.threads["thread-canonical"]?.status).toBe("waitingForInput");
   });
 
+  it("canonicalizes stale turn and item events that arrive after optimistic thread reconciliation", () => {
+    let state = createInitialAgentState();
+    state = agentReducer(state, {
+      operation: {
+        id: "op-stale-transcript",
+        kind: "optimisticThread",
+        status: "pending",
+        threadId: "pending-thread",
+      },
+      status: "running",
+      thread: { id: "pending-thread" },
+      type: "thread/optimistic/created",
+    });
+    state = agentReducer(state, {
+      canonicalThreadId: "thread-canonical",
+      threadId: "pending-thread",
+      type: "thread/reconciled",
+    });
+
+    state = agentReducer(state, {
+      threadId: "pending-thread",
+      turn: { id: "turn-stale", status: "running", threadId: "pending-thread" },
+      type: "turn/started",
+    });
+    state = agentReducer(state, {
+      item: {
+        id: "item-stale-message",
+        kind: "agentMessage",
+        status: "inProgress",
+        threadId: "pending-thread",
+        turnId: "turn-stale",
+      },
+      threadId: "pending-thread",
+      turnId: "turn-stale",
+      type: "item/started",
+    });
+    state = agentReducer(state, {
+      delta: "hello",
+      itemId: "item-stale-message",
+      threadId: "pending-thread",
+      turnId: "turn-stale",
+      type: "item/agentMessage/delta",
+    });
+    state = agentReducer(state, {
+      item: {
+        id: "item-stale-message",
+        kind: "agentMessage",
+        status: "completed",
+        text: "hello",
+        threadId: "pending-thread",
+        turnId: "turn-stale",
+      },
+      threadId: "pending-thread",
+      turnId: "turn-stale",
+      type: "item/completed",
+    });
+    state = agentReducer(state, {
+      item: {
+        id: "item-stale-failed",
+        kind: "toolCall",
+        status: "inProgress",
+        threadId: "pending-thread",
+        turnId: "turn-stale",
+      },
+      threadId: "pending-thread",
+      turnId: "turn-stale",
+      type: "item/started",
+    });
+    state = agentReducer(state, {
+      error: { message: "failed on stale alias" },
+      itemId: "item-stale-failed",
+      threadId: "pending-thread",
+      turnId: "turn-stale",
+      type: "item/failed",
+    });
+    state = agentReducer(state, {
+      items: [
+        {
+          id: "item-stale-message",
+          kind: "agentMessage",
+          status: "completed",
+          text: "hello",
+          threadId: "pending-thread",
+          turnId: "turn-stale",
+        },
+      ],
+      threadId: "pending-thread",
+      turn: {
+        id: "turn-stale",
+        itemsView: "full",
+        status: "completed",
+        threadId: "pending-thread",
+      },
+      type: "turn/completed",
+    });
+
+    const thread = state.threads["thread-canonical"];
+    const turn = thread?.turns["turn-stale"];
+    expect(state.threads["pending-thread"]).toBeUndefined();
+    expect(thread?.orderedTurnIds).toContain("turn-stale");
+    expect(turn?.turn.threadId).toBe("thread-canonical");
+    expect(turn?.turn.status).toBe("completed");
+    expect(turn?.streamingTextByItemId["item-stale-message"]).toBe("hello");
+    expect(turn?.items["item-stale-message"]).toMatchObject({
+      status: "completed",
+      text: "hello",
+      threadId: "thread-canonical",
+    });
+    expect(turn?.items["item-stale-failed"]).toMatchObject({
+      status: "failed",
+      threadId: "thread-canonical",
+    });
+    expect(turn?.blocksByItemId["item-stale-failed"]).toMatchObject({
+      error: { message: "failed on stale alias" },
+      status: "failed",
+    });
+  });
+
   it("preserves optimistic turns and operations when reconciliation meets an existing canonical entity", () => {
     let state = createInitialAgentState();
     state = agentReducer(state, {
