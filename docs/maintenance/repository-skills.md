@@ -1,8 +1,10 @@
 # Repository Development Skills
 
-Agent UI keeps repository-maintainer skills under `.agents/skills/`. These
-skills are for work inside this repository. They are separate from public
-installable user skills under `skills/`.
+Agent UI keeps repository-maintainer skills under `.agents/skills/`. Codex scans
+repository skills from `.agents/skills` in the current working directory, parent
+directories, and the repository root. These skills are for work inside this
+repository. They are separate from the distributable public Agent UI skill
+source under `skills/agent-ui`.
 
 ## Skills
 
@@ -54,7 +56,7 @@ accessibility-tree snapshots, and real interactions.
 ## Boundary
 
 Repository skills may mention repo-specific commands and validation gates.
-Public installable skills must not depend on these maintainer workflows.
+Public distributable skills must not depend on these maintainer workflows.
 
 Keep repository skills centered on ownership boundaries:
 

@@ -84,8 +84,10 @@ describe("package script documentation", () => {
     expect(testingDocs).toContain("bun run test:skills");
     expect(skillDocs).toContain("bun run test:skills");
     expect(skillDocs).toContain("skills/agent-ui/SKILL.md");
-    expect(skillDocs).toContain("gh skill install nyosegawa/agent-ui agent-ui");
-    expect(skillDocs).toContain("npx skills add nyosegawa/agent-ui --skill agent-ui");
+    expect(skillDocs).toContain("$skill-installer");
+    expect(skillDocs).toContain("Reusable distribution should use a plugin");
+    expect(skillDocs).toContain("skills/agent-ui/agents/openai.yaml");
+    expect(skillDocs).toContain(".agents/skills");
   });
 
   it("keeps repository skill docs aligned with package scripts", () => {

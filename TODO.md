@@ -3437,17 +3437,17 @@ Phase 10 notes:
   references in internal notes.
 - [x] Rename vNext-specific doc and recipe files to current-design names, then
   update docs-staleness coverage and links.
-- [ ] Re-check Agent Skills guidance against the latest official Codex manual.
-- [ ] Update public Agent UI skill docs and repository skill docs for the
+- [x] Re-check Agent Skills guidance against the latest official Codex manual.
+- [x] Update public Agent UI skill docs and repository skill docs for the
   current Codex skill/plugin model.
-- [ ] Update focused tests that protect skill docs, repository skill docs, and
+- [x] Update focused tests that protect skill docs, repository skill docs, and
   docs/package script alignment.
-- [ ] Record a design note covering:
-  - [ ] what remains internal
-  - [ ] what becomes public
-  - [ ] what host responsibility is intentionally not handled
-  - [ ] which example proves the design
-  - [ ] which tests protect the contract
+- [x] Record a design note covering:
+  - [x] what remains internal
+  - [x] what becomes public
+  - [x] what host responsibility is intentionally not handled
+  - [x] which example proves the design
+  - [x] which tests protect the contract
 - [ ] Run focused validation for docs, skills, examples, package/API surfaces
   touched by the rename and skill refresh.
 - [ ] Commit in small units, spawn an `agent-ui-review` subagent for each commit
@@ -3494,6 +3494,38 @@ Phase 10 notes:
   - Focused validation passed: `bunx vitest run test/docs-staleness.test.ts`,
     `bun run --cwd examples/recipes typecheck`, `bun run test:styles`, `bun run
     lint`, and `bun run typecheck`.
+- 2026-06-04 Agent Skills freshness slice:
+  - Refreshed the official Codex manual with `openai-docs` and verified the
+    current model: skills are workflow directories with `SKILL.md`, Codex
+    scans repo skills from `.agents/skills`, local setup uses
+    `$skill-installer`, reusable distribution should use plugins, and optional
+    `agents/openai.yaml` supplies Codex app metadata.
+  - Updated `docs/maintenance/agent-ui-skills.md` to describe
+    `skills/agent-ui` as distributable skill source, not Codex's repo-scoped
+    discovery path; updated `docs/maintenance/repository-skills.md` to spell
+    out `.agents/skills` scanning.
+  - Added `skills/agent-ui/agents/openai.yaml` for stable Codex app display
+    metadata and implicit invocation policy.
+  - Design note:
+    - what remains internal: maintainer workflows, repo validation commands,
+      release operations, host app auth/persistence/deployment policy, and any
+      app/MCP integrations not packaged in a plugin.
+    - what becomes public: the `skills/agent-ui` skill source, its references,
+      `agents/openai.yaml` metadata, and docs explaining plugin distribution.
+    - what host responsibility is intentionally not handled: host package
+      manager choice, hosted auth, bridge admission, tenant/workspace policy,
+      upload/static authorization, persistence, and deployment.
+    - which example proves the design: `skills/agent-ui/SKILL.md` plus
+      `skills/agent-ui/references/server-bridge.md` and
+      `skills/agent-ui/references/host-owned-remote.md`.
+    - which tests protect the contract: `bun run test:skills`,
+      `bun run test:repo-skills`, `bunx vitest run
+      test/package-scripts-docs.test.ts`, `bunx vitest run
+      test/docs-staleness.test.ts`, `bun run lint`, and `bun run typecheck`.
+  - Focused validation passed: `bun run test:skills`, `bun run
+    test:repo-skills`, `bunx vitest run test/package-scripts-docs.test.ts`,
+    `bunx vitest run test/docs-staleness.test.ts`, `bun run lint`, and `bun run
+    typecheck`.
 
 ## Completion Criteria
 
