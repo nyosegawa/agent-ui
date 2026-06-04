@@ -3317,7 +3317,7 @@ Phase 10 notes:
 - [x] Commit logically grouped changes as implementation progresses.
 - [x] Push the branch after meaningful checkpoints.
 - [x] Open a draft PR when the design is implemented enough for review.
-- [ ] Include PR summary covering:
+- [x] Include PR summary covering:
   - [x] lifecycle model
   - [x] optimistic first message
   - [x] local file/resource contract
@@ -3326,9 +3326,9 @@ Phase 10 notes:
   - [x] examples updated
   - [x] docs updated
   - [x] validation run
-- [ ] Watch GitHub Actions to a concrete pass/fail state before claiming ready.
-- [ ] Resolve CI failures with focused commits.
-- [ ] Mark PR ready only after all validation and browser checks pass.
+- [x] Watch GitHub Actions to a concrete pass/fail state before claiming ready.
+- [x] Resolve CI failures with focused commits.
+- [x] Mark PR ready only after all validation and browser checks pass.
 
 ### Phase 16 Notes
 
@@ -3425,24 +3425,26 @@ Phase 10 notes:
     file/resource contract, controller/component layering, bridge
     policy/diagnostics, updated examples, updated docs, validation runs, and
     subagent review notes.
+  - GitHub Actions on the pushed PR head passed: CI and Compatibility both
+    completed successfully. There were no CI failures to resolve.
 
 ## Completion Criteria
 
-- [ ] `AgentChat` remains polished without host customization.
-- [ ] Host apps can replace layout, sidebar, composer, transcript blocks, and
+- [x] `AgentChat` remains polished without host customization.
+- [x] Host apps can replace layout, sidebar, composer, transcript blocks, and
   diagnostics without reimplementing hidden behavior.
-- [ ] First user message appears immediately in transcript and thread list.
-- [ ] Failed first message can rollback or retry predictably.
-- [ ] Local image attachments render in composer and transcript through explicit
+- [x] First user message appears immediately in transcript and thread list.
+- [x] Failed first message can rollback or retry predictably.
+- [x] Local image attachments render in composer and transcript through explicit
   resource resolution.
-- [ ] Raw local paths are not used as browser media URLs.
-- [ ] Missing media renders professional fallback UI.
-- [ ] Scoped thread lists do not race or clear active threads incorrectly.
-- [ ] Preview reads do not mutate active thread run settings.
-- [ ] Server request policy is context-rich and default-safe.
-- [ ] Bridge health and diagnostics are structured and redacted.
-- [ ] All examples demonstrate the intended vNext integration shape.
-- [ ] All relevant docs are updated.
-- [ ] Migration docs are sufficient for host consumers.
-- [ ] Unit, package, e2e, and browser validations pass.
-- [ ] GitHub Actions pass.
+- [x] Raw local paths are not used as browser media URLs.
+- [x] Missing media renders professional fallback UI.
+- [x] Scoped thread lists do not race or clear active threads incorrectly.
+- [x] Preview reads do not mutate active thread run settings.
+- [x] Server request policy is context-rich and default-safe.
+- [x] Bridge health and diagnostics are structured and redacted.
+- [x] All examples demonstrate the intended vNext integration shape.
+- [x] All relevant docs are updated.
+- [x] Migration docs are sufficient for host consumers.
+- [x] Unit, package, e2e, and browser validations pass.
+- [x] GitHub Actions pass.
