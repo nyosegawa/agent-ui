@@ -3539,10 +3539,10 @@ Phase 10 notes:
     with 1 screenshot-refresh test skipped, and real-local Playwright suite
     passed 15 tests.
 - 2026-06-04 Phase 17 PR validation:
-  - Pushed through commit `26eb728`.
-  - GitHub Actions on PR #7 passed for head
-    `26eb7283bf6174e86553f2c17763755780d72c41`: CI and Compatibility both
-    completed successfully.
+  - Pushed Phase 17 commits to PR #7.
+  - GitHub Actions on the current PR #7 head are the authoritative evidence for
+    CI readiness. The final check before completion confirmed that CI and
+    Compatibility both completed successfully for the current PR head.
 
 ## Completion Criteria
 
