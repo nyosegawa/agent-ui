@@ -1,10 +1,14 @@
-# Agent UI vNext Host Integration Plan
+# Agent UI Host Integration Plan
 
 ## Purpose
 
-Agent UI vNext should turn the current request-driven improvement list into a
-coherent embeddable library design. The target is not to add one API for every
-consumer request. The target is a small set of stable primitives that let host
+This plan records the host integration design shipped by this PR. Earlier
+working notes used the `vNext` label, but the branch intentionally treats this
+as the current design because there are no existing consumers to preserve.
+
+Agent UI should turn the current request-driven improvement list into a coherent
+embeddable library design. The target is not to add one API for every consumer
+request. The target is a small set of stable primitives that let host
 applications build first-class Codex App Server experiences without forcing
 Agent UI to become a hosted runtime.
 
@@ -100,7 +104,7 @@ This work is large enough that a single implementation pass would hide too many
 review decisions. The right sequence is:
 
 1. Inventory the current public API and classify the Codex App Server protocol
-   surfaces that vNext depends on.
+   surfaces that host integration depends on.
 2. Redesign core lifecycle state and reducers from those classified protocol
    contracts.
 3. Build controller-owned composer submission, including optimistic first
@@ -119,7 +123,7 @@ test-backed stages.
 ## Protocol Classification Gate
 
 Before changing core lifecycle semantics, classify every App Server method and
-notification used by the vNext design:
+notification used by the host integration design:
 
 - Productized stable methods that Agent UI owns through React behavior.
 - Stable host-managed methods that may remain available through lower-level
@@ -136,7 +140,7 @@ semantics without labeling them as Agent UI-owned view state.
 
 ## Architecture Overview
 
-vNext should expose three layers.
+Agent UI exposes three host integration layers.
 
 ### Layer 1: Core State Model
 
@@ -280,7 +284,7 @@ thread may still have an empty transcript until App Server notifications arrive.
 
 This makes the first user message feel like it was not accepted.
 
-### vNext Contract
+### Current Contract
 
 `startWithMessage()` should be the primary first-message action exposed through
 the composer controller. It may start as an internal/source-level controller
@@ -366,7 +370,7 @@ Composer thumbnails work because React has a browser blob URL. Transcript
 images can fail because App Server items contain local filesystem paths, and
 React currently risks using that path directly as an image URL.
 
-### vNext Contract
+### Current Contract
 
 Attachment resolution should return structured resources.
 
@@ -575,7 +579,7 @@ Examples:
 
 `@nyosegawa/agent-ui-core`:
 
-- Own vNext state, events, selectors, optimistic operations, transcript view
+- Own host integration state, events, selectors, optimistic operations, transcript view
   model, resource metadata types, and fake transport fixtures.
 
 `@nyosegawa/agent-ui-codex`:
@@ -600,7 +604,7 @@ Examples:
 
 `@nyosegawa/agent-ui-web-components`:
 
-- Pass vNext `agentOptions`, component replacement options where feasible, and
+- Pass Agent UI `agentOptions`, component replacement options where feasible, and
   local resource resolver hooks through JavaScript properties.
 
 Package export maps should be finalized after internal module boundaries are
@@ -686,11 +690,11 @@ Recommended recipes:
 - `custom-transcript-blocks`
 - `bridge-policy`
 - `diagnostics-panel`
-- `migration-vnext`
+- `host-integration-checklist`
 
 ### `examples/next-with-bridge-sidecar`
 
-Keep this as the full-chat Next.js example. It should use the vNext bridge
+Keep this as the full-chat Next.js example. It should use the typed bridge
 policy and file-store shape.
 
 ### `examples/next-rpc-route`
@@ -789,6 +793,6 @@ This work is complete only when:
 - Thread history, active thread, scoped lists, and previews cannot drift through
   implicit state races.
 - Server bridge policy and diagnostics are explicit, typed, and documented.
-- Examples use the intended vNext API shape.
+- Examples use the intended current host integration API shape.
 - Docs and migration guidance are complete enough for a consumer to upgrade.
 - Tests and browser checks cover the behavior that motivated the redesign.

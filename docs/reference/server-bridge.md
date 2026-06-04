@@ -210,7 +210,10 @@ paths. The library therefore requires a host resolver for attachments.
 `createAgentUiLocalMediaHelper()` is the local development helper:
 
 - accepts `POST`; a missing `content-type` is accepted, and a present
-  `content-type` must be `application/octet-stream`, `image/*`, or `text/plain`
+  `content-type` must be `application/octet-stream`, non-SVG `image/*`, or
+  `text/plain`
+- rejects SVG uploads by declared content type, sanitized `.svg` filename, or
+  leading SVG/XML body signature before registering a same-origin asset URL
 - uses `x-agent-ui-filename` for a sanitized filename suffix and rejects
   malformed percent-encoding or control characters
 - writes into a per-session temp directory under a host temp root, defaulting
@@ -223,6 +226,8 @@ paths. The library therefore requires a host resolver for attachments.
   cleanup for expired session directories before writes
 - returns JSON with `path`, `url`, `id`, `name`, `displayName`,
   `redactedPath`, `mimeType`, `sizeBytes`, and `previewUrl`
+- serves registered assets with `Cache-Control: no-store` and
+  `X-Content-Type-Options: nosniff`
 - creates browser URLs from registered asset IDs, not raw local paths
 - exposes a constrained `serveAssetHandler` that hosts must explicitly wire if
   browser preview bytes should be served

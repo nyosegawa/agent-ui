@@ -10,7 +10,6 @@ Use this guide if your host imports Agent UI packages and does any of the
 following:
 
 - imports source modules or package `dist/*` files instead of package exports
-- depends on the old `AgentChat` slot shape
 - renders custom transcript items through raw core item or turn state
 - constructs Codex params in React instead of using Codex request builders or
   public controllers
@@ -40,17 +39,6 @@ following:
 
 ## Import Examples
 
-Before:
-
-```ts
-import { threadStartParams } from "@nyosegawa/agent-ui-react";
-```
-
-The old stylesheet path was the package's internal `dist/styles/tokens.css`
-chunk.
-
-After:
-
 ```ts
 import { threadStartParams } from "@nyosegawa/agent-ui-codex/request-builders";
 import { AgentChat } from "@nyosegawa/agent-ui-react";
@@ -58,14 +46,6 @@ import "@nyosegawa/agent-ui-react/styles.css";
 ```
 
 ## React Examples
-
-Before:
-
-```tsx
-<AgentChat slots={{ approval: ApprovalSlot }} />
-```
-
-After:
 
 ```tsx
 <AgentChat

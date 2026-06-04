@@ -1,4 +1,4 @@
-# Agent UI vNext Host Integration TODO
+# Agent UI Host Integration TODO
 
 Work through this checklist in order. Do not treat any phase as complete until
 its docs, examples, tests, and validation items are complete.
@@ -62,7 +62,7 @@ its docs, examples, tests, and validation items are complete.
   - [x] `@nyosegawa/agent-ui-web-components`
 - [x] Mark each export as one of:
   - [x] keep public
-  - [x] replace with vNext API
+  - [x] replace with current host integration API
   - [x] move to subpath
   - [x] make private
   - [x] remove
@@ -93,13 +93,13 @@ its docs, examples, tests, and validation items are complete.
 - Root export inventory and draft keep/replace/subpath/private/remove
   classifications are recorded in `docs/reference/package-exports.md`.
 - Review-gate notes are recorded in
-  `docs/architecture/vnext-design-gates.md`.
-- Soon-to-change examples/docs/tests are listed in the vNext draft export
-  inventory.
+  `docs/architecture/host-integration-design-gates.md`.
+- Import sites and docs/tests that prove the current package surface are listed
+  in the current host integration export inventory.
 
 ## Phase 2: Protocol And Normalization Contract
 
-- [x] Classify every App Server method or notification used by vNext as one of:
+- [x] Classify every App Server method or notification used by host integration as one of:
   - [x] productized stable Agent UI behavior
   - [x] stable host-managed lower-level surface
   - [x] experimental opt-in surface
@@ -275,7 +275,7 @@ its docs, examples, tests, and validation items are complete.
 ### Phase 4 Notes
 
 - Added source-level `useAgentComposerController(threadId)` in React and kept it
-  out of the root package export while the vNext controller contract is proven.
+  out of the root package export while the current controller contract is proven.
   `useAgentComposer()` remains the public wrapper, and React composer parts use
   the controller through a source import.
 - Superseded by the Phase 8 public composer controller decision: the root export
@@ -564,7 +564,7 @@ its docs, examples, tests, and validation items are complete.
   packages/core/test/reducer.test.ts`, `bun run typecheck`, and `bun run lint`
   passed.
 - Documented host-owned scope semantics in `docs/reference/hooks.md` and
-  `docs/architecture/vnext-design-gates.md`: Agent UI owns collection view
+  `docs/architecture/host-integration-design-gates.md`: Agent UI owns collection view
   state, keys, cursors, thread ids, loading/error, and normalized sync metadata;
   hosts own tenant/workspace/project meaning, authorization, persistence,
   routing policy, and audit storage.
@@ -1028,7 +1028,7 @@ Phase 8 notes:
     where first-message operation retry/cancel is under test.
 - Commit-unit review process: spawned review subagent
   `019e8fb0-978b-7a03-953c-e98a4d4c9347` with the `agent-ui-review` skill.
-  Findings about stale Phase 4/vNext design notes describing the old internal
+  Findings about stale Phase 4 host integration design notes describing the old internal
   composer boundary were fixed by marking the older boundary as superseded by
   the Phase 8 public controller decision and renaming operation-control notes to
   `useInternalAgentComposerController`. The final follow-up review reported no
@@ -2106,7 +2106,7 @@ Phase 10 notes:
 ## Phase 12: Example Updates
 
 - [x] Update `examples/codex-local-web`.
-  - [x] Use vNext bridge policy.
+  - [x] Use typed bridge policy.
   - [x] Use local media helper upload and static handlers.
   - [x] Return structured resolved attachments.
   - [x] Resolve transcript local media URLs.
@@ -2129,9 +2129,9 @@ Phase 10 notes:
   - [x] Add `custom-transcript-blocks`.
   - [x] Add `bridge-policy`.
   - [x] Add `diagnostics-panel`.
-  - [x] Add `migration-vnext`.
+  - [x] Add `host-integration-checklist`.
 - [x] Update `examples/next-with-bridge-sidecar`.
-  - [x] Use vNext bridge policy.
+  - [x] Use typed bridge policy.
   - [x] Document full-chat WebSocket boundary.
   - [x] Add local media helper utilities where applicable.
 - [x] Update `examples/next-rpc-route`.
@@ -2233,7 +2233,7 @@ Phase 10 notes:
   - what becomes public: no new package API; recipes demonstrate existing
     public controllers, `AgentThreadView`, `AgentMessageList`,
     `AgentComposerPanel`, `AgentChat` components map, local media helper,
-    explicit bridge policy, diagnostics panel, and vNext migration checklist.
+    explicit bridge policy, diagnostics panel, and host integration checklist.
   - what host responsibility is intentionally not handled: auth, tenant
     isolation, persistence, workspace and upload authorization, audit sinks,
     billing, Codex process lifecycle, and deployment policy remain host-owned.
@@ -2391,9 +2391,9 @@ Phase 10 notes:
     storage, and example-local implementation details remain outside the docs
     index.
   - what becomes public: no new package API; `docs/README.md` now points
-    readers to `docs/architecture/vnext-design-gates.md` alongside
+    readers to `docs/architecture/host-integration-design-gates.md` alongside
     `docs/reference/package-exports.md`, and describes React, attachments,
-    resources, and controllers as vNext documentation entry points.
+    resources, and controllers as host integration documentation entry points.
   - what host responsibility is intentionally not handled: auth, tenant
     isolation, persistence, upload authorization, audit sinks, process
     lifecycle, billing, and deployment policy remain documented as host-owned
@@ -2435,7 +2435,7 @@ Phase 10 notes:
     `019e9138-14db-7362-9d18-48df0bca210d` with the `agent-ui-review` skill.
     Review reported no findings.
 
-- 2026-06-04 product boundary vNext ownership slice:
+- 2026-06-04 product boundary host integration ownership slice:
   - documentation type: product boundary.
   - changed routes: none.
   - what remains internal: raw reducer state, internal CSS selectors,
@@ -2529,7 +2529,7 @@ Phase 10 notes:
     declaration chunks, private CSS chunks, and `.aui-*` selectors remain
     outside the public export contract.
   - what becomes public: no new package API; package exports now document the
-    vNext freeze requirements for promoted exports: intentional export map or
+    host integration freeze requirements for promoted exports: intentional export map or
     package barrel, canonical docs, importing examples, and focused
     test/snapshot/package-resolution protection.
   - what host responsibility is intentionally not handled: non-loopback bridge
@@ -2919,7 +2919,7 @@ Phase 10 notes:
     source-level first-message helpers, attachment mutation internals, bridge
     process lifecycle internals, generated schema files, package dist output,
     and raw protocol escape hatches remain internal or host-managed.
-  - what becomes public: no new package API; `docs/migrations/vnext-host-consumers.md`
+  - what becomes public: no new package API; `docs/guides/host-integration.md`
     now documents who must migrate, package-by-package breaking changes,
     before/after imports, React customization, server bridge, local media,
     first-message, validation, and host-owned boundaries.
@@ -2927,7 +2927,7 @@ Phase 10 notes:
     authentication, tenant isolation, persistence, audit storage, billing,
     deployment policy, dynamic tool execution, upload/static authorization, and
     remote deployment remain host-owned.
-  - which example proves the design: `examples/recipes/src/migration-vnext.ts`
+  - which example proves the design: `examples/recipes/src/host-integration-checklist.ts`
     and Phase 12 examples prove the migration checklist.
   - which tests protect the contract: docs staleness tests, recipes typecheck,
     API snapshots, package-resolution tests, and focused example gates protect
@@ -2999,7 +2999,7 @@ Phase 10 notes:
     `019e917b-e412-77e1-8c4f-3783a62b28a1` found that a changeset is required
     for package README consumer guidance and reported a `validate:packages`
     rerun failure in `test:node-compat`; a patch changeset was added in
-    `.changeset/vnext-package-readme-boundaries.md`, then local
+    `.changeset/host-integration-package-readme-boundaries.md`, then local
     `bunx vitest run test/docs-staleness.test.ts`,
     `bun run test:api-snapshots`, `bun run test:package-resolution`, and
     `bun run validate:packages` passed. Follow-up review reported no
@@ -3012,7 +3012,7 @@ Phase 10 notes:
     generated schema deep imports, private style chunks, source-level helper
     modules, bridge process lifecycle internals, local media storage internals,
     and raw diagnostic payload handling remain outside canonical public docs.
-  - what becomes public: no new package API; the promoted vNext surfaces are
+  - what becomes public: no new package API; the promoted host integration surfaces are
     documented canonically through package READMEs, reference docs, guides, and
     migration guidance, with `docs/reference/package-exports.md` remaining the
     export-freeze source of truth.
@@ -3021,7 +3021,7 @@ Phase 10 notes:
     authorization, audit storage, billing, deployment policy, and app-specific
     workflows remain host-owned.
   - which example proves the design: package-name imports in Phase 12 examples
-    and `examples/recipes/src/migration-vnext.ts` prove the documented public
+    and `examples/recipes/src/host-integration-checklist.ts` prove the documented public
     surfaces without source-level deep imports.
   - which tests protect the contract: API snapshots, package-resolution tests,
     package validation, docs staleness tests, and recipe typecheck protect the
@@ -3335,13 +3335,13 @@ Phase 10 notes:
 - 2026-06-04 PR readiness checkpoint:
   - `git status --short` reviewed after Phase 15 completion. The branch is
     `codex/agent-ui-vnext-design-plan`; the worktree contains the expected
-    broad vNext docs, examples, package, tests, and changeset edits.
+    broad host integration docs, examples, package, tests, and changeset edits.
   - `git diff --cached --name-only` produced no output; nothing is staged.
   - `git status --short third_party/codex packages/codex/src/generated
     packages/*/dist docs/screenshots` produced no output, and `git diff --
     packages/codex/src/generated third_party/codex` produced no output.
   - `git diff --check` passed.
-  - Created the reviewed vNext implementation checkpoint commit.
+  - Created the reviewed host integration implementation checkpoint commit.
 - 2026-06-04 final pre-commit integration review:
   - spawned review subagent `019e91be-cdc9-71e1-bfe3-11a48c14674d` with the
     `agent-ui-review` skill.
@@ -3365,7 +3365,7 @@ Phase 10 notes:
   - Review subagent `019e91c8-6a92-7b12-ab54-ce1a967c3bf1` used the
     `agent-ui-review` skill and found two P2 issues: the newly public
     `useAgentThreadListController()` still returned raw-bearing `ThreadState[]`,
-    and `docs/architecture/vnext-design-gates.md` still described the controller
+    and `docs/architecture/host-integration-design-gates.md` still described the controller
     itself as source-level/internal.
   - Fix: changed `useAgentThreadListController().threads` to return raw-free
     `AgentThreadView[]`, adapted the default sidebar list to consume raw-free
@@ -3465,11 +3465,9 @@ Phase 10 notes:
     to be reframed around current Codex skill discovery, local installation
     through `$skill-installer`, and plugin-based distribution.
 - 2026-06-04 current design language slice:
-  - Renamed `docs/architecture/vnext-design-gates.md` to
+  - Current design artifacts are
     `docs/architecture/host-integration-design-gates.md`,
-    `docs/migrations/vnext-host-consumers.md` to
     `docs/guides/host-integration.md`, and
-    `examples/recipes/src/migration-vnext.ts` to
     `examples/recipes/src/host-integration-checklist.ts`.
   - Removed public-facing `vNext` terminology from docs, examples, recipes,
     and the package-boundary changeset so the PR presents the host integration
@@ -3579,14 +3577,14 @@ Phase 10 notes:
 - [x] Fix P2 local media SVG/active image serving hardening and add
   `nosniff`.
 - [x] Add upload/local media tests for SVG rejection or safe serving headers.
-- [ ] Clean current-design docs drift in `PLAN.md`, `TODO.md`,
+- [x] Clean current-design docs drift in `PLAN.md`, `TODO.md`,
   `docs/reference/package-exports.md`, and `docs/guides/host-integration.md`.
-- [ ] Record design note covering:
-  - [ ] what remains internal
-  - [ ] what becomes public
-  - [ ] what host responsibility is intentionally not handled
-  - [ ] which example proves the design
-  - [ ] which tests protect the contract
+- [x] Record design note covering:
+  - [x] what remains internal
+  - [x] what becomes public
+  - [x] what host responsibility is intentionally not handled
+  - [x] which example proves the design
+  - [x] which tests protect the contract
 - [ ] Run focused validation for core reducer, server security, docs staleness,
   package/API/release gates touched by the fixes.
 - [ ] Commit in small units, spawn an `agent-ui-review` subagent for each commit
@@ -3634,3 +3632,29 @@ Phase 10 notes:
     responses also set `nosniff`. Focused validation:
     `bun test packages/server/test/upload.test.ts` pass; `bun run lint` pass;
     `bun run typecheck` pass.
+  - P2 local media review follow-up: SVG uploads are also rejected by sanitized
+    `.svg` filename and leading SVG/XML body signature when the content type is
+    missing or spoofed; `docs/reference/server-bridge.md` documents SVG
+    rejection and `nosniff` serving headers. Focused validation:
+    `bun test packages/server/test/upload.test.ts` pass;
+    `bunx vitest run test/docs-staleness.test.ts` pass; `bun run lint` pass;
+    `bun run typecheck` pass.
+  - P2 current-design docs cleanup:
+    - what remains internal: reducer/store reconciliation details, optimistic
+      operation maps, generated schema internals, non-exported permission
+      bounding helpers, local media file storage internals, and dist output.
+    - what becomes public: no new package API; docs now describe the current
+      host integration package boundary, validated import sites, React
+      `components` replacement, and Codex normalizers on the
+      `@nyosegawa/agent-ui-codex/normalizer` subpath.
+    - what host responsibility is intentionally not handled: hosted auth,
+      persistence, tenant/workspace isolation, bridge exposure policy,
+      upload/static authorization, process supervision, audit storage, billing,
+      deployment, and dynamic tool authorization.
+    - which example proves the design: `examples/codex-local-web`,
+      `examples/next-with-bridge-sidecar`, `examples/local-react-vite`, and
+      `examples/recipes/src/host-integration-checklist.ts`.
+    - which tests protect the contract: docs staleness tests, API snapshots,
+      package-resolution tests, package validation, focused core reducer tests,
+      websocket permission tests, and upload tests.
+    - Focused validation: `bunx vitest run test/docs-staleness.test.ts` pass.

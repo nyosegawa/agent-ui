@@ -38,9 +38,9 @@ supervision, billing, and deployment policy.
 
 ## Export Inventory
 
-This inventory was regenerated from `test/api-snapshots/*__index.d.ts` with
-`bun run test:api-snapshots:update` on 2026-06-03. Freeze the export map only
-after internal boundaries, examples, tests, and host integration docs agree.
+This inventory was verified from `test/api-snapshots/*__index.d.ts` with
+`bun run test:api-snapshots` on 2026-06-04. Freeze the export map only after
+internal boundaries, examples, tests, and host integration docs agree.
 
 ### `@nyosegawa/agent-ui-core`
 
@@ -201,23 +201,21 @@ Make private: element render internals and React root lifecycle details.
 
 Remove: none at this gate.
 
-### Soon-To-Change Import Sites
+### Validated Import Sites
 
-Examples that import APIs expected to change: `examples/local-react-vite`
-(`AgentChat`, `useAgentThread`, `useAgentApprovals`, direct thread lifecycle
-fixture state), `examples/codex-local-web` (`AgentChat`,
-attachment/resource resolver), `examples/next-with-bridge-sidecar` (`AgentChat`,
-attachment/resource resolver), `examples/docs-site` (`AgentChat`), and
-`examples/recipes/src/headless-hooks.tsx` (`useAgentThreads`,
-`useAgentThread`, `useAgentComposer`, `useAgentApprovals`).
+Examples that prove the current package surface: `examples/local-react-vite`
+uses the React root and current component map, `examples/codex-local-web` uses
+the server bridge and local media helper, `examples/next-with-bridge-sidecar`
+uses the typed bridge policy and local upload/static routes,
+`examples/docs-site` imports public React surfaces, and `examples/recipes`
+imports current host integration recipes.
 
-Docs that describe soon-to-change APIs: `docs/reference/hooks.md`,
+Docs that describe the current API: `docs/reference/hooks.md`,
 `docs/reference/react-components.md`, `docs/reference/server-bridge.md`,
 `docs/guides/react.md`, `docs/guides/attachments.md`,
 `docs/guides/theming.md`, `docs/guides/i18n.md`,
-`docs/guides/approvals.md`, `docs/guides/web-components.md`, and
-`docs/examples/*` pages that explain `AgentChat`, sidebar history, or
-attachments.
+`docs/guides/approvals.md`, `docs/guides/web-components.md`,
+`docs/guides/host-integration.md`, and `docs/examples/*`.
 
 Resource resolution exports are kept at the React root as the attachment
 boundary: `AgentResolvedResource`, `AgentResourceKind`,
@@ -318,11 +316,11 @@ Responsibilities:
   agent-browser verification turns
 
 The package root exports the protocol/session/transport facade: JSON-RPC
-helpers, protocol capability metadata, normalizers, session helpers, stdio
-transport, WebSocket transport, SDK adapter, and auth helpers. Browser code
-should import the browser-safe grouped clients from
+helpers, protocol capability metadata, session helpers, stdio transport,
+WebSocket transport, SDK adapter, and auth helpers. Browser code should import
+the browser-safe grouped clients from
 `@nyosegawa/agent-ui-codex/clients`, the compatibility session facade from
-`@nyosegawa/agent-ui-codex/session`, the normalized event helpers from
+`@nyosegawa/agent-ui-codex/session`, normalized event helpers from
 `@nyosegawa/agent-ui-codex/normalizer`, and the WebSocket transport from
 `@nyosegawa/agent-ui-codex/websocket` so Node stdio code stays out of the browser
 bundle.

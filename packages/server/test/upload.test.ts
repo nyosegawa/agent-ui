@@ -127,6 +127,32 @@ describe("createAgentUiLocalUploadHandler", () => {
     expect(svgResponse.status).toBe(415);
     expect(svgResponse.headers.get("x-content-type-options")).toBe("nosniff");
     await svgResponse.text();
+    const missingTypeSvgResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "<svg><script>alert(1)</script></svg>",
+      method: "POST",
+    });
+    expect(missingTypeSvgResponse.status).toBe(415);
+    expect(missingTypeSvgResponse.headers.get("x-content-type-options")).toBe(
+      "nosniff",
+    );
+    await missingTypeSvgResponse.text();
+    const octetSvgResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "<?xml version=\"1.0\"?><svg></svg>",
+      headers: { "content-type": "application/octet-stream" },
+      method: "POST",
+    });
+    expect(octetSvgResponse.status).toBe(415);
+    await octetSvgResponse.text();
+    const svgExtensionResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "mislabeled",
+      headers: {
+        "content-type": "text/plain",
+        "x-agent-ui-filename": encodeURIComponent("active.svg"),
+      },
+      method: "POST",
+    });
+    expect(svgExtensionResponse.status).toBe(415);
+    await svgExtensionResponse.text();
     const filenameResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
       body: "x",
       headers: { "content-type": "text/plain", "x-agent-ui-filename": "%E0%A4%A" },

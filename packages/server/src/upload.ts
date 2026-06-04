@@ -130,9 +130,13 @@ export function createAgentUiLocalMediaHelper(
         return;
       }
       const name = sanitizeFilename(rawName);
+      const body = Buffer.concat(chunks);
+      if (isSvgUpload(name, mimeType, body)) {
+        writeJson(response, 415, { error: "Unsupported upload content type." });
+        return;
+      }
       await mkdir(directory, { recursive: true });
       const path = join(directory, `${now()}-${Math.random().toString(36).slice(2, 8)}-${name}`);
-      const body = Buffer.concat(chunks);
       await writeFile(path, body);
       const id = createUniqueAssetId(assets, createAssetId);
       const asset = Object.freeze({
@@ -341,6 +345,14 @@ function isAllowedContentType(contentType: string): boolean {
     mimeType === "text/plain" ||
     Boolean(mimeType?.startsWith("image/"))
   );
+}
+
+function isSvgUpload(name: string, contentType: string, body: Buffer): boolean {
+  const mimeType = contentType.split(";")[0]?.trim().toLowerCase();
+  if (mimeType === "image/svg+xml") return true;
+  if (name.toLowerCase().endsWith(".svg")) return true;
+  const prefix = body.subarray(0, 512).toString("utf8").trimStart().toLowerCase();
+  return prefix.startsWith("<svg") || prefix.startsWith("<?xml") && prefix.includes("<svg");
 }
 
 function writeJson(response: ServerResponse, statusCode: number, body: unknown): void {
