@@ -1,5 +1,22 @@
 # @nyosegawa/agent-ui-core
 
+## 0.2.0
+
+### Minor Changes
+
+- ca83d35: Establish the current host integration package boundary for Agent UI.
+
+  This release updates the public surface around thread lifecycle state, scoped
+  thread collections, host integration components, Codex protocol helper
+  subpaths, bridge helpers, and package export maps. Registry-bucket thread
+  types are replaced by the current lifecycle and thread-view APIs, React host
+  customization uses the component map instead of slots, and Codex normalizers
+  move to `@nyosegawa/agent-ui-codex/normalizer` rather than the package root.
+
+  Hosts still own runtime policy including auth, persistence, tenant isolation,
+  non-loopback bridge admission, upload/static authorization, process
+  supervision, billing, and deployment.
+
 ## 0.1.1
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@nyosegawa/agent-ui-server",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Node local bridge helpers for Agent UI.",
   "license": "MIT",
   "repository": {
@@ -44,8 +44,8 @@
     "test": "vitest run --config ../../vitest.config.ts test"
   },
   "dependencies": {
-    "@nyosegawa/agent-ui-codex": "workspace:^0.1.1",
-    "@nyosegawa/agent-ui-core": "workspace:^0.1.1",
+    "@nyosegawa/agent-ui-codex": "workspace:^0.2.0",
+    "@nyosegawa/agent-ui-core": "workspace:^0.2.0",
     "execa": "9.6.1",
     "ws": "8.18.3"
   },

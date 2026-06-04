@@ -1,6 +1,6 @@
 {
   "name": "@nyosegawa/agent-ui-react",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "React hooks and components for Agent UI.",
   "license": "MIT",
   "repository": {
@@ -53,8 +53,8 @@
   "dependencies": {
     "@codemirror/state": "^6.6.0",
     "@codemirror/view": "^6.42.1",
-    "@nyosegawa/agent-ui-codex": "workspace:^0.1.1",
-    "@nyosegawa/agent-ui-core": "workspace:^0.1.1"
+    "@nyosegawa/agent-ui-codex": "workspace:^0.2.0",
+    "@nyosegawa/agent-ui-core": "workspace:^0.2.0"
   },
   "peerDependencies": {
     "react": ">=18.3.0 || >=19.0.0",
