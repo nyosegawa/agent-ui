@@ -3618,3 +3618,9 @@ Phase 10 notes:
     the same bounded protocol permission logic as normal server requests.
     Focused validation: `bun test packages/server/test/websocket.test.ts`
     pass; `bun run typecheck` pass.
+  - P2 dynamic helper review follow-up: shared permission bounding now lives in
+    an internal non-exported server module so it does not expand
+    `@nyosegawa/agent-ui-server` public API. Focused validation:
+    `bun test packages/server/test/websocket.test.ts` pass;
+    `bun run test:api-snapshots` pass after rebuilding package declarations;
+    `bun run typecheck` pass.

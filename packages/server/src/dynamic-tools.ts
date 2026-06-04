@@ -5,7 +5,10 @@ import type {
   PendingServerRequest,
 } from "@nyosegawa/agent-ui-core";
 import type { createCodexAppServerBridge } from "./bridge";
-import { boundedFileSystemPermission } from "./server-request-policy";
+import {
+  boundedFileSystemPermission,
+  boundedGenericPermission,
+} from "./permission-bounding";
 import { redactSecrets } from "./redaction";
 
 export type DynamicToolHandler = (
@@ -478,11 +481,6 @@ function boundedGrantedPermissions(
     ...(fileSystem !== undefined ? { fileSystem } : {}),
     ...(network !== undefined ? { network } : {}),
   };
-}
-
-function boundedGenericPermission(granted: unknown, requested: unknown): unknown {
-  if (granted === undefined || granted === null || requested === undefined) return undefined;
-  return JSON.stringify(granted) === JSON.stringify(requested) ? granted : undefined;
 }
 
 function stringValue(value: unknown): string | undefined {
