@@ -351,7 +351,8 @@ function isSvgUpload(name: string, contentType: string, body: Buffer): boolean {
   const mimeType = contentType.split(";")[0]?.trim().toLowerCase();
   if (mimeType === "image/svg+xml") return true;
   if (name.toLowerCase().endsWith(".svg")) return true;
-  return firstMarkupElementName(body) === "svg";
+  const elementName = firstMarkupElementName(body);
+  return elementName?.split(":").pop() === "svg";
 }
 
 function firstMarkupElementName(body: Buffer): string | undefined {
@@ -374,8 +375,9 @@ function firstMarkupElementName(body: Buffer): string | undefined {
       continue;
     }
     if (/^<!doctype\b/i.test(rest)) {
-      const end = text.indexOf(">", index + 2);
+      const end = findDoctypeEnd(text, index + 2);
       if (end === -1) return undefined;
+      if (text.slice(index, end + 1).toLowerCase().includes("svg")) return "svg";
       index = end + 1;
       continue;
     }
@@ -383,6 +385,32 @@ function firstMarkupElementName(body: Buffer): string | undefined {
     return match?.[1]?.toLowerCase();
   }
   return undefined;
+}
+
+function findDoctypeEnd(text: string, start: number): number {
+  let bracketDepth = 0;
+  let quote: "\"" | "'" | undefined;
+  for (let index = start; index < text.length; index += 1) {
+    const char = text[index];
+    if (quote) {
+      if (char === quote) quote = undefined;
+      continue;
+    }
+    if (char === "\"" || char === "'") {
+      quote = char;
+      continue;
+    }
+    if (char === "[") {
+      bracketDepth += 1;
+      continue;
+    }
+    if (char === "]" && bracketDepth > 0) {
+      bracketDepth -= 1;
+      continue;
+    }
+    if (char === ">" && bracketDepth === 0) return index;
+  }
+  return -1;
 }
 
 function writeJson(response: ServerResponse, statusCode: number, body: unknown): void {

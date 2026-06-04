@@ -3644,6 +3644,10 @@ Phase 10 notes:
     first real element, and upload tests cover delayed `<svg>` after an XML
     comment. Focused validation: `bun test packages/server/test/upload.test.ts`
     pass.
+  - P2 local media review follow-up 3: SVG body sniff now rejects namespace
+    prefixed SVG roots and DOCTYPE internal subsets that mention SVG before the
+    root element. Focused validation: `bun test packages/server/test/upload.test.ts`
+    pass; `bun run lint` pass; `bun run typecheck` pass.
   - P2 current-design docs cleanup:
     - what remains internal: reducer/store reconciliation details, optimistic
       operation maps, generated schema internals, non-exported permission

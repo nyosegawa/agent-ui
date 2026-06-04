@@ -153,6 +153,26 @@ describe("createAgentUiLocalUploadHandler", () => {
     });
     expect(paddedSvgResponse.status).toBe(415);
     await paddedSvgResponse.text();
+    const namespacedSvgResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "<svg:svg xmlns:svg=\"http://www.w3.org/2000/svg\"></svg:svg>",
+      headers: {
+        "content-type": "text/plain",
+        "x-agent-ui-filename": encodeURIComponent("namespaced.txt"),
+      },
+      method: "POST",
+    });
+    expect(namespacedSvgResponse.status).toBe(415);
+    await namespacedSvgResponse.text();
+    const doctypeSvgResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "<!DOCTYPE svg [ <!ENTITY x \"y\"> ]><svg></svg>",
+      headers: {
+        "content-type": "application/octet-stream",
+        "x-agent-ui-filename": encodeURIComponent("doctype.bin"),
+      },
+      method: "POST",
+    });
+    expect(doctypeSvgResponse.status).toBe(415);
+    await doctypeSvgResponse.text();
     const svgExtensionResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
       body: "mislabeled",
       headers: {
