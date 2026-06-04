@@ -1243,6 +1243,125 @@ describe("attachAgentUiWebSocketBridge", () => {
     await transport.close();
   });
 
+  it("keeps dynamic helper protocol filesystem grants within requested subsets", async () => {
+    const requestedEntry = {
+      access: "read",
+      path: { path: "/tmp/project/src", type: "path" },
+    };
+    const { stdout, transport, writes } = await createStartedDynamicHelper({
+      helperPermissions: () => ({
+        action: "grant",
+        permissions: {
+          fileSystem: {
+            entries: [requestedEntry],
+            globScanMaxDepth: 2,
+            read: ["/tmp/project/src"],
+            write: ["/tmp/project"],
+          },
+          network: true,
+        },
+      }),
+    });
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "helper-permissions-protocol-subset",
+        method: "item/permissions/requestApproval",
+        params: {
+          cwd: "/tmp/project",
+          permissions: {
+            fileSystem: {
+              entries: [requestedEntry],
+              globScanMaxDepth: 4,
+              read: ["/tmp/project/src", "/tmp/project/README.md"],
+              write: ["/tmp/project", "/tmp/shared"],
+            },
+            network: true,
+          },
+          threadId: "helper-thread-policy",
+          turnId: "helper-turn",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "helper-permissions-protocol-subset"));
+    expect(
+      writes.map((line) => JSON.parse(line)).find((message) => message.id === "helper-permissions-protocol-subset"),
+    ).toEqual({
+      id: "helper-permissions-protocol-subset",
+      result: {
+        permissions: {
+          fileSystem: {
+            entries: [requestedEntry],
+            globScanMaxDepth: 2,
+            read: ["/tmp/project/src"],
+            write: ["/tmp/project"],
+          },
+          network: true,
+        },
+        scope: "turn",
+      },
+    });
+    await transport.close();
+  });
+
+  it("drops dynamic helper protocol filesystem grants that broaden requested values", async () => {
+    const requestedEntry = {
+      access: "read",
+      path: { path: "/tmp/project/src", type: "path" },
+    };
+    const broaderEntry = {
+      access: "write",
+      path: { path: "/tmp/project/src", type: "path" },
+    };
+    const { stdout, transport, writes } = await createStartedDynamicHelper({
+      helperPermissions: () => ({
+        action: "grant",
+        permissions: {
+          fileSystem: {
+            entries: [broaderEntry],
+            globScanMaxDepth: 3,
+            read: ["/tmp/project/src"],
+            write: ["/"],
+          },
+          network: true,
+        },
+      }),
+    });
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "helper-permissions-protocol-broad",
+        method: "item/permissions/requestApproval",
+        params: {
+          cwd: "/tmp/project",
+          permissions: {
+            fileSystem: {
+              entries: [requestedEntry],
+              globScanMaxDepth: 2,
+              read: null,
+              write: ["/tmp/project"],
+            },
+          },
+          threadId: "helper-thread-policy",
+          turnId: "helper-turn",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "helper-permissions-protocol-broad"));
+    expect(
+      writes.map((line) => JSON.parse(line)).find((message) => message.id === "helper-permissions-protocol-broad"),
+    ).toEqual({
+      id: "helper-permissions-protocol-broad",
+      result: {
+        permissions: {},
+        scope: "turn",
+      },
+    });
+    await transport.close();
+  });
+
   it("can explicitly deny dynamic helper permissions", async () => {
     const { stdout, transport, writes } = await createStartedDynamicHelper({
       helperPermissions: "deny",

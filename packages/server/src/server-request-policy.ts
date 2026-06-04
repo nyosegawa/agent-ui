@@ -306,7 +306,7 @@ function boundedPermissions(
   };
 }
 
-function boundedFileSystemPermission(
+export function boundedFileSystemPermission(
   granted: unknown,
   requested: unknown,
 ): unknown {

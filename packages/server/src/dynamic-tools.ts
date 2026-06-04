@@ -5,6 +5,7 @@ import type {
   PendingServerRequest,
 } from "@nyosegawa/agent-ui-core";
 import type { createCodexAppServerBridge } from "./bridge";
+import { boundedFileSystemPermission } from "./server-request-policy";
 import { redactSecrets } from "./redaction";
 
 export type DynamicToolHandler = (
@@ -477,35 +478,6 @@ function boundedGrantedPermissions(
     ...(fileSystem !== undefined ? { fileSystem } : {}),
     ...(network !== undefined ? { network } : {}),
   };
-}
-
-function boundedFileSystemPermission(
-  granted: unknown,
-  requested: unknown,
-): unknown {
-  if (granted === undefined || granted === null || requested === undefined) return undefined;
-  if (typeof requested === "string") {
-    if (granted === requested) return granted;
-    if (isRecord(granted) && granted.mode === requested) return granted;
-    return undefined;
-  }
-  if (!isRecord(requested)) return boundedGenericPermission(granted, requested);
-  if (!isRecord(granted)) return undefined;
-  if (
-    typeof requested.mode === "string" &&
-    typeof granted.mode === "string" &&
-    granted.mode !== requested.mode
-  ) {
-    return undefined;
-  }
-  if (Array.isArray(requested.paths)) {
-    if (!Array.isArray(granted.paths)) return undefined;
-    const requestedPaths = new Set(requested.paths.filter((path) => typeof path === "string"));
-    if (!granted.paths.every((path) => typeof path === "string" && requestedPaths.has(path))) {
-      return undefined;
-    }
-  }
-  return granted;
 }
 
 function boundedGenericPermission(granted: unknown, requested: unknown): unknown {

@@ -3573,9 +3573,9 @@ Phase 10 notes:
 - [x] Fix P1 post-reconcile stale alias turn/item event handling.
 - [x] Add regression tests for stale pending-thread alias `turn/started`,
   streaming delta, completion, and failure events after `thread/reconciled`.
-- [ ] Fix P2 dynamic helper permission bounding for protocol-shaped filesystem
+- [x] Fix P2 dynamic helper permission bounding for protocol-shaped filesystem
   permissions by sharing server-request policy bounding behavior.
-- [ ] Add dynamic helper permission tests that reject broadening grants.
+- [x] Add dynamic helper permission tests that reject broadening grants.
 - [ ] Fix P2 local media SVG/active image serving hardening and add
   `nosniff`.
 - [ ] Add upload/local media tests for SVG rejection or safe serving headers.
@@ -3609,3 +3609,7 @@ Phase 10 notes:
   - P1 changeset fix: all public packages now use pre-1.0 `minor` for this
     package-surface change, and the changeset body documents the public API,
     package boundary, migration, and host-owned responsibilities.
+  - P2 dynamic helper permission fix: dynamic helper filesystem grants now use
+    the same bounded protocol permission logic as normal server requests.
+    Focused validation: `bun test packages/server/test/websocket.test.ts`
+    pass; `bun run typecheck` pass.
