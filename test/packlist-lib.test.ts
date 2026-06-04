@@ -1,12 +1,27 @@
 import { describe, expect, it } from "vitest";
 
-import { parseBunPackDryRun, validatePacklistEntries } from "../scripts/packlist-lib.mjs";
+import { parseNpmPackDryRun, validatePacklistEntries } from "../scripts/packlist-lib.mjs";
 
 describe("package packlist policy", () => {
-  it("parses bun pack dry-run output into sorted package entries", () => {
+  it("parses npm pack dry-run JSON into sorted package entries", () => {
     expect(
-      parseBunPackDryRun("packed 12B dist/index.js\nignored line\npacked 8B package.json\n"),
+      parseNpmPackDryRun(
+        JSON.stringify([
+          {
+            files: [{ path: "package.json" }, { path: "dist/index.js" }],
+          },
+        ]),
+      ),
     ).toEqual(["dist/index.js", "package.json"]);
+  });
+
+  it("detects packages that would publish without built output", () => {
+    expect(validatePacklistEntries("core", ["package.json", "README.md"]))
+      .toMatchInlineSnapshot(`
+        [
+          "core packs no dist files",
+        ]
+      `);
   });
 
   it("detects unexpected source files outside allowed package output", () => {

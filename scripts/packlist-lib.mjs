@@ -7,25 +7,25 @@ const staleArtifactPattern = /(?:^|\/)(?:\.DS_Store|.*\.(?:bak|old|tmp|tsbuildin
 
 export { workspacePackageDirs };
 
-export async function readBunPacklist(packageRoot) {
-  const { stdout } = await execFileAsync("bun", ["pm", "pack", "--dry-run"], {
+export async function readPackagePacklist(packageRoot) {
+  const { stdout } = await execFileAsync("npm", ["pack", "--dry-run", "--json"], {
     cwd: packageRoot,
     encoding: "utf8",
     maxBuffer: 1024 * 1024 * 10,
   });
-  return parseBunPackDryRun(stdout);
+  return parseNpmPackDryRun(stdout);
 }
 
-export function parseBunPackDryRun(output) {
-  return output
-    .split(/\r?\n/)
-    .map((line) => line.match(/^packed\s+\S+\s+(.+)$/)?.[1])
-    .filter(Boolean)
-    .sort();
+export function parseNpmPackDryRun(output) {
+  const [packument] = JSON.parse(output);
+  return packument.files.map((file) => file.path).sort();
 }
 
 export function validatePacklistEntries(packageDir, entries) {
   const issues = [];
+  if (!entries.some((entry) => entry.startsWith("dist/"))) {
+    issues.push(`${packageDir} packs no dist files`);
+  }
   for (const entry of entries) {
     if (staleArtifactPattern.test(entry)) {
       issues.push(`${packageDir} packs stale artifact ${entry}`);

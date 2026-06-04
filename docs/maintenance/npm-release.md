@@ -41,9 +41,9 @@ Use `publish` mode after the reviewed version PR has merged to:
 
 1. Run the same release validation ladder.
 2. Wait for the `npm-release` GitHub Environment approval.
-3. Run `bun run release:publish`, which first normalizes npm publish manifests
-   so internal `workspace:` dependencies become semver ranges, then runs
-   `bunx changeset publish`.
+3. Run `bun run release:publish`, which builds package `dist` output inside
+   the publish job, normalizes npm publish manifests so internal `workspace:`
+   dependencies become semver ranges, then runs `bunx changeset publish`.
 
 The publish job uses `NPM_TOKEN` and grants `id-token: write` so npm can attach
 provenance. Prefer storing `NPM_TOKEN` as an `npm-release` Environment secret and
@@ -87,7 +87,8 @@ Each public package should keep:
 - a narrow `files` list for publish output
 
 Package output must continue to pass `publint`, `attw`, and the local packlist
-smoke.
+smoke. The packlist smoke checks npm's dry-run packlist and fails if a public
+package would publish without `dist` files.
 
 The published npm manifests must not contain `workspace:` dependencies. The
 release workflow handles this immediately before publishing; post-publish
