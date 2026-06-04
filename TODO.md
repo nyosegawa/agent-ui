@@ -3448,7 +3448,7 @@ Phase 10 notes:
   - [x] what host responsibility is intentionally not handled
   - [x] which example proves the design
   - [x] which tests protect the contract
-- [ ] Run focused validation for docs, skills, examples, package/API surfaces
+- [x] Run focused validation for docs, skills, examples, package/API surfaces
   touched by the rename and skill refresh.
 - [ ] Commit in small units, spawn an `agent-ui-review` subagent for each commit
   unit, fix review findings, push, and watch GitHub Actions to a concrete
@@ -3526,6 +3526,18 @@ Phase 10 notes:
     test:repo-skills`, `bunx vitest run test/package-scripts-docs.test.ts`,
     `bunx vitest run test/docs-staleness.test.ts`, `bun run lint`, and `bun run
     typecheck`.
+- 2026-06-04 Phase 17 package/API validation:
+  - `bun run validate:packages` passed with the existing `publint` repository
+    URL suggestions and Vite chunk-size warnings.
+  - `bun run test:api-snapshots` passed.
+  - `bun run test:package-resolution` passed when rerun standalone. An earlier
+    attempt failed only because it ran in parallel with `validate:packages` and
+    both invoked Next builds concurrently.
+- 2026-06-04 Phase 17 full validation:
+  - `bun run test` passed: 58 test files and 598 tests.
+  - `bun run validate:e2e` passed: fixture Playwright suite passed 53 tests
+    with 1 screenshot-refresh test skipped, and real-local Playwright suite
+    passed 15 tests.
 
 ## Completion Criteria
 
@@ -3542,10 +3554,10 @@ Phase 10 notes:
 - [x] Preview reads do not mutate active thread run settings.
 - [x] Server request policy is context-rich and default-safe.
 - [x] Bridge health and diagnostics are structured and redacted.
-- [ ] All examples demonstrate the intended current host integration shape.
-- [ ] Public docs do not inherit vNext framing for this now-current design.
-- [ ] Agent Skills docs match the latest official Codex skill/plugin model.
-- [ ] All relevant docs are updated.
-- [ ] Host integration docs are sufficient for host consumers.
-- [ ] Unit, package, e2e, and browser validations pass.
+- [x] All examples demonstrate the intended current host integration shape.
+- [x] Public docs do not inherit vNext framing for this now-current design.
+- [x] Agent Skills docs match the latest official Codex skill/plugin model.
+- [x] All relevant docs are updated.
+- [x] Host integration docs are sufficient for host consumers.
+- [x] Unit, package, e2e, and browser validations pass.
 - [ ] GitHub Actions pass.
