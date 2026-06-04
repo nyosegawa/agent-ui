@@ -136,7 +136,7 @@ its docs, examples, tests, and validation items are complete.
 ### Phase 2 Notes
 
 - Protocol classification is recorded in
-  `docs/reference/codex-protocol.md#vnext-lifecycle-classification-gate`.
+  `docs/reference/codex-protocol.md#lifecycle-classification-gate`.
 - `thread/closed` is notification-only in the current stable generated surface;
   there is no productized stable `thread/close` client method.
 - `thread/turns/list` remains experimental opt-in, while
@@ -339,10 +339,9 @@ its docs, examples, tests, and validation items are complete.
 - Commit-unit review process: spawned review subagent
   `019e8ee6-15ab-7ee3-bf1d-76523fe0dd11` after the optimistic first-message
   slice. Findings about matching collection insertion and stale pending
-  operation state were fixed with core/React regression tests. The browser/e2e
-  immediate-message criterion remains a TODO item; current browser coverage
-  proves final first-run behavior and URL history, while jsdom proves
-  pre-server-response message visibility.
+  operation state were fixed with core/React regression tests. Later Phase 4
+  browser/e2e coverage proves immediate first-message visibility before
+  assistant output, while jsdom proves pre-server-response message visibility.
 - Focused validation after optimistic insertion: `bun test
   packages/core/test/reducer.test.ts`, `bun --filter
   @nyosegawa/agent-ui-react test`, `bun run typecheck`, `bun run lint`,
@@ -385,8 +384,8 @@ its docs, examples, tests, and validation items are complete.
 - Added `turn/start` failure handling after canonical thread creation. The real
   thread remains active, the optimistic first user message is marked failed,
   and the first-message operation is marked failed so pending-operation
-  selectors clear. Retry/cancel actions and visible failure UI metadata remain
-  separate TODO items.
+  selectors clear. Retry/cancel actions and visible failure UI metadata were
+  completed in the following operation-control slice.
 - Commit-unit review process: spawned review subagent
   `019e8f01-c50a-7aa2-bd14-9e603ab4c9b7` for the `turn/start` failure slice.
   The review found no code defect and requested this TODO status/note update.
@@ -755,8 +754,8 @@ its docs, examples, tests, and validation items are complete.
     authorization, path-to-asset registry, upload persistence, asset lifetime,
     tenant/workspace scoping, and non-loopback exposure policy.
   - Example that proves the design: `examples/codex-local-web` remains the
-    local media helper example; browser-visible e2e proof for transcript media
-    is still open in this phase.
+    local media helper example; later Phase 6 browser-visible e2e proof covers
+    transcript media and fallback behavior.
   - Tests that protect the contract: React component tests for structured
     attachment preview failure, transcript local media URL resolution, missing
     media fallback, and failed media load fallback.
@@ -2366,7 +2365,8 @@ Phase 10 notes:
   guidance.
 - [x] Update `docs/maintenance/ci-cd.md` if validation gates change.
 - [x] Update `docs/maintenance/release-checklist.md`.
-- [x] Create `docs/migrations/<version>-host-consumers.md`.
+- [x] Update `docs/guides/host-integration.md` as the host-consumer migration
+  guide.
 - [x] Migration guide includes:
   - [x] who must migrate
   - [x] package-by-package breaking changes
@@ -3431,7 +3431,7 @@ Phase 10 notes:
 ## Phase 17: Current Design Language And Agent Skills Freshness
 
 - [x] Treat the host integration model as the current design, not a future
-  vNext migration, because this PR does not need backwards compatibility.
+  migration, because this PR does not need backwards compatibility.
 - [x] Remove public-facing vNext terminology from docs, examples, recipes,
   changesets, and PR wording. Keep only unavoidable factual branch/checkpoint
   references in internal notes.
@@ -3679,3 +3679,26 @@ Phase 10 notes:
     `bun run validate:packages` pass. Package validation still reports the
     existing publint repository URL suggestions and Vite chunk-size warnings,
     with no failing checks.
+  - Final CI follow-up after push:
+    - GitHub Actions initially failed on the pushed Phase 18 head for
+      repository policy and unit tests. The failure modes matched the newly
+      hardened upload MIME policy assertions and a React thread-action fixture
+      that still used the old thread state shape.
+    - Commit `80fb284` updates the policy assertion to the current non-SVG
+      image upload contract, completes the React fixture with current account,
+      connection, thread lifecycle, and thread entity fields, and makes
+      `selectThreadView` tolerate missing `operations` on incomplete test or
+      host-injected thread records.
+    - Commit-unit review process: spawned review subagent
+      `019e9274-1a00-7b60-8633-ee82ef9055cc` with the `agent-ui-review` skill
+      for commit `80fb284`; the review reported no findings.
+    - Local validation after `80fb284`: `bun run test` pass, exact repository
+      policy command pass, focused React thread-action test pass,
+      `bun run test:api-snapshots` pass, `bun run validate:packages` pass,
+      `bun run lint` pass, and `bun run typecheck` pass.
+    - The code-changing follow-up was pushed to PR #7 at head
+      `80fb28435e752f7c9ce489b699fcd2afee7e4f8b`; GitHub Actions completed
+      successfully for CI and Compatibility on that head, including Repository
+      policy, Unit tests, API snapshots, Package validation, Package
+      resolution, Playwright fixtures, Typecheck, Lint, Protocol and fixtures,
+      and Node.js 20/22/24 compatibility.

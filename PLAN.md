@@ -724,12 +724,10 @@ Required docs:
 - Migration guide
 - Release checklist
 
-The migration guide should be first-class:
-
-`docs/migrations/<version>-host-consumers.md`
-
-It should include package-by-package breaking changes, example diffs, validation
-steps, and what Agent UI does not promise.
+The host-consumer migration guide should be first-class in
+`docs/guides/host-integration.md`. It should include package-by-package
+breaking changes, example diffs, validation steps, and what Agent UI does not
+promise.
 
 ## Validation Strategy
 
