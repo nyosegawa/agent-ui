@@ -72,6 +72,24 @@ describe("React package source structure", () => {
     }
   });
 
+  it("keeps AgentChat replacement points at documented surface boundaries", () => {
+    const chat = readFileSync(join(componentDir, "chat.tsx"), "utf8");
+    const componentsBody =
+      chat.match(/export interface AgentComponents \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    const propertyNames = Array.from(componentsBody.matchAll(/^\s+(\w+)\??:/gm))
+      .map((match) => match[1])
+      .sort();
+    expect(propertyNames).toEqual([
+      "Approval",
+      "ComposerPanel",
+      "EmptyState",
+      "Item",
+      "Shell",
+      "Sidebar",
+      "blocks",
+    ]);
+  });
+
   it("keeps hook modules responsibility-sized", () => {
     for (const name of readdirSync(hookDir)) {
       if (!name.endsWith(".ts")) continue;
@@ -112,10 +130,13 @@ describe("React package source structure", () => {
 
   it("keeps transcript windowing behavior in a focused timeline module", () => {
     const timeline = readFileSync(join(reactSrc, "timeline.tsx"), "utf8");
+    const transcript = readFileSync(join(reactSrc, "hooks", "transcript.ts"), "utf8");
     const windowing = readFileSync(join(timelineDir, "windowing.ts"), "utf8");
-    expect(timeline).toContain('from "./timeline/windowing";');
+    expect(transcript).toContain('from "../timeline/windowing";');
     expect(timeline).not.toContain("DEFAULT_TRANSCRIPT_ITEM_LIMIT");
     expect(timeline).not.toContain("setVisibleItemState");
+    expect(transcript).not.toContain("DEFAULT_TRANSCRIPT_ITEM_LIMIT");
+    expect(transcript).not.toContain("setVisibleItemState");
     expect(windowing).toContain("function useTranscriptWindowing");
     expect(windowing).toContain("visibleTranscriptWindow");
   });

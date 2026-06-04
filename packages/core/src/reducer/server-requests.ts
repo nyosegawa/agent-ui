@@ -1,24 +1,27 @@
 import type { ServerRequestEvent } from "../events";
-import type { AgentSessionState } from "../state";
+import type { AgentSessionState, PendingServerRequest } from "../state";
 import { requestIdKey } from "../request-id-key";
 import { diagnosticsStore } from "../stores/diagnostics";
 import { serverRequestStore } from "../stores/server-request";
 import { threadEntityStore } from "../stores/thread-entity";
+import { canonicalThreadId } from "../thread-alias";
 
 export function reduceServerRequestEvent(
   state: AgentSessionState,
   event: ServerRequestEvent,
 ): AgentSessionState {
   switch (event.type) {
-    case "serverRequest/created":
+    case "serverRequest/created": {
       if (event.request.kind === "dynamicTool") return state;
-      if (hasConflictingServerRequest(state, event)) {
+      const request = canonicalizeServerRequest(state, event.request);
+      if (hasConflictingServerRequest(state, request)) {
         return {
           ...state,
           diagnostics: diagnosticsStore.addWarning(state.diagnostics, {
-            id: `server-request-duplicate:${requestIdKey(event.request.id)}`,
-            message: `Ignored duplicate server request ${String(event.request.id)} for a different thread.`,
-            raw: event.request,
+            audience: ["developer", "audit"],
+            id: `server-request-duplicate:${requestIdKey(request.id)}`,
+            message: `Ignored duplicate server request ${String(request.id)} for a different thread.`,
+            raw: request,
           }),
         };
       }
@@ -28,13 +31,14 @@ export function reduceServerRequestEvent(
             ...state,
             serverRequestQueue: serverRequestStore.enqueue(
               state.serverRequestQueue,
-              event.request,
+              request,
             ),
           },
-          event.request.threadId ?? "",
+          request.threadId ?? "",
           "waitingForInput",
         ),
       );
+    }
     case "serverRequest/resolved": {
       const request = state.serverRequestQueue.byId[requestIdKey(event.requestId)];
       const serverRequestQueue = serverRequestStore.dequeue(
@@ -101,15 +105,24 @@ export function reduceServerRequestEvent(
 
 function hasConflictingServerRequest(
   state: AgentSessionState,
-  event: Extract<ServerRequestEvent, { type: "serverRequest/created" }>,
+  request: PendingServerRequest,
 ): boolean {
-  const existing = state.serverRequestQueue.byId[requestIdKey(event.request.id)];
+  const existing = state.serverRequestQueue.byId[requestIdKey(request.id)];
   return Boolean(
     existing &&
       existing.threadId &&
-      event.request.threadId &&
-      existing.threadId !== event.request.threadId,
+      request.threadId &&
+      existing.threadId !== request.threadId,
   );
+}
+
+function canonicalizeServerRequest(
+  state: AgentSessionState,
+  request: PendingServerRequest,
+): PendingServerRequest {
+  return request.threadId
+    ? { ...request, threadId: canonicalThreadId(state, request.threadId) }
+    : request;
 }
 
 function assertNever(value: never): never {

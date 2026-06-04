@@ -1,8 +1,9 @@
 import type { TurnEvent } from "../events";
-import type { AgentSessionState } from "../state";
+import type { AgentItemState, AgentSessionState, AgentTurn, ThreadId } from "../state";
 import { itemStore } from "../stores/item";
 import { turnStore } from "../stores/turn";
 import { mergeAgentTurn, shouldApplyTurnItems } from "../stores/turn-merge";
+import { canonicalThreadId } from "../thread-alias";
 import {
   isCompletedTurnStatus,
   isPreviewThreadStatus,
@@ -15,42 +16,48 @@ export function reduceTurnEvent(
 ): AgentSessionState {
   switch (event.type) {
     case "turn/started": {
-      const thread = state.threads[event.threadId];
+      const threadId = canonicalThreadId(state, event.threadId);
+      const thread = state.threads[threadId];
       if (!thread) return state;
       return commitThreadEntity(
         state,
-        turnStore.upsert(thread, event.turn, "running"),
+        turnStore.upsert(thread, canonicalTurn(event.turn, threadId), "running"),
       );
     }
     case "turn/completed": {
-      const thread = state.threads[event.threadId];
+      const threadId = canonicalThreadId(state, event.threadId);
+      const thread = state.threads[threadId];
       if (!thread) return state;
+      const incomingTurn = canonicalTurn(event.turn, threadId);
       const nextThread = (() => {
         const completedStatus =
           event.snapshot
             ? thread.status
             : (thread.status === "ready" || isPreviewThreadStatus(thread.status)) &&
-                isCompletedTurnStatus(event.turn.status)
+                isCompletedTurnStatus(incomingTurn.status)
               ? thread.status
-              : (event.turn.status ?? "complete");
-        const next = turnStore.upsert(thread, event.turn, completedStatus);
+              : (incomingTurn.status ?? "complete");
+        const next = turnStore.upsert(thread, incomingTurn, completedStatus);
         const turn =
-          next.turns[event.turn.id] ??
-          turnStore.createTurnState(event.turn, event.threadId);
+          next.turns[incomingTurn.id] ??
+          turnStore.createTurnState(incomingTurn, threadId);
         let completedTurn = {
           ...turn,
-          turn: mergeAgentTurn(turn.turn, event.turn),
+          turn: mergeAgentTurn(turn.turn, incomingTurn),
         };
-        if (shouldApplyTurnItems(turn.turn, event.turn)) {
+        if (shouldApplyTurnItems(turn.turn, incomingTurn)) {
           for (const item of event.items ?? []) {
-            completedTurn = itemStore.upsert(completedTurn, item);
+            completedTurn = itemStore.upsert(
+              completedTurn,
+              canonicalItem(item, threadId),
+            );
           }
         }
         return {
           ...next,
           turns: {
             ...next.turns,
-            [event.turn.id]: completedTurn,
+            [incomingTurn.id]: completedTurn,
           },
         };
       })();
@@ -76,6 +83,17 @@ export function reduceTurnEvent(
     default:
       return assertNever(event);
   }
+}
+
+function canonicalTurn(turn: AgentTurn, threadId: ThreadId): AgentTurn {
+  return turn.threadId === threadId ? turn : { ...turn, threadId };
+}
+
+function canonicalItem(
+  item: AgentItemState,
+  threadId: ThreadId,
+): AgentItemState {
+  return item.threadId === threadId ? item : { ...item, threadId };
 }
 
 function assertNever(value: never): never {

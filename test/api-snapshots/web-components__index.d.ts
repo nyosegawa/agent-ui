@@ -1,16 +1,16 @@
 import { AgentSessionState, AgentTransport } from '@nyosegawa/agent-ui-core';
-import { AgentChatSlots } from '@nyosegawa/agent-ui-react';
+import { AgentComponents } from '@nyosegawa/agent-ui-react';
 
 interface AgentChatElementOptions {
     className?: string;
+    components?: AgentComponents;
     initialState?: AgentSessionState;
-    slots?: AgentChatSlots;
     transport?: AgentTransport;
 }
 interface AgentChatWebComponentElement extends HTMLElement {
     agentOptions?: AgentChatElementOptions;
+    components?: AgentComponents;
     initialState?: AgentSessionState;
-    slots?: AgentChatSlots;
     transport?: AgentTransport;
 }
 declare function defineAgentChatElement(tagName?: string): CustomElementConstructor | undefined;
@@ -22,10 +22,10 @@ declare class AgentChatElement extends HTMLElementBase implements AgentChatWebCo
     #private;
     get agentOptions(): AgentChatElementOptions;
     set agentOptions(options: AgentChatElementOptions | undefined);
+    get components(): AgentComponents | undefined;
+    set components(value: AgentComponents | undefined);
     get initialState(): AgentSessionState | undefined;
     set initialState(value: AgentSessionState | undefined);
-    get slots(): AgentChatSlots | undefined;
-    set slots(value: AgentChatSlots | undefined);
     get transport(): AgentTransport | undefined;
     set transport(value: AgentTransport | undefined);
     connectedCallback(): void;

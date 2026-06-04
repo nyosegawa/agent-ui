@@ -31,7 +31,11 @@ export type {
 export { useAgentApprovals, useAgentServerRequests } from "./hooks/approvals";
 export {
   useAgentComposer,
+  useAgentComposerController,
   type AgentComposerController,
+  type AgentComposerDisabledReason,
+  type AgentComposerFailedPendingMessage,
+  type AgentComposerSubmitMode,
   type QueuedFollowUp,
   type QueuedFollowUpAttachment,
 } from "./hooks/composer";
@@ -53,5 +57,29 @@ export {
   type ThreadResumeOptions,
   type ThreadStartOptions,
 } from "./hooks/thread";
+export {
+  useAgentThreadListController,
+  type AgentThreadHistorySyncedEvent,
+  type AgentThreadListController,
+  type AgentThreadListControllerOptions,
+  type AgentThreadListRequest,
+} from "./hooks/thread-list";
 export { useAgentTurn, useAgentTurnController } from "./hooks/turn";
+export {
+  useAgentTranscriptScrollController,
+  type AgentTranscriptScrollController,
+  type AgentTranscriptScrollControllerOptions,
+} from "./timeline/scroll-follow";
+export {
+  useAgentTranscriptController,
+  type AgentTranscriptBlock,
+  type AgentTranscriptController,
+  type AgentTranscriptControllerOptions,
+  type AgentTranscriptDensity,
+  type AgentTranscriptDensityConfig,
+  type AgentTranscriptDensityMode,
+  type AgentTranscriptEntry,
+  type AgentTranscriptItem,
+  type AgentTranscriptPendingState,
+} from "./hooks/transcript";
 export { useAgentUsage } from "./hooks/usage";

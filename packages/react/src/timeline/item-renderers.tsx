@@ -4,6 +4,11 @@ import { AgentDiffViewer } from "../diff-viewer";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import { MarkdownMessage } from "../markdown";
 import {
+  agentResourceDisplayName,
+  agentResourceUrl,
+  type AgentResourceResolution,
+} from "../resources";
+import {
   commandTextForItem,
   displayText,
   formatDuration,
@@ -18,14 +23,23 @@ import {
 } from "./formatters";
 import { commandPreview, toolPreview } from "./previews";
 
+export type AgentLocalMediaUrlResolver = (
+  path: string,
+  item: AgentItemState | undefined,
+) => AgentResourceResolution;
+
 export function AgentContentBlockView({
   block,
+  item,
   output,
   patch,
+  resolveLocalMediaUrl,
 }: {
   block: AgentItemBlock;
+  item?: AgentItemState;
   output?: string;
   patch?: unknown;
+  resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
 }) {
   switch (block.kind) {
     case "thinking":
@@ -44,7 +58,13 @@ export function AgentContentBlockView({
     case "webSearch":
       return <WebSearchBlock block={block} />;
     case "image":
-      return <ImageBlock block={block} />;
+      return (
+        <ImageBlock
+          block={block}
+          item={item}
+          resolveLocalMediaUrl={resolveLocalMediaUrl}
+        />
+      );
     case "systemInfo":
       return <SystemInfoBlock block={block} />;
     case "text":
@@ -247,28 +267,85 @@ function WebSearchBlock({ block }: { block: AgentItemBlock }) {
   );
 }
 
-function ImageBlock({ block }: { block: AgentItemBlock }) {
+function ImageBlock({
+  block,
+  item,
+  resolveLocalMediaUrl,
+}: {
+  block: AgentItemBlock;
+  item?: AgentItemState;
+  resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
+}) {
   const { t } = useAgentI18n();
-  const path = block.path ?? block.text;
-  if (!path) {
+  const [failedMediaKey, setFailedMediaKey] = useState<string | undefined>();
+  const blockResource = block.resource;
+  const path = blockResource?.path ?? block.path;
+  const resolvedResource = path ? resolveLocalMediaUrl?.(path, item) : undefined;
+  const displayResource =
+    resolvedResource ?? (blockResource?.url || blockResource?.previewUrl ? blockResource : undefined);
+  const resolvedUrl = agentResourceUrl(displayResource);
+  const resolvedResourceObject =
+    displayResource && typeof displayResource !== "string"
+      ? displayResource
+      : undefined;
+  const mediaSourceKey = path ?? blockResource?.url ?? blockResource?.previewUrl;
+  const mediaKey =
+    mediaSourceKey && resolvedUrl ? `${mediaSourceKey}\u0000${resolvedUrl}` : undefined;
+  const failed = Boolean(mediaKey && failedMediaKey === mediaKey);
+  if (!path && !resolvedUrl) {
     return (
       <section className="aui-content-block aui-image-block" aria-label={t("timeline.image")}>
         {t("timeline.imageGenerated")}
       </section>
     );
   }
-  const fileName = path.split("/").pop() ?? path;
+  const fallbackDisplayName =
+    block.text ?? (path ? localMediaDisplayName(path) : undefined) ?? t("timeline.image");
+  const fileName =
+    typeof displayResource === "string"
+      ? fallbackDisplayName
+      : (agentResourceDisplayName(displayResource, fallbackDisplayName) ??
+        fallbackDisplayName);
+  const isVideoResource =
+    resolvedResourceObject?.kind === "video" ||
+    resolvedResourceObject?.mimeType?.startsWith("video/") ||
+    Boolean(path && isVideoPath(path));
+  if (!resolvedUrl || failed) {
+    return (
+      <figure
+        className="aui-content-block aui-image-block"
+        data-status={failed ? "failed" : "unavailable"}
+      >
+        <div className="aui-image-block-fallback" role="status">
+          {t("timeline.localMediaUnavailable")}
+        </div>
+        <figcaption>{fileName}</figcaption>
+      </figure>
+    );
+  }
   return (
     <figure className="aui-content-block aui-image-block">
-      {isVideoPath(path) ? (
-        // User-provided App Server media path; captions are not available from the protocol.
-        <video controls src={path} />
+      {isVideoResource ? (
+        <video
+          controls
+          onError={() => setFailedMediaKey(mediaKey)}
+          src={resolvedUrl}
+        />
       ) : (
-        <img alt={path} src={path} />
+        <img
+          alt={fileName}
+          onError={() => setFailedMediaKey(mediaKey)}
+          src={resolvedUrl}
+        />
       )}
       <figcaption>{fileName}</figcaption>
     </figure>
   );
+}
+
+function localMediaDisplayName(path: string): string {
+  const segments = path.split(/[\\/]+/).filter(Boolean);
+  return segments.at(-1) ?? path;
 }
 
 function SystemInfoBlock({ block }: { block: AgentItemBlock }) {

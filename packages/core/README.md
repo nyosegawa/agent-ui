@@ -18,5 +18,10 @@ This package does not start Codex, own persistence, manage credentials, or
 orchestrate host workflows. Host applications connect it to their own runtime
 and transport policy.
 
+Use documented selectors and view models for host-facing reads. Reducer
+reconciliation, optimistic operation maps, retention internals, and raw
+diagnostic payload handling are implementation details unless the package
+exports and docs explicitly promote them.
+
 See the repository docs for current package exports and integration guidance:
 https://github.com/nyosegawa/agent-ui

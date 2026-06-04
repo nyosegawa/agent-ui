@@ -16,6 +16,11 @@ limit, TTL cleanup, and explicit cleanup hook. The dev server calls that cleanup
 hook idempotently when the HTTP server closes or receives SIGINT/SIGTERM. Images
 become `localImage` inputs; non-images become explicit
 `Attached file: /absolute/path` text.
+The bridge policy is explicit: local-loopback admission, productized browser
+methods, manual server-request handling, dynamic tools disabled by default, and
+server-side bridge health phase logging for developer/audit diagnostics. The
+React surface enables the diagnostics rail, but auth, session admission,
+tenant isolation, persistence, and deployment policy remain host-owned.
 
 Detailed docs: [docs/examples/codex-local-web.md](../../docs/examples/codex-local-web.md).
 

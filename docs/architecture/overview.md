@@ -19,12 +19,28 @@ codex app-server
 - Experimental protocol support is isolated behind explicit opt-in.
 - The local bridge is Node-side only.
 - Optional SDK adapters adapt host-owned clients/runners into `AgentTransport`; they do not replace the App Server protocol as the primary path.
+- Controller state and visual layout are separate. Presets compose public
+  controllers and styled parts; hosts compose the same primitives when they
+  need fixed-thread, scoped-history, diagnostics, or host-owned composer
+  layouts.
+- Local resources are structured browser resources, not raw paths. Agent UI can
+  carry display names, redacted paths, preview URLs, and fallback state while
+  the host owns upload admission, storage, cleanup, and static authorization.
 - Product ownership, host ownership, and bridge helper scope are defined in
   [Product Boundary](./product-boundary.md).
 
 ## Host Bridges
 
-The chat-capable local bridge is `attachAgentUiWebSocketBridge()`. It keeps one App Server process alive for the browser session, streams App Server notifications, forwards server approval requests, and carries browser approval responses back to stdio. See [Server Bridge](../reference/server-bridge.md) for bridge lifecycle, upload handling, dynamic-tool policy, and one-shot RPC boundaries.
+The chat-capable local bridge is `attachAgentUiWebSocketBridge()`. It keeps one
+App Server process alive for the browser session, streams App Server
+notifications, forwards server approval requests, and carries browser approval
+responses back to stdio. Hosts should configure admission and browser method
+policy explicitly; loopback examples use `bridgePolicy.admission:
+{ mode: "local-loopback" }` and `browserMethodPolicy: "productized"` while
+leaving non-loopback auth, process isolation, audit, tenant policy, and
+deployment topology to the host. See [Server Bridge](../reference/server-bridge.md)
+for bridge lifecycle, upload handling, dynamic-tool policy, host events,
+diagnostics, and one-shot RPC boundaries.
 
 `createAgentUiNextRpcRoute()` is intentionally narrower: it starts an App Server process for one HTTP `POST`, runs one allowlisted target method, returns one response, and closes the process. If `initialize` is configured, the helper also performs the App Server initialization handshake before that method. It is useful for host-owned one-shot calls, but it cannot represent streaming turns, server approval requests, or browser approval responses. Next.js apps that need the full chat experience should host a WebSocket bridge in a custom Next server, Node sidecar, or another same-origin bridge process; `examples/next-with-bridge-sidecar` is the reference implementation.
 
@@ -58,7 +74,7 @@ type AgentSessionState = {
   apps: AppsState;
   hooks: HooksState;
   threads: Record<ThreadId, ThreadState>;
-  threadRegistry: ThreadRegistryState;
+  threadLifecycle: ThreadLifecycleState;
   serverRequestQueue: ServerRequestQueueState;
   models: ModelState;
   runSettings: RunSettingsState;
@@ -71,7 +87,10 @@ type ThreadState = {
   orderedTurnIds: TurnId[];
   tokenUsage?: ThreadTokenUsage;
   status: ThreadStatus;
-  registryStatus: "cold" | "preview" | "live" | "loaded";
+  activity: "idle" | "running" | "waitingForInput" | "failed";
+  availability: "available" | "preview" | "archived" | "closed";
+  storage: "unknown" | "stored" | "ephemeral";
+  operations: Record<string, AgentOperationView>;
 };
 
 type TurnState = {
@@ -88,7 +107,8 @@ type TurnState = {
 ```
 
 The reducer keeps normalized stores as the source of truth. Active selection
-lives in `threadRegistry.activeThreadId`, pending approvals and other server
+lives in `threadLifecycle.activeThreadId`, thread history lists live in
+`threadLifecycle.collections`, pending approvals and other server
 requests live in `serverRequestQueue`, account rate-limit usage lives in
 `usage.accountRateLimits`, and warnings/errors live in `diagnostics`.
 `serverRequestQueue.byId` and `serverRequestQueue.order` use the public
@@ -99,11 +119,11 @@ Domain store modules expose reusable state initialization and state-only
 reducers as they are split out of the session reducer. `connectionStore` owns
 `ConnectionState` initialization and `ConnectionEvent` updates; the session
 reducer still performs cross-store effects such as clearing pending server
-requests on disconnect. `threadIndexStore` owns `ThreadRegistryState`
-initialization, registry status classification, and movement between cold,
-preview, live, and loaded thread indexes. `threadEntityStore` owns the backing
-thread entity map, individual thread entity updates, and pruning stale thread
-snapshots from that map. `turnStore` owns turn creation, insertion into a
+requests on disconnect. `threadLifecycleStore` owns active thread selection,
+collection indexes, optimistic operations, and canonical thread ID aliases.
+`threadEntityStore` owns the backing thread entity map, individual thread
+entity updates, and pruning stale thread snapshots from that map. `turnStore`
+owns turn creation, insertion into a
 thread's ordered turn collection, and focused turn updates inside a thread
 entity. `itemStore` owns item insertion, streaming item deltas, retained command
 output and file patches, patch-only transcript index pruning, and normalized
@@ -124,6 +144,21 @@ Selectors expose stable read surfaces for hosts and React hooks across thread,
 turn, item, approval, app, diagnostics, and usage state. Components should use
 selectors instead of reaching through normalized maps when the read represents a
 public UI surface.
+
+## Controller Layer
+
+React controllers convert normalized state and Codex actions into host-facing
+behavior without forcing a visual layout. Current public controllers cover
+thread state, thread history, stored thread reads, turns, composer actions,
+run settings, transcript entries/windowing, transcript scroll, approvals,
+server requests, apps, skills, hooks, usage, account, models, and diagnostics.
+
+The default `AgentChat` preset uses these same behavior boundaries internally.
+Recipes and fixture routes prove headless composition for host-owned layouts,
+scoped lists, custom composer chrome, diagnostics panels, resource resolution,
+and custom transcript renderers. Source-level controllers may exist before
+they become root exports, but package export maps are not frozen until
+examples, tests, docs, API snapshots, and package-resolution checks agree.
 
 ## Reducer Rules
 
@@ -159,6 +194,20 @@ unsent `queuedFollowUps` locally and scoped to their thread until `Send now` or
 Cmd/Ctrl+Enter calls `turn/steer` with the active `expectedTurnId`; Stop calls
 only `turn/interrupt`.
 
+## Resource Resolution
+
+Composer attachments and transcript local media use structured resource
+metadata. Browser `File` objects become host-resolved attachments with display
+names, MIME type, byte size, redacted path, App Server-readable local path, and
+browser-safe preview URL. Transcript local-media paths are resolved through
+`resolveLocalMediaUrl` and render a visible fallback when the host cannot
+provide a URL.
+
+The server package provides `createAgentUiLocalMediaHelper()` for loopback
+examples and local development. It is not a general file server or remote
+storage layer. Hosts still own upload authorization, workspace/session scoping,
+cleanup policy, static route admission, and remote persistence.
+
 ## UI Model
 
 The drop-in UI is a convenience layer over the headless API.
@@ -184,7 +233,7 @@ Customization:
 
 - `--aui-*` design-system tokens
 - `className`
-- slots
+- `AgentChat.components`
 - render props
 - headless hooks
 
@@ -259,7 +308,7 @@ intentionally override tokens to demonstrate host theming.
 ## Fixed UI Decisions
 
 - Approval UX defaults to inline cards in the chat stream.
-- Modal and side-panel approvals are supported through slots.
+- Modal and side-panel approvals are supported through the components map.
 - Diff viewer uses a read-only CodeMirror surface with a textual fallback.
 - Monaco is deferred because it requires heavier worker and asset configuration from hosts.
 - `AgentThreadSidebar` and its thread-list primitive stay narrow history

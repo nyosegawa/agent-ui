@@ -58,6 +58,29 @@ Focused maintenance gates:
   whenever `.agents/skills/` or
   `docs/maintenance/repository-skills.md` changes.
 
+Focused example gates:
+
+- `bun run --cwd examples/recipes typecheck`: typed recipe source snippets.
+  Run it whenever recipe source files or recipe docs change.
+- `bun run --cwd examples/next-rpc-route typecheck` and
+  `bun run --cwd examples/next-rpc-route build`: one-shot Route Handler
+  example. Run them when the route, Next config, package metadata, or related
+  docs change.
+- `bun run --cwd examples/next-with-bridge-sidecar typecheck` and
+  `bun run --cwd examples/next-with-bridge-sidecar build`: full-chat Next
+  sidecar example. Run them when sidecar bridge policy, upload/media handling,
+  or related docs change.
+- `bun run --cwd examples/codex-local-web typecheck`, `bun run --cwd
+  examples/codex-local-web build`, and the relevant
+  `playwright.real-local.config.ts` spec: real local browser behavior. Run
+  these when bridge policy, diagnostics, first-message, thread routing, or
+  local media behavior changes.
+- `bun run --cwd examples/local-react-vite typecheck`, `bun run --cwd
+  examples/local-react-vite build`, and the relevant
+  `playwright.fixtures.config.ts` spec: deterministic fixture and visual
+  contract behavior. Run these when fixture routes, close-ups, density,
+  resource resolution, scoped lists, or mobile layout changes.
+
 Fixture e2e is the pull request browser gate; real-local e2e is a release and
 local validation gate.
 
@@ -215,6 +238,13 @@ The fixture routes are:
 - `/?state=bridge-error`: connection diagnostics
 - `/fixture-gallery`: component close-ups plus full-route previews
 - `/host-workflow-recipe`: host-composed primitive recipe
+- `/composer-retry`: failed first-message retry through the public composer
+  controller
+- `/resource-resolution`: structured local-media resource rendering without
+  raw path exposure
+- `/transcript-density`: compact transcript route with verbose command/file
+  blocks and noncritical chat text filtered out
+- `/scoped-thread-lists`: independent host-owned history list scopes
 - `/usage-only`: standalone usage composition examples
 - `/scoped-thread-pane`: fixed-thread composition example
 - `/app-connectors`: Codex Apps/connectors example
@@ -237,6 +267,13 @@ The deterministic fixture Playwright files are split by contract ownership:
 - `visual-closeups.e2e.ts` owns the component close-up gallery and verifies that
   close-ups render real primitives instead of iframe or hand-written DOM
   substitutes.
+- `composer-retry.e2e.ts` owns failed first-message retry through the public
+  composer controller.
+- `resource-resolution.e2e.ts` owns transcript local-media rendering through
+  structured browser-safe metadata on desktop and mobile.
+- `transcript-density.e2e.ts` owns density-mode behavior and overflow checks on
+  desktop and mobile.
+- `scoped-thread-lists.e2e.ts` owns independent scoped history list behavior.
 - `visual-approvals.e2e.ts` owns approval layout, queue behavior, and hit-test
   reachability in transcript flow.
 - `design-system-contract.e2e.ts` owns concrete token-backed UI contracts such
@@ -266,6 +303,17 @@ few seconds instead of waiting for the suite-level timeout.
 with the deterministic fake Codex App Server and runs only the
 `examples/codex-local-web/e2e` specs. `bun run validate:e2e` runs the fixture
 suite first and then this real-local suite.
+
+The real-local specs are split by App Server integration contract:
+
+- `real-local-thread-lifecycle.e2e.ts` owns stored-thread hydration, direct
+  thread URLs, browser back/forward, first-message immediate reflection, and
+  diagnostics rail presence.
+- `real-local-attachments.e2e.ts` owns image paste, arbitrary file attachment
+  payloads, same-origin transcript local-media URLs, missing-media fallback,
+  and queued attachment restoration.
+- `real-local-follow-ups.e2e.ts` owns running-turn follow-up queue behavior,
+  `turn/steer`, `turn/interrupt`, and queued-item compaction.
 
 `bun run test:e2e:real-local-web-layout` audits an already-running
 `examples/codex-local-web` instance. Start it explicitly on port 5175:

@@ -33,6 +33,8 @@ import {
   normalizeAppsListResponse,
   normalizeCodexServerMessage,
   normalizeModelListResponse,
+  normalizeThreadLoadedListResponse,
+  normalizeThreadListResponse,
   normalizeThreadReadResponse,
   normalizeThreadResumeResponse,
   normalizeThreadTurnsListResponse,
@@ -237,6 +239,7 @@ describe("Codex protocol metadata", () => {
       {
         type: "warning/added",
         warning: {
+          audience: ["developer", "audit"],
           id: "unsupported-codex-notification:item/fake/requestApproval",
           message: "Unsupported Codex notification: item/fake/requestApproval",
         },
@@ -288,6 +291,10 @@ describe("Codex protocol metadata", () => {
 
     expect(stableNotificationCoverage["item/agentMessage/delta"]).toBe("mapped");
     expect(stableNotificationCoverage["rawResponseItem/completed"]).toBe("raw");
+    expect(stableNotificationCoverage["thread/compacted"]).toBe("raw");
+    expect(stableNotificationCoverage["thread/goal/cleared"]).toBe("raw");
+    expect(stableNotificationCoverage["thread/goal/updated"]).toBe("raw");
+    expect(stableNotificationCoverage["thread/settings/updated"]).toBe("raw");
     expect(
       normalizeCodexServerMessage({
         method: "rawResponseItem/completed",
@@ -302,6 +309,97 @@ describe("Codex protocol metadata", () => {
         type: "notification/received",
       },
     ]);
+  });
+
+  it("preserves compact, goal, and settings notifications as host-owned raw diagnostics", () => {
+    const events = [
+      ...normalizeCodexServerMessage({
+        method: "thread/compacted",
+        params: { threadId: "thread-host", turnId: "turn-compact" },
+      }),
+      ...normalizeCodexServerMessage({
+        method: "thread/goal/updated",
+        params: {
+          goal: {
+            createdAt: 1,
+            objective: "Host-owned objective",
+            status: "active",
+            threadId: "thread-host",
+            timeUsedSeconds: 0,
+            tokenBudget: null,
+            tokensUsed: 0,
+            updatedAt: 2,
+          },
+          threadId: "thread-host",
+          turnId: null,
+        },
+      }),
+      ...normalizeCodexServerMessage({
+        method: "thread/goal/cleared",
+        params: { threadId: "thread-host" },
+      }),
+      ...normalizeCodexServerMessage({
+        method: "thread/settings/updated",
+        params: {
+          threadId: "thread-host",
+          threadSettings: {
+            approvalPolicy: "on-request",
+            approvalsReviewer: "user",
+            collaborationMode: "default",
+            cwd: "/workspace",
+            effort: null,
+            model: "gpt-5",
+            modelProvider: "openai",
+            personality: null,
+            sandboxPolicy: { type: "workspace-write" },
+            serviceTier: null,
+            summary: null,
+          },
+        },
+      }),
+    ];
+    const state = events.reduce(
+      (current, event) => agentReducer(current, event as AgentEvent),
+      createInitialAgentState(),
+    );
+
+    expect(events.map((event) => event.type)).toEqual([
+      "notification/received",
+      "notification/received",
+      "notification/received",
+      "notification/received",
+    ]);
+    expect(events).toMatchObject([
+      {
+        notification: {
+          audience: ["developer", "audit"],
+          method: "thread/compacted",
+          params: { threadId: "thread-host", turnId: "turn-compact" },
+        },
+      },
+      {
+        notification: {
+          audience: ["developer", "audit"],
+          method: "thread/goal/updated",
+          params: { threadId: "thread-host", turnId: null },
+        },
+      },
+      {
+        notification: {
+          audience: ["developer", "audit"],
+          method: "thread/goal/cleared",
+          params: { threadId: "thread-host" },
+        },
+      },
+      {
+        notification: {
+          audience: ["developer", "audit"],
+          method: "thread/settings/updated",
+          params: { threadId: "thread-host" },
+        },
+      },
+    ]);
+    expect(state.threads).toEqual({});
   });
 
   it("round trips JSON-RPC-lite lines without jsonrpc header", () => {
@@ -563,6 +661,141 @@ describe("Codex protocol metadata", () => {
     ]);
     expect(() => normalizeThreadReadResponse({ thread: { name: "Broken" } })).toThrow(
       "thread/read response is missing a thread id",
+    );
+  });
+
+  it("normalizes thread/list responses into scoped lifecycle collections", () => {
+    const page = normalizeThreadListResponse(
+      {
+        backwardsCursor: "cursor-newer",
+        data: [
+          {
+            cwd: "/workspace/one",
+            ephemeral: false,
+            id: "thread-list-one",
+            name: "Listed thread",
+            preview: "Listed preview",
+            status: { type: "idle" },
+          },
+          {
+            cwd: "/workspace/one",
+            ephemeral: false,
+            id: "thread-list-two",
+            preview: "Archived preview",
+            status: { type: "notLoaded" },
+          },
+        ],
+        nextCursor: "cursor-older",
+      },
+      {
+        scope: {
+          archived: true,
+          cwd: "/workspace/one",
+          key: "history:/workspace/one::true",
+          kind: "history",
+        },
+        syncedAt: 1_765_000_000_000,
+      },
+    );
+    let state = page.events.reduce(
+      (current, event) => agentReducer(current, event as AgentEvent),
+      createInitialAgentState(),
+    );
+
+    expect(page).toMatchObject({
+      backwardsCursor: "cursor-newer",
+      ids: ["thread-list-one", "thread-list-two"],
+      nextCursor: "cursor-older",
+    });
+    expect(page.events.map((event) => event.type)).toEqual([
+      "thread/upserted",
+      "thread/upserted",
+      "thread/collection/pageReceived",
+    ]);
+    expect(state.threadLifecycle.collections["history:/workspace/one::true"]).toMatchObject({
+      ids: ["thread-list-one", "thread-list-two"],
+      nextCursor: "cursor-older",
+      status: "ready",
+      syncedAt: 1_765_000_000_000,
+    });
+    expect(state.threads["thread-list-one"]?.availability).toBe("archived");
+    expect(state.threads["thread-list-one"]?.metadata).toMatchObject({
+      cwd: "/workspace/one",
+      title: "Listed thread",
+    });
+    const unarchivedPage = normalizeThreadListResponse(
+      {
+        data: [
+          {
+            cwd: "/workspace/one",
+            id: "thread-list-one",
+            name: "Listed thread",
+            status: { type: "idle" },
+          },
+        ],
+      },
+      {
+        scope: {
+          archived: false,
+          cwd: "/workspace/one",
+          key: "history:/workspace/one::false",
+          kind: "history",
+        },
+      },
+    );
+    state = unarchivedPage.events.reduce(
+      (current, event) => agentReducer(current, event as AgentEvent),
+      state,
+    );
+    expect(state.threads["thread-list-one"]?.status).toBe("loaded");
+    expect(state.threads["thread-list-one"]?.availability).toBe("available");
+    expect(() => normalizeThreadListResponse({ data: [{ name: "Broken" }] })).toThrow(
+      "thread/list response contains a thread without an id",
+    );
+  });
+
+  it("normalizes thread/loaded/list ids without inventing thread entities", () => {
+    const page = normalizeThreadLoadedListResponse(
+      {
+        data: ["thread-loaded-one", "thread-loaded-two"],
+        nextCursor: "cursor-loaded",
+      },
+      {
+        syncedAt: 1_765_000_000_001,
+      },
+    );
+    const state = page.events.reduce(
+      (current, event) => agentReducer(current, event as AgentEvent),
+      createInitialAgentState(),
+    );
+
+    expect(page).toMatchObject({
+      ids: ["thread-loaded-one", "thread-loaded-two"],
+      nextCursor: "cursor-loaded",
+      scope: { key: "loaded", kind: "custom", label: "Loaded threads" },
+    });
+    expect(page.events).toMatchObject([
+      {
+        ids: ["thread-loaded-one", "thread-loaded-two"],
+        nextCursor: "cursor-loaded",
+        replace: true,
+        scope: { key: "loaded", kind: "custom", label: "Loaded threads" },
+        syncedAt: 1_765_000_000_001,
+        type: "thread/collection/pageReceived",
+      },
+    ]);
+    expect(state.threadLifecycle.collections.loaded).toMatchObject({
+      ids: ["thread-loaded-one", "thread-loaded-two"],
+      nextCursor: "cursor-loaded",
+      status: "ready",
+      syncedAt: 1_765_000_000_001,
+    });
+    expect(state.threads).toEqual({});
+    expect(() => normalizeThreadLoadedListResponse({ data: ["ok", null] })).toThrow(
+      "thread/loaded/list response contains an invalid thread id",
+    );
+    expect(() => normalizeThreadLoadedListResponse({ data: ["ok", 123] })).toThrow(
+      "thread/loaded/list response contains an invalid thread id",
     );
   });
 
@@ -857,6 +1090,40 @@ describe("Codex protocol metadata", () => {
     ]);
   });
 
+  it("normalizes productized thread lifecycle notifications consistently", () => {
+    let state = agentReducer(createInitialAgentState(), {
+      status: "ready",
+      thread: { id: "thread-lifecycle", name: "Lifecycle" },
+      type: "thread/started",
+    });
+    const cases = [
+      ["thread/status/changed", { status: { type: "active" } }, "running"],
+      ["thread/archived", {}, "archived"],
+      ["thread/unarchived", {}, "loaded"],
+      ["thread/closed", {}, "closed"],
+    ] as const;
+
+    for (const [method, params, status] of cases) {
+      const events = normalizeCodexServerMessage({
+        method,
+        params: { ...params, threadId: "thread-lifecycle" },
+      });
+      state = events.reduce(
+        (current, event) => agentReducer(current, event as AgentEvent),
+        state,
+      );
+
+      expect(events).toEqual([
+        {
+          status,
+          threadId: "thread-lifecycle",
+          type: "thread/status/changed",
+        },
+      ]);
+      expect(state.threads["thread-lifecycle"]?.status).toBe(status);
+    }
+  });
+
   it("normalizes dynamic tool call requests", () => {
     expect(
       normalizeCodexServerMessage({
@@ -1114,6 +1381,7 @@ describe("Codex protocol metadata", () => {
     ).toMatchObject([
       {
         notification: {
+          audience: ["developer", "audit"],
           method: "rawResponseItem/completed",
           params: { itemId: "item-raw", threadId: "thread-1", turnId: "turn-1" },
         },
@@ -1124,6 +1392,7 @@ describe("Codex protocol metadata", () => {
     expect(normalizeCodexServerMessage({ method: "skills/changed", params: {} })).toEqual([
       {
         banner: {
+          audience: ["user"],
           id: "skills-changed",
           kind: "system",
           message: "Skills changed. Re-run skills/list to refresh metadata.",
@@ -1299,6 +1568,7 @@ describe("Codex protocol metadata", () => {
     ).toEqual([
       {
         error: {
+          audience: ["user"],
           data: { type: "rate_limit" },
           message: "Model overloaded",
         },
@@ -1409,6 +1679,7 @@ describe("Codex protocol metadata", () => {
       {
         type: "warning/added",
         warning: {
+          audience: ["developer", "audit"],
           id: "unsupported-codex-notification:plugin/surprising/update",
           message: "Unsupported Codex notification: plugin/surprising/update",
         },

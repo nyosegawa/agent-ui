@@ -196,6 +196,14 @@ The package exposes capability metadata plus `getCodexCapabilityStatus()`,
 `assertCodexExperimentalMethod()` for hosts that need to gate dynamic method
 selection.
 
+The classification lists in `packages/codex/src/protocol.ts` are the source of
+truth for Agent UI design gates. Before core lifecycle state or React-visible
+behavior is promoted, check whether the relevant Codex App Server method or
+notification is productized stable, stable but host-managed, experimental
+opt-in, unsupported, or test-only. Generated schema files may contain more
+methods and fields than Agent UI productizes; their presence alone does not
+make a lifecycle state, component prop, or browser bridge method public.
+
 Experimental protocol support:
 
 ```ts
@@ -235,6 +243,23 @@ the corresponding `experimentalApi` negotiation and pagination behavior.
 can normalize its paged response into merge-only snapshot events. Descending
 pages are emitted in chronological turn order, and anchor refetch pages merge
 without duplicating known turns.
+`thread/list` is productized for stored history collections. The public
+`normalizeThreadListResponse()` helper emits thread snapshot events followed by
+a scoped `thread/collection/pageReceived` event, preserving response cursors
+without inventing workspace, tenant, routing, or persistence semantics. Hosts
+choose the `AgentThreadScope` that matches their request filters, including
+archived and cwd filters; Agent UI only stores the scoped collection view.
+`thread/loaded/list` is productized as an in-memory loaded-thread ID page. The
+public `normalizeThreadLoadedListResponse()` helper emits a scoped
+`thread/collection/pageReceived` event for those ids without creating thread
+entities or metadata, because the response does not contain durable thread
+snapshots. Hosts that need titles, cwd, transcript state, or active-thread
+hydration must follow with `thread/read` or `thread/resume`.
+`thread/compact/start` remains a productized client method, but its current
+response is empty and the stable `thread/compacted` notification is deprecated
+in favor of item-level context compaction data. Agent UI preserves
+`thread/compacted` as developer/audit raw diagnostics instead of inventing core
+compact lifecycle state.
 `normalizeThreadResumeResponse()` also understands `initialTurnsPage`; resume
 metadata and the initial page are emitted as non-destructive snapshot events so
 `excludeTurns: true` can add page data without clearing an existing transcript.
@@ -247,6 +272,109 @@ Stable `thread/start` and React `ThreadStartOptions` do not expose
 `dynamicTools`. Generated experimental `thread/start` can contain dynamic-tool
 fields, but hosts that opt into that raw protocol path own the experimental API
 negotiation and tool execution policy.
+
+## Lifecycle Classification Gate
+
+Core lifecycle state must be derived from classified App Server protocol
+surfaces before React behavior is published. Agent UI may add UI-owned pending,
+collection, preview, and failure state, but those states must not be presented
+as durable App Server semantics.
+
+Productized stable Agent UI behavior:
+
+- Thread lifecycle: `thread/start`, `thread/resume`, `thread/read`,
+  `thread/list`, `thread/loaded/list`, `thread/archive`,
+  `thread/unarchive`, `thread/name/set`, `thread/metadata/update`,
+  `thread/started`, `thread/status/changed`, `thread/name/updated`,
+  `thread/archived`, `thread/unarchived`, `thread/closed`, and
+  `thread/tokenUsage/updated`.
+- Turn lifecycle: `turn/start`, `turn/steer`, `turn/interrupt`,
+  `turn/started`, `turn/completed`, `turn/plan/updated`, and
+  `turn/diff/updated`.
+- Transcript item lifecycle: `item/started`, `item/completed`,
+  `item/agentMessage/delta`, `item/plan/delta`,
+  `item/reasoning/summaryTextDelta`, `item/reasoning/summaryPartAdded`,
+  `item/reasoning/textDelta`, `item/commandExecution/outputDelta`,
+  `item/commandExecution/terminalInteraction`,
+  `item/fileChange/outputDelta`, `item/fileChange/patchUpdated`,
+  `item/mcpToolCall/progress`, and command exec output notifications already
+  normalized as structured or raw activity.
+- Approval and host-input requests:
+  `item/commandExecution/requestApproval`,
+  `item/fileChange/requestApproval`, `item/tool/requestUserInput`,
+  `mcpServer/elicitation/request`, `item/permissions/requestApproval`,
+  `item/tool/call`, `account/chatgptAuthTokens/refresh`,
+  `attestation/generate`, `applyPatchApproval`, `execCommandApproval`, and
+  `serverRequest/resolved`.
+- Account, app, skill, hook, model, usage, warning, and status surfaces already
+  documented in the stable productized method and notification lists above.
+
+Stable host-managed lower-level surfaces:
+
+- Shell, filesystem, configuration, plugin/marketplace, MCP resource/tool,
+  remote auth status, thread goal, review, feedback, guardian-denied action,
+  and Windows sandbox methods listed as host-only above.
+- Dynamic tool execution remains host-managed even though `item/tool/call` is a
+  stable server request. Agent UI may normalize the request and bridge it, but
+  authorization, tool mapping, helper-thread policy, MCP access, and audit logs
+  belong to the host.
+- Permissions approval policy remains host-managed. Agent UI can render or
+  forward the request, but it must not infer workspace, tenant, or deployment
+  authorization.
+- Stable-generated raw notifications such as `rawResponseItem/completed` are
+  developer/audit diagnostics until a normalizer maps them to productized core
+  state. They are protocol coverage, not lifecycle behavior by themselves.
+
+Experimental opt-in surfaces:
+
+- `thread/turns/list` can be normalized with
+  `normalizeThreadTurnsListResponse()` for host-owned pagination and preview
+  hydration experiments, but it must not become default React behavior without
+  an explicit opt-in design.
+- `thread/search`, `thread/settings/update`, realtime/audio methods, process
+  control, fuzzy-file-search sessions, memory, environment, remote control,
+  collaboration mode, and elicitation counters stay experimental and require
+  `experimentalApi: true` plus host-owned policy.
+- Stable methods with experimental fields, such as `thread/resume` pagination
+  fields and generated dynamic-tool fields on `thread/start`, remain raw
+  host-managed protocol usage until a productized contract is designed.
+- Thread goal and settings notifications remain outside default core lifecycle
+  state. Goal methods are host-managed, and `thread/settings/update` is
+  experimental opt-in; `thread/goal/updated`, `thread/goal/cleared`, and
+  `thread/settings/updated` are preserved as developer/audit raw diagnostics
+  until a host-owned controller contract is designed.
+
+Unsupported or test-only surfaces:
+
+- `thread/turns/items/list` is generated but unsupported upstream and must stay
+  out of default React behavior.
+- `mock/experimentalMethod` is schema test coverage only and is intentionally
+  absent from capability metadata.
+
+Thread close handling is notification-only in the current stable generated
+surface: `thread/closed` is mapped, but there is no productized stable
+`thread/close` client method. Agent UI can model closed availability from the
+notification and stored snapshots, but a default React close action must wait
+for an upstream stable method or be explicitly labeled host-owned.
+Archive lifecycle is status-only in core: `thread/archived` maps to archived
+availability, `thread/unarchived` maps back to available loaded state, and
+`thread/closed` maps to closed availability without inventing a client-side
+close method.
+
+`clientUserMessageId` is a stable correlation field on `turn/start` and
+`turn/steer`. Agent UI uses it for optimistic first-message reconciliation
+while keeping temporary operation IDs and duplicate-prevention bookkeeping
+inside Agent UI state.
+
+Media/resource payloads are split by audience. Codex input construction may use
+stable `image` and `localImage` user input variants, but browser rendering must
+use host-resolved display URLs and metadata. `thread/read` history and live item
+notifications may contain local image/path-bearing payloads; React must resolve
+those through an explicit host/local-media resolver rather than using raw local
+paths as `src` values. Core item blocks therefore normalize media payloads into
+protocol-neutral `resource` metadata: local paths remain resolver inputs, while
+only browser-safe `https:`, `data:`, or `blob:` URLs are eligible for direct
+media rendering.
 
 ## Schema Drift
 
@@ -451,6 +579,10 @@ are preserved as raw `notification/received` diagnostics so hosts can inspect
 them without the core library inventing thread or item correlation that the
 protocol does not provide. `command/exec/outputDelta` remains normalized as
 connection-scoped command output and decodes its `deltaBase64` payload.
+Raw protocol notifications and unsupported notification warnings carry the
+`developer` and `audit` diagnostic audiences by default; they are not
+user-facing diagnostics until a productized normalizer maps them to explicit UI
+state.
 
 Current protocol non-goals:
 

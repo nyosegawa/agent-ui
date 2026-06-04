@@ -1,8 +1,10 @@
-import type React from "react";
+import React from "react";
 import type { ThreadState, ThreadTokenUsage } from "@nyosegawa/agent-ui-core";
 import { useEffect, useId, useRef, useState } from "react";
-import { useAgentComposer, type AgentComposerController } from "../hooks";
+import { type AgentComposerController } from "../hooks";
+import { useInternalAgentComposerController } from "../hooks/composer";
 import { useAgentI18n } from "../i18n";
+import type { AgentResourceKind } from "../resources";
 import {
   IconAlert,
   IconApp,
@@ -13,7 +15,7 @@ import {
   IconShield,
   buttonClass,
 } from "../components-internal";
-import { ComposerSubmitButton } from "./composer-submit-button";
+import { AgentComposerSubmitButton } from "./composer-submit-button";
 import { ComposerRunSettings } from "./run-settings";
 import { deferAction } from "./shared";
 import { AgentContextUsageIndicator } from "./context-usage";
@@ -38,11 +40,151 @@ export type {
   AgentComposerMentionResolver,
   AgentLocalAttachmentKind,
   AgentLocalAttachmentResolver,
+  AgentResolvedLocalAttachment,
   AgentMentionAttachmentKind,
 } from "./composer-attachments";
+export type { AgentComposerSubmitButtonProps } from "./composer-submit-button";
+export { AgentComposerSubmitButton } from "./composer-submit-button";
+
+export type AgentAttachmentChipKind = Extract<
+  AgentResourceKind,
+  "image" | "file" | "app" | "plugin"
+>;
+
+export interface AgentAttachmentChip {
+  extension?: string;
+  id: string;
+  kind: AgentAttachmentChipKind;
+  label: string;
+  previewFailed?: boolean;
+  previewUrl?: string;
+  sizeLabel?: string;
+}
+
+export interface AgentAttachmentChipsProps {
+  attachments: readonly AgentAttachmentChip[];
+  onPreviewFailed?: (id: string) => void;
+  onRemove?: (id: string) => void;
+}
+
+export function AgentAttachmentChips({
+  attachments,
+  onPreviewFailed,
+  onRemove,
+}: AgentAttachmentChipsProps) {
+  const { t } = useAgentI18n();
+  if (attachments.length === 0) return null;
+  return (
+    <ul className="aui-composer-chips" aria-label={t("aria.pendingAttachments")}>
+      {attachments.map((attachment) => (
+        <li
+          aria-label={[
+            attachment.label,
+            attachment.kind === "file" ? attachment.extension : undefined,
+            attachment.kind === "file" ? attachment.sizeLabel : undefined,
+          ]
+            .filter(Boolean)
+            .join(" ")}
+          className="aui-composer-chip"
+          data-kind={attachment.kind}
+          data-preview-status={
+            attachment.previewUrl
+              ? attachment.previewFailed
+                ? "failed"
+                : "ready"
+              : "none"
+          }
+          key={attachment.id}
+        >
+          {attachment.previewUrl && !attachment.previewFailed ? (
+            <img
+              alt=""
+              className="aui-composer-chip-thumbnail"
+              onError={() => onPreviewFailed?.(attachment.id)}
+              src={attachment.previewUrl}
+            />
+          ) : (
+            <span className="aui-composer-chip-icon" aria-hidden="true">
+              {attachment.kind === "image" ? <IconImage size={14} /> : null}
+              {attachment.kind === "file" ? <IconPaperclip size={14} /> : null}
+              {attachment.kind === "app" ? <IconApp size={14} /> : null}
+              {attachment.kind === "plugin" ? <IconPlugin size={14} /> : null}
+            </span>
+          )}
+          <span className="aui-composer-chip-copy">
+            <span className="aui-composer-chip-label">{attachment.label}</span>
+            {attachment.kind === "file" ? (
+              <span className="aui-composer-chip-meta">
+                {[attachment.extension, attachment.sizeLabel]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </span>
+            ) : null}
+          </span>
+          {onRemove ? (
+            <button
+              aria-label={t("composer.removeAttachment", { label: attachment.label })}
+              className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
+              onClick={() => onRemove(attachment.id)}
+              type="button"
+            >
+              <IconClose size={12} />
+            </button>
+          ) : null}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export interface AgentComposerInputProps
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  shortcutHintId?: string;
+}
+
+export const AgentComposerInput = React.forwardRef<
+  HTMLTextAreaElement,
+  AgentComposerInputProps
+>(function AgentComposerInput({ className, shortcutHintId, ...props }, ref) {
+  const describedBy = Array.from(
+    new Set(
+      [props["aria-describedby"], shortcutHintId]
+        .flatMap((value) => value?.split(/\s+/) ?? [])
+        .filter(Boolean),
+    ),
+  )
+    .join(" ");
+  return (
+    <textarea
+      {...props}
+      aria-describedby={describedBy || undefined}
+      className={["aui-composer-input", className].filter(Boolean).join(" ")}
+      ref={ref}
+    />
+  );
+});
+
+export interface AgentComposerToolbarProps {
+  className?: string;
+  end?: React.ReactNode;
+  start?: React.ReactNode;
+}
+
+export function AgentComposerToolbar({
+  className,
+  end,
+  start,
+}: AgentComposerToolbarProps) {
+  return (
+    <div className={["aui-composer-toolbar", className].filter(Boolean).join(" ")}>
+      <div className="aui-composer-toolbar-start">{start}</div>
+      <div className="aui-composer-toolbar-end">{end}</div>
+    </div>
+  );
+}
 
 export function AgentComposer(props: AgentComposerProps) {
-  const composer = useAgentComposer(props.threadId);
+  const composer = useInternalAgentComposerController(props.threadId);
   const attachmentRestoreRef = useRef<
     ((attachments: ComposerAttachment[]) => void) | null
   >(null);
@@ -92,6 +234,7 @@ function AgentComposerForm({
     attachmentError,
     attachments,
     clearSubmittedAttachments,
+    markAttachmentPreviewFailed,
     removeAttachment,
   } = useComposerAttachmentState({
     onRegisterAttachmentRestore,
@@ -204,61 +347,14 @@ function AgentComposerForm({
           <span>{composer.error}</span>
         </div>
       ) : null}
-      {attachments.length > 0 ? (
-        <ul className="aui-composer-chips" aria-label={t("aria.pendingAttachments")}>
-          {attachments.map((attachment) => (
-            <li
-              aria-label={[
-                attachment.label,
-                attachment.kind === "file" ? attachment.extension : undefined,
-                attachment.kind === "file" ? attachment.sizeLabel : undefined,
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              className="aui-composer-chip"
-              data-kind={attachment.kind}
-              key={attachment.id}
-            >
-              {attachment.previewUrl ? (
-                <img
-                  alt=""
-                  className="aui-composer-chip-thumbnail"
-                  src={attachment.previewUrl}
-                />
-              ) : (
-                <span className="aui-composer-chip-icon" aria-hidden="true">
-                  {attachment.kind === "image" ? <IconImage size={14} /> : null}
-                  {attachment.kind === "file" ? <IconPaperclip size={14} /> : null}
-                  {attachment.kind === "app" ? <IconApp size={14} /> : null}
-                  {attachment.kind === "plugin" ? <IconPlugin size={14} /> : null}
-                </span>
-              )}
-              <span className="aui-composer-chip-copy">
-                <span className="aui-composer-chip-label">{attachment.label}</span>
-                {attachment.kind === "file" ? (
-                  <span className="aui-composer-chip-meta">
-                    {[attachment.extension, attachment.sizeLabel]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </span>
-                ) : null}
-              </span>
-              <button
-                aria-label={t("composer.removeAttachment", { label: attachment.label })}
-                className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
-                onClick={() => removeAttachment(attachment.id)}
-                type="button"
-              >
-                <IconClose size={12} />
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      <textarea
+      <AgentAttachmentChips
+        attachments={attachments}
+        onPreviewFailed={markAttachmentPreviewFailed}
+        onRemove={removeAttachment}
+      />
+      <AgentComposerInput
         aria-describedby={shortcutHintId}
         aria-label={t("aria.message")}
-        className="aui-composer-input"
         disabled={disabled}
         onBlur={() => setFocused(false)}
         onChange={(event) => composer.setValue(event.currentTarget.value)}
@@ -283,10 +379,12 @@ function AgentComposerForm({
         }
         ref={textareaRef}
         rows={1}
+        shortcutHintId={shortcutHintId}
         value={composer.value}
       />
-      <div className="aui-composer-toolbar">
-        <div className="aui-composer-toolbar-start">
+      <AgentComposerToolbar
+        start={
+          <>
           <div className="aui-composer-toolbar-attach">
             {resolveLocalAttachment ? (
               <>
@@ -342,15 +440,21 @@ function AgentComposerForm({
             ) : null}
           </div>
           <ComposerRunSettings />
-        </div>
-        <div className="aui-composer-toolbar-end">
+          </>
+        }
+        end={
+          <>
           <AgentContextUsageIndicator tokenUsage={tokenUsage} />
           <span className="aui-composer-hint" id={shortcutHintId}>
             {t("composer.enterToSend")}
           </span>
-          <ComposerSubmitButton canSubmit={canSubmit} isStopAction={isStopAction} />
-        </div>
-      </div>
+          <AgentComposerSubmitButton
+            canSubmit={canSubmit}
+            isStopAction={isStopAction}
+          />
+          </>
+        }
+      />
     </form>
   );
 }
@@ -384,7 +488,7 @@ export function AgentComposerPanel({
   const { t } = useAgentI18n();
   const isPreviewOnly = isPreviewOnlyThread(thread);
   const isBlocked = thread.status === "waitingForInput" || isPreviewOnly;
-  const composer = useAgentComposer(threadId);
+  const composer = useInternalAgentComposerController(threadId);
   const attachmentRestoreRef = useRef<
     ((attachments: ComposerAttachment[]) => void) | null
   >(null);

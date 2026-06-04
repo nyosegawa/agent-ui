@@ -3,6 +3,10 @@
 Remote deployment is advanced host-owned integration work. Agent UI defaults to
 local-first browser UI: a host process starts
 `codex app-server --listen stdio://` and exposes only the UI surface it owns.
+Agent UI packages provide transports, bridge helpers, redaction helpers,
+resource helpers, and React components. They do not provide a hosted Codex
+service, authentication system, persistence layer, tenant isolation model,
+billing boundary, or deployment controller.
 
 The canonical bridge contract is documented in
 [Server Bridge](../reference/server-bridge.md).
@@ -36,6 +40,8 @@ const transport = createCodexWebSocketTransport({
 ```
 
 Authentication is a host responsibility. The transport intentionally does not put bearer tokens in query strings. Prefer same-origin cookies, a reverse proxy session, or a server-side token exchange.
+The browser transport is only a client for a host-owned endpoint. It does not
+prove that an upstream App Server WebSocket is safe to expose directly.
 
 Reconnect is disabled unless `reconnect` is provided. When enabled, the transport rejects in-flight requests on close, emits `connection/connecting`, and reopens the socket with bounded backoff. Hosts should keep server requests idempotent enough that users can retry after reconnect.
 
@@ -60,6 +66,8 @@ For any remote recipe:
 - do not share a personal OAuth session across users
 - keep workspace filesystem access explicit
 - scope upload directories per user/session/workspace
+- derive cwd/workspace roots server-side and reject browser-supplied roots that
+  the authenticated session cannot access
 - enforce process count, idle time, turn time, and output-size limits
 - audit bridge connection, workspace, approval, and shutdown events
 

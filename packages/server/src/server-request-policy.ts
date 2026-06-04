@@ -1,12 +1,87 @@
 import type { AgentTransportEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
+import {
+  boundedFileSystemPermission,
+  boundedGenericPermission,
+} from "./permission-bounding";
 
 export interface ServerRequestPolicy {
-  commandExecution?: "accept" | "acceptForSession" | "manual";
-  fileChange?: "accept" | "acceptForSession" | "manual";
+  commandExecution?: CommandApprovalPolicy | "manual";
+  decide?: ServerRequestPolicyCallback;
+  fileChange?: FileChangeApprovalPolicy | "manual";
   mcpToolApproval?: "accept" | "manual";
   permissions?: PermissionApprovalPolicy | "manual";
   userInput?: "manual";
 }
+
+export interface ServerRequestPolicyContext {
+  kind: PendingServerRequest["kind"];
+  payload: unknown;
+  request: PendingServerRequest;
+  requestId: NonNullable<AgentTransportEvent["requestId"]>;
+  threadId?: string;
+  turnId?: string;
+}
+
+export type ServerRequestPolicyDecision =
+  | {
+      action: "respond";
+      auditAction?: string;
+      response: unknown;
+    }
+  | { action: "manual" }
+  | null
+  | undefined;
+
+export type ServerRequestPolicyCallback = (
+  context: ServerRequestPolicyContext,
+) => ServerRequestPolicyDecision;
+
+export interface CommandApprovalContext {
+  command?: string;
+  cwd?: string;
+  itemId?: string;
+  payload: unknown;
+  reason?: string;
+  requestId: NonNullable<AgentTransportEvent["requestId"]>;
+  threadId?: string;
+  turnId?: string;
+}
+
+export type CommandApprovalDecision =
+  | {
+      action: "accept";
+      scope?: "request" | "session";
+    }
+  | { action: "manual" }
+  | null
+  | undefined;
+
+export type CommandApprovalPolicy = (
+  context: CommandApprovalContext,
+) => CommandApprovalDecision;
+
+export interface FileChangeApprovalContext {
+  grantRoot?: string;
+  itemId?: string;
+  payload: unknown;
+  reason?: string;
+  requestId: NonNullable<AgentTransportEvent["requestId"]>;
+  threadId?: string;
+  turnId?: string;
+}
+
+export type FileChangeApprovalDecision =
+  | {
+      action: "accept";
+      scope?: "request" | "session";
+    }
+  | { action: "manual" }
+  | null
+  | undefined;
+
+export type FileChangeApprovalPolicy = (
+  context: FileChangeApprovalContext,
+) => FileChangeApprovalDecision;
 
 export interface PermissionApprovalContext {
   cwd?: string;
@@ -38,8 +113,9 @@ export type PermissionApprovalPolicy = (
 ) => PermissionApprovalDecision;
 
 export type ResolvedServerRequestPolicy = {
-  commandExecution: NonNullable<ServerRequestPolicy["commandExecution"]>;
-  fileChange: NonNullable<ServerRequestPolicy["fileChange"]>;
+  commandExecution: CommandApprovalPolicy | "manual";
+  decide?: ServerRequestPolicyCallback;
+  fileChange: FileChangeApprovalPolicy | "manual";
   mcpToolApproval: NonNullable<ServerRequestPolicy["mcpToolApproval"]>;
   permissions: PermissionApprovalPolicy | "manual";
   userInput: NonNullable<ServerRequestPolicy["userInput"]>;
@@ -49,8 +125,10 @@ export function resolveServerRequestPolicy(
   policy?: ServerRequestPolicy,
 ): ResolvedServerRequestPolicy {
   return {
-    commandExecution: policy?.commandExecution ?? "manual",
-    fileChange: policy?.fileChange ?? "manual",
+    commandExecution:
+      typeof policy?.commandExecution === "function" ? policy.commandExecution : "manual",
+    decide: policy?.decide,
+    fileChange: typeof policy?.fileChange === "function" ? policy.fileChange : "manual",
     mcpToolApproval: policy?.mcpToolApproval ?? "manual",
     permissions: policy?.permissions ?? "manual",
     userInput: policy?.userInput ?? "manual",
@@ -68,6 +146,20 @@ export function responseForServerRequest(
 } | undefined {
   if (event.type !== "request" || event.requestId === undefined || !event.request) {
     return undefined;
+  }
+  const request = event.request;
+  const requestId = event.requestId;
+
+  const context = serverRequestPolicyContext(request, requestId);
+  const customDecision = policy.decide?.(context);
+  if (customDecision?.action === "manual") return undefined;
+  if (customDecision?.action === "respond") {
+    return {
+      action: customDecision.auditAction ?? "custom",
+      kind: request.kind,
+      requestId,
+      response: customDecision.response,
+    };
   }
 
   if (
@@ -103,31 +195,42 @@ export function responseForServerRequest(
       kind: event.request.kind,
       requestId: event.requestId,
       response: {
-        permissions: boundedPermissions(decision.permissions),
+        permissions: boundedPermissions(decision.permissions, requested),
         scope: decision.scope ?? "turn",
       },
     };
   }
 
-  if (event.request.kind === "commandApproval" && policy.commandExecution !== "manual") {
+  if (
+    event.request.kind === "commandApproval" &&
+    typeof policy.commandExecution === "function" &&
+    isRecord(event.request.payload)
+  ) {
+    const decision = policy.commandExecution(commandApprovalContext(event.request.payload, requestId));
+    if (!decision || decision.action !== "accept") return undefined;
     return {
-      action: policy.commandExecution,
+      action: commandDecisionValue(decision),
       kind: event.request.kind,
       requestId: event.requestId,
       response: {
-        decision:
-          policy.commandExecution === "acceptForSession" ? "acceptForSession" : "accept",
+        decision: commandDecisionValue(decision),
       },
     };
   }
 
-  if (event.request.kind === "fileChangeApproval" && policy.fileChange !== "manual") {
+  if (
+    event.request.kind === "fileChangeApproval" &&
+    typeof policy.fileChange === "function" &&
+    isRecord(event.request.payload)
+  ) {
+    const decision = policy.fileChange(fileChangeApprovalContext(event.request.payload, requestId));
+    if (!decision || decision.action !== "accept") return undefined;
     return {
-      action: policy.fileChange,
+      action: fileChangeDecisionValue(decision),
       kind: event.request.kind,
       requestId: event.requestId,
       response: {
-        decision: policy.fileChange === "acceptForSession" ? "acceptForSession" : "accept",
+        decision: fileChangeDecisionValue(decision),
       },
     };
   }
@@ -135,17 +238,75 @@ export function responseForServerRequest(
   return undefined;
 }
 
-function boundedPermissions(permissions: {
-  fileSystem?: unknown;
-  network?: unknown;
-}): Record<string, unknown> {
+function commandApprovalContext(
+  payload: Record<string, unknown>,
+  requestId: NonNullable<AgentTransportEvent["requestId"]>,
+): CommandApprovalContext {
   return {
-    ...(permissions.fileSystem !== undefined && permissions.fileSystem !== null
-      ? { fileSystem: permissions.fileSystem }
-      : {}),
-    ...(permissions.network !== undefined && permissions.network !== null
-      ? { network: permissions.network }
-      : {}),
+    command: stringValue(payload.command),
+    cwd: stringValue(payload.cwd),
+    itemId: stringValue(payload.itemId),
+    payload,
+    reason: stringValue(payload.reason),
+    requestId,
+    threadId: stringValue(payload.threadId),
+    turnId: stringValue(payload.turnId),
+  };
+}
+
+function fileChangeApprovalContext(
+  payload: Record<string, unknown>,
+  requestId: NonNullable<AgentTransportEvent["requestId"]>,
+): FileChangeApprovalContext {
+  return {
+    grantRoot: stringValue(payload.grantRoot),
+    itemId: stringValue(payload.itemId),
+    payload,
+    reason: stringValue(payload.reason),
+    requestId,
+    threadId: stringValue(payload.threadId),
+    turnId: stringValue(payload.turnId),
+  };
+}
+
+function commandDecisionValue(decision: Extract<CommandApprovalDecision, { action: "accept" }>): "accept" | "acceptForSession" {
+  return decision.scope === "session" ? "acceptForSession" : "accept";
+}
+
+function fileChangeDecisionValue(decision: Extract<FileChangeApprovalDecision, { action: "accept" }>): "accept" | "acceptForSession" {
+  return decision.scope === "session" ? "acceptForSession" : "accept";
+}
+
+function serverRequestPolicyContext(
+  request: PendingServerRequest,
+  requestId: NonNullable<AgentTransportEvent["requestId"]>,
+): ServerRequestPolicyContext {
+  const payload = request.payload;
+  return {
+    kind: request.kind,
+    payload,
+    request,
+    requestId,
+    threadId: request.threadId ?? threadIdFromPayload(payload),
+    turnId: request.turnId ?? turnIdFromPayload(payload),
+  };
+}
+
+function boundedPermissions(
+  permissions: {
+    fileSystem?: unknown;
+    network?: unknown;
+  },
+  requested: PermissionApprovalContext["requested"],
+): Record<string, unknown> {
+  const fileSystem = boundedFileSystemPermission(
+    permissions.fileSystem,
+    requested.fileSystem,
+  );
+  const network = boundedGenericPermission(permissions.network, requested.network);
+  return {
+    ...(fileSystem !== undefined ? { fileSystem } : {}),
+    ...(network !== undefined ? { network } : {}),
   };
 }
 
@@ -163,6 +324,16 @@ function requestedPermissionsFromPayload(payload: Record<string, unknown>): Perm
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
+}
+
+function threadIdFromPayload(payload: unknown): string | undefined {
+  if (!isRecord(payload)) return undefined;
+  return stringValue(payload.threadId ?? payload.thread_id);
+}
+
+function turnIdFromPayload(payload: unknown): string | undefined {
+  if (!isRecord(payload)) return undefined;
+  return stringValue(payload.turnId ?? payload.turn_id);
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

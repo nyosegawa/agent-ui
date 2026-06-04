@@ -1,6 +1,7 @@
-import type { AgentError } from "./common";
+import type { AgentDiagnosticAudience, AgentError } from "./common";
 
 export interface WarningState {
+  audience?: readonly AgentDiagnosticAudience[];
   id: string;
   message: string;
   raw?: unknown;
@@ -16,6 +17,7 @@ export type StatusBannerKind =
   | "system";
 
 export interface StatusBannerState {
+  audience?: readonly AgentDiagnosticAudience[];
   id: string;
   kind: StatusBannerKind;
   message: string;
@@ -31,6 +33,7 @@ export interface DiagnosticsState {
 }
 
 export interface ProtocolNotificationState {
+  audience?: readonly AgentDiagnosticAudience[];
   id: string;
   method: string;
   params?: unknown;

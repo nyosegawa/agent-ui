@@ -18,8 +18,12 @@ test("opens a thread by URL and accepts image plus arbitrary file attachments", 
   await page.evaluate(() => {
     const textarea = document.querySelector("textarea.aui-composer-input");
     if (!textarea) throw new Error("missing composer textarea");
+    const pngBytes = Uint8Array.from(
+      atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="),
+      (char) => char.charCodeAt(0),
+    );
     const transfer = new DataTransfer();
-    transfer.items.add(new File(["png fixture"], "fixture.png", { type: "image/png" }));
+    transfer.items.add(new File([pngBytes], "fixture.png", { type: "image/png" }));
     transfer.items.add(
       new File(["mesh"], "part.3mf", { type: "application/octet-stream" }),
     );
@@ -42,6 +46,30 @@ test("opens a thread by URL and accepts image plus arbitrary file attachments", 
   ).toContainText(".3mf", { timeout: FAST_EXPECT_TIMEOUT });
   await submitComposer(page);
   await expect(page.getByText(/Attached file: .*part\.3mf/)).toBeVisible({
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  const transcriptImage = page.locator(".aui-image-block img").first();
+  await expect(transcriptImage).toBeVisible({ timeout: FAST_EXPECT_TIMEOUT });
+  await expect(transcriptImage).toHaveAttribute(
+    "src",
+    /\/agent-ui\/assets\//,
+    { timeout: FAST_EXPECT_TIMEOUT },
+  );
+  await expect(transcriptImage).not.toHaveAttribute("src", /fixture\.png$/);
+});
+
+test("renders unavailable transcript local media as a fallback instead of a broken image", async ({
+  page,
+}) => {
+  await openStoredThread(page, { width: 1280, height: 900 });
+  await fillMessage(page, "missing media smoke");
+  await submitComposer(page);
+
+  const imageBlock = page.locator(".aui-image-block").first();
+  await expect(imageBlock).toContainText("Local media unavailable", {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(imageBlock.locator("img")).toHaveCount(0, {
     timeout: FAST_EXPECT_TIMEOUT,
   });
 });

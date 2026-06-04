@@ -284,6 +284,18 @@
   max-width: min(420px, 100%);
 }
 
+.aui-image-block-fallback {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px dashed var(--aui-border-strong);
+  border-radius: var(--aui-radius-sm);
+  color: var(--aui-fg-muted);
+  display: flex;
+  font-size: var(--aui-font-size-sm);
+  min-height: 96px;
+  padding: var(--aui-space-300);
+}
+
 .aui-image-block figcaption {
   color: var(--aui-fg-faint);
   font-size: var(--aui-font-size-xs);

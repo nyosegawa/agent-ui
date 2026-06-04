@@ -2,11 +2,8 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { agentReducer, createInitialAgentState } from "@nyosegawa/agent-ui-core";
 import { describe, expect, it } from "vitest";
-import {
-  CODEX_PROTOCOL_COMMIT,
-  normalizeCodexServerMessage,
-  parseJsonRpcLine,
-} from "../src";
+import { normalizeCodexServerMessage } from "../src/normalizer";
+import { CODEX_PROTOCOL_COMMIT, parseJsonRpcLine } from "../src";
 
 const fixtureRoot = join(process.cwd(), "fixtures/app-server/v2-jsonrpc");
 

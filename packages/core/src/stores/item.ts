@@ -22,6 +22,12 @@ export interface ItemStore {
     patch: unknown,
     maxEntries: number,
   ): TurnState;
+  updateItemStatus(
+    turn: TurnState,
+    itemId: ItemId,
+    status: AgentItemState["status"],
+    options?: { raw?: Record<string, unknown> },
+  ): TurnState;
   upsert(turn: TurnState, item: AgentItemState): TurnState;
 }
 
@@ -30,21 +36,112 @@ export const itemStore: ItemStore = {
   appendStreamingText,
   createItemBlock,
   updateFilePatch,
+  updateItemStatus,
   upsert: upsertItem,
 };
 
 export function upsertItem(turn: TurnState, item: AgentItemState): TurnState {
+  const reconciledItem = reconcileClientUserMessage(turn, item);
   return {
     ...turn,
     blocksByItemId: {
       ...turn.blocksByItemId,
-      [item.id]: createItemBlock(item),
+      [reconciledItem.id]: createItemBlock(reconciledItem),
     },
-    itemOrder: ensureItemOrder(turn.itemOrder, item.id),
+    itemOrder: ensureItemOrder(turn.itemOrder, reconciledItem.id),
     items: {
       ...turn.items,
-      [item.id]: item,
+      [reconciledItem.id]: reconciledItem,
     },
+  };
+}
+
+export function updateItemStatus(
+  turn: TurnState,
+  itemId: ItemId,
+  status: AgentItemState["status"],
+  options: { raw?: Record<string, unknown> } = {},
+): TurnState {
+  const item = turn.items[itemId];
+  if (!item) return turn;
+  const raw = mergeRaw(item.raw, options.raw);
+  const nextItem = { ...item, raw, status };
+  return {
+    ...turn,
+    blocksByItemId: {
+      ...turn.blocksByItemId,
+      [itemId]: createItemBlock(nextItem),
+    },
+    items: {
+      ...turn.items,
+      [itemId]: nextItem,
+    },
+  };
+}
+
+function reconcileClientUserMessage(
+  turn: TurnState,
+  item: AgentItemState,
+): AgentItemState {
+  if (item.kind !== "userMessage") return item;
+  const clientId = clientUserMessageId(item.raw);
+  if (!clientId) return item;
+  const existing = Object.values(turn.items).find(
+    (candidate) =>
+      candidate.kind === "userMessage" &&
+      candidate.turnId === item.turnId &&
+      candidate.id !== item.id &&
+      clientUserMessageId(candidate.raw) === clientId,
+  );
+  if (!existing) return item;
+  return reconcileUserMessageItem(existing, item, clientId);
+}
+
+export function reconcileUserMessageItem(
+  existing: AgentItemState,
+  incoming: AgentItemState,
+  clientId: string,
+): AgentItemState {
+  return {
+    ...existing,
+    ...incoming,
+    id: existing.id,
+    raw: reconcileUserMessageRaw(existing.raw, incoming.raw, incoming.id, clientId),
+    text: incoming.text ?? existing.text,
+  };
+}
+
+export function clientUserMessageId(raw: unknown): string | undefined {
+  if (!isRecord(raw)) return undefined;
+  const value = raw.clientUserMessageId ?? raw.clientId ?? raw.client_id;
+  return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function reconcileUserMessageRaw(
+  existingRaw: unknown,
+  incomingRaw: unknown,
+  serverItemId: string,
+  clientId: string,
+): unknown {
+  const existing = isRecord(existingRaw) ? existingRaw : {};
+  const incoming = isRecord(incomingRaw) ? incomingRaw : {};
+  return {
+    ...existing,
+    ...incoming,
+    clientUserMessageId: clientId,
+    optimistic: false,
+    serverItemId,
+  };
+}
+
+function mergeRaw(
+  raw: unknown,
+  patch: Record<string, unknown> | undefined,
+): unknown {
+  if (!patch) return raw;
+  return {
+    ...(isRecord(raw) ? raw : {}),
+    ...patch,
   };
 }
 
@@ -164,6 +261,7 @@ export function createItemBlock(item: AgentItemState): AgentItemBlock {
   const raw = isRecord(item.raw) ? item.raw : {};
   const kind = blockKindForItemKind(item.kind);
   const base: AgentItemBlock = {
+    error: raw.error,
     id: item.id,
     kind,
     raw: item.raw,
@@ -221,7 +319,8 @@ export function createItemBlock(item: AgentItemState): AgentItemBlock {
     return { ...base, query: stringValue(raw.query) ?? item.text };
   }
   if (kind === "image") {
-    return { ...base, path: stringValue(raw.path ?? raw.savedPath ?? raw.saved_path) };
+    const resource = imageResource(raw);
+    return { ...base, path: resource?.path, resource };
   }
   if (kind === "systemInfo") {
     return {
@@ -236,6 +335,39 @@ export function createItemBlock(item: AgentItemState): AgentItemBlock {
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" && value.length > 0 ? value : undefined;
+}
+
+function imageResource(raw: Record<string, unknown>): AgentItemBlock["resource"] {
+  const path = stringValue(raw.path ?? raw.savedPath ?? raw.saved_path);
+  const url =
+    browserMediaUrl(raw.url) ??
+    browserMediaUrl(raw.imageUrl) ??
+    browserMediaUrl(raw.image_url) ??
+    browserMediaUrl(raw.result);
+  const previewUrl = browserMediaUrl(raw.previewUrl ?? raw.preview_url);
+  const mimeType = stringValue(raw.mimeType ?? raw.mime_type);
+  const displayName = stringValue(
+    raw.displayName ?? raw.display_name ?? raw.name ?? raw.filename ?? raw.fileName,
+  );
+  const redactedPath = stringValue(raw.redactedPath ?? raw.redacted_path);
+  if (!path && !url && !previewUrl && !displayName && !mimeType && !redactedPath) {
+    return undefined;
+  }
+  return {
+    displayName,
+    kind: path ? "local-media" : mimeType?.startsWith("video/") ? "video" : "image",
+    mimeType,
+    path,
+    previewUrl,
+    redactedPath,
+    url,
+  };
+}
+
+function browserMediaUrl(value: unknown): string | undefined {
+  const url = stringValue(value);
+  if (!url) return undefined;
+  return /^(https:|data:|blob:)/.test(url) ? url : undefined;
 }
 
 function numberValue(value: unknown): number | undefined {

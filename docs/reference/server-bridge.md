@@ -7,6 +7,14 @@ Agent UI has two different server integration shapes. Keep them separate:
 
 Only the full chat bridge can power `AgentChat`.
 
+The public server package exports bridge, local media, one-shot RPC,
+server-request policy, dynamic-tool mapping, host-event, and redaction helpers.
+Those helpers are integration surfaces for a host-owned server process; they do
+not make Agent UI a hosted runtime. Authentication, non-loopback admission,
+process supervision, persistence, tenant/workspace isolation, upload/static
+authorization, audit retention, billing, and deployment topology stay outside
+the core library.
+
 ## Full Chat WebSocket Bridge
 
 Use this when a browser UI needs streaming turns, approvals, thread hydration,
@@ -28,8 +36,13 @@ attachAgentUiWebSocketBridge({
   server,
   path: "/agent-ui/ws",
   cwd: process.cwd(),
-  admission(request) {
-    return request.headers.origin === "http://127.0.0.1:5175";
+  bridgePolicy: {
+    admission: {
+      admit(request) {
+        return request.headers.origin === "http://127.0.0.1:5175";
+      },
+      mode: "host-callback",
+    },
   },
   initialize: {
     capabilities: {
@@ -78,22 +91,58 @@ long, the bridge closes the browser socket with `1000` and shuts down the App
 Server process. Startup failures close with `1011`; admission rejections close
 with `1008`; admission errors close with `1011`.
 
-`admission` runs before the Codex child process is spawned. A `false` result
-closes the socket with `1008`; thrown or rejected admission errors close with
-`1011`, do not spawn the child process, and have diagnostics redacted before
-host stderr callbacks. Use admission for session or explicit local-token checks
-on any bridge that is not a private loopback-only development endpoint; an
-Origin comparison alone is not authentication. Browser JSON-RPC requests are
+`bridgePolicy.admission` is checked before the Codex child process is spawned.
+The explicit modes are:
+
+- `local-loopback`: the default. Only loopback remote addresses such as
+  `127.0.0.1` and `::1` are admitted.
+- `host-callback`: calls a host callback with the original HTTP request. A
+  `false` result closes the socket with `1008`; thrown or rejected errors close
+  with `1011`, do not spawn the child process, and have diagnostics redacted
+  before host stderr callbacks.
+- `unsafe-no-admission`: admits without request checks only when the host
+  supplies a non-empty `reason`. This mode is for explicit host-owned
+  experiments and should be paired with external auth, isolation, and audit
+  logging.
+
+The legacy top-level `admission(request)` option is treated as
+`host-callback`. Use host-callback admission for session or explicit local-token
+checks on any bridge that is not a private loopback-only development endpoint;
+an Origin comparison alone is not authentication. Browser JSON-RPC requests are
 filtered by `browserMethodPolicy`; the default is the full-chat productized UI
-surface, including account/model/thread/turn/skills/hooks/apps calls needed by
-`AgentChat`. This is intentionally broader than the one-shot HTTP default below.
-Host-only methods such as `fs/readFile`, `command/exec`, `mcpServer/tool/call`,
-and configuration writes require an explicit host policy. Rejected methods
-return a JSON-RPC error with `code: -32601` and `data.method`. When an allowed
-App Server request fails, the bridge preserves the App Server error `code` and
-`data` in the browser response instead of collapsing it to a message string.
-Browser request `trace` is forwarded as JSON-RPC-lite top-level `trace` to the
-underlying transport.
+surface expressed as capability categories:
+
+Bridge health diagnostics are emitted through `hostEvents.onBridgeHealthEvent`.
+The event carries a snapshot with `admissionChecked`, `processSpawned`,
+`initialized`, `connected`, `pendingRequestCount`, and
+`lastRedactedDiagnostic`. Health phases include `admissionChecked`,
+`processSpawned`, `initialized`, `connected`, `pendingRequestCount`,
+`diagnostic`, `idleClosed`, and `backpressureClosed`. Events carry
+`audience: ["developer", "audit"]`. The bridge updates the pending count when
+App Server requests arrive and when browser or bridge policy responses resolve
+them. The health stream is for host developer/audit tooling; Agent UI does not
+persist it, attach tenant meaning to it, or turn it into a deployment policy.
+
+- `connection`: `initialize` and `initialized`
+- `account`: account read, device login, logout, and rate-limit read
+- `models`: model listing
+- `threadHistory`: list/read/archive/unarchive thread history
+- `threadLifecycle`: start/resume/fork/name/update/compact/rollback/inject/unsubscribe
+- `turns`: start, steer, and interrupt turns
+- `skills`: list and write skill config
+- `hooks`: hook listing
+- `apps`: app listing
+
+Hosts may pass `browserMethodPolicy: { capabilities: [...] }` to narrow the
+browser surface by category. This is intentionally broader than the one-shot
+HTTP default below. Host-only methods such as `fs/readFile`, `command/exec`,
+`mcpServer/tool/call`, and configuration writes outside the listed categories
+require `browserMethodPolicy: "all"` plus host-owned auth, isolation, and audit
+logging. Rejected methods return a JSON-RPC error with `code: -32601` and
+`data.method`. When an allowed App Server request fails, the bridge preserves
+the App Server error `code` and `data` in the browser response instead of
+collapsing it to a message string. Browser request `trace` is forwarded as
+JSON-RPC-lite top-level `trace` to the underlying transport.
 
 The upstream App Server may reject direct browser WebSocket connections by
 `Origin`, but that does not protect an Agent UI same-origin bridge endpoint.
@@ -101,14 +150,16 @@ The bridge is a host endpoint and must enforce its own admission/session policy.
 Same-origin routing and upstream `Origin` checks are not authentication.
 Non-loopback exposure requires host-owned auth, admission, workspace or session
 scoping, process isolation, resource limits, and audit logging.
+Agent UI provides policy hooks and diagnostics so hosts can implement those
+decisions; it does not persist bridge events, attach tenant meaning, or choose
+deployment isolation for them.
 
 `handleAgentUiWebSocketConnection()` is the lower-level handler for hosts that
-do not use `attachAgentUiWebSocketBridge()`. If an `admission` hook needs HTTP
-headers, cookies, or the `Origin` header, pass the original `IncomingMessage` as
-the third argument. When `admission` is configured but no request object is
-passed, the handler skips admission and proceeds to spawn the App Server
-process. Use `attachAgentUiWebSocketBridge()` or always pass the request object
-when admission is the intended security boundary.
+do not use `attachAgentUiWebSocketBridge()`. If admission needs HTTP headers,
+cookies, the `Origin` header, or loopback remote address checks, pass the
+original `IncomingMessage` as the third argument. Without a request object,
+`local-loopback` and `host-callback` admission reject before spawning; only
+`unsafe-no-admission` with a non-empty reason can proceed.
 
 Server-side redaction helpers are public exports from
 `@nyosegawa/agent-ui-server`: `redactSecrets()`, `redactStructuredValue()`, and
@@ -151,15 +202,18 @@ rejoin paths can replay restored usage where upstream supports it so the UI can
 show context usage before the next turn starts; `thread/read` should be treated
 as stored history hydration, not token-usage notification replay.
 
-## Upload Handler
+## Local Media Helper
 
 Browsers hold `File` objects; Codex App Server reads local image inputs from
 paths. The library therefore requires a host resolver for attachments.
 
-`createAgentUiLocalUploadHandler()` is the local development helper:
+`createAgentUiLocalMediaHelper()` is the local development helper:
 
 - accepts `POST`; a missing `content-type` is accepted, and a present
-  `content-type` must be `application/octet-stream`, `image/*`, or `text/plain`
+  `content-type` must be `application/octet-stream`, non-SVG `image/*`, or
+  `text/plain`
+- rejects SVG uploads by declared content type, sanitized `.svg` filename, or
+  leading SVG/XML body signature before registering a same-origin asset URL
 - uses `x-agent-ui-filename` for a sanitized filename suffix and rejects
   malformed percent-encoding or control characters
 - writes into a per-session temp directory under a host temp root, defaulting
@@ -170,18 +224,45 @@ paths. The library therefore requires a host resolver for attachments.
   in the host's resolver return value
 - exposes `cleanup()` for explicit per-session cleanup and runs best-effort TTL
   cleanup for expired session directories before writes
-- returns JSON `{ "path": "/absolute/local/path" }`
+- returns JSON with `path`, `url`, `id`, `name`, `displayName`,
+  `redactedPath`, `mimeType`, `sizeBytes`, and `previewUrl`
+- serves registered assets with `Cache-Control: no-store` and
+  `X-Content-Type-Options: nosniff`
+- creates browser URLs from registered asset IDs, not raw local paths
+- exposes a constrained `serveAssetHandler` that hosts must explicitly wire if
+  browser preview bytes should be served
 
 If a host passes a relative `directory`, the returned path can also be relative
 to the host process. Use an absolute upload root when the App Server process
-needs absolute attachment paths. Agent UI does not automatically redact returned
-local paths.
+needs absolute attachment paths. Use `path` only for explicit App Server input
+construction and `url`/`previewUrl` only for browser rendering. Agent UI does
+not derive image/video `src` values from raw filesystem paths.
+
+Static serving is opt-in. The helper does not install routes on a server; the
+host must route a path such as `/agent-ui/assets/:id` to `serveAssetHandler`.
+The handler resolves only registered asset IDs, rejects path-like IDs before
+filesystem access, refuses files outside the configured session directory, and
+can call `serveAsset.admitRequest` before serving bytes. Loopback demos may use
+the default admission behavior. Non-loopback or shared endpoints need
+host-owned authentication, session admission, tenant/workspace isolation,
+resource limits, and audit logging before routing the handler.
+
+`createAgentUiLocalUploadHandler()` remains available as the upload-only entry
+point. It is backed by the local media helper and returns the same structured
+JSON while preserving the `path` field used by existing resolvers.
+
+Preview cleanup is explicit. Call `releaseAsset(id)` to remove a registered
+asset and delete its temporary file after browser preview use is finished. Do
+not release an asset whose `path` was just sent to Codex App Server until the
+server has finished reading it. Call `cleanup()` to remove the whole helper
+session.
 
 The React composer calls the host's `resolveLocalAttachment(file)` resolver.
-The resolver may upload the file, then return one Codex input or an array of
-Codex inputs. Images should return `localImageInput(path)`. For arbitrary
-non-image files, App Server has no generic `localFile` user input, so the host
-should return explicit text such as `textInput("Attached file:
+The resolver may upload the file, then return structured metadata with an
+explicit `input` field containing one Codex input or an array of Codex inputs.
+Images should set `input` to `localImageInput(path)`. For arbitrary non-image
+files, App Server has no generic `localFile` user input, so the host should set
+`input` to explicit text such as `textInput("Attached file:
 /absolute/local/path")`. The React package never treats a browser blob URL or
 `File.name` as an App Server-readable path, and non-image files should not rely
 only on `mentionInput`.
@@ -191,29 +272,34 @@ only on `mentionInput`.
 `item/tool/call` requests are normalized by the Codex adapter. The default core
 server request queue does not retain them as normal approval items; they are
 handled out of band by the bridge or by a host integration. The bridge does not
-execute dynamic tool requests unless the host passes a `dynamicToolHandler`. The exported
+execute dynamic tool requests unless the host passes
+`dynamicToolPolicy: { mode: "host-callback", handler }`. The exported
 `createMcpDynamicToolHandler()` helper requires explicit namespace, server, and
 tool mappings before it will forward a dynamic request to `mcpServer/tool/call`:
 
 ```ts
 attachAgentUiWebSocketBridge({
   server,
-  dynamicToolHandler: createMcpDynamicToolHandler({
-    tools: [
-      {
-        namespace: "mcp__browser",
-        server: "browser",
-        tools: ["snapshot"],
-      },
-    ],
-  }),
+  dynamicToolPolicy: {
+    handler: createMcpDynamicToolHandler({
+      tools: [
+        {
+          namespace: "mcp__browser",
+          server: "browser",
+          tools: ["snapshot"],
+        },
+      ],
+    }),
+    mode: "host-callback",
+  },
 });
 ```
 
 Unknown namespaces or tools fail before Agent UI creates the helper thread or
-calls `mcpServer/tool/call`. The legacy `defaultDynamicToolHandler` no longer
-derives server names from namespace strings; hosts should use the explicit
-factory. Allowed dynamic-tool requests may create a helper thread with:
+calls `mcpServer/tool/call`. The legacy `defaultDynamicToolHandler` surface has
+been removed; hosts should use the explicit factory or provide their own handler
+inside `dynamicToolPolicy`. Allowed dynamic-tool requests may create a helper
+thread with:
 
 ```text
 approvalPolicy: "on-request"
@@ -221,9 +307,18 @@ sandbox: "workspace-write"
 ```
 
 This is a host boundary, not a UI convenience. Hosts that do not understand the
-risk should disable or override `dynamicToolHandler`, and production hosts
-should provide explicit authorization, audit logging, workspace isolation, and
-resource limits before enabling mapped dynamic tools.
+risk should leave `dynamicToolPolicy` unset or set `{ mode: "disabled" }`, and
+production hosts should provide explicit authorization, audit logging, workspace
+isolation, and resource limits before enabling mapped dynamic tools.
+
+Dynamic tool diagnostics are emitted through `hostEvents.onDynamicToolEvent`.
+Events use phases `received`, `denied`, `helperThreadCreated`,
+`mcpCallStarted`, `timeout`, `completed`, and `failed`. They include the
+request id, call id, namespace, tool, thread id, turn id, optional server/helper
+thread id, success flag, duration, redacted message, and
+`audience: ["developer", "audit"]`. They intentionally do not include raw
+dynamic tool arguments or MCP result content. These events are for
+developer/audit logging by the host, not browser-visible approval UI.
 
 Server request auto-resolution is controlled separately by
 `serverRequestPolicy`. The default policy forwards approval-like requests to
@@ -231,13 +326,33 @@ the browser UI so the user can decide. The MCP tool approval shortcut only
 accepts elicitations that carry `_meta.codex_approval_kind ===
 "mcp_tool_call"`; generic MCP elicitations stay visible to the host/UI.
 
+Hosts that need request-specific policy can provide
+`serverRequestPolicy.decide(context)`. The callback receives the normalized
+request kind, request id, thread id, turn id, full request object, and payload.
+Return `{ action: "respond", response }` to resolve that request, return
+`{ action: "manual" }` to force browser/UI handling and skip fallback shortcuts,
+or return `undefined` to continue to the narrower built-in policies such as
+`mcpToolApproval`, `commandExecution`, `fileChange`, and `permissions`.
+
+Command and file-change approval auto-resolution is callback-only. Agent UI no
+longer accepts generic `commandExecution: "accept"` or
+`fileChange: "acceptForSession"` bridge policies because those strings approve
+every matching request without inspecting command text, cwd, reason, grant root,
+or thread context. Hosts that intentionally auto-approve these requests must
+provide `serverRequestPolicy.commandExecution(context)` or
+`serverRequestPolicy.fileChange(context)` and return `{ action: "accept" }`.
+Set `scope: "session"` only when the host explicitly wants
+`acceptForSession`; return `{ action: "manual" }`, `undefined`, or `null` to
+leave the request visible to the UI.
+
 Permission approval behavior depends on the surface. Dynamic helper-thread
-permissions default to `dynamicToolHelperPermissions: "manual"`, so the request
-stays visible to the browser/server-request path. Hosts may choose `"deny"`, the
-unsafe explicit opt-in `"grantRequestedForTurn"`, or a callback. Callback grants
-are checked against the requested file-system and network families, structured
-filesystem grants are checked against requested modes and paths where the helper
-understands that shape, and grants are always turn-scoped in this release. The
+permissions live under `dynamicToolPolicy.helperPermissions` and default to
+`"manual"`, so the request stays visible to the browser/server-request path.
+Hosts may choose `"deny"`, the unsafe explicit opt-in
+`"grantRequestedForTurn"`, or a callback. Callback grants are checked against
+the requested file-system and network families, structured filesystem grants are
+checked against requested modes and paths where the helper understands that
+shape, and dynamic helper grants are always turn-scoped in this release. The
 helper is not a schema-wide permission sanitizer for every generated App Server
 permission shape.
 
@@ -269,8 +384,14 @@ attachAgentUiWebSocketBridge({
 
 The callback receives `requestId`, `threadId`, `turnId`, `cwd`, requested
 filesystem/network permissions, and the raw App Server request payload. The
-normal policy path treats returned grants as trusted host policy: it drops
-nullish permission families but does not clamp grants to the requested subset.
+normal policy path treats returned grants as trusted host policy but still
+clamps them to the requested subset: unrequested permission families are
+dropped, generic grants such as network must match the requested value,
+protocol-shaped filesystem `read`, `write`, and `entries` grants must be
+subsets of the request, and `globScanMaxDepth` cannot exceed the requested
+value. `scope` defaults to `"turn"`; hosts may return `"session"` only when
+they intentionally want the App Server to persist the bounded grant for later
+turns in the same session.
 Return `undefined`, `null`, or `{ action: "manual" }` to leave the request
 pending for the UI.
 

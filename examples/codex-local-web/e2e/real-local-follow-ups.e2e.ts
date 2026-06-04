@@ -211,13 +211,13 @@ test("follows streaming content only while the transcript is near the bottom", a
 }) => {
   await openStoredThread(page, { width: 390, height: 900 });
   const message = await readyMessageInput(page);
-  await fillMessage(page, "slow smoke");
+  await fillMessage(page, "streaming smoke");
   await submitComposer(page);
   await expect(stopButton(page)).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
   const nearBottomBefore = await messageListScroll(page);
-  await expect(page.getByText("Echo: slow smoke")).toBeVisible({
+  await expect(page.getByText("Echo: streaming smoke")).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
   const nearBottomAfter = await messageListScroll(page);

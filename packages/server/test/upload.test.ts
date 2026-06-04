@@ -3,7 +3,10 @@ import { createServer } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { createAgentUiLocalUploadHandler } from "../src";
+import {
+  createAgentUiLocalMediaHelper,
+  createAgentUiLocalUploadHandler,
+} from "../src";
 
 const servers: Array<{
   close: (callback?: () => void) => void;
@@ -112,7 +115,84 @@ describe("createAgentUiLocalUploadHandler", () => {
       method: "POST",
     });
     expect(contentTypeResponse.status).toBe(415);
+    expect(contentTypeResponse.headers.get("x-content-type-options")).toBe(
+      "nosniff",
+    );
     await contentTypeResponse.text();
+    const svgResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "<svg><script>alert(1)</script></svg>",
+      headers: { "content-type": "image/svg+xml; charset=utf-8" },
+      method: "POST",
+    });
+    expect(svgResponse.status).toBe(415);
+    expect(svgResponse.headers.get("x-content-type-options")).toBe("nosniff");
+    await svgResponse.text();
+    const missingTypeSvgResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "<svg><script>alert(1)</script></svg>",
+      method: "POST",
+    });
+    expect(missingTypeSvgResponse.status).toBe(415);
+    expect(missingTypeSvgResponse.headers.get("x-content-type-options")).toBe(
+      "nosniff",
+    );
+    await missingTypeSvgResponse.text();
+    const octetSvgResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "<?xml version=\"1.0\"?><svg></svg>",
+      headers: { "content-type": "application/octet-stream" },
+      method: "POST",
+    });
+    expect(octetSvgResponse.status).toBe(415);
+    await octetSvgResponse.text();
+    const paddedSvgResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: `<!--${"x".repeat(64)}--><svg><script>alert(1)</script></svg>`,
+      headers: {
+        "content-type": "text/plain",
+        "x-agent-ui-filename": encodeURIComponent("payload.txt"),
+      },
+      method: "POST",
+    });
+    expect(paddedSvgResponse.status).toBe(415);
+    await paddedSvgResponse.text();
+    const namespacedSvgResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "<svg:svg xmlns:svg=\"http://www.w3.org/2000/svg\"></svg:svg>",
+      headers: {
+        "content-type": "text/plain",
+        "x-agent-ui-filename": encodeURIComponent("namespaced.txt"),
+      },
+      method: "POST",
+    });
+    expect(namespacedSvgResponse.status).toBe(415);
+    await namespacedSvgResponse.text();
+    const doctypeSvgResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "<!DOCTYPE svg [ <!ENTITY x \"y\"> ]><svg></svg>",
+      headers: {
+        "content-type": "application/octet-stream",
+        "x-agent-ui-filename": encodeURIComponent("doctype.bin"),
+      },
+      method: "POST",
+    });
+    expect(doctypeSvgResponse.status).toBe(415);
+    await doctypeSvgResponse.text();
+    const nonSvgDoctypeResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "<!DOCTYPE note [ <!ENTITY label \"svg icon label\"> ]><note/>",
+      headers: {
+        "content-type": "text/plain",
+        "x-agent-ui-filename": encodeURIComponent("note.txt"),
+      },
+      method: "POST",
+    });
+    expect(nonSvgDoctypeResponse.status).toBe(200);
+    await nonSvgDoctypeResponse.text();
+    const svgExtensionResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "mislabeled",
+      headers: {
+        "content-type": "text/plain",
+        "x-agent-ui-filename": encodeURIComponent("active.svg"),
+      },
+      method: "POST",
+    });
+    expect(svgExtensionResponse.status).toBe(415);
+    await svgExtensionResponse.text();
     const filenameResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
       body: "x",
       headers: { "content-type": "text/plain", "x-agent-ui-filename": "%E0%A4%A" },
@@ -157,5 +237,202 @@ describe("createAgentUiLocalUploadHandler", () => {
     await expect(readFile(result.path ?? "", "utf8")).resolves.toBe("image");
     await upload.cleanup();
     await expect(stat(upload.directory)).rejects.toThrow();
+  });
+});
+
+describe("createAgentUiLocalMediaHelper", () => {
+  it("returns structured local media metadata and serves registered asset IDs", async () => {
+    const directory = join(tmpdir(), `agent-ui-media-test-${Date.now()}`);
+    const helper = createAgentUiLocalMediaHelper({
+      createAssetId: () => "asset-1",
+      directory,
+      maxBytes: 128,
+      sessionId: "session-a",
+    });
+    const server = createServer((request, response) => {
+      if (request.url?.startsWith("/agent-ui/assets/")) {
+        void helper.serveAssetHandler(request, response);
+        return;
+      }
+      void helper.handleUpload(request, response);
+    });
+    servers.push(server);
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const uploadResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "image-bytes",
+      headers: {
+        "content-type": "image/png",
+        "x-agent-ui-filename": encodeURIComponent("../unsafe image.png"),
+      },
+      method: "POST",
+    });
+
+    expect(uploadResponse.status).toBe(200);
+    const result = (await uploadResponse.json()) as {
+      id?: string;
+      mimeType?: string;
+      name?: string;
+      path?: string;
+      previewUrl?: string;
+      redactedPath?: string;
+      sizeBytes?: number;
+      url?: string;
+    };
+    expect(result).toMatchObject({
+      displayName: "unsafe_image.png",
+      id: "asset-1",
+      mimeType: "image/png",
+      name: "unsafe_image.png",
+      previewUrl: "/agent-ui/assets/asset-1",
+      redactedPath: "[agent-ui-local-media]/unsafe_image.png",
+      sizeBytes: 11,
+      url: "/agent-ui/assets/asset-1",
+    });
+    expect(result.path).toContain(helper.directory);
+    expect(result.url).not.toContain(result.path ?? "");
+    expect(helper.resolveAssetPath("asset-1")).toBe(result.path);
+
+    const assetResponse = await fetch(`http://127.0.0.1:${address.port}${result.url}`);
+    expect(assetResponse.status).toBe(200);
+    expect(assetResponse.headers.get("content-type")).toBe("image/png");
+    expect(assetResponse.headers.get("x-content-type-options")).toBe("nosniff");
+    await expect(assetResponse.text()).resolves.toBe("image-bytes");
+
+    const assetHeadResponse = await fetch(`http://127.0.0.1:${address.port}${result.url}`, {
+      method: "HEAD",
+    });
+    expect(assetHeadResponse.status).toBe(200);
+    expect(assetHeadResponse.headers.get("x-content-type-options")).toBe(
+      "nosniff",
+    );
+  });
+
+  it("serves only registered asset IDs and supports host admission checks", async () => {
+    const helper = createAgentUiLocalMediaHelper({
+      createAssetId: () => "asset-denied",
+      directory: join(tmpdir(), `agent-ui-media-deny-${Date.now()}`),
+      serveAsset: {
+        admitRequest: ({ request }) => request.headers["x-agent-ui-session"] === "allowed",
+      },
+    });
+    const server = createServer((request, response) => {
+      if (request.url?.startsWith("/agent-ui/assets/")) {
+        void helper.serveAssetHandler(request, response);
+        return;
+      }
+      void helper.handleUpload(request, response);
+    });
+    servers.push(server);
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const uploadResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "secret",
+      method: "POST",
+    });
+    const asset = (await uploadResponse.json()) as { url: string };
+
+    const denied = await fetch(`http://127.0.0.1:${address.port}${asset.url}`);
+    expect(denied.status).toBe(403);
+    await denied.text();
+
+    const traversal = await fetch(
+      `http://127.0.0.1:${address.port}/agent-ui/assets/${encodeURIComponent("../secret")}`,
+    );
+    expect(traversal.status).toBe(404);
+    await traversal.text();
+
+    const admitted = await fetch(`http://127.0.0.1:${address.port}${asset.url}`, {
+      headers: { "x-agent-ui-session": "allowed" },
+    });
+    expect(admitted.status).toBe(200);
+    await expect(admitted.text()).resolves.toBe("secret");
+  });
+
+  it("releases a preview asset by ID and removes the temporary file", async () => {
+    const helper = createAgentUiLocalMediaHelper({
+      createAssetId: () => "asset-release",
+      directory: join(tmpdir(), `agent-ui-media-release-${Date.now()}`),
+    });
+    const server = createServer((request, response) => {
+      if (request.url?.startsWith("/agent-ui/assets/")) {
+        void helper.serveAssetHandler(request, response);
+        return;
+      }
+      void helper.handleUpload(request, response);
+    });
+    servers.push(server);
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const uploadResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "preview",
+      method: "POST",
+    });
+    const asset = (await uploadResponse.json()) as { id: string; path: string; url: string };
+    await expect(readFile(asset.path, "utf8")).resolves.toBe("preview");
+
+    await expect(helper.releaseAsset(asset.id)).resolves.toBe(true);
+    expect(helper.getAsset(asset.id)).toBeUndefined();
+    expect(helper.resolveAssetPath(asset.id)).toBeUndefined();
+    await expect(stat(asset.path)).rejects.toThrow();
+
+    const released = await fetch(`http://127.0.0.1:${address.port}${asset.url}`);
+    expect(released.status).toBe(404);
+    await released.text();
+    await expect(helper.releaseAsset(asset.id)).resolves.toBe(false);
+  });
+
+  it("does not let public asset metadata mutation redirect release deletion", async () => {
+    let admissionAsset: { path: string } | undefined;
+    const helper = createAgentUiLocalMediaHelper({
+      createAssetId: () => "asset-mutation",
+      directory: join(tmpdir(), `agent-ui-media-mutation-${Date.now()}`),
+      serveAsset: {
+        admitRequest: ({ asset }) => {
+          admissionAsset = asset;
+          return true;
+        },
+      },
+    });
+    const server = createServer((request, response) => {
+      if (request.url?.startsWith("/agent-ui/assets/")) {
+        void helper.serveAssetHandler(request, response);
+        return;
+      }
+      void helper.handleUpload(request, response);
+    });
+    servers.push(server);
+    await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const uploadResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "registered",
+      method: "POST",
+    });
+    const asset = (await uploadResponse.json()) as { id: string; path: string; url: string };
+    const substitutePath = join(helper.directory, "substitute.txt");
+    await writeFile(substitutePath, "substitute");
+
+    const publicAsset = helper.getAsset(asset.id);
+    if (!publicAsset) throw new Error("missing public asset");
+    publicAsset.path = substitutePath;
+    expect(helper.resolveAssetPath(asset.id)).toBe(asset.path);
+
+    const served = await fetch(`http://127.0.0.1:${address.port}${asset.url}`);
+    expect(served.status).toBe(200);
+    await served.text();
+    if (!admissionAsset) throw new Error("missing admission asset");
+    admissionAsset.path = substitutePath;
+
+    await expect(helper.releaseAsset(asset.id)).resolves.toBe(true);
+    await expect(stat(asset.path)).rejects.toThrow();
+    await expect(readFile(substitutePath, "utf8")).resolves.toBe("substitute");
   });
 });

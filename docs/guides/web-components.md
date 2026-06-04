@@ -22,8 +22,9 @@ The element accepts JavaScript properties:
 
 - `transport`
 - `initialState`
-- `slots`
+- `components`
 - `agentOptions`
+- `agentOptions.components`
 - `agentOptions.className`
 
 `agentOptions` is a combined property for the same values. `agentOptions.className`

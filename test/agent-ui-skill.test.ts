@@ -70,6 +70,23 @@ describe("public Agent UI skill", () => {
     expect(actualReferences.sort()).toEqual(expectedAgentUiReferences);
   });
 
+  it("keeps Codex app metadata explicit and portable", async () => {
+    const metadataPath = join(publicSkillRoot, "agent-ui", "agents", "openai.yaml");
+    const text = await readFile(metadataPath, "utf8");
+    const metadata = parseOpenAiMetadata(text);
+
+    expect(metadata.interface).toEqual({
+      brand_color: "#2563EB",
+      default_prompt:
+        "Use the Agent UI skill to integrate or debug Agent UI in this host application.",
+      display_name: "Agent UI",
+      short_description:
+        "Integrate reusable Codex App Server UI components in host applications.",
+    });
+    expect(metadata.policy).toEqual({ allow_implicit_invocation: true });
+    expect(metadata.dependencies).toBeUndefined();
+  });
+
   it("keeps public skill guidance aligned with Agent UI public APIs", async () => {
     const allSkillText = await readSkillTreeText(join(publicSkillRoot, "agent-ui"));
 
@@ -143,6 +160,59 @@ function parseFrontmatter(text: string): Record<string, string> {
     fields[field[1]] = field[2];
   }
   return fields;
+}
+
+function parseOpenAiMetadata(text: string): {
+  dependencies?: unknown;
+  interface?: Record<string, string>;
+  policy?: Record<string, boolean>;
+} {
+  const metadata: {
+    dependencies?: unknown;
+    interface?: Record<string, string>;
+    policy?: Record<string, boolean>;
+  } = {};
+  let section: "dependencies" | "interface" | "policy" | undefined;
+
+  for (const [index, line] of text.split(/\r?\n/).entries()) {
+    if (line.trim() === "") continue;
+    const topLevel = line.match(/^([a-z_]+):$/);
+    if (topLevel) {
+      const key = topLevel[1];
+      expect(["dependencies", "interface", "policy"], `${index + 1}: ${line}`).toContain(
+        key,
+      );
+      section = key as typeof section;
+      if (section === "dependencies") metadata.dependencies = {};
+      else metadata[section] = {};
+      continue;
+    }
+
+    const field = line.match(/^ {2}([a-z_]+):\s*(.+)$/);
+    expect(field, `invalid metadata line ${index + 1}: ${line}`).not.toBeNull();
+    if (!field || !section) continue;
+
+    const [, key, rawValue] = field;
+    if (section === "dependencies") {
+      throw new Error(`unexpected dependency metadata at line ${index + 1}: ${line}`);
+    }
+    if (section === "policy") {
+      expect(["true", "false"], `${index + 1}: ${line}`).toContain(rawValue);
+      metadata.policy ??= {};
+      metadata.policy[key] = rawValue === "true";
+      continue;
+    }
+    metadata.interface ??= {};
+    metadata.interface[key] = parseYamlString(rawValue);
+  }
+
+  return metadata;
+}
+
+function parseYamlString(rawValue: string): string {
+  const quoted = rawValue.match(/^"([\s\S]*)"$/);
+  if (quoted) return quoted[1].replace(/\\"/g, '"');
+  return rawValue;
 }
 
 function localMarkdownTargets(markdown: string): string[] {

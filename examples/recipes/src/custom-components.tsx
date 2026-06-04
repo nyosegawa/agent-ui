@@ -27,9 +27,14 @@ export function CustomComponentsExample({ transport }: { transport: AgentTranspo
   return (
     <AgentProvider transport={transport}>
       <AgentChat
-        slots={{
-          renderApproval: (approval) => <CustomApprovalCard approval={approval} />,
-          renderItem: (item) => (
+        components={{
+          Approval: ({ approval, Default }) => (
+            <>
+              <CustomApprovalCard approval={approval} />
+              <Default approval={approval} />
+            </>
+          ),
+          Item: ({ item }) => (
             <article className={`custom-item custom-item-${item.kind}`}>
               <strong>{item.kind}</strong>
               <p>{item.text}</p>

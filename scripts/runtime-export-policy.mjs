@@ -3,11 +3,12 @@ export const representativeNamedExportsBySpecifier = {
     "createCodexSession",
     "createCodexStdioTransport",
     "createCodexWebSocketTransport",
-    "normalizeCodexServerMessage",
   ],
   "@nyosegawa/agent-ui-codex/clients": ["createCodexClients"],
   "@nyosegawa/agent-ui-codex/normalizer": [
     "normalizeCodexServerMessage",
+    "normalizeThreadLoadedListResponse",
+    "normalizeThreadListResponse",
     "normalizeThreadReadResponse",
     "normalizeThreadResumeResponse",
   ],

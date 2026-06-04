@@ -1,28 +1,44 @@
-# Installable Agent UI Skill
+# Agent UI Skill
 
-Agent UI publishes a user-installable Agent Skill at
-`skills/agent-ui/SKILL.md`. The skill helps external users integrate, customize,
-debug, and upgrade Agent UI in Codex App Server host applications.
+Agent UI keeps a reusable Agent Skill source at `skills/agent-ui/SKILL.md`.
+The skill helps external users integrate, customize, debug, and upgrade Agent UI
+in Codex App Server host applications.
 
-## Install
+Codex discovers checked-in repository skills from `.agents/skills`, not from
+`skills/`. Treat `skills/agent-ui` as the distributable skill source for users
+and plugin packaging. Repository-maintainer skills stay under `.agents/skills`.
 
-Use either `gh skill install` or `npx skills add` after reviewing the source:
+## Current Codex Model
 
-```sh
-gh skill install nyosegawa/agent-ui agent-ui --agent cursor --scope project
-gh skill install nyosegawa/agent-ui skills/agent-ui/SKILL.md --agent codex --scope project
-npx skills add nyosegawa/agent-ui --skill agent-ui -a cursor -y
-```
+The latest Codex skill model is:
 
-For a local checkout during development:
+- A skill is a directory with `SKILL.md`, optional references, optional scripts,
+  and optional `agents/openai.yaml` metadata.
+- `SKILL.md` must include `name` and `description`; Codex initially loads only
+  the skill name, description, and file path, then reads the full instructions
+  through progressive disclosure.
+- Codex scans repository skills from `.agents/skills` from the current working
+  directory up to the repository root, user skills from `$HOME/.agents/skills`,
+  admin skills from `/etc/codex/skills`, and bundled system skills.
+- Direct skill folders are for local authoring and repo-scoped workflows.
+  Reusable distribution should use a plugin when the skill is shared beyond one
+  local checkout or bundled with apps/MCP.
+- Local experimentation should use `$skill-installer`; reusable distribution
+  should prefer plugins.
 
-```sh
-gh skill install . agent-ui --from-local --agent cursor --scope project --force
-npx skills add . --skill agent-ui -a cursor -y
-```
+## Distribution
 
-The canonical source layout is `skills/*/SKILL.md`. Do not move public skills to
-`.agents/skills`; that directory is reserved for repository-maintainer skills.
+For local testing, ask Codex to use `$skill-installer` against this checkout or
+copy the skill into an isolated user-skill directory. Do not overwrite a real
+user's installed skills during smoke tests.
+
+For external reuse, package `skills/agent-ui` in an Agent UI plugin. A plugin
+can carry the skill plus future app or MCP integrations without making those
+integrations part of Agent UI core.
+
+The skill also includes `skills/agent-ui/agents/openai.yaml` so the Codex app can
+show stable UI metadata and keep implicit invocation enabled for Agent UI
+integration prompts.
 
 ## Shape
 
@@ -73,12 +89,5 @@ bun run lint
 bun run test
 ```
 
-Manual distribution checks should cover both installers when possible:
-
-```sh
-gh skill install . agent-ui --from-local --agent cursor --scope project --force
-npx skills add . --skill agent-ui -a cursor -y
-```
-
-Use temporary repositories or isolated home directories for installer smoke
-tests so local user skills are not overwritten accidentally.
+For distribution-sensitive changes, also smoke the plugin or isolated local
+skill install path that will be documented for users.

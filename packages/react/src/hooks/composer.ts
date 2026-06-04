@@ -1,30 +1,102 @@
 import {
   selectLatestRunningTurnId,
+  selectRunSettings,
   selectThread,
-  selectThreadRegistry,
+  type AgentOperationView,
   type ThreadId,
 } from "@nyosegawa/agent-ui-core";
-import { useCallback, useMemo, useState } from "react";
+import type { CodexStable } from "@nyosegawa/agent-ui-codex/stable-types";
+import {
+  useCallback,
+  useMemo,
+  useState,
+} from "react";
 import type { AgentUserInput } from "../agent-input";
 import {
   useAgentComposerQueueStore,
   type QueuedFollowUpAttachment,
 } from "../composer-queue";
-import { useAgentI18n, type AgentI18nKey } from "../i18n";
+import { useAgentI18n } from "../i18n";
 import { useAgentContext } from "../provider";
+import {
+  codexThreadStartParams,
+  codexTurnStartOptions,
+  type ThreadStartOptions,
+} from "../request-options";
+import { rawThreadId, threadProjectPath } from "../thread-history";
+import { useCodexSession } from "./codex-session";
+import {
+  forgetFirstMessagePayload,
+  rememberFirstMessagePayload,
+  useFirstMessageOperationController,
+  type FirstMessageOperationIds,
+} from "./first-message-operations";
+import {
+  composerActionError,
+  followUpSendPreflightError,
+} from "./composer-errors";
+import type {
+  AgentComposerController,
+  AgentComposerDisabledReason,
+  AgentComposerSubmitMode,
+} from "./composer-types";
+import { AGENT_EXECUTION_MODES } from "./run-settings";
 import { useAgentTurn } from "./turn";
-import { summarizeUserInput, textAgentInput } from "./turn-input";
+import {
+  codexReasoningEffort,
+  normalizeTurnInput,
+  summarizeUserInput,
+  textAgentInput,
+} from "./turn-input";
 
-export function useAgentComposer(threadId?: ThreadId) {
+export interface InternalAgentComposerController extends AgentComposerController {
+  cancelOperation: (operationId: string) => void;
+  getOperation: (operationId: string) => AgentOperationView | undefined;
+  operationsById: Record<string, AgentOperationView>;
+  retryOperation: (operationId: string) => Promise<void>;
+  startWithMessage: (
+    input: string | AgentUserInput[],
+    params?: ThreadStartOptions,
+  ) => Promise<CodexStable.v2.ThreadStartResponse>;
+}
+
+export function useAgentComposer(threadId?: ThreadId): AgentComposerController {
+  return useAgentComposerController(threadId);
+}
+
+export function useAgentComposerController(
+  threadId?: ThreadId,
+): AgentComposerController {
+  const {
+    cancelOperation,
+    getOperation,
+    operationsById,
+    retryOperation,
+    startWithMessage,
+    ...composer
+  } = useInternalAgentComposerController(threadId);
+  void cancelOperation;
+  void getOperation;
+  void operationsById;
+  void retryOperation;
+  void startWithMessage;
+  return composer;
+}
+
+export function useInternalAgentComposerController(
+  threadId?: ThreadId,
+): InternalAgentComposerController {
   const { t } = useAgentI18n();
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInterrupting, setIsInterrupting] = useState(false);
   const { dispatch, state } = useAgentContext();
+  const codex = useCodexSession();
   const composerQueue = useAgentComposerQueueStore();
-  const resolvedThreadId = threadId ?? selectThreadRegistry(state).activeThreadId;
+  const resolvedThreadId = threadId ?? state.threadLifecycle.activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;
+  const runSettings = selectRunSettings(state);
   const { interruptTurn, startTurn, steerTurn } = useAgentTurn(threadId);
   const activeTurnId = resolvedThreadId
     ? selectLatestRunningTurnId(state, resolvedThreadId)
@@ -102,6 +174,178 @@ export function useAgentComposer(threadId?: ThreadId) {
     },
     [buildInput, isRunning, queueFollowUp, startTurn, t],
   );
+  const startWithMessage = useCallback(
+    async (input: string | AgentUserInput[], params?: ThreadStartOptions) => {
+      const inputItems = typeof input === "string" ? [textAgentInput(input)] : input;
+      const normalizedInput = normalizeTurnInput(inputItems);
+      const promptText = summarizeUserInput(inputItems, t);
+      const pending = createFirstMessageOperationIds();
+      let canonicalThreadId: string | undefined;
+      rememberFirstMessagePayload({
+        displayText: promptText,
+        input,
+        normalizedInput,
+        params,
+        pending,
+      });
+      setError(undefined);
+      setIsSubmitting(true);
+      try {
+        dispatch({
+          operation: {
+            id: pending.operationId,
+            kind: "firstMessage",
+            status: "pending",
+            threadId: pending.threadId,
+          },
+          status: "running",
+          thread: {
+            ephemeral: true,
+            id: pending.threadId,
+            name: promptText,
+            path: runSettings.cwd,
+            raw: {
+              optimistic: true,
+              operationId: pending.operationId,
+            },
+          },
+          turns: [
+            {
+              id: pending.turnId,
+              raw: {
+                optimistic: true,
+                operationId: pending.operationId,
+              },
+              status: "running",
+              threadId: pending.threadId,
+            },
+          ],
+          type: "thread/optimistic/created",
+        });
+        dispatch({
+          item: {
+            id: pending.userMessageId,
+            kind: "userMessage",
+            raw: {
+              clientUserMessageId: pending.userMessageId,
+              optimistic: true,
+              operationId: pending.operationId,
+            },
+            status: "inProgress",
+            text: promptText,
+            threadId: pending.threadId,
+            turnId: pending.turnId,
+          },
+          threadId: pending.threadId,
+          turnId: pending.turnId,
+          type: "item/started",
+        });
+        const result = await codex.thread.start({
+          cwd: runSettings.cwd,
+          model: runSettings.modelId,
+          ...codexThreadStartParams(params),
+        });
+        const resultRecord = asRecord(result) ?? {};
+        const rawThread = resultRecord.thread ?? result;
+        const rawThreadRecord = asRecord(rawThread) ?? ({} as Record<string, unknown>);
+        const nextThreadId = rawThreadId(rawThreadRecord);
+        if (!nextThreadId) throw new Error("thread/start returned no thread id");
+        canonicalThreadId = nextThreadId;
+        rememberFirstMessagePayload({
+          displayText: promptText,
+          input,
+          normalizedInput,
+          params,
+          pending,
+          threadId: nextThreadId,
+        });
+        dispatch({
+          status: "ready",
+          thread: {
+            ephemeral: Boolean(rawThreadRecord.ephemeral),
+            id: nextThreadId,
+            name: stringValue(rawThreadRecord.name),
+            path: threadProjectPath(rawThreadRecord),
+            raw: rawThread,
+          },
+          type: "thread/started",
+        });
+        syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
+        dispatch({
+          canonicalThreadId: nextThreadId,
+          threadId: pending.threadId,
+          type: "thread/reconciled",
+        });
+        const executionMode = AGENT_EXECUTION_MODES.find(
+          (mode) => mode.id === runSettings.executionMode,
+        );
+        await codex.turn.start({
+          clientUserMessageId: pending.userMessageId,
+          cwd: runSettings.cwd,
+          effort: codexReasoningEffort(runSettings.effort),
+          input: normalizedInput,
+          model: runSettings.modelId,
+          ...codexTurnStartOptions(executionMode?.turnParams),
+          threadId: nextThreadId,
+        });
+        dispatch({
+          operation: {
+            id: pending.operationId,
+            kind: "firstMessage",
+            status: "succeeded",
+            threadId: nextThreadId,
+          },
+          type: "thread/operation/updated",
+        });
+        forgetFirstMessagePayload(pending.operationId);
+        setValue("");
+        return result;
+      } catch (caught) {
+        const error = agentError(caught);
+        if (!canonicalThreadId) {
+          dispatch({
+            operationId: pending.operationId,
+            threadId: pending.threadId,
+            type: "thread/optimistic/rolledBack",
+          });
+          forgetFirstMessagePayload(pending.operationId);
+        } else {
+          dispatch({
+            itemId: pending.userMessageId,
+            error,
+            threadId: canonicalThreadId,
+            turnId: pending.turnId,
+            type: "item/failed",
+          });
+          dispatch({
+            operation: {
+              error,
+              id: pending.operationId,
+              kind: "firstMessage",
+              status: "failed",
+              threadId: canonicalThreadId,
+            },
+            type: "thread/operation/updated",
+          });
+        }
+        setError(composerActionError(caught, "start", t));
+        throw caught;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [
+      codex,
+      dispatch,
+      runSettings.cwd,
+      runSettings.effort,
+      runSettings.executionMode,
+      runSettings.modelId,
+      t,
+    ],
+  );
+  const { cancelOperation, getOperation, operationsById, retryOperation } =
+    useFirstMessageOperationController(startWithMessage);
   const scopedQueuedFollowUps = useMemo(
     () =>
       resolvedThreadId
@@ -118,6 +362,34 @@ export function useAgentComposer(threadId?: ThreadId) {
         .map((followUp) => followUp.id),
     [composerQueue.sendingFollowUpIds, scopedQueuedFollowUps],
   );
+  const failedPendingMessages = useMemo(
+    () =>
+      resolvedThreadId
+        ? Object.values(operationsById)
+            .filter(
+              (operation) =>
+                operation.kind === "firstMessage" &&
+                operation.status === "failed" &&
+                operation.threadId === resolvedThreadId,
+            )
+            .map((operation) => ({
+              error: operation.error?.message,
+              operationId: operation.id,
+              threadId: resolvedThreadId,
+            }))
+        : [],
+    [operationsById, resolvedThreadId],
+  );
+  const submitMode: AgentComposerSubmitMode = isRunning ? "stop" : "send";
+  const hasTextInput = value.trim().length > 0;
+  const disabledReason: AgentComposerDisabledReason | undefined = isSubmitting
+    ? "submitting"
+    : isInterrupting
+      ? "interrupting"
+      : !isRunning && !hasTextInput
+        ? "empty"
+        : undefined;
+  const canSubmit = !disabledReason || disabledReason === "empty" ? isRunning || hasTextInput : false;
   const sendQueuedFollowUp = useCallback(
     async (id: string) => {
       const item = composerQueue.queuedFollowUps.find(
@@ -186,12 +458,19 @@ export function useAgentComposer(threadId?: ThreadId) {
   }, [activeTurnId, dispatch, interruptTurn, resolvedThreadId, t]);
   return {
     activeTurnId,
+    canSubmit,
+    cancelOperation,
+    cancelFailedPendingMessage: cancelOperation,
+    disabledReason,
     editQueuedFollowUp,
     error,
+    failedPendingMessages,
     followUpErrors: composerQueue.followUpErrors,
+    getOperation,
     isInterrupting,
     isRunning,
     isSubmitting,
+    operationsById,
     queuedFollowUps: scopedQueuedFollowUps,
     removeQueuedFollowUp,
     sendQueuedFollowUp,
@@ -200,47 +479,68 @@ export function useAgentComposer(threadId?: ThreadId) {
     setValue,
     steerNow,
     stop,
+    submitMode,
     submit,
+    retryFailedPendingMessage: retryOperation,
+    retryOperation,
+    startWithMessage,
     value,
   };
 }
 
 export type { QueuedFollowUp, QueuedFollowUpAttachment } from "../composer-queue";
+export type {
+  AgentComposerController,
+  AgentComposerDisabledReason,
+  AgentComposerFailedPendingMessage,
+  AgentComposerSubmitMode,
+} from "./composer-types";
 
-export type AgentComposerController = ReturnType<typeof useAgentComposer>;
-
-function composerActionError(
-  caught: unknown,
-  action: "interrupt" | "start" | "steer",
-  t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string,
+function syncRunSettingsFromRawThread(
+  dispatch: ReturnType<typeof useAgentContext>["dispatch"],
+  rawThread: Record<string, unknown>,
 ) {
-  const message = caught instanceof Error ? caught.message : String(caught);
-  if (action === "steer") {
-    if (/not steerable|non.?steerable|review|compact/i.test(message)) {
-      return t("composer.cannotAcceptFollowUp");
-    }
-    if (/expected.*turn|mismatch/i.test(message)) {
-      return t("composer.followUpTurnChangedRefresh");
-    }
-    if (/no active turn/i.test(message)) {
-      return t("composer.followUpNoActiveTurn");
-    }
-    return t("composer.couldNotSendAdditional", { message });
+  const cwd = threadProjectPath(rawThread);
+  const modelId = stringValue(rawThread.modelId) ?? stringValue(rawThread.model);
+  const effort = stringValue(rawThread.effort) ?? stringValue(rawThread.reasoningEffort);
+  if (cwd || modelId || effort) {
+    dispatch({
+      cwd,
+      effort,
+      modelId,
+      type: "runSettings/updated",
+    });
   }
-  if (action === "interrupt") return t("composer.couldNotStop", { message });
-  return t("composer.couldNotStart", { message });
 }
 
-function followUpSendPreflightError(
-  activeTurnId: string | undefined,
-  expectedTurnId: string | undefined,
-  t: (key: AgentI18nKey) => string,
-): string | undefined {
-  if (!activeTurnId || !expectedTurnId) {
-    return t("composer.followUpNoActiveTurn");
-  }
-  if (activeTurnId !== expectedTurnId) {
-    return t("composer.followUpTurnChanged");
-  }
-  return undefined;
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" ? value : undefined;
+}
+
+function agentError(caught: unknown) {
+  return {
+    message: caught instanceof Error ? caught.message : String(caught),
+  };
+}
+
+function createFirstMessageOperationIds(): FirstMessageOperationIds {
+  const id = randomOperationSuffix();
+  return {
+    operationId: `first-message-${id}`,
+    threadId: `pending-thread-${id}`,
+    turnId: `pending-turn-${id}`,
+    userMessageId: `pending-user-message-${id}`,
+  };
+}
+
+function randomOperationSuffix() {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid) return uuid;
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }

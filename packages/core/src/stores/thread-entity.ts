@@ -5,7 +5,14 @@ import type {
   ThreadStatus,
   ThreadState,
 } from "../state";
-import { threadIndexStore } from "./thread-index";
+import {
+  threadActivityFromStatus,
+  threadAvailabilityFromStatus,
+  threadLifecycleStore,
+  threadMetadataFromThread,
+  threadStorageFromThread,
+} from "./thread-lifecycle";
+import { canonicalThreadId } from "../thread-alias";
 
 export type ThreadEntityState = Record<ThreadId, ThreadState>;
 
@@ -42,9 +49,14 @@ export function createInitialThreadEntityState(): ThreadEntityState {
 
 export function createThreadState(thread: AgentThread): ThreadState {
   return {
+    activity: "idle",
+    availability: "available",
+    id: thread.id,
+    metadata: threadMetadataFromThread(thread),
+    operations: {},
     orderedTurnIds: [],
-    registryStatus: "loaded",
     status: "loaded",
+    storage: threadStorageFromThread(thread),
     thread,
     turns: {},
   };
@@ -62,13 +74,27 @@ export function updateThreadEntity(
   threadId: ThreadId,
   updater: (thread: ThreadState) => ThreadState,
 ): AgentSessionState {
-  const thread = state.threads[threadId];
+  const canonicalId = canonicalThreadId(state, threadId);
+  const thread = state.threads[canonicalId];
   if (!thread) return state;
+  const updated = updater(thread);
+  const nextId = updated.id;
+  if (nextId !== canonicalId) {
+    const { [canonicalId]: _removed, ...rest } = state.threads;
+    void _removed;
+    return {
+      ...state,
+      threads: {
+        ...rest,
+        [nextId]: updated,
+      },
+    };
+  }
   return {
     ...state,
     threads: {
       ...state.threads,
-      [threadId]: updater(thread),
+      [canonicalId]: updated,
     },
   };
 }
@@ -79,28 +105,27 @@ export function setThreadStatus(
   status: ThreadStatus,
   options: { onlyIf?: ThreadStatus } = {},
 ): AgentSessionState {
-  const thread = state.threads[threadId];
+  const canonicalId = canonicalThreadId(state, threadId);
+  const thread = state.threads[canonicalId];
   if (!thread || (options.onlyIf !== undefined && thread.status !== options.onlyIf)) {
     return state;
   }
-  const registryStatus = threadIndexStore.classifyStatus(
-    status,
-    thread.orderedTurnIds
-      .map((turnId) => thread.turns[turnId]?.turn)
-      .filter((turn) => turn != null),
-  );
+  const activity = threadActivityFromStatus(status);
+  const availability = threadAvailabilityFromStatus(status);
   return {
     ...state,
-    threadRegistry: threadIndexStore.upsert(
-      state.threadRegistry,
-      threadId,
-      registryStatus,
-    ),
+    threadLifecycle: threadLifecycleStore.upsertThread(state.threadLifecycle, {
+      ...thread,
+      activity,
+      availability,
+      status,
+    }),
     threads: {
       ...state.threads,
-      [threadId]: {
+      [canonicalId]: {
         ...thread,
-        registryStatus,
+        activity,
+        availability,
         status,
       },
     },
@@ -109,13 +134,12 @@ export function setThreadStatus(
 
 export function pruneThreadSnapshots(state: AgentSessionState): AgentSessionState {
   const retainedThreadIds = new Set<ThreadId>([
-    ...state.threadRegistry.coldThreadIds,
-    ...state.threadRegistry.previewThreadIds,
-    ...state.threadRegistry.liveThreadIds,
-    ...state.threadRegistry.loadedThreadIds,
+    ...Object.values(state.threadLifecycle.collections).flatMap(
+      (collection) => collection.ids,
+    ),
   ]);
-  if (state.threadRegistry.activeThreadId) {
-    retainedThreadIds.add(state.threadRegistry.activeThreadId);
+  if (state.threadLifecycle.activeThreadId) {
+    retainedThreadIds.add(state.threadLifecycle.activeThreadId);
   }
   for (const request of Object.values(state.serverRequestQueue.byId)) {
     if (request.threadId) retainedThreadIds.add(request.threadId);
@@ -128,12 +152,20 @@ export function pruneThreadSnapshots(state: AgentSessionState): AgentSessionStat
       threads[threadId] = thread;
       continue;
     }
-    if (thread.registryStatus === "live") {
+    if (thread.activity === "running" || thread.activity === "waitingForInput") {
       threads[threadId] = thread;
       retainedThreadIds.add(threadId);
       continue;
     }
     changed = true;
   }
-  return changed ? { ...state, threads } : state;
+  if (!changed) return state;
+  return {
+    ...state,
+    threadLifecycle: threadLifecycleStore.removeThreadIds(
+      state.threadLifecycle,
+      retainedThreadIds,
+    ),
+    threads,
+  };
 }

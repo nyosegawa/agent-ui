@@ -9,9 +9,12 @@ import {
   textInput,
 } from "@nyosegawa/agent-ui-codex/request-builders";
 import {
+  AgentChat,
   AgentApprovalQueue,
   AgentComposer,
+  AgentMessageList,
   AgentProvider,
+  AgentStartComposer,
   AgentStatusDetails,
   AgentStatusSummary,
   AgentUsagePanel,
@@ -22,6 +25,24 @@ import {
   fixtureModels,
   fixtureRateLimits,
 } from "../fixtures/demo-state";
+
+function resolvedCloseupImage(file: File) {
+  const path = `/tmp/agent-ui-closeup/${file.name}`;
+  return {
+    displayName: file.name,
+    input: localImageInput(path),
+    path,
+  };
+}
+
+function resolvedCloseupFile(file: File) {
+  const path = `/tmp/agent-ui-closeup/${file.name}`;
+  return {
+    displayName: file.name,
+    input: textInput(`Attached file: ${path}`),
+    path,
+  };
+}
 
 export function ComponentCloseupGallery() {
   return (
@@ -47,6 +68,7 @@ export function ComponentCloseupGallery() {
         <CloseupApprovalCommand />
         <CloseupApprovalUserInput />
         <CloseupCommandBlock />
+        <CloseupCustomCommandBlock />
         <CloseupDiffBlock />
         <CloseupSidebarSearch />
         <CloseupUsageChips />
@@ -73,6 +95,11 @@ export function CriticalInteractionStates() {
       <div className="aui-closeup-grid">
         <CloseupApprovalQueue />
         <CloseupComposerWithMentions />
+        <CloseupEmptyStateMobile />
+        <CloseupStartComposer />
+        <CloseupSidebarDrawerSearch />
+        <CloseupLocalMediaFallback />
+        <CloseupOptimisticPendingMessage />
         <CloseupMobileChatShell />
         <CloseupBannerStack />
       </div>
@@ -113,12 +140,20 @@ function CloseupComposerProvider({ children }: { children: ReactNode }) {
     };
     state.usage.accountRateLimits = fixtureRateLimits();
     state.models = { models: fixtureModels(), selectedModelId: "fixture-demo-model" };
-    state.threadRegistry.activeThreadId = "thread-closeup";
-    state.threadRegistry.liveThreadIds = ["thread-closeup"];
+    state.threadLifecycle.activeThreadId = "thread-closeup";
+    state.threadLifecycle.collections[state.threadLifecycle.defaultCollectionKey]!.ids = ["thread-closeup"];
     state.threads["thread-closeup"] = {
+      activity: "idle",
+      availability: "available",
+      id: "thread-closeup",
+      metadata: {
+        cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+        title: "Composer close-up",
+      },
+      operations: {},
       orderedTurnIds: [],
-      registryStatus: "live",
       status: "loaded",
+      storage: "unknown",
       thread: {
         id: "thread-closeup",
         name: "Composer close-up",
@@ -187,9 +222,7 @@ function CloseupComposer() {
         <AgentComposer
           onRequestAppMention={sampleAppMention}
           onRequestPluginMention={samplePluginMention}
-          resolveLocalAttachment={(file) =>
-            localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
-          }
+          resolveLocalAttachment={resolvedCloseupImage}
           threadId="thread-closeup"
         />
       </CloseupComposerProvider>
@@ -209,9 +242,7 @@ function CloseupComposerFocused() {
           <AgentComposer
             onRequestAppMention={sampleAppMention}
             onRequestPluginMention={samplePluginMention}
-            resolveLocalAttachment={(file) =>
-              localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
-            }
+            resolveLocalAttachment={resolvedCloseupImage}
             threadId="thread-closeup"
           />
         </div>
@@ -255,9 +286,7 @@ function CloseupComposerMobile() {
         <AgentComposer
           onRequestAppMention={sampleAppMention}
           onRequestPluginMention={samplePluginMention}
-          resolveLocalAttachment={(file) =>
-            localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
-          }
+          resolveLocalAttachment={resolvedCloseupImage}
           threadId="thread-closeup"
         />
       </CloseupComposerProvider>
@@ -308,9 +337,7 @@ function CloseupComposerPastedImage() {
             files={[{ name: "ui-review.png", type: "image/png" }]}
           />
           <AgentComposer
-            resolveLocalAttachment={(file) =>
-              localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
-            }
+            resolveLocalAttachment={resolvedCloseupImage}
             threadId="thread-closeup"
           />
         </div>
@@ -336,9 +363,7 @@ function CloseupComposerAttachments() {
           />
           <AgentComposer
             resolveLocalAttachment={(file, kind) =>
-              kind === "image"
-                ? localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
-                : textInput(`Attached file: /tmp/agent-ui-closeup/${file.name}`)
+              kind === "image" ? resolvedCloseupImage(file) : resolvedCloseupFile(file)
             }
             threadId="thread-closeup"
           />
@@ -473,12 +498,17 @@ function CloseupMobileChatShell() {
 function CloseupComposerWithMentions() {
   const initialState = useMemo(() => {
     const state = createInitialAgentState();
-    state.threadRegistry.activeThreadId = "thread-mentions";
-    state.threadRegistry.liveThreadIds = ["thread-mentions"];
+    state.threadLifecycle.activeThreadId = "thread-mentions";
+    state.threadLifecycle.collections[state.threadLifecycle.defaultCollectionKey]!.ids = ["thread-mentions"];
     state.threads["thread-mentions"] = {
+      activity: "idle",
+      availability: "available",
+      id: "thread-mentions",
+      metadata: { title: "Mentions composer" },
+      operations: {},
       orderedTurnIds: [],
-      registryStatus: "live",
       status: "loaded",
+      storage: "unknown",
       thread: { id: "thread-mentions", name: "Mentions composer" },
       turns: {},
     };
@@ -497,11 +527,139 @@ function CloseupComposerWithMentions() {
             return appCalled.current % 2 === 1 ? sampleAppMention() : sampleAppMentionAlt();
           }}
           onRequestPluginMention={samplePluginMention}
-          resolveLocalAttachment={(file) =>
-            localImageInput(`/tmp/agent-ui-closeup/${file.name}`)
-          }
+          resolveLocalAttachment={resolvedCloseupImage}
           threadId="thread-mentions"
         />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupEmptyStateMobile() {
+  const initialState = useMemo(() => createEmptyAuthenticatedState(), []);
+  return (
+    <CloseupFrame
+      title="Empty state · mobile"
+      caption="No active thread; first-run composer remains reachable."
+      tone="mobile"
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat sidebar={false} usage={false} />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupStartComposer() {
+  const initialState = useMemo(() => createEmptyAuthenticatedState(), []);
+  return (
+    <CloseupFrame
+      title="Start composer"
+      caption="Standalone first-message primitive with run settings."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentStartComposer onStartThread={() => undefined} />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupSidebarDrawerSearch() {
+  const initialState = useMemo(() => createSidebarDrawerState(), []);
+  const transport = useMemo(
+    () =>
+      new FakeAgentTransport({
+        onRequest(request) {
+          if (request.method === "thread/list") {
+            const searchTerm =
+              typeof request.params === "object" &&
+              request.params &&
+              "searchTerm" in request.params &&
+              typeof request.params.searchTerm === "string"
+                ? request.params.searchTerm.toLowerCase()
+                : "";
+            const data = sidebarDrawerThreads()
+              .filter(
+                (thread) =>
+                  !searchTerm || thread.name?.toLowerCase().includes(searchTerm),
+              )
+              .map(({ id, name, path }) => ({
+                id,
+                name,
+                path,
+                status: { type: "idle" },
+                turns: [],
+              }));
+            return { data };
+          }
+          if (request.method === "thread/read") {
+            return {
+              thread: {
+                id: "thread-side-select",
+                name: "Renderer audit",
+                path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+                status: { type: "idle" },
+                turns: [
+                  {
+                    id: "turn-side-select",
+                    items: [
+                      {
+                        id: "item-side-select-agent",
+                        text: "Renderer audit selected from the mobile drawer.",
+                        type: "agentMessage",
+                      },
+                    ],
+                    status: "completed",
+                  },
+                ],
+              },
+            };
+          }
+          return {};
+        },
+      }),
+    [],
+  );
+  return (
+    <CloseupFrame
+      title="Sidebar drawer search/select"
+      caption="Mobile drawer opens history, filters, and selects a thread."
+      tone="mobile"
+    >
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat usage={false} />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupLocalMediaFallback() {
+  const initialState = useMemo(() => createLocalMediaFallbackState(), []);
+  const thread = initialState.threads["thread-local-media-closeup"];
+  if (!thread) return null;
+  return (
+    <CloseupFrame
+      title="Local media fallback card"
+      caption="Missing host media URL renders a card, never a filesystem src."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList thread={thread} />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupOptimisticPendingMessage() {
+  const initialState = useMemo(() => createOptimisticPendingState(), []);
+  const thread = initialState.threads["pending-thread-closeup"];
+  if (!thread) return null;
+  return (
+    <CloseupFrame
+      title="Optimistic pending message"
+      caption="Public pending transcript state before server reconciliation."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList thread={thread} />
       </AgentProvider>
     </CloseupFrame>
   );
@@ -519,6 +677,205 @@ function CloseupApprovalQueue() {
       </AgentProvider>
     </CloseupFrame>
   );
+}
+
+function createEmptyAuthenticatedState(): AgentSessionState {
+  const state = createInitialAgentState();
+  state.account = {
+    account: { email: "fixture@example.com", planType: "pro" },
+    status: "authenticated",
+  };
+  state.usage.accountRateLimits = fixtureRateLimits();
+  state.models = { models: fixtureModels(), selectedModelId: "fixture-demo-model" };
+  return state;
+}
+
+function sidebarDrawerThreads() {
+  return [
+    {
+      id: "thread-side-closeup",
+      name: "Close-up review",
+      path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+    },
+    {
+      id: "thread-side-select",
+      name: "Renderer audit",
+      path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+    },
+  ];
+}
+
+function createSidebarDrawerState(): AgentSessionState {
+  const state = createEmptyAuthenticatedState();
+  state.threadLifecycle.activeThreadId = "thread-side-closeup";
+  state.threadLifecycle.collections[state.threadLifecycle.defaultCollectionKey]!.ids =
+    sidebarDrawerThreads().map((thread) => thread.id);
+  for (const thread of sidebarDrawerThreads()) {
+    const selected = thread.id === "thread-side-select";
+    state.threads[thread.id] = {
+      activity: "idle",
+      availability: "available",
+      id: thread.id,
+      metadata: { cwd: thread.path, title: thread.name },
+      operations: {},
+      orderedTurnIds: selected ? ["turn-side-select"] : [],
+      status: "loaded",
+      storage: "unknown",
+      thread,
+      turns: selected
+        ? {
+            "turn-side-select": {
+              blocksByItemId: {
+                "item-side-select-agent": {
+                  id: "item-side-select-agent",
+                  kind: "text",
+                  status: "completed",
+                  text: "Renderer audit selected from the mobile drawer.",
+                },
+              },
+              commandOutputByItemId: {},
+              filePatchByItemId: {},
+              itemOrder: ["item-side-select-agent"],
+              items: {
+                "item-side-select-agent": {
+                  id: "item-side-select-agent",
+                  kind: "agentMessage",
+                  status: "completed",
+                  text: "Renderer audit selected from the mobile drawer.",
+                  threadId: "thread-side-select",
+                  turnId: "turn-side-select",
+                },
+              },
+              streamingTextByItemId: {},
+              turn: {
+                id: "turn-side-select",
+                status: "completed",
+                threadId: "thread-side-select",
+              },
+            },
+          }
+        : {},
+    };
+  }
+  return state;
+}
+
+function createLocalMediaFallbackState(): AgentSessionState {
+  const state = createEmptyAuthenticatedState();
+  state.threadLifecycle.activeThreadId = "thread-local-media-closeup";
+  state.threadLifecycle.collections[state.threadLifecycle.defaultCollectionKey]!.ids = [
+    "thread-local-media-closeup",
+  ];
+  state.threads["thread-local-media-closeup"] = {
+    activity: "idle",
+    availability: "available",
+    id: "thread-local-media-closeup",
+    metadata: { title: "Local media fallback" },
+    operations: {},
+    orderedTurnIds: ["turn-local-media-closeup"],
+    status: "loaded",
+    storage: "unknown",
+    thread: { id: "thread-local-media-closeup", name: "Local media fallback" },
+    turns: {
+      "turn-local-media-closeup": {
+        blocksByItemId: {
+          "item-local-media": {
+            id: "item-local-media",
+            kind: "image",
+            path: "/tmp/agent-ui-closeups/private-screenshot.png",
+            status: "completed",
+          },
+        },
+        commandOutputByItemId: {},
+        filePatchByItemId: {},
+        itemOrder: ["item-local-media"],
+        items: {
+          "item-local-media": {
+            id: "item-local-media",
+            kind: "imageView",
+            status: "completed",
+            threadId: "thread-local-media-closeup",
+            turnId: "turn-local-media-closeup",
+          },
+        },
+        streamingTextByItemId: {},
+        turn: {
+          id: "turn-local-media-closeup",
+          status: "completed",
+          threadId: "thread-local-media-closeup",
+        },
+      },
+    },
+  };
+  return state;
+}
+
+function createOptimisticPendingState(): AgentSessionState {
+  const state = createEmptyAuthenticatedState();
+  state.threadLifecycle.activeThreadId = "pending-thread-closeup";
+  state.threadLifecycle.collections[state.threadLifecycle.defaultCollectionKey]!.ids = [
+    "pending-thread-closeup",
+  ];
+  state.threadLifecycle.operations["pending-operation-closeup"] = {
+    id: "pending-operation-closeup",
+    kind: "firstMessage",
+    status: "pending",
+    threadId: "pending-thread-closeup",
+  };
+  state.threads["pending-thread-closeup"] = {
+    activity: "running",
+    availability: "available",
+    id: "pending-thread-closeup",
+    metadata: {
+      title: "Pending first message",
+    },
+    operations: {},
+    orderedTurnIds: ["pending-turn-closeup"],
+    status: "running",
+    storage: "unknown",
+    thread: {
+      id: "pending-thread-closeup",
+      name: "Pending first message",
+      ephemeral: true,
+    },
+    turns: {
+      "pending-turn-closeup": {
+        blocksByItemId: {
+          "pending-user-message-closeup": {
+            id: "pending-user-message-closeup",
+            kind: "text",
+            status: "inProgress",
+            text: "Start the renderer audit and keep the first message visible.",
+          },
+        },
+        commandOutputByItemId: {},
+        filePatchByItemId: {},
+        itemOrder: ["pending-user-message-closeup"],
+        items: {
+          "pending-user-message-closeup": {
+            id: "pending-user-message-closeup",
+            kind: "userMessage",
+            raw: {
+              clientUserMessageId: "pending-user-message-closeup",
+              optimistic: true,
+              operationId: "pending-operation-closeup",
+            },
+            status: "inProgress",
+            text: "Start the renderer audit and keep the first message visible.",
+            threadId: "pending-thread-closeup",
+            turnId: "pending-turn-closeup",
+          },
+        },
+        streamingTextByItemId: {},
+        turn: {
+          id: "pending-turn-closeup",
+          status: "running",
+          threadId: "pending-thread-closeup",
+        },
+      },
+    },
+  };
+  return state;
 }
 
 function CloseupBannerStack() {
@@ -612,6 +969,45 @@ function CloseupCommandBlock() {
   );
 }
 
+function CloseupCustomCommandBlock() {
+  const initialState = useMemo(() => createCustomCommandRendererState(), []);
+  const thread = initialState.threads["thread-rich-transcript"];
+  const approval = initialState.serverRequestQueue.byId[
+    "string:approval-command-custom-renderer"
+  ];
+  if (!thread || !approval) return null;
+  return (
+    <CloseupFrame
+      title="Custom command block"
+      caption="Host renderer wraps the default command block; approval stays anchored."
+      tone="dark"
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList
+          approvalAnchors={{
+            renderApprovalAnchor: (request) => <AgentApprovalQueue approvals={[request]} />,
+            requests: [approval],
+          }}
+          components={{
+            blocks: {
+              commandExecution: ({ block, item, Default }) => (
+                <div
+                  className="aui-host-command-renderer"
+                  data-testid="custom-command-renderer"
+                >
+                  <strong>Host command renderer</strong>
+                  <Default block={block} item={item} />
+                </div>
+              ),
+            },
+          }}
+          thread={thread}
+        />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
 function CloseupCommandStage() {
   return (
     <details className="aui-transcript-card aui-command-card" data-status="completed" open>
@@ -626,6 +1022,28 @@ function CloseupCommandStage() {
       <pre className="aui-command-output">9 passed{"\n"}</pre>
     </details>
   );
+}
+
+function createCustomCommandRendererState(): AgentSessionState {
+  const state = createRichTranscriptInitialState();
+  const requestKey = "string:approval-command-custom-renderer" as const;
+  const request: PendingServerRequest = {
+    id: "approval-command-custom-renderer",
+    itemId: "item-command",
+    kind: "commandApproval",
+    payload: {
+      command: "bun run test:e2e:playwright",
+      cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+      reason: "Verify the host command renderer replacement.",
+    },
+    threadId: "thread-rich-transcript",
+    turnId: "turn-rich-transcript",
+  };
+  state.serverRequestQueue = {
+    byId: { [requestKey]: request },
+    order: [requestKey],
+  };
+  return state;
 }
 
 function createSingleApprovalState(id: string): AgentSessionState {

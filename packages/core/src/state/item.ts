@@ -24,6 +24,22 @@ export type AgentItemBlockKind =
   | "systemInfo"
   | "unknown";
 
+export type AgentItemBlockResourceKind =
+  | "image"
+  | "video"
+  | "file"
+  | "local-media";
+
+export interface AgentItemBlockResource {
+  displayName?: string;
+  kind?: AgentItemBlockResourceKind;
+  mimeType?: string;
+  path?: string;
+  previewUrl?: string;
+  redactedPath?: string;
+  url?: string;
+}
+
 export interface AgentItemBlock {
   id: ItemId;
   kind: AgentItemBlockKind;
@@ -45,6 +61,7 @@ export interface AgentItemBlock {
   error?: unknown;
   query?: string;
   path?: string;
+  resource?: AgentItemBlockResource;
   subtype?: "review_mode" | "compaction" | "unknown_item" | "error" | "status" | string;
   metadata?: Record<string, unknown>;
   raw?: unknown;

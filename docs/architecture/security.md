@@ -24,12 +24,34 @@ There are three separate browser-facing boundaries:
 - direct upstream App Server WebSocket, whose own browser `Origin` checks apply
   only to that upstream endpoint
 - Agent UI's same-origin WebSocket bridge, which is a host endpoint and must use
-  `admission` or equivalent host session checks
+  `bridgePolicy.admission` or equivalent host session checks
 - one-shot HTTP RPC helpers, which default to read/list/status-shaped methods
   and do not power chat
 
 Do not rely on upstream direct-WebSocket origin rejection to protect an Agent UI
 bridge route. Same-origin routing and `Origin` checks are not authentication.
+The bridge defaults to `local-loopback` admission. Non-loopback or shared
+endpoints must choose `host-callback` admission or an equivalent host boundary;
+`unsafe-no-admission` requires a reason and should only be used when another
+host-owned layer supplies authentication, isolation, and audit logging.
+
+`browserMethodPolicy` narrows which productized App Server methods the browser
+can call through the full-chat bridge. The productized default is broader than
+one-shot RPC because `AgentChat` needs browser-callable account, model,
+thread-history, thread-lifecycle, turn, skills, hooks, and app methods.
+Host-only browser methods such as filesystem reads, shell execution, and broad
+configuration writes require explicit host policy and must not be enabled by a
+public browser route without authorization and audit controls.
+
+The same bridge also carries App Server notifications, server approval
+requests, browser JSON-RPC responses for those requests, and usage events.
+Those surfaces are governed by the bridge lifecycle, server-request policy,
+and normalized event handling, not by treating them as browser-callable
+methods. Dynamic tool server requests are governed by `dynamicToolPolicy`.
+
+One-shot HTTP RPC helpers are for one allowlisted method per request. They
+cannot power `AgentChat`, streaming turns, App Server notifications, server
+approval requests, browser approval responses, attachments, or full chat.
 
 ## Shell Commands
 
@@ -44,9 +66,10 @@ Reasons:
 - host applications need their own authorization rules
 
 Dynamic-tool bridge helpers are also privileged. Agent UI does not execute them
-unless the host provides a dynamic tool handler, and helper-thread permission
-requests are manual by default. Hosts that opt into mapped dynamic tools must
-own authorization, workspace isolation, audit logging, and resource limits.
+unless the host provides `dynamicToolPolicy: { mode: "host-callback",
+handler }`, and helper-thread permission requests are manual by default. Hosts
+that opt into mapped dynamic tools must own authorization, workspace isolation,
+audit logging, and resource limits.
 
 ## Approvals
 
@@ -77,9 +100,15 @@ Device-code login displays only the App Server `verificationUrl` and `userCode` 
 
 ## Diagnostics
 
-`createCodexAppServerBridge()` is the single stderr redaction point for the local App Server process. It consumes raw `child.stderr`, redacts it once, forwards the redacted text to the optional host callback, and passes a redacted stderr stream to the transport. Bridge-owned WebSocket diagnostics and dynamic-tool failure text are redacted before they reach host stderr callbacks or App Server responses. Browser WebSocket events and React diagnostics must therefore only receive redacted stderr.
+`createCodexAppServerBridge()` is the single stderr redaction point for the local App Server process. It consumes raw `child.stderr`, redacts it once, forwards the redacted text to the optional host callback, and passes a redacted stderr stream to the transport. Bridge-owned WebSocket diagnostics, dynamic-tool failure text, dynamic-tool debug event messages, and bridge health diagnostics are redacted before they reach host stderr callbacks, App Server responses, or host event sinks. Dynamic-tool debug events carry phase metadata for host developer/audit logs and intentionally omit raw tool arguments and MCP result content. Bridge health events carry lifecycle state and pending request counts for host developer/audit logs, but Agent UI does not persist them or attach tenant/workspace meaning. Browser WebSocket events and React diagnostics must therefore only receive redacted stderr.
 
-The default React diagnostics surface keeps App Server warnings out of the primary chat transcript. Known low-value Codex plugin manifest warnings about `interface.defaultPrompt` and skill icon path warnings about `interface.icon_small` / `interface.icon_large` are suppressed from visible diagnostics because they are not actionable from Agent UI. Fatal bridge errors, request errors, and other redacted stderr warnings still surface as visible diagnostics.
+Diagnostic entries carry an `AgentDiagnosticAudience` classification:
+`user`, `developer`, or `audit`. User diagnostics are appropriate for visible
+UI. Developer and audit diagnostics are for host-owned logs, support tools, or
+review trails. Agent UI supplies the classification and redaction, but it does
+not decide retention, alerting, tenant/workspace mapping, or audit storage.
+
+The default React diagnostics surface keeps App Server warnings out of the primary chat transcript. Known low-value Codex plugin manifest warnings about `interface.defaultPrompt` and skill icon path warnings about `interface.icon_small` / `interface.icon_large` are suppressed from visible diagnostics because they are not actionable from Agent UI. Fatal bridge errors and request errors with the `user` audience still surface as visible diagnostics. Redacted stderr, admission phases, bridge health events, raw protocol notifications, unsupported notification warnings, and dynamic-tool debug phases default to `developer` and `audit`, not `user`.
 
 React diagnostics store formatted diagnostic strings only. They do not retain the raw transport stderr event in React state, so browser devtools and custom renderers do not receive a second copy of host diagnostic payloads.
 
@@ -93,6 +122,21 @@ Current redaction covers:
 - `secret=...` and `secret: ...`
 - labeled `device_code`, `user_code`, and `userCode` values with `=` or `:` separators
 - JSON string fields with token, secret, password, API key, or labeled device-code names
+
+## Local Media And Uploads
+
+Attachment upload and transcript local-media serving are host endpoints.
+`createAgentUiLocalMediaHelper()` writes to a per-session temp directory,
+returns structured metadata, and serves only registered asset IDs when the host
+wires `serveAssetHandler`. It does not authenticate browsers, authorize static
+asset reads, persist uploads, or assign tenant/workspace meaning.
+
+Loopback examples may route `/agent-ui/upload` and `/agent-ui/assets/<id>`
+without additional auth for local development. Non-loopback or shared hosts
+must add session admission, workspace/upload scoping, static route
+authorization, cleanup policy, and audit logging before exposing those routes.
+Browser UI must render preview URLs from structured metadata and must not
+derive asset URLs from raw filesystem paths.
 
 ## Markdown Rendering
 

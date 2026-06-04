@@ -24,7 +24,10 @@ Endpoint:
 POST /api/agent-ui
 ```
 
-This example is not a chat bridge. Use the WebSocket sidecar for full chat.
+This example is not a chat bridge and cannot power `AgentChat`. A single HTTP
+response cannot carry streaming turns, App Server notifications, server
+approval requests, browser approval responses, attachments, or full chat. Use
+the WebSocket sidecar for those surfaces.
 The helper rejects host-only methods such as `fs/readFile`, `command/exec`, and
 `mcpServer/tool/call` by default. Keep `allowedMethods` scoped to the calls this
 route actually needs.

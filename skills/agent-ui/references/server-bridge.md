@@ -27,6 +27,9 @@ Important defaults:
 - slow browser consumers are closed by the backpressure guard
 - inbound message size and rate limits are enforced
 - bridge diagnostics should be redacted before host stderr or browser exposure
+- `hostEvents.onBridgeHealthEvent` is for host developer/audit diagnostics;
+  events carry `audience: ["developer", "audit"]`; keep storage, tenant
+  meaning, and alerting policy host-owned
 
 Minimal server shape:
 

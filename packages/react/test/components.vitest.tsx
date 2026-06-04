@@ -3,25 +3,34 @@ import "@testing-library/jest-dom/vitest";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
+import { useRef, useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import demoFixture from "../../../fixtures/app-server/demo-session.json" with { type: "json" };
 import {
   createInitialAgentState,
   FakeAgentTransport,
   runEventFixture,
-  selectDiagnosticWarnings,
-  type FixtureStep,
-} from "@nyosegawa/agent-ui-core";
+	  selectDiagnosticWarnings,
+	  selectPendingOperations,
+	  type AgentThreadView as AgentThreadViewModel,
+	  type AgentThreadScope,
+	  type FixtureStep,
+	} from "@nyosegawa/agent-ui-core";
 import {
   AgentChat,
+  AgentAttachmentChips,
   AgentComposer,
+  AgentComposerInput,
   AgentApprovalQueue,
   AgentDiffViewer,
   AgentMessageList,
   AgentProvider,
   AgentShell,
+  AgentComposerSubmitButton,
+  AgentComposerToolbar,
   AgentStatusDetails,
   AgentStatusSummary,
+  AgentStartComposer,
   AgentThemeToggle,
   AgentThreadSidebar,
   AgentThreadView,
@@ -36,13 +45,22 @@ import {
   useAgentApprovals,
   useAgentServerRequests,
   useAgentHooks,
+  useAgentRunSettings,
   useAgentSkills,
   useAgentContext,
+  useAgentDiagnostics,
   useAgentThread,
   useAgentThreadReader,
   useAgentThreads,
+  useAgentThreadListController,
+  useAgentComposerController,
+  useAgentTranscriptController,
+  useAgentTranscriptScrollController,
   useAgentTurn,
+  type AgentThreadHistorySyncedEvent,
 } from "../src";
+import { useInternalAgentComposerController } from "../src/hooks/composer";
+import { AgentCriticalNoticeList } from "../src/components/status";
 import { useTranscriptFollowScroll } from "../src/timeline/scroll-follow";
 
 function localImageInput(path: string) {
@@ -53,6 +71,88 @@ function textInput(text: string) {
   return { text, text_elements: [], type: "text" as const };
 }
 
+function resolvedImageAttachment(path: string, label?: string, previewUrl?: string) {
+  return {
+    displayName: label,
+    input: localImageInput(path),
+    path,
+    previewUrl,
+  };
+}
+
+function resolvedTextAttachment(path: string, label?: string) {
+  return {
+    displayName: label,
+    input: textInput(`Attached file: ${path}`),
+    path,
+  };
+}
+
+function ThreadListControllerProbe({
+  label,
+  onHistorySynced,
+  scope,
+}: {
+  label: string;
+  onHistorySynced?: (event: AgentThreadHistorySyncedEvent) => void;
+  scope: AgentThreadScope;
+}) {
+  const { state } = useAgentContext();
+  const controller = useAgentThreadListController(scope, { onHistorySynced });
+  const activeThreadId = state.threadLifecycle.activeThreadId;
+  return (
+    <section aria-label={label}>
+      <input
+        aria-label={`${label} search`}
+        onChange={(event) => controller.setSearchTerm(event.currentTarget.value)}
+        value={controller.searchTerm}
+      />
+      <button onClick={() => void controller.refresh()} type="button">
+        {label} refresh
+      </button>
+      <button onClick={() => void controller.loadNextPage()} type="button">
+        {label} load more
+      </button>
+      <button
+        onClick={() => {
+          const firstThreadId = controller.threads[0]?.id;
+          if (firstThreadId) void controller.previewThread(firstThreadId);
+        }}
+        type="button"
+      >
+        {label} preview first
+      </button>
+      <button
+        onClick={() => {
+          const firstThreadId = controller.threads[0]?.id;
+          if (firstThreadId) void controller.resumeThread(firstThreadId);
+        }}
+        type="button"
+      >
+        {label} resume first
+      </button>
+      <output aria-label={`${label} active thread`}>{activeThreadId ?? ""}</output>
+      <output aria-label={`${label} cursor`}>{controller.nextCursor ?? ""}</output>
+      <output aria-label={`${label} status`}>
+        {controller.isLoading ? "loading" : controller.error?.message ?? "ready"}
+      </output>
+      <output aria-label={`${label} threads`}>
+        {controller.threads.map((thread) => thread.title ?? thread.id).join(",")}
+      </output>
+      <output aria-label={`${label} scope search`}>
+        {controller.collection?.scope.kind === "history"
+          ? (controller.collection.scope.searchTerm ?? "")
+          : ""}
+      </output>
+    </section>
+  );
+}
+
+function RunSettingsProbe() {
+  const { runSettings } = useAgentRunSettings();
+  return <output aria-label="current cwd">{runSettings.cwd ?? ""}</output>;
+}
+
 expect.extend(toHaveNoViolations);
 
 afterEach(() => {
@@ -61,7 +161,7 @@ afterEach(() => {
 
 function runningComposerState() {
   const initialState = createInitialAgentState();
-  initialState.threadRegistry.activeThreadId = "thread-running";
+  initialState.threadLifecycle.activeThreadId = "thread-running";
   initialState.threads["thread-running"] = {
     orderedTurnIds: ["turn-running"],
     status: "running",
@@ -131,7 +231,7 @@ function ActiveThreadHarness(props: React.ComponentProps<typeof AgentChat>) {
 function ResumeThreadHarness({ requestedId }: { requestedId: string }) {
   const { state } = useAgentContext();
   const { resumeThread } = useAgentThread();
-  const activeThreadId = state.threadRegistry.activeThreadId;
+  const activeThreadId = state.threadLifecycle.activeThreadId;
   const activeThread = activeThreadId ? state.threads[activeThreadId] : undefined;
   const pageItemText = activeThread?.turns["turn-page"]?.items["item-page"]?.text;
 
@@ -151,7 +251,7 @@ function ResumeThreadHarness({ requestedId }: { requestedId: string }) {
 function ReadThreadHarness({ threadId }: { threadId: string }) {
   const { state } = useAgentContext();
   const { readThread } = useAgentThreadReader();
-  const activeThreadId = state.threadRegistry.activeThreadId;
+  const activeThreadId = state.threadLifecycle.activeThreadId;
   const previewThread = state.threads[threadId];
   const previewItemText = previewThread?.turns["turn-preview"]?.items["item-preview"]?.text;
 
@@ -166,6 +266,142 @@ function ReadThreadHarness({ threadId }: { threadId: string }) {
       <output aria-label="active thread">{activeThreadId ?? "none"}</output>
       <output aria-label="preview thread status">{previewThread?.status ?? "none"}</output>
       <output aria-label="preview thread item">{previewItemText ?? "none"}</output>
+    </>
+  );
+}
+
+function ActiveThreadStateProbe() {
+  const { state } = useAgentContext();
+  const activeThreadId = state.threadLifecycle.activeThreadId;
+  const activeThread = activeThreadId ? state.threads[activeThreadId] : undefined;
+  const turnId = activeThread?.orderedTurnIds[0];
+  const turn = turnId ? activeThread?.turns[turnId] : undefined;
+  const itemId = turn?.itemOrder[0];
+  const item = itemId ? turn?.items[itemId] : undefined;
+  const pendingOperations = activeThreadId
+    ? selectPendingOperations(state, activeThreadId)
+    : [];
+  return (
+    <>
+      <output aria-label="active thread id">{activeThreadId ?? "none"}</output>
+      <output aria-label="active turn id">{turnId ?? "none"}</output>
+      <output aria-label="active item id">{itemId ?? "none"}</output>
+      <output aria-label="active item text">{item?.text ?? "none"}</output>
+      <output aria-label="active item status">{item?.status ?? "none"}</output>
+      <output aria-label="active item thread id">{item?.threadId ?? "none"}</output>
+      <output aria-label="pending operation count">
+        {String(pendingOperations.length)}
+      </output>
+      <output aria-label="pending operation status">
+        {pendingOperations[0]?.status ?? "none"}
+      </output>
+    </>
+  );
+}
+
+function ComposerOperationProbe() {
+  const [retryError, setRetryError] = useState("");
+  const composer = useInternalAgentComposerController();
+  const operationId = Object.keys(composer.operationsById)[0];
+  const operation = operationId ? composer.getOperation(operationId) : undefined;
+  return (
+    <>
+      <output aria-label="composer operation id">{operationId ?? "none"}</output>
+      <output aria-label="composer operation status">
+        {operation?.status ?? "none"}
+      </output>
+      <output aria-label="composer retry error">{retryError || "none"}</output>
+      <button
+        disabled={!operationId}
+        onClick={() => {
+          if (operationId) {
+            void composer.retryOperation(operationId).catch((caught: unknown) => {
+              setRetryError(caught instanceof Error ? caught.message : String(caught));
+            });
+          }
+        }}
+        type="button"
+      >
+        Retry operation
+      </button>
+      <button
+        disabled={!operationId}
+        onClick={() => {
+          if (operationId) {
+            void composer.retryOperation(operationId).catch((caught: unknown) => {
+              setRetryError(caught instanceof Error ? caught.message : String(caught));
+            });
+            void composer.retryOperation(operationId).catch((caught: unknown) => {
+              setRetryError(caught instanceof Error ? caught.message : String(caught));
+            });
+          }
+        }}
+        type="button"
+      >
+        Retry operation twice
+      </button>
+      <button
+        disabled={!operationId}
+        onClick={() => {
+          if (operationId) composer.cancelOperation(operationId);
+        }}
+        type="button"
+      >
+        Cancel operation
+      </button>
+    </>
+  );
+}
+
+function PublicComposerControllerProbe() {
+  const [retryError, setRetryError] = useState("");
+  const composer = useAgentComposerController();
+  const failedPendingMessage = composer.failedPendingMessages[0];
+  return (
+    <>
+      <output aria-label="public composer can submit">
+        {String(composer.canSubmit)}
+      </output>
+      <output aria-label="public composer disabled reason">
+        {composer.disabledReason ?? "none"}
+      </output>
+      <output aria-label="public composer submit mode">{composer.submitMode}</output>
+      <output aria-label="public failed pending count">
+        {String(composer.failedPendingMessages.length)}
+      </output>
+      <output aria-label="public failed pending error">
+        {failedPendingMessage?.error ?? "none"}
+      </output>
+      <output aria-label="public failed pending id">
+        {failedPendingMessage?.operationId ?? "none"}
+      </output>
+      <output aria-label="public retry error">{retryError || "none"}</output>
+      <button
+        disabled={!failedPendingMessage}
+        onClick={() => {
+          if (failedPendingMessage) {
+            void composer
+              .retryFailedPendingMessage(failedPendingMessage.operationId)
+              .catch((caught: unknown) => {
+                setRetryError(caught instanceof Error ? caught.message : String(caught));
+              });
+          }
+        }}
+        type="button"
+      >
+        Retry failed pending message
+      </button>
+      <button
+        disabled={!failedPendingMessage}
+        onClick={() => {
+          if (failedPendingMessage) {
+            composer.cancelFailedPendingMessage(failedPendingMessage.operationId);
+          }
+        }}
+        type="button"
+      >
+        Cancel failed pending message
+      </button>
     </>
   );
 }
@@ -266,6 +502,207 @@ describe("AgentChat", () => {
     expect(screen.getByTestId("agent-chat")).toHaveAttribute("data-aui-theme", "dark");
   });
 
+  it("does not forward replacement-only Default prop to AgentShell DOM", () => {
+    render(
+      <AgentShell
+        {...({
+          Default: AgentShell,
+        } as React.ComponentProps<typeof AgentShell> & { Default: typeof AgentShell })}
+      >
+        Body
+      </AgentShell>,
+    );
+
+    expect(screen.getByTestId("agent-chat")).not.toHaveAttribute("Default");
+  });
+
+  it("renders preset transcript items through the components map", () => {
+    const initialState = createInitialAgentState();
+    initialState.threadLifecycle.activeThreadId = "thread-components";
+    initialState.threads["thread-components"] = {
+      orderedTurnIds: ["turn-components"],
+      status: "complete",
+      thread: { id: "thread-components", name: "Components" },
+      turns: {
+        "turn-components": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-components"],
+          items: {
+            "item-components": {
+              id: "item-components",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Default transcript text",
+              threadId: "thread-components",
+              turnId: "turn-components",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: {
+            id: "turn-components",
+            status: "completed",
+            threadId: "thread-components",
+          },
+        },
+      },
+    };
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          components={{
+            Item: ({ item, turn }) => (
+              <article>
+                Custom item {item.id} in {turn.turn.id}
+              </article>
+            ),
+          }}
+        />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("Custom item item-components in turn-components")).toBeInTheDocument();
+    expect(screen.queryByText("Default transcript text")).not.toBeInTheDocument();
+  });
+
+  it("lets sidebar replacements delegate history control to Default", async () => {
+    const user = userEvent.setup();
+    window.history.replaceState(null, "", "/");
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          const searchTerm = (request.params as { searchTerm?: string } | undefined)
+            ?.searchTerm;
+          if (searchTerm === "wrapped history") {
+            return {
+              data: [
+                {
+                  id: "thread-sidebar-wrapper",
+                  name: "Wrapped sidebar thread",
+                  status: { type: "notLoaded" },
+                },
+              ],
+              nextCursor: null,
+            };
+          }
+          return { data: [], nextCursor: null };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-sidebar-canonical",
+              name: "Canonical wrapped sidebar thread",
+              status: { type: "idle" },
+              turns: [
+                {
+                  id: "turn-sidebar-canonical",
+                  items: [
+                    {
+                      id: "item-sidebar-canonical",
+                      text: "Hydrated wrapped sidebar transcript",
+                      type: "agent_message",
+                    },
+                  ],
+                },
+              ],
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat
+          components={{
+            Sidebar: ({ Default, ...props }) => (
+              <div aria-label="Host sidebar wrapper">
+                <Default {...props} />
+              </div>
+            ),
+          }}
+          threadUrlRouting
+        />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("Host sidebar wrapper")).toBeInTheDocument();
+    const search = await screen.findByLabelText("Search history");
+    await user.clear(search);
+    await user.type(search, "wrapped history{Enter}");
+    expect(await screen.findByRole("button", { name: /Wrapped sidebar thread/ }))
+      .toBeInTheDocument();
+    const searchRequest = transport.requests.find(
+      (request) =>
+        request.method === "thread/list" &&
+        (request.params as { searchTerm?: string }).searchTerm === "wrapped history",
+    );
+    expect(searchRequest?.params).toMatchObject({
+      limit: 25,
+      searchTerm: "wrapped history",
+    });
+    await user.click(screen.getByRole("button", { name: /Wrapped sidebar thread/ }));
+    expect(
+      await screen.findByText("Hydrated wrapped sidebar transcript"),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(window.location.pathname).toBe("/threads/thread-sidebar-canonical"),
+    );
+    expect(
+      transport.requests.find((request) => request.method === "thread/read")?.params,
+    ).toEqual({
+      includeTurns: true,
+      threadId: "thread-sidebar-wrapper",
+    });
+    await user.click(screen.getByRole("button", { name: "Collapse history" }));
+    expect(screen.queryByLabelText("Search history")).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Expand history" }));
+    expect(screen.getByLabelText("Search history")).toBeInTheDocument();
+  });
+
+  it("lets composer panel replacements delegate submit semantics to Default", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    const initialState = createInitialAgentState();
+    initialState.threadLifecycle.activeThreadId = "thread-composer-wrapper";
+    initialState.threads["thread-composer-wrapper"] = {
+      orderedTurnIds: [],
+      status: "loaded",
+      thread: { id: "thread-composer-wrapper", name: "Composer wrapper" },
+      turns: {},
+    };
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat
+          components={{
+            ComposerPanel: ({ Default, ...props }) => (
+              <section aria-label="Host composer wrapper">
+                <Default {...props} />
+              </section>
+            ),
+          }}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "line one");
+    await user.keyboard("{Shift>}{Enter}{/Shift}");
+    await user.type(message, "line two");
+    expect(transport.requests.map((request) => request.method)).not.toContain("turn/start");
+    await user.keyboard("{Enter}");
+    await waitFor(() =>
+      expect(transport.requests.find((request) => request.method === "turn/start")).toMatchObject({
+        params: {
+          input: [{ text: "line one\nline two", type: "text" }],
+          threadId: "thread-composer-wrapper",
+        },
+      }),
+    );
+  });
+
   it("offers an external theme toggle primitive", async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
@@ -343,7 +780,7 @@ describe("AgentChat", () => {
 
   it("renders only a fixed thread without following active selection", () => {
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-active";
+    initialState.threadLifecycle.activeThreadId = "thread-active";
     initialState.threads["thread-active"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -440,6 +877,356 @@ describe("AgentChat", () => {
     expect(screen.getAllByLabelText("Command output")).toHaveLength(80);
     expect(screen.getByText("echo 1")).toBeInTheDocument();
     expect(screen.getByText("echo 80")).toBeInTheDocument();
+  });
+
+  it("exposes transcript entries without internal optimistic operation objects", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-transcript-entries"] = {
+      orderedTurnIds: ["turn-transcript-entries"],
+      status: "waitingForInput",
+      thread: { id: "thread-transcript-entries", name: "Transcript entries" },
+      turns: {
+        "turn-transcript-entries": {
+          blocksByItemId: {
+            "cmd-1": {
+              command: "bun test",
+              id: "cmd-1",
+              kind: "commandExecution",
+              raw: { command: "bun test" },
+            },
+          },
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["user-pending", "cmd-1", "assistant-1"],
+          items: {
+            "assistant-1": {
+              id: "assistant-1",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Done.",
+              threadId: "thread-transcript-entries",
+              turnId: "turn-transcript-entries",
+            },
+            "cmd-1": {
+              id: "cmd-1",
+              kind: "commandExecution",
+              raw: { command: "bun test" },
+              status: "completed",
+              threadId: "thread-transcript-entries",
+              turnId: "turn-transcript-entries",
+            },
+            "user-pending": {
+              id: "user-pending",
+              kind: "userMessage",
+              status: "failed",
+              text: "Please run tests.",
+              threadId: "thread-transcript-entries",
+              turnId: "turn-transcript-entries",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: {
+            id: "turn-transcript-entries",
+            threadId: "thread-transcript-entries",
+          },
+        },
+      },
+    };
+    initialState.threadLifecycle.operations["operation-internal"] = {
+      id: "operation-internal",
+      kind: "firstMessage",
+      status: "failed",
+      threadId: "thread-transcript-entries",
+    };
+    function TranscriptEntriesProbe() {
+      const controller = useAgentTranscriptController("thread-transcript-entries", {
+        approvalAnchors: {
+          renderApprovalAnchor: () => null,
+          requests: [
+            {
+              id: "approval-command",
+              itemId: "cmd-1",
+              kind: "commandApproval",
+              payload: { command: "bun test" },
+              threadId: "thread-transcript-entries",
+              turnId: "turn-transcript-entries",
+            },
+          ],
+        },
+      });
+      return (
+        <output aria-label="transcript entries">
+          {JSON.stringify(
+            controller.entries.map((entry) => ({
+              approvals: entry.approvals.map((approval) => approval.id),
+              blockKind: entry.block.kind,
+              blockRaw: "raw" in entry.block,
+              density: entry.density,
+              displayStatus: entry.displayStatus,
+              hasOperations: "operations" in entry,
+              id: entry.itemId,
+              itemRaw: entry.item ? "raw" in entry.item : false,
+              pending: entry.pending?.status,
+              role: entry.role,
+              status: entry.status,
+            })),
+          )}
+        </output>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <TranscriptEntriesProbe />
+      </AgentProvider>,
+    );
+
+    const entries = JSON.parse(screen.getByLabelText("transcript entries").textContent ?? "[]");
+    expect(entries).toEqual([
+      {
+        approvals: [],
+        blockKind: "text",
+        blockRaw: false,
+        density: "default",
+        displayStatus: "failed",
+        hasOperations: false,
+        id: "user-pending",
+        itemRaw: false,
+        pending: "failed",
+        role: "user",
+        status: "failed",
+      },
+      {
+        approvals: ["approval-command"],
+        blockKind: "commandExecution",
+        blockRaw: false,
+        density: "default",
+        displayStatus: "completed",
+        hasOperations: false,
+        id: "cmd-1",
+        itemRaw: false,
+        role: "command",
+        status: "completed",
+      },
+      {
+        approvals: [],
+        blockKind: "text",
+        blockRaw: false,
+        density: "default",
+        displayStatus: "completed",
+        hasOperations: false,
+        id: "assistant-1",
+        itemRaw: false,
+        role: "assistant",
+        status: "completed",
+      },
+    ]);
+  });
+
+  it("applies transcript density defaults, critical-only filtering, and per-block overrides", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-density"] = {
+      orderedTurnIds: ["turn-density"],
+      status: "loaded",
+      thread: { id: "thread-density", name: "Transcript density" },
+      turns: {
+        "turn-density": {
+          blocksByItemId: {
+            "cmd-1": {
+              command: "bun test",
+              id: "cmd-1",
+              kind: "commandExecution",
+            },
+          },
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["user-failed", "cmd-1", "assistant-1"],
+          items: {
+            "assistant-1": {
+              id: "assistant-1",
+              kind: "agentMessage",
+              status: "completed",
+              text: "All done.",
+              threadId: "thread-density",
+              turnId: "turn-density",
+            },
+            "cmd-1": {
+              id: "cmd-1",
+              kind: "commandExecution",
+              status: "completed",
+              threadId: "thread-density",
+              turnId: "turn-density",
+            },
+            "user-failed": {
+              id: "user-failed",
+              kind: "userMessage",
+              status: "failed",
+              text: "Run checks.",
+              threadId: "thread-density",
+              turnId: "turn-density",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-density", threadId: "thread-density" },
+        },
+      },
+    };
+
+    function DensityProbe() {
+      const controller = useAgentTranscriptController("thread-density", {
+        approvalAnchors: {
+          renderApprovalAnchor: () => null,
+          requests: [
+            {
+              id: "approval-command",
+              itemId: "cmd-1",
+              kind: "commandApproval",
+              payload: { command: "bun test" },
+              threadId: "thread-density",
+              turnId: "turn-density",
+            },
+          ],
+        },
+        density: {
+          default: "compact",
+          byBlockKind: {
+            commandExecution: "verbose",
+            text: "critical-only",
+          },
+        },
+      });
+      return (
+        <output aria-label="density entries">
+          {JSON.stringify({
+            density: controller.density,
+            entries: controller.entries.map((entry) => ({
+              approvals: entry.approvals.map((approval) => approval.id),
+              density: entry.density,
+              id: entry.itemId,
+            })),
+          })}
+        </output>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <DensityProbe />
+      </AgentProvider>,
+    );
+
+    const output = JSON.parse(screen.getByLabelText("density entries").textContent ?? "{}");
+    expect(output).toEqual({
+      density: "compact",
+      entries: [
+        { approvals: [], density: "critical-only", id: "user-failed" },
+        { approvals: ["approval-command"], density: "verbose", id: "cmd-1" },
+      ],
+    });
+  });
+
+  it("renders transcript density attributes for the default message list", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-density-dom"] = {
+      orderedTurnIds: ["turn-density-dom"],
+      status: "loaded",
+      thread: { id: "thread-density-dom", name: "Transcript density DOM" },
+      turns: {
+        "turn-density-dom": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["user-1"],
+          items: {
+            "user-1": {
+              id: "user-1",
+              kind: "userMessage",
+              status: "completed",
+              text: "Use compact density.",
+              threadId: "thread-density-dom",
+              turnId: "turn-density-dom",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-density-dom", threadId: "thread-density-dom" },
+        },
+      },
+    };
+
+    const { container } = render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList density="compact" thread={initialState.threads["thread-density-dom"]!} />
+      </AgentProvider>,
+    );
+
+    expect(container.querySelector(".aui-message-list")).toHaveAttribute(
+      "data-density",
+      "compact",
+    );
+    expect(container.querySelector(".aui-message")).toHaveAttribute("data-density", "compact");
+  });
+
+  it("keeps turn-level approval anchors visible in critical-only transcript density", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-critical-approval"] = {
+      orderedTurnIds: ["turn-critical-approval"],
+      status: "waitingForInput",
+      thread: { id: "thread-critical-approval", name: "Critical approval" },
+      turns: {
+        "turn-critical-approval": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["user-1", "assistant-1"],
+          items: {
+            "assistant-1": {
+              id: "assistant-1",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Waiting for approval.",
+              threadId: "thread-critical-approval",
+              turnId: "turn-critical-approval",
+            },
+            "user-1": {
+              id: "user-1",
+              kind: "userMessage",
+              status: "completed",
+              text: "Run the next step.",
+              threadId: "thread-critical-approval",
+              turnId: "turn-critical-approval",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-critical-approval", threadId: "thread-critical-approval" },
+        },
+      },
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentMessageList
+          approvalAnchors={{
+            renderApprovalAnchor: (approval) => <button type="button">{String(approval.id)}</button>,
+            requests: [
+              {
+                id: "approval-turn-only",
+                kind: "userInput",
+                payload: { prompt: "Continue?" },
+                threadId: "thread-critical-approval",
+                turnId: "turn-critical-approval",
+              },
+            ],
+          }}
+          density="critical-only"
+          thread={initialState.threads["thread-critical-approval"]!}
+        />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("approval-turn-only")).toBeInTheDocument();
+    expect(
+      screen.getByText("approval-turn-only").closest(".aui-transcript-approval-anchor"),
+    ).toBeTruthy();
+    expect(screen.getByText("Waiting for approval.")).toBeInTheDocument();
+    expect(screen.queryByText("Run the next step.")).toBeNull();
   });
 
   it("renders command execution blocks with a closed summary and lazy output body", async () => {
@@ -742,21 +1529,38 @@ describe("AgentChat", () => {
 
     const { container } = render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentThreadView threadId="thread-anchor" />
+        <AgentThreadView
+          components={{
+            Approval: ({ approval, Default }) => (
+              <section>
+                Custom approval {String(approval.id)}
+                <Default approval={approval} />
+              </section>
+            ),
+          }}
+          threadId="thread-anchor"
+        />
       </AgentProvider>,
     );
 
     const command = container.querySelector('[data-kind="commandExecution"]');
     const anchored = screen
-      .getByRole("button", {
-        name: "Approve command request approval-anchored",
-      })
+      .getByText("Custom approval approval-anchored")
       .closest(".aui-transcript-approval-anchor");
     expect(command?.nextElementSibling).toBe(anchored);
+    expect(
+      within(anchored as HTMLElement).getByRole("button", {
+        name: "Approve command request approval-anchored",
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByText("Tail fallback")).toBeInTheDocument();
+    expect(screen.getByText("Custom approval approval-tail")).toBeInTheDocument();
     expect(
       container.querySelector(".aui-transcript-tail .aui-approval"),
     ).toHaveTextContent("Tail fallback");
+    expect(container.querySelector(".aui-transcript-tail")).toHaveTextContent(
+      "Custom approval approval-tail",
+    );
   });
 
   it("anchors item-only approvals and falls back when the item is missing", () => {
@@ -1086,11 +1890,110 @@ describe("AgentChat", () => {
     await waitFor(() => expect(screen.queryByText("Jump visible")).not.toBeInTheDocument());
   });
 
+  it("lets hosts own transcript scroll refs and invoke public scroll actions", async () => {
+    const showEarlierItems = vi.fn();
+    const scrollIntoView = vi.fn();
+    const scrollToLatest = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    function TranscriptScrollControllerProbe() {
+      const scrollRef = useRef<HTMLOListElement | null>(null);
+      const controller = useAgentTranscriptScrollController({
+        hiddenItemCount: 2,
+        onShowEarlierItems: showEarlierItems,
+        scrollContainerRef: scrollRef,
+        threadId: "thread-scroll-controller",
+        turnCount: 1,
+      });
+      return (
+        <>
+          <ol
+            aria-label="Host transcript scroller"
+            ref={(node) => {
+              scrollRef.current = node;
+              if (!node) return;
+              let scrollTop = 0;
+              Object.defineProperties(node, {
+                clientHeight: { configurable: true, get: () => 120 },
+                scrollHeight: { configurable: true, get: () => 900 },
+                scrollTop: {
+                  configurable: true,
+                  get: () => scrollTop,
+                  set: (value: number) => {
+                    scrollTop = value;
+                  },
+                },
+              });
+              node.scrollTo = vi.fn(({ top }: ScrollToOptions) => {
+                scrollToLatest(top);
+                scrollTop = Number(top ?? scrollTop);
+              });
+            }}
+          >
+            <li
+              className="aui-transcript-approval-anchor"
+              ref={(node) => {
+                if (!node) return;
+                node.getBoundingClientRect = () =>
+                  ({
+                    bottom: -200,
+                    height: 80,
+                    left: 0,
+                    right: 300,
+                    top: -280,
+                    width: 300,
+                    x: 0,
+                    y: -280,
+                  }) as DOMRect;
+              }}
+            >
+              pending approval
+            </li>
+          </ol>
+          <button onClick={controller.handleScroll} type="button">
+            Measure scroll
+          </button>
+          <button onClick={controller.jumpToLatest} type="button">
+            Jump latest
+          </button>
+          <button onClick={controller.jumpToPendingApproval} type="button">
+            Jump approval
+          </button>
+          <button onClick={controller.showEarlierItems} type="button">
+            Show earlier
+          </button>
+          <span>{controller.canShowEarlierItems ? "Earlier available" : "No earlier"}</span>
+          {controller.showJumpApproval ? <span>Approval jump visible</span> : null}
+        </>
+      );
+    }
+
+    render(<TranscriptScrollControllerProbe />);
+
+    expect(screen.getByText("Earlier available")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Measure scroll" }));
+    expect(await screen.findByText("Approval jump visible")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Jump latest" }));
+    expect(scrollToLatest).toHaveBeenCalledWith(900);
+
+    fireEvent.click(screen.getByRole("button", { name: "Jump approval" }));
+    expect(scrollIntoView).toHaveBeenCalledWith({ block: "center", behavior: "smooth" });
+
+    fireEvent.click(screen.getByRole("button", { name: "Show earlier" }));
+    expect(showEarlierItems).toHaveBeenCalledTimes(1);
+  });
+
   it("removes resolved inline approvals and resumes the waiting thread", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-approval-resolution";
-    initialState.threadRegistry.liveThreadIds = ["thread-approval-resolution"];
+    initialState.threadLifecycle.activeThreadId = "thread-approval-resolution";
+    initialState.threadLifecycle.collections[
+      initialState.threadLifecycle.defaultCollectionKey
+    ]!.ids = ["thread-approval-resolution"];
     initialState.threads["thread-approval-resolution"] = {
       orderedTurnIds: ["turn-approval-resolution"],
       status: "waitingForInput",
@@ -1326,22 +2229,145 @@ describe("AgentChat", () => {
           turn: { id: "turn-stored", threadId: "thread-stored" },
         },
       },
-    };
-    const initialState = createInitialAgentState();
-    initialState.connection.status = "connected";
-    initialState.threads["thread-stored"] = storedThread;
+	    };
+	    const storedThreadView: AgentThreadViewModel = {
+	      cwd: "/Users/sakasegawa/src/agent-ui",
+	      id: "thread-stored",
+	      isActive: true,
+	      isArchived: false,
+	      isPreview: true,
+	      isRunning: false,
+	      needsInput: false,
+	      subtitle: "/Users/sakasegawa/src/agent-ui",
+	      title: "Review stored transcript",
+	    };
+	    const initialState = createInitialAgentState();
+	    initialState.connection.status = "connected";
+	    initialState.threads["thread-stored"] = storedThread;
 
-    render(
-      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentThreadSidebar activeThreadId="thread-stored" threads={[storedThread]} />
-      </AgentProvider>,
-    );
+	    render(
+	      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+	        <AgentThreadSidebar activeThreadId="thread-stored" threads={[storedThreadView]} />
+	      </AgentProvider>,
+	    );
 
     const row = screen.getByRole("button", { name: /Review stored transcript/ });
     expect(row).toHaveTextContent("Review stored transcript");
     expect(row).toHaveTextContent("Preview");
     expect(row).toHaveTextContent("agent-ui");
     expect(screen.queryByRole("button", { name: /Load all/i })).not.toBeInTheDocument();
+  });
+
+  it("reports the canonical thread id after sidebar hydration", async () => {
+    const user = userEvent.setup();
+    const storedThread = {
+      orderedTurnIds: [],
+      status: "notLoaded" as const,
+      thread: {
+        id: "thread-alias",
+        name: "Aliased stored transcript",
+      },
+      turns: {},
+    };
+	    const initialState = createInitialAgentState();
+	    initialState.connection.status = "connected";
+	    initialState.threads["thread-alias"] = storedThread;
+	    const storedThreadView: AgentThreadViewModel = {
+	      id: "thread-alias",
+	      isActive: true,
+	      isArchived: false,
+	      isPreview: true,
+	      isRunning: false,
+	      needsInput: false,
+	      title: "Aliased stored transcript",
+	    };
+	    const onSelectThread = vi.fn();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-canonical",
+              name: "Aliased stored transcript",
+              status: { type: "idle" },
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentThreadSidebar
+	          activeThreadId="thread-alias"
+	          onSelectThread={onSelectThread}
+	          threads={[storedThreadView]}
+	        />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Aliased stored transcript/ }));
+
+    await waitFor(() => expect(onSelectThread).toHaveBeenCalledWith("thread-canonical"));
+    expect(
+      transport.requests.find((request) => request.method === "thread/read")?.params,
+    ).toEqual({
+      includeTurns: true,
+      threadId: "thread-alias",
+    });
+  });
+
+  it("does not report sidebar selection when hydration fails", async () => {
+    const user = userEvent.setup();
+    const storedThread = {
+      orderedTurnIds: [],
+      status: "notLoaded" as const,
+      thread: {
+        id: "thread-read-fails",
+        name: "Read fails",
+      },
+      turns: {},
+    };
+	    const initialState = createInitialAgentState();
+	    initialState.connection.status = "connected";
+	    initialState.threads["thread-read-fails"] = storedThread;
+	    const storedThreadView: AgentThreadViewModel = {
+	      id: "thread-read-fails",
+	      isActive: true,
+	      isArchived: false,
+	      isPreview: true,
+	      isRunning: false,
+	      needsInput: false,
+	      title: "Read fails",
+	    };
+	    const onSelectThread = vi.fn();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/read") throw new Error("read failed");
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentThreadSidebar
+	          activeThreadId="thread-read-fails"
+	          onSelectThread={onSelectThread}
+	          threads={[storedThreadView]}
+	        />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /Read fails/ }));
+
+    await waitFor(() =>
+      expect(transport.requests.some((request) => request.method === "thread/read")).toBe(
+        true,
+      ),
+    );
+    expect(onSelectThread).not.toHaveBeenCalled();
   });
 
   it("renders usage as a standalone primitive without chat chrome", () => {
@@ -1440,9 +2466,45 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("Usage summary")).toHaveTextContent("55%");
   });
 
+  it("keeps developer and audit status banners out of visible status UI", () => {
+    const initialState = createInitialAgentState();
+    initialState.diagnostics.banners = [
+      {
+        id: "debug-status",
+        audience: ["developer", "audit"],
+        kind: "system",
+        message: "Debug-only bridge status",
+        severity: "critical",
+      },
+      {
+        id: "user-status",
+        audience: ["user"],
+        kind: "configWarning",
+        message: "User-visible config warning",
+      },
+    ];
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentStatusSummary />
+        <AgentStatusDetails includeCritical />
+        <AgentCriticalNoticeList />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("Status summary")).toHaveTextContent(
+      "1 warning · 1 total",
+    );
+    expect(screen.getByLabelText("Status details")).toHaveTextContent(
+      "User-visible config warning",
+    );
+    expect(screen.queryByText("Debug-only bridge status")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Critical status")).not.toBeInTheDocument();
+  });
+
   it("keeps normal rate-limit notices out of critical thread warnings", () => {
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-rate";
+    initialState.threadLifecycle.activeThreadId = "thread-rate";
     initialState.diagnostics.banners = [
       {
         id: "rate-normal",
@@ -1452,7 +2514,6 @@ describe("AgentChat", () => {
     ];
     initialState.threads["thread-rate"] = {
       orderedTurnIds: [],
-      registryStatus: "live",
       status: "complete",
       thread: { id: "thread-rate", name: "Rate status" },
       turns: {},
@@ -1472,7 +2533,7 @@ describe("AgentChat", () => {
 
   it("uses structured status severity instead of parsing localized banner text", () => {
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-localized-status";
+    initialState.threadLifecycle.activeThreadId = "thread-localized-status";
     initialState.diagnostics.banners = [
       {
         id: "localized-critical",
@@ -1493,7 +2554,6 @@ describe("AgentChat", () => {
     ];
     initialState.threads["thread-localized-status"] = {
       orderedTurnIds: [],
-      registryStatus: "live",
       status: "complete",
       thread: { id: "thread-localized-status", name: "Localized status" },
       turns: {},
@@ -1516,7 +2576,7 @@ describe("AgentChat", () => {
 
   it("marks structured reached rate limits as critical without message parsing", () => {
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-rate-reached";
+    initialState.threadLifecycle.activeThreadId = "thread-rate-reached";
     initialState.diagnostics.banners = [
       {
         id: "rate-reached",
@@ -1532,7 +2592,6 @@ describe("AgentChat", () => {
     ];
     initialState.threads["thread-rate-reached"] = {
       orderedTurnIds: [],
-      registryStatus: "live",
       status: "complete",
       thread: { id: "thread-rate-reached", name: "Rate reached" },
       turns: {},
@@ -1991,7 +3050,7 @@ describe("AgentChat", () => {
 
   it("renders status banners as first-class shell content", () => {
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-banner";
+    initialState.threadLifecycle.activeThreadId = "thread-banner";
     initialState.diagnostics.banners = [
       {
         id: "model-reroute",
@@ -2028,9 +3087,21 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const prompt = vi.spyOn(globalThis, "prompt").mockReturnValue("Renamed thread");
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-actions";
+    initialState.account = {
+      account: { email: "user@example.com", planType: "pro" },
+      status: "authenticated",
+    };
+    initialState.connection = { status: "connected" };
+    initialState.threadLifecycle.activeThreadId = "thread-actions";
+    initialState.threadLifecycle.collections.all.ids = ["thread-actions"];
     initialState.threads["thread-actions"] = {
+      activity: "idle",
+      availability: "available",
+      id: "thread-actions",
+      metadata: { title: "Action thread" },
+      operations: {},
       orderedTurnIds: ["turn-actions"],
+      storage: "stored",
       status: "loaded",
       thread: { id: "thread-actions", name: "Action thread" },
       turns: {
@@ -2087,7 +3158,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const prompt = vi.spyOn(globalThis, "prompt");
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-compose";
+    initialState.threadLifecycle.activeThreadId = "thread-compose";
     initialState.threads["thread-compose"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -2121,7 +3192,7 @@ describe("AgentChat", () => {
 
   it("hides composer App/Plugin buttons when no host resolver is provided", async () => {
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-compose-noresolver";
+    initialState.threadLifecycle.activeThreadId = "thread-compose-noresolver";
     initialState.threads["thread-compose-noresolver"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -2131,7 +3202,15 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentChat sidebar={false} usage={false} />
+        <AgentChat
+          resolveLocalMediaUrl={(path, item) => {
+            expect(path).toBe("/tmp/agent-ui.png");
+            expect(item?.id).toBe("image");
+            return "/agent-ui/assets/image";
+          }}
+          sidebar={false}
+          usage={false}
+        />
       </AgentProvider>,
     );
 
@@ -2143,7 +3222,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const prompt = vi.spyOn(globalThis, "prompt");
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-compose-prompt";
+    initialState.threadLifecycle.activeThreadId = "thread-compose-prompt";
     initialState.threads["thread-compose-prompt"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -2173,7 +3252,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-compose-reject";
+    initialState.threadLifecycle.activeThreadId = "thread-compose-reject";
     initialState.threads["thread-compose-reject"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -2205,7 +3284,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const resolvedKinds: string[] = [];
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-image";
+    initialState.threadLifecycle.activeThreadId = "thread-image";
     initialState.threads["thread-image"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -2219,8 +3298,8 @@ describe("AgentChat", () => {
           resolveLocalAttachment={(file, kind) => {
             resolvedKinds.push(kind);
             return kind === "image"
-              ? localImageInput(`/tmp/agent-ui-image-test/${file.name}`)
-              : textInput(`Attached file: /tmp/agent-ui-image-test/${file.name}`);
+              ? resolvedImageAttachment(`/tmp/agent-ui-image-test/${file.name}`, file.name)
+              : resolvedTextAttachment(`/tmp/agent-ui-image-test/${file.name}`, file.name);
           }}
           sidebar={false}
           usage={false}
@@ -2251,7 +3330,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-compose";
+    initialState.threadLifecycle.activeThreadId = "thread-compose";
     initialState.threads["thread-compose"] = {
       orderedTurnIds: [],
       status: "loaded",
@@ -2263,7 +3342,7 @@ describe("AgentChat", () => {
       <AgentProvider initialState={initialState} transport={transport}>
         <AgentThreadView
           resolveLocalAttachment={(file) =>
-            localImageInput(`/tmp/agent-ui-test/${file.name}`)
+            resolvedImageAttachment(`/tmp/agent-ui-test/${file.name}`, file.name)
           }
           threadId="thread-compose"
         />
@@ -2292,7 +3371,9 @@ describe("AgentChat", () => {
     render(
       <AgentProvider initialState={runningComposerState()} transport={new FakeAgentTransport()}>
         <AgentComposer
-          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          resolveLocalAttachment={(file) =>
+            resolvedImageAttachment(`/uploads/${file.name}`, file.name)
+          }
           threadId="thread-running"
         />
       </AgentProvider>,
@@ -2308,6 +3389,69 @@ describe("AgentChat", () => {
 
     expect(screen.getByRole("list", { name: "Pending attachments" })).toBeInTheDocument();
     expect(screen.getByRole("listitem", { name: /fixture\.png/ })).toBeInTheDocument();
+  });
+
+  it("renders public composer styled parts without the preset", async () => {
+    const user = userEvent.setup();
+    const onStartThread = vi.fn();
+    render(
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <AgentAttachmentChips
+          attachments={[
+            {
+              id: "chip-1",
+              kind: "file",
+              label: "notes.3mf",
+              extension: ".3mf",
+              sizeLabel: "5 KB",
+            },
+          ]}
+        />
+        <AgentComposerInput aria-label="Standalone message" defaultValue="draft" />
+        <span id="host-help">Host help</span>
+        <span id="shortcut-help">Shortcut help</span>
+        <AgentComposerInput
+          aria-describedby="host-help"
+          aria-label="Described message"
+          shortcutHintId="shortcut-help"
+        />
+        <AgentComposerToolbar
+          start={<button type="button">Left tool</button>}
+          end={
+            <AgentComposerSubmitButton canSubmit isStopAction={false} />
+          }
+        />
+        <AgentStartComposer onStartThread={onStartThread} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByRole("list", { name: "Pending attachments" })).toBeInTheDocument();
+    expect(screen.getByRole("listitem", { name: /notes\.3mf .3mf 5 KB/ })).toHaveAttribute(
+      "data-kind",
+      "file",
+    );
+    expect(screen.getByRole("textbox", { name: "Standalone message" })).toHaveClass(
+      "aui-composer-input",
+    );
+    expect(screen.getByRole("textbox", { name: "Described message" })).toHaveAttribute(
+      "aria-describedby",
+      "host-help shortcut-help",
+    );
+    expect(screen.getByRole("button", { name: "Send" })).toBeEnabled();
+    expect(screen.getByRole("form", { name: "Start a Codex thread" })).toHaveClass(
+      "aui-first-run-starter",
+    );
+    const starterPrompt = screen.getByRole("textbox", { name: "Message" });
+    expect(starterPrompt).toHaveClass("aui-composer-input");
+    expect(starterPrompt).toHaveClass("aui-first-run-prompt");
+    expect(document.querySelector(".aui-first-run-toolbar")).toHaveClass(
+      "aui-composer-toolbar",
+    );
+    await user.type(starterPrompt, "hello");
+    await user.keyboard("{Shift>}{Enter}{/Shift}");
+    expect(onStartThread).not.toHaveBeenCalled();
+    await user.keyboard("{Enter}");
+    expect(onStartThread).toHaveBeenCalledWith("hello");
   });
 
   it("does not offer to start a thread before account bootstrap finishes", async () => {
@@ -2512,7 +3656,7 @@ describe("AgentChat", () => {
     ).toBeUndefined();
   });
 
-  it("formats App Server stderr diagnostics into readable messages", async () => {
+  it("classifies App Server stderr diagnostics for developer and audit audiences", async () => {
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method === "account/read") {
@@ -2521,9 +3665,26 @@ describe("AgentChat", () => {
         return {};
       },
     });
+    function DiagnosticAudienceProbe() {
+      const { developerDiagnostics, auditDiagnostics, userDiagnostics } = useAgentDiagnostics();
+      return (
+        <output>
+          <span data-testid="developer-diagnostics">
+            {developerDiagnostics.warnings.map((warning) => warning.message).join("\n")}
+          </span>
+          <span data-testid="audit-diagnostics">
+            {auditDiagnostics.warnings.map((warning) => warning.message).join("\n")}
+          </span>
+          <span data-testid="user-diagnostics">
+            {userDiagnostics.warnings.map((warning) => warning.message).join("\n")}
+          </span>
+        </output>
+      );
+    }
     render(
       <AgentProvider transport={transport}>
         <AgentChat diagnostics />
+        <DiagnosticAudienceProbe />
       </AgentProvider>,
     );
 
@@ -2539,15 +3700,17 @@ describe("AgentChat", () => {
       type: "stderr",
     });
 
-    expect(
-      await screen.findByText(
-        /WARN codex_app_server bridge recovered after stderr warning/,
-      ),
-    ).toBeInTheDocument();
-    const diagnostics = screen.getByLabelText("Diagnostics");
-    expect(diagnostics).toHaveTextContent("Diagnostics");
-    expect(diagnostics.tagName).toBe("DETAILS");
-    expect(diagnostics).not.toHaveAttribute("open");
+    const developerDiagnostics = await screen.findByTestId("developer-diagnostics");
+    expect(developerDiagnostics).toHaveTextContent(
+      /WARN codex_app_server bridge recovered after stderr warning/,
+    );
+    expect(screen.getByTestId("audit-diagnostics")).toHaveTextContent(
+      /WARN codex_app_server bridge recovered after stderr warning/,
+    );
+    expect(screen.getByTestId("user-diagnostics")).not.toHaveTextContent(
+      /bridge recovered after stderr warning/,
+    );
+    expect(screen.queryByLabelText("Diagnostics")).not.toBeInTheDocument();
   });
 
   it("does not retain raw transport events for diagnostics", async () => {
@@ -2641,7 +3804,7 @@ describe("AgentChat", () => {
 
   it("keeps long history messages expanded without a preview disclosure", () => {
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-history";
+    initialState.threadLifecycle.activeThreadId = "thread-history";
     initialState.threads["thread-history"] = {
       orderedTurnIds: ["turn-history"],
       status: "loaded",
@@ -2681,7 +3844,7 @@ describe("AgentChat", () => {
 
   it("renders structured App Server message content without crashing", () => {
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-real";
+    initialState.threadLifecycle.activeThreadId = "thread-real";
     initialState.threads["thread-real"] = {
       orderedTurnIds: ["turn-real"],
       status: "running",
@@ -2822,7 +3985,15 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentChat sidebar={false} usage={false} />
+        <AgentChat
+          resolveLocalMediaUrl={(path, item) => {
+            expect(path).toBe("/tmp/agent-ui.png");
+            expect(item?.id).toBe("image");
+            return "/agent-ui/assets/image";
+          }}
+          sidebar={false}
+          usage={false}
+        />
       </AgentProvider>,
     );
 
@@ -2840,7 +4011,347 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("Web search")).toHaveTextContent(
       "Codex App Server generated protocol",
     );
-    expect(screen.getByRole("img", { name: "/tmp/agent-ui.png" })).toBeInTheDocument();
+    const image = screen.getByRole("img", { name: "agent-ui.png" });
+    expect(image).toBeInTheDocument();
+    expect(image).toHaveAttribute("src", "/agent-ui/assets/image");
+  });
+
+  it("renders local media fallback instead of raw filesystem image src", async () => {
+    const initialState = runEventFixture([
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-local-media" },
+          turns: [{ id: "turn-local-media", threadId: "thread-local-media" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "image",
+            kind: "imageView",
+            raw: { path: "/tmp/secret-screenshot.png" },
+            threadId: "thread-local-media",
+            turnId: "turn-local-media",
+          },
+          threadId: "thread-local-media",
+          turnId: "turn-local-media",
+          type: "item/completed",
+        },
+      },
+    ] as FixtureStep[]);
+    initialState.threadLifecycle.activeThreadId = "thread-local-media";
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat sidebar={false} usage={false} />
+      </AgentProvider>,
+    );
+
+    expect(screen.queryByRole("img", { name: "secret-screenshot.png" })).toBeNull();
+    expect(screen.getByText("Local media unavailable")).toBeInTheDocument();
+    expect(document.querySelector(".aui-image-block img")).toBeNull();
+  });
+
+  it("renders structured local media resources without exposing raw paths as captions", async () => {
+    const initialState = runEventFixture([
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-structured-media" },
+          turns: [{ id: "turn-structured-media", threadId: "thread-structured-media" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "structured-image",
+            kind: "imageView",
+            raw: { path: "/tmp/agent-ui-local-media/private/diagram.png" },
+            threadId: "thread-structured-media",
+            turnId: "turn-structured-media",
+          },
+          threadId: "thread-structured-media",
+          turnId: "turn-structured-media",
+          type: "item/completed",
+        },
+      },
+    ] as FixtureStep[]);
+    initialState.threadLifecycle.activeThreadId = "thread-structured-media";
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          resolveLocalMediaUrl={() => ({
+            displayName: "diagram.png",
+            previewUrl: "/agent-ui/assets/diagram",
+            redactedPath: "[agent-ui-local-media]/diagram.png",
+          })}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByRole("img", { name: "diagram.png" })).toHaveAttribute(
+      "src",
+      "/agent-ui/assets/diagram",
+    );
+    expect(screen.getByText("diagram.png")).toBeInTheDocument();
+    expect(screen.queryByText(/private/)).not.toBeInTheDocument();
+  });
+
+  it("renders structured video media from mime type when the local path is opaque", async () => {
+    const initialState = runEventFixture([
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-structured-video" },
+          turns: [{ id: "turn-structured-video", threadId: "thread-structured-video" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "structured-video",
+            kind: "imageView",
+            raw: { path: "/tmp/agent-ui-local-media/opaque-resource" },
+            threadId: "thread-structured-video",
+            turnId: "turn-structured-video",
+          },
+          threadId: "thread-structured-video",
+          turnId: "turn-structured-video",
+          type: "item/completed",
+        },
+      },
+    ] as FixtureStep[]);
+    initialState.threadLifecycle.activeThreadId = "thread-structured-video";
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          resolveLocalMediaUrl={() => ({
+            displayName: "recording",
+            mimeType: "video/mp4",
+            previewUrl: "/agent-ui/assets/recording",
+          })}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const video = document.querySelector(".aui-image-block video");
+    expect(video).toHaveAttribute("src", "/agent-ui/assets/recording");
+    expect(document.querySelector(".aui-image-block img")).toBeNull();
+    expect(screen.getByText("recording")).toBeInTheDocument();
+  });
+
+  it("falls back when resolved local media fails to load", async () => {
+    const initialState = runEventFixture([
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-local-media-failure" },
+          turns: [
+            { id: "turn-local-media-failure", threadId: "thread-local-media-failure" },
+          ],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "image",
+            kind: "imageView",
+            raw: { path: "/tmp/failing-screenshot.png" },
+            threadId: "thread-local-media-failure",
+            turnId: "turn-local-media-failure",
+          },
+          threadId: "thread-local-media-failure",
+          turnId: "turn-local-media-failure",
+          type: "item/completed",
+        },
+      },
+    ] as FixtureStep[]);
+    initialState.threadLifecycle.activeThreadId = "thread-local-media-failure";
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          resolveLocalMediaUrl={() => "/agent-ui/assets/missing-image"}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const image = screen.getByRole("img", { name: "failing-screenshot.png" });
+    expect(image).toHaveAttribute("src", "/agent-ui/assets/missing-image");
+    fireEvent.error(image);
+    expect(screen.getByText("Local media unavailable")).toBeInTheDocument();
+    expect(document.querySelector(".aui-image-block img")).toBeNull();
+  });
+
+  it("renders browser-safe image block resources without a local media resolver", async () => {
+    const initialState = runEventFixture([
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-safe-image-resource" },
+          turns: [
+            {
+              id: "turn-safe-image-resource",
+              threadId: "thread-safe-image-resource",
+            },
+          ],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "safe-image-resource",
+            kind: "imageView",
+            raw: {
+              displayName: "Generated preview",
+              image_url: "https://example.test/preview.png",
+              text: "not-a-local-media-path",
+            },
+            threadId: "thread-safe-image-resource",
+            turnId: "turn-safe-image-resource",
+          },
+          threadId: "thread-safe-image-resource",
+          turnId: "turn-safe-image-resource",
+          type: "item/completed",
+        },
+      },
+    ] as FixtureStep[]);
+    initialState.threadLifecycle.activeThreadId = "thread-safe-image-resource";
+    const resolveLocalMediaUrl = vi.fn(() => "/agent-ui/assets/incorrect");
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          resolveLocalMediaUrl={resolveLocalMediaUrl}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByRole("img", { name: "Generated preview" })).toHaveAttribute(
+      "src",
+      "https://example.test/preview.png",
+    );
+    expect(resolveLocalMediaUrl).not.toHaveBeenCalled();
+    expect(screen.queryByText("Local media unavailable")).toBeNull();
+  });
+
+  it("redacts Windows local media directories in fallback captions", async () => {
+    const initialState = runEventFixture([
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-windows-media" },
+          turns: [{ id: "turn-windows-media", threadId: "thread-windows-media" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "image",
+            kind: "imageView",
+            raw: { path: String.raw`C:\Users\me\secret.png` },
+            threadId: "thread-windows-media",
+            turnId: "turn-windows-media",
+          },
+          threadId: "thread-windows-media",
+          turnId: "turn-windows-media",
+          type: "item/completed",
+        },
+      },
+    ] as FixtureStep[]);
+    initialState.threadLifecycle.activeThreadId = "thread-windows-media";
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat sidebar={false} usage={false} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("Local media unavailable")).toBeInTheDocument();
+    expect(screen.getByText("secret.png")).toBeInTheDocument();
+    expect(screen.queryByText(/Users\\me/)).toBeNull();
+  });
+
+  it("retries transcript local media when the resolved URL changes", async () => {
+    const initialState = runEventFixture([
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-media-refresh" },
+          turns: [{ id: "turn-media-refresh", threadId: "thread-media-refresh" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "image",
+            kind: "imageView",
+            raw: { path: "/tmp/refresh.png" },
+            threadId: "thread-media-refresh",
+            turnId: "turn-media-refresh",
+          },
+          threadId: "thread-media-refresh",
+          turnId: "turn-media-refresh",
+          type: "item/completed",
+        },
+      },
+    ] as FixtureStep[]);
+    initialState.threadLifecycle.activeThreadId = "thread-media-refresh";
+    const { rerender } = render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          resolveLocalMediaUrl={() => "/agent-ui/assets/old-refresh"}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const image = screen.getByRole("img", { name: "refresh.png" });
+    fireEvent.error(image);
+    expect(screen.getByText("Local media unavailable")).toBeInTheDocument();
+
+    rerender(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          resolveLocalMediaUrl={() => "/agent-ui/assets/new-refresh"}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    await waitFor(() =>
+      expect(screen.getByRole("img", { name: "refresh.png" })).toHaveAttribute(
+        "src",
+        "/agent-ui/assets/new-refresh",
+      ),
+    );
   });
 
   it("renders reasoning in disclosure and compaction items inline", async () => {
@@ -2987,7 +4498,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-ready";
+    initialState.threadLifecycle.activeThreadId = "thread-ready";
     initialState.threads["thread-ready"] = {
       orderedTurnIds: [],
       status: "complete",
@@ -3533,8 +5044,8 @@ describe("AgentChat", () => {
         <AgentChat
           resolveLocalAttachment={(file, kind) =>
             kind === "image"
-              ? localImageInput(`/uploads/${file.name}`)
-              : textInput(`Attached file: /uploads/${file.name}`)
+              ? resolvedImageAttachment(`/uploads/${file.name}`, file.name)
+              : resolvedTextAttachment(`/uploads/${file.name}`, file.name)
           }
           sidebar={false}
           usage={false}
@@ -3595,8 +5106,8 @@ describe("AgentChat", () => {
         <AgentChat
           resolveLocalAttachment={(file, kind) =>
             kind === "image"
-              ? localImageInput(`/uploads/${file.name}`)
-              : textInput(`Attached file: /uploads/${file.name}`)
+              ? resolvedImageAttachment(`/uploads/${file.name}`, file.name)
+              : resolvedTextAttachment(`/uploads/${file.name}`, file.name)
           }
           sidebar={false}
           usage={false}
@@ -3642,7 +5153,9 @@ describe("AgentChat", () => {
         transport={new FakeAgentTransport()}
       >
         <AgentChat
-          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          resolveLocalAttachment={(file) =>
+            resolvedImageAttachment(`/uploads/${file.name}`, file.name)
+          }
           sidebar={false}
           usage={false}
         />
@@ -3671,7 +5184,9 @@ describe("AgentChat", () => {
         transport={new FakeAgentTransport()}
       >
         <ActiveThreadHarness
-          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          resolveLocalAttachment={(file) =>
+            resolvedImageAttachment(`/uploads/${file.name}`, file.name)
+          }
         />
       </AgentProvider>,
     );
@@ -3699,7 +5214,9 @@ describe("AgentChat", () => {
         transport={new FakeAgentTransport()}
       >
         <AgentChat
-          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          resolveLocalAttachment={(file) =>
+            resolvedImageAttachment(`/uploads/${file.name}`, file.name)
+          }
           sidebar={false}
           usage={false}
         />
@@ -3729,7 +5246,9 @@ describe("AgentChat", () => {
         transport={new FakeAgentTransport()}
       >
         <AgentChat
-          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          resolveLocalAttachment={(file) =>
+            resolvedImageAttachment(`/uploads/${file.name}`, file.name)
+          }
           sidebar={false}
           usage={false}
         />
@@ -3780,7 +5299,9 @@ describe("AgentChat", () => {
       >
         <ArchiveNotification />
         <AgentChat
-          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          resolveLocalAttachment={(file) =>
+            resolvedImageAttachment(`/uploads/${file.name}`, file.name)
+          }
           sidebar={false}
           usage={false}
         />
@@ -3834,7 +5355,9 @@ describe("AgentChat", () => {
       >
         <CloseNotification />
         <AgentChat
-          resolveLocalAttachment={(file) => localImageInput(`/uploads/${file.name}`)}
+          resolveLocalAttachment={(file) =>
+            resolvedImageAttachment(`/uploads/${file.name}`, file.name)
+          }
           sidebar={false}
           usage={false}
         />
@@ -3912,7 +5435,7 @@ describe("AgentChat", () => {
 
   it("does not leave messages marked in progress after the thread completes", () => {
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-real";
+    initialState.threadLifecycle.activeThreadId = "thread-real";
     initialState.threads["thread-real"] = {
       orderedTurnIds: ["turn-real"],
       status: "completed",
@@ -3951,7 +5474,7 @@ describe("AgentChat", () => {
 
   it("does not leave hydrated history messages marked in progress", () => {
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-history";
+    initialState.threadLifecycle.activeThreadId = "thread-history";
     initialState.threads["thread-history"] = {
       orderedTurnIds: ["turn-history"],
       status: "loaded",
@@ -3991,7 +5514,7 @@ describe("AgentChat", () => {
   it("keeps large historical command output inline in transcript order", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-history";
+    initialState.threadLifecycle.activeThreadId = "thread-history";
     const itemOrder = Array.from({ length: 80 }, (_, index) => `command-${index}`);
     initialState.threads["thread-history"] = {
       orderedTurnIds: ["turn-history"],
@@ -4271,8 +5794,8 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
-    if (initialState.threadRegistry.activeThreadId) {
-      initialState.threads[initialState.threadRegistry.activeThreadId]!.status = "complete";
+    if (initialState.threadLifecycle.activeThreadId) {
+      initialState.threads[initialState.threadLifecycle.activeThreadId]!.status = "complete";
     }
     initialState.serverRequestQueue = { byId: {}, order: [] };
     render(
@@ -4308,7 +5831,7 @@ describe("AgentChat", () => {
   it("shows compact context usage near the composer only for nonzero usage", async () => {
     const user = userEvent.setup();
     const initialState = createInitialAgentState();
-    initialState.threadRegistry.activeThreadId = "thread-usage";
+    initialState.threadLifecycle.activeThreadId = "thread-usage";
     initialState.threads["thread-usage"] = {
       orderedTurnIds: [],
       status: "complete",
@@ -4341,7 +5864,7 @@ describe("AgentChat", () => {
     );
 
     const zeroState = createInitialAgentState();
-    zeroState.threadRegistry.activeThreadId = "thread-zero";
+    zeroState.threadLifecycle.activeThreadId = "thread-zero";
     zeroState.threads["thread-zero"] = {
       orderedTurnIds: [],
       status: "complete",
@@ -4362,8 +5885,8 @@ describe("AgentChat", () => {
     const prompt = vi.spyOn(globalThis, "prompt");
     const transport = new FakeAgentTransport();
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
-    if (initialState.threadRegistry.activeThreadId) {
-      initialState.threads[initialState.threadRegistry.activeThreadId]!.status = "complete";
+    if (initialState.threadLifecycle.activeThreadId) {
+      initialState.threads[initialState.threadLifecycle.activeThreadId]!.status = "complete";
     }
     initialState.serverRequestQueue = { byId: {}, order: [] };
     render(
@@ -4404,8 +5927,8 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
-    if (initialState.threadRegistry.activeThreadId) {
-      initialState.threads[initialState.threadRegistry.activeThreadId]!.status = "complete";
+    if (initialState.threadLifecycle.activeThreadId) {
+      initialState.threads[initialState.threadLifecycle.activeThreadId]!.status = "complete";
     }
     initialState.serverRequestQueue = { byId: {}, order: [] };
     render(
@@ -4442,8 +5965,8 @@ describe("AgentChat", () => {
   it("does not expose working-directory editing on an existing thread", async () => {
     const transport = new FakeAgentTransport();
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
-    if (initialState.threadRegistry.activeThreadId) {
-      initialState.threads[initialState.threadRegistry.activeThreadId]!.status = "complete";
+    if (initialState.threadLifecycle.activeThreadId) {
+      initialState.threads[initialState.threadLifecycle.activeThreadId]!.status = "complete";
     }
     initialState.serverRequestQueue = { byId: {}, order: [] };
     render(
@@ -4551,8 +6074,77 @@ describe("AgentChat", () => {
     expect(screen.getByText("Visible answer")).toBeInTheDocument();
   });
 
+  it("lets components map replace transcript blocks with Default fallback", () => {
+    render(
+      <AgentMessageList
+        components={{
+          blocks: {
+            commandExecution: ({ block, Default }) => (
+              <section>
+                Custom block {block.kind}
+                <Default block={block} />
+              </section>
+            ),
+          },
+        }}
+        thread={{
+          orderedTurnIds: ["turn-block-components"],
+          status: "complete",
+          thread: { id: "thread-block-components", name: "Blocks" },
+          turns: {
+            "turn-block-components": {
+              blocksByItemId: {
+                "cmd-block": {
+                  command: "bun test",
+                  id: "cmd-block",
+                  kind: "commandExecution",
+                },
+              },
+              commandOutputByItemId: {},
+              filePatchByItemId: {},
+              itemOrder: ["cmd-block"],
+              items: {
+                "cmd-block": {
+                  id: "cmd-block",
+                  kind: "commandExecution",
+                  status: "completed",
+                  text: "bun test",
+                  threadId: "thread-block-components",
+                  turnId: "turn-block-components",
+                },
+              },
+              streamingTextByItemId: {},
+              turn: {
+                id: "turn-block-components",
+                status: "completed",
+                threadId: "thread-block-components",
+              },
+            },
+          },
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Custom block commandExecution")).toBeInTheDocument();
+    expect(screen.getByText("bun test")).toBeInTheDocument();
+    expect(screen.getByText("Custom block commandExecution").closest(".aui-message")).toHaveAttribute(
+      "data-kind",
+      "commandExecution",
+    );
+  });
+
   it("starts new threads with selected model and working directory", async () => {
     const user = userEvent.setup();
+    let resolveThreadStart:
+      | ((result: {
+          thread: { id: string; name: string; status: { type: string } };
+        }) => void)
+      | undefined;
+    const threadStartResult = new Promise<{
+      thread: { id: string; name: string; status: { type: string } };
+    }>((resolve) => {
+      resolveThreadStart = resolve;
+    });
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method === "account/read") {
@@ -4570,13 +6162,7 @@ describe("AgentChat", () => {
           };
         }
         if (request.method === "thread/start") {
-          return {
-            thread: {
-              id: "thread-new",
-              name: "New real thread",
-              status: { type: "idle" },
-            },
-          };
+          return threadStartResult;
         }
         return {};
       },
@@ -4584,6 +6170,7 @@ describe("AgentChat", () => {
     render(
       <AgentProvider transport={transport}>
         <AgentChat onRequestWorkingDirectory={() => "/tmp/agent-ui"} />
+        <ActiveThreadStateProbe />
       </AgentProvider>,
     );
 
@@ -4601,21 +6188,417 @@ describe("AgentChat", () => {
     await user.type(screen.getByRole("textbox", { name: "Message" }), "start here");
     await user.click(screen.getByRole("button", { name: "Start thread" }));
 
+    await waitFor(() =>
+      expect(screen.getByLabelText("active thread id")).toHaveTextContent(
+        /^pending-thread-/,
+      ),
+    );
+    const pendingThreadId = screen.getByLabelText("active thread id").textContent ?? "";
+    expect(screen.getByLabelText("active turn id")).toHaveTextContent(
+      /^pending-turn-/,
+    );
+    expect(screen.getByLabelText("active item id")).toHaveTextContent(
+      /^pending-user-message-/,
+    );
+    const pendingUserMessageId =
+      screen.getByLabelText("active item id").textContent ?? "";
+    expect(screen.getByLabelText("active item text")).toHaveTextContent("start here");
+    expect(screen.getByLabelText("active item status")).toHaveTextContent("inProgress");
+    expect(screen.getByLabelText("active item thread id")).toHaveTextContent(
+      pendingThreadId,
+    );
+    expect(screen.getByLabelText("pending operation count")).toHaveTextContent("1");
+    expect(screen.getByLabelText("pending operation status")).toHaveTextContent(
+      "pending",
+    );
     expect(
       transport.requests.find((request) => request.method === "thread/start")?.params,
     ).toEqual({
       cwd: "/tmp/agent-ui",
       model: "real-model",
     });
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+
+    resolveThreadStart?.({
+      thread: {
+        id: "thread-new",
+        name: "New real thread",
+        status: { type: "idle" },
+      },
+    });
+    await waitFor(() =>
+      expect(
+        transport.requests.find((request) => request.method === "turn/start")?.params,
+      ).toMatchObject({
+        clientUserMessageId: pendingUserMessageId,
+        input: [{ text: "start here", text_elements: [], type: "text" }],
+        model: "real-model",
+        threadId: "thread-new",
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText("active thread id")).toHaveTextContent("thread-new"),
+    );
+    expect(screen.getByLabelText("active item thread id")).toHaveTextContent(
+      "thread-new",
+    );
+    expect(screen.getByLabelText("pending operation count")).toHaveTextContent("0");
+    expect(screen.getByLabelText("pending operation status")).toHaveTextContent("none");
+    await waitFor(() => expect(screen.getAllByText("Ready").length).toBeGreaterThan(0));
+    expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
+  });
+
+  it("rolls back pending first-run state when thread start fails", async () => {
+    const user = userEvent.setup();
+    let rejectThreadStart: ((error: Error) => void) | undefined;
+    const threadStartResult = new Promise<never>((_resolve, reject) => {
+      rejectThreadStart = reject;
+    });
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        if (request.method === "thread/start") {
+          return threadStartResult;
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+        <ActiveThreadStateProbe />
+        <ComposerOperationProbe />
+        <PublicComposerControllerProbe />
+      </AgentProvider>,
+    );
+
+    await user.type(await screen.findByRole("textbox", { name: "Message" }), "fail now");
+    await user.click(screen.getByRole("button", { name: "Start thread" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("active thread id")).toHaveTextContent(
+        /^pending-thread-/,
+      ),
+    );
+    expect(screen.getByLabelText("pending operation count")).toHaveTextContent("1");
+
+    rejectThreadStart?.(new Error("start failed"));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("active thread id")).toHaveTextContent("none"),
+    );
+    expect(screen.getByLabelText("active item id")).toHaveTextContent("none");
+    expect(screen.getByLabelText("pending operation count")).toHaveTextContent("0");
+    expect(screen.getByRole("textbox", { name: "Message" })).toBeInTheDocument();
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+  });
+
+  it("does not duplicate rollback or retry work after unmount", async () => {
+    const user = userEvent.setup();
+    let rejectThreadStart: ((error: Error) => void) | undefined;
+    const threadStartResult = new Promise<never>((_resolve, reject) => {
+      rejectThreadStart = reject;
+    });
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        if (request.method === "thread/start") {
+          return threadStartResult;
+        }
+        return {};
+      },
+    });
+    const rendered = render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.type(await screen.findByRole("textbox", { name: "Message" }), "unmount");
+    await user.click(screen.getByRole("button", { name: "Start thread" }));
+    await waitFor(() =>
+      expect(
+        transport.requests.filter((request) => request.method === "thread/start"),
+      ).toHaveLength(1),
+    );
+
+    rendered.unmount();
+    rejectThreadStart?.(new Error("start failed after unmount"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+
+    expect(
+      transport.requests.filter((request) => request.method === "thread/start"),
+    ).toHaveLength(1);
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+  });
+
+  it("keeps the real thread and marks the first message failed when turn start fails", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-real",
+              name: "Real thread",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "turn/start") {
+          throw new Error("turn failed");
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+        <ActiveThreadStateProbe />
+        <ComposerOperationProbe />
+        <PublicComposerControllerProbe />
+      </AgentProvider>,
+    );
+
+    await user.type(await screen.findByRole("textbox", { name: "Message" }), "fail turn");
+    await user.click(screen.getByRole("button", { name: "Start thread" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("active thread id")).toHaveTextContent(
+        "thread-real",
+      ),
+    );
+    expect(screen.getByLabelText("active item id")).toHaveTextContent(
+      /^pending-user-message-/,
+    );
+    expect(screen.getByLabelText("active item text")).toHaveTextContent("fail turn");
+    expect(screen.getByLabelText("active item status")).toHaveTextContent("failed");
+    expect(screen.getByLabelText("active item thread id")).toHaveTextContent(
+      "thread-real",
+    );
+    expect(screen.getByLabelText("pending operation count")).toHaveTextContent("0");
+    expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+      "failed",
+    );
+    expect(screen.getByLabelText("public failed pending count")).toHaveTextContent("1");
+    expect(screen.getByLabelText("public failed pending error")).toHaveTextContent(
+      "turn failed",
+    );
+    expect(screen.getByLabelText("public composer submit mode")).toHaveTextContent(
+      "send",
+    );
+    expect(screen.getByLabelText("public composer can submit")).toHaveTextContent(
+      "false",
+    );
+    expect(screen.getByLabelText("public composer disabled reason")).toHaveTextContent(
+      "empty",
+    );
     expect(
       transport.requests.find((request) => request.method === "turn/start")?.params,
     ).toMatchObject({
-      input: [{ text: "start here", text_elements: [], type: "text" }],
-      model: "real-model",
-      threadId: "thread-new",
+      threadId: "thread-real",
     });
-    expect(await screen.findByText("Ready")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Resume" })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cancel failed pending message" }));
+    expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+      "cancelled",
+    );
+    expect(screen.getByLabelText("public failed pending count")).toHaveTextContent("0");
+  });
+
+  it("retries failed first messages on the real thread by operation id", async () => {
+    const user = userEvent.setup();
+    let turnStartCalls = 0;
+    let resolveRetryTurnStart: (() => void) | undefined;
+    const retryTurnStartResult = new Promise<void>((resolve) => {
+      resolveRetryTurnStart = resolve;
+    });
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-retry",
+              name: "Retry thread",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "turn/start") {
+          turnStartCalls += 1;
+          if (turnStartCalls === 1) throw new Error("turn failed once");
+          return retryTurnStartResult;
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+        <ActiveThreadStateProbe />
+        <ComposerOperationProbe />
+        <PublicComposerControllerProbe />
+      </AgentProvider>,
+    );
+
+    await user.type(await screen.findByRole("textbox", { name: "Message" }), "retry me");
+    await user.click(screen.getByRole("button", { name: "Start thread" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+        "failed",
+      ),
+    );
+    expect(screen.getByLabelText("public failed pending count")).toHaveTextContent("1");
+    const firstTurnStartParams = transport.requests.find(
+      (request) => request.method === "turn/start",
+    )?.params as Record<string, unknown>;
+    const retryMessageArticle = screen
+      .getAllByText("retry me")
+      .map((node) => node.closest("article"))
+      .find((article) => article?.classList.contains("aui-message"));
+    expect(retryMessageArticle).toHaveAttribute(
+      "data-status",
+      "failed",
+    );
+    await user.click(screen.getByRole("button", { name: "Retry failed pending message" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+        "pending",
+      ),
+    );
+    expect(screen.getByLabelText("public failed pending count")).toHaveTextContent("0");
+    expect(
+      transport.requests.filter((request) => request.method === "turn/start"),
+    ).toHaveLength(2);
+    expect(retryMessageArticle).toHaveTextContent("retry me");
+    expect(retryMessageArticle).toHaveAttribute("data-status", "inProgress");
+    resolveRetryTurnStart?.();
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+        "succeeded",
+      ),
+    );
+    const threadStartRequests = transport.requests.filter(
+      (request) => request.method === "thread/start",
+    );
+    const turnStartRequests = transport.requests.filter(
+      (request) => request.method === "turn/start",
+    );
+    expect(threadStartRequests).toHaveLength(1);
+    expect(turnStartRequests).toHaveLength(2);
+    expect(turnStartRequests[1]?.params).toMatchObject({
+      clientUserMessageId: firstTurnStartParams.clientUserMessageId,
+      threadId: "thread-retry",
+    });
+  });
+
+  it("does not expose failed pending messages when no thread is active", () => {
+    const initialState = createInitialAgentState();
+    initialState.threadLifecycle.activeThreadId = undefined;
+    initialState.threadLifecycle.operations["operation-hidden"] = {
+      error: { message: "hidden turn failed" },
+      id: "operation-hidden",
+      kind: "firstMessage",
+      status: "failed",
+      threadId: "thread-hidden",
+    };
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <PublicComposerControllerProbe />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("public failed pending count")).toHaveTextContent("0");
+    expect(screen.getByLabelText("public failed pending error")).toHaveTextContent(
+      "none",
+    );
+    expect(screen.getByLabelText("public failed pending id")).toHaveTextContent(
+      "none",
+    );
+    expect(
+      screen.getByRole("button", { name: "Retry failed pending message" }),
+    ).toBeDisabled();
+  });
+
+  it("keeps cancelled retry operations cancelled when the retry resolves", async () => {
+    const user = userEvent.setup();
+    let turnStartCalls = 0;
+    let resolveRetryTurnStart: (() => void) | undefined;
+    const retryTurnStartResult = new Promise<void>((resolve) => {
+      resolveRetryTurnStart = resolve;
+    });
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-cancel-retry",
+              name: "Cancel retry thread",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "turn/start") {
+          turnStartCalls += 1;
+          if (turnStartCalls === 1) throw new Error("turn failed once");
+          return retryTurnStartResult;
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+        <ComposerOperationProbe />
+      </AgentProvider>,
+    );
+
+    await user.type(await screen.findByRole("textbox", { name: "Message" }), "cancel retry");
+    await user.click(screen.getByRole("button", { name: "Start thread" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+        "failed",
+      ),
+    );
+
+    await user.click(screen.getByRole("button", { name: "Retry operation" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+        "pending",
+      ),
+    );
+    await user.click(screen.getByRole("button", { name: "Cancel operation" }));
+    expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+      "cancelled",
+    );
+    resolveRetryTurnStart?.();
+    await waitFor(() =>
+      expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+        "cancelled",
+      ),
+    );
+    expect(
+      transport.requests.filter((request) => request.method === "turn/start"),
+    ).toHaveLength(2);
   });
 
   it("leaves the selected working directory unchanged when folder selection is canceled", async () => {
@@ -5590,6 +7573,66 @@ describe("AgentChat", () => {
     expect(window.location.pathname).toBe("/threads/thread-target");
   });
 
+  it("uses the canonical id when direct URL resume returns a different thread id", async () => {
+    window.history.replaceState(null, "", "/threads/thread-requested-url");
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-requested-url",
+                name: "Requested URL thread",
+                status: { type: "notLoaded" },
+              },
+            ],
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-requested-url",
+              name: "Requested URL thread",
+              status: { type: "idle" },
+              turns: [],
+            },
+          };
+        }
+        if (request.method === "thread/resume") {
+          return {
+            thread: {
+              id: "thread-canonical-url",
+              name: "Canonical URL thread",
+              status: { type: "active" },
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat threadUrlRouting />
+      </AgentProvider>,
+    );
+
+    expect(
+      await screen.findByRole("heading", { name: "Canonical URL thread" }),
+    ).toBeInTheDocument();
+    await waitFor(() =>
+      expect(window.location.pathname).toBe("/threads/thread-canonical-url"),
+    );
+    expect(screen.getByLabelText("Message")).toBeEnabled();
+    expect(
+      transport.requests.find((request) => request.method === "thread/resume")?.params,
+    ).toEqual({ threadId: "thread-requested-url" });
+    expect(
+      screen.queryByRole("heading", { name: "Requested URL thread" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("passes real thread/list search params and shows empty history state", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
@@ -5619,6 +7662,375 @@ describe("AgentChat", () => {
       sortDirection: "desc",
       sortKey: "updated_at",
     });
+  });
+
+  it("keeps explicit thread list scopes independent across search and pagination", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method !== "thread/list") return {};
+        const params = request.params as
+          | { cursor?: string | null; searchTerm?: string }
+          | undefined;
+        if (params?.searchTerm === "alpha" && params.cursor === "alpha-page-2") {
+          return {
+            data: [
+              {
+                id: "thread-alpha-2",
+                name: "Alpha second page",
+                status: { type: "notLoaded" },
+              },
+            ],
+            nextCursor: null,
+          };
+        }
+        if (params?.searchTerm === "alpha") {
+          return {
+            data: [
+              {
+                id: "thread-alpha-1",
+                name: "Alpha first page",
+                status: { type: "notLoaded" },
+              },
+            ],
+            nextCursor: "alpha-page-2",
+          };
+        }
+        if (params?.searchTerm === "beta") {
+          return {
+            data: [
+              {
+                id: "thread-beta-1",
+                name: "Beta first page",
+                status: { type: "notLoaded" },
+              },
+            ],
+            nextCursor: null,
+          };
+        }
+        return { data: [], nextCursor: null };
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <ThreadListControllerProbe
+          label="left"
+          scope={{ key: "history:left", kind: "history" }}
+        />
+        <ThreadListControllerProbe
+          label="right"
+          scope={{ key: "history:right", kind: "history" }}
+        />
+      </AgentProvider>,
+    );
+
+    await user.type(screen.getByLabelText("left search"), "alpha");
+    await user.click(screen.getByRole("button", { name: "left refresh" }));
+    expect(await screen.findByLabelText("left threads")).toHaveTextContent(
+      "Alpha first page",
+    );
+    expect(screen.getByLabelText("left cursor")).toHaveTextContent("alpha-page-2");
+
+    await user.type(screen.getByLabelText("right search"), "beta");
+    await user.click(screen.getByRole("button", { name: "right refresh" }));
+    expect(await screen.findByLabelText("right threads")).toHaveTextContent(
+      "Beta first page",
+    );
+
+    await user.click(screen.getByRole("button", { name: "left load more" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("left threads")).toHaveTextContent(
+        "Alpha first page,Alpha second page",
+      ),
+    );
+    expect(screen.getByLabelText("right threads")).toHaveTextContent("Beta first page");
+    expect(
+      transport.requests.find(
+        (request) =>
+          request.method === "thread/list" &&
+          (request.params as { cursor?: string | null; searchTerm?: string }).cursor ===
+            "alpha-page-2",
+      )?.params,
+    ).toMatchObject({
+      cursor: "alpha-page-2",
+      searchTerm: "alpha",
+    });
+  });
+
+  it("emits normalized history sync metadata after thread list refresh and pagination", async () => {
+    const user = userEvent.setup();
+    const onHistorySynced = vi.fn();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method !== "thread/list") return {};
+        const params = request.params as
+          | { cursor?: string | null; searchTerm?: string }
+          | undefined;
+        if (params?.cursor === "sync-page-2") {
+          return {
+            data: [
+              {
+                id: "thread-sync-2",
+                name: "Sync page two",
+                rawSecret: "not forwarded",
+                status: { type: "notLoaded" },
+              },
+            ],
+            nextCursor: null,
+          };
+        }
+        return {
+          data: [
+            {
+              id: "thread-sync-1",
+              name: "Sync page one",
+              rawSecret: "not forwarded",
+              status: { type: "notLoaded" },
+            },
+          ],
+          nextCursor: "sync-page-2",
+        };
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <ThreadListControllerProbe
+          label="sync"
+          onHistorySynced={onHistorySynced}
+          scope={{ key: "history:sync", kind: "history" }}
+        />
+      </AgentProvider>,
+    );
+
+    await user.type(screen.getByLabelText("sync search"), "sync");
+    await user.click(screen.getByRole("button", { name: "sync refresh" }));
+    await waitFor(() => expect(onHistorySynced).toHaveBeenCalledTimes(1));
+    expect(onHistorySynced.mock.calls[0]?.[0]).toMatchObject({
+      append: false,
+      nextCursor: "sync-page-2",
+      scope: { key: "history:sync", kind: "history", searchTerm: "sync" },
+      searchTerm: "sync",
+      threadIds: ["thread-sync-1"],
+    });
+    expect(onHistorySynced.mock.calls[0]?.[0]).not.toHaveProperty("rawSecret");
+
+    await user.click(screen.getByRole("button", { name: "sync load more" }));
+    await waitFor(() => expect(onHistorySynced).toHaveBeenCalledTimes(2));
+    expect(onHistorySynced.mock.calls[1]?.[0]).toMatchObject({
+      append: true,
+      nextCursor: null,
+      scope: { key: "history:sync", kind: "history", searchTerm: "sync" },
+      searchTerm: "sync",
+      threadIds: ["thread-sync-2"],
+    });
+    expect(onHistorySynced.mock.calls[1]?.[0].syncedAt).toEqual(expect.any(Number));
+  });
+
+  it("ignores stale search responses for the same explicit thread list scope key", async () => {
+    const user = userEvent.setup();
+    let resolveAlpha: (response: unknown) => void = () => undefined;
+    const alphaResponse = new Promise((resolve) => {
+      resolveAlpha = resolve;
+    });
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method !== "thread/list") return {};
+        const searchTerm = (request.params as { searchTerm?: string } | undefined)
+          ?.searchTerm;
+        if (searchTerm === "alpha") return alphaResponse;
+        if (searchTerm === "beta") {
+          return {
+            data: [
+              {
+                id: "thread-shared-race",
+                name: "Beta race result",
+                status: { type: "notLoaded" },
+              },
+            ],
+            nextCursor: null,
+          };
+        }
+        return { data: [], nextCursor: null };
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <ThreadListControllerProbe
+          label="race"
+          scope={{ key: "history:race", kind: "history" }}
+        />
+      </AgentProvider>,
+    );
+
+    await user.type(screen.getByLabelText("race search"), "alpha");
+    await user.click(screen.getByRole("button", { name: "race refresh" }));
+    await waitFor(() =>
+      expect(
+        transport.requests.some(
+          (request) =>
+            request.method === "thread/list" &&
+            (request.params as { searchTerm?: string }).searchTerm === "alpha",
+        ),
+      ).toBe(true),
+    );
+
+    await user.clear(screen.getByLabelText("race search"));
+    await user.type(screen.getByLabelText("race search"), "beta");
+    await user.click(screen.getByRole("button", { name: "race refresh" }));
+    expect(await screen.findByLabelText("race threads")).toHaveTextContent(
+      "Beta race result",
+    );
+    expect(screen.getByLabelText("race scope search")).toHaveTextContent("beta");
+
+    await act(async () => {
+      resolveAlpha({
+        data: [
+          {
+            id: "thread-shared-race",
+            name: "Alpha stale result",
+            status: { type: "notLoaded" },
+          },
+        ],
+        nextCursor: null,
+      });
+      await alphaResponse;
+    });
+
+    expect(screen.getByLabelText("race threads")).toHaveTextContent("Beta race result");
+    expect(screen.getByLabelText("race threads")).not.toHaveTextContent(
+      "Alpha stale result",
+    );
+    expect(screen.getByLabelText("race scope search")).toHaveTextContent("beta");
+  });
+
+  it("keeps scoped thread list state consistent when resume returns a canonical id", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-requested",
+                name: "Requested stored thread",
+                status: { type: "notLoaded" },
+              },
+            ],
+            nextCursor: null,
+          };
+        }
+        if (request.method === "thread/resume") {
+          return {
+            thread: {
+              id: "thread-canonical-resume",
+              name: "Canonical resumed thread",
+              status: { type: "active" },
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <ThreadListControllerProbe
+          label="resume"
+          scope={{ key: "history:resume", kind: "history" }}
+        />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "resume refresh" }));
+    expect(await screen.findByLabelText("resume threads")).toHaveTextContent(
+      "Requested stored thread",
+    );
+
+    await user.click(screen.getByRole("button", { name: "resume resume first" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("resume active thread")).toHaveTextContent(
+        "thread-canonical-resume",
+      ),
+    );
+    expect(screen.getByLabelText("resume threads")).toHaveTextContent(
+      "Canonical resumed thread",
+    );
+    expect(screen.getByLabelText("resume threads")).not.toHaveTextContent(
+      "Requested stored thread",
+    );
+    expect(
+      transport.requests.find((request) => request.method === "thread/resume")?.params,
+    ).toEqual({ threadId: "thread-requested" });
+  });
+
+  it("hydrates thread list previews without changing active run settings", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.runSettings.cwd = "/Users/example/active";
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                cwd: "/Users/example/background",
+                id: "thread-background-preview",
+                name: "Background preview",
+                status: { type: "notLoaded" },
+              },
+            ],
+            nextCursor: null,
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              cwd: "/Users/example/background",
+              id: "thread-background-preview",
+              name: "Background preview",
+              status: { type: "notLoaded" },
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <ThreadListControllerProbe
+          label="history"
+          scope={{ key: "history:preview", kind: "history" }}
+        />
+        <RunSettingsProbe />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("current cwd")).toHaveTextContent(
+      "/Users/example/active",
+    );
+    await user.click(screen.getByRole("button", { name: "history refresh" }));
+    expect(await screen.findByLabelText("history threads")).toHaveTextContent(
+      "Background preview",
+    );
+    await user.click(screen.getByRole("button", { name: "history preview first" }));
+
+    await waitFor(() =>
+      expect(
+        transport.requests.find((request) => request.method === "thread/read")?.params,
+      ).toEqual({
+        includeTurns: true,
+        threadId: "thread-background-preview",
+      }),
+    );
+    expect(screen.getByLabelText("current cwd")).toHaveTextContent(
+      "/Users/example/active",
+    );
   });
 
   it("ignores stored thread rows without stable ids", async () => {
@@ -5764,7 +8176,9 @@ describe("AgentChat", () => {
     expect(await screen.findByText("Second page thread")).toBeInTheDocument();
     expect((await screen.findAllByText(/second-project/)).length).toBeGreaterThan(0);
     expect(screen.queryByText(/threads loaded/)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Load more" })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByRole("button", { name: "Load more" })).not.toBeInTheDocument(),
+    );
     expect(
       transport.requests.find(
         (request) =>
@@ -5840,8 +8254,8 @@ describe("AgentChat", () => {
 
   function existingThreadState() {
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
-    if (initialState.threadRegistry.activeThreadId) {
-      initialState.threads[initialState.threadRegistry.activeThreadId]!.status = "complete";
+    if (initialState.threadLifecycle.activeThreadId) {
+      initialState.threads[initialState.threadLifecycle.activeThreadId]!.status = "complete";
     }
     initialState.serverRequestQueue = { byId: {}, order: [] };
     return initialState;
@@ -5854,7 +8268,9 @@ describe("AgentChat", () => {
         transport={new FakeAgentTransport()}
       >
         <AgentChat
-          resolveLocalAttachment={(file) => localImageInput(`/tmp/${file.name}`)}
+          resolveLocalAttachment={(file) =>
+            resolvedImageAttachment(`/tmp/${file.name}`, file.name)
+          }
         />
       </AgentProvider>,
     );
@@ -5876,8 +8292,8 @@ describe("AgentChat", () => {
         <AgentChat
           resolveLocalAttachment={(file, kind) =>
             kind === "image"
-              ? localImageInput(`/tmp/${file.name}`)
-              : textInput(`Attached file: /tmp/${file.name}`)
+              ? resolvedImageAttachment(`/tmp/${file.name}`, file.name)
+              : resolvedTextAttachment(`/tmp/${file.name}`, file.name)
           }
         />
       </AgentProvider>,
@@ -5900,7 +8316,9 @@ describe("AgentChat", () => {
         transport={new FakeAgentTransport()}
       >
         <AgentChat
-          resolveLocalAttachment={(file) => localImageInput(`/tmp/${file.name}`)}
+          resolveLocalAttachment={(file) =>
+            resolvedImageAttachment(`/tmp/${file.name}`, file.name)
+          }
         />
       </AgentProvider>,
     );
@@ -5923,8 +8341,8 @@ describe("AgentChat", () => {
         <AgentChat
           resolveLocalAttachment={(file, kind) =>
             kind === "image"
-              ? localImageInput(`/uploads/${file.name}`)
-              : textInput(`Attached file: /uploads/${file.name}`)
+              ? resolvedImageAttachment(`/uploads/${file.name}`, file.name)
+              : resolvedTextAttachment(`/uploads/${file.name}`, file.name)
           }
         />
       </AgentProvider>,
@@ -5947,6 +8365,78 @@ describe("AgentChat", () => {
     });
   });
 
+  it("uses structured attachment preview URLs while preserving explicit Codex input", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    const revoke = vi.spyOn(URL, "revokeObjectURL");
+    render(
+      <AgentProvider initialState={existingThreadState()} transport={transport}>
+        <AgentChat
+          resolveLocalAttachment={(file) => ({
+            displayName: "Diagram preview",
+            id: "asset-diagram",
+            input: localImageInput(`/uploads/${file.name}`),
+            path: `/uploads/${file.name}`,
+            previewUrl: "/agent-ui/assets/asset-diagram",
+            redactedPath: "[agent-ui-local-media]/diagram.png",
+          })}
+        />
+      </AgentProvider>,
+    );
+    const textarea = await screen.findByLabelText("Message");
+    fireEvent.paste(textarea, {
+      clipboardData: {
+        files: [new File(["x"], "diagram.png", { type: "image/png" })],
+      },
+    });
+    const chip = await screen.findByRole("listitem", { name: /Diagram preview/ });
+    expect(chip.querySelector("img")?.getAttribute("src")).toBe(
+      "/agent-ui/assets/asset-diagram",
+    );
+    expect(screen.getByText("Diagram preview")).toBeInTheDocument();
+    await user.type(textarea, "review preview");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(transport.requests.at(-1)?.params).toMatchObject({
+      input: [
+        { text: "review preview", text_elements: [], type: "text" },
+        { path: "/uploads/diagram.png", type: "localImage" },
+      ],
+    });
+    expect(revoke).not.toHaveBeenCalledWith("/agent-ui/assets/asset-diagram");
+  });
+
+  it("falls back when a structured attachment preview URL fails to load", async () => {
+    render(
+      <AgentProvider
+        initialState={existingThreadState()}
+        transport={new FakeAgentTransport()}
+      >
+        <AgentChat
+          resolveLocalAttachment={(file) => ({
+            displayName: "Broken preview",
+            input: localImageInput(`/uploads/${file.name}`),
+            path: `/uploads/${file.name}`,
+            previewUrl: "/agent-ui/assets/missing-preview",
+          })}
+        />
+      </AgentProvider>,
+    );
+    const textarea = await screen.findByLabelText("Message");
+    fireEvent.paste(textarea, {
+      clipboardData: {
+        files: [new File(["x"], "broken.png", { type: "image/png" })],
+      },
+    });
+    const chip = await screen.findByRole("listitem", { name: /Broken preview/ });
+    const image = chip.querySelector("img");
+    expect(image?.getAttribute("src")).toBe("/agent-ui/assets/missing-preview");
+    fireEvent.error(image!);
+    expect(chip).toHaveAttribute("data-preview-status", "failed");
+    expect(chip.querySelector("img")).toBeNull();
+    expect(chip.querySelector(".aui-composer-chip-icon")).not.toBeNull();
+  });
+
   it("sends arbitrary file attachments as explicit local path text inputs", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
@@ -5955,8 +8445,8 @@ describe("AgentChat", () => {
         <AgentChat
           resolveLocalAttachment={(file, kind) =>
             kind === "image"
-              ? localImageInput(`/uploads/${file.name}`)
-              : textInput(`Attached file: /uploads/${file.name}`)
+              ? resolvedImageAttachment(`/uploads/${file.name}`, file.name)
+              : resolvedTextAttachment(`/uploads/${file.name}`, file.name)
           }
         />
       </AgentProvider>,
@@ -5976,6 +8466,35 @@ describe("AgentChat", () => {
     });
   });
 
+  it("does not render structured non-image attachment URLs as image previews", async () => {
+    render(
+      <AgentProvider
+        initialState={existingThreadState()}
+        transport={new FakeAgentTransport()}
+      >
+        <AgentChat
+          resolveLocalAttachment={(file) => ({
+            displayName: file.name,
+            input: textInput(`Attached file: /uploads/${file.name}`),
+            path: `/uploads/${file.name}`,
+            previewUrl: "/agent-ui/assets/file-asset",
+            url: "/agent-ui/assets/file-asset",
+          })}
+        />
+      </AgentProvider>,
+    );
+    const textarea = await screen.findByLabelText("Message");
+    fireEvent.paste(textarea, {
+      clipboardData: {
+        files: [new File(["model"], "part.3mf", { type: "" })],
+      },
+    });
+    const chip = await screen.findByRole("listitem", { name: /part\.3mf/ });
+    expect(chip).toHaveAttribute("data-kind", "file");
+    expect(chip.querySelector("img")).toBeNull();
+    expect(screen.getByText(".3mf · 5 B")).toBeInTheDocument();
+  });
+
   it("hides composer attachment controls without a host resolver", async () => {
     render(
       <AgentProvider
@@ -5992,11 +8511,10 @@ describe("AgentChat", () => {
   it("expands additional pending approvals from the compact picker", async () => {
     const user = userEvent.setup();
     const state = createInitialAgentState();
-    state.threadRegistry.activeThreadId = "thread-approvals";
-    state.threadRegistry.liveThreadIds = ["thread-approvals"];
+    state.threadLifecycle.activeThreadId = "thread-approvals";
+    state.threadLifecycle.collections[state.threadLifecycle.defaultCollectionKey]!.ids = ["thread-approvals"];
     state.threads["thread-approvals"] = {
       orderedTurnIds: [],
-      registryStatus: "live",
       status: "waitingForInput",
       thread: { id: "thread-approvals", name: "Approvals" },
       turns: {},
@@ -6042,7 +8560,6 @@ describe("AgentChat", () => {
   });
 
   it("auto-loads history and debounce-filters it from the search box", async () => {
-    const user = userEvent.setup();
     const transport = new FakeAgentTransport({
       onRequest(request) {
         if (request.method !== "thread/list") return {};
@@ -6076,16 +8593,38 @@ describe("AgentChat", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Load" })).not.toBeInTheDocument();
 
-    await user.type(await screen.findByLabelText("Search history"), "audit");
+    const searchInput = screen.getByLabelText("Search history");
+    vi.useFakeTimers();
+    try {
+      fireEvent.change(searchInput, {
+        target: { value: "audit" },
+      });
+      await act(async () => {
+        vi.advanceTimersByTime(320);
+        await Promise.resolve();
+      });
+    } finally {
+      vi.useRealTimers();
+    }
     expect(
       await screen.findByRole("button", { name: /Audit thread/ }),
     ).toBeInTheDocument();
-    expect(
-      transport.requests.some(
+    const auditRequestCount = () =>
+      transport.requests.filter(
         (request) =>
           request.method === "thread/list" &&
           (request.params as { searchTerm?: string }).searchTerm === "audit",
-      ),
-    ).toBe(true);
+      ).length;
+    expect(auditRequestCount()).toBe(1);
+    vi.useFakeTimers();
+    try {
+      await act(async () => {
+        vi.advanceTimersByTime(2000);
+        await Promise.resolve();
+      });
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(auditRequestCount()).toBe(1);
   });
 });

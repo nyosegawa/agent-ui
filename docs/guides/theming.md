@@ -118,6 +118,11 @@ constrain height with normal CSS:
 
 ## Custom Rendering
 
-Use slots for approval cards and thread items when the default UI is not
-enough. Keep approval decisions explicit and keep command, tool, and file-change
-context in the transcript order so restored sessions remain auditable.
+Use the `AgentChat.components` map when token changes are not enough.
+`Approval`, `ComposerPanel`, `EmptyState`, `Shell`, `Sidebar`, and `blocks`
+are the preferred replacement points for current customization. `Item` remains a
+legacy replacement point whose props still expose core item/turn state in this
+draft, so prefer `blocks` or transcript controllers for raw-free custom
+rendering. Keep approval decisions explicit and keep command, tool, and
+file-change context in the transcript order so restored sessions remain
+auditable.

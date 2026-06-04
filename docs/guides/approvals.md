@@ -18,6 +18,12 @@ Dynamic tool calls are also host integration requests, but the default queue
 does not retain them because they must be handled out of band by the bridge or
 host tool runner.
 
+Keep approval decisions separate from broader server-request policy. Agent UI
+can render approval cards and expose neutral `respond()` / `reject()` actions,
+but hosts own permission grants, MCP elicitation payloads, user-input forms,
+dynamic-tool authorization, audit logging, and any workspace or tenant policy
+attached to a decision.
+
 ## Default Placement
 
 The default thread view anchors approvals inside the transcript. When upstream
@@ -35,13 +41,13 @@ The default approval surface shows:
 - working directory and policy metadata when available
 - explicit approve, approve-for-session, and decline actions when supported
 
-Hosts can customize approval rendering through component slots, but should not
-hide the context needed to make a safe decision.
+Hosts can customize approval rendering through the `AgentChat.components` map,
+but should not hide the context needed to make a safe decision.
 
-`AgentChat.slots.renderApproval` replaces the default approval card and its
-actions for that rendered request. Custom renderers must wire decisions through
-`useAgentApprovals()` or a host-owned response path; otherwise the request will
-remain pending until the App Server resolves or rejects it.
+`AgentChat.components.Approval` replaces the default approval card and its
+actions for that rendered request. Custom components must wire decisions
+through `useAgentApprovals()` or a host-owned response path; otherwise the
+request will remain pending until the App Server resolves or rejects it.
 
 ## Headless Control
 
@@ -51,6 +57,11 @@ Use hooks for custom surfaces:
 const approvals = useAgentApprovals(threadId);
 const { requests, respond, reject } = useAgentServerRequests(threadId);
 ```
+
+`useAgentApprovals()` returns only command, file-change, and legacy
+exec/apply-patch approval requests. `useAgentServerRequests()` returns the
+broader normalized request queue and intentionally uses neutral response names
+so hosts send method-specific payloads instead of approval-shaped decisions.
 
 See [reference/hooks.md](../reference/hooks.md) for hook details and
 [architecture/security.md](../architecture/security.md) for security rules.

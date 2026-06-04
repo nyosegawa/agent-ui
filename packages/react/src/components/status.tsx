@@ -126,11 +126,11 @@ export function AgentDiagnosticsPanel({
   bootstrap: ReturnType<typeof useAgentBootstrap>;
 }) {
   const { t } = useAgentI18n();
-  const { errors, warnings } = useAgentDiagnostics();
+  const { userDiagnostics } = useAgentDiagnostics();
   const messages = [
     ...bootstrap.errors.map((error) => error.message),
-    ...errors.map((error) => error.message),
-    ...warnings.map((warning) => warning.message),
+    ...userDiagnostics.errors.map((error) => error.message),
+    ...userDiagnostics.warnings.map((warning) => warning.message),
   ].filter((message) => message && !isSuppressedDiagnostic(message));
   if (bootstrap.isBootstrapping && messages.length === 0) {
     return (
@@ -163,8 +163,8 @@ export function AgentDiagnosticsPanel({
 
 export function AgentStatusSummary() {
   const { t } = useAgentI18n();
-  const { banners } = useAgentDiagnostics();
-  const notices = normalizedStatusNotices(banners);
+  const { userDiagnostics } = useAgentDiagnostics();
+  const notices = normalizedStatusNotices(userDiagnostics.banners);
   if (notices.length === 0) return null;
   const criticalCount = notices.filter((notice) => notice.severity === "critical").length;
   const warningCount = notices.filter((notice) => notice.severity === "warning").length;
@@ -178,8 +178,8 @@ export function AgentStatusSummary() {
 
 export function AgentStatusDetails({ includeCritical = false }: { includeCritical?: boolean }) {
   const { t } = useAgentI18n();
-  const { banners } = useAgentDiagnostics();
-  const notices = normalizedStatusNotices(banners)
+  const { userDiagnostics } = useAgentDiagnostics();
+  const notices = normalizedStatusNotices(userDiagnostics.banners)
     .filter((notice) => includeCritical || notice.severity !== "critical")
     .slice(-6);
   if (notices.length === 0) return null;
@@ -210,8 +210,8 @@ export function AgentStatusDetails({ includeCritical = false }: { includeCritica
 
 export function AgentCriticalNoticeList() {
   const { t } = useAgentI18n();
-  const { banners } = useAgentDiagnostics();
-  const notices = normalizedStatusNotices(banners).filter(
+  const { userDiagnostics } = useAgentDiagnostics();
+  const notices = normalizedStatusNotices(userDiagnostics.banners).filter(
     (notice) => notice.severity === "critical",
   );
   if (notices.length === 0) return null;

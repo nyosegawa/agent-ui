@@ -17,9 +17,15 @@ Do not implement full chat with a plain Next Route Handler. Route Handlers are
 request/response only; streaming turns, approval requests, and browser approval
 responses require a long-lived WebSocket bridge.
 
-This example has no bridge `admission` hook. It is loopback-first development
-infrastructure; add host-owned auth, admission, upload scoping, isolation,
-resource limits, and audit logging before non-loopback use.
+This example makes bridge policy explicit with local-loopback admission and the
+productized browser method allowlist. It is loopback-first development
+infrastructure; add host-owned auth, host-callback admission, upload scoping,
+isolation, resource limits, and audit logging before non-loopback use.
+
+The upload helper exposes both `POST /agent-ui/upload` and
+`/agent-ui/assets/<id>`. The React page returns structured attachment metadata
+for composer sends and resolves transcript local media back to the same-origin
+asset URL.
 
 Run:
 

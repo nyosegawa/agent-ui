@@ -84,8 +84,10 @@ describe("package script documentation", () => {
     expect(testingDocs).toContain("bun run test:skills");
     expect(skillDocs).toContain("bun run test:skills");
     expect(skillDocs).toContain("skills/agent-ui/SKILL.md");
-    expect(skillDocs).toContain("gh skill install nyosegawa/agent-ui agent-ui");
-    expect(skillDocs).toContain("npx skills add nyosegawa/agent-ui --skill agent-ui");
+    expect(skillDocs).toContain("$skill-installer");
+    expect(skillDocs).toContain("Reusable distribution should use a plugin");
+    expect(skillDocs).toContain("skills/agent-ui/agents/openai.yaml");
+    expect(skillDocs).toContain(".agents/skills");
   });
 
   it("keeps repository skill docs aligned with package scripts", () => {
@@ -174,15 +176,15 @@ describe("package script documentation", () => {
 
     expect(uploadSource).toContain("const DEFAULT_MAX_UPLOAD_BYTES = 16 * 1024 * 1024");
     expect(uploadSource).toContain("const DEFAULT_UPLOAD_TTL_MS = 60 * 60 * 1000");
-    expect(uploadSource).toContain(
-      "application\\/octet-stream|image\\/[-+.\\w]+|text\\/plain",
-    );
-    expect(uploadSource).toContain("contentType && !isAllowedContentType(contentType)");
+    expect(uploadSource).toContain('mimeType === "application/octet-stream"');
+    expect(uploadSource).toContain('mimeType === "text/plain"');
+    expect(uploadSource).toContain('mimeType?.startsWith("image/")');
+    expect(uploadSource).toContain('mimeType === "image/svg+xml"');
+    expect(uploadSource).toContain("mimeType && !isAllowedContentType(mimeType)");
 
     expect(serverBridgeDocs).toContain("missing `content-type` is accepted");
-    expect(serverBridgeDocs).toContain(
-      "`application/octet-stream`, `image/*`, or `text/plain`",
-    );
+    expect(serverBridgeDocs).toContain("`application/octet-stream`, non-SVG `image/*`");
+    expect(serverBridgeDocs).toContain("`text/plain`");
     expect(serverBridgeDocs).toContain("16 MB default limit");
     expect(serverBridgeDocs).toContain("one hour default TTL");
   });

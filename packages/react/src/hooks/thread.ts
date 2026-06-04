@@ -4,7 +4,7 @@ import {
   selectOrderedTurns,
   selectRunSettings,
   selectThread,
-  selectThreadRegistry,
+  selectThreadLifecycle,
   type ThreadId,
   type ThreadState,
 } from "@nyosegawa/agent-ui-core";
@@ -13,7 +13,6 @@ import {
   normalizeThreadResumeResponse,
 } from "@nyosegawa/agent-ui-codex/normalizer";
 import { useCallback, useMemo, useState } from "react";
-import type { AgentUserInput } from "../agent-input";
 import { useAgentComposerQueueStore } from "../composer-queue";
 import { useAgentContext } from "../provider";
 import {
@@ -21,7 +20,6 @@ import {
   codexThreadHistoryParams,
   codexThreadResumeParams,
   codexThreadStartParams,
-  codexTurnStartOptions,
   type ThreadForkOptions,
   type ThreadHistoryParams,
   type ThreadResumeOptions,
@@ -33,8 +31,6 @@ import {
   threadUpsertEvent,
 } from "../thread-history";
 import { useCodexSession } from "./codex-session";
-import { AGENT_EXECUTION_MODES } from "./run-settings";
-import { codexReasoningEffort, normalizeTurnInput } from "./turn-input";
 
 export type {
   ThreadForkOptions,
@@ -46,7 +42,7 @@ export type {
 export function useAgentThread(threadId?: ThreadId) {
   const { dispatch, state } = useAgentContext();
   const codex = useCodexSession();
-  const resolvedThreadId = threadId ?? selectThreadRegistry(state).activeThreadId;
+  const resolvedThreadId = threadId ?? selectThreadLifecycle(state).activeThreadId;
   const thread: ThreadState | undefined = resolvedThreadId
     ? selectThread(state, resolvedThreadId)
     : selectActiveThread(state);
@@ -83,36 +79,6 @@ export function useAgentThread(threadId?: ThreadId) {
     [codex, dispatch, runSettings.cwd, runSettings.modelId],
   );
 
-  const startThreadWithInput = useCallback(
-    async (input: string | AgentUserInput[], params?: ThreadStartOptions) => {
-      const result = await startThread(params);
-      const rawThread = asRecord(result)?.thread ?? result;
-      const rawThreadRecord = asRecord(rawThread);
-      const threadId = rawThreadRecord ? rawThreadId(rawThreadRecord) : undefined;
-      if (!threadId) throw new Error("thread/start returned no thread id");
-      const executionMode = AGENT_EXECUTION_MODES.find(
-        (mode) => mode.id === runSettings.executionMode,
-      );
-      await codex.turn.start({
-        cwd: runSettings.cwd,
-        effort: codexReasoningEffort(runSettings.effort),
-        input: normalizeTurnInput(input),
-        model: runSettings.modelId,
-        ...codexTurnStartOptions(executionMode?.turnParams),
-        threadId,
-      });
-      return result;
-    },
-    [
-      codex,
-      runSettings.cwd,
-      runSettings.effort,
-      runSettings.executionMode,
-      runSettings.modelId,
-      startThread,
-    ],
-  );
-
   const resumeThread = useCallback(
     async (id: ThreadId, params?: ThreadResumeOptions) => {
       const result = await codex.thread.resume(id, codexThreadResumeParams(params));
@@ -120,6 +86,14 @@ export function useAgentThread(threadId?: ThreadId) {
       for (const event of normalized.events) dispatch(event);
       const rawThread = asRecord(result)?.thread ?? result;
       const rawThreadRecord = asRecord(rawThread);
+      const canonicalThreadId = rawThreadRecord ? rawThreadId(rawThreadRecord) : undefined;
+      if (canonicalThreadId && canonicalThreadId !== id) {
+        dispatch({
+          canonicalThreadId,
+          threadId: id,
+          type: "thread/reconciled",
+        });
+      }
       if (rawThreadRecord && hasThreadId(rawThreadRecord)) {
         syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       }
@@ -131,7 +105,6 @@ export function useAgentThread(threadId?: ThreadId) {
   return {
     resumeThread,
     startThread,
-    startThreadWithInput,
     thread,
     threadId: resolvedThreadId,
     turns,
@@ -144,7 +117,7 @@ export function useAgentThreadActions(threadId?: ThreadId) {
   const { dispatch, state } = useAgentContext();
   const codex = useCodexSession();
   const composerQueue = useAgentComposerQueueStore();
-  const resolvedThreadId = threadId ?? selectThreadRegistry(state).activeThreadId;
+  const resolvedThreadId = threadId ?? selectThreadLifecycle(state).activeThreadId;
 
   const requireThreadId = useCallback(() => {
     if (!resolvedThreadId) throw new Error("No thread selected");
@@ -210,7 +183,7 @@ export function useAgentThreadActions(threadId?: ThreadId) {
 
 export function useAgentThreads() {
   const { dispatch, state } = useAgentContext();
-  const activeThreadId = selectThreadRegistry(state).activeThreadId;
+  const activeThreadId = selectThreadLifecycle(state).activeThreadId;
   const threads = useMemo(() => selectOrderedThreads(state), [state]);
   const setActiveThread = useCallback(
     (threadId?: ThreadId) => dispatch({ threadId, type: "thread/active/set" }),
@@ -290,7 +263,9 @@ export function useAgentThreadReader() {
       }
       const rawThreadRecord = rawThread as Record<string, unknown>;
       for (const event of events) dispatch(event);
-      syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
+      if (options.activate !== false) {
+        syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
+      }
       return response;
     },
     [codex, dispatch],

@@ -62,7 +62,7 @@ const storeFiles = [
   "item",
   "server-request",
   "thread-entity",
-  "thread-index",
+  "thread-lifecycle",
   "turn",
   "usage",
 ];

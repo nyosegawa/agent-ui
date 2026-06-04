@@ -4,8 +4,21 @@ Typed implementation recipes for host applications.
 
 Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
 
-- `src/custom-components.tsx`: `AgentChat` slots for custom approval and item rendering.
+- `src/custom-components.tsx`: `AgentChat` components map for custom approval and item rendering.
+- `src/custom-transcript-blocks.tsx`: custom transcript block renderers while
+  preserving default block rendering.
+- `src/headless-chat-controller.tsx`: chat UI composed from public controllers.
 - `src/headless-hooks.tsx`: custom layout built from hooks only.
+- `src/scoped-thread-list.tsx`: host-owned thread list scope with search and
+  pagination.
+- `src/host-owned-composer.tsx`: transcript plus host toolbar using the public
+  composer controller.
+- `src/local-media-helper.tsx`: upload/static handlers paired with structured
+  attachment and transcript media resolvers.
+- `src/bridge-policy.ts`: loopback bridge policy and host health-event logging.
+- `src/diagnostics-panel.tsx`: standalone diagnostics rail composition.
+- `src/host-integration-checklist.ts`: host integration checklist for Agent UI
+  boundaries.
 - `src/themed.tsx` and `src/themed.css`: scoped CSS variable theme override that
   changes a small set of brand tokens while inheriting the rest of Agent UI's
   light, dark, and system token contract.

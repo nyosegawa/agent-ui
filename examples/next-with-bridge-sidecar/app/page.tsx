@@ -9,9 +9,11 @@ import {
   AgentChat,
   AgentProvider,
   type AgentLocalAttachmentKind,
-  type AgentUserInput,
+  type AgentResolvedLocalAttachment,
 } from "@nyosegawa/agent-ui-react";
 import { useMemo } from "react";
+
+const localMediaUrlsByPath = new Map<string, string>();
 
 function getAgentUiWebSocketUrl(): string {
   if (typeof window === "undefined") return "ws://127.0.0.1/agent-ui/ws";
@@ -22,20 +24,61 @@ function getAgentUiWebSocketUrl(): string {
 async function resolveLocalAttachment(
   file: File,
   kind: AgentLocalAttachmentKind,
-): Promise<AgentUserInput | null> {
+): Promise<AgentResolvedLocalAttachment | null> {
   const response = await fetch("/agent-ui/upload", {
     body: await file.arrayBuffer(),
     headers: { "x-agent-ui-filename": encodeURIComponent(file.name || "upload") },
     method: "POST",
   });
-  const result = (await response.json()) as { error?: unknown; path?: unknown };
+  const result = (await response.json()) as {
+    displayName?: unknown;
+    error?: unknown;
+    id?: unknown;
+    mimeType?: unknown;
+    name?: unknown;
+    path?: unknown;
+    previewUrl?: unknown;
+    redactedPath?: unknown;
+    sizeBytes?: unknown;
+    url?: unknown;
+  };
   if (!response.ok) {
     throw new Error(typeof result.error === "string" ? result.error : "Upload failed.");
   }
   if (typeof result.path !== "string") return null;
-  return kind === "image"
-    ? localImageInput(result.path)
-    : textInput(`Attached file: ${result.path}`);
+  const browserUrl =
+    typeof result.previewUrl === "string"
+      ? result.previewUrl
+      : typeof result.url === "string"
+        ? result.url
+        : undefined;
+  if (browserUrl) localMediaUrlsByPath.set(result.path, browserUrl);
+  return {
+    displayName:
+      typeof result.displayName === "string"
+        ? result.displayName
+        : typeof result.name === "string"
+          ? result.name
+          : file.name,
+    id: typeof result.id === "string" ? result.id : undefined,
+    input:
+      kind === "image"
+        ? localImageInput(result.path)
+        : textInput(`Attached file: ${result.path}`),
+    mimeType: typeof result.mimeType === "string" ? result.mimeType : file.type,
+    name: typeof result.name === "string" ? result.name : file.name,
+    path: result.path,
+    previewUrl: browserUrl,
+    redactedPath:
+      typeof result.redactedPath === "string" ? result.redactedPath : undefined,
+    sizeBytes:
+      typeof result.sizeBytes === "number" ? result.sizeBytes : file.size,
+    url: typeof result.url === "string" ? result.url : undefined,
+  };
+}
+
+function resolveLocalMediaUrl(path: string): string | null {
+  return localMediaUrlsByPath.get(path) ?? null;
 }
 
 export default function Page() {
@@ -66,7 +109,10 @@ export default function Page() {
   return (
     <AgentProvider transport={transport}>
       <main className="agent-ui-local-app">
-        <AgentChat resolveLocalAttachment={resolveLocalAttachment} />
+        <AgentChat
+          resolveLocalAttachment={resolveLocalAttachment}
+          resolveLocalMediaUrl={resolveLocalMediaUrl}
+        />
       </main>
     </AgentProvider>
   );

@@ -1,18 +1,18 @@
 import type { AgentSessionState, AgentTransport } from "@nyosegawa/agent-ui-core";
-import { AgentChat, AgentProvider, type AgentChatSlots } from "@nyosegawa/agent-ui-react";
+import { AgentChat, AgentProvider, type AgentComponents } from "@nyosegawa/agent-ui-react";
 import { createRoot, type Root } from "react-dom/client";
 
 export interface AgentChatElementOptions {
   className?: string;
+  components?: AgentComponents;
   initialState?: AgentSessionState;
-  slots?: AgentChatSlots;
   transport?: AgentTransport;
 }
 
 export interface AgentChatWebComponentElement extends HTMLElement {
   agentOptions?: AgentChatElementOptions;
+  components?: AgentComponents;
   initialState?: AgentSessionState;
-  slots?: AgentChatSlots;
   transport?: AgentTransport;
 }
 
@@ -28,25 +28,34 @@ const HTMLElementBase =
   typeof HTMLElement === "undefined" ? (class {} as typeof HTMLElement) : HTMLElement;
 
 export class AgentChatElement extends HTMLElementBase implements AgentChatWebComponentElement {
+  #components?: AgentComponents;
   #initialState?: AgentSessionState;
   #root?: Root;
-  #slots?: AgentChatSlots;
   #transport?: AgentTransport;
 
   get agentOptions(): AgentChatElementOptions {
     return {
       className: this.getAttribute("chat-class") ?? undefined,
+      components: this.#components,
       initialState: this.#initialState,
-      slots: this.#slots,
       transport: this.#transport,
     };
   }
 
   set agentOptions(options: AgentChatElementOptions | undefined) {
+    this.#components = options?.components;
     this.#initialState = options?.initialState;
-    this.#slots = options?.slots;
     this.#transport = options?.transport;
     if (options?.className) this.setAttribute("chat-class", options.className);
+    this.#render();
+  }
+
+  get components() {
+    return this.#components;
+  }
+
+  set components(value: AgentComponents | undefined) {
+    this.#components = value;
     this.#render();
   }
 
@@ -56,15 +65,6 @@ export class AgentChatElement extends HTMLElementBase implements AgentChatWebCom
 
   set initialState(value: AgentSessionState | undefined) {
     this.#initialState = value;
-    this.#render();
-  }
-
-  get slots() {
-    return this.#slots;
-  }
-
-  set slots(value: AgentChatSlots | undefined) {
-    this.#slots = value;
     this.#render();
   }
 
@@ -96,7 +96,7 @@ export class AgentChatElement extends HTMLElementBase implements AgentChatWebCom
     }
     this.#root.render(
       <AgentProvider initialState={this.#initialState} transport={this.#transport}>
-        <AgentChat className={className} slots={this.#slots} />
+        <AgentChat className={className} components={this.#components} />
       </AgentProvider>,
     );
   }

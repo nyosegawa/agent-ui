@@ -1,15 +1,19 @@
 import type React from "react";
 import type {
+  AgentThreadView as AgentThreadViewModel,
   AgentItemState,
   PendingServerRequest,
   TurnState,
 } from "@nyosegawa/agent-ui-core";
+import { selectThreadView } from "@nyosegawa/agent-ui-core";
 import { useCallback, useState } from "react";
 import {
   useAgentBootstrap,
   useAgentThread,
   useAgentThreads,
 } from "../hooks";
+import { useAgentContext } from "../provider";
+import { useInternalAgentComposerController } from "../hooks/composer";
 import {
   AgentI18nProvider,
   useAgentI18n,
@@ -17,6 +21,10 @@ import {
   type AgentLocale,
 } from "../i18n";
 import { AgentThreadView } from "./thread";
+import {
+  AgentComposerPanel,
+  type AgentComposerPanelProps,
+} from "./composer";
 import type {
   AgentComposerMentionResolver,
   AgentLocalAttachmentResolver,
@@ -26,6 +34,10 @@ import type { AgentWorkingDirectoryResolver } from "./run-settings";
 import { AgentThreadSidebar } from "./sidebar";
 import { useCompactLayout } from "./shared";
 import type { AgentTheme } from "./theme";
+import type {
+  AgentTranscriptBlock,
+  AgentTranscriptItem,
+} from "../hooks/transcript";
 import {
   threadPath,
   threadUrlRoutingBasePath,
@@ -40,21 +52,84 @@ import {
   AgentStatusSummary,
   AgentUsagePanel,
 } from "./status";
+import type { AgentLocalMediaUrlResolver } from "../timeline";
 
-export interface AgentChatSlots {
-  renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
-  renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
+export interface AgentApprovalComponentProps {
+  approval: PendingServerRequest;
+  Default: React.ComponentType<AgentApprovalDefaultProps>;
 }
+
+export interface AgentApprovalDefaultProps {
+  approval: PendingServerRequest;
+}
+
+export interface AgentItemComponentProps {
+  Default: React.ComponentType<AgentItemDefaultProps>;
+  item: AgentItemState;
+  turn: TurnState;
+}
+
+export interface AgentItemDefaultProps {
+  item: AgentItemState;
+  turn: TurnState;
+}
+
+export interface AgentShellComponentProps extends AgentShellProps {
+  Default: React.ComponentType<AgentShellProps>;
+}
+
+export interface AgentSidebarComponentProps
+  extends React.ComponentProps<typeof AgentThreadSidebar> {
+  Default: React.ComponentType<React.ComponentProps<typeof AgentThreadSidebar>>;
+}
+
+export interface AgentEmptyStateComponentProps
+  extends React.ComponentProps<typeof AgentFirstRun> {
+  Default: React.ComponentType<React.ComponentProps<typeof AgentFirstRun>>;
+}
+
+export interface AgentComposerPanelComponentProps extends AgentComposerPanelProps {
+  Default: React.ComponentType<AgentComposerPanelProps>;
+}
+
+export interface AgentBlockDefaultProps {
+  block: AgentTranscriptBlock;
+  item?: AgentTranscriptItem;
+}
+
+export interface AgentBlockComponentProps extends AgentBlockDefaultProps {
+  Default: React.ComponentType<AgentBlockDefaultProps>;
+}
+
+export interface AgentComponents {
+  Approval?: React.ComponentType<AgentApprovalComponentProps>;
+  ComposerPanel?: React.ComponentType<AgentComposerPanelComponentProps>;
+  EmptyState?: React.ComponentType<AgentEmptyStateComponentProps>;
+  Item?: React.ComponentType<AgentItemComponentProps>;
+  Shell?: React.ComponentType<AgentShellComponentProps>;
+  Sidebar?: React.ComponentType<AgentSidebarComponentProps>;
+  blocks?: Partial<
+    Record<AgentTranscriptBlock["kind"], React.ComponentType<AgentBlockComponentProps>>
+  >;
+}
+
+export const defaultAgentComponents = {
+  ComposerPanel: AgentComposerPanel,
+  EmptyState: AgentFirstRun,
+  Shell: AgentShell,
+  Sidebar: AgentThreadSidebar,
+} satisfies AgentComponents;
 
 export interface AgentChatProps {
   className?: string;
+  components?: AgentComponents;
   diagnostics?: boolean;
   onRequestAppMention?: AgentComposerMentionResolver;
   onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
   onRequestPluginMention?: AgentComposerMentionResolver;
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
+  resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   sidebar?: boolean;
-  slots?: AgentChatSlots;
   statusBarEnd?: React.ReactNode;
   theme?: AgentTheme;
   locale?: AgentLocale | string;
@@ -65,13 +140,14 @@ export interface AgentChatProps {
 
 export function AgentChat({
   className,
+  components,
   diagnostics = false,
   onRequestAppMention,
   onRequestWorkingDirectory,
   onRequestPluginMention,
   resolveLocalAttachment,
+  resolveLocalMediaUrl,
   sidebar = true,
-  slots,
   statusBarEnd,
   theme,
   locale,
@@ -83,13 +159,14 @@ export function AgentChat({
     <AgentI18nProvider locale={locale} messages={messages}>
       <AgentChatInner
         className={className}
+        components={components}
         diagnostics={diagnostics}
         onRequestAppMention={onRequestAppMention}
         onRequestPluginMention={onRequestPluginMention}
         onRequestWorkingDirectory={onRequestWorkingDirectory}
         resolveLocalAttachment={resolveLocalAttachment}
+        resolveLocalMediaUrl={resolveLocalMediaUrl}
         sidebar={sidebar}
-        slots={slots}
         statusBarEnd={statusBarEnd}
         theme={theme}
         threadUrlRouting={threadUrlRouting}
@@ -101,13 +178,14 @@ export function AgentChat({
 
 function AgentChatInner({
   className,
+  components,
   diagnostics = false,
   onRequestAppMention,
   onRequestWorkingDirectory,
   onRequestPluginMention,
   resolveLocalAttachment,
+  resolveLocalMediaUrl,
   sidebar = true,
-  slots,
   statusBarEnd,
   theme,
   threadUrlRouting = false,
@@ -116,8 +194,14 @@ function AgentChatInner({
   const bootstrap = useAgentBootstrap();
   const compact = useCompactLayout();
   const { t } = useAgentI18n();
-  const { thread, threadId, startThread, startThreadWithInput } = useAgentThread();
+  const { thread, threadId, startThread } = useAgentThread();
+  const composer = useInternalAgentComposerController();
   const { threads, activeThreadId, setActiveThread } = useAgentThreads();
+  const { state } = useAgentContext();
+  const sidebarThreads: AgentThreadViewModel[] = threads.flatMap((thread) => {
+    const view = selectThreadView(state, thread.id);
+    return view ? [view] : [];
+  });
   useThreadUrlRouting(threadUrlRouting, activeThreadId);
   const urlRoutingEnabled = Boolean(threadUrlRouting);
   const routingBasePath = threadUrlRoutingBasePath(threadUrlRouting);
@@ -137,6 +221,10 @@ function AgentChatInner({
   );
   const hasRail = usage || diagnostics;
   const drawerOpen = compact && sidebar && !isSidebarCollapsed;
+  const componentMap = { ...defaultAgentComponents, ...components };
+  const EmptyState = componentMap.EmptyState;
+  const Shell = componentMap.Shell;
+  const Sidebar = componentMap.Sidebar;
   const navigateHome = useCallback(() => {
     setActiveThread(undefined);
     if (compact) setSidebarOpenMobile(false);
@@ -157,19 +245,21 @@ function AgentChatInner({
     [routingBasePath, setActiveThread, urlRoutingEnabled],
   );
   return (
-    <AgentShell
+    <Shell
+      Default={AgentShell}
       className={className}
       data-sidebar-collapsed={isSidebarCollapsed ? "true" : "false"}
       data-sidebar-drawer={drawerOpen ? "open" : "closed"}
       sidebar={
-        sidebar ? (
-          <AgentThreadSidebar
+        sidebar && Sidebar ? (
+          <Sidebar
+            Default={AgentThreadSidebar}
             activeThreadId={activeThreadId}
             collapsed={isSidebarCollapsed}
             onCreateThread={navigateHome}
             onCollapsedChange={setSidebarCollapsed}
             onSelectThread={navigateToThread}
-            threads={threads}
+            threads={sidebarThreads}
           />
         ) : undefined
       }
@@ -195,20 +285,23 @@ function AgentChatInner({
               <AgentThreadView
                 onRequestAppMention={onRequestAppMention}
                 onRequestPluginMention={onRequestPluginMention}
-                renderApproval={slots?.renderApproval}
-                renderItem={slots?.renderItem}
+                components={componentMap}
                 resolveLocalAttachment={resolveLocalAttachment}
+                resolveLocalMediaUrl={resolveLocalMediaUrl}
                 threadId={threadId}
               />
             ) : (
               <div className="aui-empty">
-                <AgentFirstRun
-                  onRequestWorkingDirectory={onRequestWorkingDirectory}
-                  onStartThread={async (prompt) => {
-                    if (prompt) await startThreadWithInput(prompt);
-                    else await startThread();
-                  }}
-                />
+                {EmptyState ? (
+                  <EmptyState
+                    Default={AgentFirstRun}
+                    onRequestWorkingDirectory={onRequestWorkingDirectory}
+                    onStartThread={async (prompt) => {
+                      if (prompt) await composer.startWithMessage(prompt);
+                      else await startThread();
+                    }}
+                  />
+                ) : null}
               </div>
             )}
           </div>
@@ -222,7 +315,7 @@ function AgentChatInner({
           ) : null}
         </div>
       </div>
-    </AgentShell>
+    </Shell>
   );
 }
 
@@ -238,13 +331,17 @@ export function AgentShell({
   theme,
   ...props
 }: AgentShellProps) {
+  const { Default: _Default, ...htmlProps } = props as typeof props & {
+    Default?: unknown;
+  };
+  void _Default;
   const inheritedTheme = (props as { "data-aui-theme"?: AgentTheme })["data-aui-theme"];
   return (
     <section
       className={["aui-shell", className].filter(Boolean).join(" ")}
       data-sidebar-present={sidebar ? "true" : "false"}
       data-testid="agent-chat"
-      {...props}
+      {...htmlProps}
       data-aui-theme={theme ?? inheritedTheme}
     >
       {sidebar}

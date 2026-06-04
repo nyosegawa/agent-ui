@@ -82,6 +82,7 @@ async function readTransportEvents(
         dispatchToLease(lease, {
           type: "warning/added",
           warning: {
+            audience: ["developer", "audit"],
             id: `stderr-${lease.warningSequence++}-${index}`,
             message,
           },

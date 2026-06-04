@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AgentI18nKey } from "../i18n";
-import type { AgentUserInput } from "../agent-input";
+import {
+  agentResourceDisplayName,
+  agentResourceUrl,
+} from "../resources";
 import {
   fileExtension,
   formatFileSize,
   isImageFile,
   type AgentLocalAttachmentKind,
   type AgentLocalAttachmentResolver,
+  type AgentResolvedLocalAttachment,
   type ComposerAttachment,
 } from "./composer-attachments";
 
@@ -24,6 +28,7 @@ export interface ComposerAttachmentState {
     pendingAttachments: readonly ComposerAttachment[],
     options?: { revokePreview?: boolean },
   ): void;
+  markAttachmentPreviewFailed(id: string): void;
   removeAttachment(id: string): void;
 }
 
@@ -43,7 +48,9 @@ export function useComposerAttachmentState({
   const attachmentsRef = useRef<ComposerAttachment[]>([]);
 
   const revokePreview = useCallback((attachment: ComposerAttachment) => {
-    if (attachment.previewUrl) URL.revokeObjectURL(attachment.previewUrl);
+    if (attachment.previewUrl && attachment.previewUrlRevoke) {
+      URL.revokeObjectURL(attachment.previewUrl);
+    }
   }, []);
 
   const addAttachment = useCallback((attachment: ComposerAttachment) => {
@@ -86,6 +93,14 @@ export function useComposerAttachmentState({
     [revokePreview],
   );
 
+  const markAttachmentPreviewFailed = useCallback((id: string) => {
+    setAttachments((current) =>
+      current.map((attachment) =>
+        attachment.id === id ? { ...attachment, previewFailed: true } : attachment,
+      ),
+    );
+  }, []);
+
   const addLocalFiles = useCallback(
     async (files: FileList | File[]) => {
       if (!resolveLocalAttachment) return;
@@ -94,30 +109,40 @@ export function useComposerAttachmentState({
       let rejected = 0;
       for (const file of list) {
         const kind: AgentLocalAttachmentKind = isImageFile(file) ? "image" : "file";
-        let input: AgentUserInput | AgentUserInput[] | null | undefined;
+        let resolved: AgentResolvedLocalAttachment | null | undefined;
         try {
-          input = await resolveLocalAttachment(file, kind);
+          resolved = await resolveLocalAttachment(file, kind);
         } catch (error) {
           console.warn("AgentComposer attachment resolver failed", error);
           setAttachmentError(error instanceof Error ? error.message : String(error));
-          input = null;
+          resolved = null;
         }
-        if (!input) {
+        if (!resolved) {
           rejected += 1;
           continue;
         }
-        const previewUrl = kind === "image" ? URL.createObjectURL(file) : undefined;
+        const label = agentResourceDisplayName(resolved, file.name || kind) ?? kind;
+        const previewUrl =
+          kind === "image"
+            ? agentResourceUrl(resolved) || URL.createObjectURL(file)
+            : undefined;
         addAttachment({
-          extension: fileExtension(file.name),
-          id: `${kind}:${file.name}:${file.size}:${Date.now()}:${Math.random()
-            .toString(36)
-            .slice(2, 7)}`,
-          input,
+          displayName: resolved.displayName,
+          extension: fileExtension(label),
+          id:
+            resolved.id ??
+            `${kind}:${file.name}:${file.size}:${Date.now()}:${Math.random()
+              .toString(36)
+              .slice(2, 7)}`,
+          input: resolved.input,
           kind,
-          label: file.name || kind,
+          label,
           previewUrl,
-          sizeLabel: formatFileSize(file.size),
-          value: file.name,
+          previewUrlRevoke:
+            kind === "image" && Boolean(previewUrl) && !resolved.previewUrl && !resolved.url,
+          redactedPath: resolved.redactedPath,
+          sizeLabel: formatFileSize(resolved.sizeBytes ?? file.size),
+          value: resolved.path || resolved.url || file.name,
         });
       }
       setAttachmentError(
@@ -155,6 +180,7 @@ export function useComposerAttachmentState({
     attachmentError,
     attachments,
     clearSubmittedAttachments,
+    markAttachmentPreviewFailed,
     removeAttachment,
   };
 }

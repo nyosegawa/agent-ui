@@ -8,6 +8,9 @@ Use this checklist before publishing Agent UI packages to npm.
 - Confirm the release notes are generated from Changesets.
 - Confirm docs changed with any public API, package boundary, security, example,
   or visual behavior change.
+- Confirm every new or promoted public API has exactly one canonical reference
+  doc, an importing example or recipe, and a focused validation gate recorded in
+  the PR notes.
 - Confirm `NPM_TOKEN` exists as a GitHub Actions repository secret and can
   publish without an interactive OTP prompt.
 
@@ -40,6 +43,9 @@ built and inspected in order.
   version.
 - `bun run test:packlist` and `bun run test:package-resolution` pass through the
   release validation ladder.
+- `bun run test:api-snapshots` matches the intended package export map, and
+  `docs/reference/package-exports.md` matches the public subpaths being
+  published.
 
 ## Publish
 

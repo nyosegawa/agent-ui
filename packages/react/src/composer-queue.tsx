@@ -25,12 +25,15 @@ export interface QueuedFollowUp {
 }
 
 export interface QueuedFollowUpAttachment {
+  displayName?: string;
   extension?: string;
   id: string;
   input?: AgentUserInput | AgentUserInput[];
   kind: "image" | "file" | "app" | "plugin";
   label: string;
   previewUrl?: string;
+  previewUrlRevoke?: boolean;
+  redactedPath?: string;
   sizeLabel?: string;
   value: string;
 }
@@ -74,7 +77,7 @@ export function AgentComposerQueueProvider({
 
   const revokeFollowUpPreviews = useCallback((item: QueuedFollowUp) => {
     for (const attachment of item.attachments) {
-      if (!attachment.previewUrl) continue;
+      if (!attachment.previewUrl || !attachment.previewUrlRevoke) continue;
       if (revokedPreviewUrlsRef.current.has(attachment.previewUrl)) continue;
       revokedPreviewUrlsRef.current.add(attachment.previewUrl);
       URL.revokeObjectURL(attachment.previewUrl);

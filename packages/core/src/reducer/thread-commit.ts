@@ -1,30 +1,45 @@
 import type { AgentSessionState, ThreadId, ThreadState } from "../state";
-import { threadIndexStore } from "../stores/thread-index";
+import {
+  threadActivityFromStatus,
+  threadAvailabilityFromStatus,
+  threadLifecycleStore,
+  threadMetadataFromThread,
+  threadStorageFromThread,
+} from "../stores/thread-lifecycle";
 
 export function commitThreadEntity(
   state: AgentSessionState,
   thread: ThreadState,
-  options: { activeThreadId?: ThreadId } = {},
+  options: { activeThreadId?: ThreadId; collectionKeys?: readonly string[] } = {},
 ): AgentSessionState {
-  const registryStatus = threadIndexStore.classifyStatus(
-    thread.status,
-    thread.orderedTurnIds
-      .map((turnId) => thread.turns[turnId]?.turn)
-      .filter((turn) => turn != null),
-  );
+  const activity = threadActivityFromStatus(thread.status);
+  const availability = threadAvailabilityFromStatus(thread.status);
+  const metadata = {
+    ...thread.metadata,
+    ...threadMetadataFromThread(thread.thread),
+  };
+  const storage = threadStorageFromThread(thread.thread);
   return {
     ...state,
-    threadRegistry: threadIndexStore.upsert(
-      state.threadRegistry,
-      thread.thread.id,
-      registryStatus,
-      options.activeThreadId,
+    threadLifecycle: threadLifecycleStore.upsertThread(
+      state.threadLifecycle,
+      {
+        ...thread,
+        activity,
+        availability,
+        metadata,
+        storage,
+      },
+      options,
     ),
     threads: {
       ...state.threads,
       [thread.thread.id]: {
         ...thread,
-        registryStatus,
+        activity,
+        availability,
+        metadata,
+        storage,
       },
     },
   };

@@ -2,13 +2,16 @@ import type React from "react";
 import { useCallback, useRef, useState } from "react";
 import { useAgentAccount } from "../hooks";
 import { useAgentI18n } from "../i18n";
-import { IconSend, buttonClass } from "../components-internal";
+import { buttonClass } from "../components-internal";
 import { useAgentContext } from "../provider";
 import {
   AgentStarterCwd,
   ComposerRunSettings,
   type AgentWorkingDirectoryResolver,
 } from "./run-settings";
+import { AgentComposerInput, AgentComposerToolbar } from "./composer";
+import { AgentComposerSubmitButton } from "./composer-submit-button";
+import { shouldSubmitOnComposerEnter } from "./composer-submit-semantics";
 import { deferAction } from "./shared";
 
 export function AgentFirstRun({
@@ -21,27 +24,6 @@ export function AgentFirstRun({
   const { t } = useAgentI18n();
   const { account, cancelLogin, login } = useAgentAccount();
   const { state } = useAgentContext();
-  const [prompt, setPrompt] = useState("");
-  const [error, setError] = useState<string | undefined>();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const isComposing = useRef(false);
-  const submit = useCallback(() => {
-    const input = prompt.trim();
-    if (!input) return;
-    setError(undefined);
-    setIsSubmitting(true);
-    deferAction(async () => {
-      try {
-        await onStartThread(input || undefined);
-        setPrompt("");
-      } catch (caught) {
-        setError(caught instanceof Error ? caught.message : String(caught));
-      } finally {
-        setIsSubmitting(false);
-      }
-    });
-  }, [onStartThread, prompt]);
-
   if (state.connection.status === "error" || state.connection.status === "closed") {
     return (
       <div className="aui-first-run">
@@ -93,6 +75,45 @@ export function AgentFirstRun({
     );
   }
   return (
+    <AgentStartComposer
+      onRequestWorkingDirectory={onRequestWorkingDirectory}
+      onStartThread={onStartThread}
+    />
+  );
+}
+
+export interface AgentStartComposerProps {
+  onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
+  onStartThread: (prompt?: string) => Promise<void> | void;
+}
+
+export function AgentStartComposer({
+  onRequestWorkingDirectory,
+  onStartThread,
+}: AgentStartComposerProps) {
+  const { t } = useAgentI18n();
+  const [prompt, setPrompt] = useState("");
+  const [error, setError] = useState<string | undefined>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const isComposing = useRef(false);
+  const submit = useCallback(() => {
+    const input = prompt.trim();
+    if (!input) return;
+    setError(undefined);
+    setIsSubmitting(true);
+    deferAction(async () => {
+      try {
+        await onStartThread(input || undefined);
+        setPrompt("");
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : String(caught));
+      } finally {
+        setIsSubmitting(false);
+      }
+    });
+  }, [onStartThread, prompt]);
+
+  return (
     <form
       aria-label={t("firstRun.form")}
       className="aui-first-run aui-first-run-starter"
@@ -108,7 +129,7 @@ export function AgentFirstRun({
             {t("firstRun.error", { message: error })}
           </p>
         ) : null}
-        <textarea
+        <AgentComposerInput
           aria-label={t("aria.message")}
           className="aui-first-run-prompt"
           onChange={(event) => setPrompt(event.currentTarget.value)}
@@ -119,7 +140,13 @@ export function AgentFirstRun({
             isComposing.current = true;
           }}
           onKeyDown={(event) => {
-            if (event.key === "Enter" && !event.shiftKey && !isComposing.current) {
+            if (
+              shouldSubmitOnComposerEnter({
+                isComposing: isComposing.current,
+                key: event.key,
+                shiftKey: event.shiftKey,
+              })
+            ) {
               event.preventDefault();
               submit();
             }
@@ -128,20 +155,19 @@ export function AgentFirstRun({
           rows={2}
           value={prompt}
         />
-        <div className="aui-first-run-toolbar">
-          <ComposerRunSettings />
-          <button
-            aria-label={t("firstRun.startThread")}
-            className={buttonClass("primary", {
-              className: "aui-first-run-submit",
-              iconOnly: true,
-            })}
-            disabled={isSubmitting || !prompt.trim()}
-            type="submit"
-          >
-            <IconSend size={16} />
-          </button>
-        </div>
+        <AgentComposerToolbar
+          className="aui-first-run-toolbar"
+          start={<ComposerRunSettings />}
+          end={
+            <AgentComposerSubmitButton
+              canSubmit={!isSubmitting && Boolean(prompt.trim())}
+              className="aui-first-run-submit"
+              isStopAction={false}
+              label={t("firstRun.startThread")}
+              title={t("firstRun.startThread")}
+            />
+          }
+        />
       </div>
       <AgentStarterCwd onRequestWorkingDirectory={onRequestWorkingDirectory} />
     </form>

@@ -1,6 +1,6 @@
 import {
   attachAgentUiWebSocketBridge,
-  createAgentUiLocalUploadHandler,
+  createAgentUiLocalMediaHelper,
 } from "@nyosegawa/agent-ui-server";
 import react from "@vitejs/plugin-react";
 import { execFile } from "node:child_process";
@@ -28,18 +28,16 @@ const codexArgs = process.env.AGENT_UI_CODEX_ARGS
 const root = dirname(fileURLToPath(import.meta.url));
 const execFileAsync = promisify(execFile);
 
-// Composer image / file attachments need a real local path because the Codex
-// App Server reads `localImage` inputs from disk. The browser only has a
-// `File`, so this host endpoint persists the upload next to the App Server's
-// machine and returns an absolute path the agent can actually open. This is a
-// host responsibility, not something the agent-ui library fakes with blob URLs.
-const uploadHandler = createAgentUiLocalUploadHandler();
-const cleanupUploads = createIdempotentUploadCleanup(uploadHandler, (error) => {
+// Composer attachments need both an App Server-readable local path and a
+// browser-safe preview URL. This helper registers local media by opaque asset
+// ID; the host still decides which upload/static routes are wired.
+const mediaHelper = createAgentUiLocalMediaHelper();
+const cleanupUploads = createIdempotentUploadCleanup(mediaHelper, (error) => {
   console.warn(`Attachment upload cleanup failed: ${String(error)}`);
 });
 
 async function handleUpload(request: IncomingMessage, response: ServerResponse) {
-  await uploadHandler.handle(request, response);
+  await mediaHelper.handleUpload(request, response);
 }
 
 async function handleSelectDirectory(response: ServerResponse) {
@@ -71,16 +69,17 @@ async function handleSelectDirectory(response: ServerResponse) {
   }
 }
 
-const vite = await createViteServer({
-  appType: "spa",
-  plugins: [react()],
-  root,
-  server: { hmr: false, middlewareMode: true, ws: false },
-});
-
 const server = createServer((request, response) => {
   if (request.method === "POST" && request.url === "/agent-ui/upload") {
     handleUpload(request, response).catch((error: unknown) => {
+      response.statusCode = 500;
+      response.setHeader("content-type", "application/json");
+      response.end(JSON.stringify({ error: String(error) }));
+    });
+    return;
+  }
+  if (request.url?.startsWith("/agent-ui/assets/")) {
+    mediaHelper.serveAssetHandler(request, response).catch((error: unknown) => {
       response.statusCode = 500;
       response.setHeader("content-type", "application/json");
       response.end(JSON.stringify({ error: String(error) }));
@@ -100,6 +99,16 @@ const server = createServer((request, response) => {
     response.end("Not found");
   });
 });
+
+const vite = await createViteServer({
+  appType: "spa",
+  plugins: [react()],
+  root,
+  server: {
+    hmr: { path: "/vite-hmr", server },
+    middlewareMode: true,
+  },
+});
 server.on("close", () => {
   void cleanupUploads();
 });
@@ -107,7 +116,16 @@ server.on("close", () => {
 attachAgentUiWebSocketBridge({
   ...(codexArgs ? { args: codexArgs } : {}),
   ...(codexCommand ? { command: codexCommand } : {}),
+  bridgePolicy: { admission: { mode: "local-loopback" } },
+  browserMethodPolicy: "productized",
   cwd,
+  hostEvents: {
+    onBridgeHealthEvent(event) {
+      process.stderr.write(
+        `[agent-ui] bridge phase=${event.phase} pending=${event.state.pendingRequestCount}\n`,
+      );
+    },
+  },
   path: "/agent-ui/ws",
   server,
   stderr(line) {
@@ -119,7 +137,7 @@ server.listen(port, host, () => {
   if (hostResolution.warning) console.warn(hostResolution.warning);
   console.log(`Agent UI Codex local web: http://${host}:${port}`);
   console.log(`Codex working directory: ${cwd}`);
-  console.log(`Attachment upload directory: ${uploadHandler.directory}`);
+  console.log(`Attachment upload directory: ${mediaHelper.directory}`);
 });
 
 async function shutdown(signal: NodeJS.Signals) {
