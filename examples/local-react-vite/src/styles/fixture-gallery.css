@@ -83,8 +83,10 @@
   color: var(--aui-fg-faint);
   font-size: var(--aui-font-size-sm);
   font-weight: 600;
+  min-width: 0;
+  overflow-wrap: anywhere;
   padding: var(--aui-space-100) var(--aui-space-250);
-  white-space: nowrap;
+  text-align: right;
 }
 
 .aui-fixture-gallery-grid {
@@ -343,6 +345,16 @@
   .aui-fixture-preview header,
   .aui-fixture-preview-frames {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .aui-fixture-gallery-group-header {
+    align-items: start;
+    flex-direction: column;
+    gap: var(--aui-space-150);
+  }
+
+  .aui-fixture-gallery-group-header span {
+    text-align: left;
   }
 
   .aui-fixture-gallery-actions {

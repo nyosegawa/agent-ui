@@ -30,6 +30,11 @@ or internal `.aui-*` selectors.
 `AgentChat` is a convenience preset. It renders the transcript, composer,
 approvals, and optional thread sidebar. Usage and diagnostics are opt-in
 secondary chrome because many host apps already have their own shell.
+Customize the preset with `components`, not source imports or private slots.
+`Shell`, `Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are
+the preferred replacement points. `Item` remains a legacy core-state replacement
+point for this draft; use transcript controllers or `blocks` when a custom
+renderer needs raw-free inputs.
 
 ## Compose From Primitives
 
@@ -67,7 +72,8 @@ Usage, status, apps, skills, and diagnostics can sit outside the chat column:
 
 ```tsx
 function HostChrome() {
-  const { threads, activeThreadId, setActiveThread } = useAgentThreads();
+  const { activeThreadId, setActiveThread } = useAgentThreads();
+  const threadList = useAgentThreadListController({ kind: "history" });
 
   return (
     <AgentShell
@@ -75,7 +81,7 @@ function HostChrome() {
         <AgentThreadSidebar
           activeThreadId={activeThreadId}
           onSelectThread={setActiveThread}
-          threads={threads}
+          threads={threadList.threads}
         />
       }
     >
@@ -94,6 +100,12 @@ function HostChrome() {
 `panel`; it is not a children-based layout wrapper. Use `AgentShell`,
 `AgentThreadSurface`, and the thread primitives when the host wants to place
 every region manually.
+
+Host chrome stays host-owned. Agent UI does not persist panel state, create app
+registries, choose navigation or routing policy, authenticate users, map
+tenants/workspaces, or deploy a hosted chat service. Pass transports,
+resolvers, theme state, locale overrides, and host panels in through the public
+React props and hooks.
 
 `AgentChat threadUrlRouting` keeps direct thread URLs in sync. The root route
 stays on the start screen; selecting a stored thread pushes

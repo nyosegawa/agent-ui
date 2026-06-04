@@ -11,7 +11,7 @@ import {
   type AgentLocale,
   type AgentTheme,
   type AgentLocalAttachmentKind,
-  type AgentUserInput,
+  type AgentResolvedLocalAttachment,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
 import { useMemo, useState } from "react";
@@ -24,6 +24,8 @@ declare global {
   }
 }
 
+const localMediaUrlsByPath = new Map<string, string>();
+
 /**
  * Host-supplied attachment resolver. The browser only holds a `File`; the
  * Codex App Server needs a real local path for `localImage` inputs. The file
@@ -34,19 +36,61 @@ declare global {
 async function resolveLocalAttachment(
   file: File,
   kind: AgentLocalAttachmentKind,
-): Promise<AgentUserInput | null> {
+): Promise<AgentResolvedLocalAttachment | null> {
   const response = await fetch("/agent-ui/upload", {
     body: await file.arrayBuffer(),
     headers: { "x-agent-ui-filename": encodeURIComponent(file.name || "upload") },
     method: "POST",
   });
-  const result = (await response.json()) as { error?: unknown; path?: unknown };
+  const result = (await response.json()) as {
+    displayName?: unknown;
+    error?: unknown;
+    id?: unknown;
+    mimeType?: unknown;
+    name?: unknown;
+    path?: unknown;
+    previewUrl?: unknown;
+    redactedPath?: unknown;
+    sizeBytes?: unknown;
+    url?: unknown;
+  };
   if (!response.ok) {
     throw new Error(typeof result.error === "string" ? result.error : "Upload failed.");
   }
   if (typeof result.path !== "string") return null;
-  if (kind === "image") return localImageInput(result.path);
-  return textInput(`Attached file: ${result.path}`);
+  const browserUrl =
+    typeof result.previewUrl === "string"
+      ? result.previewUrl
+      : typeof result.url === "string"
+        ? result.url
+        : undefined;
+  if (browserUrl) localMediaUrlsByPath.set(result.path, browserUrl);
+  return {
+    displayName:
+      typeof result.displayName === "string"
+        ? result.displayName
+        : typeof result.name === "string"
+          ? result.name
+          : file.name,
+    id: typeof result.id === "string" ? result.id : undefined,
+    input:
+      kind === "image"
+        ? localImageInput(result.path)
+        : textInput(`Attached file: ${result.path}`),
+    mimeType: typeof result.mimeType === "string" ? result.mimeType : file.type,
+    name: typeof result.name === "string" ? result.name : file.name,
+    path: result.path,
+    previewUrl: browserUrl,
+    redactedPath:
+      typeof result.redactedPath === "string" ? result.redactedPath : undefined,
+    sizeBytes:
+      typeof result.sizeBytes === "number" ? result.sizeBytes : file.size,
+    url: typeof result.url === "string" ? result.url : undefined,
+  };
+}
+
+function resolveLocalMediaUrl(path: string): string | null {
+  return localMediaUrlsByPath.get(path) ?? null;
 }
 
 async function requestWorkingDirectory(): Promise<string | null> {
@@ -94,9 +138,11 @@ function App() {
     <AgentProvider transport={transport}>
       <main className="agent-ui-local-app" data-aui-theme={theme}>
         <AgentChat
+          diagnostics
           locale={locale}
           onRequestWorkingDirectory={requestWorkingDirectory}
           resolveLocalAttachment={resolveLocalAttachment}
+          resolveLocalMediaUrl={resolveLocalMediaUrl}
           statusBarEnd={
             <>
               <AgentLocaleSelect value={locale} onChange={setLocale} />

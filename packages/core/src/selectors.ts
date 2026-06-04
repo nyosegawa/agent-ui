@@ -1,18 +1,28 @@
 import type {
+  AgentDiagnosticAudience,
+  AgentError,
   AgentSessionState,
+  AgentThreadCollection,
+  AgentThreadScope,
+  AgentThreadView,
+  DiagnosticsState,
   ItemId,
   PendingServerRequest,
+  ProtocolNotificationState,
+  StatusBannerState,
   ThreadId,
   TurnId,
+  WarningState,
 } from "./state";
+import { threadLifecycleStore } from "./stores/thread-lifecycle";
 
 export function selectActiveThread(state: AgentSessionState) {
-  const threadId = state.threadRegistry.activeThreadId;
+  const threadId = threadLifecycleStore.activeThreadId(state.threadLifecycle);
   return threadId ? state.threads[threadId] : undefined;
 }
 
 export function selectThread(state: AgentSessionState, threadId: ThreadId) {
-  return state.threads[threadId];
+  return state.threads[canonicalThreadId(state, threadId)];
 }
 
 export function selectOrderedTurns(state: AgentSessionState, threadId: ThreadId) {
@@ -80,13 +90,10 @@ export function selectItemBlock(
 }
 
 export function selectOrderedThreads(state: AgentSessionState) {
-  const registry = state.threadRegistry;
+  const lifecycle = state.threadLifecycle;
   const orderedIds = [
-    registry.activeThreadId,
-    ...[...registry.liveThreadIds].reverse(),
-    ...[...registry.previewThreadIds].reverse(),
-    ...[...registry.loadedThreadIds].reverse(),
-    ...[...registry.coldThreadIds].reverse(),
+    threadLifecycleStore.activeThreadId(lifecycle),
+    ...[...(lifecycle.collections[lifecycle.defaultCollectionKey]?.ids ?? [])].reverse(),
     ...Object.keys(state.threads),
   ];
   const seen = new Set<ThreadId>();
@@ -96,6 +103,80 @@ export function selectOrderedThreads(state: AgentSessionState) {
     const thread = state.threads[threadId];
     return thread ? [thread] : [];
   });
+}
+
+export function selectThreadCollection(
+  state: AgentSessionState,
+  scope: AgentThreadScope | string = state.threadLifecycle.defaultCollectionKey,
+): AgentThreadCollection | undefined {
+  return state.threadLifecycle.collections[threadLifecycleStore.collectionKey(scope)];
+}
+
+export function selectOrderedCollectionThreads(
+  state: AgentSessionState,
+  scope: AgentThreadScope | string = state.threadLifecycle.defaultCollectionKey,
+) {
+  const collection = selectThreadCollection(state, scope);
+  const seen = new Set<ThreadId>();
+  return (
+    collection?.ids.flatMap((threadId) => {
+      const canonicalId = canonicalThreadId(state, threadId);
+      if (seen.has(canonicalId)) return [];
+      seen.add(canonicalId);
+      const thread = state.threads[canonicalId];
+      return thread ? [thread] : [];
+    }) ?? []
+  );
+}
+
+export function selectPendingOperations(state: AgentSessionState, threadId?: ThreadId) {
+  const canonicalFilterId = threadId ? canonicalThreadId(state, threadId) : undefined;
+  return Object.values(state.threadLifecycle.operations).filter(
+    (operation) =>
+      operation.status === "pending" &&
+      (canonicalFilterId == null ||
+        (operation.threadId != null &&
+          canonicalThreadId(state, operation.threadId) === canonicalFilterId)),
+  );
+}
+
+export function selectThreadView(
+  state: AgentSessionState,
+  threadId: ThreadId,
+): AgentThreadView | undefined {
+  const thread = selectThread(state, threadId);
+  if (!thread) return undefined;
+  const pending = Object.values(thread.operations).find(
+    (operation) => operation.status === "pending",
+  );
+  return {
+    cwd: thread.metadata.cwd,
+    error:
+      thread.activity === "failed"
+        ? Object.values(thread.operations).find((operation) => operation.error)?.error
+        : undefined,
+    id: thread.id,
+    isActive: selectActiveThread(state)?.id === thread.id,
+    isArchived: thread.availability === "archived",
+    isPreview: thread.availability === "preview",
+    isRunning: thread.activity === "running",
+    lastActivityAt: thread.metadata.lastActivityAt,
+    needsInput: thread.activity === "waitingForInput",
+    pending: pending
+      ? {
+          error: pending.error,
+          operationId: pending.id,
+          status: pending.status,
+        }
+      : undefined,
+    subtitle: thread.metadata.cwd,
+    title: thread.metadata.title ?? thread.thread.name ?? thread.thread.id,
+  };
+}
+
+export function selectActiveThreadView(state: AgentSessionState) {
+  const thread = selectActiveThread(state);
+  return thread ? selectThreadView(state, thread.id) : undefined;
 }
 
 const approvalRequestKinds = new Set<PendingServerRequest["kind"]>([
@@ -133,6 +214,38 @@ export function selectDiagnostics(state: AgentSessionState) {
   return state.diagnostics;
 }
 
+export function selectDiagnosticsForAudience(
+  state: AgentSessionState,
+  audience: AgentDiagnosticAudience,
+): DiagnosticsState {
+  return {
+    banners: state.diagnostics.banners.filter((banner) =>
+      hasDiagnosticAudience(banner, audience, ["user"]),
+    ),
+    errors: state.diagnostics.errors.filter((error) =>
+      hasDiagnosticAudience(error, audience, ["user"]),
+    ),
+    protocolNotifications: state.diagnostics.protocolNotifications.filter((notification) =>
+      hasDiagnosticAudience(notification, audience, ["developer", "audit"]),
+    ),
+    warnings: state.diagnostics.warnings.filter((warning) =>
+      hasDiagnosticAudience(warning, audience, ["user"]),
+    ),
+  };
+}
+
+export function selectUserDiagnostics(state: AgentSessionState) {
+  return selectDiagnosticsForAudience(state, "user");
+}
+
+export function selectDeveloperDiagnostics(state: AgentSessionState) {
+  return selectDiagnosticsForAudience(state, "developer");
+}
+
+export function selectAuditDiagnostics(state: AgentSessionState) {
+  return selectDiagnosticsForAudience(state, "audit");
+}
+
 export function selectStatusBanners(state: AgentSessionState) {
   return state.diagnostics.banners;
 }
@@ -149,6 +262,18 @@ export function selectProtocolNotifications(state: AgentSessionState) {
   return state.diagnostics.protocolNotifications;
 }
 
+function hasDiagnosticAudience(
+  value:
+    | AgentError
+    | ProtocolNotificationState
+    | StatusBannerState
+    | WarningState,
+  audience: AgentDiagnosticAudience,
+  fallback: readonly AgentDiagnosticAudience[],
+): boolean {
+  return (value.audience ?? fallback).includes(audience);
+}
+
 export function selectUsage(state: AgentSessionState) {
   return state.usage;
 }
@@ -161,10 +286,20 @@ export function selectHostMetrics(state: AgentSessionState) {
   return state.usage.hostMetrics;
 }
 
-export function selectThreadRegistry(state: AgentSessionState) {
-  return state.threadRegistry;
+export function selectThreadLifecycle(state: AgentSessionState) {
+  return state.threadLifecycle;
 }
 
 export function selectRunSettings(state: AgentSessionState) {
   return state.runSettings;
+}
+
+function canonicalThreadId(state: AgentSessionState, threadId: ThreadId): ThreadId {
+  let current = threadId;
+  const seen = new Set<ThreadId>();
+  while (state.threadLifecycle.aliasById[current] && !seen.has(current)) {
+    seen.add(current);
+    current = state.threadLifecycle.aliasById[current]!;
+  }
+  return current;
 }

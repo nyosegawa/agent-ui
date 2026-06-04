@@ -302,6 +302,13 @@
   min-width: 0;
 }
 
+.aui-first-run-toolbar.aui-composer-toolbar {
+  align-items: end;
+  flex-wrap: nowrap;
+  gap: var(--aui-space-200);
+  margin-top: 0;
+}
+
 /* Settings wrap internally on narrow widths so the send button stays pinned
  * to the bottom-right corner rather than dropping onto its own row. */
 .aui-first-run-toolbar .aui-composer-settings {
@@ -340,6 +347,15 @@
   padding: var(--aui-space-450) var(--aui-space-550) var(--aui-space-700);
   scroll-behavior: auto;
   position: relative;
+}
+
+.aui-message-list[data-density="compact"] {
+  gap: var(--aui-space-300);
+  padding: var(--aui-space-350) var(--aui-space-450) var(--aui-space-600);
+}
+
+.aui-message-list[data-density="verbose"] {
+  gap: var(--aui-space-550);
 }
 
 .aui-message-list-wrap {
@@ -433,6 +449,36 @@
   color: var(--aui-fg-muted);
   font-size: var(--aui-font-size-md);
   font-style: italic;
+}
+
+.aui-message[data-density="compact"] {
+  gap: var(--aui-space-100);
+}
+
+.aui-message[data-density="compact"][data-kind="userMessage"] {
+  padding: var(--aui-space-200) var(--aui-space-300);
+}
+
+.aui-message[data-density="compact"] .aui-message-meta {
+  font-size: var(--aui-font-size-2xs-plus);
+}
+
+.aui-message[data-density="compact"] .aui-message-body {
+  font-size: var(--aui-font-size-md-plus);
+  line-height: var(--aui-line-prose);
+}
+
+.aui-message[data-density="verbose"] {
+  gap: var(--aui-space-250);
+}
+
+.aui-message[data-density="verbose"][data-kind="userMessage"] {
+  padding: var(--aui-space-300) var(--aui-space-400);
+}
+
+.aui-message[data-density="verbose"] .aui-message-body {
+  font-size: var(--aui-font-size-xl);
+  line-height: var(--aui-line-reading);
 }
 
 .aui-message-meta {

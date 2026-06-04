@@ -17,5 +17,10 @@ This package provides bridge helpers. Host applications own process lifecycle,
 authorization, network exposure, deployment topology, persistence, and resource
 policy.
 
+Use explicit bridge admission, browser method policy, one-shot method policy,
+dynamic-tool policy, local media serving, redaction, and host event sinks.
+Non-loopback bridges, upload/static authorization, tenant/workspace isolation,
+audit storage, billing, and deployment policy remain host-owned.
+
 See the repository docs for current package exports and integration guidance:
 https://github.com/nyosegawa/agent-ui

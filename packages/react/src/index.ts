@@ -4,6 +4,7 @@ export * from "./hooks";
 export * from "./components";
 export * from "./diff-viewer";
 export * from "./timeline";
+export * from "./resources";
 export * from "./transcript-window";
 export * from "./thread-history";
 export * from "./usage";

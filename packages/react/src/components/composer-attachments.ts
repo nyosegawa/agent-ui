@@ -1,19 +1,26 @@
 import type { AgentUserInput } from "../agent-input";
 import type { QueuedFollowUpAttachment } from "../hooks";
+import type { AgentResolvedResource, AgentResourceKind } from "../resources";
 
-export type ComposerAttachmentKind = "image" | "file" | "app" | "plugin";
+export type ComposerAttachmentKind = Extract<
+  AgentResourceKind,
+  "image" | "file" | "app" | "plugin"
+>;
 
-export type AgentLocalAttachmentKind = Extract<ComposerAttachmentKind, "image" | "file">;
+export type AgentLocalAttachmentKind = Extract<AgentResourceKind, "image" | "file">;
+
+export interface AgentResolvedLocalAttachment extends AgentResolvedResource {
+  input: AgentUserInput | AgentUserInput[];
+}
 
 export type AgentLocalAttachmentResolver = (
   file: File,
   kind: AgentLocalAttachmentKind,
 ) =>
-  | AgentUserInput
-  | AgentUserInput[]
+  | AgentResolvedLocalAttachment
   | null
   | undefined
-  | Promise<AgentUserInput | AgentUserInput[] | null | undefined>;
+  | Promise<AgentResolvedLocalAttachment | null | undefined>;
 
 export type AgentMentionAttachmentKind = Extract<ComposerAttachmentKind, "app" | "plugin">;
 
@@ -31,12 +38,16 @@ export type AgentComposerMentionResolver = () =>
   | Promise<AgentComposerMentionAttachment | null | undefined>;
 
 export interface ComposerAttachment extends QueuedFollowUpAttachment {
+  displayName?: string;
   extension?: string;
   id: string;
   input?: AgentUserInput | AgentUserInput[];
   kind: ComposerAttachmentKind;
   label: string;
+  previewFailed?: boolean;
   previewUrl?: string;
+  previewUrlRevoke?: boolean;
+  redactedPath?: string;
   sizeLabel?: string;
   value: string;
 }

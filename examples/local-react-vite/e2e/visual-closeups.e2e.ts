@@ -45,6 +45,7 @@ test("component close-up gallery renders direct primitives, not iframes", async 
     "Approval · command",
     "Approval · user input",
     "Command block",
+    "Custom command block",
     "Diff / file change",
     "Sidebar search + threads",
     "Usage / status chips",
@@ -79,8 +80,94 @@ test("component close-up gallery renders direct primitives, not iframes", async 
   await expect(commandBlock.locator(".aui-transcript-card")).toHaveCount(1);
   await expect(commandBlock.locator(".aui-message-list")).toHaveCount(0);
 
+  const customCommand = closeups.getByTestId("closeup:Custom command block");
+  const customCommandMessage = customCommand.locator(
+    '.aui-message[data-kind="commandExecution"]',
+  );
+  await expect(customCommandMessage).toBeVisible();
+  await expect(customCommandMessage.getByTestId("custom-command-renderer")).toContainText(
+    "Host command renderer",
+  );
+  await expect(customCommandMessage.locator(".aui-command-card")).toBeVisible();
+  const anchoredApproval = await customCommand.evaluate(() => {
+    const command = document.querySelector(
+      '[data-testid="closeup:Custom command block"] .aui-message[data-kind="commandExecution"]',
+    );
+    const anchor = command?.nextElementSibling;
+    const approval = anchor?.querySelector('.aui-approval[data-kind="commandApproval"]');
+    const approveButton = anchor?.querySelector(
+      'button[aria-label="Approve command request approval-command-custom-renderer"]',
+    );
+    return {
+      anchorClass: anchor?.className ?? "",
+      approvalInsideAnchor: Boolean(approval),
+      approveButtonInsideAnchor: Boolean(approveButton),
+    };
+  });
+  expect(anchoredApproval.anchorClass).toContain("aui-transcript-approval-anchor");
+  expect(anchoredApproval.approvalInsideAnchor).toBe(true);
+  expect(anchoredApproval.approveButtonInsideAnchor).toBe(true);
+
   const pastedImage = closeups.getByTestId("closeup:Composer · pasted image");
   await expect(pastedImage.locator(".aui-composer-chip")).toHaveCount(1);
+});
+
+test("critical close-ups cover Phase 9 fixture states", async ({ page }) => {
+  await page.setViewportSize(desktopViewport);
+  await page.goto("/fixture-gallery");
+  const critical = page.getByTestId("critical-states");
+  await expect(critical).toBeVisible();
+  for (const title of [
+    "Empty state · mobile",
+    "Start composer",
+    "Sidebar drawer search/select",
+    "Local media fallback card",
+    "Optimistic pending message",
+  ]) {
+    await expect(critical.getByTestId(`closeup:${title}`)).toBeVisible();
+  }
+
+  const emptyState = critical.getByTestId("closeup:Empty state · mobile");
+  await expect(emptyState.locator(".aui-empty .aui-first-run-starter")).toBeVisible();
+
+  const startComposer = critical.getByTestId("closeup:Start composer");
+  await expect(startComposer.getByRole("form", { name: "Start a Codex thread" })).toBeVisible();
+  await expect(startComposer.getByPlaceholder("Ask Codex what to work on")).toBeVisible();
+  await expect(startComposer.getByRole("button", { name: "Start thread" })).toBeVisible();
+
+  const localMedia = critical.getByTestId("closeup:Local media fallback card");
+  await expect(localMedia.locator(".aui-image-block-fallback")).toHaveText(
+    "Local media unavailable",
+  );
+  await expect(localMedia.locator(".aui-image-block img")).toHaveCount(0);
+
+  const pendingMessage = critical.getByTestId("closeup:Optimistic pending message");
+  await expect(
+    pendingMessage.locator(
+      '.aui-message[data-kind="userMessage"][data-status="inProgress"]',
+    ),
+  ).toContainText("Start the renderer audit");
+});
+
+test("sidebar drawer close-up searches and selects on mobile", async ({ page }) => {
+  await page.setViewportSize(mobileViewport);
+  await page.goto("/fixture-gallery");
+  const closeup = page
+    .getByTestId("critical-states")
+    .getByTestId("closeup:Sidebar drawer search/select");
+  await expect(closeup).toBeVisible();
+  await closeup.getByRole("button", { name: "Open thread history" }).click();
+  const shell = closeup.getByTestId("agent-chat");
+  await expect(shell).toHaveAttribute("data-sidebar-drawer", "open");
+  const search = closeup.getByRole("searchbox", { name: "Search history" });
+  await search.fill("renderer");
+  await expect(closeup.getByRole("button", { name: /Renderer audit/ })).toBeVisible();
+  await closeup.getByRole("button", { name: /Renderer audit/ }).click();
+  await expect(shell).toHaveAttribute("data-sidebar-drawer", "closed");
+  await expect(closeup.getByRole("heading", { name: "Renderer audit" })).toBeVisible();
+  await expect(closeup).toContainText(
+    "Renderer audit selected from the mobile drawer.",
+  );
 });
 
 test("focused composer close-up renders the real AgentComposer", async ({ page }) => {

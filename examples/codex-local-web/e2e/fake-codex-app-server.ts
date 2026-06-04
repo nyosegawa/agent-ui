@@ -60,44 +60,15 @@ function handleRequest(message: JsonRpcLine) {
       });
       return;
     case "thread/list":
-      respond(message.id, {
-        data: [
-          thread({
-            id: "thread-stored",
-            name: "Stored real smoke",
-            status: { type: "notLoaded" },
-          }),
-        ],
-        nextCursor: null,
-      });
+      respond(message.id, threadListResponse(message.params));
       return;
     case "thread/read":
       respond(message.id, {
-        thread: thread({
-          id: "thread-stored",
-          name: "Stored real smoke",
-          status: { type: "notLoaded" },
-          turns: [
-            {
-              completedAt: 1778000001,
-              durationMs: 100,
-              error: null,
-              id: "turn-stored",
-              items: [
-                {
-                  id: "item-stored",
-                  text: "Stored thread hydrated.",
-                  type: "agentMessage",
-                },
-              ],
-              startedAt: 1778000000,
-              status: "completed",
-            },
-          ],
-        }),
+        thread: storedThread(stringParam(message.params, "threadId") ?? "thread-stored"),
       });
       return;
-    case "thread/resume":
+    case "thread/resume": {
+      const threadId = stringParam(message.params, "threadId") ?? "thread-stored";
       respond(message.id, {
         approvalPolicy: "on-request",
         approvalsReviewer: { type: "auto" },
@@ -108,14 +79,10 @@ function handleRequest(message: JsonRpcLine) {
         reasoningEffort: "medium",
         sandbox: { type: "readOnly", networkAccess: false },
         serviceTier: null,
-        thread: thread({
-          id: stringParam(message.params, "threadId") ?? "thread-stored",
-          name: "Stored real smoke",
-          status: { type: "idle" },
-        }),
+        thread: storedThread(threadId, { resumed: true }),
       });
       notify("thread/tokenUsage/updated", {
-        threadId: stringParam(message.params, "threadId") ?? "thread-stored",
+        threadId,
         tokenUsage: {
           last: {
             cachedInputTokens: 25,
@@ -136,6 +103,7 @@ function handleRequest(message: JsonRpcLine) {
         turnId: "turn-stored",
       });
       return;
+    }
     case "thread/start": {
       const threadId = `thread-live-${nextThreadOrdinal++}`;
       respond(message.id, {
@@ -167,9 +135,13 @@ function handleRequest(message: JsonRpcLine) {
     case "turn/start": {
       const turnId = `turn-live-${nextTurnOrdinal++}`;
       const prompt = inputText(message.params);
+      const localImagePaths = inputLocalImagePaths(message.params);
       const threadId = stringParam(message.params, "threadId") ?? "thread-live";
       const requiresApproval = prompt === "run smoke";
-      const isSlow = prompt === "slow smoke";
+      const delaysFirstDelta = prompt === "slow smoke";
+      const streamsWhileRunning = prompt === "streaming smoke";
+      const hasLongRunningTurn = delaysFirstDelta || streamsWhileRunning;
+      const isMissingMedia = prompt === "missing media smoke";
       respond(message.id, {
         turn: {
           completedAt: null,
@@ -182,15 +154,19 @@ function handleRequest(message: JsonRpcLine) {
         },
       });
       streamTurn({
-        completeDelayMs: isSlow ? 30_000 : 40,
+        completeDelayMs: hasLongRunningTurn ? 30_000 : 40,
+        localImagePaths: isMissingMedia
+          ? ["/tmp/agent-ui/missing-transcript-image.png"]
+          : localImagePaths,
         responseText: requiresApproval
           ? "Streaming smoke response."
-          : isSlow
+          : hasLongRunningTurn
             ? `Echo: ${prompt}\n${Array.from({ length: 80 }, (_, index) => `stream line ${index + 1}`).join("\n")}`
             : `Echo: ${prompt}`,
         requiresApproval,
         threadId,
         turnId,
+        firstDeltaDelayMs: delaysFirstDelta ? 30_000 : undefined,
       });
       return;
     }
@@ -242,14 +218,87 @@ function handleRequest(message: JsonRpcLine) {
   }
 }
 
+function threadListResponse(params: Record<string, unknown> | undefined) {
+  const cursor = stringParam(params, "cursor");
+  const searchTerm = stringParam(params, "searchTerm")?.toLowerCase();
+  if (cursor === "page-2") {
+    return {
+      data: [threadListThread("thread-page-2", "Second page real smoke")],
+      nextCursor: null,
+    };
+  }
+  const data = [
+    threadListThread("thread-stored", "Stored real smoke"),
+    threadListThread("thread-search", "Searchable real smoke"),
+    threadListThread("thread-page-1", "First page real smoke"),
+  ].filter((candidate) =>
+    searchTerm
+      ? String(candidate.name).toLowerCase().includes(searchTerm) ||
+        String(candidate.id).toLowerCase().includes(searchTerm)
+      : true,
+  );
+  return {
+    data,
+    nextCursor: searchTerm ? null : "page-2",
+  };
+}
+
+function threadListThread(id: string, name: string) {
+  return thread({
+    id,
+    name,
+    status: { type: "notLoaded" },
+  });
+}
+
+function storedThread(
+  id: string,
+  options: { resumed?: boolean } = {},
+): Record<string, unknown> {
+  const name = storedThreadName(id);
+  return thread({
+    id,
+    name,
+    status: { type: options.resumed ? "idle" : "notLoaded" },
+    turns: [
+      {
+        completedAt: 1778000001,
+        durationMs: 100,
+        error: null,
+        id: `turn-${id}`,
+        items: [
+          {
+            id: `item-${id}`,
+            text: `${name} hydrated.`,
+            type: "agentMessage",
+          },
+        ],
+        startedAt: 1778000000,
+        status: "completed",
+      },
+    ],
+  });
+}
+
+function storedThreadName(id: string): string {
+  if (id === "thread-search") return "Searchable real smoke";
+  if (id === "thread-page-1") return "First page real smoke";
+  if (id === "thread-page-2") return "Second page real smoke";
+  return "Stored real smoke";
+}
+
 function streamTurn({
   completeDelayMs = 40,
+  firstDeltaDelayMs,
+  localImagePaths = [],
   requiresApproval,
   responseText,
   threadId,
   turnId,
 }: {
   completeDelayMs?: number;
+  firstDeltaDelayMs?: number;
+  localImagePaths?: string[];
   requiresApproval: boolean;
   responseText: string;
   threadId: string;
@@ -273,7 +322,7 @@ function streamTurn({
       },
     }),
   );
-  schedule(10, () =>
+  schedule(firstDeltaDelayMs ?? 10, () =>
     notify("item/agentMessage/delta", {
       delta: responseText,
       itemId: agentItemId,
@@ -308,6 +357,11 @@ function streamTurn({
             text: responseText,
             type: "agentMessage",
           },
+          ...localImagePaths.map((path, index) => ({
+            id: `image-${turnId}-${index}`,
+            path,
+            type: "imageView",
+          })),
         ],
         threadId,
         turn: {
@@ -338,6 +392,26 @@ function streamTurn({
       },
     });
   });
+}
+
+function inputLocalImagePaths(params: Record<string, unknown> | undefined): string[] {
+  const input = params?.input;
+  if (!Array.isArray(input)) return [];
+  return input
+    .map((item) => {
+      if (
+        typeof item === "object" &&
+        item !== null &&
+        "type" in item &&
+        item.type === "localImage" &&
+        "path" in item &&
+        typeof item.path === "string"
+      ) {
+        return item.path;
+      }
+      return undefined;
+    })
+    .filter((path): path is string => Boolean(path));
 }
 
 function thread(overrides: Record<string, unknown>) {

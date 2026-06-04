@@ -8,14 +8,17 @@ import type { ModelState } from "./state/models";
 import type { RunSettingsState } from "./state/run-settings";
 import type { ServerRequestQueueState } from "./state/server-requests";
 import type { SkillsState } from "./state/skills";
-import type { ThreadRegistryState, ThreadState } from "./state/thread";
+import type {
+  ThreadLifecycleState,
+  ThreadState,
+} from "./state/thread";
 import type { UsageState } from "./state/usage";
 import { createInitialAppsState } from "./stores/apps";
 import { createInitialConnectionState } from "./stores/connection";
 import { createInitialDiagnosticsState } from "./stores/diagnostics";
 import { createInitialServerRequestQueueState } from "./stores/server-request";
 import { createInitialThreadEntityState } from "./stores/thread-entity";
-import { createInitialThreadRegistryState } from "./stores/thread-index";
+import { createInitialThreadLifecycleState } from "./stores/thread-lifecycle";
 import { createInitialUsageState } from "./stores/usage";
 
 export type * from "./state/account";
@@ -40,7 +43,7 @@ export interface AgentSessionState {
   diagnostics: DiagnosticsState;
   hooks: HooksState;
   threads: Record<ThreadId, ThreadState>;
-  threadRegistry: ThreadRegistryState;
+  threadLifecycle: ThreadLifecycleState;
   serverRequestQueue: ServerRequestQueueState;
   models: ModelState;
   runSettings: RunSettingsState;
@@ -59,7 +62,7 @@ export function createInitialAgentState(): AgentSessionState {
     runSettings: { executionMode: "review" },
     serverRequestQueue: createInitialServerRequestQueueState(),
     skills: { byCwd: {} },
-    threadRegistry: createInitialThreadRegistryState(),
+    threadLifecycle: createInitialThreadLifecycleState(),
     threads: createInitialThreadEntityState(),
     usage: createInitialUsageState(),
   };

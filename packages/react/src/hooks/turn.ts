@@ -1,6 +1,6 @@
 import {
   selectRunSettings,
-  selectThreadRegistry,
+  selectThreadLifecycle,
   type ThreadId,
 } from "@nyosegawa/agent-ui-core";
 import { useCallback } from "react";
@@ -14,7 +14,7 @@ import { codexReasoningEffort, normalizeTurnInput } from "./turn-input";
 export function useAgentTurn(threadId?: ThreadId) {
   const { state } = useAgentContext();
   const codex = useCodexSession();
-  const resolvedThreadId = threadId ?? selectThreadRegistry(state).activeThreadId;
+  const resolvedThreadId = threadId ?? selectThreadLifecycle(state).activeThreadId;
   const runSettings = selectRunSettings(state);
 
   const startTurn = useCallback(

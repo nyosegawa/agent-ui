@@ -1,6 +1,10 @@
 import {
   createInitialAgentState,
   FakeAgentTransport,
+  selectOrderedCollectionThreads,
+  selectThreadCollection,
+  type AgentThreadScope,
+  type ThreadId,
 } from "@nyosegawa/agent-ui-core";
 import {
   AgentAppsPanel,
@@ -10,6 +14,7 @@ import {
   AgentDiagnosticsPanel,
   AgentI18nProvider,
   AgentLocaleSelect,
+  AgentMessageList,
   AgentProvider,
   AgentStatusDetails,
   AgentStatusSummary,
@@ -25,6 +30,8 @@ import {
   normalizeUsageWindows,
   useAgentApprovals,
   useAgentBootstrap,
+  useAgentComposerController,
+  useAgentContext,
   useAgentThread,
   useAgentUsage,
 } from "@nyosegawa/agent-ui-react";
@@ -43,6 +50,7 @@ import { FixturePreview } from "./closeups/FixturePreview";
 import {
   createFixtureInitialState,
   createFixtureTransport,
+  fixtureModels,
   createRichTranscriptInitialState,
   fixtureRateLimits,
 } from "./fixtures/demo-state";
@@ -61,11 +69,230 @@ declare global {
 
 function DemoApp() {
   if (window.location.pathname === "/app-connectors") return <AppConnectorsExample />;
+  if (window.location.pathname === "/composer-retry") return <ComposerRetryExample />;
   if (window.location.pathname === "/fixture-gallery") return <VisualQaIndex />;
   if (window.location.pathname === "/host-workflow-recipe") return <HostWorkflowRecipe />;
+  if (window.location.pathname === "/resource-resolution") {
+    return <ResourceResolutionExample />;
+  }
+  if (window.location.pathname === "/transcript-density") return <TranscriptDensityExample />;
+  if (window.location.pathname === "/scoped-thread-lists") {
+    return <ScopedThreadListsExample />;
+  }
   if (window.location.pathname === "/scoped-thread-pane") return <ScopedThreadPaneExample />;
   if (window.location.pathname === "/usage-only") return <UsageOnlyExample />;
   return <AgentDemo />;
+}
+
+function ComposerRetryExample() {
+  const [turnStartCalls, setTurnStartCalls] = useState(0);
+  const transport = useMemo(
+    () => new ComposerRetryTransport(setTurnStartCalls),
+    [],
+  );
+  return (
+    <AgentProvider initialState={createInitialAgentState()} transport={transport}>
+      <main className="aui-demo-main" data-aui-theme="light">
+        <ExampleFrame title="Composer retry">
+          <AgentChat sidebar={false} usage={false} />
+          <ComposerRetryProbe turnStartCalls={turnStartCalls} />
+        </ExampleFrame>
+      </main>
+    </AgentProvider>
+  );
+}
+
+class ComposerRetryTransport extends FakeAgentTransport {
+  private turnStartCalls = 0;
+
+  constructor(onTurnStartCallsChange: (calls: number) => void) {
+    super({
+      onRequest: (request) => {
+        if (request.method === "account/read") {
+          return { account: { email: "fixture@example.com", planType: "pro" } };
+        }
+        if (request.method === "model/list") return { data: fixtureModels() };
+        if (request.method === "account/rateLimits/read") return fixtureRateLimits();
+        if (request.method === "thread/list") return { data: [] };
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-browser-retry",
+              name: "Browser retry thread",
+              path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "turn/start") {
+          this.turnStartCalls += 1;
+          onTurnStartCallsChange(this.turnStartCalls);
+          if (this.turnStartCalls === 1 && requestInputText(request.params) === "browser retry") {
+            throw new Error("browser retry failed once");
+          }
+          return { turnId: `turn-browser-retry-${this.turnStartCalls}` };
+        }
+        return {};
+      },
+    });
+  }
+}
+
+function ComposerRetryProbe({ turnStartCalls }: { turnStartCalls: number }) {
+  const composer = useAgentComposerController();
+  const failed = composer.failedPendingMessages[0];
+  return (
+    <section aria-label="Composer retry status" className="aui-host-recipe-panel">
+      <p aria-label="failed pending count">
+        {composer.failedPendingMessages.length}
+      </p>
+      <p aria-label="failed pending error">{failed?.error ?? "none"}</p>
+      <p aria-label="turn start calls">{turnStartCalls}</p>
+      <button
+        disabled={!failed}
+        onClick={() => {
+          if (failed) void composer.retryFailedPendingMessage(failed.operationId);
+        }}
+        type="button"
+      >
+        Retry failed first message
+      </button>
+    </section>
+  );
+}
+
+function requestInputText(params: unknown): string {
+  if (!params || typeof params !== "object") return "";
+  const input = (params as { input?: unknown }).input;
+  if (typeof input === "string") return input;
+  if (!Array.isArray(input)) return "";
+  return input
+    .map((item) =>
+      item && typeof item === "object" && "text" in item
+        ? String((item as { text?: unknown }).text ?? "")
+        : "",
+    )
+    .filter(Boolean)
+    .join("\n");
+}
+
+function ScopedThreadListsExample() {
+  return (
+    <AgentProvider initialState={createInitialAgentState()} transport={new FakeAgentTransport()}>
+      <main className="aui-demo-main" data-aui-theme="light">
+        <ExampleFrame title="Scoped thread lists">
+          <div className="aui-host-workflow-grid" data-testid="scoped-thread-lists">
+            <ScopedThreadListPanel
+              label="Left"
+              pageThreadId="thread-left-page"
+              primaryThreadId="thread-left-alpha"
+              scopeKey="history:left-fixture"
+            />
+            <ScopedThreadListPanel
+              label="Right"
+              pageThreadId="thread-right-page"
+              primaryThreadId="thread-right-beta"
+              scopeKey="history:right-fixture"
+            />
+          </div>
+        </ExampleFrame>
+      </main>
+    </AgentProvider>
+  );
+}
+
+function ScopedThreadListPanel({
+  label,
+  pageThreadId,
+  primaryThreadId,
+  scopeKey,
+}: {
+  label: string;
+  pageThreadId: ThreadId;
+  primaryThreadId: ThreadId;
+  scopeKey: string;
+}) {
+  const { dispatch, state } = useAgentContext();
+  const [searchTerm, setSearchTerm] = useState(label.toLowerCase());
+  const scope: AgentThreadScope = {
+    key: scopeKey,
+    kind: "history",
+    searchTerm: searchTerm || undefined,
+  };
+  const collection = selectThreadCollection(state, scope);
+  const threads = selectOrderedCollectionThreads(state, scope);
+  const loadPage = (append = false) => {
+    const threadIds = append ? [pageThreadId] : [primaryThreadId];
+    const syncedAt = append ? 2 : 1;
+    for (const threadId of threadIds) {
+      dispatch({
+        status: "notLoaded",
+        thread: {
+          id: threadId,
+          name: `${label} ${append ? "page" : searchTerm || "all"} thread`,
+        },
+        type: "thread/upserted",
+      });
+    }
+    dispatch({
+      ids: threadIds,
+      nextCursor: append ? null : `${scopeKey}:page-2`,
+      replace: !append,
+      scope,
+      syncedAt,
+      type: "thread/collection/pageReceived",
+    });
+    dispatch({
+      nextCursor: append ? null : `${scopeKey}:page-2`,
+      scope,
+      syncedAt,
+      type: "thread/collection/synced",
+    });
+  };
+  return (
+    <section aria-label={`${label} scoped list`} className="aui-host-recipe-panel">
+      <h2>{label} scope</h2>
+      <label>
+        <span>Search</span>
+        <input
+          aria-label={`${label} search`}
+          className="aui-text-input"
+          value={searchTerm}
+          onChange={(event) => setSearchTerm(event.currentTarget.value)}
+        />
+      </label>
+      <div className="aui-host-recipe-actions">
+        <button type="button" onClick={() => loadPage(false)}>
+          Refresh {label}
+        </button>
+        <button type="button" onClick={() => loadPage(true)}>
+          Load more {label}
+        </button>
+      </div>
+      <p aria-label={`${label} scope metadata`}>
+        {collection?.scope.kind === "history" ? collection.scope.searchTerm : ""}
+      </p>
+      <p aria-label={`${label} cursor`}>{collection?.nextCursor ?? ""}</p>
+      <ul aria-label={`${label} threads`}>
+        {threads.map((thread) => (
+          <li key={thread.thread.id}>
+            <button
+              type="button"
+              onClick={() => dispatch({ threadId: thread.thread.id, type: "thread/active/set" })}
+            >
+              {thread.thread.name ?? thread.thread.id}
+            </button>
+          </li>
+        ))}
+      </ul>
+      <p aria-label={`${label} active`}>
+        {state.threadLifecycle.activeThreadId === primaryThreadId ||
+        state.threadLifecycle.activeThreadId === pageThreadId
+          ? state.threadLifecycle.activeThreadId
+          : ""}
+      </p>
+    </section>
+  );
 }
 
 function AgentDemo() {
@@ -161,18 +388,28 @@ function localeFromLocation(): AgentLocale {
 function ScopedThreadPaneExample() {
   const initialState = useMemo(() => {
     const state = createInitialAgentState();
-    state.threadRegistry.activeThreadId = "thread-active";
+    state.threadLifecycle.activeThreadId = "thread-active";
     state.threads["thread-active"] = {
+      activity: "idle",
+      availability: "available",
+      id: "thread-active",
+      metadata: { title: "Active host thread" },
+      operations: {},
       orderedTurnIds: [],
-      registryStatus: "live",
       status: "loaded",
+      storage: "unknown",
       thread: { id: "thread-active", name: "Active host thread" },
       turns: {},
     };
     state.threads["thread-fixed"] = {
+      activity: "idle",
+      availability: "available",
+      id: "thread-fixed",
+      metadata: { title: "Scoped thread pane" },
+      operations: {},
       orderedTurnIds: ["turn-fixed"],
-      registryStatus: "live",
       status: "complete",
+      storage: "unknown",
       thread: { id: "thread-fixed", name: "Scoped thread pane" },
       turns: {
         "turn-fixed": {
@@ -405,6 +642,35 @@ function HostWorkflowRecipe() {
   );
 }
 
+function TranscriptDensityExample() {
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
+  const thread = initialState.threads["thread-rich-transcript"];
+  if (!thread) return null;
+  return (
+    <AgentProvider initialState={initialState} transport={transport}>
+      <main className="aui-demo-main" data-aui-theme="light">
+        <ExampleFrame title="Transcript density">
+          <AgentThreadSurface>
+            <AgentThreadHeader thread={thread} threadId={thread.thread.id} />
+            <AgentMessageList
+              density={{
+                default: "compact",
+                byBlockKind: {
+                  commandExecution: "verbose",
+                  fileChange: "verbose",
+                  text: "critical-only",
+                },
+              }}
+              thread={thread}
+            />
+          </AgentThreadSurface>
+        </ExampleFrame>
+      </main>
+    </AgentProvider>
+  );
+}
+
 function HostWorkflowComposition() {
   const bootstrap = useAgentBootstrap();
   const { thread, threadId } = useAgentThread();
@@ -613,6 +879,34 @@ function HostWorkflowPanel() {
         </button>
       </div>
     </section>
+  );
+}
+
+function ResourceResolutionExample() {
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
+  const thread = initialState.threads["thread-rich-transcript"];
+  const previewUrl =
+    "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+  if (!thread) return null;
+  return (
+    <AgentProvider initialState={initialState} transport={transport}>
+      <main className="aui-demo-main" data-aui-theme="light">
+        <ExampleFrame title="Resource resolution">
+          <AgentThreadSurface>
+            <AgentThreadHeader thread={thread} threadId={thread.thread.id} />
+            <AgentMessageList
+              resolveLocalMediaUrl={(path) => ({
+                displayName: "fixture-image.png",
+                previewUrl,
+                redactedPath: `[agent-ui-local-media]/${path.split(/[\\/]+/).at(-1) ?? "media"}`,
+              })}
+              thread={thread}
+            />
+          </AgentThreadSurface>
+        </ExampleFrame>
+      </main>
+    </AgentProvider>
   );
 }
 

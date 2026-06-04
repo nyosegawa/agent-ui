@@ -177,7 +177,7 @@ describe("package script documentation", () => {
     expect(uploadSource).toContain(
       "application\\/octet-stream|image\\/[-+.\\w]+|text\\/plain",
     );
-    expect(uploadSource).toContain("contentType && !isAllowedContentType(contentType)");
+    expect(uploadSource).toContain("mimeType && !isAllowedContentType(mimeType)");
 
     expect(serverBridgeDocs).toContain("missing `content-type` is accepted");
     expect(serverBridgeDocs).toContain(

@@ -26,6 +26,21 @@ and optional sidebar. Usage and diagnostics are off by default because they are
 host-composition primitives; opt into them only when the preset should own that
 secondary chrome.
 
+The public preset customization API is `AgentChatProps.components:
+AgentComponents`, plus the exported default map `defaultAgentComponents`. The
+old slot-oriented shape is not part of the vNext public contract. Replacement
+components should import from `@nyosegawa/agent-ui-react`, not from source
+modules, and receive a `Default` renderer for the surface they replace. `Shell`,
+`Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are the
+raw-free preset replacement targets for this gate. `Item` remains a legacy
+replacement point that currently receives `AgentItemState` and `TurnState`
+from core, including `raw?: unknown` fields; do not treat that shape as the
+final vNext item renderer contract. Moving item replacement to raw-free
+transcript view-model props is part of the later API stabilization gate.
+Internal component state, CSS implementation selectors, attachment mutation
+objects, transcript window bookkeeping, and generated protocol payloads stay
+inside Agent UI.
+
 ```tsx
 import {
   localImageInput,
@@ -42,17 +57,22 @@ import {
   onRequestPluginMention={openPluginPicker}
   onRequestWorkingDirectory={openDirectoryPicker}
   resolveLocalAttachment={async (file, kind) => {
-    const path = await uploadAttachmentToLocalPath(file);
-    return kind === "image"
-      ? localImageInput(path)
-      : textInput(`Attached file: ${path}`);
+    const asset = await uploadAttachmentToLocalMedia(file);
+    return {
+      ...asset,
+      input:
+        kind === "image"
+          ? localImageInput(asset.path)
+          : textInput(`Attached file: ${asset.path}`),
+    };
   }}
+  resolveLocalMediaUrl={(path) => localMediaAssetUrlForPath(path)}
   messages={{
     "composer.placeholder": "フォローアップの変更を求める",
   }}
-  slots={{
-    renderApproval: (approval) => <CustomApproval approval={approval} />,
-    renderItem: (item, turn) => <CustomItem item={item} turn={turn} />,
+  components={{
+    Approval: ({ approval }) => <CustomApproval approval={approval} />,
+    Item: ({ item, turn }) => <CustomItem item={item} turn={turn} />,
   }}
 />
 ```
@@ -84,9 +104,47 @@ inline. Authenticated account details, plan, usage windows, and logout are
 available from the account dialog in the status actions so host applications can
 keep personal identity in profile or settings chrome.
 
-`slots.renderApproval` replaces the default approval card and its default
-actions. Custom approval renderers must call `useAgentApprovals()` or a
-host-owned response path to send decisions.
+`components.Approval` replaces the default approval card and its default
+actions for each rendered approval request. Custom approval components must
+call `useAgentApprovals()` or a host-owned response path to send decisions.
+`components.Item` replaces transcript item rendering at the preset boundary.
+It is still typed with core `AgentItemState` / `TurnState` for this draft, so
+hosts should prefer `components.blocks` or headless transcript controllers when
+they need raw-free rendering inputs.
+`components.blocks` replaces individual transcript block renderers by block
+kind. Block replacement components receive a narrow `Default` renderer so hosts
+can wrap or annotate the default UI without depending on private reducer state.
+The initial components map also supports `Shell`, `Sidebar`, `EmptyState`, and
+`ComposerPanel`; each receives the documented public props for that surface
+plus `Default`.
+
+Replacement points are intentionally limited to surfaces whose accessibility,
+scroll, and approval-anchor contracts can be preserved:
+
+- `Shell` may wrap `AgentShell`, but the preset still owns the transcript column
+  and sidebar drawer state.
+- `Sidebar` receives the default sidebar props and `Default`; it should delegate
+  to `Default` unless the host accepts responsibility for thread navigation and
+  history search accessibility.
+- `EmptyState` and `ComposerPanel` receive public starter/composer props and
+  `Default`; low-level toolbar, submit, attachment, and textarea behavior stays
+  inside the styled parts so Enter/Shift+Enter, stop, queue, and attachment
+  restore semantics remain tested in one place.
+- `Approval` replaces only the approval card body rendered at an existing
+  transcript anchor. It does not move approvals out of the transcript scroll
+  area or own approval placement.
+- `Item` and `blocks` are wrapped by the default transcript list/turn/message
+  containers. Replacing one block does not replace the list, turn ordering,
+  approval anchor nodes, density attributes, or scroll-follow behavior.
+
+Rejected replacement points for this gate include the transcript scroll
+container, approval anchor placement, composer toolbar internals, individual
+attachment mutation controls, sidebar pagination internals, and low-level
+generated block normalization. Hosts that need those policies should compose
+headless hooks and primitives directly instead of widening `AgentChat`.
+Host applications also keep ownership of any product shell, navigation model,
+auth gate, persistent panel state, tenant/workspace mapping, custom registry,
+or deployment policy they compose around the preset.
 
 ## Transcript Primitives
 
@@ -94,12 +152,35 @@ host-owned response path to send decisions.
 The default path does not regroup command execution, tool calls, or file-change
 diffs into UI-owned buckets.
 
+`useAgentTranscriptController(threadId, options)` exposes the transcript view
+model that backs the default list. It returns `AgentTranscriptEntry` objects
+with a raw-free normalized item view, a raw-free synthesized block view, role,
+status, display status, density, approval anchors, and public pending metadata.
+The public controller does not return `ThreadState`, `TurnState`, internal
+optimistic operation records, or raw generated protocol payload fields.
+
+Transcript density is a render preference, not lifecycle state. Pass
+`density="compact"` or `density="verbose"` to `AgentMessageList`, or pass
+`density` to `useAgentTranscriptController()` as a mode or as `{ default,
+byBlockKind }`. `critical-only` hides entries without a failed/in-progress
+status or an anchored approval; per-block overrides can keep specific block
+kinds expanded or dense while the rest of the transcript stays compact.
+
 Large stored threads are rendered incrementally. The initial hydrated history
 mounts only the latest transcript items, keeps order intact, and exposes
 `Show earlier items` to reveal older items in batches. User and assistant
 messages always render expanded. Heavy non-chat bodies such as command output,
 JSON/tool results, and CodeMirror-backed diffs stay unmounted until their
 details disclosure is opened.
+
+`useAgentTranscriptScrollController()` is the public scroll controller for
+custom transcript compositions. The default `AgentMessageList` uses it for
+follow-scroll, Jump to latest, Jump to pending approval, host-owned scroll
+container refs, and the show-earlier action that delegates to the transcript
+controller. Replacing `AgentChat` components does not expose the default
+transcript scroll container as a component replacement point; hosts that need
+custom scroll layout should compose the transcript and scroll controllers
+directly.
 
 Live App Server streams and stored `thread/read` history are not identical
 surfaces. A live browser connection can receive per-item notifications such as
@@ -110,10 +191,18 @@ turn ends with file changes, the transcript window keeps command/tool context
 from the same turn visible with the diff so restored sessions do not degrade
 into a stack of file-change cards.
 
+Local media transcript blocks require the host to pass
+`resolveLocalMediaUrl(path, item)`. The `path` is the App Server local resource
+reference and is never used directly as an image or video `src`. Return a
+browser-safe URL from a same-origin helper or static asset route. Returning
+`null`/`undefined`, omitting the resolver, or a failed image/video load renders
+the default local-media fallback card instead of a broken media element.
+
 Internally, transcript block synthesis and closed-card preview text are pure
-helpers under `packages/react/src/timeline/`. Public imports should continue to
-come from `@nyosegawa/agent-ui-react`; the helper modules are implementation
-details for tests and maintenance, not new public API.
+helpers under `packages/react/src/timeline/`, while windowing is owned by the
+transcript controller. Public imports should continue to come from
+`@nyosegawa/agent-ui-react`; the helper modules are implementation details for
+tests and maintenance, not new public API.
 
 Transcript item primitives are exported for host composition and close-up QA:
 
@@ -132,7 +221,8 @@ The public React stylesheet is
 `@nyosegawa/agent-ui-react/styles.css`. Its design-system API is the
 `--aui-*` token set defined in `packages/react/src/styles/tokens.css`. Hosts
 should theme Agent UI by overriding tokens on their wrapper or by using
-documented props, slots, render props, and `className` attachment points.
+documented props, the `components` map, render props, and `className`
+attachment points.
 Copied `dist/styles/*` files and internal `.aui-*` selectors are private
 implementation details, not stable host imports or styling contracts.
 
@@ -266,6 +356,11 @@ Use these primitives when embedding Agent UI into existing product chrome:
   missing-source requests. Hosts can also place it standalone.
 - `AgentComposerPanel`: turn composer with inline mode / model / effort menus,
   running-turn steering, composer-local Stop, and compact context usage.
+- `AgentComposerInput`, `AgentComposerToolbar`, `AgentAttachmentChips`,
+  `AgentComposerSubmitButton`, and `AgentStartComposer`: composer styled parts
+  for host composition. These preserve the default composer class names and
+  accessibility contract without exposing attachment mutation internals or
+  first-message operation maps.
 - `AgentRunSettingsPanel`: thread-start settings primitive with model, effort,
   cwd, and execution mode for popovers, sheets, or host-owned settings panels.
 - `AgentStatusSummary`, `AgentStatusDetails`, and `AgentCriticalNoticeList`:
@@ -283,7 +378,11 @@ Use these primitives when embedding Agent UI into existing product chrome:
   automatically.
 - `AgentContextUsageIndicator`: compact per-thread context usage popover for
   App Server `thread/tokenUsage/updated` totals.
-- `AgentDiagnosticsPanel`: bridge/account/model startup diagnostics.
+- `AgentDiagnosticsPanel`: user-audience bridge/account/model startup
+  diagnostics. Redacted stderr, raw protocol notifications, bridge health, and
+  dynamic-tool debug phases stay available through
+  `useAgentDiagnostics().developerDiagnostics` and `.auditDiagnostics` for
+  host-owned support or audit surfaces.
 - `AgentSkillsPanel`: skill list and enable/disable controls.
 - `AgentAppsPanel`: Codex Apps/connectors list from `app/list`, using upstream
   enabled/accessibility vocabulary rather than treating connector availability
@@ -344,6 +443,10 @@ file-change summaries, MCP/dynamic/collab tool calls, web search queries,
 images, and system info. This renderer consumes `AgentItemBlock` values from
 core state, so hosts can keep visual components free of generated App Server
 types while still preserving protocol-derived detail in adapters and reducers.
+For media blocks, `AgentItemBlock.resource` separates browser-safe
+`previewUrl`/`url` metadata from local `path` values. Local paths are passed to
+`resolveLocalMediaUrl(path, item)` before rendering; they are not used as image
+or video `src` values.
 
 `AgentApprovalQueue` reads pending approvals through `useAgentApprovals()` and
 renders them as a compact pending-decision surface. In `AgentThreadView` and
@@ -409,8 +512,20 @@ Local image and file attachments are only enabled when the host supplies
 paste, drag and drop, and one toolbar attach file picker, then shows each as a
 removable chip above the textarea. Image chips render a local thumbnail. File
 chips render an attachment icon, filename, extension, and size. The resolver
-may return one `AgentUserInput` or multiple input items for each browser
-`File`.
+returns structured metadata for each browser `File`: `input` is the explicit
+Codex App Server input item or items, while `previewUrl`/`url`, `displayName`,
+and `redactedPath` are browser/UI metadata. Agent UI never derives browser
+image/video `src` values from raw filesystem paths. If a structured attachment
+preview URL fails to load, the chip falls back to its attachment icon and keeps
+the resolved Codex `input` unchanged.
+
+Resource resolution uses the shared `AgentResolvedResource` shape. Composer
+file attachments require `AgentResolvedLocalAttachment` so each resolved file
+has explicit Codex input, while transcript local media may return either a URL
+string or an `AgentResolvedResource` with `previewUrl`/`url` and safe
+`displayName`. `mimeType` or `kind: "video"` controls video rendering for
+opaque local-media paths. This keeps browser rendering metadata separate from
+raw App Server paths without adding a public attachment controller.
 
 When a turn is running, normal Enter queues non-empty follow-ups locally and
 empty Enter does not interrupt the turn. `Send now`
@@ -422,10 +537,10 @@ and attachments can be recovered instead of sending stale `turn/steer` params.
 Codex App Server stable v2 has `text`, `image`, `localImage`, `skill`, and
 `mention` user inputs; it does not have a generic local-file input type.
 Hosts must therefore persist arbitrary files themselves. Images should become
-`localImageInput(path)`. Non-image files should include explicit text such as
-`textInput("Attached file: /absolute/path")` so the model can see the saved
-path; do not rely only on `mentionInput`. A resolver returning `null` or
-throwing surfaces an inline composer error.
+`{ input: localImageInput(path), previewUrl }`. Non-image files should include
+explicit text such as `{ input: textInput("Attached file: /absolute/path") }`
+so the model can see the saved path; do not rely only on `mentionInput`. A
+resolver returning `null` or throwing surfaces an inline composer error.
 
 `examples/codex-local-web` shows the full host responsibility: a
 `POST /agent-ui/upload` endpoint persists any extension, including unknown
@@ -434,13 +549,16 @@ extensions such as `.3mf`, next to the App Server and returns an absolute path.
 ### Start Screen
 
 The empty-state / first-run surface is a starter composer: a large prompt card
-whose lower toolbar reuses the composer's execution-mode and model/effort menus
-(`ComposerRunSettings`), with a round send control. The working directory is a
-thread-start setting, so it sits beneath the card as a compact context picker
-instead of inside the toolbar. The collapsed picker shows only the selected
-folder name; opening it shows recent thread cwd values by folder name, keeps
-the full absolute path in the selection title and request params, and marks
-the selected cwd with a check. `Open folder...` invokes the
+whose prompt, lower toolbar, and submit control reuse the same public composer
+styled parts as the normal composer (`AgentComposerInput`,
+`AgentComposerToolbar`, `ComposerRunSettings`, and
+`AgentComposerSubmitButton`). Hosts can render that starter composer directly
+through `AgentStartComposer`. The working directory is a thread-start setting, so it
+sits beneath the card as a compact context picker instead of inside the toolbar.
+The collapsed picker shows only the selected folder name; opening it shows
+recent thread cwd values by folder name, keeps the full absolute path in the
+selection title and request params, and marks the selected cwd with a check.
+`Open folder...` invokes the
 host-provided `onRequestWorkingDirectory` resolver; without one, the component
 falls back to a path prompt so browser-only fixtures can still set a cwd. The
 `examples/codex-local-web` wires that resolver to a local macOS folder picker
@@ -489,7 +607,7 @@ inside custom UI.
 
 `@nyosegawa/agent-ui-web-components` exports `defineAgentChatElement()`,
 `AgentChatElement`, and the related element option/instance types. The custom
-element accepts `transport`, `initialState`, `slots`, or the combined
+element accepts `transport`, `initialState`, `components`, or the combined
 `agentOptions` object as JavaScript properties and renders the standard preset
 chat. Use the `chat-class` attribute or `agentOptions.className` to pass a class
 name to the rendered `AgentChat`.

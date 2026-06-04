@@ -42,6 +42,30 @@ export const visualQaStates: FixtureState[] = [
   },
   {
     description:
+      "Failed first-message retry through the public composer controller without host-owned rollback logic.",
+    group: "primitives",
+    href: "/composer-retry",
+    meta: "primitive · composer retry",
+    title: "Composer retry",
+  },
+  {
+    description:
+      "Transcript primitive with compact defaults, verbose command/file blocks, and critical-only chat text.",
+    group: "primitives",
+    href: "/transcript-density",
+    meta: "primitive · transcript density",
+    title: "Transcript density",
+  },
+  {
+    description:
+      "Transcript local media rendered from structured browser-safe resource metadata rather than raw paths.",
+    group: "primitives",
+    href: "/resource-resolution",
+    meta: "primitive · resource resolution",
+    title: "Resource resolution",
+  },
+  {
+    description:
       "AgentUsagePanel rendered with no chat, composer, sidebar, or status chrome.",
     group: "primitives",
     href: "/usage-only",

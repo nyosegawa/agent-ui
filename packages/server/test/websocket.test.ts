@@ -8,7 +8,11 @@ import {
   attachAgentUiWebSocketBridge,
   createMcpDynamicToolHandler,
   type AgentUiWebSocketBridgeOptions,
+  type AgentUiBridgeHealthEvent,
+  type BrowserMethodCapability,
   type CodexChildProcess,
+  type DynamicToolDebugEvent,
+  type DynamicToolHelperPermissionPolicy,
 } from "../src";
 
 const servers: Array<{ close: () => void }> = [];
@@ -18,6 +22,86 @@ afterEach(() => {
 });
 
 describe("attachAgentUiWebSocketBridge", () => {
+  it("uses explicit host-callback admission mode before spawning", async () => {
+    let spawnCount = 0;
+    let sawRequest = false;
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      bridgePolicy: {
+        admission: {
+          admit(request) {
+            sawRequest = request.headers.host !== undefined;
+            return false;
+          },
+          mode: "host-callback",
+        },
+      },
+      server: httpServer,
+      spawn: () => {
+        spawnCount += 1;
+        throw new Error("spawn should not run");
+      },
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
+    const close = await onceCloseWithInfo(client);
+    expect(close.code).toBe(1008);
+    expect(sawRequest).toBe(true);
+    expect(spawnCount).toBe(0);
+  });
+
+  it("requires a reason before unsafe no-admission mode can spawn", async () => {
+    let spawnCount = 0;
+    const logs: string[] = [];
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      bridgePolicy: { admission: { mode: "unsafe-no-admission", reason: "" } },
+      server: httpServer,
+      spawn: () => {
+        spawnCount += 1;
+        throw new Error("spawn should not run");
+      },
+      stderr: (line) => logs.push(line),
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
+    const close = await onceCloseWithInfo(client);
+    expect(close).toMatchObject({
+      code: 1011,
+      reason: "Agent UI bridge admission failed",
+    });
+    expect(logs.join("")).toContain("reason is required");
+    expect(spawnCount).toBe(0);
+  });
+
+  it("allows explicit unsafe no-admission mode only with an audit reason", async () => {
+    const logs: string[] = [];
+    const { socket } = await createBridgeBackedSocket({
+      bridgePolicy: {
+        admission: {
+          mode: "unsafe-no-admission",
+          reason: "single-user dev tunnel with host auth disabled for fixture QA",
+        },
+      },
+      stderr: (line) => logs.push(line),
+    });
+
+    expect(logs.join("")).toContain("unsafe admission enabled");
+    socket.close();
+  });
+
   it("runs admission before spawning the Codex process", async () => {
     let spawnCount = 0;
     const httpServer = createServer();
@@ -144,6 +228,95 @@ describe("attachAgentUiWebSocketBridge", () => {
     expect(writes.map((line) => JSON.parse(line)).at(-1)).toMatchObject({
       method: "turn/start",
       params: { threadId: "thread-1" },
+    });
+    socket.close();
+  });
+
+  it("narrows browser methods by capability category", async () => {
+    const { socket, writes } = await createBridgeBackedSocket({
+      browserMethodPolicy: { capabilities: ["connection", "models"] },
+    });
+
+    socket.send(JSON.stringify({ id: "model-list", method: "model/list", params: {} }));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).method === "model/list"),
+    );
+    expect(writes.map((line) => JSON.parse(line)).at(-1)).toMatchObject({
+      method: "model/list",
+    });
+
+    socket.send(
+      JSON.stringify({
+        id: "turn-start",
+        method: "turn/start",
+        params: { input: [{ text: "hello", type: "text" }], threadId: "thread-1" },
+      }),
+    );
+    await expect(nextResponseMessage(socket, "turn-start")).resolves.toMatchObject({
+      error: {
+        code: -32601,
+        data: { method: "turn/start" },
+      },
+      id: "turn-start",
+    });
+    expect(writes.map((line) => JSON.parse(line)).filter((message) => message.method === "turn/start")).toHaveLength(0);
+    socket.close();
+  });
+
+  it("rejects unknown browser method capabilities before spawning", async () => {
+    let spawnCount = 0;
+    const logs: string[] = [];
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      browserMethodPolicy: {
+        capabilities: [
+          "models",
+          "token=browser-method-policy-secret",
+        ] as unknown as BrowserMethodCapability[],
+      },
+      bridgePolicy: {
+        admission: {
+          mode: "unsafe-no-admission",
+          reason: "test invalid runtime capability before spawn",
+        },
+      },
+      server: httpServer,
+      spawn: () => {
+        spawnCount += 1;
+        throw new Error("spawn should not run");
+      },
+      stderr: (line) => logs.push(line),
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
+    const close = await onceCloseWithInfo(client);
+    expect(close).toMatchObject({
+      code: 1011,
+      reason: "Agent UI bridge browser method policy failed",
+    });
+    expect(spawnCount).toBe(0);
+    expect(logs.join("")).toContain("browser method policy failed");
+    expect(logs.join("")).toContain("token=[REDACTED]");
+    expect(logs.join("")).not.toContain("browser-method-policy-secret");
+  });
+
+  it("keeps unsafe all browser method policy explicit", async () => {
+    const { socket, writes } = await createBridgeBackedSocket({
+      browserMethodPolicy: "all",
+    });
+
+    socket.send(JSON.stringify({ id: "fs-read", method: "fs/readFile", params: { path: "/tmp/secret" } }));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).method === "fs/readFile"),
+    );
+    expect(writes.map((line) => JSON.parse(line)).at(-1)).toMatchObject({
+      method: "fs/readFile",
     });
     socket.close();
   });
@@ -484,17 +657,133 @@ describe("attachAgentUiWebSocketBridge", () => {
     await transport.close();
   });
 
-  it("handles dynamic MCP tool calls through the app-server bridge", async () => {
+  it("keeps dynamic tool execution disabled unless host policy provides a handler", async () => {
+    const dynamicToolEvents: DynamicToolDebugEvent[] = [];
     const { stdout, transport, writes } = await createBridgeBackedTransport({
-      dynamicToolHandler: createMcpDynamicToolHandler({
-        tools: [
-          {
-            namespace: "mcp__computer_use__",
-            server: "computer-use",
-            tools: ["get_app_state"],
-          },
+      hostEvents: {
+        onDynamicToolEvent: (event) => dynamicToolEvents.push(event),
+      },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "dynamic-disabled",
+        method: "item/tool/call",
+        params: {
+          arguments: {},
+          callId: "call-disabled",
+          namespace: "mcp__computer_use__",
+          threadId: "thread-1",
+          tool: "get_app_state",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "dynamic-disabled"));
+    expect(
+      writes.map((line) => JSON.parse(line)).find((message) => message.id === "dynamic-disabled"),
+    ).toEqual({
+      id: "dynamic-disabled",
+      result: {
+        contentItems: [
+          { text: "Dynamic tool handling is disabled by host policy", type: "inputText" },
         ],
+        success: false,
+      },
+    });
+    expect(writes.some((line) => JSON.parse(line).method === "thread/start")).toBe(false);
+    expect(dynamicToolEvents).toEqual([
+      expect.objectContaining({
+        phase: "received",
+        requestId: "dynamic-disabled",
       }),
+      {
+        audience: ["developer", "audit"],
+        message: "Dynamic tool handling is disabled by host policy",
+        phase: "denied",
+        request: {
+          callId: "call-disabled",
+          namespace: "mcp__computer_use__",
+          threadId: "thread-1",
+          tool: "get_app_state",
+          turnId: "turn-1",
+        },
+        requestId: "dynamic-disabled",
+        success: false,
+        type: "dynamicTool",
+      },
+    ]);
+    await transport.close();
+  });
+
+  it("does not let throwing dynamic tool event sinks block disabled denial responses", async () => {
+    const logs: string[] = [];
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      hostEvents: {
+        onDynamicToolEvent() {
+          throw new Error("event sink token: sink-secret");
+        },
+      },
+      stderr: (line) => logs.push(line),
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "dynamic-disabled-sink",
+        method: "item/tool/call",
+        params: {
+          callId: "call-disabled-sink",
+          namespace: "mcp__computer_use__",
+          threadId: "thread-1",
+          tool: "get_app_state",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "dynamic-disabled-sink"));
+    expect(
+      writes.map((line) => JSON.parse(line)).find((message) => message.id === "dynamic-disabled-sink"),
+    ).toMatchObject({
+      id: "dynamic-disabled-sink",
+      result: { success: false },
+    });
+    expect(logs.join("")).toContain("dynamic tool host event sink failed");
+    expect(logs.join("")).not.toContain("sink-secret");
+    await transport.close();
+  });
+
+  it("handles dynamic MCP tool calls through the app-server bridge", async () => {
+    const dynamicToolEvents: DynamicToolDebugEvent[] = [];
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      dynamicToolPolicy: {
+        handler: createMcpDynamicToolHandler({
+          tools: [
+            {
+              namespace: "mcp__computer_use__",
+              server: "computer-use",
+              tools: ["get_app_state"],
+            },
+          ],
+        }),
+        mode: "host-callback",
+      },
+      hostEvents: {
+        onDynamicToolEvent: (event) => dynamicToolEvents.push(event),
+      },
     });
 
     const connected = transport.connect();
@@ -579,14 +868,110 @@ describe("attachAgentUiWebSocketBridge", () => {
         success: true,
       },
     });
+    await waitFor(() => dynamicToolEvents.some((event) => event.phase === "completed"));
+    expect(dynamicToolEvents.map((event) => event.phase)).toEqual([
+      "received",
+      "helperThreadCreated",
+      "mcpCallStarted",
+      "completed",
+    ]);
+    expect(dynamicToolEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          helperThreadId: "helper-thread-1",
+          phase: "helperThreadCreated",
+          requestId: "dynamic-1",
+        }),
+        expect.objectContaining({
+          helperThreadId: "helper-thread-1",
+          phase: "mcpCallStarted",
+          request: {
+            callId: "call-1",
+            namespace: "mcp__computer_use__",
+            threadId: "thread-1",
+            tool: "get_app_state",
+            turnId: "turn-1",
+          },
+          requestId: "dynamic-1",
+          server: "computer-use",
+        }),
+        expect.objectContaining({
+          durationMs: expect.any(Number),
+          phase: "completed",
+          requestId: "dynamic-1",
+          success: true,
+        }),
+      ]),
+    );
+    expect(JSON.stringify(dynamicToolEvents)).not.toContain("Google Chrome");
+    await transport.close();
+  });
+
+  it("does not let throwing dynamic tool event sinks block successful handler responses", async () => {
+    const logs: string[] = [];
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      dynamicToolPolicy: {
+        handler: () => ({
+          contentItems: [{ text: "ok", type: "inputText" }],
+          success: true,
+        }),
+        mode: "host-callback",
+      },
+      hostEvents: {
+        onDynamicToolEvent() {
+          throw new Error("event sink token: success-secret");
+        },
+      },
+      stderr: (line) => logs.push(line),
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "dynamic-success-sink",
+        method: "item/tool/call",
+        params: {
+          callId: "call-success-sink",
+          namespace: "host__debug__",
+          threadId: "thread-1",
+          tool: "debug",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "dynamic-success-sink"));
+    expect(
+      writes.map((line) => JSON.parse(line)).find((message) => message.id === "dynamic-success-sink"),
+    ).toEqual({
+      id: "dynamic-success-sink",
+      result: {
+        contentItems: [{ text: "ok", type: "inputText" }],
+        success: true,
+      },
+    });
+    expect(logs.join("")).toContain("dynamic tool host event sink failed");
+    expect(logs.join("")).not.toContain("success-secret");
     await transport.close();
   });
 
   it("redacts dynamic tool handler failures from host stderr and App Server responses", async () => {
+    const dynamicToolEvents: DynamicToolDebugEvent[] = [];
     const logs: string[] = [];
     const { stdout, transport, writes } = await createBridgeBackedTransport({
-      dynamicToolHandler: () => {
-        throw new Error("dynamic failed token: tool-secret api_key: sk-tool");
+      dynamicToolPolicy: {
+        handler: () => {
+          throw new Error("dynamic failed token: tool-secret api_key: sk-tool");
+        },
+        mode: "host-callback",
+      },
+      hostEvents: {
+        onDynamicToolEvent: (event) => dynamicToolEvents.push(event),
       },
       stderr: (line) => logs.push(line),
     });
@@ -631,20 +1016,35 @@ describe("attachAgentUiWebSocketBridge", () => {
     expect(logs.join("")).toContain("dynamic tool failed id=dynamic-secret");
     expect(logs.join("")).not.toContain("tool-secret");
     expect(logs.join("")).not.toContain("sk-tool");
+    expect(dynamicToolEvents).toEqual([
+      expect.objectContaining({
+        phase: "received",
+        requestId: "dynamic-secret",
+      }),
+      expect.objectContaining({
+        message: "dynamic failed token: [REDACTED] api_key: [REDACTED]",
+        phase: "failed",
+        requestId: "dynamic-secret",
+        success: false,
+      }),
+    ]);
     await transport.close();
   });
 
   it("auto-resolves MCP approvals for dynamic tool helper calls", async () => {
     const { stdout, transport, writes } = await createBridgeBackedTransport({
-      dynamicToolHandler: createMcpDynamicToolHandler({
-        tools: [
-          {
-            namespace: "mcp__computer_use__",
-            server: "computer-use",
-            tools: ["get_app_state"],
-          },
-        ],
-      }),
+      dynamicToolPolicy: {
+        handler: createMcpDynamicToolHandler({
+          tools: [
+            {
+              namespace: "mcp__computer_use__",
+              server: "computer-use",
+              tools: ["get_app_state"],
+            },
+          ],
+        }),
+        mode: "host-callback",
+      },
     });
 
     const connected = transport.connect();
@@ -771,7 +1171,7 @@ describe("attachAgentUiWebSocketBridge", () => {
 
   it("bounds dynamic helper permission callback grants to requested families", async () => {
     const { stdout, transport, writes } = await createStartedDynamicHelper({
-      dynamicToolHelperPermissions: (context) => ({
+      helperPermissions: (context) => ({
         action: "grant",
         permissions: {
           fileSystem: { mode: "read-only", paths: [context.cwd] },
@@ -808,7 +1208,7 @@ describe("attachAgentUiWebSocketBridge", () => {
 
   it("drops dynamic helper callback grants that broaden requested filesystem values", async () => {
     const { stdout, transport, writes } = await createStartedDynamicHelper({
-      dynamicToolHelperPermissions: () => ({
+      helperPermissions: () => ({
         action: "grant",
         permissions: {
           fileSystem: { mode: "workspace-write", paths: ["/"] },
@@ -845,7 +1245,7 @@ describe("attachAgentUiWebSocketBridge", () => {
 
   it("can explicitly deny dynamic helper permissions", async () => {
     const { stdout, transport, writes } = await createStartedDynamicHelper({
-      dynamicToolHelperPermissions: "deny",
+      helperPermissions: "deny",
     });
 
     stdout.write(
@@ -1112,6 +1512,187 @@ describe("attachAgentUiWebSocketBridge", () => {
     await transport.close();
   });
 
+  it("drops normal permission grants outside the requested permission families", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: {
+        permissions: () => ({
+          action: "grant",
+          permissions: {
+            fileSystem: { mode: "read-only", paths: ["/tmp/project"] },
+            network: true,
+          },
+          scope: "turn",
+        }),
+      },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "permissions-family-bound-1",
+        method: "item/permissions/requestApproval",
+        params: {
+          cwd: "/tmp/project",
+          permissions: {
+            fileSystem: "read-only",
+          },
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "permissions-family-bound-1"));
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-family-bound-1")).toEqual({
+      id: "permissions-family-bound-1",
+      result: {
+        permissions: {
+          fileSystem: { mode: "read-only", paths: ["/tmp/project"] },
+        },
+        scope: "turn",
+      },
+    });
+    await transport.close();
+  });
+
+  it("keeps normal permission grants within requested protocol permission subsets", async () => {
+    const requestedEntry = {
+      access: "read",
+      path: { path: "/tmp/project/src", type: "path" },
+    };
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: {
+        permissions: () => ({
+          action: "grant",
+          permissions: {
+            fileSystem: {
+              entries: [requestedEntry],
+              globScanMaxDepth: 2,
+              read: ["/tmp/project/src"],
+              write: ["/tmp/project"],
+            },
+            network: true,
+          },
+          scope: "session",
+        }),
+      },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "permissions-protocol-subset-1",
+        method: "item/permissions/requestApproval",
+        params: {
+          cwd: "/tmp/project",
+          permissions: {
+            fileSystem: {
+              entries: [requestedEntry],
+              globScanMaxDepth: 4,
+              read: ["/tmp/project/src", "/tmp/project/README.md"],
+              write: ["/tmp/project", "/tmp/shared"],
+            },
+            network: true,
+          },
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "permissions-protocol-subset-1"));
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-protocol-subset-1")).toEqual({
+      id: "permissions-protocol-subset-1",
+      result: {
+        permissions: {
+          fileSystem: {
+            entries: [requestedEntry],
+            globScanMaxDepth: 2,
+            read: ["/tmp/project/src"],
+            write: ["/tmp/project"],
+          },
+          network: true,
+        },
+        scope: "session",
+      },
+    });
+    await transport.close();
+  });
+
+  it("drops normal permission grants that broaden requested filesystem values", async () => {
+    const requestedEntry = {
+      access: "read",
+      path: { path: "/tmp/project/src", type: "path" },
+    };
+    const broaderEntry = {
+      access: "write",
+      path: { path: "/tmp/project/src", type: "path" },
+    };
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: {
+        permissions: () => ({
+          action: "grant",
+          permissions: {
+            fileSystem: {
+              entries: [broaderEntry],
+              globScanMaxDepth: 3,
+              read: ["/tmp/project/src"],
+              write: ["/"],
+            },
+            network: true,
+          },
+          scope: "turn",
+        }),
+      },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "permissions-filesystem-bound-1",
+        method: "item/permissions/requestApproval",
+        params: {
+          cwd: "/tmp/project",
+          permissions: {
+            fileSystem: {
+              entries: [requestedEntry],
+              globScanMaxDepth: 2,
+              read: null,
+              write: ["/tmp/project"],
+            },
+          },
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "permissions-filesystem-bound-1"));
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-filesystem-bound-1")).toEqual({
+      id: "permissions-filesystem-bound-1",
+      result: {
+        permissions: {},
+        scope: "turn",
+      },
+    });
+    await transport.close();
+  });
+
   it("keeps permission approvals manual when the host callback declines", async () => {
     const { stdout, transport, writes } = await createBridgeBackedTransport({
       serverRequestPolicy: {
@@ -1155,11 +1736,181 @@ describe("attachAgentUiWebSocketBridge", () => {
     await transport.close();
   });
 
-  it("can auto-accept command and file approvals for the active browser session", async () => {
+  it("can auto-resolve server requests through a context-rich host callback", async () => {
+    const contexts: unknown[] = [];
     const { stdout, transport, writes } = await createBridgeBackedTransport({
       serverRequestPolicy: {
-        commandExecution: "acceptForSession",
-        fileChange: "acceptForSession",
+        decide: (context) => {
+          contexts.push(context);
+          if (context.kind !== "userInput") return undefined;
+          return {
+            action: "respond",
+            auditAction: "answer",
+            response: {
+              content: [{ text: "Use the fixture target.", type: "inputText" }],
+            },
+          };
+        },
+      },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "input-active-1",
+        method: "item/tool/requestUserInput",
+        params: {
+          itemId: "tool-input-1",
+          prompt: "Which target should the bridge verify?",
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "input-active-1"));
+    expect(contexts).toEqual([
+      expect.objectContaining({
+        kind: "userInput",
+        payload: expect.objectContaining({
+          prompt: "Which target should the bridge verify?",
+        }),
+        requestId: "input-active-1",
+        threadId: "active-thread-1",
+        turnId: "turn-1",
+      }),
+    ]);
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "input-active-1")).toEqual({
+      id: "input-active-1",
+      result: {
+        content: [{ text: "Use the fixture target.", type: "inputText" }],
+      },
+    });
+    await transport.close();
+  });
+
+  it("lets the context-rich host callback force manual handling before fallback policy", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: {
+        commandExecution: () => ({ action: "accept" }),
+        decide: (context) =>
+          context.kind === "commandApproval" ? { action: "manual" } : undefined,
+      },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "command-manual-callback-1",
+        method: "item/commandExecution/requestApproval",
+        params: {
+          command: "open -a 'Google Chrome'",
+          cwd: "/tmp/project",
+          itemId: "cmd-manual-callback",
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await expect(
+      nextTransportEvent(transport, (candidate) => {
+        return candidate.event?.type === "serverRequest/created";
+      }),
+    ).resolves.toMatchObject({
+      event: {
+        request: {
+          id: "command-manual-callback-1",
+          kind: "commandApproval",
+        },
+        type: "serverRequest/created",
+      },
+    });
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "command-manual-callback-1" && "result" in message)).toBeUndefined();
+    await transport.close();
+  });
+
+  it("keeps server requests manual when the context-rich host callback throws", async () => {
+    const logs: string[] = [];
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: {
+        commandExecution: () => ({ action: "accept" }),
+        decide: () => {
+          throw new Error("token=server-request-policy-secret");
+        },
+      },
+      stderr: (line) => logs.push(line),
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "command-throwing-callback-1",
+        method: "item/commandExecution/requestApproval",
+        params: {
+          command: "open -a 'Google Chrome'",
+          cwd: "/tmp/project",
+          itemId: "cmd-throwing-callback",
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await expect(
+      nextTransportEvent(transport, (candidate) => {
+        return candidate.event?.type === "serverRequest/created";
+      }),
+    ).resolves.toMatchObject({
+      event: {
+        request: {
+          id: "command-throwing-callback-1",
+          kind: "commandApproval",
+        },
+        type: "serverRequest/created",
+      },
+    });
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "command-throwing-callback-1" && "result" in message)).toBeUndefined();
+    expect(logs.join("")).toContain("server request policy failed");
+    expect(logs.join("")).toContain("token=[REDACTED]");
+    expect(logs.join("")).not.toContain("server-request-policy-secret");
+    await transport.close();
+  });
+
+  it("can auto-accept command and file approvals through context callbacks", async () => {
+    const commandContexts: unknown[] = [];
+    const fileContexts: unknown[] = [];
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: {
+        commandExecution: (context) => {
+          commandContexts.push(context);
+          if (context.cwd === "/tmp/project" && context.command === "open -a 'Google Chrome'") {
+            return { action: "accept", scope: "session" };
+          }
+          return { action: "manual" };
+        },
+        fileChange: (context) => {
+          fileContexts.push(context);
+          if (context.grantRoot === "/tmp/project") {
+            return { action: "accept", scope: "session" };
+          }
+          return { action: "manual" };
+        },
       },
     });
 
@@ -1187,7 +1938,9 @@ describe("attachAgentUiWebSocketBridge", () => {
         id: "file-active-1",
         method: "item/fileChange/requestApproval",
         params: {
+          grantRoot: "/tmp/project",
           itemId: "file-1",
+          reason: "Allow patch for fixture project",
           threadId: "active-thread-1",
           turnId: "turn-1",
         },
@@ -1204,6 +1957,97 @@ describe("attachAgentUiWebSocketBridge", () => {
       id: "file-active-1",
       result: { decision: "acceptForSession" },
     });
+    expect(commandContexts).toEqual([
+      expect.objectContaining({
+        command: "open -a 'Google Chrome'",
+        cwd: "/tmp/project",
+        itemId: "cmd-1",
+        requestId: "command-active-1",
+        threadId: "active-thread-1",
+        turnId: "turn-1",
+      }),
+    ]);
+    expect(fileContexts).toEqual([
+      expect.objectContaining({
+        grantRoot: "/tmp/project",
+        itemId: "file-1",
+        reason: "Allow patch for fixture project",
+        requestId: "file-active-1",
+        threadId: "active-thread-1",
+        turnId: "turn-1",
+      }),
+    ]);
+    await transport.close();
+  });
+
+  it("does not auto-accept command and file approvals from legacy broad string policies", async () => {
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: {
+        commandExecution: "acceptForSession",
+        fileChange: "acceptForSession",
+      } as unknown as AgentUiWebSocketBridgeOptions["serverRequestPolicy"],
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "command-legacy-string-1",
+        method: "item/commandExecution/requestApproval",
+        params: {
+          command: "rm -rf /tmp/project",
+          cwd: "/tmp/project",
+          itemId: "cmd-legacy-string",
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+    stdout.write(
+      `${JSON.stringify({
+        id: "file-legacy-string-1",
+        method: "item/fileChange/requestApproval",
+        params: {
+          grantRoot: "/tmp/project",
+          itemId: "file-legacy-string",
+          threadId: "active-thread-1",
+          turnId: "turn-1",
+        },
+      })}\n`,
+    );
+
+    await expect(
+      nextTransportEvent(transport, (candidate) => {
+        return candidate.event?.type === "serverRequest/created";
+      }),
+    ).resolves.toMatchObject({
+      event: {
+        request: {
+          id: "command-legacy-string-1",
+          kind: "commandApproval",
+        },
+        type: "serverRequest/created",
+      },
+    });
+    await expect(
+      nextTransportEvent(transport, (candidate) => {
+        return candidate.event?.type === "serverRequest/created";
+      }),
+    ).resolves.toMatchObject({
+      event: {
+        request: {
+          id: "file-legacy-string-1",
+          kind: "fileChangeApproval",
+        },
+        type: "serverRequest/created",
+      },
+    });
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "command-legacy-string-1" && "result" in message)).toBeUndefined();
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "file-legacy-string-1" && "result" in message)).toBeUndefined();
     await transport.close();
   });
 
@@ -1267,6 +2111,169 @@ describe("attachAgentUiWebSocketBridge", () => {
     await transport.close();
   });
 
+  it("emits bridge health lifecycle, pending request count, and redacted diagnostics", async () => {
+    const healthEvents: AgentUiBridgeHealthEvent[] = [];
+    const logs: string[] = [];
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      hostEvents: {
+        onBridgeHealthEvent: (event) => healthEvents.push(event),
+      },
+      stderr: (line) => logs.push(line),
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => healthEvents.some((event) => event.phase === "processSpawned"));
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+    await waitFor(() => healthEvents.some((event) => event.phase === "connected"));
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "health-command-1",
+        method: "item/commandExecution/requestApproval",
+        params: {
+          command: "echo token=health-secret",
+          threadId: "thread-health",
+          turnId: "turn-health",
+        },
+      })}\n`,
+    );
+
+    await nextTransportEvent(transport, (candidate) => candidate.type === "request");
+    await waitFor(() =>
+      healthEvents.some(
+        (event) => event.phase === "pendingRequestCount" && event.state.pendingRequestCount === 1,
+      ),
+    );
+    await transport.respond("unknown-health-command", { decision: "decline" });
+    await waitFor(() =>
+      writes.some((line) => {
+        const message = JSON.parse(line) as { id?: unknown };
+        return message.id === "unknown-health-command";
+      }),
+    );
+    expect(healthEvents.findLast((event) => event.phase === "pendingRequestCount")?.state.pendingRequestCount).toBe(1);
+    await transport.respond("health-command-1", { decision: "decline" });
+    await waitFor(() =>
+      healthEvents.some(
+        (event) => event.phase === "pendingRequestCount" && event.state.pendingRequestCount === 0,
+      ),
+    );
+
+    expect(healthEvents.map((event) => event.phase)).toEqual(
+      expect.arrayContaining([
+        "admissionChecked",
+        "processSpawned",
+        "initialized",
+        "connected",
+        "pendingRequestCount",
+        "diagnostic",
+      ]),
+    );
+    const connectedHealth = healthEvents.find((event) => event.phase === "connected");
+    expect(connectedHealth?.audience).toEqual(["developer", "audit"]);
+    expect(connectedHealth?.state).toMatchObject({
+      admissionChecked: true,
+      connected: true,
+      initialized: true,
+      processSpawned: true,
+    });
+    const lastDiagnostic = healthEvents.findLast((event) => event.phase === "diagnostic");
+    expect(lastDiagnostic?.state.lastRedactedDiagnostic).toContain("request kind=commandApproval");
+    expect(JSON.stringify(healthEvents)).not.toContain("health-secret");
+    expect(logs.join("")).not.toContain("health-secret");
+    await transport.close();
+  });
+
+  it("emits bridge health idle closure", async () => {
+    const healthEvents: AgentUiBridgeHealthEvent[] = [];
+    const stdin = new PassThrough();
+    const stdout = new PassThrough();
+    const stderr = new PassThrough();
+    let killed = false;
+
+    const process: CodexChildProcess = {
+      get killed() {
+        return killed;
+      },
+      kill: () => {
+        killed = true;
+        return true;
+      },
+      stderr,
+      stdin,
+      stdout,
+    };
+
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      hostEvents: {
+        onBridgeHealthEvent: (event) => healthEvents.push(event),
+      },
+      idleTimeoutMs: 20,
+      server: httpServer,
+      spawn: () => process,
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
+    await onceOpen(client);
+    await waitFor(() => killed, 500);
+    expect(killed).toBe(true);
+    expect(healthEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          closeCode: 1000,
+          closeReason: "Agent UI bridge idle timeout",
+          phase: "idleClosed",
+        }),
+      ]),
+    );
+    client.close();
+  });
+
+  it("emits bridge health backpressure closure", async () => {
+    const healthEvents: AgentUiBridgeHealthEvent[] = [];
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      hostEvents: {
+        onBridgeHealthEvent: (event) => healthEvents.push(event),
+      },
+      maxBufferedBytes: 1024,
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        method: "thread/name/updated",
+        params: { name: "x".repeat(2048), threadId: "thread-backpressure" },
+      })}\n`,
+    );
+
+    await waitFor(() => healthEvents.some((event) => event.phase === "backpressureClosed"));
+    expect(healthEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          closeCode: 1013,
+          closeReason: "Agent UI bridge backpressure limit exceeded",
+          phase: "backpressureClosed",
+        }),
+      ]),
+    );
+    await transport.close().catch(() => undefined);
+  });
+
   it("forwards only redacted stderr through the browser transport", async () => {
     const { stderr, stdout, transport, writes } = await createBridgeBackedTransport();
 
@@ -1327,22 +2334,22 @@ describe("attachAgentUiWebSocketBridge", () => {
 });
 
 async function createStartedDynamicHelper(
-  options: Pick<
-    AgentUiWebSocketBridgeOptions,
-    "dynamicToolHelperPermissions"
-  > = {},
+  options: { helperPermissions?: DynamicToolHelperPermissionPolicy } = {},
 ) {
   const setup = await createBridgeBackedTransport({
-    ...options,
-    dynamicToolHandler: createMcpDynamicToolHandler({
-      tools: [
-        {
-          namespace: "mcp__computer_use__",
-          server: "computer-use",
-          tools: ["get_app_state"],
-        },
-      ],
-    }),
+    dynamicToolPolicy: {
+      handler: createMcpDynamicToolHandler({
+        tools: [
+          {
+            namespace: "mcp__computer_use__",
+            server: "computer-use",
+            tools: ["get_app_state"],
+          },
+        ],
+      }),
+      helperPermissions: options.helperPermissions,
+      mode: "host-callback",
+    },
   });
   const { stdout, transport, writes } = setup;
   const connected = transport.connect();
@@ -1383,9 +2390,9 @@ async function createStartedDynamicHelper(
 async function createBridgeBackedTransport(
   options: Pick<
     AgentUiWebSocketBridgeOptions,
-    | "dynamicToolHandler"
-    | "dynamicToolHelperPermissions"
+    | "dynamicToolPolicy"
     | "hostEvents"
+    | "maxBufferedBytes"
     | "serverRequestPolicy"
     | "stderr"
   > = {},
@@ -1437,8 +2444,8 @@ async function createBridgeBackedSocket(
   options: Pick<
     AgentUiWebSocketBridgeOptions,
     | "browserMethodPolicy"
-    | "dynamicToolHandler"
-    | "dynamicToolHelperPermissions"
+    | "bridgePolicy"
+    | "dynamicToolPolicy"
     | "hostEvents"
     | "inbound"
     | "initialize"

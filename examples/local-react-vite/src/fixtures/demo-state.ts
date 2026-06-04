@@ -130,8 +130,8 @@ export function createRichTranscriptInitialState(): AgentSessionState {
   };
   state.usage.accountRateLimits = fixtureRateLimits();
   state.models = { models: fixtureModels(), selectedModelId: "fixture-demo-model" };
-  state.threadRegistry.activeThreadId = "thread-rich-transcript";
-  state.threadRegistry.liveThreadIds = ["thread-rich-transcript"];
+  state.threadLifecycle.activeThreadId = "thread-rich-transcript";
+  state.threadLifecycle.collections[state.threadLifecycle.defaultCollectionKey]!.ids = ["thread-rich-transcript"];
   state.diagnostics.banners = [
     {
       id: "banner-model-reroute",
@@ -202,9 +202,17 @@ export function createRichTranscriptInitialState(): AgentSessionState {
     ],
   };
   state.threads["thread-rich-transcript"] = {
+    activity: "waitingForInput",
+    availability: "available",
+    id: "thread-rich-transcript",
+    metadata: {
+      cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+      title: "Rich transcript fixture",
+    },
+    operations: {},
     orderedTurnIds: ["turn-rich-transcript"],
-    registryStatus: "live",
     status: "waitingForInput",
+    storage: "unknown",
     thread: {
       id: "thread-rich-transcript",
       name: "Rich transcript fixture",

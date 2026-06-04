@@ -48,6 +48,14 @@ export function agentReducer(
     case "thread/name/updated":
     case "thread/tokenUsage/updated":
     case "thread/active/set":
+    case "thread/optimistic/created":
+    case "thread/reconciled":
+    case "thread/optimistic/rolledBack":
+    case "thread/collection/refreshStarted":
+    case "thread/collection/pageReceived":
+    case "thread/collection/synced":
+    case "thread/collection/failed":
+    case "thread/operation/updated":
       return reduceThreadEvent(state, event);
     case "turn/started":
     case "turn/completed":
@@ -59,6 +67,7 @@ export function agentReducer(
     case "item/reasoning/summaryTextDelta":
     case "item/commandOutput/delta":
     case "item/filePatch/updated":
+    case "item/failed":
     case "item/completed":
       return reduceItemEvent(state, event);
     case "serverRequest/created":

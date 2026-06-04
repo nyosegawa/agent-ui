@@ -1,4 +1,4 @@
-import type { ThreadId, TurnId } from "./common";
+import type { AgentError, ThreadId, TurnId } from "./common";
 import type { TurnState } from "./turn";
 
 export interface AgentThread {
@@ -38,21 +38,88 @@ export interface TokenUsageBreakdown {
   totalTokens?: number;
 }
 
+export type AgentOperationStatus =
+  | "pending"
+  | "running"
+  | "succeeded"
+  | "failed"
+  | "cancelled";
+
+export interface AgentPendingThreadState {
+  operationId: string;
+  status: AgentOperationStatus;
+  error?: AgentError;
+}
+
+export interface AgentOperationView {
+  id: string;
+  kind: string;
+  status: AgentOperationStatus;
+  error?: AgentError;
+  threadId?: ThreadId;
+}
+
+export interface AgentThreadView {
+  id: ThreadId;
+  title: string;
+  subtitle?: string;
+  cwd?: string;
+  isActive: boolean;
+  isArchived: boolean;
+  isPreview: boolean;
+  isRunning: boolean;
+  needsInput: boolean;
+  lastActivityAt?: number;
+  pending?: AgentPendingThreadState;
+  error?: AgentError;
+}
+
 export interface ThreadState {
+  id: ThreadId;
+  canonicalId?: ThreadId;
+  activity: "idle" | "running" | "waitingForInput" | "failed";
+  availability: "available" | "preview" | "archived" | "closed";
+  storage: "unknown" | "stored" | "ephemeral";
+  metadata: {
+    cwd?: string;
+    lastActivityAt?: number;
+    title?: string;
+  };
+  operations: Record<string, AgentOperationView>;
   thread: AgentThread;
   turns: Record<TurnId, TurnState>;
   orderedTurnIds: TurnId[];
   tokenUsage?: ThreadTokenUsage;
   status: ThreadStatus;
-  registryStatus: ThreadRegistryStatus;
 }
 
-export type ThreadRegistryStatus = "cold" | "preview" | "live" | "loaded";
+export type AgentThreadScope =
+  | { kind: "all"; key?: string }
+  | {
+      kind: "history";
+      key?: string;
+      archived?: boolean;
+      cwd?: string;
+      searchTerm?: string;
+    }
+  | { kind: "custom"; key: string; label?: string };
 
-export interface ThreadRegistryState {
+export type AgentThreadCollectionStatus = "idle" | "loading" | "ready" | "error";
+
+export interface AgentThreadCollection {
+  key: string;
+  scope: AgentThreadScope;
+  ids: ThreadId[];
+  nextCursor: string | null;
+  status: AgentThreadCollectionStatus;
+  error?: AgentError;
+  syncedAt?: number;
+}
+
+export interface ThreadLifecycleState {
   activeThreadId?: ThreadId;
-  coldThreadIds: ThreadId[];
-  previewThreadIds: ThreadId[];
-  liveThreadIds: ThreadId[];
-  loadedThreadIds: ThreadId[];
+  aliasById: Record<ThreadId, ThreadId>;
+  collections: Record<string, AgentThreadCollection>;
+  defaultCollectionKey: string;
+  operations: Record<string, AgentOperationView>;
 }

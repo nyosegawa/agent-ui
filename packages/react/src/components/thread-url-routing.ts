@@ -23,6 +23,7 @@ export function useThreadUrlRouting(
   const { setActiveThread, threads } = useAgentThreads();
   const lastPathRef = useRef<string | undefined>(undefined);
   const initialUrlThreadReadRef = useRef<string | undefined>(undefined);
+  const suppressNextActivePushRef = useRef(false);
   const enabled = Boolean(options);
   const basePath = threadUrlRoutingBasePath(options);
 
@@ -45,15 +46,21 @@ export function useThreadUrlRouting(
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined" || !activeThreadId) return;
+    if (suppressNextActivePushRef.current) {
+      suppressNextActivePushRef.current = false;
+      return;
+    }
+    if (isOptimisticUrlThread(state.threads[activeThreadId]?.thread.raw)) return;
     const path = threadPath(activeThreadId, basePath);
     if (window.location.pathname === path || lastPathRef.current === path) return;
     lastPathRef.current = path;
     window.history.pushState({ agentUiThreadId: activeThreadId }, "", path);
-  }, [activeThreadId, basePath, enabled]);
+  }, [activeThreadId, basePath, enabled, state.threads]);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined") return;
     const onPopState = () => {
+      suppressNextActivePushRef.current = true;
       const threadId = threadIdFromPath(window.location.pathname, basePath);
       lastPathRef.current = threadId
         ? threadPath(threadId, basePath)
@@ -107,4 +114,13 @@ function trimTrailingSlash(path: string): string {
 
 function isPreviewUrlThread(status?: string): boolean {
   return status === "notLoaded" || status === "loaded";
+}
+
+function isOptimisticUrlThread(raw: unknown): boolean {
+  return (
+    typeof raw === "object" &&
+    raw !== null &&
+    "optimistic" in raw &&
+    raw.optimistic === true
+  );
 }

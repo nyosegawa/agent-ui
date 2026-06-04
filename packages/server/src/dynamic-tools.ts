@@ -1,5 +1,9 @@
 import { createCodexSession } from "@nyosegawa/agent-ui-codex";
-import type { AgentTransportEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
+import type {
+  AgentDiagnosticAudience,
+  AgentTransportEvent,
+  PendingServerRequest,
+} from "@nyosegawa/agent-ui-core";
 import type { createCodexAppServerBridge } from "./bridge";
 import { redactSecrets } from "./redaction";
 
@@ -9,6 +13,7 @@ export type DynamicToolHandler = (
 ) => Promise<DynamicToolCallResponse> | DynamicToolCallResponse;
 
 export interface DynamicToolHandlerContext {
+  emitDebugEvent(event: DynamicToolDebugEventDetails): void;
   getMcpThreadId(): Promise<string>;
   transport: ReturnType<typeof createCodexAppServerBridge>["transport"];
 }
@@ -30,6 +35,41 @@ export interface DynamicToolCallResponse {
 export type DynamicToolCallOutputContentItem =
   | { type: "inputText"; text: string }
   | { type: "inputImage"; imageUrl: string };
+
+export type DynamicToolDebugPhase =
+  | "received"
+  | "denied"
+  | "helperThreadCreated"
+  | "mcpCallStarted"
+  | "timeout"
+  | "completed"
+  | "failed";
+
+export interface DynamicToolDebugRequest {
+  callId: string;
+  namespace: string | null;
+  threadId: string;
+  tool: string;
+  turnId: string;
+}
+
+export interface DynamicToolDebugEvent {
+  audience?: readonly AgentDiagnosticAudience[];
+  durationMs?: number;
+  helperThreadId?: string;
+  message?: string;
+  phase: DynamicToolDebugPhase;
+  request: DynamicToolDebugRequest;
+  requestId: NonNullable<AgentTransportEvent["requestId"]>;
+  server?: string;
+  success?: boolean;
+  type: "dynamicTool";
+}
+
+export type DynamicToolDebugEventDetails = Omit<
+  DynamicToolDebugEvent,
+  "request" | "requestId" | "type"
+>;
 
 export interface McpDynamicToolMapping {
   namespace: string;
@@ -94,18 +134,37 @@ export async function handleDynamicToolRequest(
   transport: ReturnType<typeof createCodexAppServerBridge>["transport"],
   handler: DynamicToolHandler,
   getMcpThreadId: () => Promise<string>,
+  emitDynamicToolEvent?: (event: DynamicToolDebugEvent) => void,
 ): Promise<void> {
   const request = dynamicToolRequestFromPending(event.request);
-  const response = await handler(request, { getMcpThreadId, transport });
-  await transport.respond(event.requestId, response);
-}
-
-export async function defaultDynamicToolHandler(
-  request: DynamicToolRequest,
-): Promise<DynamicToolCallResponse> {
-  return dynamicToolFailure(
-    `Dynamic tool namespace is not allowlisted: ${request.namespace ?? "(none)"}`,
-  );
+  const startedAt = Date.now();
+  const emitDebugEvent = (details: DynamicToolDebugEventDetails) => {
+    try {
+      emitDynamicToolEvent?.(
+        dynamicToolDebugEventFromRequest(event.requestId, request, details),
+      );
+    } catch {
+      // Host diagnostics must not affect dynamic tool execution.
+    }
+  };
+  emitDebugEvent({ phase: "received" });
+  try {
+    const response = await handler(request, { emitDebugEvent, getMcpThreadId, transport });
+    await transport.respond(event.requestId, response);
+    emitDebugEvent({
+      durationMs: Date.now() - startedAt,
+      phase: "completed",
+      success: response.success,
+    });
+  } catch (error) {
+    emitDebugEvent({
+      durationMs: Date.now() - startedAt,
+      message: error instanceof Error ? error.message : String(error),
+      phase: "failed",
+      success: false,
+    });
+    throw error;
+  }
 }
 
 export function createMcpDynamicToolHandler(
@@ -117,16 +176,34 @@ export function createMcpDynamicToolHandler(
       return candidate.namespace === request.namespace;
     });
     if (!mapping) {
+      context.emitDebugEvent({
+        message: `Dynamic tool namespace is not allowlisted: ${request.namespace ?? "(none)"}`,
+        phase: "denied",
+        success: false,
+      });
       return dynamicToolFailure(
         `Dynamic tool namespace is not allowlisted: ${request.namespace ?? "(none)"}`,
       );
     }
     if (mapping.tools !== "all" && !mapping.tools.includes(request.tool)) {
+      context.emitDebugEvent({
+        message: `Dynamic tool is not allowlisted: ${request.namespace ?? "(none)"}${request.tool}`,
+        phase: "denied",
+        server: mapping.server,
+        success: false,
+      });
       return dynamicToolFailure(
         `Dynamic tool is not allowlisted: ${request.namespace ?? "(none)"}${request.tool}`,
       );
     }
     const threadId = await context.getMcpThreadId();
+    context.emitDebugEvent({
+      helperThreadId: threadId,
+      phase: "mcpCallStarted",
+      server: mapping.server,
+    });
+    const timeoutMessage =
+      `Dynamic tool ${request.namespace ?? ""}${request.tool} timed out after ${timeoutMs}ms`;
     const response = await withTimeout(
       context.transport.request<
         { arguments?: unknown; server: string; threadId: string; tool: string },
@@ -138,7 +215,16 @@ export function createMcpDynamicToolHandler(
         tool: request.tool,
       }),
       timeoutMs,
-      `Dynamic tool ${request.namespace ?? ""}${request.tool} timed out after ${timeoutMs}ms`,
+      timeoutMessage,
+      () => {
+        context.emitDebugEvent({
+          helperThreadId: threadId,
+          message: timeoutMessage,
+          phase: "timeout",
+          server: mapping.server,
+          success: false,
+        });
+      },
     );
     return mcpResponseToDynamicToolResponse(response);
   };
@@ -224,19 +310,44 @@ async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
   message: string,
+  onTimeout?: () => void,
 ): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
       promise,
       new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error(message)), timeoutMs);
+        timer = setTimeout(() => {
+          onTimeout?.();
+          reject(new Error(message));
+        }, timeoutMs);
         timer.unref?.();
       }),
     ]);
   } finally {
     if (timer) clearTimeout(timer);
   }
+}
+
+function dynamicToolDebugEventFromRequest(
+  requestId: NonNullable<AgentTransportEvent["requestId"]>,
+  request: DynamicToolRequest,
+  details: DynamicToolDebugEventDetails,
+): DynamicToolDebugEvent {
+  return {
+    ...details,
+    audience: details.audience ?? ["developer", "audit"],
+    ...(details.message ? { message: redactSecrets(details.message) } : {}),
+    request: {
+      callId: request.callId,
+      namespace: request.namespace,
+      threadId: request.threadId,
+      tool: request.tool,
+      turnId: request.turnId,
+    },
+    requestId,
+    type: "dynamicTool",
+  };
 }
 
 function extractThreadId(response: unknown): string | undefined {

@@ -1,6 +1,6 @@
 import {
   attachAgentUiWebSocketBridge,
-  createAgentUiLocalUploadHandler,
+  createAgentUiLocalMediaHelper,
 } from "@nyosegawa/agent-ui-server";
 import { createServer } from "node:http";
 import next from "next";
@@ -22,8 +22,8 @@ const codexArgs = process.env.AGENT_UI_CODEX_ARGS
 
 const app = next({ dev, hostname: host, port });
 const handle = app.getRequestHandler();
-const uploadHandler = createAgentUiLocalUploadHandler();
-const cleanupUploads = createIdempotentUploadCleanup(() => uploadHandler.cleanup(), {
+const mediaHelper = createAgentUiLocalMediaHelper();
+const cleanupUploads = createIdempotentUploadCleanup(() => mediaHelper.cleanup(), {
   onError(error) {
     console.warn(`Failed to clean Agent UI upload directory: ${String(error)}`);
   },
@@ -33,7 +33,15 @@ await app.prepare();
 
 const server = createServer((request, response) => {
   if (request.method === "POST" && request.url === "/agent-ui/upload") {
-    uploadHandler.handle(request, response).catch((error: unknown) => {
+    mediaHelper.handleUpload(request, response).catch((error: unknown) => {
+      response.statusCode = 500;
+      response.setHeader("content-type", "application/json");
+      response.end(JSON.stringify({ error: String(error) }));
+    });
+    return;
+  }
+  if (request.url?.startsWith("/agent-ui/assets/")) {
+    mediaHelper.serveAssetHandler(request, response).catch((error: unknown) => {
       response.statusCode = 500;
       response.setHeader("content-type", "application/json");
       response.end(JSON.stringify({ error: String(error) }));
@@ -46,7 +54,16 @@ const server = createServer((request, response) => {
 attachAgentUiWebSocketBridge({
   ...(codexArgs ? { args: codexArgs } : {}),
   ...(codexCommand ? { command: codexCommand } : {}),
+  bridgePolicy: { admission: { mode: "local-loopback" } },
+  browserMethodPolicy: "productized",
   cwd,
+  hostEvents: {
+    onBridgeHealthEvent(event) {
+      process.stderr.write(
+        `[agent-ui] bridge phase=${event.phase} pending=${event.state.pendingRequestCount}\n`,
+      );
+    },
+  },
   path: "/agent-ui/ws",
   server,
   stderr(line: string) {
@@ -70,5 +87,5 @@ server.listen(port, host, () => {
   if (hostResolution.warning) console.warn(hostResolution.warning);
   console.log(`Agent UI Next bridge example: http://${host}:${port}`);
   console.log(`Codex working directory: ${cwd}`);
-  console.log(`Attachment upload directory: ${uploadHandler.directory}`);
+  console.log(`Attachment upload directory: ${mediaHelper.directory}`);
 });

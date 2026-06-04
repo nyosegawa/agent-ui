@@ -1,15 +1,15 @@
 import type React from "react";
 import { useMemo } from "react";
 import type {
-  AgentItemState,
   PendingServerRequest,
   ThreadState,
-  TurnState,
 } from "@nyosegawa/agent-ui-core";
 import { useAgentApprovals, useAgentThread, useAgentThreadActions } from "../hooks";
 import { useAgentI18n } from "../i18n";
 import { IconMoreVertical } from "../components-internal";
 import { AgentMessageList } from "../timeline";
+import type { AgentLocalMediaUrlResolver } from "../timeline";
+import type { AgentComponents, AgentApprovalDefaultProps } from "./chat";
 import { AgentApprovalQueue } from "./approvals";
 import {
   transcriptItemIds,
@@ -24,41 +24,59 @@ import { deferAction } from "./shared";
 import { formatThreadStatus, threadSubtitle } from "./sidebar";
 
 export interface AgentThreadViewProps {
+  components?: AgentComponents;
   onRequestAppMention?: AgentComposerMentionResolver;
   onRequestPluginMention?: AgentComposerMentionResolver;
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
-  renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
+  renderItem?: React.ComponentProps<typeof AgentMessageList>["renderItem"];
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
+  resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   threadId?: string;
 }
 
 export function AgentThreadView({
+  components,
   onRequestAppMention,
   onRequestPluginMention,
   renderApproval,
   renderItem,
   resolveLocalAttachment,
+  resolveLocalMediaUrl,
   threadId,
 }: AgentThreadViewProps) {
   const { thread, threadId: resolvedThreadId } = useAgentThread(threadId);
   if (!thread) return null;
+  const ComposerPanel = components?.ComposerPanel;
   return (
     <AgentThreadSurface>
       <AgentThreadHeader thread={thread} threadId={resolvedThreadId} />
       <AgentCriticalNoticeList />
       <AgentThreadTimeline
+        components={components}
         renderApproval={renderApproval}
         renderItem={renderItem}
+        resolveLocalMediaUrl={resolveLocalMediaUrl}
         thread={thread}
         threadId={resolvedThreadId}
       />
-      <AgentComposerPanel
-        onRequestAppMention={onRequestAppMention}
-        onRequestPluginMention={onRequestPluginMention}
-        resolveLocalAttachment={resolveLocalAttachment}
-        thread={thread}
-        threadId={resolvedThreadId}
-      />
+      {ComposerPanel ? (
+        <ComposerPanel
+          Default={AgentComposerPanel}
+          onRequestAppMention={onRequestAppMention}
+          onRequestPluginMention={onRequestPluginMention}
+          resolveLocalAttachment={resolveLocalAttachment}
+          thread={thread}
+          threadId={resolvedThreadId}
+        />
+      ) : (
+        <AgentComposerPanel
+          onRequestAppMention={onRequestAppMention}
+          onRequestPluginMention={onRequestPluginMention}
+          resolveLocalAttachment={resolveLocalAttachment}
+          thread={thread}
+          threadId={resolvedThreadId}
+        />
+      )}
     </AgentThreadSurface>
   );
 }
@@ -103,18 +121,39 @@ export function AgentThreadHeader({
  * tail so they stay in the scroll area, not a separate pane above the composer.
  */
 export function AgentThreadTimeline({
+  components,
   renderApproval,
   renderItem,
+  resolveLocalMediaUrl,
   thread,
   threadId,
 }: {
+  components?: AgentComponents;
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
-  renderItem?: (item: AgentItemState, turn: TurnState) => React.ReactNode;
+  renderItem?: React.ComponentProps<typeof AgentMessageList>["renderItem"];
+  resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   thread: ThreadState;
   threadId?: string;
 }) {
   const approvalThreadId = threadId ?? thread.thread.id;
   const { approvals } = useAgentApprovals(approvalThreadId);
+  const Approval = components?.Approval;
+  const Item = components?.Item;
+  const renderApprovalComponent =
+    Approval || renderApproval
+      ? (approval: PendingServerRequest) => {
+          if (!Approval) return renderApproval?.(approval);
+          function DefaultApproval({ approval: defaultApproval }: AgentApprovalDefaultProps) {
+            return (
+              <AgentApprovalQueue
+                approvals={[defaultApproval]}
+                threadId={approvalThreadId}
+              />
+            );
+          }
+          return <Approval approval={approval} Default={DefaultApproval} />;
+        }
+      : undefined;
   const approvalPlacement = useMemo(
     () => placeTranscriptApprovals(thread, approvals),
     [approvals, thread],
@@ -128,7 +167,7 @@ export function AgentThreadTimeline({
               renderApprovalAnchor: (approval) => (
                 <AgentApprovalQueue
                   approvals={[approval]}
-                  renderApproval={renderApproval}
+                  renderApproval={renderApprovalComponent}
                   threadId={approvalThreadId}
                 />
               ),
@@ -139,12 +178,20 @@ export function AgentThreadTimeline({
         approvalPlacement.tail.length > 0 ? (
           <AgentApprovalQueue
             approvals={approvalPlacement.tail}
-            renderApproval={renderApproval}
+            renderApproval={renderApprovalComponent}
             threadId={approvalThreadId}
           />
         ) : undefined
       }
-      renderItem={renderItem}
+      components={components}
+      renderItem={
+        Item
+          ? (item, turn, Default) => (
+              <Item Default={Default} item={item} turn={turn} />
+            )
+          : renderItem
+      }
+      resolveLocalMediaUrl={resolveLocalMediaUrl}
       scrollKey={approvals.length}
       thread={thread}
     />

@@ -6,6 +6,15 @@ normalized Agent UI state and stable actions. React exposes Agent UI option
 types for hook inputs; generated Codex App Server params and request builders
 stay inside the Codex package boundary.
 
+vNext treats the exported hooks below as the public controller layer when their
+return values are raw-free view models and stable host actions. Controllers that
+still expose reducer reconciliation, optimistic operation maps, queued
+attachment restore internals, collection request sequencing, or raw generated
+protocol payloads stay source-level until examples, tests, docs, API snapshots,
+and package-resolution gates prove the boundary. `AgentThreadScope` and other
+view-state keys are Agent UI UI metadata only; hosts still own tenant,
+workspace, project, authorization, persistence, and routing policy.
+
 ## Thread Controllers
 
 ```tsx
@@ -19,9 +28,12 @@ for a new Codex thread and `resumeThread(threadId)` only when the host explicitl
 wants to rejoin a stored session. `resumeThread()` dispatches the normalized
 App Server `thread/resume` response in order: the active thread id comes from
 the returned canonical `thread.id`, and upstream active/running status is not
-overwritten to ready. Its React options stay stable-only; experimental resume
-fields such as `excludeTurns`, `initialTurnsPage`, path/history resume, and
-cursor ownership remain host-managed raw protocol usage.
+overwritten to ready. When the requested id differs from the returned canonical
+id, Agent UI reconciles the requested id into the canonical id so active-thread
+state, scoped collections, pending operations, and server requests stay
+consistent. Its React options stay stable-only; experimental resume fields such
+as `excludeTurns`, `initialTurnsPage`, path/history resume, and cursor ownership
+remain host-managed raw protocol usage.
 
 `useAgentTurnController()` is the preferred name for `useAgentTurn()`. It sends
 `turn/start` with normalized run settings, `turn/steer` for continuing an active
@@ -43,13 +55,23 @@ const reader = useAgentThreadReader();
 ```
 
 `useAgentThreads()` returns normalized thread state in `selectOrderedThreads()`
-order: the active thread first, then registry buckets in live, preview, loaded,
-and cold order. Within each bucket the newest registry entry is returned first;
-unregistered in-memory thread entities are appended last as a fallback.
+order: the active thread first, then the default lifecycle collection newest
+first, with uncollected in-memory thread entities appended last as a fallback.
 
 `useAgentThreadHistory().listThreads()` calls `thread/list`, supports search and
 pagination cursor inputs, tracks the latest cursor, and upserts returned thread
 metadata without forcing activation.
+
+`useAgentThreadListController(scope, options)` is the public scoped history
+controller used by the default sidebar and host-owned thread-list recipes. Its
+`AgentThreadScope` is Agent UI view-state metadata, not a host workspace,
+tenant, project, or authorization model. `scope.key` lets a host keep
+independent visible lists; Agent UI stores the key, search term, cwd, archive
+flag, cursor, ids, loading state, and sync timestamp for that list, while the
+host still owns what those dimensions mean in its product. `onHistorySynced`
+reports normalized sync metadata such as scope, thread ids, cursor, append
+mode, search term, and timestamp; it does not expose raw App Server
+`thread/list` payloads or ask Agent UI to persist history.
 
 `useAgentThreadReader().readThread(threadId, { includeTurns: true })` calls
 `thread/read` and hydrates persisted turns/items before activation. This is the
@@ -73,23 +95,34 @@ root route stays a no-thread start state.
 ## Composer And Run Settings
 
 ```tsx
-const composer = useAgentComposer(threadId);
+const composer = useAgentComposerController(threadId);
 const run = useAgentRunSettings();
 ```
 
-`useAgentComposer()` owns input text and submits turns through the turn
-controller. Idle threads submit `turn/start`. Running threads keep the textarea
-editable: Enter adds to `queuedFollowUps`, Cmd/Ctrl+Enter calls `turn/steer`
-immediately, and `sendQueuedFollowUp(id)` calls `turn/steer` for that item with
-its stored `expectedTurnId`. Cmd/Ctrl+Enter on an idle or complete thread still
-submits through `turn/start`. Queued items are scoped by thread, retain
-structured attachment metadata for Edit, and remain queued with an item error
-if the active turn no longer matches their stored `expectedTurnId`. `Stop`
-calls only `turn/interrupt` and does not clear unsent queued follow-ups. The
-hook keeps queue state separate from App Server pending input with
-`queuedFollowUps`, `sendingFollowUpIds`, `followUpErrors`, and `activeTurnId`.
-The default `AgentComposerPanel` still blocks submission for approval-waiting
-threads and stored read-only previews.
+`useAgentComposerController()` owns input text and submits turns through the
+turn controller. `useAgentComposer()` remains a public alias for the same
+raw-free controller view. The public view exposes `value`, `setValue`,
+`canSubmit`, `submitMode`, `disabledReason`, `isSubmitting`, `isInterrupting`,
+`activeTurnId`, queued follow-ups, failed first-message pending messages, and
+retry/cancel actions for those failed pending messages. It does not expose the
+internal operation map or raw generated protocol payloads. Idle threads submit
+`turn/start`. Running threads keep the textarea editable: Enter adds to
+`queuedFollowUps`, Cmd/Ctrl+Enter calls `turn/steer` immediately, and
+`sendQueuedFollowUp(id)` calls `turn/steer` for that item with its stored
+`expectedTurnId`. Cmd/Ctrl+Enter on an idle or complete thread still submits
+through `turn/start`. Queued items are scoped by thread, retain structured
+attachment metadata for Edit, and remain queued with an item error if the active
+turn no longer matches their stored `expectedTurnId`. `Stop` calls only
+`turn/interrupt` and does not clear unsent queued follow-ups. The hook keeps
+queue state separate from App Server pending input with `queuedFollowUps`,
+`sendingFollowUpIds`, `followUpErrors`, and `activeTurnId`. Attachment-local
+draft state and host-disabled states are composed by the visual composer layer;
+`canSubmit` reflects the controller's text/running state before those external
+constraints are applied. The default `AgentComposerPanel` still blocks
+submission for approval-waiting threads and stored read-only previews.
+The source-level first-message start helper is not public package API; hosts
+start empty threads with `useAgentThreadController().startThread()` or submit
+through the public composer controller.
 
 `useAgentRunSettings()` exposes execution modes, available models, supported
 efforts, cwd, current selections, and setters. Execution modes map to React-owned
@@ -102,6 +135,42 @@ calling App Server.
 const { requests, respond, reject } = useAgentServerRequests(threadId);
 const { approvals, approve } = useAgentApprovals(threadId);
 ```
+
+## Transcript Controller
+
+```tsx
+const transcript = useAgentTranscriptController(threadId, {
+  density: {
+    default: "compact",
+    byBlockKind: { commandExecution: "verbose" },
+  },
+});
+
+const scroll = useAgentTranscriptScrollController({
+  hiddenItemCount: transcript.hiddenItemCount,
+  onShowEarlierItems: transcript.showEarlierItems,
+  scrollContainerRef,
+  threadId,
+  turnCount,
+});
+```
+
+`useAgentTranscriptController()` returns raw-free transcript entry view models,
+windowing state, and the `showEarlierItems()` action. `density` may be
+`"default"`, `"compact"`, `"verbose"`, `"critical-only"`, or an object with a
+default density plus `byBlockKind` overrides. The resolved entry density is
+presentation metadata for host renderers and the default list. `critical-only`
+filters noncritical entries; entries with failed or in-progress status, or an
+anchored pending approval, stay visible. Density is not persisted and does not
+change Codex App Server lifecycle state.
+
+`useAgentTranscriptScrollController()` owns transcript viewport behavior for
+headless transcript compositions. It accepts either an Agent UI-owned scroll ref
+or a host-owned `scrollContainerRef`, exposes `jumpToLatest()`,
+`jumpToPendingApproval()`, and `showEarlierItems()`, and returns booleans for
+the default jump/show-earlier affordances. The hook manages only browser scroll
+state; hosts remain responsible for layout, persistence of transcript
+preferences, routing, and any virtualizer they choose to compose around it.
 
 `useAgentServerRequests()` returns the queued normalized server requests for the
 active or supplied thread, including host integration requests such as
@@ -138,7 +207,11 @@ const usage = useAgentUsage();
 normalized account/login state.
 
 `useAgentDiagnostics()` exposes normalized diagnostic banners, warnings, errors,
-and protocol notifications for host-owned status surfaces.
+protocol notifications, and audience-filtered views. `userDiagnostics` is the
+default visible UI surface. `developerDiagnostics` and `auditDiagnostics` carry
+redacted stderr, raw protocol notifications, bridge/debug phases, and other
+host-owned support or audit signals. Agent UI does not persist those logs or add
+tenant/workspace meaning.
 
 `useAgentUsage().refreshUsage()` calls `account/rateLimits/read` and stores the
 normalized rate-limit snapshot used by `AgentUsagePanel`.

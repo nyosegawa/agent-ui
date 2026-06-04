@@ -1,4 +1,4 @@
-import type { AgentItemState, ItemId, ThreadId, TurnId } from "../state";
+import type { AgentError, AgentItemState, ItemId, ThreadId, TurnId } from "../state";
 
 export type ItemEvent =
   | { type: "item/started"; threadId: ThreadId; turnId: TurnId; item: AgentItemState }
@@ -29,5 +29,12 @@ export type ItemEvent =
       turnId: TurnId;
       itemId: ItemId;
       patch: unknown;
+    }
+  | {
+      type: "item/failed";
+      threadId: ThreadId;
+      turnId: TurnId;
+      itemId: ItemId;
+      error?: AgentError;
     }
   | { type: "item/completed"; threadId: ThreadId; turnId: TurnId; item: AgentItemState };

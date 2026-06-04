@@ -9,9 +9,9 @@ Dynamic tools are host-owned. Agent UI may display tool state and route
 requests through the App Server protocol, but the host owns execution,
 permissions, side effects, and auditability.
 
-The bridge does not execute dynamic tool requests unless the host passes a
-`dynamicToolHandler`. Prefer the explicit MCP mapping helper when forwarding
-selected dynamic tools:
+The bridge does not execute dynamic tool requests unless the host passes
+`dynamicToolPolicy: { mode: "host-callback", handler }`. Prefer the explicit
+MCP mapping helper when forwarding selected dynamic tools:
 
 ```ts
 import {
@@ -21,20 +21,30 @@ import {
 
 attachAgentUiWebSocketBridge({
   server,
-  dynamicToolHandler: createMcpDynamicToolHandler({
-    tools: [
-      {
-        namespace: "mcp__browser",
-        server: "browser",
-        tools: ["snapshot"],
-      },
-    ],
-  }),
+  dynamicToolPolicy: {
+    handler: createMcpDynamicToolHandler({
+      tools: [
+        {
+          namespace: "mcp__browser",
+          server: "browser",
+          tools: ["snapshot"],
+        },
+      ],
+    }),
+    mode: "host-callback",
+  },
 });
 ```
 
 Unknown namespaces or tools should fail before any helper thread or
 `mcpServer/tool/call` request is created.
+
+Use `hostEvents.onDynamicToolEvent` for developer/audit diagnostics. Expected
+phases are `received`, `denied`, `helperThreadCreated`, `mcpCallStarted`,
+`timeout`, `completed`, and `failed`. These events carry
+`audience: ["developer", "audit"]` and should include redacted phase metadata
+only; do not put raw tool arguments, credentials, or MCP result content into the
+event.
 
 Before implementing, identify:
 
@@ -54,8 +64,8 @@ Before implementing, identify:
   possible.
 - Treat shell, filesystem, network, browser automation, and credential access as
   sensitive.
-- Leave `dynamicToolHelperPermissions` at `"manual"` unless the host has a
-  reviewed policy for `"deny"`, `"grantRequestedForTurn"`, or a callback.
+- Leave `dynamicToolPolicy.helperPermissions` at `"manual"` unless the host has
+  a reviewed policy for `"deny"`, `"grantRequestedForTurn"`, or a callback.
 - Do not add tools only because one host app happens to need them if the user is
   asking for reusable Agent UI library work.
 

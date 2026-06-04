@@ -287,6 +287,7 @@ export interface AgentI18nDictionary {
   "timeline.from": string;
   "timeline.image": string;
   "timeline.imageGenerated": string;
+  "timeline.localMediaUnavailable": string;
   "timeline.item": string;
   "timeline.items": string;
   "timeline.jumpToPendingApproval": string;

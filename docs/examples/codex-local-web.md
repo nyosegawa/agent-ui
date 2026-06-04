@@ -19,6 +19,10 @@ Purpose:
   browser method filtering, inbound limits, idle timeout, backpressure handling,
   upload and directory-picker routes, and no dynamic-tool execution unless a
   host handler is configured
+- explicitly wire `bridgePolicy.admission: { mode: "local-loopback" }`,
+  `browserMethodPolicy: "productized"`, and host-side bridge health logging so
+  the example shows the policy boundary without adding auth or deployment
+  policy to Agent UI core
 
 Run:
 
@@ -48,6 +52,13 @@ The example imports `@nyosegawa/agent-ui-react/styles.css` once and keeps its
 route CSS token-based. Any `.aui-*` classes produced by the React package are
 internal implementation details of that stylesheet, not selectors this example
 documents as a host contract.
+
+The default chat surface enables the diagnostics rail so user-facing
+bootstrap/status diagnostics have a visible place in the layout. Bridge health
+events are emitted through the server-side `hostEvents.onBridgeHealthEvent`
+hook and logged as redacted developer/audit phases; they are not persisted by
+Agent UI and do not imply hosted-service admission, auth, tenant isolation, or
+deployment policy.
 
 Thread URL routing keeps browser history aligned with the visible thread. The
 root route `/` remains the no-thread start screen while the sidebar loads
@@ -119,10 +130,16 @@ extensions such as `.3mf`, are saved to the same upload directory and sent as
 explicit `Attached file: /absolute/path` text because App Server has no generic
 local-file user input.
 
-The local upload helper writes into a per-session temp directory, validates
+The local media helper writes into a per-session temp directory, validates
 method/content type/filename headers, enforces size limits, preserves arbitrary
-sanitized extensions, exposes a cleanup hook, and runs TTL cleanup for expired
-upload sessions before new writes. This example calls the cleanup hook
-idempotently when the HTTP server closes or receives SIGINT/SIGTERM, so normal
-dev-server shutdown removes the current session directory while TTL cleanup still
-handles abandoned sessions.
+sanitized extensions, registers asset IDs, exposes a cleanup hook, and runs TTL
+cleanup for expired upload sessions before new writes. This example wires
+`POST /agent-ui/upload` for upload registration and `GET /agent-ui/assets/:id`
+for browser preview bytes. React uses the returned `path` only for explicit App
+Server input and would use `url`/`previewUrl` for browser rendering. The asset
+route is acceptable for this loopback demo, but host applications must add their
+own admission/session checks before non-loopback use.
+
+This example calls the cleanup hook idempotently when the HTTP server closes or
+receives SIGINT/SIGTERM, so normal dev-server shutdown removes the current
+session directory while TTL cleanup still handles abandoned sessions.

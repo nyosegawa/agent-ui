@@ -1,4 +1,4 @@
-import { AgentApp, AgentModel, AgentEvent, AgentTurn } from '@nyosegawa/agent-ui-core';
+import { AgentApp, AgentModel, AgentThreadScope, AgentEvent, AgentTurn } from '@nyosegawa/agent-ui-core';
 
 interface MethodMessage {
     id?: string | number;
@@ -30,6 +30,29 @@ interface NormalizedThreadTurnsListResponse extends NormalizedTurnsPage {
     backwardsCursor: string | null;
     nextCursor: string | null;
 }
+interface NormalizeThreadListResponseOptions {
+    replace?: boolean;
+    scope?: AgentThreadScope;
+    syncedAt?: number;
+}
+interface NormalizedThreadListResponse {
+    backwardsCursor: string | null;
+    events: AgentEvent[];
+    ids: string[];
+    nextCursor: string | null;
+    scope: AgentThreadScope;
+}
+interface NormalizeThreadLoadedListResponseOptions {
+    replace?: boolean;
+    scope?: AgentThreadScope;
+    syncedAt?: number;
+}
+interface NormalizedThreadLoadedListResponse {
+    events: AgentEvent[];
+    ids: string[];
+    nextCursor: string | null;
+    scope: AgentThreadScope;
+}
 interface NormalizeThreadResumeResponseOptions extends NormalizeTurnsPageOptions {
     activate?: boolean;
 }
@@ -41,9 +64,11 @@ declare function normalizeThreadReadResponse(response: unknown, options?: {
     activate?: boolean;
 }): AgentEvent[];
 declare function normalizeThreadTurnsListResponse(response: unknown, options: NormalizeTurnsPageOptions): NormalizedThreadTurnsListResponse;
+declare function normalizeThreadListResponse(response: unknown, options?: NormalizeThreadListResponseOptions): NormalizedThreadListResponse;
+declare function normalizeThreadLoadedListResponse(response: unknown, options?: NormalizeThreadLoadedListResponseOptions): NormalizedThreadLoadedListResponse;
 declare function normalizeThreadResumeResponse(response: unknown, options?: Partial<NormalizeThreadResumeResponseOptions>): NormalizedThreadResumeResponse;
 declare function normalizeTurnsPage(rawTurns: readonly unknown[], options: NormalizeTurnsPageOptions): NormalizedTurnsPage;
 
 declare function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[];
 
-export { normalizeApps, normalizeAppsListResponse, normalizeCodexServerMessage, normalizeModelListResponse, normalizeThreadReadResponse, normalizeThreadResumeResponse, normalizeThreadTurnsListResponse, normalizeTurnsPage };
+export { normalizeApps, normalizeAppsListResponse, normalizeCodexServerMessage, normalizeModelListResponse, normalizeThreadListResponse, normalizeThreadLoadedListResponse, normalizeThreadReadResponse, normalizeThreadResumeResponse, normalizeThreadTurnsListResponse, normalizeTurnsPage };

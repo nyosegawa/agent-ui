@@ -40,9 +40,24 @@ Routes:
 - `/?state=bridge-error`: local bridge diagnostics state.
 - `/fixture-gallery`: component close-ups plus route previews.
 - `/host-workflow-recipe`: host-composed primitive layout.
+- `/composer-retry`: failed optimistic first-message retry through the public
+  composer controller.
+- `/transcript-density`: compact transcript route with verbose command/file
+  blocks and chat text filtered out.
+- `/resource-resolution`: local media rendered from structured browser-safe
+  resource metadata instead of raw local paths.
+- `/scoped-thread-lists`: independent scoped history collections for host-owned
+  list panes.
 - `/usage-only`: standalone usage primitive examples.
 - `/scoped-thread-pane`: fixed-thread composition.
 - `/app-connectors`: Codex Apps/connectors metadata.
+
+The fixture gallery renders component close-ups directly rather than through
+iframes. Its critical-state section covers the mobile empty state, start
+composer, sidebar drawer selection, local media fallback, and optimistic
+pending message examples used for visual review. Its component close-up section
+covers primitive renderers including the custom command/transcript block
+example.
 
 `bun run test:e2e:fixtures` starts its own preview server on port 4173 for the
 fixture browser checks. Do not rely on a manually running 5174 server for this

@@ -3,7 +3,11 @@
 Agent UI is an embeddable Codex App Server UI component library for host
 applications. The docs are organized for a public library: start by running the
 local app, then choose a guide, then use reference and architecture pages when
-you need exact contracts.
+you need exact contracts. During the breaking vNext work, use
+[Package Exports](./reference/package-exports.md) and
+[vNext Design Gates](./architecture/vnext-design-gates.md) together: exports
+are not final until internal boundaries, examples, tests, and migration docs
+agree.
 
 ## Start Here
 
@@ -25,16 +29,18 @@ you need exact contracts.
 ## Guides
 
 - [React](./guides/react.md): compose `AgentProvider`, `AgentChat`, and
-  primitives in a host app.
+  public controllers/primitives in a host app.
 - [Web Components](./guides/web-components.md): wrap the React preset in a
   custom element when a host cannot mount React directly.
 - [Approvals](./guides/approvals.md): default command and file-change
   approvals, plus host-owned handling for broader server requests such as user
   input.
-- [Attachments](./guides/attachments.md): paste, drag/drop, upload, and local
-  path resolution.
+- [Attachments](./guides/attachments.md): paste, drag/drop, structured local
+  media resources, upload helpers, and transcript resource resolution.
 - [Usage and Status](./guides/usage-and-status.md): account rate limits,
   thread token usage, diagnostics, and status chrome.
+- [Diagnostics](./guides/diagnostics.md): user/developer/audit audiences,
+  redaction, bridge health events, and host-owned observability.
 - [Theming](./guides/theming.md): `--aui-*` tokens and visual customization.
 - [Internationalization](./guides/i18n.md): built-in locales, host-controlled
   locale state, and copy overrides.
@@ -46,6 +52,9 @@ you need exact contracts.
   multi-user, and API-key constraints.
 - [Browser Verification](./guides/browser-verification.md): local visual QA
   with `agent-browser`.
+- [vNext Host Consumer Migration](./migrations/vnext-host-consumers.md):
+  package, React, bridge, local media, first-message, and validation migration
+  checklist.
 
 ## Reference
 
@@ -68,6 +77,9 @@ you need exact contracts.
 - [Security](./architecture/security.md): shell, filesystem, auth, remote, and
   multi-user constraints.
 - [Testing](./architecture/testing.md): validation matrix and release gates.
+- [vNext Design Gates](./architecture/vnext-design-gates.md): review notes for
+  internal versus public boundaries, host responsibilities, examples, and
+  tests.
 - [Protocol Drift](./architecture/protocol-drift.md): schema refresh workflow.
 - [Toolchain](./architecture/toolchain.md): Bun, Node, package validation, and
   release automation.

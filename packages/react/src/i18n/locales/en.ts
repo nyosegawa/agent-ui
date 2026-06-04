@@ -298,6 +298,7 @@ export const en = {
   "timeline.from": "From",
   "timeline.image": "Image",
   "timeline.imageGenerated": "Image generated",
+  "timeline.localMediaUnavailable": "Local media unavailable",
   "timeline.item": "item",
   "timeline.items": "items",
   "timeline.jumpToPendingApproval": "Jump to pending approval",

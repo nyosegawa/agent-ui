@@ -18,6 +18,8 @@ import type { StableNotificationMethod } from "./protocol";
 export { normalizeApps, normalizeAppsListResponse } from "./normalizers/apps";
 export { normalizeModelListResponse } from "./normalizers/models";
 export {
+  normalizeThreadLoadedListResponse,
+  normalizeThreadListResponse,
   normalizeThreadReadResponse,
   normalizeThreadResumeResponse,
   normalizeThreadTurnsListResponse,
@@ -52,6 +54,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
       {
         type: "notification/received",
         notification: {
+          audience: ["developer", "audit"],
           id: `codex-notification:${message.method}:${stringValue(params.threadId ?? params.thread_id) ?? ""}:${stringValue(params.turnId ?? params.turn_id) ?? ""}:${stringValue(params.itemId ?? params.item_id) ?? ""}`,
           method: message.method,
           params: message.params,
@@ -64,6 +67,7 @@ export function normalizeCodexServerMessage(message: MethodMessage): AgentEvent[
     {
       type: "warning/added",
       warning: {
+        audience: ["developer", "audit"],
         id: `unsupported-codex-notification:${message.method}`,
         message: `Unsupported Codex notification: ${message.method}`,
       },

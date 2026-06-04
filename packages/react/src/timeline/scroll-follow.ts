@@ -1,22 +1,54 @@
+import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-export function useTranscriptFollowScroll({
-  scrollKey,
-  threadId,
-  turnCount,
-}: {
+const DEFAULT_PENDING_APPROVAL_SELECTOR = ".aui-transcript-approval-anchor";
+
+export interface AgentTranscriptScrollControllerOptions {
+  hiddenItemCount?: number;
+  onShowEarlierItems?: () => void;
+  pendingApprovalSelector?: string;
+  scrollContainerRef?: React.RefObject<HTMLElement | null>;
   scrollKey?: string | number;
   threadId: string;
   turnCount: number;
-}) {
-  const listRef = useRef<HTMLOListElement | null>(null);
+}
+
+export interface AgentTranscriptScrollController {
+  canShowEarlierItems: boolean;
+  handleScroll(): void;
+  jumpToLatest(): void;
+  jumpToPendingApproval(): void;
+  scrollContainerRef: React.RefObject<HTMLElement | null>;
+  showEarlierItems(): void;
+  showJumpLatest: boolean;
+  showJumpApproval: boolean;
+}
+
+export function useAgentTranscriptScrollController({
+  hiddenItemCount = 0,
+  onShowEarlierItems,
+  pendingApprovalSelector = DEFAULT_PENDING_APPROVAL_SELECTOR,
+  scrollContainerRef,
+  scrollKey,
+  threadId,
+  turnCount,
+}: AgentTranscriptScrollControllerOptions): AgentTranscriptScrollController {
+  const ownedScrollContainerRef = useRef<HTMLElement | null>(null);
+  const activeScrollContainerRef = scrollContainerRef ?? ownedScrollContainerRef;
+  const activeScrollContainerRefRef =
+    useRef<React.RefObject<HTMLElement | null>>(activeScrollContainerRef);
   const followModeRef = useRef(true);
   const previousThreadIdRef = useRef(threadId);
   const rafRef = useRef<number | undefined>(undefined);
   const [showJumpLatest, setShowJumpLatest] = useState(false);
+  const [showJumpApproval, setShowJumpApproval] = useState(false);
+
+  useEffect(() => {
+    activeScrollContainerRefRef.current = activeScrollContainerRef;
+  }, [activeScrollContainerRef]);
 
   const scrollToLatest = useCallback((behavior: ScrollBehavior = "auto") => {
-    const list = listRef.current;
+    const list = activeScrollContainerRefRef.current.current;
     if (!list) return false;
     if (typeof list.scrollTo === "function") {
       list.scrollTo({ behavior, top: list.scrollHeight });
@@ -51,11 +83,22 @@ export function useTranscriptFollowScroll({
     });
   }, [scrollToLatest]);
 
+  const updateJumpApproval = useCallback(() => {
+    const list = activeScrollContainerRefRef.current.current;
+    const anchor = list?.querySelector<HTMLElement>(pendingApprovalSelector);
+    if (!list || !anchor) {
+      setShowJumpApproval(false);
+      return;
+    }
+    setShowJumpApproval(!isElementFullyVisibleInScrollContainer(list, anchor));
+  }, [pendingApprovalSelector]);
+
   useEffect(() => {
     if (previousThreadIdRef.current === threadId) return;
     previousThreadIdRef.current = threadId;
     followModeRef.current = true;
     setShowJumpLatest(false);
+    setShowJumpApproval(false);
   }, [threadId]);
 
   useEffect(() => {
@@ -63,10 +106,10 @@ export function useTranscriptFollowScroll({
     return () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current);
     };
-  }, [scheduleFollowScroll, threadId, turnCount, scrollKey]);
+  }, [scheduleFollowScroll, scrollKey, threadId, turnCount]);
 
   useEffect(() => {
-    const list = listRef.current;
+    const list = activeScrollContainerRefRef.current.current;
     if (!list) return;
     const observer = new MutationObserver(() => scheduleFollowScroll("smooth"));
     observer.observe(list, {
@@ -78,14 +121,22 @@ export function useTranscriptFollowScroll({
     return () => observer.disconnect();
   }, [scheduleFollowScroll, threadId]);
 
+  useEffect(() => {
+    const timer = globalThis.setTimeout(() => {
+      updateJumpApproval();
+    }, 0);
+    return () => globalThis.clearTimeout(timer);
+  }, [hiddenItemCount, pendingApprovalSelector, threadId, turnCount, updateJumpApproval]);
+
   const handleScroll = useCallback(() => {
-    const list = listRef.current;
+    const list = activeScrollContainerRefRef.current.current;
     if (!list) return;
     const distanceFromBottom = list.scrollHeight - list.scrollTop - list.clientHeight;
     const shouldFollow = distanceFromBottom <= 80;
     followModeRef.current = shouldFollow;
     if (shouldFollow) setShowJumpLatest(false);
-  }, []);
+    updateJumpApproval();
+  }, [updateJumpApproval]);
 
   const jumpToLatest = useCallback(() => {
     followModeRef.current = true;
@@ -93,10 +144,58 @@ export function useTranscriptFollowScroll({
     scrollToLatest("smooth");
   }, [scrollToLatest]);
 
+  const jumpToPendingApproval = useCallback(() => {
+    const anchor =
+      activeScrollContainerRefRef.current.current?.querySelector<HTMLElement>(
+        pendingApprovalSelector,
+      );
+    anchor?.scrollIntoView({ block: "center", behavior: "smooth" });
+    setShowJumpApproval(false);
+  }, [pendingApprovalSelector]);
+
+  const showEarlierItems = useCallback(() => {
+    onShowEarlierItems?.();
+  }, [onShowEarlierItems]);
+
   return {
+    canShowEarlierItems: hiddenItemCount > 0,
     handleScroll,
     jumpToLatest,
-    listRef,
+    jumpToPendingApproval,
+    scrollContainerRef: activeScrollContainerRef,
+    showEarlierItems,
     showJumpLatest,
+    showJumpApproval,
+  };
+}
+
+function isElementFullyVisibleInScrollContainer(
+  container: HTMLElement,
+  element: HTMLElement,
+): boolean {
+  const containerRect = container.getBoundingClientRect();
+  const elementRect = element.getBoundingClientRect();
+  return elementRect.top >= containerRect.top && elementRect.bottom <= containerRect.bottom;
+}
+
+export function useTranscriptFollowScroll({
+  scrollKey,
+  threadId,
+  turnCount,
+}: {
+  scrollKey?: string | number;
+  threadId: string;
+  turnCount: number;
+}) {
+  const controller = useAgentTranscriptScrollController({
+    scrollKey,
+    threadId,
+    turnCount,
+  });
+  return {
+    handleScroll: controller.handleScroll,
+    jumpToLatest: controller.jumpToLatest,
+    listRef: controller.scrollContainerRef,
+    showJumpLatest: controller.showJumpLatest,
   };
 }

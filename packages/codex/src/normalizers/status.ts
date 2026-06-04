@@ -12,6 +12,7 @@ export function normalizeStatusNotification(
         {
           type: "warning/added",
           warning: {
+            audience: ["user"],
             id: String(params.id ?? params.code ?? params.message ?? "codex-warning"),
             message: String(params.message ?? params.warning ?? "Codex warning"),
             raw: params,
@@ -24,6 +25,7 @@ export function normalizeStatusNotification(
         {
           type: "error/added",
           error: {
+            audience: ["user"],
             code: numberValue(params.code ?? error?.code),
             data:
               params.data ??
@@ -40,6 +42,7 @@ export function normalizeStatusNotification(
         {
           type: "status/banner/added",
           banner: {
+            audience: ["user"],
             id: "skills-changed",
             kind: "system",
             message: "Skills changed. Re-run skills/list to refresh metadata.",
@@ -52,6 +55,7 @@ export function normalizeStatusNotification(
         {
           type: "status/banner/added",
           banner: {
+            audience: ["user"],
             id: `model-rerouted:${params.threadId ?? ""}:${params.turnId ?? ""}`,
             kind: "modelReroute",
             message: `Model rerouted from ${String(params.fromModel ?? "unknown")} to ${String(params.toModel ?? "unknown")}.`,
@@ -64,6 +68,7 @@ export function normalizeStatusNotification(
         {
           type: "status/banner/added",
           banner: {
+            audience: ["user"],
             id: `deprecation:${params.summary ?? "notice"}`,
             kind: "deprecationNotice",
             message: joinSummaryDetails(params.summary, params.details, "Deprecation notice"),
@@ -76,6 +81,7 @@ export function normalizeStatusNotification(
         {
           type: "status/banner/added",
           banner: {
+            audience: ["user"],
             id: `config-warning:${params.path ?? params.summary ?? "warning"}`,
             kind: "configWarning",
             message: joinSummaryDetails(params.summary, params.details, "Config warning"),
@@ -85,6 +91,7 @@ export function normalizeStatusNotification(
         {
           type: "warning/added",
           warning: {
+            audience: ["developer", "audit"],
             id: `config-warning:${params.path ?? params.summary ?? "warning"}`,
             message: joinSummaryDetails(params.summary, params.details, "Config warning"),
             raw: params,
@@ -96,6 +103,7 @@ export function normalizeStatusNotification(
         {
           type: "status/banner/added",
           banner: {
+            audience: ["user"],
             id: `mcp-oauth:${params.name ?? "server"}`,
             kind: "mcpOAuth",
             message:
@@ -112,6 +120,7 @@ export function normalizeStatusNotification(
         {
           type: "status/banner/added",
           banner: {
+            audience: ["user"],
             id: `mcp-startup:${params.name ?? "server"}`,
             kind: "system",
             message: `MCP server ${String(params.name ?? "server")} status: ${String(params.status ?? "unknown")}.`,

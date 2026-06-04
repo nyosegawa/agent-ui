@@ -1,4 +1,4 @@
-import type { AgentThread, ThreadState } from "@nyosegawa/agent-ui-core";
+import type { AgentThread, AgentThreadView } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   IconAdd,
@@ -7,11 +7,10 @@ import {
   IconSearch,
   buttonClass,
 } from "../components-internal";
-import { useAgentThreadHistory, useAgentThreadReader } from "../hooks";
+import { useAgentThreadListController } from "../hooks/thread-list";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import { useAgentContext } from "../provider";
-import { rawThreadId } from "../thread-history";
-import { compactPath, isRecord, stringField, useCompactLayout } from "./shared";
+import { compactPath, useCompactLayout } from "./shared";
 
 export function ThreadList({
   activeThreadId,
@@ -22,30 +21,31 @@ export function ThreadList({
   activeThreadId?: string;
   footer?: React.ReactNode;
   onSelectThread?: (threadId: string) => void;
-  threads: ThreadState[];
+  threads: AgentThreadView[];
 }) {
   const { t } = useAgentI18n();
   return (
     <nav className="aui-thread-list" aria-label={t("aria.threads")}>
       {threads.map((thread) => {
         const meta = threadListMeta(thread, t);
+        const status = threadListStatus(thread);
         return (
           <button
-            aria-current={thread.thread.id === activeThreadId ? "page" : undefined}
+            aria-current={thread.id === activeThreadId ? "page" : undefined}
             className="aui-thread-list-item"
-            data-status={thread.status}
-            key={thread.thread.id}
-            onClick={() => onSelectThread?.(thread.thread.id)}
+            data-status={status}
+            key={thread.id}
+            onClick={() => onSelectThread?.(thread.id)}
             type="button"
           >
             <span className="aui-thread-list-name">
-              {thread.thread.name ?? thread.thread.id}
+              {thread.title}
             </span>
             <span className="aui-thread-list-meta">
               <span
                 aria-hidden="true"
                 className="aui-thread-list-dot"
-                data-status={thread.status}
+                data-status={status}
               />
               <small>{meta}</small>
             </span>
@@ -57,43 +57,31 @@ export function ThreadList({
   );
 }
 
-function threadListMeta(thread: ThreadState, t: (key: AgentI18nKey) => string): string {
-  const parts = [
-    formatThreadStatus(thread.status, { hasTurns: thread.orderedTurnIds.length > 0, t }),
-  ];
-  const updated = rawThreadDate(thread.thread.raw, [
-    "updatedAt",
-    "updated_at",
-    "modifiedAt",
-    "modified_at",
-    "createdAt",
-    "created_at",
-  ]);
-  if (updated) parts.push(updated);
-  if (thread.thread.path && isUserFacingPath(thread.thread.path)) {
-    parts.push(compactPath(thread.thread.path));
-  }
+function threadListMeta(
+  thread: AgentThreadView,
+  t: (key: AgentI18nKey) => string,
+): string {
+  const parts = [formatThreadStatus(threadListStatus(thread), { t })];
+  if (thread.lastActivityAt) parts.push(formatThreadDate(thread.lastActivityAt));
+  const path = thread.cwd ?? thread.subtitle;
+  if (path && isUserFacingPath(path)) parts.push(compactPath(path));
   return parts.join(" · ");
 }
 
-function rawThreadDate(raw: unknown, keys: string[]): string | undefined {
-  if (!isRecord(raw)) return undefined;
-  for (const key of keys) {
-    const value = raw[key];
-    const date =
-      typeof value === "number"
-        ? new Date(value > 10_000_000_000 ? value : value * 1000)
-        : typeof value === "string"
-          ? new Date(value)
-          : undefined;
-    if (date && Number.isFinite(date.getTime())) {
-      return new Intl.DateTimeFormat(undefined, {
-        dateStyle: "medium",
-        timeStyle: "short",
-      }).format(date);
-    }
-  }
-  return undefined;
+function threadListStatus(thread: AgentThreadView): string {
+  if (thread.error) return "error";
+  if (thread.needsInput) return "waitingForInput";
+  if (thread.isRunning) return "running";
+  if (thread.isPreview) return "preview";
+  if (thread.isArchived) return "archived";
+  return "ready";
+}
+
+function formatThreadDate(timestamp: number): string {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(timestamp));
 }
 
 export function formatThreadStatus(
@@ -106,6 +94,8 @@ export function formatThreadStatus(
       return t("thread.status.stored");
     case "loaded":
       return options.hasTurns ? t("thread.status.preview") : t("thread.status.ready");
+    case "preview":
+      return t("thread.status.preview");
     case "ready":
       return t("thread.status.ready");
     case "running":
@@ -153,28 +143,32 @@ export function AgentThreadSidebar({
   onCreateThread?: () => void;
   onCollapsedChange?: (collapsed: boolean) => void;
   onSelectThread?: (threadId: string) => void;
-  threads: ThreadState[];
+  threads: AgentThreadView[];
 }) {
   const { t } = useAgentI18n();
   const compact = useCompactLayout();
-  const { cursor, error, isLoading, listThreads } = useAgentThreadHistory();
+  const sidebarHistoryScope = useMemo(() => ({ kind: "history" as const }), []);
+  const threadList = useAgentThreadListController(sidebarHistoryScope);
+  const {
+    activateThread,
+    error,
+    hasLoaded,
+    isLoading,
+    listThreads,
+    nextCursor,
+    searchTerm,
+    setSearchTerm,
+    threads: listedThreads,
+  } = threadList;
   const { state } = useAgentContext();
-  const { readThread } = useAgentThreadReader();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [hasLoaded, setHasLoaded] = useState(false);
-  const [nextCursor, setNextCursor] = useState<string | null>();
-  const [visibleThreadIds, setVisibleThreadIds] = useState<string[] | undefined>();
   const didAutoLoad = useRef(false);
-  const searchTouched = useRef(false);
+  const [searchTouched, setSearchTouched] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const visibleThreads = useMemo(() => {
-    if (!visibleThreadIds) return threads;
-    const byId = new Map(threads.map((thread) => [thread.thread.id, thread]));
-    return visibleThreadIds.flatMap((threadId) => {
-      const thread = byId.get(threadId);
-      return thread ? [thread] : [];
-    });
-  }, [threads, visibleThreadIds]);
+  const fallbackThreads = threads;
+  const visibleThreads =
+    hasLoaded && (searchTouched || threads.length === 0)
+      ? listedThreads
+      : fallbackThreads;
   const loadThreadPage = useCallback(
     async (
       params: {
@@ -183,42 +177,27 @@ export function AgentThreadSidebar({
         searchTerm?: string;
       } = {},
     ) => {
-      const response = await listThreads({
+      return listThreads({
+        append: params.append,
         cursor: params.cursor,
         limit: 25,
         searchTerm: params.searchTerm,
       });
-      const rawThreads = Array.isArray(response?.data)
-        ? response.data
-        : Array.isArray(response?.threads)
-          ? response.threads
-          : [];
-      const threadIds = rawThreads.flatMap((rawThread: Record<string, unknown>) => {
-        const threadId = rawThreadId(rawThread);
-        return threadId ? [threadId] : [];
-      });
-      setVisibleThreadIds((current) => {
-        if (!params.append) return threadIds;
-        return Array.from(new Set([...(current ?? []), ...threadIds]));
-      });
-      setNextCursor(responseCursor(response));
-      setHasLoaded(true);
-      return response;
     },
     [listThreads],
   );
   const loadNextThreadPage = useCallback(() => {
-    const pageCursor = nextCursor ?? cursor ?? null;
+    const pageCursor = nextCursor;
     if (!pageCursor || isLoading) return;
     void loadThreadPage({
       append: true,
       cursor: pageCursor,
       searchTerm,
     }).catch(() => undefined);
-  }, [cursor, isLoading, loadThreadPage, nextCursor, searchTerm]);
+  }, [isLoading, loadThreadPage, nextCursor, searchTerm]);
   useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel || !(nextCursor ?? cursor)) return;
+    if (!sentinel || !nextCursor) return;
     if (typeof IntersectionObserver === "undefined") return;
     const observer = new IntersectionObserver(
       (entries) => {
@@ -228,7 +207,7 @@ export function AgentThreadSidebar({
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [cursor, loadNextThreadPage, nextCursor]);
+  }, [loadNextThreadPage, nextCursor]);
   useEffect(() => {
     if (
       state.connection.status === "connected" &&
@@ -237,33 +216,31 @@ export function AgentThreadSidebar({
       !didAutoLoad.current
     ) {
       didAutoLoad.current = true;
-      void loadThreadPage().catch(() => {
-        setHasLoaded(true);
-      });
+      void loadThreadPage().catch(() => undefined);
     }
   }, [isLoading, loadThreadPage, state.connection.status, threads.length]);
   // Debounced search: typing auto-filters history without a separate Load
   // button. The leading render and the initial auto-load are skipped so the
   // first page is fetched exactly once.
   useEffect(() => {
-    if (!searchTouched.current) return;
+    if (!searchTouched) return;
     const handle = setTimeout(() => {
       void loadThreadPage({ searchTerm }).catch(() => undefined);
     }, 320);
     return () => clearTimeout(handle);
-  }, [loadThreadPage, searchTerm]);
+  }, [loadThreadPage, searchTerm, searchTouched]);
 
   const selectThread = useCallback(
     (threadId: string) => {
       if (compact) onCollapsedChange?.(true);
-      const openThread = readThread(threadId, { activate: true, includeTurns: true });
+      const openThread = activateThread(threadId);
       void openThread
-        .catch(() => undefined)
-        .finally(() => {
-          onSelectThread?.(threadId);
-        });
+        .then((selectedThreadId) => {
+          onSelectThread?.(selectedThreadId);
+        })
+        .catch(() => undefined);
     },
-    [compact, onCollapsedChange, onSelectThread, readThread],
+    [activateThread, compact, onCollapsedChange, onSelectThread],
   );
   const createThread = useCallback(() => {
     if (compact) onCollapsedChange?.(true);
@@ -330,6 +307,7 @@ export function AgentThreadSidebar({
         className="aui-history-controls"
         onSubmit={(event) => {
           event.preventDefault();
+          setSearchTouched(true);
           void loadThreadPage({ searchTerm }).catch(() => undefined);
         }}
         role="search"
@@ -340,7 +318,7 @@ export function AgentThreadSidebar({
             aria-label={t("thread.searchHistory")}
             className="aui-text-input"
             onChange={(event) => {
-              searchTouched.current = true;
+              setSearchTouched(true);
               setSearchTerm(event.currentTarget.value);
             }}
             placeholder={t("thread.search")}
@@ -357,7 +335,9 @@ export function AgentThreadSidebar({
         </div>
       </form>
       <div className="aui-history-feedback" aria-live="polite">
-        {error ? <p className="aui-sidebar-error">{error.message}</p> : null}
+        {error ? (
+          <p className="aui-sidebar-error">{error.message}</p>
+        ) : null}
         {!isLoading && hasLoaded && visibleThreads.length === 0 ? (
           <p className="aui-sidebar-status">{t("thread.noThreadsFound")}</p>
         ) : null}
@@ -365,7 +345,7 @@ export function AgentThreadSidebar({
       <ThreadList
         activeThreadId={activeThreadId}
         footer={
-          (nextCursor ?? cursor) ? (
+          nextCursor ? (
             <div className="aui-thread-list-sentinel" ref={sentinelRef}>
               <button
                 className={buttonClass("subtle", { size: "sm" })}
@@ -398,11 +378,4 @@ function fallbackThreadT(key: AgentI18nKey): string {
     "thread.status.stored": "Stored",
   };
   return fallback[key] ?? key;
-}
-
-function responseCursor(response: Record<string, unknown> | undefined): string | null {
-  if (!response) return null;
-  return (
-    stringField(response, "nextCursor") ?? stringField(response, "next_cursor") ?? null
-  );
 }

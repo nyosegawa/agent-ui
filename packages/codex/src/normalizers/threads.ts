@@ -1,4 +1,8 @@
-import type { AgentEvent, AgentTurn } from "@nyosegawa/agent-ui-core";
+import type {
+  AgentEvent,
+  AgentThreadScope,
+  AgentTurn,
+} from "@nyosegawa/agent-ui-core";
 import {
   asRecord,
   itemsViewValue,
@@ -28,6 +32,33 @@ export interface NormalizedTurnsPage {
 export interface NormalizedThreadTurnsListResponse extends NormalizedTurnsPage {
   backwardsCursor: string | null;
   nextCursor: string | null;
+}
+
+export interface NormalizeThreadListResponseOptions {
+  replace?: boolean;
+  scope?: AgentThreadScope;
+  syncedAt?: number;
+}
+
+export interface NormalizedThreadListResponse {
+  backwardsCursor: string | null;
+  events: AgentEvent[];
+  ids: string[];
+  nextCursor: string | null;
+  scope: AgentThreadScope;
+}
+
+export interface NormalizeThreadLoadedListResponseOptions {
+  replace?: boolean;
+  scope?: AgentThreadScope;
+  syncedAt?: number;
+}
+
+export interface NormalizedThreadLoadedListResponse {
+  events: AgentEvent[];
+  ids: string[];
+  nextCursor: string | null;
+  scope: AgentThreadScope;
 }
 
 export interface NormalizeThreadResumeResponseOptions extends NormalizeTurnsPageOptions {
@@ -166,6 +197,73 @@ export function normalizeThreadTurnsListResponse(
     ...page,
     backwardsCursor: cursorValue(record.backwardsCursor ?? record.backwards_cursor),
     nextCursor: cursorValue(record.nextCursor ?? record.next_cursor),
+  };
+}
+
+export function normalizeThreadListResponse(
+  response: unknown,
+  options: NormalizeThreadListResponseOptions = {},
+): NormalizedThreadListResponse {
+  const record = asRecord(response) ?? {};
+  const scope = options.scope ?? { kind: "history", archived: false };
+  const rawThreads = threadListData(response);
+  const ids: string[] = [];
+  const events: AgentEvent[] = rawThreads.map((rawThread) => {
+    const rawThreadRecord = asRecord(rawThread) ?? {};
+    if (!rawThreadId(rawThreadRecord)) {
+      throw new Error("thread/list response contains a thread without an id");
+    }
+    const thread = normalizeThread(rawThread);
+    ids.push(thread.id);
+    return {
+      snapshot: true,
+      status: threadListSnapshotStatus(rawThread, scope),
+      thread,
+      type: "thread/upserted",
+    };
+  });
+
+  events.push({
+    ids,
+    nextCursor: cursorValue(record.nextCursor ?? record.next_cursor),
+    replace: options.replace ?? true,
+    scope,
+    syncedAt: options.syncedAt,
+    type: "thread/collection/pageReceived",
+  });
+
+  return {
+    backwardsCursor: cursorValue(record.backwardsCursor ?? record.backwards_cursor),
+    events,
+    ids,
+    nextCursor: cursorValue(record.nextCursor ?? record.next_cursor),
+    scope,
+  };
+}
+
+export function normalizeThreadLoadedListResponse(
+  response: unknown,
+  options: NormalizeThreadLoadedListResponseOptions = {},
+): NormalizedThreadLoadedListResponse {
+  const record = asRecord(response) ?? {};
+  const scope = options.scope ?? { key: "loaded", kind: "custom", label: "Loaded threads" };
+  const ids = threadLoadedListData(response);
+  const events: AgentEvent[] = [
+    {
+      ids,
+      nextCursor: cursorValue(record.nextCursor ?? record.next_cursor),
+      replace: options.replace ?? true,
+      scope,
+      syncedAt: options.syncedAt,
+      type: "thread/collection/pageReceived",
+    },
+  ];
+
+  return {
+    events,
+    ids,
+    nextCursor: cursorValue(record.nextCursor ?? record.next_cursor),
+    scope,
   };
 }
 
@@ -371,6 +469,29 @@ function turnsListData(response: unknown): unknown[] {
   return [];
 }
 
+function threadListData(response: unknown): unknown[] {
+  const record = asRecord(response);
+  if (Array.isArray(record?.data)) return record.data;
+  if (Array.isArray(record?.threads)) return record.threads;
+  return [];
+}
+
+function threadLoadedListData(response: unknown): string[] {
+  const record = asRecord(response);
+  const rawIds = Array.isArray(record?.data)
+    ? record.data
+    : Array.isArray(record?.ids)
+      ? record.ids
+      : [];
+  const ids: string[] = [];
+  for (const rawId of rawIds) {
+    const id = typeof rawId === "string" ? rawId : undefined;
+    if (!id) throw new Error("thread/loaded/list response contains an invalid thread id");
+    ids.push(id);
+  }
+  return ids;
+}
+
 function initialTurnsPage(response: unknown): Record<string, unknown> | undefined {
   const record = asRecord(response);
   return asRecord(record?.initialTurnsPage ?? record?.initial_turns_page);
@@ -395,6 +516,12 @@ function rawThreadId(rawThread: Record<string, unknown>): string | undefined {
   if (typeof value === "string" && value.trim()) return value;
   if (typeof value === "number" && Number.isFinite(value)) return String(value);
   return undefined;
+}
+
+function threadListSnapshotStatus(rawThread: unknown, scope: AgentThreadScope): string {
+  const record = asRecord(rawThread);
+  if (scope.kind === "history" && scope.archived === true) return "archived";
+  return snapshotStatus(record?.status, 0);
 }
 
 function snapshotStatus(value: unknown, turnCount: number): string {

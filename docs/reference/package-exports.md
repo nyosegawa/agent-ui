@@ -12,6 +12,241 @@
 
 Packages are split by responsibility, but the local bridge is included in the official package set.
 
+## vNext Freeze Policy
+
+The export map is not frozen while vNext is still proving controller,
+resource, bridge, and diagnostics boundaries. Breaking removals and renames are
+allowed for unshipped branch work, but each promoted public export must have all
+of the following before it becomes part of the package contract:
+
+- an intentional export-map entry or package-root barrel export
+- a canonical reference doc in this page or the package-specific reference page
+- an example or recipe that imports the public surface through the package name
+- a focused test, API snapshot, or package-resolution gate that protects that
+  import
+
+Source-level modules can remain usable inside the repository without becoming
+published package API. Internal reducer reconciliation, optimistic operation
+maps, local media temp-file lookup, bridge process lifecycle internals,
+generated Codex schema files, bundled declaration chunks, private CSS chunks,
+and `.aui-*` implementation selectors stay outside the public contract unless a
+later design gate explicitly promotes them.
+
+Agent UI package exports also do not make host runtime policy public. Hosts
+still own non-loopback bridge admission, hosted auth, persistence, tenant and
+workspace isolation, audit sinks, upload/static authorization, process
+supervision, billing, and deployment policy.
+
+## vNext Draft Export Inventory
+
+This inventory was regenerated from `test/api-snapshots/*__index.d.ts` with
+`bun run test:api-snapshots:update` on 2026-06-03. It is a draft review note
+for the breaking vNext work; the final export map should be frozen only after
+internal boundaries, examples, tests, and migration docs agree.
+
+### `@nyosegawa/agent-ui-core`
+
+Keep public: `AGENT_RETENTION_POLICY`, `FakeAgentTransport`,
+`FakeAgentTransportOptions`, `FakeTransportRequest`, `AgentTransport`,
+`AgentTransportEvent`, `AgentRequestOptions`, `RequestId`, `RequestIdKey`,
+`requestIdKey`, `AgentEvent`, product-domain event/state types for account,
+apps, connection, diagnostics, hooks, items, models, run settings, server
+requests, skills, status banners, turns, usage, and warnings,
+`AgentDiagnosticAudience`, resource-aware item block types
+(`AgentItemBlockResource`, `AgentItemBlockResourceKind`), `agentReducer`,
+`createInitialAgentState`,
+`runEventFixture`, and selectors for account, apps, diagnostics,
+audience-filtered diagnostics, items, running turns, ordered items/turns,
+pending approvals, protocol notifications, run settings, server requests,
+status banners, thread, turn, and usage.
+
+Replaced in vNext API draft: registry-bucket public shapes
+(`ThreadRegistryState`, `ThreadRegistryStatus`, and `selectThreadRegistry`)
+were removed in favor of explicit thread lifecycle state, scoped collections,
+active-thread selectors, pending operation selectors, and the separate public
+`AgentThreadView`.
+
+Move to subpath or make diagnostic-only: raw normalized `AgentSessionState`,
+`ThreadState`, `AgentThread`, `AgentTurn`, and store-wide selectors when they
+expose internal reconciliation details. Public controllers should consume view
+models rather than asking hosts to inspect raw store shape.
+
+Make private: reducer-internal registry/retention helper behavior and any
+canonical-ID reconciliation detail that is not part of an explicit diagnostic
+surface.
+
+Remove: no root exports are removed at this draft gate beyond replacing the
+registry bucket model with the vNext collection model.
+
+### `@nyosegawa/agent-ui-codex`
+
+Keep public: protocol capability metadata and guards
+(`CODEX_PROTOCOL_COMMIT`, `CODEX_PROTOCOL_GENERATED_AT`,
+`codexCapabilityMetadata`, `getCodexCapabilityStatus`,
+`isStableProductizedMethod`, `isHostOnlyMethod`,
+`isExperimentalAvailableMethod`, `isExperimentalUnsupportedMethod`,
+`assertCodexProductizedMethod`, `assertCodexExperimentalMethod`, stable and
+experimental method lists), `CodexSession`, `createCodexSession`,
+`createCodexClients`, grouped client classes, JSON-RPC helpers,
+`createCodexStdioTransport`, `createCodexWebSocketTransport`,
+`createCodexSdkTransportAdapter`, `startDeviceCodeLogin`, and
+`cancelDeviceCodeLogin`.
+
+Move to subpath: generated method params/results and request-construction
+types should stay on `stable-types`, `clients`, `request-builders`, or
+`normalizer` subpaths instead of the root. Normalizers such as
+`normalizeThreadLoadedListResponse`, `normalizeThreadListResponse`,
+`normalizeThreadReadResponse`, `normalizeThreadResumeResponse`,
+`normalizeTurnsPage`, `normalizeAppsListResponse`, and
+`normalizeCodexServerMessage` are host-owned lower-level helpers and should be
+imported from `@nyosegawa/agent-ui-codex/normalizer`.
+
+Replace with vNext API: lifecycle-dependent normalizer contracts that still
+produce old registry status names should be updated after protocol
+classification.
+
+Make private: generated source-level chunks and aliases surfaced only because
+declaration bundling uses chunk names. Root imports should not expose generated
+schema internals as the normal integration path.
+
+Remove: unsupported or test-only protocol helpers, including default React use
+of `thread/turns/items/list`, must not be promoted.
+
+### `@nyosegawa/agent-ui-react`
+
+Keep public: `AgentProvider`, `AgentChat`, `AgentShell`,
+`AgentThreadSurface`, `AgentThreadView`, `AgentThreadHeader`,
+`AgentThreadTimeline`, `AgentMessageList`, `AgentTranscript`,
+`AgentComposerPanel`, `AgentComposer`, approval, status, usage, apps, skills,
+i18n, theme, run-settings, diff, content block, and transcript item primitives
+that remain backed by stable view models. Keep `AgentChatProps`,
+`AgentThreadViewProps`, styling token guidance, `useAgentBootstrap`,
+`useAgentAccount`, `useAgentModels`, `useAgentUsage`, `useAgentDiagnostics`
+with user/developer/audit diagnostic views,
+`useAgentApprovals`, `useAgentServerRequests`, `useAgentApps`,
+`useAgentSkills`, `useAgentHooks`, `useAgentRunSettings`, and
+`useAgentTurnController`, `useAgentTranscriptController`, and
+`useAgentTranscriptScrollController` if their return shapes stay view-model
+based.
+
+Replace with vNext API: `AgentChatSlots` has been removed in favor of the
+single `AgentComponents` map and `defaultAgentComponents`. The accepted
+replacement points are `Shell`, `Sidebar`, `EmptyState`, `ComposerPanel`,
+`Approval`, preset transcript `Item`, and transcript `blocks`. Lower-level
+scroll containers, approval anchor placement, composer toolbar internals,
+attachment mutation controls, sidebar pagination internals, and generated block
+normalization remain internal/source-level boundaries;
+`useAgentThread`, `useAgentThreadController`, `useAgentThreads`,
+`useAgentThreadHistory`, `useAgentThreadReader`,
+`useAgentThreadListController`, `useAgentComposer`,
+`useAgentComposerController`, `AgentComposerController`, `ThreadList`,
+`AgentThreadSidebar`, and `AgentWorkspace` are rebuilt on explicit session,
+active-thread, thread-list, composer, transcript, scroll, server-request, and
+diagnostics controllers. `startThreadWithInput()` has been removed from the
+thread hook in the vNext draft; first-message start behavior now lives on the
+source-level internal composer controller as `startWithMessage()`.
+
+Move to subpath or keep internal: transcript-window utilities
+(`DEFAULT_TRANSCRIPT_ITEM_LIMIT`, `TRANSCRIPT_ITEM_INCREMENT`,
+`visibleTranscriptWindow`), thread snapshot helpers (`threadSnapshotEvents`,
+`threadUpsertEvent`, `threadSubtitle`, `threadProjectPath`, `rawThreadId`),
+and low-level input/path helpers should not remain root convenience exports
+unless examples prove host-facing value.
+
+Make private: raw old state-name helpers, internal `.aui-*` styling details,
+queue implementation objects, and any hook return that exposes optimistic
+operation internals instead of public pending message state.
+
+Remove: compatibility aliases that only preserve unshipped branch behavior.
+
+### `@nyosegawa/agent-ui-server`
+
+Keep public: `attachAgentUiWebSocketBridge`,
+`handleAgentUiWebSocketConnection`, `createCodexAppServerBridge`,
+`createAgentUiNextRpcRoute`, `createAgentUiExpressMiddleware`,
+one-shot method policy helpers, bridge option types, browser method capability
+policy types, `AgentUiBridgePolicy` admission mode types,
+`AgentUiDynamicToolPolicy`, dynamic tool handler/helper types and explicit MCP
+mapping factories, dynamic tool debug event types, host event sink helpers,
+bridge health event types, context-rich server-request policy callback/helper
+types including command and file-change approval policy callbacks, redaction
+helpers, `createAgentUiLocalMediaHelper()`, and the upload-only
+`createAgentUiLocalUploadHandler()` / `AgentUiUploadHandler` surface.
+`createAgentUiLocalMediaHelper()` is the broader local media helper that returns
+path, URL, asset ID, display name, redacted path, MIME type, and byte size while
+keeping static serving explicitly host-wired. `createAgentUiLocalUploadHandler()`
+remains public for hosts that only need browser `File` to local-path upload
+adaptation.
+
+Move to subpath or make explicit advanced surface: dynamic tool helper-thread
+exports and one-shot RPC policy helpers are host-managed lower-level surfaces;
+they can stay public but should not be presented as default React workflow.
+
+Make private: bridge process lifecycle internals and raw child-process details
+that hosts do not need for admission, diagnostics, or shutdown policy.
+
+Remove: `defaultDynamicToolHandler` was removed; hosts now choose
+`dynamicToolPolicy: { mode: "disabled" }`, provide a host callback, or wrap the
+explicit `createMcpDynamicToolHandler()` mapping helper.
+
+### `@nyosegawa/agent-ui-web-components`
+
+Keep public: `defineAgentChatElement`, `AgentChatElement`,
+`AgentChatElementOptions`, and `AgentChatWebComponentElement`.
+
+Replace with vNext API: `AgentChatElementOptions.components` follows the React
+`components` replacement map.
+
+Move to subpath: none at this gate.
+
+Make private: element render internals and React root lifecycle details.
+
+Remove: none at this gate.
+
+### Soon-To-Change Import Sites
+
+Examples that import APIs expected to change: `examples/local-react-vite`
+(`AgentChat`, `useAgentThread`, `useAgentApprovals`, direct thread lifecycle
+fixture state), `examples/codex-local-web` (`AgentChat`,
+attachment/resource resolver), `examples/next-with-bridge-sidecar` (`AgentChat`,
+attachment/resource resolver), `examples/docs-site` (`AgentChat`), and
+`examples/recipes/src/headless-hooks.tsx` (`useAgentThreads`,
+`useAgentThread`, `useAgentComposer`, `useAgentApprovals`).
+
+Docs that describe soon-to-change APIs: `docs/reference/hooks.md`,
+`docs/reference/react-components.md`, `docs/reference/server-bridge.md`,
+`docs/guides/react.md`, `docs/guides/attachments.md`,
+`docs/guides/theming.md`, `docs/guides/i18n.md`,
+`docs/guides/approvals.md`, `docs/guides/web-components.md`, and
+`docs/examples/*` pages that explain `AgentChat`, sidebar history, or
+attachments.
+
+Resource resolution exports are kept at the React root while vNext proves the
+attachment boundary: `AgentResolvedResource`, `AgentResourceKind`,
+`AgentFileResourceRequest`, `AgentLocalMediaResourceRequest`,
+`AgentResourceRequest`, `AgentResourceResolution`, `AgentResourceResolver`,
+`AgentLocalMediaUrlResolver`, `AgentResolvedLocalAttachment`, `agentResourceUrl`, and
+`agentResourceDisplayName`. These are browser/UI metadata primitives, not host
+upload, storage, authorization, or static-serving policy.
+
+Composer controller exports include the raw-free `AgentComposerController`
+view plus `AgentComposerSubmitMode`, `AgentComposerDisabledReason`, and
+`AgentComposerFailedPendingMessage`. Internal first-message operation maps,
+rollback payloads, and generated protocol payloads remain source-level only.
+
+Composer styled parts exported at the React root are `AgentComposerPanel`,
+`AgentComposerInput`, `AgentComposerToolbar`, `AgentAttachmentChips`,
+`AgentComposerSubmitButton`, and `AgentStartComposer`. They expose browser UI
+composition surfaces while keeping attachment mutation, preview revocation,
+queued attachment restore, and first-message rollback internals private.
+
+Tests encoding old state names or old hook behavior:
+`packages/core/test/reducer.test.ts`, `packages/core/test/public-surface.test.ts`,
+`packages/react/test/components.vitest.tsx`, React e2e files under
+`examples/local-react-vite/e2e`, real-local e2e files under
+`examples/codex-local-web/e2e`, `test/api-snapshots/*.d.ts`,
+`test/runtime-export-policy.test.ts`, and `packages/web-components/test`.
+
 ## Monorepo Layout
 
 ```text
@@ -48,10 +283,13 @@ Responsibilities:
 
 The package root exports these building blocks directly: state/event/transport
 types, reducer and selector helpers, `FakeAgentTransport`, fixture utilities,
-and the default retention policy constant. Store singletons, store interfaces,
-retention helper internals, and reducer-internal commit/merge helpers are not
-part of the root public API. JSON-RPC framing and generated App Server schema
-are Codex adapter responsibilities, not core responsibilities.
+and the default retention policy constant. Item blocks may expose
+protocol-neutral resource metadata for browser-safe URLs and host-resolved local
+media paths; upload, authorization, static serving, and path-to-URL policy stay
+outside core. Store singletons, store interfaces, retention helper internals,
+and reducer-internal commit/merge helpers are not part of the root public API.
+JSON-RPC framing and generated App Server schema are Codex adapter
+responsibilities, not core responsibilities.
 
 Must not include:
 
@@ -160,7 +398,7 @@ from `packages/react/src/styles/*`; package builds copy those chunks under
 `dist/styles/*` or rely on internal `.aui-*` selectors as a styling contract.
 The stable customization surface is the token set in
 `packages/react/src/styles/tokens.css`, plus documented component props,
-slots, render props, and `className` attachment points.
+the `components` map, render props, and `className` attachment points.
 
 The default UI keeps the high-traffic surfaces split internally:
 
@@ -198,7 +436,7 @@ Custom element wrapper for host applications that do not want to mount React dir
 Responsibilities:
 
 - define `<agent-chat>` or a caller-supplied tag name
-- accept `transport`, `initialState`, `slots`, and `agentOptions` as JavaScript
+- accept `transport`, `initialState`, `components`, and `agentOptions` as JavaScript
   properties
 - pass `agentOptions.className` or the `chat-class` attribute through to the
   rendered `AgentChat`
@@ -281,7 +519,7 @@ Headless usage:
 ```tsx
 const thread = useAgentThread(threadId);
 const approvals = useAgentApprovals(threadId);
-const composer = useAgentComposer(threadId);
+const composer = useAgentComposerController(threadId);
 ```
 
 ## Export Boundary Gates

@@ -7,7 +7,7 @@ export const AGENT_RETENTION_POLICY = {
   protocolNotificationsMax: 100,
   skillsCwdEntriesMax: 50,
   statusBannersMax: 20,
-  threadRegistrySnapshotsMax: 200,
+  threadCollectionEntriesMax: 200,
   warningsMax: 50,
 } as const;
 

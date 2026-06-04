@@ -1,6 +1,42 @@
-import type { AgentTransportEvent } from "@nyosegawa/agent-ui-core";
+import type {
+  AgentDiagnosticAudience,
+  AgentTransportEvent,
+} from "@nyosegawa/agent-ui-core";
+import type { DynamicToolDebugEvent } from "./dynamic-tools";
+
+export type AgentUiBridgeHealthPhase =
+  | "admissionChecked"
+  | "processSpawned"
+  | "initialized"
+  | "connected"
+  | "idleClosed"
+  | "backpressureClosed"
+  | "pendingRequestCount"
+  | "diagnostic";
+
+export interface AgentUiBridgeHealthState {
+  admissionChecked: boolean;
+  connected: boolean;
+  initialized: boolean;
+  lastRedactedDiagnostic?: string;
+  pendingRequestCount: number;
+  processSpawned: boolean;
+}
+
+export interface AgentUiBridgeHealthEvent {
+  audience: readonly AgentDiagnosticAudience[];
+  closeCode?: number;
+  closeReason?: string;
+  diagnostic?: string;
+  phase: AgentUiBridgeHealthPhase;
+  state: AgentUiBridgeHealthState;
+  timestamp: number;
+  type: "bridgeHealth";
+}
 
 export interface AgentUiHostEventSink {
+  onBridgeHealthEvent?: (event: AgentUiBridgeHealthEvent) => void;
+  onDynamicToolEvent?: (event: DynamicToolDebugEvent) => void;
   onServerRequest?: (event: AgentTransportEvent) => void;
   onThreadEvent?: (event: AgentTransportEvent) => void;
   onTransportEvent?: (event: AgentTransportEvent) => void;

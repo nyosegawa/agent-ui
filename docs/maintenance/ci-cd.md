@@ -41,9 +41,14 @@ Playwright config changes are conservative and run broader checks.
 
 Docs-only changes run the repository policy gate. Package README and changelog
 changes are package-surface changes, so they are not treated as docs-only.
+Docs that change documented example gates, package exports, protocol
+classification, bridge policy, or browser-visible contracts should still run
+the focused local validations named in [Testing](../architecture/testing.md)
+before review, even when hosted CI treats the PR as docs-only.
 
 The `Compatibility` workflow covers Node 20, 22, and 24 smoke checks plus pnpm
-workspace smoke when changes are not docs-only.
+workspace smoke for package and toolchain compatibility-sensitive changes.
+Docs-only and unrelated non-package surfaces skip it.
 
 `Package Validation` is a manual workflow for rerunning package checks without
 duplicating every PR run.
@@ -104,6 +109,10 @@ bun run test:api-snapshots
 bun run test:package-resolution
 bun run test:e2e:fixtures
 ```
+
+For docs that document a narrower surface, use the focused example, protocol,
+package, or browser gates from [Testing](../architecture/testing.md), then
+record the exact commands in the PR notes.
 
 Before npm publish, always run:
 
