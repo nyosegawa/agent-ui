@@ -3450,7 +3450,7 @@ Phase 10 notes:
   - [x] which tests protect the contract
 - [x] Run focused validation for docs, skills, examples, package/API surfaces
   touched by the rename and skill refresh.
-- [ ] Commit in small units, spawn an `agent-ui-review` subagent for each commit
+- [x] Commit in small units, spawn an `agent-ui-review` subagent for each commit
   unit, fix review findings, push, and watch GitHub Actions to a concrete
   pass/fail state.
 
@@ -3538,6 +3538,11 @@ Phase 10 notes:
   - `bun run validate:e2e` passed: fixture Playwright suite passed 53 tests
     with 1 screenshot-refresh test skipped, and real-local Playwright suite
     passed 15 tests.
+- 2026-06-04 Phase 17 PR validation:
+  - Pushed through commit `26eb728`.
+  - GitHub Actions on PR #7 passed for head
+    `26eb7283bf6174e86553f2c17763755780d72c41`: CI and Compatibility both
+    completed successfully.
 
 ## Completion Criteria
 
@@ -3560,4 +3565,4 @@ Phase 10 notes:
 - [x] All relevant docs are updated.
 - [x] Host integration docs are sufficient for host consumers.
 - [x] Unit, package, e2e, and browser validations pass.
-- [ ] GitHub Actions pass.
+- [x] GitHub Actions pass.
