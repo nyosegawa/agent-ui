@@ -3639,6 +3639,11 @@ Phase 10 notes:
     `bun test packages/server/test/upload.test.ts` pass;
     `bunx vitest run test/docs-staleness.test.ts` pass; `bun run lint` pass;
     `bun run typecheck` pass.
+  - P2 local media review follow-up 2: SVG body sniff now skips XML comments,
+    processing instructions, DOCTYPE, whitespace, and BOM before checking the
+    first real element, and upload tests cover delayed `<svg>` after an XML
+    comment. Focused validation: `bun test packages/server/test/upload.test.ts`
+    pass.
   - P2 current-design docs cleanup:
     - what remains internal: reducer/store reconciliation details, optimistic
       operation maps, generated schema internals, non-exported permission

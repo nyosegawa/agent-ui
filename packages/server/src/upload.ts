@@ -351,8 +351,38 @@ function isSvgUpload(name: string, contentType: string, body: Buffer): boolean {
   const mimeType = contentType.split(";")[0]?.trim().toLowerCase();
   if (mimeType === "image/svg+xml") return true;
   if (name.toLowerCase().endsWith(".svg")) return true;
-  const prefix = body.subarray(0, 512).toString("utf8").trimStart().toLowerCase();
-  return prefix.startsWith("<svg") || prefix.startsWith("<?xml") && prefix.includes("<svg");
+  return firstMarkupElementName(body) === "svg";
+}
+
+function firstMarkupElementName(body: Buffer): string | undefined {
+  const text = body.toString("utf8").replace(/^\uFEFF/, "");
+  let index = 0;
+  while (index < text.length) {
+    while (/\s/.test(text[index] ?? "")) index += 1;
+    if (text[index] !== "<") return undefined;
+    const rest = text.slice(index);
+    if (rest.startsWith("<!--")) {
+      const end = text.indexOf("-->", index + 4);
+      if (end === -1) return undefined;
+      index = end + 3;
+      continue;
+    }
+    if (rest.startsWith("<?")) {
+      const end = text.indexOf("?>", index + 2);
+      if (end === -1) return undefined;
+      index = end + 2;
+      continue;
+    }
+    if (/^<!doctype\b/i.test(rest)) {
+      const end = text.indexOf(">", index + 2);
+      if (end === -1) return undefined;
+      index = end + 1;
+      continue;
+    }
+    const match = /^<([a-zA-Z][\w:.-]*)\b/.exec(rest);
+    return match?.[1]?.toLowerCase();
+  }
+  return undefined;
 }
 
 function writeJson(response: ServerResponse, statusCode: number, body: unknown): void {
