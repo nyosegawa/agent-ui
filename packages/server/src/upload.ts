@@ -201,6 +201,7 @@ export function createAgentUiLocalMediaHelper(
       response.setHeader("content-type", asset.mimeType);
       response.setHeader("content-length", String(body.byteLength));
       response.setHeader("cache-control", "no-store");
+      response.setHeader("x-content-type-options", "nosniff");
       if (request.method === "HEAD") {
         response.end();
         return;
@@ -333,13 +334,18 @@ function defaultRedactedPath(path: string, name: string): string {
 }
 
 function isAllowedContentType(contentType: string): boolean {
-  return /^(application\/octet-stream|image\/[-+.\w]+|text\/plain)(?:\s*;|$)/i.test(
-    contentType,
+  const mimeType = contentType.split(";")[0]?.trim().toLowerCase();
+  if (mimeType === "image/svg+xml") return false;
+  return (
+    mimeType === "application/octet-stream" ||
+    mimeType === "text/plain" ||
+    Boolean(mimeType?.startsWith("image/"))
   );
 }
 
 function writeJson(response: ServerResponse, statusCode: number, body: unknown): void {
   response.statusCode = statusCode;
   response.setHeader("content-type", "application/json");
+  response.setHeader("x-content-type-options", "nosniff");
   response.end(JSON.stringify(body));
 }

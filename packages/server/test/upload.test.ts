@@ -115,7 +115,18 @@ describe("createAgentUiLocalUploadHandler", () => {
       method: "POST",
     });
     expect(contentTypeResponse.status).toBe(415);
+    expect(contentTypeResponse.headers.get("x-content-type-options")).toBe(
+      "nosniff",
+    );
     await contentTypeResponse.text();
+    const svgResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
+      body: "<svg><script>alert(1)</script></svg>",
+      headers: { "content-type": "image/svg+xml; charset=utf-8" },
+      method: "POST",
+    });
+    expect(svgResponse.status).toBe(415);
+    expect(svgResponse.headers.get("x-content-type-options")).toBe("nosniff");
+    await svgResponse.text();
     const filenameResponse = await fetch(`http://127.0.0.1:${address.port}/agent-ui/upload`, {
       body: "x",
       headers: { "content-type": "text/plain", "x-agent-ui-filename": "%E0%A4%A" },
@@ -221,7 +232,16 @@ describe("createAgentUiLocalMediaHelper", () => {
     const assetResponse = await fetch(`http://127.0.0.1:${address.port}${result.url}`);
     expect(assetResponse.status).toBe(200);
     expect(assetResponse.headers.get("content-type")).toBe("image/png");
+    expect(assetResponse.headers.get("x-content-type-options")).toBe("nosniff");
     await expect(assetResponse.text()).resolves.toBe("image-bytes");
+
+    const assetHeadResponse = await fetch(`http://127.0.0.1:${address.port}${result.url}`, {
+      method: "HEAD",
+    });
+    expect(assetHeadResponse.status).toBe(200);
+    expect(assetHeadResponse.headers.get("x-content-type-options")).toBe(
+      "nosniff",
+    );
   });
 
   it("serves only registered asset IDs and supports host admission checks", async () => {

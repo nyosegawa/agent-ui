@@ -3576,9 +3576,9 @@ Phase 10 notes:
 - [x] Fix P2 dynamic helper permission bounding for protocol-shaped filesystem
   permissions by sharing server-request policy bounding behavior.
 - [x] Add dynamic helper permission tests that reject broadening grants.
-- [ ] Fix P2 local media SVG/active image serving hardening and add
+- [x] Fix P2 local media SVG/active image serving hardening and add
   `nosniff`.
-- [ ] Add upload/local media tests for SVG rejection or safe serving headers.
+- [x] Add upload/local media tests for SVG rejection or safe serving headers.
 - [ ] Clean current-design docs drift in `PLAN.md`, `TODO.md`,
   `docs/reference/package-exports.md`, and `docs/guides/host-integration.md`.
 - [ ] Record design note covering:
@@ -3628,4 +3628,9 @@ Phase 10 notes:
     `@nyosegawa/agent-ui-server` public API. Focused validation:
     `bun test packages/server/test/websocket.test.ts` pass;
     `bun run test:api-snapshots` pass after rebuilding package declarations;
+    `bun run typecheck` pass.
+  - P2 local media hardening: upload rejects `image/svg+xml`, local asset
+    responses include `X-Content-Type-Options: nosniff`, and JSON error
+    responses also set `nosniff`. Focused validation:
+    `bun test packages/server/test/upload.test.ts` pass; `bun run lint` pass;
     `bun run typecheck` pass.
