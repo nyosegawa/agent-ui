@@ -146,14 +146,15 @@ export function selectThreadView(
 ): AgentThreadView | undefined {
   const thread = selectThread(state, threadId);
   if (!thread) return undefined;
-  const pending = Object.values(thread.operations).find(
+  const operations = Object.values(thread.operations ?? {});
+  const pending = operations.find(
     (operation) => operation.status === "pending",
   );
   return {
     cwd: thread.metadata.cwd,
     error:
       thread.activity === "failed"
-        ? Object.values(thread.operations).find((operation) => operation.error)?.error
+        ? operations.find((operation) => operation.error)?.error
         : undefined,
     id: thread.id,
     isActive: selectActiveThread(state)?.id === thread.id,

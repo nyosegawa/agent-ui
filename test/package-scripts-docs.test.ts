@@ -176,15 +176,15 @@ describe("package script documentation", () => {
 
     expect(uploadSource).toContain("const DEFAULT_MAX_UPLOAD_BYTES = 16 * 1024 * 1024");
     expect(uploadSource).toContain("const DEFAULT_UPLOAD_TTL_MS = 60 * 60 * 1000");
-    expect(uploadSource).toContain(
-      "application\\/octet-stream|image\\/[-+.\\w]+|text\\/plain",
-    );
+    expect(uploadSource).toContain('mimeType === "application/octet-stream"');
+    expect(uploadSource).toContain('mimeType === "text/plain"');
+    expect(uploadSource).toContain('mimeType?.startsWith("image/")');
+    expect(uploadSource).toContain('mimeType === "image/svg+xml"');
     expect(uploadSource).toContain("mimeType && !isAllowedContentType(mimeType)");
 
     expect(serverBridgeDocs).toContain("missing `content-type` is accepted");
-    expect(serverBridgeDocs).toContain(
-      "`application/octet-stream`, `image/*`, or `text/plain`",
-    );
+    expect(serverBridgeDocs).toContain("`application/octet-stream`, non-SVG `image/*`");
+    expect(serverBridgeDocs).toContain("`text/plain`");
     expect(serverBridgeDocs).toContain("16 MB default limit");
     expect(serverBridgeDocs).toContain("one hour default TTL");
   });

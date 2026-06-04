@@ -3087,9 +3087,21 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const prompt = vi.spyOn(globalThis, "prompt").mockReturnValue("Renamed thread");
     const initialState = createInitialAgentState();
+    initialState.account = {
+      account: { email: "user@example.com", planType: "pro" },
+      status: "authenticated",
+    };
+    initialState.connection = { status: "connected" };
     initialState.threadLifecycle.activeThreadId = "thread-actions";
+    initialState.threadLifecycle.collections.all.ids = ["thread-actions"];
     initialState.threads["thread-actions"] = {
+      activity: "idle",
+      availability: "available",
+      id: "thread-actions",
+      metadata: { title: "Action thread" },
+      operations: {},
       orderedTurnIds: ["turn-actions"],
+      storage: "stored",
       status: "loaded",
       thread: { id: "thread-actions", name: "Action thread" },
       turns: {
