@@ -56,6 +56,10 @@ describe("npm release readiness", () => {
     expect(workflow).toContain("environment: npm-release");
     expect(workflow).toContain("NPM_CONFIG_PROVENANCE: true");
     expect(workflow).not.toContain("pull_request_target");
+
+    const publishScript = await readFile(join(root, "scripts", "publish-npm-packages.mjs"), "utf8");
+    expect(publishScript).toContain('run("bun", ["run", "build"])');
+    expect(publishScript).toContain('run("bunx", ["changeset", "publish"])');
   });
 
   it("documents npm release operations and checklist gates", async () => {
@@ -66,7 +70,9 @@ describe("npm release readiness", () => {
     expect(npmRelease).toContain("Do not increment package versions on every `main` push");
     expect(npmRelease).toContain("manual");
     expect(npmRelease).toContain("npm-release");
+    expect(npmRelease).toContain("builds package `dist` output inside");
     expect(npmRelease).toContain("bunx changeset publish");
+    expect(npmRelease).toContain("package would publish without `dist` files");
     expect(npmRelease).toContain("post-publish smoke");
     expect(checklist).toContain("NPM_TOKEN");
     expect(checklist).toContain("bun run validate:release");

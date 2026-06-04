@@ -35,7 +35,7 @@ Canonical validation tiers:
   normalization coverage. The legacy `bun run test:fixtures` command delegates
   to `bun run test:core-fixtures`; both are the core reducer/state fixture gate,
   not browser fixture e2e and not raw JSON-RPC conformance.
-- `bun run validate:packages`: fresh package build, packlist smoke, Node
+- `bun run validate:packages`: fresh package build, npm packlist smoke, Node
   compatibility smoke, `publint`, and `arethetypeswrong` in the required order.
 - `bun run validate:e2e`: clean Playwright ports, then deterministic browser
   e2e.
@@ -133,7 +133,9 @@ workspace TypeScript dependencies.
 The manual release workflow runs `bun run validate:release` and then
 `bun run validate:e2e`, so the real-local fake App Server suite is release
 evidence without blocking every pull request. npm publish is a separate
-Environment-gated job after release validation.
+Environment-gated job after release validation. The publish job runs
+`bun run release:publish`, which performs its own package build before
+Changesets publishes immutable npm tarballs.
 
 ## Protocol Tests
 
