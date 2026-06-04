@@ -3585,9 +3585,9 @@ Phase 10 notes:
   - [x] what host responsibility is intentionally not handled
   - [x] which example proves the design
   - [x] which tests protect the contract
-- [ ] Run focused validation for core reducer, server security, docs staleness,
+- [x] Run focused validation for core reducer, server security, docs staleness,
   package/API/release gates touched by the fixes.
-- [ ] Commit in small units, spawn an `agent-ui-review` subagent for each commit
+- [x] Commit in small units, spawn an `agent-ui-review` subagent for each commit
   unit, fix review findings, push, and watch GitHub Actions to a concrete
   pass/fail state.
 
@@ -3658,3 +3658,14 @@ Phase 10 notes:
       package-resolution tests, package validation, focused core reducer tests,
       websocket permission tests, and upload tests.
     - Focused validation: `bunx vitest run test/docs-staleness.test.ts` pass.
+  - Final Phase 18 validation before handoff:
+    `bun test packages/core/test/reducer.test.ts` pass,
+    `bun test packages/server/test/websocket.test.ts` pass,
+    `bun test packages/server/test/upload.test.ts` pass,
+    `bunx vitest run test/docs-staleness.test.ts` pass,
+    `bun run lint` pass, `bun run typecheck` pass,
+    `bun run test:api-snapshots` pass,
+    `bun run test:package-resolution` pass, and
+    `bun run validate:packages` pass. Package validation still reports the
+    existing publint repository URL suggestions and Vite chunk-size warnings,
+    with no failing checks.
