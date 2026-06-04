@@ -3315,17 +3315,17 @@ Phase 10 notes:
 - [x] Review `git status --short`.
 - [x] Confirm no unrelated user changes are staged.
 - [x] Commit logically grouped changes as implementation progresses.
-- [ ] Push the branch after meaningful checkpoints.
-- [ ] Open a draft PR when the design is implemented enough for review.
+- [x] Push the branch after meaningful checkpoints.
+- [x] Open a draft PR when the design is implemented enough for review.
 - [ ] Include PR summary covering:
-  - [ ] lifecycle model
-  - [ ] optimistic first message
-  - [ ] local file/resource contract
-  - [ ] controller/component layering
-  - [ ] bridge policy/diagnostics
-  - [ ] examples updated
-  - [ ] docs updated
-  - [ ] validation run
+  - [x] lifecycle model
+  - [x] optimistic first message
+  - [x] local file/resource contract
+  - [x] controller/component layering
+  - [x] bridge policy/diagnostics
+  - [x] examples updated
+  - [x] docs updated
+  - [x] validation run
 - [ ] Watch GitHub Actions to a concrete pass/fail state before claiming ready.
 - [ ] Resolve CI failures with focused commits.
 - [ ] Mark PR ready only after all validation and browser checks pass.
@@ -3418,6 +3418,13 @@ Phase 10 notes:
     lint`, `bun run typecheck`, `bun run validate:packages`, and `bun run
     test:package-resolution` passed. `validate:packages` still reports only the
     existing `publint` repository URL suggestions and Vite chunk-size warnings.
+- 2026-06-04 PR checkpoint:
+  - Pushed `codex/agent-ui-vnext-design-plan` to `origin`.
+  - Opened draft PR #7: https://github.com/nyosegawa/agent-ui/pull/7
+  - PR summary covers lifecycle model, optimistic first message, local
+    file/resource contract, controller/component layering, bridge
+    policy/diagnostics, updated examples, updated docs, validation runs, and
+    subagent review notes.
 
 ## Completion Criteria
 
