@@ -3,9 +3,8 @@ import { expect, type Locator, type Page } from "@playwright/test";
 export const desktopViewport = { height: 900, width: 1280 } as const;
 export const mobileViewport = { height: 900, width: 390 } as const;
 
-const visualSnapshotSelectors = [
+const alwaysVisibleSurfaceSelectors = [
   ["shell", ".aui-shell"],
-  ["sidebar", ".aui-sidebar"],
   ["chat", ".aui-chat"],
   ["status", ".aui-status"],
   ["usage", ".aui-usage"],
@@ -16,6 +15,10 @@ const visualSnapshotSelectors = [
   ["approvals", ".aui-approvals"],
   ["composer", ".aui-composer"],
   ["composerSettings", ".aui-composer-settings"],
+] as const;
+
+const desktopOnlySurfaceSelectors = [
+  ["sidebar", ".aui-sidebar"],
 ] as const;
 
 export const viewportSurfaceSelectors = [
@@ -39,8 +42,40 @@ export function firstApprovalActionButtons(approval: Locator) {
   ];
 }
 
-export async function visualContractJson(page: Page) {
-  return `${JSON.stringify(await visualContract(page), null, 2)}\n`;
+export async function expectVisualLayoutContract(
+  page: Page,
+  mode: "desktop" | "mobile",
+) {
+  const contract = await visualContract(page);
+  expect(contract.document.scrollWidth, JSON.stringify(contract.document)).toBeLessThanOrEqual(
+    contract.document.clientWidth + 1,
+  );
+  const expectedSurfaces =
+    mode === "desktop"
+      ? [...alwaysVisibleSurfaceSelectors, ...desktopOnlySurfaceSelectors]
+      : alwaysVisibleSurfaceSelectors;
+  for (const [name, selector] of expectedSurfaces) {
+    const surface = contract.surfaces[name];
+    expect(surface, selector).toBeDefined();
+    expect(surface.present, selector).toBe(true);
+    expect(surface.visible, selector).toBe(true);
+    expect(surface.display, selector).not.toBe("none");
+    if (mode === "mobile") {
+      expect(surface.width, selector).toBeLessThanOrEqual(contract.document.clientWidth + 1);
+    }
+  }
+  const shell = contract.surfaces.shell;
+  const sidebar = contract.surfaces.sidebar;
+  const chat = contract.surfaces.chat;
+  if (mode === "desktop") {
+    expect(shell.gridColumnCount, JSON.stringify(shell)).toBeGreaterThanOrEqual(2);
+    expect(sidebar?.width, JSON.stringify(sidebar)).toBeGreaterThanOrEqual(220);
+    expect(sidebar?.width, JSON.stringify(sidebar)).toBeLessThanOrEqual(340);
+    expect(chat.width, JSON.stringify(chat)).toBeGreaterThan(600);
+  } else {
+    expect(shell.gridColumnCount, JSON.stringify(shell)).toBe(1);
+    expect(chat.width, JSON.stringify(chat)).toBeGreaterThan(320);
+  }
 }
 
 export async function expectActuallyClickable(locator: Locator) {
@@ -208,29 +243,59 @@ export async function elementMetrics(page: Page, selector: string) {
   }, selector);
 }
 
-async function visualContract(page: Page) {
+interface VisualSurfaceContract {
+  display: string;
+  gridColumnCount: number;
+  height: number;
+  overflowX: string;
+  overflowY: string;
+  present: boolean;
+  visible: boolean;
+  width: number;
+}
+
+interface VisualContract {
+  document: {
+    clientWidth: number;
+    scrollWidth: number;
+  };
+  surfaces: Record<string, VisualSurfaceContract>;
+}
+
+async function visualContract(page: Page): Promise<VisualContract> {
   return page.evaluate((entries) => {
-    const snapshot: Record<string, unknown> = {
+    const gridColumnCount = (gridTemplateColumns: string): number => {
+      if (!gridTemplateColumns || gridTemplateColumns === "none") return 1;
+      return gridTemplateColumns.trim().split(/\s+/).length;
+    };
+    const snapshot: VisualContract = {
       document: {
         clientWidth: document.documentElement.clientWidth,
         scrollWidth: document.documentElement.scrollWidth,
       },
+      surfaces: {},
     };
 
     for (const [name, selector] of entries) {
       const element = document.querySelector<HTMLElement>(selector);
       if (!element) {
-        snapshot[name] = { present: false };
+        snapshot.surfaces[name] = {
+          display: "none",
+          gridColumnCount: 0,
+          height: 0,
+          overflowX: "missing",
+          overflowY: "missing",
+          present: false,
+          visible: false,
+          width: 0,
+        };
         continue;
       }
       const rect = element.getBoundingClientRect();
       const styles = getComputedStyle(element);
-      snapshot[name] = {
-        backgroundColor: styles.backgroundColor,
-        borderColor: styles.borderColor,
-        borderRadius: styles.borderRadius,
+      snapshot.surfaces[name] = {
         display: styles.display,
-        gridTemplateColumns: styles.gridTemplateColumns,
+        gridColumnCount: gridColumnCount(styles.gridTemplateColumns),
         height: Math.round(rect.height),
         overflowX: styles.overflowX,
         overflowY: styles.overflowY,
@@ -241,5 +306,5 @@ async function visualContract(page: Page) {
     }
 
     return snapshot;
-  }, visualSnapshotSelectors);
+  }, [...alwaysVisibleSurfaceSelectors, ...desktopOnlySurfaceSelectors]);
 }

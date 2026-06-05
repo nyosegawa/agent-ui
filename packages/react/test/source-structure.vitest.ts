@@ -151,6 +151,75 @@ describe("React package source structure", () => {
     expect(snapshot).not.toContain("SkillsListParams");
   });
 
+  it("keeps Codex generated thread responses out of the React public API", () => {
+    const snapshot = readFileSync(reactApiSnapshot, "utf8");
+    expect(snapshot).not.toContain("ThreadStartResponse");
+    expect(snapshot).not.toContain("ThreadResumeResponse");
+    expect(snapshot).not.toContain("ThreadForkResponse");
+    expect(snapshot).not.toContain("ThreadReadResponse");
+    expect(snapshot).not.toContain("ThreadArchiveResponse");
+    expect(snapshot).not.toContain("ThreadUnarchiveResponse");
+    expect(snapshot).not.toContain("ThreadSetNameResponse");
+    expect(snapshot).not.toContain("ThreadCompactStartResponse");
+    expect(snapshot).not.toContain("ThreadRollbackResponse");
+    expect(snapshot).not.toMatch(/type ThreadStatus = \{[\s\S]*?type:/);
+    expect(snapshot).not.toMatch(/type Thread = \{[\s\S]*?status\?: ThreadStatus/);
+  });
+
+  it("keeps Codex generated turn responses out of the React public API", () => {
+    const snapshot = readFileSync(reactApiSnapshot, "utf8");
+    expect(snapshot).not.toContain("TurnStartResponse");
+    expect(snapshot).not.toContain("TurnSteerResponse");
+    expect(snapshot).not.toContain("TurnInterruptResponse");
+  });
+
+  it("keeps Codex generated response promises out of the React public API", () => {
+    const snapshot = readFileSync(reactApiSnapshot, "utf8");
+    expect(snapshot).not.toMatch(/Promise<[^>]*Response>/);
+  });
+
+  it("keeps raw thread compatibility helpers out of the React root API", () => {
+    const snapshot = readFileSync(reactApiSnapshot, "utf8");
+    expect(snapshot).not.toContain("threadUpsertEvent");
+    expect(snapshot).not.toContain("threadSnapshotEvents");
+    expect(snapshot).not.toContain("rawThreadId");
+    expect(snapshot).not.toContain("threadProjectPath");
+  });
+
+  it("keeps first-message operation internals out of the React public API", () => {
+    const snapshot = readFileSync(reactApiSnapshot, "utf8");
+    expect(snapshot).not.toContain("useInternalAgentComposerController");
+    expect(snapshot).not.toContain("InternalAgentComposerController");
+    expect(snapshot).not.toContain("startWithMessage");
+    expect(snapshot).not.toContain("operationsById");
+    expect(snapshot).not.toContain("retryOperation");
+    expect(snapshot).not.toContain("cancelOperation");
+  });
+
+  it("keeps raw protocol payload fields out of public declaration snapshots", () => {
+    const coreSnapshot = readFileSync(
+      join(repoRoot, "test", "api-snapshots", "core__index.d.ts"),
+      "utf8",
+    );
+    for (const interfaceName of [
+      "AgentThread",
+      "ThreadTokenUsage",
+      "AgentItemState",
+      "AgentItemBlock",
+      "AgentTurn",
+      "TurnPlanState",
+      "TurnDiffState",
+    ]) {
+      expect(interfaceBody(coreSnapshot, interfaceName), interfaceName).not.toContain("raw");
+    }
+
+    const reactSnapshot = readFileSync(reactApiSnapshot, "utf8");
+    expect(reactSnapshot).not.toContain("AgentResourceResolution = AgentResolvedResource | string");
+    expect(reactSnapshot).not.toContain("AgentTranscriptBlock = Omit<");
+    expect(reactSnapshot).not.toContain("AgentTranscriptItem = Omit<");
+    expect(reactSnapshot).not.toContain("raw: any");
+  });
+
   it("keeps style chunks responsibility-sized", () => {
     for (const name of readdirSync(styleDir)) {
       if (!name.endsWith(".css")) continue;
@@ -262,4 +331,9 @@ function responsibilitySizeFailure(
         : "Read the component, identify the UI/state ownership boundaries, delete stale paths, and move coherent behavior into purpose-named component modules.",
     "If the file is still large after real cleanup, add a focused module with tests/docs that explain the new responsibility boundary.",
   ].join("\n");
+}
+
+function interfaceBody(snapshot: string, interfaceName: string): string {
+  const match = new RegExp(`interface ${interfaceName} \\{([\\s\\S]*?)\\n\\}`).exec(snapshot);
+  return match?.[1] ?? "";
 }

@@ -39,6 +39,27 @@ export type {
   ThreadStartOptions,
 } from "../request-options";
 
+export interface AgentThreadStartResult {
+  threadId: ThreadId;
+}
+
+export interface AgentThreadResumeResult {
+  threadId: ThreadId;
+}
+
+export interface AgentThreadReadResult {
+  threadId: ThreadId;
+}
+
+export interface AgentThreadForkResult {
+  threadId: ThreadId;
+}
+
+export interface AgentThreadHistoryResult {
+  nextCursor: string | null;
+  threadIds: ThreadId[];
+}
+
 export function useAgentThread(threadId?: ThreadId) {
   const { dispatch, state } = useAgentContext();
   const codex = useCodexSession();
@@ -69,12 +90,11 @@ export function useAgentThread(threadId?: ThreadId) {
           id: threadId,
           name: stringValue(rawThreadRecord.name),
           path: threadProjectPath(rawThreadRecord),
-          raw: rawThread,
         },
         type: "thread/started",
       });
       syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
-      return result;
+      return { threadId } satisfies AgentThreadStartResult;
     },
     [codex, dispatch, runSettings.cwd, runSettings.modelId],
   );
@@ -97,7 +117,7 @@ export function useAgentThread(threadId?: ThreadId) {
       if (rawThreadRecord && hasThreadId(rawThreadRecord)) {
         syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       }
-      return result;
+      return { threadId: canonicalThreadId ?? id } satisfies AgentThreadResumeResult;
     },
     [codex, dispatch],
   );
@@ -127,45 +147,43 @@ export function useAgentThreadActions(threadId?: ThreadId) {
   const renameThread = useCallback(
     async (name: string) => {
       const id = requireThreadId();
-      const response = await codex.thread.setName(id, name);
+      await codex.thread.setName(id, name);
       dispatch({ name, threadId: id, type: "thread/name/updated" });
-      return response;
     },
     [codex, dispatch, requireThreadId],
   );
 
   const archiveThread = useCallback(async () => {
     const id = requireThreadId();
-    const response = await codex.thread.archive(id);
+    await codex.thread.archive(id);
     composerQueue.clearThreadFollowUps(id);
     dispatch({ status: "archived", threadId: id, type: "thread/status/changed" });
-    return response;
   }, [codex, composerQueue, dispatch, requireThreadId]);
 
   const unarchiveThread = useCallback(async () => {
     const id = requireThreadId();
-    const response = await codex.thread.unarchive(id);
+    await codex.thread.unarchive(id);
     dispatch({ status: "loaded", threadId: id, type: "thread/status/changed" });
-    return response;
   }, [codex, dispatch, requireThreadId]);
 
   const forkThread = useCallback(
     async (params: ThreadForkOptions = {}) => {
       const id = requireThreadId();
-      return codex.thread.fork(id, codexThreadForkParams(params));
+      const response = await codex.thread.fork(id, codexThreadForkParams(params));
+      return { threadId: responseThreadId(response) ?? id } satisfies AgentThreadForkResult;
     },
     [codex, requireThreadId],
   );
 
   const compactThread = useCallback(async () => {
     const id = requireThreadId();
-    return codex.thread.compactStart(id);
+    await codex.thread.compactStart(id);
   }, [codex, requireThreadId]);
 
   const rollbackThread = useCallback(
     async (numTurns = 1) => {
       const id = requireThreadId();
-      return codex.thread.rollback(id, numTurns);
+      await codex.thread.rollback(id, numTurns);
     },
     [codex, requireThreadId],
   );
@@ -211,15 +229,18 @@ export function useAgentThreadHistory() {
           : Array.isArray(responseRecord?.threads)
             ? responseRecord.threads
             : [];
+        const threadIds: ThreadId[] = [];
         for (const rawThread of rawThreads.filter(isRecordWithThreadId)) {
           dispatch(threadUpsertEvent(rawThread));
+          const threadId = rawThreadId(rawThread);
+          if (threadId) threadIds.push(threadId);
         }
-        setCursor(
+        const nextCursor =
           stringValue(responseRecord?.nextCursor) ??
-            stringValue(responseRecord?.next_cursor) ??
-            null,
-        );
-        return responseRecord ?? {};
+          stringValue(responseRecord?.next_cursor) ??
+          null;
+        setCursor(nextCursor);
+        return { nextCursor, threadIds } satisfies AgentThreadHistoryResult;
       } catch (caught) {
         const nextError = caught instanceof Error ? caught : new Error(String(caught));
         setError(nextError);
@@ -266,7 +287,7 @@ export function useAgentThreadReader() {
       if (options.activate !== false) {
         syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       }
-      return response;
+      return { threadId: rawThreadId(rawThreadRecord) ?? threadId } satisfies AgentThreadReadResult;
     },
     [codex, dispatch],
   );
@@ -307,4 +328,10 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
+}
+
+function responseThreadId(response: unknown): ThreadId | undefined {
+  const responseRecord = asRecord(response);
+  const rawThread = asRecord(responseRecord?.thread) ?? responseRecord;
+  return rawThread ? rawThreadId(rawThread) : undefined;
 }

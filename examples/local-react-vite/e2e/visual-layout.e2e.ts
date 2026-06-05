@@ -7,21 +7,21 @@ import {
   expectWithinViewport,
   mobileViewport,
   viewportSurfaceSelectors,
-  visualContractJson,
+  expectVisualLayoutContract,
 } from "./support/visual-contracts";
 
 test("matches the desktop shell layout contract", async ({ page }) => {
   await page.setViewportSize(desktopViewport);
   await page.goto("/");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
-  expect(await visualContractJson(page)).toMatchSnapshot("desktop-layout.json");
+  await expectVisualLayoutContract(page, "desktop");
 });
 
 test("matches the mobile shell layout contract", async ({ page }) => {
   await page.setViewportSize(mobileViewport);
   await page.goto("/");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
-  expect(await visualContractJson(page)).toMatchSnapshot("mobile-layout.json");
+  await expectVisualLayoutContract(page, "mobile");
 });
 
 test("rich transcript mobile keeps approval and composer surfaces inside the viewport", async ({

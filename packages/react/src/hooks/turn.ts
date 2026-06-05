@@ -23,7 +23,7 @@ export function useAgentTurn(threadId?: ThreadId) {
       const executionMode = AGENT_EXECUTION_MODES.find(
         (mode) => mode.id === runSettings.executionMode,
       );
-      return codex.turn.start({
+      await codex.turn.start({
         cwd: runSettings.cwd,
         effort: codexReasoningEffort(runSettings.effort),
         input: normalizeTurnInput(input),
@@ -46,7 +46,7 @@ export function useAgentTurn(threadId?: ThreadId) {
   const interruptTurn = useCallback(
     async (turnId: string) => {
       if (!resolvedThreadId) throw new Error("No active thread");
-      return codex.turn.interrupt(resolvedThreadId, turnId);
+      await codex.turn.interrupt(resolvedThreadId, turnId);
     },
     [codex, resolvedThreadId],
   );
@@ -54,7 +54,7 @@ export function useAgentTurn(threadId?: ThreadId) {
   const steerTurn = useCallback(
     async (expectedTurnId: string, input: string | AgentUserInput[]) => {
       if (!resolvedThreadId) throw new Error("No active thread");
-      return codex.turn.steer({
+      await codex.turn.steer({
         expectedTurnId,
         input: normalizeTurnInput(input),
         threadId: resolvedThreadId,

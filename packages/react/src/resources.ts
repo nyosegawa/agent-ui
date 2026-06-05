@@ -3,25 +3,37 @@ import type { AgentUserInput } from "./agent-input";
 
 export type AgentResourceKind =
   | "image"
-  | "video"
   | "file"
   | "app"
   | "plugin"
-  | "local-media";
+  | "url"
+  | "unavailable";
 
-export interface AgentResolvedResource {
+export interface AgentResolvedResourceBase {
   displayName?: string;
   id?: string;
   input?: AgentUserInput | AgentUserInput[];
-  kind?: AgentResourceKind;
   mimeType?: string;
   name?: string;
   path?: string;
   previewUrl?: string;
   redactedPath?: string;
+  reason?: string;
   sizeBytes?: number;
   url?: string;
 }
+
+export interface AgentResolvedUrlResource extends AgentResolvedResourceBase {
+  kind: "url";
+}
+
+export interface AgentUnavailableResource extends AgentResolvedResourceBase {
+  kind: "unavailable";
+}
+
+export type AgentResolvedResource =
+  | AgentResolvedUrlResource
+  | AgentUnavailableResource;
 
 export interface AgentFileResourceRequest {
   file: File;
@@ -41,7 +53,6 @@ export type AgentResourceRequest =
 
 export type AgentResourceResolution =
   | AgentResolvedResource
-  | string
   | null
   | undefined;
 
@@ -50,15 +61,14 @@ export type AgentResourceResolver = (
 ) => AgentResourceResolution | Promise<AgentResourceResolution>;
 
 export function agentResourceUrl(
-  resource: AgentResourceResolution,
+  resource: AgentResolvedResourceBase | null | undefined,
 ): string | undefined {
   if (!resource) return undefined;
-  if (typeof resource === "string") return resource;
   return resource.previewUrl ?? resource.url;
 }
 
 export function agentResourceDisplayName(
-  resource: AgentResolvedResource | null | undefined,
+  resource: AgentResolvedResourceBase | null | undefined,
   fallback?: string,
 ): string | undefined {
   return resource?.displayName ?? resource?.name ?? fallback;

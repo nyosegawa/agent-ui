@@ -115,7 +115,10 @@ resolveLocalAttachment={async (file, kind) => {
         : textInput(`Attached file: ${asset.path}`),
   };
 }}
-resolveLocalMediaUrl={(path) => browserUrlForLocalMediaPath(path)}
+resolveLocalMediaUrl={(path) => ({
+  kind: "url",
+  previewUrl: browserUrlForLocalMediaPath(path),
+})}
 ```
 
 The host owns upload authorization, static serving, persistence, cleanup, and

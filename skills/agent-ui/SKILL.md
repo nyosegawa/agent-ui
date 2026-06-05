@@ -43,7 +43,8 @@ generic chatbot kit.
    create a second lockfile unless the user explicitly asks to switch package
    managers.
 7. Self-review before finishing: search the changed files for private Agent UI
-   CSS imports, internal `.aui-*` selectors, and package-manager drift. Fix
+   CSS imports, internal `.aui-*` selectors, raw protocol payload dependencies,
+   string-returning local media resolvers, and package-manager drift. Fix
    violations instead of only reporting them.
 
 ## Non-Goals

@@ -32,6 +32,7 @@ export const turnStore: TurnStore = {
 };
 
 export function createTurnState(turn: AgentTurn, threadId: ThreadId): TurnState {
+  const publicTurn = sanitizeTurn(turn);
   return {
     blocksByItemId: {},
     commandOutputByItemId: {},
@@ -39,7 +40,7 @@ export function createTurnState(turn: AgentTurn, threadId: ThreadId): TurnState 
     itemOrder: [],
     items: {},
     streamingTextByItemId: {},
-    turn: { ...turn, threadId },
+    turn: { ...publicTurn, threadId },
   };
 }
 
@@ -49,7 +50,7 @@ export function upsertTurn(
   threadStatus: ThreadState["status"],
 ): ThreadState {
   const existingTurn = thread.turns[turn.id];
-  const canonicalTurn = { ...turn, threadId: thread.thread.id };
+  const canonicalTurn = { ...sanitizeTurn(turn), threadId: thread.thread.id };
   const orderedTurnIds = mergeOrderedTurnIds(thread.orderedTurnIds, [turn.id]);
   return {
     ...thread,
@@ -65,6 +66,23 @@ export function upsertTurn(
       },
     },
   };
+}
+
+export function sanitizeTurn(turn: AgentTurn): AgentTurn {
+  const { raw, ...publicTurn } = turn as AgentTurn & { raw?: unknown };
+  const rawRecord = isRecord(raw) ? raw : undefined;
+  return {
+    ...publicTurn,
+    metadata: {
+      ...(rawRecord?.optimistic === true ? { optimistic: true } : {}),
+      ...(typeof rawRecord?.operationId === "string" ? { operationId: rawRecord.operationId } : {}),
+      ...publicTurn.metadata,
+    },
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
 
 export function updateTurn(

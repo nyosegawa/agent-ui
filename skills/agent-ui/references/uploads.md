@@ -59,6 +59,23 @@ Do not invent a generic browser `File` transport directly into App Server.
 - Keep per-user or per-session storage isolated for remote or multi-user apps.
 - Never derive arbitrary absolute paths from untrusted browser input.
 
+## Transcript Local Media
+
+Transcript image/video blocks receive App Server local paths. Hosts must map
+those paths to browser-safe URLs with `resolveLocalMediaUrl(path, item)` and
+return a structured resource object:
+
+```tsx
+resolveLocalMediaUrl={(path) => ({
+  kind: "url",
+  previewUrl: assetUrlForLocalPath(path),
+})}
+```
+
+Do not return raw strings or pass filesystem paths to browser `src` attributes.
+Return `null`/`undefined` when the host cannot serve the path; Agent UI will
+render the local-media fallback.
+
 ## Local Helper
 
 `@nyosegawa/agent-ui-server` exports `createAgentUiLocalUploadHandler()` for

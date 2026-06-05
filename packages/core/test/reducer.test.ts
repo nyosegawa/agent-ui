@@ -266,7 +266,7 @@ describe("agentReducer", () => {
     });
     state = agentReducer(state, {
       status: "notLoaded",
-      thread: { id: "thread-pending", raw: { retained: "pending" } },
+      thread: { id: "thread-pending" },
       type: "thread/upserted",
     });
     state = agentReducer(state, {
@@ -284,18 +284,18 @@ describe("agentReducer", () => {
     for (let index = 0; index < AGENT_RETENTION_POLICY.threadCollectionEntriesMax + 5; index += 1) {
       state = agentReducer(state, {
         status: "notLoaded",
-        thread: { id: `thread-cold-${index}`, raw: { index } },
+        thread: { id: `thread-cold-${index}` },
         type: "thread/upserted",
       });
       state = agentReducer(state, {
         status: "notLoaded",
-        thread: { id: `thread-preview-${index}`, raw: { index } },
+        thread: { id: `thread-preview-${index}` },
         turns: [{ id: `turn-preview-${index}` }],
         type: "thread/upserted",
       });
       state = agentReducer(state, {
         status: "loaded",
-        thread: { id: `thread-loaded-${index}`, raw: { index } },
+        thread: { id: `thread-loaded-${index}` },
         type: "thread/upserted",
       });
     }
@@ -398,7 +398,6 @@ describe("agentReducer", () => {
         id: "thread-lifecycle",
         name: "Lifecycle thread",
         path: "/repo/agent-ui",
-        raw: { upstream: true },
       },
       type: "thread/started",
     });
@@ -413,7 +412,7 @@ describe("agentReducer", () => {
       cwd: "/repo/agent-ui",
       title: "Lifecycle thread",
     });
-    expect(activeThread?.thread.raw).toEqual({ upstream: true });
+    expect("raw" in (activeThread?.thread ?? {})).toBe(false);
     expect(activeThreadView).toEqual({
       cwd: "/repo/agent-ui",
       error: undefined,
@@ -638,7 +637,7 @@ describe("agentReducer", () => {
       turns: [
         {
           id: "pending-turn",
-          raw: { optimistic: true, operationId: "op-first-message" },
+          metadata: { optimistic: true, operationId: "op-first-message" },
           threadId: "pending-thread",
         },
       ],
@@ -1048,7 +1047,7 @@ describe("agentReducer", () => {
       turns: [
         {
           id: "turn-pending",
-          raw: { optimistic: true, operationId: "op-first-message" },
+          metadata: { optimistic: true, operationId: "op-first-message" },
           threadId: "pending-thread",
         },
       ],
@@ -1126,7 +1125,7 @@ describe("agentReducer", () => {
       turns: [
         {
           id: "turn-pending",
-          raw: { optimistic: true, operationId: "op-first-message" },
+          metadata: { optimistic: true, operationId: "op-first-message" },
           threadId: "pending-thread",
         },
       ],
@@ -1136,7 +1135,7 @@ describe("agentReducer", () => {
       item: {
         id: "pending-user-message-1",
         kind: "userMessage",
-        raw: {
+        metadata: {
           clientUserMessageId: "pending-user-message-1",
           optimistic: true,
           operationId: "op-first-message",
@@ -1160,12 +1159,7 @@ describe("agentReducer", () => {
       item: {
         id: "server-user-message-1",
         kind: "userMessage",
-        raw: {
-          clientId: "pending-user-message-1",
-          content: [{ text: "Pending user message" }],
-          id: "server-user-message-1",
-          type: "userMessage",
-        },
+        metadata: { clientUserMessageId: "pending-user-message-1", content: "Pending user message" },
         status: "completed",
         text: "Pending user message",
         threadId: "thread-canonical",
@@ -1189,8 +1183,7 @@ describe("agentReducer", () => {
       threadId: "thread-canonical",
       turnId: "turn-server",
     });
-    expect(turn?.items["pending-user-message-1"]?.raw).toMatchObject({
-      clientId: "pending-user-message-1",
+    expect(turn?.items["pending-user-message-1"]?.metadata).toMatchObject({
       clientUserMessageId: "pending-user-message-1",
       optimistic: false,
       serverItemId: "server-user-message-1",
@@ -1217,7 +1210,7 @@ describe("agentReducer", () => {
       turns: [
         {
           id: "turn-pending",
-          raw: { optimistic: true, operationId: "op-first-message" },
+          metadata: { optimistic: true, operationId: "op-first-message" },
           threadId: "pending-thread",
         },
       ],
@@ -1227,7 +1220,7 @@ describe("agentReducer", () => {
       item: {
         id: "pending-user-message-1",
         kind: "userMessage",
-        raw: {
+        metadata: {
           clientUserMessageId: "pending-user-message-1",
           optimistic: true,
           operationId: "op-first-message",
@@ -2087,7 +2080,6 @@ describe("agentReducer", () => {
             ephemeral: false,
             id: "thread-history",
             path: "/workspace/history",
-            raw: { version: 1 },
           },
           turns: [{ id: "turn-history", threadId: "thread-history", status: "completed" }],
           type: "thread/upserted",
@@ -2125,7 +2117,6 @@ describe("agentReducer", () => {
             id: "thread-history",
             name: "History without turns",
             path: "/workspace/history-renamed",
-            raw: { version: 2 },
           },
           type: "thread/upserted",
         },
@@ -2149,7 +2140,6 @@ describe("agentReducer", () => {
       id: "thread-history",
       name: "History without turns",
       path: "/workspace/history-renamed",
-      raw: { version: 2 },
     });
     expect(defaultThreadIds(state)).toContain("thread-history");
     expect(state.threads["thread-history"]?.availability).toBe("preview");
@@ -2190,7 +2180,7 @@ describe("agentReducer", () => {
             {
               id: "item-command-full",
               kind: "commandExecution",
-              raw: { command: "bun test" },
+              metadata: { command: "bun test" },
               status: "completed",
               text: "full command",
               threadId: "thread-view-merge",
@@ -2199,7 +2189,7 @@ describe("agentReducer", () => {
             {
               id: "item-file-full",
               kind: "fileChange",
-              raw: { changes: [{ path: "src/app.ts", type: "modify" }] },
+              metadata: { changes: [{ path: "src/app.ts", type: "modify" }] },
               status: "completed",
               threadId: "thread-view-merge",
               turnId: "turn-view-merge",
@@ -2207,7 +2197,7 @@ describe("agentReducer", () => {
             {
               id: "item-tool-full",
               kind: "toolCall",
-              raw: { tool: "search" },
+              metadata: { tool: "search" },
               status: "completed",
               threadId: "thread-view-merge",
               turnId: "turn-view-merge",
@@ -2807,10 +2797,7 @@ describe("agentReducer", () => {
           item: {
             id: "reasoning",
             kind: "reasoning",
-            raw: {
-              content: [{ text: "full reasoning" }],
-              summary: [{ text: "short thought" }],
-            },
+            metadata: { content: "full reasoning", summary: "short thought" },
             text: "short thought",
             threadId: "thread-blocks",
             turnId: "turn-blocks",
@@ -2825,7 +2812,7 @@ describe("agentReducer", () => {
           item: {
             id: "command",
             kind: "commandExecution",
-            raw: { command: "bun test", cwd: "/repo", durationMs: 1500, exitCode: 0 },
+            metadata: { command: "bun test", cwd: "/repo", durationMs: 1500, exitCode: 0 },
             threadId: "thread-blocks",
             turnId: "turn-blocks",
           },
@@ -2839,7 +2826,7 @@ describe("agentReducer", () => {
           item: {
             id: "tool",
             kind: "mcpToolCall",
-            raw: {
+            metadata: {
               arguments: { q: "agent-ui" },
               result: { ok: true },
               server: "browser",
@@ -2858,7 +2845,7 @@ describe("agentReducer", () => {
           item: {
             id: "search",
             kind: "webSearch",
-            raw: { query: "Codex App Server" },
+            metadata: { query: "Codex App Server" },
             threadId: "thread-blocks",
             turnId: "turn-blocks",
           },
@@ -2872,7 +2859,7 @@ describe("agentReducer", () => {
           item: {
             id: "image",
             kind: "imageView",
-            raw: { path: "/tmp/screenshot.png" },
+            metadata: { path: "/tmp/screenshot.png" },
             threadId: "thread-blocks",
             turnId: "turn-blocks",
           },
@@ -2886,10 +2873,10 @@ describe("agentReducer", () => {
           item: {
             id: "remote-image",
             kind: "imageGeneration",
-            raw: {
+            metadata: {
               displayName: "Remote preview",
-              image_url: "https://example.test/preview.png",
-              preview_url: "http://example.test/not-direct.png",
+              imageUrl: "https://example.test/preview.png",
+              previewUrl: "http://example.test/not-direct.png",
               result: "http://example.test/not-direct-result.png",
             },
             threadId: "thread-blocks",
@@ -2956,10 +2943,7 @@ describe("agentReducer", () => {
             {
               id: "stored-reasoning",
               kind: "reasoning",
-              raw: {
-                content: [{ text: "stored reasoning" }],
-                summary: [{ text: "stored summary" }],
-              },
+              metadata: { content: "stored reasoning", summary: "stored summary" },
               status: "completed",
               threadId: "thread-stored-blocks",
               turnId: "turn-stored-blocks",
@@ -2967,7 +2951,7 @@ describe("agentReducer", () => {
             {
               id: "stored-command",
               kind: "commandExecution",
-              raw: { command: "bun test", cwd: "/repo", exitCode: 0 },
+              metadata: { command: "bun test", cwd: "/repo", exitCode: 0 },
               status: "completed",
               threadId: "thread-stored-blocks",
               turnId: "turn-stored-blocks",
@@ -2975,7 +2959,7 @@ describe("agentReducer", () => {
             {
               id: "stored-file",
               kind: "fileChange",
-              raw: { changes: [{ path: "src/app.ts", status: "modified" }] },
+              metadata: { changes: [{ path: "src/app.ts", status: "modified" }] },
               status: "completed",
               threadId: "thread-stored-blocks",
               turnId: "turn-stored-blocks",
@@ -2983,7 +2967,7 @@ describe("agentReducer", () => {
             {
               id: "stored-tool",
               kind: "toolCall",
-              raw: { arguments: { q: "agent-ui" }, result: { ok: true }, tool: "search" },
+              metadata: { arguments: { q: "agent-ui" }, result: { ok: true }, tool: "search" },
               status: "completed",
               threadId: "thread-stored-blocks",
               turnId: "turn-stored-blocks",
@@ -2991,7 +2975,7 @@ describe("agentReducer", () => {
             {
               id: "stored-mcp",
               kind: "mcpToolCall",
-              raw: { server: "browser", tool: "snapshot" },
+              metadata: { server: "browser", tool: "snapshot" },
               status: "completed",
               threadId: "thread-stored-blocks",
               turnId: "turn-stored-blocks",
@@ -2999,7 +2983,7 @@ describe("agentReducer", () => {
             {
               id: "stored-search",
               kind: "webSearch",
-              raw: { query: "Codex App Server" },
+              metadata: { query: "Codex App Server" },
               status: "completed",
               threadId: "thread-stored-blocks",
               turnId: "turn-stored-blocks",
@@ -3007,7 +2991,7 @@ describe("agentReducer", () => {
             {
               id: "stored-image",
               kind: "imageView",
-              raw: { path: "/tmp/stored.png" },
+              metadata: { path: "/tmp/stored.png" },
               status: "completed",
               threadId: "thread-stored-blocks",
               turnId: "turn-stored-blocks",
@@ -3015,7 +2999,7 @@ describe("agentReducer", () => {
             {
               id: "stored-system",
               kind: "systemInfo",
-              raw: { message: "Stored status" },
+              metadata: { message: "Stored status" },
               status: "completed",
               threadId: "thread-stored-blocks",
               turnId: "turn-stored-blocks",
@@ -3089,9 +3073,9 @@ describe("agentReducer", () => {
 
     const failed = runEventFixture(failedFixture as FixtureStep[]);
     expect(failed.threads["thread-failed"]?.status).toBe("failed");
-    expect(failed.threads["thread-failed"]?.turns["turn-failed"]?.turn.raw).toEqual({
-      error: { message: "Model request failed" },
-    });
+    expect("raw" in (failed.threads["thread-failed"]?.turns["turn-failed"]?.turn ?? {})).toBe(
+      false,
+    );
 
     const rateLimited = runEventFixture(rateLimitFixture as FixtureStep[]);
     expect(rateLimited.usage.accountRateLimits).toEqual({

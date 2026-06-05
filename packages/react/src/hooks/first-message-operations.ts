@@ -78,7 +78,7 @@ export function useFirstMessageOperationController(
         item: {
           id: payload.pending.userMessageId,
           kind: "userMessage",
-          raw: {
+          metadata: {
             clientUserMessageId: payload.pending.userMessageId,
             optimistic: true,
             operationId,

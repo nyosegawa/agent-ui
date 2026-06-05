@@ -7,8 +7,8 @@ export interface AgentModel {
   id: string;
   name?: string;
   defaultEffort?: ReasoningEffort;
+  isDefault?: boolean;
   supportedEfforts?: ReasoningEffort[];
-  raw?: unknown;
 }
 
 export type ReasoningEffort =

@@ -77,8 +77,9 @@ async function resolveLocalAttachment(
   };
 }
 
-function resolveLocalMediaUrl(path: string): string | null {
-  return localMediaUrlsByPath.get(path) ?? null;
+function resolveLocalMediaUrl(path: string) {
+  const previewUrl = localMediaUrlsByPath.get(path);
+  return previewUrl ? { kind: "url" as const, previewUrl } : null;
 }
 
 export default function Page() {

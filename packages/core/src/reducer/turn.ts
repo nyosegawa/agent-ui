@@ -1,5 +1,11 @@
 import type { TurnEvent } from "../events";
-import type { AgentItemState, AgentSessionState, AgentTurn, ThreadId } from "../state";
+import type {
+  AgentItemState,
+  AgentSessionState,
+  AgentTurn,
+  ThreadId,
+  ThreadStatus,
+} from "../state";
 import { itemStore } from "../stores/item";
 import { turnStore } from "../stores/turn";
 import { mergeAgentTurn, shouldApplyTurnItems } from "../stores/turn-merge";
@@ -30,13 +36,13 @@ export function reduceTurnEvent(
       if (!thread) return state;
       const incomingTurn = canonicalTurn(event.turn, threadId);
       const nextThread = (() => {
-        const completedStatus =
+        const completedStatus: ThreadStatus =
           event.snapshot
             ? thread.status
             : (thread.status === "ready" || isPreviewThreadStatus(thread.status)) &&
                 isCompletedTurnStatus(incomingTurn.status)
               ? thread.status
-              : (incomingTurn.status ?? "complete");
+              : turnCompletionThreadStatus(incomingTurn.status);
         const next = turnStore.upsert(thread, incomingTurn, completedStatus);
         const turn =
           next.turns[incomingTurn.id] ??
@@ -69,7 +75,6 @@ export function reduceTurnEvent(
         plan: {
           explanation: event.explanation,
           plan: event.plan,
-          raw: event.raw,
         },
       }));
     case "turn/diff/updated":
@@ -77,7 +82,6 @@ export function reduceTurnEvent(
         ...turn,
         diff: {
           diff: event.diff,
-          raw: event.raw,
         },
       }));
     default:
@@ -87,6 +91,13 @@ export function reduceTurnEvent(
 
 function canonicalTurn(turn: AgentTurn, threadId: ThreadId): AgentTurn {
   return turn.threadId === threadId ? turn : { ...turn, threadId };
+}
+
+function turnCompletionThreadStatus(status: string | undefined): ThreadStatus {
+  if (status === "failed") return "failed";
+  if (status === "interrupted") return "interrupted";
+  if (status === "completed") return "completed";
+  return status === "error" ? "error" : "complete";
 }
 
 function canonicalItem(

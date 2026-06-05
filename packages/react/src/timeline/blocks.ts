@@ -5,7 +5,6 @@ import type {
 import {
   commandTextForItem,
   displayText,
-  isRecord,
   numberValue,
   stringValue,
 } from "./formatters";
@@ -17,7 +16,7 @@ export function blockForTranscriptItem(
 ): AgentItemBlock {
   if (block) return block;
   const item = turn.items[itemId];
-  const raw = isRecord(item?.raw) ? item.raw : {};
+  const metadata = item?.metadata ?? {};
   const activityKind = activityKindForId(turn, itemId);
   if (activityKind === "commandExecution") {
     return {
@@ -29,7 +28,7 @@ export function blockForTranscriptItem(
   }
   if (activityKind === "fileChange") {
     return {
-      changes: Array.isArray(raw.changes) ? raw.changes : undefined,
+      changes: Array.isArray(metadata.changes) ? metadata.changes : undefined,
       id: itemId,
       kind: "fileChange",
       status: item?.status,
@@ -38,17 +37,16 @@ export function blockForTranscriptItem(
   }
   if (item?.kind === "mcpToolCall") {
     return {
-      arguments: raw.arguments ?? raw.args,
-      durationMs: numberValue(raw.durationMs ?? raw.duration_ms),
-      error: raw.error,
+      arguments: metadata.arguments,
+      durationMs: numberValue(metadata.durationMs),
+      error: metadata.error,
       id: itemId,
       kind: "mcpToolCall",
-      raw: item.raw,
-      result: raw.result ?? raw.contentItems ?? raw.content_items,
-      server: stringValue(raw.server),
+      result: metadata.result,
+      server: stringValue(metadata.server),
       status: item.status,
       text: displayText(item.text),
-      tool: stringValue(raw.tool ?? raw.name) ?? displayText(item.text),
+      tool: stringValue(metadata.tool ?? metadata.name) ?? displayText(item.text),
       toolType: "mcp",
     };
   }
@@ -58,17 +56,16 @@ export function blockForTranscriptItem(
     item?.kind === "dynamicToolCall"
   ) {
     return {
-      arguments: raw.arguments ?? raw.args,
-      durationMs: numberValue(raw.durationMs ?? raw.duration_ms),
-      error: raw.error,
+      arguments: metadata.arguments,
+      durationMs: numberValue(metadata.durationMs),
+      error: metadata.error,
       id: itemId,
       kind: "toolCall",
-      raw: item.raw,
-      result: raw.result ?? raw.contentItems ?? raw.content_items,
-      server: stringValue(raw.server),
+      result: metadata.result,
+      server: stringValue(metadata.server),
       status: item.status,
       text: displayText(item.text),
-      tool: stringValue(raw.tool ?? raw.name) ?? displayText(item.text),
+      tool: stringValue(metadata.tool ?? metadata.name) ?? displayText(item.text),
       toolType:
         item.kind === "dynamicTool" || item.kind === "dynamicToolCall"
           ? "dynamic"

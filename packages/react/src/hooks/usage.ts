@@ -10,7 +10,6 @@ export function useAgentUsage() {
   const refreshUsage = useCallback(async () => {
     const response = await codex.account.rateLimitsRead();
     dispatch({ rateLimits: response, type: "account/rateLimits/updated" });
-    return response;
   }, [codex, dispatch]);
   return { rateLimits, refreshUsage };
 }

@@ -60,8 +60,9 @@ export async function resolveLocalAttachment(
   };
 }
 
-export function resolveLocalMediaUrl(path: string): string | null {
-  return previewUrlsByPath.get(path) ?? null;
+export function resolveLocalMediaUrl(path: string) {
+  const previewUrl = previewUrlsByPath.get(path);
+  return previewUrl ? { kind: "url" as const, previewUrl } : null;
 }
 
 export function LocalMediaHelperExample({ transport }: { transport: AgentTransport }) {

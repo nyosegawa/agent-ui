@@ -43,7 +43,10 @@ import { AgentChat } from "@nyosegawa/agent-ui-react";
           : textInput(`Attached file: ${asset.path}`),
     };
   }}
-  resolveLocalMediaUrl={(path) => assetUrlForLocalPath(path)}
+  resolveLocalMediaUrl={(path) => ({
+    kind: "url",
+    previewUrl: assetUrlForLocalPath(path),
+  })}
 />
 ```
 
@@ -55,11 +58,11 @@ The shared resource primitive is `AgentResolvedResource`: browser-facing
 metadata such as `displayName`, `url`, `previewUrl`, `redactedPath`,
 `mimeType`, and `sizeBytes`, plus optional Codex `input`. Composer attachment
 resolution uses the stricter `AgentResolvedLocalAttachment` form where `input`
-is required. Transcript local media resolution may return either a URL string
-or an `AgentResolvedResource`; `previewUrl` is preferred for browser rendering
-and `displayName` is preferred for captions. Structured media resources can use
-`mimeType` or `kind: "video"` to render video even when the App Server path is
-opaque or extensionless.
+is required. Transcript local media resolution returns `AgentResolvedResource |
+null | undefined`; URL string shorthand is not part of the public contract.
+`previewUrl` is preferred for browser rendering and `displayName` is preferred
+for captions. Structured media resources can use `mimeType` to render video
+even when the App Server path is opaque or extensionless.
 
 The composer shows removable chips for resolved attachments and appends the
 resolver's `input` items after the text when sending a turn. Images use the

@@ -9,6 +9,7 @@ import type {
   ThreadState,
 } from "../state";
 import { threadEntityStore } from "../stores/thread-entity";
+import { sanitizeThread } from "../stores/thread-entity";
 import {
   threadLifecycleStore,
   threadMetadataFromThread,
@@ -29,7 +30,8 @@ export function reduceThreadEvent(
 ): AgentSessionState {
   switch (event.type) {
     case "thread/optimistic/created": {
-      const threadState = threadEntityStore.getOrCreate(state.threads, event.thread);
+      const incomingThread = sanitizeThread(event.thread);
+      const threadState = threadEntityStore.getOrCreate(state.threads, incomingThread);
       const turns = { ...threadState.turns };
       const incomingTurnIds = (event.turns ?? []).map((turn) => turn.id);
       const orderedTurnIds = mergeOrderedTurnIds(
@@ -37,7 +39,7 @@ export function reduceThreadEvent(
         incomingTurnIds,
       );
       for (const turn of event.turns ?? []) {
-        turns[turn.id] = turnStore.createTurnState(turn, event.thread.id);
+        turns[turn.id] = turnStore.createTurnState(turn, incomingThread.id);
       }
       const status = event.status ?? threadState.status;
       return threadEntityStore.pruneSnapshots(
@@ -55,7 +57,7 @@ export function reduceThreadEvent(
             availability: "available",
             metadata: {
               ...threadState.metadata,
-              ...threadMetadataFromThread(event.thread),
+              ...threadMetadataFromThread(incomingThread),
             },
             operations: {
               ...threadState.operations,
@@ -63,17 +65,17 @@ export function reduceThreadEvent(
             },
             orderedTurnIds,
             status,
-            thread: { ...threadState.thread, ...event.thread },
+            thread: sanitizeThread({ ...threadState.thread, ...incomingThread }),
             turns,
           },
           {
-            activeThreadId: event.thread.id,
+            activeThreadId: incomingThread.id,
             collectionKeys: matchingCollectionKeys(
               state,
-              event.thread.id,
+              incomingThread.id,
               {
                 ...threadState.metadata,
-                ...threadMetadataFromThread(event.thread),
+                ...threadMetadataFromThread(incomingThread),
               },
               status,
             ),
@@ -84,7 +86,7 @@ export function reduceThreadEvent(
     case "thread/upserted":
     case "thread/started": {
       const threadId = canonicalThreadId(state, event.thread.id);
-      const incomingThread = canonicalThread(event.thread, threadId);
+      const incomingThread = sanitizeThread(canonicalThread(event.thread, threadId));
       const incomingTurns = (event.turns ?? []).map((turn) =>
         canonicalTurn(turn, threadId),
       );
@@ -115,7 +117,7 @@ export function reduceThreadEvent(
           {
             ...threadState,
             orderedTurnIds,
-            thread: { ...threadState.thread, ...incomingThread },
+            thread: sanitizeThread({ ...threadState.thread, ...incomingThread }),
             status,
             turns,
           },

@@ -50,7 +50,7 @@ export function useThreadUrlRouting(
       suppressNextActivePushRef.current = false;
       return;
     }
-    if (isOptimisticUrlThread(state.threads[activeThreadId]?.thread.raw)) return;
+    if (state.threads[activeThreadId]?.thread.metadata?.optimistic === true) return;
     const path = threadPath(activeThreadId, basePath);
     if (window.location.pathname === path || lastPathRef.current === path) return;
     lastPathRef.current = path;
@@ -114,13 +114,4 @@ function trimTrailingSlash(path: string): string {
 
 function isPreviewUrlThread(status?: string): boolean {
   return status === "notLoaded" || status === "loaded";
-}
-
-function isOptimisticUrlThread(raw: unknown): boolean {
-  return (
-    typeof raw === "object" &&
-    raw !== null &&
-    "optimistic" in raw &&
-    raw.optimistic === true
-  );
 }

@@ -12,6 +12,8 @@ new public APIs.
 - Web Components wrapper around the React preset.
 - Node server helpers for local same-origin WebSocket bridges, local uploads,
   redaction, one-shot RPC, method policy, and dynamic-tool delegation.
+- Raw-free public view models and structured browser resource metadata for
+  local media display.
 - The `--aui-*` design-system token contract and the public React stylesheet.
 
 ## Host Applications Own
@@ -22,6 +24,7 @@ new public APIs.
 - Workspace/session/user/tenant isolation.
 - Codex App Server process lifecycle and non-loopback exposure policy.
 - Upload storage, cleanup, path redaction, and attachment resolver behavior.
+- Browser serving of local media URLs derived from App Server filesystem paths.
 - Dynamic tool execution policy, MCP access policy, and app-specific registries.
 
 ## Review Questions

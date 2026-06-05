@@ -25,15 +25,17 @@ const turns = useAgentTurnController(threadId);
 `useAgentThreadController()` is the preferred name for `useAgentThread()`. It can
 follow the active thread or lock to a supplied `threadId`. Use `startThread()`
 for a new Codex thread and `resumeThread(threadId)` only when the host explicitly
-wants to rejoin a stored session. `resumeThread()` dispatches the normalized
-App Server `thread/resume` response in order: the active thread id comes from
-the returned canonical `thread.id`, and upstream active/running status is not
-overwritten to ready. When the requested id differs from the returned canonical
-id, Agent UI reconciles the requested id into the canonical id so active-thread
-state, scoped collections, pending operations, and server requests stay
-consistent. Its React options stay stable-only; experimental resume fields such
-as `excludeTurns`, `initialTurnsPage`, path/history resume, and cursor ownership
-remain host-managed raw protocol usage.
+wants to rejoin a stored session. Both actions return stable Agent UI result
+objects such as `{ threadId }`, not generated App Server response payloads.
+`resumeThread()` dispatches the normalized App Server `thread/resume` response in
+order: the active thread id comes from the returned canonical `thread.id`, and
+upstream active/running status is not overwritten to ready. When the requested id
+differs from the returned canonical id, Agent UI reconciles the requested id into
+the canonical id so active-thread state, scoped collections, pending operations,
+and server requests stay consistent. Its React options stay stable-only;
+experimental resume fields such as `excludeTurns`, `initialTurnsPage`,
+path/history resume, and cursor ownership remain host-managed raw protocol
+usage.
 
 `useAgentTurnController()` is the preferred name for `useAgentTurn()`. It sends
 `turn/start` with normalized run settings, `turn/steer` for continuing an active
@@ -60,7 +62,8 @@ first, with uncollected in-memory thread entities appended last as a fallback.
 
 `useAgentThreadHistory().listThreads()` calls `thread/list`, supports search and
 pagination cursor inputs, tracks the latest cursor, and upserts returned thread
-metadata without forcing activation.
+metadata without forcing activation. It returns stable sync metadata
+(`threadIds` and `nextCursor`) rather than the raw App Server list payload.
 
 `useAgentThreadListController(scope, options)` is the public scoped history
 controller used by the default sidebar and host-owned thread-list recipes. Its
@@ -82,7 +85,7 @@ a resumable preview instead of an interrupted live thread. Passing
 `activate: false` keeps the current active thread while still updating the
 requested thread's normalized snapshot state; the hook uses the Codex
 `normalizeThreadReadResponse()` boundary for item aliases, command output, file
-patches, and text extraction.
+patches, and text extraction, then returns stable `{ threadId }` metadata.
 
 The default `AgentChat` history sidebar uses `thread/read` so browsing a stored
 transcript from the list does not imply `thread/resume`. A direct

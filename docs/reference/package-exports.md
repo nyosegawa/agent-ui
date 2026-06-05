@@ -146,10 +146,11 @@ source-level internal composer controller as `startWithMessage()`.
 
 Move to subpath or keep internal: transcript-window utilities
 (`DEFAULT_TRANSCRIPT_ITEM_LIMIT`, `TRANSCRIPT_ITEM_INCREMENT`,
-`visibleTranscriptWindow`), thread snapshot helpers (`threadSnapshotEvents`,
-`threadUpsertEvent`, `threadSubtitle`, `threadProjectPath`, `rawThreadId`),
-and low-level input/path helpers should not remain root convenience exports
-unless examples prove host-facing value.
+`visibleTranscriptWindow`) and low-level input/path helpers should not remain
+root convenience exports unless examples prove host-facing value. Thread raw
+snapshot helpers such as `threadSnapshotEvents`, `threadUpsertEvent`,
+`threadProjectPath`, and `rawThreadId` are internal compatibility plumbing for
+React's Codex-backed hooks, not React root API.
 
 Make private: raw old state-name helpers, internal `.aui-*` styling details,
 queue implementation objects, and any hook return that exposes optimistic
@@ -223,7 +224,9 @@ boundary: `AgentResolvedResource`, `AgentResourceKind`,
 `AgentResourceRequest`, `AgentResourceResolution`, `AgentResourceResolver`,
 `AgentLocalMediaUrlResolver`, `AgentResolvedLocalAttachment`, `agentResourceUrl`, and
 `agentResourceDisplayName`. These are browser/UI metadata primitives, not host
-upload, storage, authorization, or static-serving policy.
+upload, storage, authorization, or static-serving policy. Resource resolution
+returns structured `AgentResolvedResource` objects; URL string shorthand is not
+part of the public contract.
 
 Composer controller exports include the raw-free `AgentComposerController`
 view plus `AgentComposerSubmitMode`, `AgentComposerDisabledReason`, and
@@ -367,10 +370,11 @@ Responsibilities:
 
 The package root also exports lower-level surfaces for advanced hosts:
 `AgentStatusBar`, `AgentFirstRun`, `AgentRunControls`, `ComposerRunSettings`,
-`AgentThemeToggle`, `AgentDiffViewer`, thread-history helpers,
-transcript-window helpers, and sidebar/status panel primitives. The
-documented components below are the recommended host-facing primitives; these
-helpers remain public because they are re-exported by the package barrel.
+`AgentThemeToggle`, `AgentDiffViewer`, transcript-window helpers, and
+sidebar/status panel primitives. The documented components below are the
+recommended host-facing primitives; these helpers remain public because they are
+re-exported by the package barrel. Raw thread-history compatibility helpers are
+intentionally not part of the React root API.
 
 React does not export Codex request builders such as `threadStartParams()`,
 `turnStartParams()`, `textInput()`, `localImageInput()`, or generated Codex

@@ -43,7 +43,7 @@ export function reduceItemEvent(
     case "item/failed":
       return turnStore.update(state, event.threadId, event.turnId, (turn) =>
         itemStore.updateItemStatus(turn, event.itemId, "failed", {
-          raw: event.error ? { error: event.error } : undefined,
+          metadata: event.error ? { error: event.error } : undefined,
         }),
       );
     case "item/completed":
@@ -62,7 +62,7 @@ function upsertItemEvent(
     event.item.threadId === threadId ? event.item : { ...event.item, threadId };
   const clientId =
     item.kind === "userMessage"
-      ? clientUserMessageId(item.raw)
+      ? clientUserMessageId(item)
       : undefined;
   if (!clientId) {
     return turnStore.update(state, threadId, event.turnId, (turn) =>
@@ -89,7 +89,7 @@ function findClientUserMessage(
     for (const item of Object.values(turn.items)) {
       if (
         item.kind === "userMessage" &&
-        clientUserMessageId(item.raw) === clientId
+        clientUserMessageId(item) === clientId
       ) {
         return { item, turnId };
       }
@@ -118,7 +118,7 @@ function moveReconciledUserMessage(
       threadId: event.threadId,
       turnId: event.turnId,
     },
-    clientUserMessageId(event.item.raw) ?? match.item.id,
+    clientUserMessageId(event.item) ?? match.item.id,
   );
   const nextSourceTurn = removeItemFromTurn(sourceTurn, match.item.id);
   const nextTargetTurn = itemStore.upsert(targetTurn, reconciledItem);
@@ -166,11 +166,7 @@ function removeItemFromTurn(turn: TurnState, itemId: string): TurnState {
 }
 
 function shouldRemoveOptimisticTurn(turn: TurnState): boolean {
-  const raw = turn.turn.raw;
-  const optimistic =
-    typeof raw === "object" &&
-    raw !== null &&
-    (raw as Record<string, unknown>).optimistic === true;
+  const optimistic = turn.turn.metadata?.optimistic === true;
   return (
     optimistic &&
     turn.itemOrder.length === 0 &&

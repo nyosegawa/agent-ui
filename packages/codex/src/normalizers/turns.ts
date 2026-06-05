@@ -36,7 +36,6 @@ export function normalizeTurnNotification(
         {
           explanation: stringValue(params.explanation) ?? null,
           plan: params.plan ?? [],
-          raw: params,
           threadId: String(params.threadId ?? params.thread_id),
           turnId: String(params.turnId ?? params.turn_id),
           type: "turn/plan/updated",

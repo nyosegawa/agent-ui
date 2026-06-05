@@ -47,7 +47,6 @@ export function normalizeApps(raw: unknown): AgentApp[] {
         metadata: appMetadata ?? record.metadata,
         name: stringValue(record.name),
         pluginDisplayNames: record.pluginDisplayNames ?? record.plugin_display_names,
-        raw: app,
         uri: stringValue(record.uri) ?? stringValue(record.installUrl ?? record.install_url),
       },
     ];

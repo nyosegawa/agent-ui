@@ -1045,27 +1045,6 @@ describe("Codex protocol metadata", () => {
           },
           modelContextWindow: 200,
           outputTokens: 30,
-          raw: {
-            threadId: "thread-usage",
-            tokenUsage: {
-              last: {
-                cachedInputTokens: 3,
-                inputTokens: 20,
-                outputTokens: 10,
-                reasoningOutputTokens: 4,
-                totalTokens: 30,
-              },
-              modelContextWindow: 200,
-              total: {
-                cachedInputTokens: 11,
-                inputTokens: 120,
-                outputTokens: 30,
-                reasoningOutputTokens: 10,
-                totalTokens: 150,
-              },
-            },
-            turnId: "turn-usage",
-          },
           reasoningOutputTokens: 10,
           totalTokens: 150,
           turnId: "turn-usage",
@@ -1260,12 +1239,6 @@ describe("Codex protocol metadata", () => {
       {
         explanation: "Do the work in order.",
         plan: [{ status: "inProgress", step: "Implement" }],
-        raw: {
-          explanation: "Do the work in order.",
-          plan: [{ status: "inProgress", step: "Implement" }],
-          threadId: "t1",
-          turnId: "u1",
-        },
         threadId: "t1",
         turnId: "u1",
         type: "turn/plan/updated",
@@ -1315,7 +1288,6 @@ describe("Codex protocol metadata", () => {
     ).toEqual([
       {
         diff: "diff --git a/a b/a",
-        raw: { diff: "diff --git a/a b/a", threadId: "t1", turnId: "u1" },
         threadId: "t1",
         turnId: "u1",
         type: "turn/diff/updated",
@@ -1708,18 +1680,8 @@ describe("Codex protocol metadata", () => {
       {
         defaultEffort: "medium",
         id: "gpt-5.5",
+        isDefault: true,
         name: "GPT-5.5",
-        raw: {
-          defaultReasoningEffort: "medium",
-          displayName: "GPT-5.5",
-          id: "gpt-5.5",
-          isDefault: true,
-          model: "gpt-5.5",
-          supportedReasoningEfforts: [
-            { description: "Fast", reasoningEffort: "low" },
-            { description: "Deep", reasoningEffort: "high" },
-          ],
-        },
         supportedEfforts: ["low", "high"],
       },
     ]);
