@@ -146,10 +146,11 @@ source-level internal composer controller as `startWithMessage()`.
 
 Move to subpath or keep internal: transcript-window utilities
 (`DEFAULT_TRANSCRIPT_ITEM_LIMIT`, `TRANSCRIPT_ITEM_INCREMENT`,
-`visibleTranscriptWindow`), thread snapshot helpers (`threadSnapshotEvents`,
-`threadUpsertEvent`, `threadSubtitle`, `threadProjectPath`, `rawThreadId`),
-and low-level input/path helpers should not remain root convenience exports
-unless examples prove host-facing value.
+`visibleTranscriptWindow`) and low-level input/path helpers should not remain
+root convenience exports unless examples prove host-facing value. Thread raw
+snapshot helpers such as `threadSnapshotEvents`, `threadUpsertEvent`,
+`threadProjectPath`, and `rawThreadId` are internal compatibility plumbing for
+React's Codex-backed hooks, not React root API.
 
 Make private: raw old state-name helpers, internal `.aui-*` styling details,
 queue implementation objects, and any hook return that exposes optimistic

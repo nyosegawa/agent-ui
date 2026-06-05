@@ -22,7 +22,7 @@ export function useAgentAccount() {
       status: account == null ? "unauthenticated" : "authenticated",
       type: "account/updated",
     });
-    return response;
+    return { authenticated: account != null };
   }, [codex, dispatch]);
   const login = useCallback(async () => {
     const raw = await codex.account.loginDeviceCode();
@@ -48,9 +48,8 @@ export function useAgentAccount() {
     dispatch({ account: null, status: "unauthenticated", type: "account/updated" });
   }, [codex, dispatch, state.account.login?.loginId]);
   const logout = useCallback(async () => {
-    const response = await codex.account.logout();
+    await codex.account.logout();
     dispatch({ account: null, status: "unauthenticated", type: "account/updated" });
-    return response;
   }, [codex, dispatch]);
   return { account: state.account, cancelLogin, login, logout, readAccount };
 }
@@ -81,17 +80,15 @@ export function useAgentBootstrap(): AgentBootstrapState {
     setBootstrap({ errors: [], isBootstrapping: true, status: "loading" });
     void (async () => {
       const errors: Error[] = [];
-      let accountResponse: unknown;
+      let accountAuthenticated = state.account.status === "authenticated";
       if (state.account.status === "unknown") {
         try {
-          accountResponse = await readAccount();
+          accountAuthenticated = (await readAccount()).authenticated;
         } catch (caught) {
           errors.push(caught instanceof Error ? caught : new Error(String(caught)));
         }
       }
-      const isAuthenticated =
-        state.account.status === "authenticated" ||
-        accountResponseHasAccount(accountResponse);
+      const isAuthenticated = state.account.status === "authenticated" || accountAuthenticated;
       const tasks = [
         state.models.models.length === 0 ? refreshModels() : Promise.resolve(),
         isAuthenticated && accountRateLimits == null
@@ -174,15 +171,6 @@ export function useAgentBootstrap(): AgentBootstrapState {
   ]);
 
   return bootstrap;
-}
-
-function accountResponseHasAccount(response: unknown): boolean {
-  const record = asRecord(response);
-  if (!record) return false;
-  if (Object.prototype.hasOwnProperty.call(record, "account")) {
-    return record.account != null;
-  }
-  return Object.keys(record).length > 0;
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {

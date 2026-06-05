@@ -35,9 +35,7 @@ export function useAgentSkills(cwd?: string) {
   );
   const setSkillEnabled = useCallback(
     async (params: AgentSkillConfigWriteOptions) => {
-      const response = await codex.skills.configWrite(
-        codexSkillsConfigWriteParams(params),
-      );
+      await codex.skills.configWrite(codexSkillsConfigWriteParams(params));
       const targetName = stringValue(params.name);
       const targetPath = stringValue(params.path);
       const updateCwd = cwd ?? key;
@@ -51,7 +49,6 @@ export function useAgentSkills(cwd?: string) {
         }),
         type: "skills/updated",
       });
-      return response;
     },
     [codex, cwd, dispatch, key, state.skills.byCwd],
   );

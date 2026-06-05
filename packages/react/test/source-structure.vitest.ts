@@ -151,6 +151,41 @@ describe("React package source structure", () => {
     expect(snapshot).not.toContain("SkillsListParams");
   });
 
+  it("keeps Codex generated thread responses out of the React public API", () => {
+    const snapshot = readFileSync(reactApiSnapshot, "utf8");
+    expect(snapshot).not.toContain("ThreadStartResponse");
+    expect(snapshot).not.toContain("ThreadResumeResponse");
+    expect(snapshot).not.toContain("ThreadForkResponse");
+    expect(snapshot).not.toContain("ThreadReadResponse");
+    expect(snapshot).not.toContain("ThreadArchiveResponse");
+    expect(snapshot).not.toContain("ThreadUnarchiveResponse");
+    expect(snapshot).not.toContain("ThreadSetNameResponse");
+    expect(snapshot).not.toContain("ThreadCompactStartResponse");
+    expect(snapshot).not.toContain("ThreadRollbackResponse");
+    expect(snapshot).not.toMatch(/type ThreadStatus = \{[\s\S]*?type:/);
+    expect(snapshot).not.toMatch(/type Thread = \{[\s\S]*?status\?: ThreadStatus/);
+  });
+
+  it("keeps Codex generated turn responses out of the React public API", () => {
+    const snapshot = readFileSync(reactApiSnapshot, "utf8");
+    expect(snapshot).not.toContain("TurnStartResponse");
+    expect(snapshot).not.toContain("TurnSteerResponse");
+    expect(snapshot).not.toContain("TurnInterruptResponse");
+  });
+
+  it("keeps Codex generated response promises out of the React public API", () => {
+    const snapshot = readFileSync(reactApiSnapshot, "utf8");
+    expect(snapshot).not.toMatch(/Promise<[^>]*Response>/);
+  });
+
+  it("keeps raw thread compatibility helpers out of the React root API", () => {
+    const snapshot = readFileSync(reactApiSnapshot, "utf8");
+    expect(snapshot).not.toContain("threadUpsertEvent");
+    expect(snapshot).not.toContain("threadSnapshotEvents");
+    expect(snapshot).not.toContain("rawThreadId");
+    expect(snapshot).not.toContain("threadProjectPath");
+  });
+
   it("keeps first-message operation internals out of the React public API", () => {
     const snapshot = readFileSync(reactApiSnapshot, "utf8");
     expect(snapshot).not.toContain("useInternalAgentComposerController");

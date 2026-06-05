@@ -217,19 +217,19 @@ export function useAgentThreadListController(
 
   const activateThread = useCallback(
     async (threadId: ThreadId) => {
-      const response = await readThread(threadId, {
+      const result = await readThread(threadId, {
         activate: true,
         includeTurns: true,
       });
-      return responseThreadId(response) ?? threadId;
+      return result.threadId;
     },
     [readThread],
   );
 
   const resumeThread = useCallback(
     async (threadId: ThreadId, params?: ThreadResumeOptions) => {
-      const response = await threadController.resumeThread(threadId, params);
-      return responseThreadId(response) ?? threadId;
+      const result = await threadController.resumeThread(threadId, params);
+      return result.threadId;
     },
     [threadController],
   );
@@ -269,12 +269,6 @@ function responseThreads(response: Record<string, unknown>): Record<string, unkn
       ? response.threads
       : [];
   return rawThreads.filter(isRecord);
-}
-
-function responseThreadId(response: unknown): ThreadId | undefined {
-  const responseRecord = asRecord(response);
-  const rawThread = asRecord(responseRecord?.thread) ?? responseRecord;
-  return rawThread ? rawThreadId(rawThread) : undefined;
 }
 
 function responseCursor(response: Record<string, unknown>): string | null {
