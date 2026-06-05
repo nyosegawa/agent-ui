@@ -370,10 +370,11 @@ Responsibilities:
 
 The package root also exports lower-level surfaces for advanced hosts:
 `AgentStatusBar`, `AgentFirstRun`, `AgentRunControls`, `ComposerRunSettings`,
-`AgentThemeToggle`, `AgentDiffViewer`, thread-history helpers,
-transcript-window helpers, and sidebar/status panel primitives. The
-documented components below are the recommended host-facing primitives; these
-helpers remain public because they are re-exported by the package barrel.
+`AgentThemeToggle`, `AgentDiffViewer`, transcript-window helpers, and
+sidebar/status panel primitives. The documented components below are the
+recommended host-facing primitives; these helpers remain public because they are
+re-exported by the package barrel. Raw thread-history compatibility helpers are
+intentionally not part of the React root API.
 
 React does not export Codex request builders such as `threadStartParams()`,
 `turnStartParams()`, `textInput()`, `localImageInput()`, or generated Codex
