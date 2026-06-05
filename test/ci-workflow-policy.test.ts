@@ -51,24 +51,29 @@ describe("CI workflow policy", () => {
     expect(ci).toContain("actions/upload-artifact@v4");
   });
 
-  it("keeps release publishing manual and environment-gated", () => {
+  it("keeps release publishing tied to reviewed version PR merges", () => {
     const release = readRepoFile(".github/workflows/release.yml");
 
+    expect(release).toContain("push:");
+    expect(release).toContain("branches:\n      - main");
     expect(release).toContain("workflow_dispatch:");
     expect(release).toContain("type: choice");
     expect(release).toContain("- prepare");
-    expect(release).toContain("- publish");
-    expect(release).not.toContain("push:");
     expect(release).not.toContain("pull_request_target");
 
+    expect(release).toContain("name: Check release targets");
     expect(release).toContain("name: Validate release");
     expect(release).toContain("name: Prepare version PR");
     expect(release).toContain("name: Publish npm packages");
-    expect(release).toContain("environment: npm-release");
+    expect(release).not.toContain("environment: npm-release");
     expect(release).toContain("id-token: write");
     expect(release).toContain("NPM_CONFIG_PROVENANCE: true");
     expect(release).toContain("NPM_TOKEN: ${{ secrets.NPM_TOKEN }}");
     expect(release).toContain("Unversioned changesets remain");
+    expect(release).toContain("node scripts/check-release-targets.mjs");
+    expect(release).toContain("node scripts/post-publish-smoke.mjs");
+    expect(release).toContain("Create GitHub releases");
+    expect(release).toContain("title: Release Agent UI packages");
   });
 
   it("keeps package validation reusable without duplicating every PR run", () => {

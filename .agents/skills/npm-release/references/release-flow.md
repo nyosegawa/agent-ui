@@ -25,17 +25,19 @@ support policy.
    generated.
 4. Confirm required PR checks passed before merging the version PR.
 
-Do not publish directly from a feature branch. The release commit should be
-reviewed, merged, and present on `main` before running the release workflow.
+Do not publish directly from a feature branch. The release commit should be a
+reviewed Changesets version PR merge on `main`. Merging that PR is the human
+approval to publish.
 
-## Manual Release Workflow
+## Prepare Version PR
 
-Run the `Release` GitHub Actions workflow manually from `main`.
+Run the `Release` GitHub Actions workflow manually from `main` only when
+changesets should become a version PR.
 
 Required input:
 
 ```text
-publish
+prepare
 ```
 
 The workflow first runs:
@@ -45,27 +47,34 @@ bun run validate:release
 bun run validate:e2e
 ```
 
-Only after validation passes does the `Publish npm packages` job start. That job
-uses the `npm-release` GitHub Environment. Configure the Environment with a
-required reviewer so publishing stops for human approval before `NPM_TOKEN` is
-available to the job.
+Only after validation passes does the workflow create or update the
+`Release Agent UI packages` Changesets version PR.
 
-## Publish Gate
+## Automatic Publish
 
-Before approving the `npm-release` Environment:
+After the reviewed version PR is merged, the `Release` workflow runs on the
+`main` push and first executes:
 
-- confirm the workflow was manually started for the intended commit on `main`
-- confirm the validation job passed
-- confirm the package versions do not already exist on npm
-- confirm no unexpected package manifest, changelog, or README changes are in
-  the release commit
+```sh
+node scripts/check-release-targets.mjs
+```
 
-Then approve the Environment and let the workflow run `bun run release:publish`.
+The workflow publishes only when:
+
+- no `.changeset/*.md` files remain
+- at least one public package manifest version is not already published on npm
+- the release validation job passes
+
+The publish job then runs `bun run release:publish`, creates GitHub Releases for
+the package tags, and runs `node scripts/post-publish-smoke.mjs`.
+
+`NPM_TOKEN` is available only to the trusted `main` push workflow. Do not use
+`pull_request_target` for publishing.
 
 ## Failure Handling
 
-If validation fails, inspect the uploaded artifacts and fix the repository
-before re-running the workflow.
+If prepare validation fails, inspect the uploaded artifacts and fix the
+repository before re-running the workflow.
 
 If publish fails, do not blindly rerun. First inspect npm registry state:
 

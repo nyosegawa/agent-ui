@@ -11,8 +11,8 @@ Use this checklist before publishing Agent UI packages to npm.
 - Confirm every new or promoted public API has exactly one canonical reference
   doc, an importing example or recipe, and a focused validation gate recorded in
   the PR notes.
-- Confirm `NPM_TOKEN` exists as a GitHub Actions repository secret and can
-  publish without an interactive OTP prompt.
+- Confirm `NPM_TOKEN` exists as a GitHub Actions repository secret for trusted
+  `main` push workflows and can publish without an interactive OTP prompt.
 
 ## Local Validation
 
@@ -35,6 +35,8 @@ built and inspected in order.
 - Public package manifests use `workspace:^<version>` for internal Agent UI
   dependencies so workspace installers link locally and packed packages resolve
   to the released semver range.
+- Changesets keeps all public Agent UI packages fixed-versioned together, so a
+  version PR aligns package versions and internal `workspace:^<version>` ranges.
 - Release workflow runs `bun run release:publish`, which builds package output
   and normalizes npm registry manifests before invoking Changesets publish so
   packages include `dist` and do not keep `workspace:` dependency ranges.
@@ -54,10 +56,11 @@ Use `.agents/skills/npm-release/` for the release flow.
 1. Run the `Release` GitHub Actions workflow in `prepare` mode when changesets
    should become a version PR.
 2. Review and merge the version PR after required checks pass.
-3. Run the `Release` workflow in `publish` mode from `main`.
-4. Confirm the workflow completed validation before approving the `npm-release`
-   Environment.
-5. Approve the Environment only for the intended commit and package versions.
+3. Merge the reviewed version PR. The `Release` workflow runs on the resulting
+   `main` push, detects unpublished public package versions, validates, and
+   publishes automatically.
+4. Confirm the workflow completed validation, publish, GitHub Release creation,
+   and post-publish smoke for the intended commit and package versions.
 
 ## Post-Publish
 
@@ -66,6 +69,7 @@ Use `.agents/skills/npm-release/` for the release flow.
   workspace.
 - Verify public ESM imports.
 - Verify CJS entry points where package exports provide `require`.
+- Confirm GitHub Releases exist for the published package tags.
 - Confirm GitHub Actions completed successfully.
 - If a package failed to publish, identify exactly which package versions exist
   on npm before re-running publish.

@@ -4,7 +4,15 @@
   "baseBranch": "main",
   "changelog": "@changesets/cli/changelog",
   "commit": false,
-  "fixed": [],
+  "fixed": [
+    [
+      "@nyosegawa/agent-ui-core",
+      "@nyosegawa/agent-ui-codex",
+      "@nyosegawa/agent-ui-react",
+      "@nyosegawa/agent-ui-server",
+      "@nyosegawa/agent-ui-web-components"
+    ]
+  ],
   "ignore": [
     "@nyosegawa/agent-ui-docs-site",
     "@nyosegawa/agent-ui-example-codex-local-web",

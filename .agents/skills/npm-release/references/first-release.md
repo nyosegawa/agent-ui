@@ -23,8 +23,7 @@ Confirm:
   `workspace:` ranges.
 - each public package has a README.
 - `NPM_TOKEN` is configured for GitHub Actions.
-- release workflow uses trusted manual `workflow_dispatch`, not untrusted pull
-  request code.
+- release workflow uses trusted release code, not untrusted pull request code.
 
 ## Required Validation
 
@@ -44,9 +43,10 @@ bun run test:package-resolution
 
 ## Publish
 
-Prefer the manual release workflow. It validates the repo, waits for the
-`npm-release` Environment approval, then uses Changesets to publish with
-provenance from GitHub Actions.
+Current releases use reviewed Changesets version PRs. After the version PR
+merge, the trusted `main` push workflow validates the repo, publishes with
+provenance from GitHub Actions, creates GitHub Releases, and runs post-publish
+smoke.
 
 Local publish is allowed only when the user explicitly requests it and accepts
 that provenance or token behavior may differ from the workflow.

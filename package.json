@@ -27,7 +27,7 @@
     "test": "vitest run",
     "test:skills": "vitest run test/agent-ui-skill.test.ts",
     "test:repo-skills": "vitest run test/repository-skills.test.ts",
-    "test:npm-release": "vitest run test/npm-release-readiness.test.ts test/prepare-npm-publish-manifests.test.ts",
+    "test:npm-release": "vitest run test/npm-release-readiness.test.ts test/prepare-npm-publish-manifests.test.ts test/release-targets.test.ts",
     "test:hooks": "vitest run test/codex-hooks-repo-policy.test.ts",
     "test:styles": "vitest run packages/react/test/style-duplication.vitest.ts packages/react/test/source-structure.vitest.ts",
     "test:protocol": "vitest run --config vitest.config.ts packages/codex/test",

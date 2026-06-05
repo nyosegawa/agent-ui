@@ -66,9 +66,11 @@ of expanding this file.
 
 ## Release And Upstream Work
 
-- npm publishing is manual and Environment-gated. Do not treat `main` pushes as
-  releases. Use the `npm-release` skill for release preparation, publish, and
-  post-publish smoke.
+- npm publishing is version-PR driven. A reviewed Changesets version PR merge to
+  `main` is the release approval; the Release workflow publishes unpublished
+  package versions from trusted `main` pushes. Use the `npm-release` skill for
+  release preparation, version PR review, publish monitoring, and post-publish
+  smoke.
 - Weekly Codex App Server drift checks are owned by Codex App Automation using
   the `codex-upstream-sync` skill. Do not replace that cadence with a scheduled
   GitHub Actions workflow unless the user explicitly asks for that model change.

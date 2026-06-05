@@ -85,8 +85,10 @@ bun run validate:e2e
 
 ## Maintainer-Owned Workflows
 
-npm publishing is maintainer-only. It uses the `npm-release` skill and the manual
-`Release` GitHub Actions workflow; `main` pushes do not publish npm packages.
+npm publishing is maintainer-only and version-PR driven. Use the `npm-release`
+skill to prepare and review a Changesets version PR. Merging that reviewed
+version PR to `main` lets the trusted `Release` workflow publish unpublished
+package versions automatically.
 
 Codex App Server upstream sync is also maintainer-owned. Weekly drift checks are
 run by Codex App Automation with the `codex-upstream-sync` skill. Automation may

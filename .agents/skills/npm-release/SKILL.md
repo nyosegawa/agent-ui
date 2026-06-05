@@ -1,6 +1,6 @@
 ---
 name: npm-release
-description: Operate Agent UI npm releases for @nyosegawa public packages with Changesets, manual GitHub Actions release workflow, npm-release Environment approval, provenance, version PR review, post-publish install smoke, rollback, and deprecation. Use when preparing or running an npm release, adding changesets, reviewing version PRs, publishing packages, or debugging release workflow failures.
+description: Operate Agent UI npm releases for @nyosegawa public packages with Changesets version PRs, automatic main-push publishing, provenance, GitHub Releases, post-publish install smoke, rollback, and deprecation. Use when preparing or running an npm release, adding changesets, reviewing version PRs, publishing packages, or debugging release workflow failures.
 ---
 
 # npm Release
@@ -15,14 +15,20 @@ explicitly asks to publish.
 - The npm account may be `sakasegawa`; publish authority comes from membership
   in the `nyosegawa` npm organization.
 - Use Changesets. Do not bump package versions on every push to `main`.
-- Do not treat `main` push as an npm release. Publishing is a manual
-  `workflow_dispatch` operation.
-- Use the `npm-release` GitHub Environment for the publish job. Prefer storing
-  `NPM_TOKEN` as an Environment secret and requiring a reviewer before publish.
+- Treat a reviewed Changesets version PR merge as the human release approval.
+  The `Release` workflow checks every `main` push and publishes only when local
+  public package versions are not already on npm and no `.changeset/*.md` files
+  remain.
+- Do not add a second GitHub Environment approval gate unless the release policy
+  changes. Store `NPM_TOKEN` as a repository secret for the trusted `main` push
+  publish workflow.
 - First public release is `0.1.0`.
 - Do not run canary or prerelease channels until a future design adds them.
 - Keep `build`, `publint`, and `attw` ordered through
   `bun run validate:packages`.
+- Public Agent UI packages are fixed-versioned together. If one public package
+  releases, the version PR should align all public package versions and internal
+  `workspace:^<version>` ranges.
 
 ## First Pass
 
@@ -37,6 +43,6 @@ explicitly asks to publish.
 
 ## Completion
 
-Report package versions, npm org/scope status, validation commands, publish
-method, package URLs, post-publish smoke results, and any remaining support
-risk.
+Report package versions, npm org/scope status, validation commands, version PR
+URL, publish workflow URL, package URLs, GitHub Release/tag status,
+post-publish smoke results, and any remaining support risk.
