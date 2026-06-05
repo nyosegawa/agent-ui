@@ -69,7 +69,6 @@ export function useAgentThread(threadId?: ThreadId) {
           id: threadId,
           name: stringValue(rawThreadRecord.name),
           path: threadProjectPath(rawThreadRecord),
-          raw: rawThread,
         },
         type: "thread/started",
       });

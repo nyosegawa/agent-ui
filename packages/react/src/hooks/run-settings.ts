@@ -120,11 +120,5 @@ export function useAgentRunSettings() {
 }
 
 function isDefaultModel(model: AgentModel): boolean {
-  return asRecord(model.raw)?.isDefault === true;
-}
-
-function asRecord(value: unknown): Record<string, unknown> | undefined {
-  return typeof value === "object" && value !== null
-    ? (value as Record<string, unknown>)
-    : undefined;
+  return model.isDefault === true;
 }

@@ -75,13 +75,18 @@ If the upstream schema adds methods outside the release surface, keep them gener
 
 ## Raw Retention Policy
 
-Core state keeps raw payloads only where they support UI rendering, debug
-inspection, docs examples, or host extension points:
+Public thread, turn, item, token-usage, and block state is raw-free. Codex
+normalizers must project protocol payloads into Agent UI metadata, lifecycle
+status, transcript blocks, diagnostics, or resource objects before they cross
+the public package boundary:
 
-- `AgentThread.raw`, `AgentTurn.raw`, `AgentItemState.raw`, and block `raw`
-  preserve source protocol data needed to render current transcript items.
-- Token usage, status banners, warnings, and protocol notifications keep raw
-  payloads for diagnostics but are bounded by the reducer retention policy.
+- Thread lifecycle exposes closed Agent UI status/activity fields rather than
+  arbitrary App Server status strings.
+- Transcript items and blocks preserve renderable command, file-change, tool,
+  image, and system-info fields without exposing generated payloads.
+- Status banners, warnings, and protocol notifications may keep raw payloads for
+  diagnostics, but those diagnostics are bounded by the reducer retention policy
+  and audience-filtered before user display.
 - Command output is retained per item with a maximum character window.
 - File patch payloads are retained per turn with a maximum item count. Evicting
   a synthetic patch-only body also removes that ID from `turn.itemOrder`; IDs

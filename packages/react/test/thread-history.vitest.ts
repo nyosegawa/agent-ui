@@ -192,10 +192,6 @@ describe("thread history normalization", () => {
         id: "thread-history",
         name: undefined,
         path: undefined,
-        raw: {
-          id: "thread-history",
-          status: { type: "notLoaded" },
-        },
       },
       type: "thread/started",
     });

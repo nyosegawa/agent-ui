@@ -33,8 +33,8 @@ export interface AgentTranscriptPendingState {
   status: "failed" | "inProgress";
 }
 
-export type AgentTranscriptBlock = Omit<AgentItemBlock, "raw">;
-export type AgentTranscriptItem = Omit<AgentItemState, "raw">;
+export type AgentTranscriptBlock = AgentItemBlock;
+export type AgentTranscriptItem = AgentItemState;
 
 export interface AgentTranscriptEntry {
   approvals: PendingServerRequest[];
@@ -201,15 +201,15 @@ function densityForTranscriptBlock(
 
 function stripItemRaw(item: AgentItemState | undefined): AgentTranscriptItem | undefined {
   if (!item) return undefined;
-  const viewItem = { ...item };
-  delete viewItem.raw;
-  return viewItem;
+  const { raw: _raw, ...publicItem } = item as AgentItemState & { raw?: unknown };
+  void _raw;
+  return publicItem;
 }
 
 function stripBlockRaw(block: AgentItemBlock): AgentTranscriptBlock {
-  const viewBlock = { ...block };
-  delete viewBlock.raw;
-  return viewBlock;
+  const { raw: _raw, ...publicBlock } = block as AgentItemBlock & { raw?: unknown };
+  void _raw;
+  return publicBlock;
 }
 
 function approvalAnchorsForEntry(

@@ -2,6 +2,7 @@ import type {
   AgentEvent,
   AgentThreadScope,
   AgentTurn,
+  ThreadStatus,
 } from "@nyosegawa/agent-ui-core";
 import {
   asRecord,
@@ -136,7 +137,6 @@ export function normalizeThreadNotification(
         {
           type: "turn/diff/updated",
           diff: params.diff ?? params,
-          raw: params,
           threadId: String(params.threadId ?? params.thread_id ?? ""),
           turnId: String(params.turnId ?? params.turn_id ?? ""),
         },
@@ -157,15 +157,23 @@ export function normalizeThreadReadResponse(
   const rawTurns = Array.isArray(rawThread.turns) ? rawThread.turns : undefined;
   const turns = rawTurns?.map((turn) => normalizeTurn(turn, thread.id)) ?? [];
   const status = snapshotStatus(rawThread.status, rawTurns?.length ?? 0);
-  const events: AgentEvent[] = [
-    {
-      status,
-      thread,
-      snapshot: true,
-      ...(rawTurns ? { turns } : {}),
-      type: options.activate === false ? "thread/upserted" : "thread/started",
-    },
-  ];
+  const threadEvent =
+    options.activate === false
+      ? ({
+          status,
+          thread,
+          snapshot: true,
+          ...(rawTurns ? { turns } : {}),
+          type: "thread/upserted",
+        } satisfies AgentEvent)
+      : ({
+          status,
+          thread,
+          snapshot: true,
+          ...(rawTurns ? { turns } : {}),
+          type: "thread/started",
+        } satisfies AgentEvent);
+  const events: AgentEvent[] = [threadEvent];
 
   events.push(...normalizeTurnSnapshotEvents(rawTurns ?? [], { threadId: thread.id }));
 
@@ -371,7 +379,6 @@ function normalizeTokenUsage(params: Record<string, unknown>): AgentEvent {
         numberValue(totalUsage?.total_tokens) ??
         numberValue(params.totalTokens),
       turnId: optionalStringValue(params.turnId ?? params.turn_id),
-      raw: params,
     },
   };
 }
@@ -518,13 +525,13 @@ function rawThreadId(rawThread: Record<string, unknown>): string | undefined {
   return undefined;
 }
 
-function threadListSnapshotStatus(rawThread: unknown, scope: AgentThreadScope): string {
+function threadListSnapshotStatus(rawThread: unknown, scope: AgentThreadScope): ThreadStatus {
   const record = asRecord(rawThread);
   if (scope.kind === "history" && scope.archived === true) return "archived";
   return snapshotStatus(record?.status, 0);
 }
 
-function snapshotStatus(value: unknown, turnCount: number): string {
+function snapshotStatus(value: unknown, turnCount: number): ThreadStatus {
   const status = normalizeThreadStatus(value);
   return status === "notLoaded" && turnCount > 0 ? "loaded" : status;
 }

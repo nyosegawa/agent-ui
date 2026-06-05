@@ -1,6 +1,6 @@
 import type { AgentUserInput } from "../agent-input";
 import type { QueuedFollowUpAttachment } from "../hooks";
-import type { AgentResolvedResource, AgentResourceKind } from "../resources";
+import type { AgentResolvedResourceBase, AgentResourceKind } from "../resources";
 
 export type ComposerAttachmentKind = Extract<
   AgentResourceKind,
@@ -9,7 +9,7 @@ export type ComposerAttachmentKind = Extract<
 
 export type AgentLocalAttachmentKind = Extract<AgentResourceKind, "image" | "file">;
 
-export interface AgentResolvedLocalAttachment extends AgentResolvedResource {
+export interface AgentResolvedLocalAttachment extends AgentResolvedResourceBase {
   input: AgentUserInput | AgentUserInput[];
 }
 

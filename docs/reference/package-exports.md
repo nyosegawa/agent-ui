@@ -223,7 +223,9 @@ boundary: `AgentResolvedResource`, `AgentResourceKind`,
 `AgentResourceRequest`, `AgentResourceResolution`, `AgentResourceResolver`,
 `AgentLocalMediaUrlResolver`, `AgentResolvedLocalAttachment`, `agentResourceUrl`, and
 `agentResourceDisplayName`. These are browser/UI metadata primitives, not host
-upload, storage, authorization, or static-serving policy.
+upload, storage, authorization, or static-serving policy. Resource resolution
+returns structured `AgentResolvedResource` objects; URL string shorthand is not
+part of the public contract.
 
 Composer controller exports include the raw-free `AgentComposerController`
 view plus `AgentComposerSubmitMode`, `AgentComposerDisabledReason`, and

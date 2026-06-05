@@ -33,10 +33,10 @@ components should import from `@nyosegawa/agent-ui-react`, not from source
 modules, and receive a `Default` renderer for the surface they replace. `Shell`,
 `Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are the
 raw-free preset replacement targets for this gate. `Item` remains a legacy
-replacement point that currently receives `AgentItemState` and `TurnState`
-from core, including `raw?: unknown` fields; do not treat that shape as the
-final item renderer contract. Moving item replacement to raw-free
-transcript view-model props is part of the later API stabilization gate.
+replacement point, but public item and turn state are raw-free. Prefer `blocks`
+replacements and transcript view-model props for new custom renderers so host
+code depends on normalized Agent UI fields instead of generated App Server
+payloads.
 Internal component state, CSS implementation selectors, attachment mutation
 objects, transcript window bookkeeping, and generated protocol payloads stay
 inside Agent UI.
@@ -66,7 +66,10 @@ import {
           : textInput(`Attached file: ${asset.path}`),
     };
   }}
-  resolveLocalMediaUrl={(path) => localMediaAssetUrlForPath(path)}
+  resolveLocalMediaUrl={(path) => ({
+    kind: "url",
+    previewUrl: localMediaAssetUrlForPath(path),
+  })}
   messages={{
     "composer.placeholder": "フォローアップの変更を求める",
   }}
@@ -194,9 +197,10 @@ into a stack of file-change cards.
 Local media transcript blocks require the host to pass
 `resolveLocalMediaUrl(path, item)`. The `path` is the App Server local resource
 reference and is never used directly as an image or video `src`. Return a
-browser-safe URL from a same-origin helper or static asset route. Returning
-`null`/`undefined`, omitting the resolver, or a failed image/video load renders
-the default local-media fallback card instead of a broken media element.
+structured `AgentResolvedResource` with `previewUrl` or `url` from a same-origin
+helper or static asset route. Returning `null`/`undefined`, omitting the
+resolver, or a failed image/video load renders the default local-media fallback
+card instead of a broken media element.
 
 Internally, transcript block synthesis and closed-card preview text are pure
 helpers under `packages/react/src/timeline/`, while windowing is owned by the
@@ -519,13 +523,15 @@ image/video `src` values from raw filesystem paths. If a structured attachment
 preview URL fails to load, the chip falls back to its attachment icon and keeps
 the resolved Codex `input` unchanged.
 
-Resource resolution uses the shared `AgentResolvedResource` shape. Composer
-file attachments require `AgentResolvedLocalAttachment` so each resolved file
-has explicit Codex input, while transcript local media may return either a URL
-string or an `AgentResolvedResource` with `previewUrl`/`url` and safe
-`displayName`. `mimeType` or `kind: "video"` controls video rendering for
-opaque local-media paths. This keeps browser rendering metadata separate from
-raw App Server paths without adding a public attachment controller.
+Resource resolution uses the shared `AgentResolvedResource` object shape.
+Composer file attachments require `AgentResolvedLocalAttachment` so each
+resolved file has explicit Codex input. Transcript local media returns
+`AgentResolvedResource | null | undefined`; string URL shorthand is not part of
+the public contract. Use `previewUrl`/`url` for browser rendering and
+`displayName` for safe captions. `mimeType` controls video rendering for
+opaque local-media paths. This keeps browser rendering metadata
+separate from App Server local paths without adding a public attachment
+controller.
 
 When a turn is running, normal Enter queues non-empty follow-ups locally and
 empty Enter does not interrupt the turn. `Send now`

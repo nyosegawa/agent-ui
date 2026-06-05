@@ -285,9 +285,7 @@ function ImageBlock({
     resolvedResource ?? (blockResource?.url || blockResource?.previewUrl ? blockResource : undefined);
   const resolvedUrl = agentResourceUrl(displayResource);
   const resolvedResourceObject =
-    displayResource && typeof displayResource !== "string"
-      ? displayResource
-      : undefined;
+    displayResource ?? undefined;
   const mediaSourceKey = path ?? blockResource?.url ?? blockResource?.previewUrl;
   const mediaKey =
     mediaSourceKey && resolvedUrl ? `${mediaSourceKey}\u0000${resolvedUrl}` : undefined;
@@ -302,12 +300,9 @@ function ImageBlock({
   const fallbackDisplayName =
     block.text ?? (path ? localMediaDisplayName(path) : undefined) ?? t("timeline.image");
   const fileName =
-    typeof displayResource === "string"
-      ? fallbackDisplayName
-      : (agentResourceDisplayName(displayResource, fallbackDisplayName) ??
-        fallbackDisplayName);
+    agentResourceDisplayName(displayResource, fallbackDisplayName) ??
+    fallbackDisplayName;
   const isVideoResource =
-    resolvedResourceObject?.kind === "video" ||
     resolvedResourceObject?.mimeType?.startsWith("video/") ||
     Boolean(path && isVideoPath(path));
   if (!resolvedUrl || failed) {

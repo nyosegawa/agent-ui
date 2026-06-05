@@ -318,7 +318,9 @@ export function collectionFailed(
 export function threadActivityFromStatus(status?: ThreadStatus): ThreadState["activity"] {
   if (status === "running") return "running";
   if (status === "waitingForInput") return "waitingForInput";
-  if (status === "error") return "failed";
+  if (status === "error" || status === "failed" || status === "systemError") {
+    return "failed";
+  }
   return "idle";
 }
 

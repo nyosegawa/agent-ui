@@ -846,7 +846,7 @@ describe("AgentChat", () => {
               {
                 id,
                 kind: "commandExecution",
-                raw: { command: `echo ${index + 1}` },
+                metadata: { command: `echo ${index + 1}` },
                 status: "completed",
                 text: `echo ${index + 1}`,
                 threadId: "thread-large",
@@ -892,7 +892,7 @@ describe("AgentChat", () => {
               command: "bun test",
               id: "cmd-1",
               kind: "commandExecution",
-              raw: { command: "bun test" },
+              metadata: { command: "bun test" },
             },
           },
           commandOutputByItemId: {},
@@ -910,7 +910,7 @@ describe("AgentChat", () => {
             "cmd-1": {
               id: "cmd-1",
               kind: "commandExecution",
-              raw: { command: "bun test" },
+              metadata: { command: "bun test" },
               status: "completed",
               threadId: "thread-transcript-entries",
               turnId: "turn-transcript-entries",
@@ -1257,7 +1257,7 @@ describe("AgentChat", () => {
             "cmd-1": {
               id: "cmd-1",
               kind: "commandExecution",
-              raw: { command: "bun test packages/react" },
+              metadata: { command: "bun test packages/react" },
               status: "completed",
               threadId: "thread-command-block",
               turnId: "turn-command-block",
@@ -1316,7 +1316,7 @@ describe("AgentChat", () => {
             "file-1": {
               id: "file-1",
               kind: "fileChange",
-              raw: { changes: [change] },
+              metadata: { changes: [change] },
               status: "completed",
               threadId: "thread-file-block",
               turnId: "turn-file-block",
@@ -1364,7 +1364,7 @@ describe("AgentChat", () => {
             "tool-node-repl": {
               id: "tool-node-repl",
               kind: "mcpToolCall",
-              raw: {
+              metadata: {
                 arguments: { title: "Inspect Agent UI DOM" },
                 result: {
                   content: [
@@ -1396,7 +1396,7 @@ describe("AgentChat", () => {
             "file-change": {
               id: "file-change",
               kind: "fileChange",
-              raw: {
+              metadata: {
                 changes: [{ kind: "update", path: "packages/react/src/timeline.tsx" }],
               },
               status: "completed",
@@ -1497,7 +1497,7 @@ describe("AgentChat", () => {
             "item-command": {
               id: "item-command",
               kind: "commandExecution",
-              raw: { command: "bun test" },
+              metadata: { command: "bun test" },
               status: "completed",
               threadId: "thread-anchor",
               turnId: "turn-anchor",
@@ -1578,7 +1578,7 @@ describe("AgentChat", () => {
             "item-command": {
               id: "item-command",
               kind: "commandExecution",
-              raw: { command: "bun test" },
+              metadata: { command: "bun test" },
               status: "completed",
               threadId: "thread-item-only",
               turnId: "turn-item-only",
@@ -2007,7 +2007,7 @@ describe("AgentChat", () => {
             "item-command": {
               id: "item-command",
               kind: "commandExecution",
-              raw: { command: "bun test" },
+              metadata: { command: "bun test" },
               status: "completed",
               threadId: "thread-approval-resolution",
               turnId: "turn-approval-resolution",
@@ -2098,7 +2098,7 @@ describe("AgentChat", () => {
             "tool-bool": {
               id: "tool-bool",
               kind: "mcpToolCall",
-              raw: {
+              metadata: {
                 arguments: { expression: "Boolean(process.env.CI)" },
                 result: true,
                 server: "node_repl",
@@ -2112,7 +2112,7 @@ describe("AgentChat", () => {
             "tool-error": {
               id: "tool-error",
               kind: "dynamicToolCall",
-              raw: {
+              metadata: {
                 arguments: { path: "/tmp/missing" },
                 error: "Error: ENOENT\n    at readFile (/tmp/tool.js:10:3)",
                 name: "read_file",
@@ -2217,7 +2217,6 @@ describe("AgentChat", () => {
         id: "thread-stored",
         name: "Review stored transcript",
         path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
-        raw: { updatedAt: "2026-05-16T12:00:00.000Z" },
       },
       turns: {
         "turn-stored": {
@@ -3206,7 +3205,7 @@ describe("AgentChat", () => {
           resolveLocalMediaUrl={(path, item) => {
             expect(path).toBe("/tmp/agent-ui.png");
             expect(item?.id).toBe("image");
-            return "/agent-ui/assets/image";
+            return { kind: "url", previewUrl: "/agent-ui/assets/image" };
           }}
           sidebar={false}
           usage={false}
@@ -3858,11 +3857,7 @@ describe("AgentChat", () => {
             "item-user": {
               id: "item-user",
               kind: "userMessage",
-              raw: {
-                content: [
-                  { text: "Reply with exactly: agent-ui-ui-check", type: "text" },
-                ],
-              },
+              metadata: { content: "Reply with exactly: agent-ui-ui-check" },
               status: "completed",
               text: [
                 { text: "Reply with exactly: agent-ui-ui-check", type: "text" },
@@ -3907,9 +3902,9 @@ describe("AgentChat", () => {
           item: {
             id: "reasoning",
             kind: "reasoning",
-            raw: {
-              content: [{ text: "Full hidden reasoning" }],
-              summary: [{ text: "Reviewing renderer taxonomy" }],
+            metadata: {
+              content: "Full hidden reasoning",
+              summary: "Reviewing renderer taxonomy",
             },
             text: "Reviewing renderer taxonomy",
             threadId: "thread-blocks",
@@ -3939,7 +3934,7 @@ describe("AgentChat", () => {
           item: {
             id: "tool",
             kind: "mcpToolCall",
-            raw: {
+            metadata: {
               arguments: { selector: "#app" },
               result: { ok: true },
               server: "agent-browser",
@@ -3958,7 +3953,7 @@ describe("AgentChat", () => {
           item: {
             id: "search",
             kind: "webSearch",
-            raw: { query: "Codex App Server generated protocol" },
+            metadata: { query: "Codex App Server generated protocol" },
             threadId: "thread-blocks",
             turnId: "turn-blocks",
           },
@@ -3972,7 +3967,7 @@ describe("AgentChat", () => {
           item: {
             id: "image",
             kind: "imageView",
-            raw: { path: "/tmp/agent-ui.png" },
+            metadata: { path: "/tmp/agent-ui.png" },
             threadId: "thread-blocks",
             turnId: "turn-blocks",
           },
@@ -3989,7 +3984,7 @@ describe("AgentChat", () => {
           resolveLocalMediaUrl={(path, item) => {
             expect(path).toBe("/tmp/agent-ui.png");
             expect(item?.id).toBe("image");
-            return "/agent-ui/assets/image";
+            return { kind: "url", previewUrl: "/agent-ui/assets/image" };
           }}
           sidebar={false}
           usage={false}
@@ -4032,7 +4027,7 @@ describe("AgentChat", () => {
           item: {
             id: "image",
             kind: "imageView",
-            raw: { path: "/tmp/secret-screenshot.png" },
+            metadata: { path: "/tmp/secret-screenshot.png" },
             threadId: "thread-local-media",
             turnId: "turn-local-media",
           },
@@ -4071,7 +4066,7 @@ describe("AgentChat", () => {
           item: {
             id: "structured-image",
             kind: "imageView",
-            raw: { path: "/tmp/agent-ui-local-media/private/diagram.png" },
+            metadata: { path: "/tmp/agent-ui-local-media/private/diagram.png" },
             threadId: "thread-structured-media",
             turnId: "turn-structured-media",
           },
@@ -4121,7 +4116,7 @@ describe("AgentChat", () => {
           item: {
             id: "structured-video",
             kind: "imageView",
-            raw: { path: "/tmp/agent-ui-local-media/opaque-resource" },
+            metadata: { path: "/tmp/agent-ui-local-media/opaque-resource" },
             threadId: "thread-structured-video",
             turnId: "turn-structured-video",
           },
@@ -4171,7 +4166,7 @@ describe("AgentChat", () => {
           item: {
             id: "image",
             kind: "imageView",
-            raw: { path: "/tmp/failing-screenshot.png" },
+            metadata: { path: "/tmp/failing-screenshot.png" },
             threadId: "thread-local-media-failure",
             turnId: "turn-local-media-failure",
           },
@@ -4186,7 +4181,10 @@ describe("AgentChat", () => {
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <AgentChat
-          resolveLocalMediaUrl={() => "/agent-ui/assets/missing-image"}
+          resolveLocalMediaUrl={() => ({
+            kind: "url",
+            previewUrl: "/agent-ui/assets/missing-image",
+          })}
           sidebar={false}
           usage={false}
         />
@@ -4221,10 +4219,9 @@ describe("AgentChat", () => {
           item: {
             id: "safe-image-resource",
             kind: "imageView",
-            raw: {
+            metadata: {
               displayName: "Generated preview",
-              image_url: "https://example.test/preview.png",
-              text: "not-a-local-media-path",
+              imageUrl: "https://example.test/preview.png",
             },
             threadId: "thread-safe-image-resource",
             turnId: "turn-safe-image-resource",
@@ -4236,7 +4233,10 @@ describe("AgentChat", () => {
       },
     ] as FixtureStep[]);
     initialState.threadLifecycle.activeThreadId = "thread-safe-image-resource";
-    const resolveLocalMediaUrl = vi.fn(() => "/agent-ui/assets/incorrect");
+    const resolveLocalMediaUrl = vi.fn(() => ({
+      kind: "url",
+      previewUrl: "/agent-ui/assets/incorrect",
+    }));
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
@@ -4272,7 +4272,7 @@ describe("AgentChat", () => {
           item: {
             id: "image",
             kind: "imageView",
-            raw: { path: String.raw`C:\Users\me\secret.png` },
+            metadata: { path: String.raw`C:\Users\me\secret.png` },
             threadId: "thread-windows-media",
             turnId: "turn-windows-media",
           },
@@ -4311,7 +4311,7 @@ describe("AgentChat", () => {
           item: {
             id: "image",
             kind: "imageView",
-            raw: { path: "/tmp/refresh.png" },
+            metadata: { path: "/tmp/refresh.png" },
             threadId: "thread-media-refresh",
             turnId: "turn-media-refresh",
           },
@@ -4325,7 +4325,10 @@ describe("AgentChat", () => {
     const { rerender } = render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <AgentChat
-          resolveLocalMediaUrl={() => "/agent-ui/assets/old-refresh"}
+          resolveLocalMediaUrl={() => ({
+            kind: "url",
+            previewUrl: "/agent-ui/assets/old-refresh",
+          })}
           sidebar={false}
           usage={false}
         />
@@ -4339,7 +4342,10 @@ describe("AgentChat", () => {
     rerender(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <AgentChat
-          resolveLocalMediaUrl={() => "/agent-ui/assets/new-refresh"}
+          resolveLocalMediaUrl={() => ({
+            kind: "url",
+            previewUrl: "/agent-ui/assets/new-refresh",
+          })}
           sidebar={false}
           usage={false}
         />
@@ -5533,7 +5539,7 @@ describe("AgentChat", () => {
               {
                 id,
                 kind: "commandExecution",
-                raw: { command: `echo ${index}` },
+                metadata: { command: `echo ${index}` },
                 status: "completed",
                 text: `echo ${index}`,
                 threadId: "thread-history",

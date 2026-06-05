@@ -63,10 +63,10 @@ export function itemLabel(kind: string): string {
   }
 }
 
-export function commandTextForItem(item: { raw?: unknown; text?: unknown } | undefined): string | undefined {
-  const raw = item?.raw;
-  if (!isRecord(raw)) return undefined;
-  const command = raw.command;
+export function commandTextForItem(
+  item: { metadata?: { command?: unknown }; text?: unknown } | undefined,
+): string | undefined {
+  const command = item?.metadata?.command;
   return typeof command === "string" && command.trim() ? command.trim() : undefined;
 }
 

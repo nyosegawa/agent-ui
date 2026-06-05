@@ -101,7 +101,6 @@ function normalizeSkillsList(response: unknown, fallbackCwd?: string) {
               enabled: typeof skillRecord.enabled === "boolean" ? skillRecord.enabled : undefined,
               name: String(skillRecord.name ?? ""),
               path: stringValue(skillRecord.path),
-              raw: skill,
             },
           ];
         }),
@@ -140,7 +139,6 @@ function normalizeHooksList(response: unknown, fallbackCwd?: string) {
               enabled: typeof hookRecord.enabled === "boolean" ? hookRecord.enabled : undefined,
               id,
               name: stringValue(hookRecord.name),
-              raw: hook,
             },
           ];
         }),

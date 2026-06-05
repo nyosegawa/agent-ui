@@ -855,7 +855,7 @@ function createOptimisticPendingState(): AgentSessionState {
           "pending-user-message-closeup": {
             id: "pending-user-message-closeup",
             kind: "userMessage",
-            raw: {
+            metadata: {
               clientUserMessageId: "pending-user-message-closeup",
               optimistic: true,
               operationId: "pending-operation-closeup",

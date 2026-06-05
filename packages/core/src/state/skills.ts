@@ -3,7 +3,6 @@ export interface AgentSkill {
   path?: string;
   cwd?: string;
   enabled?: boolean;
-  raw?: unknown;
 }
 
 export interface SkillsState {

@@ -898,6 +898,7 @@ function ResourceResolutionExample() {
             <AgentMessageList
               resolveLocalMediaUrl={(path) => ({
                 displayName: "fixture-image.png",
+                kind: "url",
                 previewUrl,
                 redactedPath: `[agent-ui-local-media]/${path.split(/[\\/]+/).at(-1) ?? "media"}`,
               })}

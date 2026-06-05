@@ -7,7 +7,39 @@ export interface AgentItemState {
   kind: string;
   status: "inProgress" | "completed" | "failed";
   text?: string;
-  raw?: unknown;
+  metadata?: AgentItemMetadata;
+}
+
+export interface AgentItemMetadata {
+  arguments?: unknown;
+  changes?: unknown[];
+  clientUserMessageId?: string;
+  command?: string;
+  content?: string;
+  cwd?: string;
+  displayName?: string;
+  durationMs?: number;
+  error?: unknown;
+  exitCode?: number;
+  fileName?: string;
+  imageUrl?: string;
+  message?: string;
+  mimeType?: string;
+  name?: string;
+  optimistic?: boolean;
+  operationId?: string;
+  retrying?: boolean;
+  path?: string;
+  previewUrl?: string;
+  query?: string;
+  redactedPath?: string;
+  result?: unknown;
+  review?: string;
+  server?: string;
+  serverItemId?: string;
+  summary?: string;
+  tool?: string;
+  url?: string;
 }
 
 export type AgentItemBlockKind =
@@ -64,5 +96,4 @@ export interface AgentItemBlock {
   resource?: AgentItemBlockResource;
   subtype?: "review_mode" | "compaction" | "unknown_item" | "error" | "status" | string;
   metadata?: Record<string, unknown>;
-  raw?: unknown;
 }

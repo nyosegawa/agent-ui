@@ -48,16 +48,17 @@ export function createInitialThreadEntityState(): ThreadEntityState {
 }
 
 export function createThreadState(thread: AgentThread): ThreadState {
+  const publicThread = sanitizeThread(thread);
   return {
     activity: "idle",
     availability: "available",
-    id: thread.id,
-    metadata: threadMetadataFromThread(thread),
+    id: publicThread.id,
+    metadata: threadMetadataFromThread(publicThread),
     operations: {},
     orderedTurnIds: [],
     status: "loaded",
-    storage: threadStorageFromThread(thread),
-    thread,
+    storage: threadStorageFromThread(publicThread),
+    thread: publicThread,
     turns: {},
   };
 }
@@ -67,6 +68,23 @@ export function getOrCreateThreadState(
   thread: AgentThread,
 ): ThreadState {
   return threads[thread.id] ?? createThreadState(thread);
+}
+
+export function sanitizeThread(thread: AgentThread): AgentThread {
+  const { raw, ...publicThread } = thread as AgentThread & { raw?: unknown };
+  const rawRecord = isRecord(raw) ? raw : undefined;
+  return {
+    ...publicThread,
+    metadata: {
+      ...(rawRecord?.optimistic === true ? { optimistic: true } : {}),
+      ...(typeof rawRecord?.operationId === "string" ? { operationId: rawRecord.operationId } : {}),
+      ...publicThread.metadata,
+    },
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
 
 export function updateThreadEntity(

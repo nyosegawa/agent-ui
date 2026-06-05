@@ -1,7 +1,9 @@
 import type {
+  AgentItemMetadata,
   AgentItemState,
   AgentThread,
   AgentTurn,
+  ThreadStatus,
 } from "@nyosegawa/agent-ui-core";
 
 export interface MethodMessage {
@@ -20,16 +22,49 @@ export function normalizeThread(raw: unknown): AgentThread {
       stringValue(record.title) ??
       stringValue(record.preview),
     path: threadProjectPath(record),
-    raw,
   };
 }
 
-export function normalizeThreadStatus(value: unknown): string {
-  if (typeof value === "string") return value;
-  const type = asRecord(value)?.type;
-  if (type === "active") return "running";
+export function normalizeThreadStatus(value: unknown): ThreadStatus {
+  if (typeof value === "string") return threadStatusValue(value);
+  const record = asRecord(value);
+  const type = record?.type;
+  if (type === "active" && record) {
+    return activeFlags(record).includes("waitingOnUserInput")
+      ? "waitingForInput"
+      : "running";
+  }
   if (type === "idle") return "loaded";
-  return typeof type === "string" ? type : "notLoaded";
+  if (type === "systemError") return "systemError";
+  if (type === "notLoaded") return "notLoaded";
+  return "notLoaded";
+}
+
+function activeFlags(record: Record<string, unknown>): string[] {
+  return Array.isArray(record.activeFlags)
+    ? record.activeFlags.filter((flag): flag is string => typeof flag === "string")
+    : [];
+}
+
+function threadStatusValue(value: string): ThreadStatus {
+  switch (value) {
+    case "notLoaded":
+    case "loaded":
+    case "ready":
+    case "running":
+    case "waitingForInput":
+    case "complete":
+    case "completed":
+    case "interrupted":
+    case "error":
+    case "failed":
+    case "archived":
+    case "closed":
+    case "systemError":
+      return value;
+    default:
+      return "loaded";
+  }
 }
 
 export function normalizeTurn(raw: unknown, threadId: string): AgentTurn {
@@ -37,7 +72,6 @@ export function normalizeTurn(raw: unknown, threadId: string): AgentTurn {
   return {
     id: String(record.id ?? record.turnId ?? record.turn_id),
     itemsView: itemsViewValue(record.itemsView ?? record.items_view),
-    raw,
     status: stringValue(record.status),
     threadId,
   };
@@ -55,7 +89,7 @@ export function normalizeItem(
   return {
     id: String(record.id ?? record.itemId ?? record.item_id),
     kind: String(kind),
-    raw,
+    metadata: itemMetadata(record),
     status:
       record.status === "failed"
         ? "failed"
@@ -73,6 +107,70 @@ export function normalizeItem(
       record.turnId ?? record.turn_id ?? contextRecord.turnId ?? contextRecord.turn_id,
     ),
   };
+}
+
+function itemMetadata(raw: Record<string, unknown>): AgentItemMetadata | undefined {
+  const metadata: AgentItemMetadata = {};
+  copyString(metadata, "clientUserMessageId", raw.clientUserMessageId ?? raw.clientId ?? raw.client_id);
+  copyString(metadata, "command", raw.command);
+  copyString(metadata, "content", textParts(raw.content));
+  copyString(metadata, "cwd", raw.cwd);
+  copyString(metadata, "displayName", raw.displayName ?? raw.display_name);
+  copyNumber(metadata, "durationMs", raw.durationMs ?? raw.duration_ms);
+  metadata.error = raw.error;
+  copyNumber(metadata, "exitCode", raw.exitCode ?? raw.exit_code);
+  copyString(metadata, "fileName", raw.fileName ?? raw.file_name ?? raw.filename);
+  copyString(metadata, "imageUrl", raw.imageUrl ?? raw.image_url);
+  copyString(metadata, "mimeType", raw.mimeType ?? raw.mime_type);
+  copyString(metadata, "name", raw.name);
+  copyString(metadata, "path", raw.path ?? raw.savedPath ?? raw.saved_path);
+  copyString(metadata, "previewUrl", raw.previewUrl ?? raw.preview_url);
+  copyString(metadata, "query", raw.query);
+  copyString(metadata, "redactedPath", raw.redactedPath ?? raw.redacted_path);
+  metadata.result = raw.result ?? raw.contentItems ?? raw.content_items;
+  copyString(metadata, "review", raw.review);
+  copyString(metadata, "server", raw.server);
+  copyString(metadata, "summary", textParts(raw.summary));
+  copyString(metadata, "tool", raw.tool);
+  copyString(metadata, "url", raw.url);
+  metadata.arguments = raw.arguments ?? raw.args;
+  if (Array.isArray(raw.changes)) metadata.changes = raw.changes;
+  return Object.values(metadata).some((value) => value !== undefined) ? metadata : undefined;
+}
+
+function textParts(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  if (!Array.isArray(value)) return undefined;
+  const text = value
+    .map((part) => {
+      if (typeof part === "string") return part;
+      const record = asRecord(part);
+      return typeof record?.text === "string" ? record.text : undefined;
+    })
+    .filter(isNonEmptyString)
+    .join("");
+  return text || undefined;
+}
+
+function copyString<T extends keyof AgentItemMetadata>(
+  metadata: AgentItemMetadata,
+  key: T,
+  value: unknown,
+) {
+  const text = stringValue(value);
+  if (text) {
+    (metadata[key] as string | undefined) = text;
+  }
+}
+
+function copyNumber<T extends keyof AgentItemMetadata>(
+  metadata: AgentItemMetadata,
+  key: T,
+  value: unknown,
+) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    (metadata[key] as number | undefined) = value;
+  }
 }
 
 function itemText(raw: Record<string, unknown>): string | undefined {

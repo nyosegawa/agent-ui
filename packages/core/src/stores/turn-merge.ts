@@ -7,15 +7,17 @@ const itemsViewRank: Record<AgentTurnItemsView, number> = {
 };
 
 export function mergeAgentTurn(existing: AgentTurn, incoming: AgentTurn): AgentTurn {
-  const existingRank = rankItemsView(existing.itemsView);
-  const incomingRank = rankItemsView(incoming.itemsView);
+  const publicExisting = sanitizeTurnForMerge(existing);
+  const publicIncoming = sanitizeTurnForMerge(incoming);
+  const existingRank = rankItemsView(publicExisting.itemsView);
+  const incomingRank = rankItemsView(publicIncoming.itemsView);
   return {
-    ...existing,
-    ...incoming,
+    ...publicExisting,
+    ...publicIncoming,
     itemsView:
-      incoming.itemsView === undefined || incomingRank < existingRank
-        ? existing.itemsView
-        : incoming.itemsView,
+      publicIncoming.itemsView === undefined || incomingRank < existingRank
+        ? publicExisting.itemsView
+        : publicIncoming.itemsView,
   };
 }
 
@@ -28,4 +30,10 @@ export function shouldApplyTurnItems(existing: AgentTurn, incoming: AgentTurn): 
 
 function rankItemsView(itemsView: AgentTurnItemsView | undefined): number {
   return itemsView === undefined ? -1 : itemsViewRank[itemsView];
+}
+
+function sanitizeTurnForMerge(turn: AgentTurn): AgentTurn {
+  const { raw, ...publicTurn } = turn as AgentTurn & { raw?: unknown };
+  void raw;
+  return publicTurn;
 }

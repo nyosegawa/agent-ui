@@ -15,6 +15,5 @@ export type TurnEvent =
       turnId: TurnId;
       explanation?: string | null;
       plan: unknown;
-      raw?: unknown;
     }
-  | { type: "turn/diff/updated"; threadId: ThreadId; turnId: TurnId; diff: unknown; raw?: unknown };
+  | { type: "turn/diff/updated"; threadId: ThreadId; turnId: TurnId; diff: unknown };

@@ -1,6 +1,7 @@
 import type {
   AgentItemBlock,
   AgentItemBlockKind,
+  AgentItemMetadata,
   AgentItemState,
   ItemId,
   TurnState,
@@ -26,7 +27,7 @@ export interface ItemStore {
     turn: TurnState,
     itemId: ItemId,
     status: AgentItemState["status"],
-    options?: { raw?: Record<string, unknown> },
+    options?: { metadata?: AgentItemState["metadata"] },
   ): TurnState;
   upsert(turn: TurnState, item: AgentItemState): TurnState;
 }
@@ -41,7 +42,7 @@ export const itemStore: ItemStore = {
 };
 
 export function upsertItem(turn: TurnState, item: AgentItemState): TurnState {
-  const reconciledItem = reconcileClientUserMessage(turn, item);
+  const reconciledItem = reconcileClientUserMessage(turn, sanitizeItem(item));
   return {
     ...turn,
     blocksByItemId: {
@@ -60,12 +61,12 @@ export function updateItemStatus(
   turn: TurnState,
   itemId: ItemId,
   status: AgentItemState["status"],
-  options: { raw?: Record<string, unknown> } = {},
+  options: { metadata?: AgentItemState["metadata"] } = {},
 ): TurnState {
   const item = turn.items[itemId];
   if (!item) return turn;
-  const raw = mergeRaw(item.raw, options.raw);
-  const nextItem = { ...item, raw, status };
+  const metadata = options.metadata ? { ...item.metadata, ...options.metadata } : item.metadata;
+  const nextItem = { ...item, metadata, status };
   return {
     ...turn,
     blocksByItemId: {
@@ -84,17 +85,99 @@ function reconcileClientUserMessage(
   item: AgentItemState,
 ): AgentItemState {
   if (item.kind !== "userMessage") return item;
-  const clientId = clientUserMessageId(item.raw);
+  const clientId = clientUserMessageId(item);
   if (!clientId) return item;
   const existing = Object.values(turn.items).find(
     (candidate) =>
       candidate.kind === "userMessage" &&
       candidate.turnId === item.turnId &&
       candidate.id !== item.id &&
-      clientUserMessageId(candidate.raw) === clientId,
+      clientUserMessageId(candidate) === clientId,
   );
   if (!existing) return item;
   return reconcileUserMessageItem(existing, item, clientId);
+}
+
+function sanitizeItem(item: AgentItemState): AgentItemState {
+  const { raw, ...publicItem } = item as AgentItemState & { raw?: unknown };
+  return {
+    ...publicItem,
+    metadata: mergeMetadata(publicItem.metadata, metadataFromRaw(raw)),
+  };
+}
+
+function mergeMetadata(
+  metadata: AgentItemState["metadata"],
+  patch: AgentItemState["metadata"],
+): AgentItemState["metadata"] {
+  if (!metadata) return patch;
+  if (!patch) return metadata;
+  return { ...patch, ...metadata };
+}
+
+function metadataFromRaw(raw: unknown): AgentItemState["metadata"] {
+  if (!isRecord(raw)) return undefined;
+  const metadata: NonNullable<AgentItemState["metadata"]> = {};
+  copyString(metadata, "clientUserMessageId", raw.clientUserMessageId ?? raw.clientId ?? raw.client_id);
+  copyString(metadata, "command", raw.command);
+  copyString(metadata, "content", textParts(raw.content));
+  copyString(metadata, "cwd", raw.cwd);
+  copyString(metadata, "displayName", raw.displayName ?? raw.display_name);
+  copyNumber(metadata, "durationMs", raw.durationMs ?? raw.duration_ms);
+  metadata.error = raw.error;
+  copyNumber(metadata, "exitCode", raw.exitCode ?? raw.exit_code);
+  copyString(metadata, "fileName", raw.fileName ?? raw.file_name ?? raw.filename);
+  copyString(metadata, "imageUrl", raw.imageUrl ?? raw.image_url);
+  copyString(metadata, "message", raw.message);
+  copyString(metadata, "mimeType", raw.mimeType ?? raw.mime_type);
+  copyString(metadata, "name", raw.name);
+  copyString(metadata, "path", raw.path ?? raw.savedPath ?? raw.saved_path);
+  copyString(metadata, "previewUrl", raw.previewUrl ?? raw.preview_url);
+  copyString(metadata, "query", raw.query);
+  copyString(metadata, "redactedPath", raw.redactedPath ?? raw.redacted_path);
+  metadata.result = raw.result ?? raw.contentItems ?? raw.content_items;
+  copyString(metadata, "review", raw.review);
+  copyString(metadata, "server", raw.server);
+  copyString(metadata, "summary", textParts(raw.summary));
+  copyString(metadata, "tool", raw.tool);
+  copyString(metadata, "url", raw.url);
+  metadata.arguments = raw.arguments ?? raw.args;
+  if (Array.isArray(raw.changes)) metadata.changes = raw.changes;
+  copyBoolean(metadata, "optimistic", raw.optimistic);
+  copyString(metadata, "operationId", raw.operationId ?? raw.operation_id);
+  copyBoolean(metadata, "retrying", raw.retrying);
+  return Object.values(metadata).some((value) => value !== undefined) ? metadata : undefined;
+}
+
+function copyString<T extends keyof NonNullable<AgentItemState["metadata"]>>(
+  metadata: NonNullable<AgentItemState["metadata"]>,
+  key: T,
+  value: unknown,
+) {
+  const text = stringValue(value);
+  if (text) {
+    (metadata[key] as string | undefined) = text;
+  }
+}
+
+function copyNumber<T extends keyof NonNullable<AgentItemState["metadata"]>>(
+  metadata: NonNullable<AgentItemState["metadata"]>,
+  key: T,
+  value: unknown,
+) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    (metadata[key] as number | undefined) = value;
+  }
+}
+
+function copyBoolean<T extends keyof NonNullable<AgentItemState["metadata"]>>(
+  metadata: NonNullable<AgentItemState["metadata"]>,
+  key: T,
+  value: unknown,
+) {
+  if (typeof value === "boolean") {
+    (metadata[key] as boolean | undefined) = value;
+  }
 }
 
 export function reconcileUserMessageItem(
@@ -106,42 +189,33 @@ export function reconcileUserMessageItem(
     ...existing,
     ...incoming,
     id: existing.id,
-    raw: reconcileUserMessageRaw(existing.raw, incoming.raw, incoming.id, clientId),
+    metadata: reconcileUserMessageMetadata(
+      existing.metadata,
+      incoming.metadata,
+      incoming.id,
+      clientId,
+    ),
     text: incoming.text ?? existing.text,
   };
 }
 
-export function clientUserMessageId(raw: unknown): string | undefined {
-  if (!isRecord(raw)) return undefined;
-  const value = raw.clientUserMessageId ?? raw.clientId ?? raw.client_id;
+export function clientUserMessageId(item: Pick<AgentItemState, "metadata">): string | undefined {
+  const value = item.metadata?.clientUserMessageId;
   return typeof value === "string" && value.length > 0 ? value : undefined;
 }
 
-function reconcileUserMessageRaw(
-  existingRaw: unknown,
-  incomingRaw: unknown,
+function reconcileUserMessageMetadata(
+  existingMetadata: AgentItemState["metadata"],
+  incomingMetadata: AgentItemState["metadata"],
   serverItemId: string,
   clientId: string,
-): unknown {
-  const existing = isRecord(existingRaw) ? existingRaw : {};
-  const incoming = isRecord(incomingRaw) ? incomingRaw : {};
+): AgentItemState["metadata"] {
   return {
-    ...existing,
-    ...incoming,
+    ...existingMetadata,
+    ...incomingMetadata,
     clientUserMessageId: clientId,
     optimistic: false,
     serverItemId,
-  };
-}
-
-function mergeRaw(
-  raw: unknown,
-  patch: Record<string, unknown> | undefined,
-): unknown {
-  if (!patch) return raw;
-  return {
-    ...(isRecord(raw) ? raw : {}),
-    ...patch,
   };
 }
 
@@ -258,47 +332,46 @@ function ensureItemOrder(itemOrder: ItemId[], itemId: ItemId): ItemId[] {
 }
 
 export function createItemBlock(item: AgentItemState): AgentItemBlock {
-  const raw = isRecord(item.raw) ? item.raw : {};
+  const metadata = item.metadata ?? {};
   const kind = blockKindForItemKind(item.kind);
   const base: AgentItemBlock = {
-    error: raw.error,
+    error: item.metadata?.error,
     id: item.id,
     kind,
-    raw: item.raw,
     status: item.status,
     text: item.text,
   };
   if (kind === "thinking") {
     return {
       ...base,
-      content: textParts(raw.content) ?? item.text,
-      summary: textParts(raw.summary) ?? item.text,
+      content: textParts(metadata.content) ?? item.text,
+      summary: textParts(metadata.summary) ?? item.text,
     };
   }
   if (kind === "commandExecution") {
     return {
       ...base,
-      command: stringValue(raw.command) ?? arrayText(raw.command) ?? item.text,
-      cwd: stringValue(raw.cwd),
-      durationMs: numberValue(raw.durationMs ?? raw.duration_ms),
-      exitCode: numberValue(raw.exitCode ?? raw.exit_code),
+      command: stringValue(metadata.command) ?? arrayText(metadata.command) ?? item.text,
+      cwd: stringValue(metadata.cwd),
+      durationMs: numberValue(metadata.durationMs),
+      exitCode: numberValue(metadata.exitCode),
     };
   }
   if (kind === "fileChange") {
     return {
       ...base,
-      changes: Array.isArray(raw.changes) ? raw.changes : undefined,
+      changes: Array.isArray(metadata.changes) ? metadata.changes : undefined,
     };
   }
   if (kind === "toolCall" || kind === "mcpToolCall") {
     return {
       ...base,
-      arguments: raw.arguments ?? raw.args,
-      durationMs: numberValue(raw.durationMs ?? raw.duration_ms),
-      error: raw.error,
-      result: raw.result ?? raw.contentItems ?? raw.content_items,
-      server: stringValue(raw.server),
-      tool: stringValue(raw.tool ?? raw.name) ?? item.text,
+      arguments: metadata.arguments,
+      durationMs: numberValue(metadata.durationMs),
+      error: metadata.error,
+      result: metadata.result,
+      server: stringValue(metadata.server),
+      tool: stringValue(metadata.tool ?? metadata.name) ?? item.text,
       toolType:
         kind === "mcpToolCall"
           ? "mcp"
@@ -310,24 +383,24 @@ export function createItemBlock(item: AgentItemState): AgentItemBlock {
   if (kind === "collabToolCall") {
     return {
       ...base,
-      metadata: raw,
-      tool: stringValue(raw.tool) ?? item.text,
+      metadata: item.metadata as Record<string, unknown> | undefined,
+      tool: stringValue(metadata.tool) ?? item.text,
       toolType: "collab",
     };
   }
   if (kind === "webSearch") {
-    return { ...base, query: stringValue(raw.query) ?? item.text };
+    return { ...base, query: stringValue(metadata.query) ?? item.text };
   }
   if (kind === "image") {
-    const resource = imageResource(raw);
+    const resource = imageResource(metadata);
     return { ...base, path: resource?.path, resource };
   }
   if (kind === "systemInfo") {
     return {
       ...base,
-      metadata: raw,
+      metadata: item.metadata as Record<string, unknown> | undefined,
       subtype: systemSubtype(item.kind),
-      text: item.text ?? systemText(item.kind, raw),
+      text: item.text ?? systemText(item.kind, metadata),
     };
   }
   return base;
@@ -337,19 +410,18 @@ function stringValue(value: unknown): string | undefined {
   return typeof value === "string" && value.length > 0 ? value : undefined;
 }
 
-function imageResource(raw: Record<string, unknown>): AgentItemBlock["resource"] {
-  const path = stringValue(raw.path ?? raw.savedPath ?? raw.saved_path);
+function imageResource(raw: AgentItemMetadata): AgentItemBlock["resource"] {
+  const path = stringValue(raw.path);
   const url =
     browserMediaUrl(raw.url) ??
     browserMediaUrl(raw.imageUrl) ??
-    browserMediaUrl(raw.image_url) ??
     browserMediaUrl(raw.result);
-  const previewUrl = browserMediaUrl(raw.previewUrl ?? raw.preview_url);
-  const mimeType = stringValue(raw.mimeType ?? raw.mime_type);
+  const previewUrl = browserMediaUrl(raw.previewUrl);
+  const mimeType = stringValue(raw.mimeType);
   const displayName = stringValue(
-    raw.displayName ?? raw.display_name ?? raw.name ?? raw.filename ?? raw.fileName,
+    raw.displayName ?? raw.name ?? raw.fileName,
   );
-  const redactedPath = stringValue(raw.redactedPath ?? raw.redacted_path);
+  const redactedPath = stringValue(raw.redactedPath);
   if (!path && !url && !previewUrl && !displayName && !mimeType && !redactedPath) {
     return undefined;
   }
@@ -402,7 +474,7 @@ function systemSubtype(kind: string): AgentItemBlock["subtype"] {
   return "unknown_item";
 }
 
-function systemText(kind: string, raw: Record<string, unknown>): string {
+function systemText(kind: string, raw: AgentItemMetadata): string {
   if (typeof raw.review === "string") return raw.review;
   if (typeof raw.message === "string") return raw.message;
   if (kind === "contextCompaction") return "Context compacted";

@@ -264,8 +264,9 @@ The deterministic fixture Playwright files are split by contract ownership:
 
 - `smoke.e2e.ts` covers route availability, basic interaction, and blank-page
   regressions.
-- `visual-layout.e2e.ts` owns shell snapshots, viewport containment, menu
-  reachability, and host layout examples.
+- `visual-layout.e2e.ts` owns shell layout contracts, viewport containment,
+  menu reachability, and host layout examples. It checks presence, overflow,
+  hit-testing, and viewport-relative dimensions instead of exact pixel snapshots.
 - `visual-closeups.e2e.ts` owns the component close-up gallery and verifies that
   close-ups render real primitives instead of iframe or hand-written DOM
   substitutes.

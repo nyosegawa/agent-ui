@@ -6,17 +6,28 @@ export interface AgentThread {
   name?: string;
   path?: string | null;
   ephemeral?: boolean;
-  raw?: unknown;
+  metadata?: AgentThreadMetadata;
+}
+
+export interface AgentThreadMetadata {
+  optimistic?: boolean;
+  operationId?: string;
 }
 
 export type ThreadStatus =
   | "notLoaded"
   | "loaded"
+  | "ready"
   | "running"
   | "waitingForInput"
   | "complete"
+  | "completed"
+  | "interrupted"
   | "error"
-  | string;
+  | "failed"
+  | "archived"
+  | "closed"
+  | "systemError";
 
 export interface ThreadTokenUsage {
   cachedInputTokens?: number;
@@ -27,7 +38,6 @@ export interface ThreadTokenUsage {
   reasoningOutputTokens?: number;
   totalTokens?: number;
   turnId?: TurnId;
-  raw?: unknown;
 }
 
 export interface TokenUsageBreakdown {

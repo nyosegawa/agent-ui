@@ -21,7 +21,7 @@ describe("timeline pure helpers", () => {
         file: {
           id: "file",
           kind: "fileChange",
-          raw: { changes: [{ kind: "update", path: "src/app.ts" }] },
+          metadata: { changes: [{ kind: "update", path: "src/app.ts" }] },
           status: "completed",
           threadId: "thread",
           turnId: "turn",
@@ -29,7 +29,7 @@ describe("timeline pure helpers", () => {
         tool: {
           id: "tool",
           kind: "mcpToolCall",
-          raw: {
+          metadata: {
             arguments: { selector: "#app" },
             durationMs: 42,
             result: { content: [{ text: "DOM snapshot captured", type: "text" }] },

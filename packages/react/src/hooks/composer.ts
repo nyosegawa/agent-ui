@@ -202,17 +202,17 @@ export function useInternalAgentComposerController(
           thread: {
             ephemeral: true,
             id: pending.threadId,
-            name: promptText,
-            path: runSettings.cwd,
-            raw: {
+            metadata: {
               optimistic: true,
               operationId: pending.operationId,
             },
+            name: promptText,
+            path: runSettings.cwd,
           },
           turns: [
             {
               id: pending.turnId,
-              raw: {
+              metadata: {
                 optimistic: true,
                 operationId: pending.operationId,
               },
@@ -226,7 +226,7 @@ export function useInternalAgentComposerController(
           item: {
             id: pending.userMessageId,
             kind: "userMessage",
-            raw: {
+            metadata: {
               clientUserMessageId: pending.userMessageId,
               optimistic: true,
               operationId: pending.operationId,
@@ -266,7 +266,6 @@ export function useInternalAgentComposerController(
             id: nextThreadId,
             name: stringValue(rawThreadRecord.name),
             path: threadProjectPath(rawThreadRecord),
-            raw: rawThread,
           },
           type: "thread/started",
         });

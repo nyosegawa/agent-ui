@@ -86,7 +86,7 @@ type ThreadState = {
   turns: Record<TurnId, TurnState>;
   orderedTurnIds: TurnId[];
   tokenUsage?: ThreadTokenUsage;
-  status: ThreadStatus;
+  status: ThreadStatus; // closed Agent UI lifecycle projection, not arbitrary App Server strings
   activity: "idle" | "running" | "waitingForInput" | "failed";
   availability: "available" | "preview" | "archived" | "closed";
   storage: "unknown" | "stored" | "ephemeral";

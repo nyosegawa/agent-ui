@@ -16,15 +16,13 @@ describe("resource resolution primitives", () => {
     expect(agentResourceUrl({ url: "/agent-ui/assets/raw" })).toBe(
       "/agent-ui/assets/raw",
     );
-    expect(agentResourceUrl("/agent-ui/assets/string")).toBe(
-      "/agent-ui/assets/string",
-    );
     expect(agentResourceUrl(null)).toBeUndefined();
   });
 
   it("keeps display names separate from raw local paths", () => {
     const resource: AgentResolvedResource = {
       displayName: "diagram.png",
+      kind: "url",
       name: "/tmp/agent-ui/diagram.png",
       path: "/tmp/agent-ui/diagram.png",
       redactedPath: "[agent-ui-local-media]/diagram.png",

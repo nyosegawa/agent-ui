@@ -3,7 +3,6 @@ export interface AgentHook {
   name?: string;
   cwd?: string;
   enabled?: boolean;
-  raw?: unknown;
 }
 
 export interface HooksState {

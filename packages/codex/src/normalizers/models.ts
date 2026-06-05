@@ -22,8 +22,8 @@ export function normalizeModelListResponse(response: unknown): AgentModel[] {
           model.default_reasoning_effort ??
           model.default_effort,
       ),
+      isDefault: model.isDefault === true || model.is_default === true,
       name: normalizeModelName(model),
-      raw: model,
       supportedEfforts: normalizeSupportedEfforts(model),
     }));
 }

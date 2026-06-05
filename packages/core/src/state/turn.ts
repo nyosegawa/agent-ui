@@ -6,7 +6,12 @@ export interface AgentTurn {
   threadId: ThreadId;
   itemsView?: AgentTurnItemsView;
   status?: string;
-  raw?: unknown;
+  metadata?: AgentTurnMetadata;
+}
+
+export interface AgentTurnMetadata {
+  optimistic?: boolean;
+  operationId?: string;
 }
 
 export type AgentTurnItemsView = "notLoaded" | "summary" | "full";
@@ -26,10 +31,8 @@ export interface TurnState {
 export interface TurnPlanState {
   explanation?: string | null;
   plan: unknown;
-  raw?: unknown;
 }
 
 export interface TurnDiffState {
   diff: unknown;
-  raw?: unknown;
 }

@@ -17,7 +17,6 @@ export interface AgentApp {
   name?: string;
   pluginDisplayNames?: unknown;
   uri?: string;
-  raw?: unknown;
 }
 
 export interface AppsState {

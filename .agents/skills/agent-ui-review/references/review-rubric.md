@@ -27,6 +27,9 @@ findings" and then mention test gaps or residual risk.
 ## Repository-Specific Checks
 
 - Public package exports and API snapshots stay aligned.
+- Public controller/component/resource types do not expose `raw?: unknown`,
+  generated App Server payloads, first-message operation maps, or string
+  shorthand local-media resolvers.
 - Generated Codex schema changes are reviewed semantically, not accepted as
   mechanical output.
 - Browser method policy does not expose host-only App Server methods by default.
