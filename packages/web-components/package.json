@@ -1,6 +1,6 @@
 {
   "name": "@nyosegawa/agent-ui-web-components",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "Web Components wrapper for Agent UI React components.",
   "license": "MIT",
   "repository": {

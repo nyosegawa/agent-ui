@@ -1,6 +1,6 @@
 # @nyosegawa/agent-ui-web-components
 
-## 0.2.2
+## 0.3.0
 
 ### Patch Changes
 
