@@ -24,7 +24,7 @@ npm view @nyosegawa/agent-ui-react@<version> provenance
 Create a temporary project outside the workspace and install from npm:
 
 ```sh
-npm install react react-dom \
+bun add react react-dom \
   @nyosegawa/agent-ui-core@<version> \
   @nyosegawa/agent-ui-codex@<version> \
   @nyosegawa/agent-ui-react@<version> \
@@ -34,6 +34,12 @@ npm install react react-dom \
 
 Then verify ESM and CJS imports for public exports. Do not rely on workspace
 symlinks for post-publish smoke.
+
+The release workflow runs the same shape through:
+
+```sh
+node scripts/post-publish-smoke.mjs
+```
 
 ## Documentation
 

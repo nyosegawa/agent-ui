@@ -14,9 +14,9 @@ source under `skills/agent-ui`.
   generated-change review.
 - `.agents/skills/release-validation/`: package, API snapshot, build output,
   release, CI, and publish-risk validation.
-- `.agents/skills/npm-release/`: Changesets versioning, manual release
-  workflow operation, npm publish, provenance, post-publish smoke, rollback,
-  and deprecation operations.
+- `.agents/skills/npm-release/`: Changesets versioning, version PR review,
+  automatic trusted `main` push publishing, npm provenance, GitHub Releases,
+  post-publish smoke, rollback, and deprecation operations.
 - `.agents/skills/example-authoring/`: examples, recipes, fixture routes,
   docs-site examples, and example docs.
 - `.agents/skills/browser-qa/`: Playwright and agent-browser QA for
@@ -41,9 +41,9 @@ Use `release-validation` before release, before publish, after package export or
 declaration changes, when CI/package validation fails, or when a PR needs
 merge-readiness validation.
 
-Use `npm-release` when preparing a Changesets release, operating the manual npm
-publish workflow, verifying `NPM_TOKEN` and provenance behavior, or handling
-post-publish support tasks.
+Use `npm-release` when preparing a Changesets release, reviewing a version PR,
+monitoring the automatic npm publish workflow, verifying `NPM_TOKEN` and
+provenance behavior, or handling post-publish support tasks.
 
 Use `example-authoring` when changing `examples/`, `docs/examples/`, recipes,
 fixture routes, Next.js/Vite integrations, uploads examples, dynamic tools

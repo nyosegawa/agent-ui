@@ -89,8 +89,8 @@ boundaries, examples, tests, and host integration docs agree.
   updates.
 - [Codex Hooks](./maintenance/codex-hooks.md): project-local hook policy,
   trust/review behavior, and validation for safer repository development.
-- [CI/CD](./maintenance/ci-cd.md): PR checks, path-filtered CI, manual release,
-  artifacts, and local fallback.
+- [CI/CD](./maintenance/ci-cd.md): PR checks, path-filtered CI, version-PR
+  driven release, artifacts, and local fallback.
 - [Installable Agent UI Skill](./maintenance/agent-ui-skills.md): public
   `skills/agent-ui` layout, install commands, references, and validation.
 - [Repository Development Skills](./maintenance/repository-skills.md):

@@ -42,19 +42,29 @@ describe("npm release readiness", () => {
 
   it("keeps release automation provenance-enabled and token-scoped", async () => {
     const workflow = await readFile(join(root, ".github", "workflows", "release.yml"), "utf8");
+    const changesets = JSON.parse(
+      await readFile(join(root, ".changeset", "config.json"), "utf8"),
+    ) as {
+      fixed?: string[][];
+    };
+    expect(changesets.fixed).toContainEqual(publicPackages.map((pkg) => pkg.name));
+
+    expect(workflow).toContain("push:");
     expect(workflow).toContain("workflow_dispatch:");
     expect(workflow).toContain("type: choice");
     expect(workflow).toContain("- prepare");
-    expect(workflow).toContain("- publish");
-    expect(workflow).not.toContain("push:");
+    expect(workflow).toContain("Compare local package versions to npm");
     expect(workflow).toContain("id-token: write");
     expect(workflow).toContain("NPM_TOKEN: ${{ secrets.NPM_TOKEN }}");
     expect(workflow).toContain("bun run validate:release");
     expect(workflow).toContain("bun run validate:e2e");
     expect(workflow).toContain("version: bunx changeset version");
+    expect(workflow).toContain("title: Release Agent UI packages");
+    expect(workflow).toContain("commit: Release Agent UI packages");
     expect(workflow).toContain("publish: bun run release:publish");
-    expect(workflow).toContain("environment: npm-release");
+    expect(workflow).not.toContain("environment: npm-release");
     expect(workflow).toContain("NPM_CONFIG_PROVENANCE: true");
+    expect(workflow).toContain("node scripts/post-publish-smoke.mjs");
     expect(workflow).not.toContain("pull_request_target");
 
     const publishScript = await readFile(join(root, "scripts", "publish-npm-packages.mjs"), "utf8");
@@ -68,13 +78,14 @@ describe("npm release readiness", () => {
 
     expect(npmRelease).toContain("first public release was `0.1.0`");
     expect(npmRelease).toContain("Do not increment package versions on every `main` push");
-    expect(npmRelease).toContain("manual");
-    expect(npmRelease).toContain("npm-release");
+    expect(npmRelease).toContain("main push checks whether already-versioned packages are unpublished");
+    expect(npmRelease).toContain("reviewed version PR");
     expect(npmRelease).toContain("builds package `dist` output inside");
     expect(npmRelease).toContain("bunx changeset publish");
     expect(npmRelease).toContain("package would publish without `dist` files");
     expect(npmRelease).toContain("post-publish smoke");
     expect(checklist).toContain("NPM_TOKEN");
+    expect(checklist).toContain("Merge the reviewed version PR");
     expect(checklist).toContain("bun run validate:release");
     expect(checklist).toContain("bun run validate:e2e");
     expect(checklist).toContain("temporary consumer project outside the");

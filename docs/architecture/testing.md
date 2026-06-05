@@ -130,12 +130,13 @@ metadata. When that guard is added, start with the React guide examples because
 they cover the most user-facing component wiring and are already backed by
 workspace TypeScript dependencies.
 
-The manual release workflow runs `bun run validate:release` and then
+The release workflow runs `bun run validate:release` and then
 `bun run validate:e2e`, so the real-local fake App Server suite is release
-evidence without blocking every pull request. npm publish is a separate
-Environment-gated job after release validation. The publish job runs
-`bun run release:publish`, which performs its own package build before
-Changesets publishes immutable npm tarballs.
+evidence without blocking every pull request. On a reviewed version PR merge,
+the trusted `main` push path publishes only unpublished package versions after
+release validation. The publish job runs `bun run release:publish`, which
+performs its own package build before Changesets publishes immutable npm
+tarballs, then runs post-publish registry install smoke.
 
 ## Protocol Tests
 
