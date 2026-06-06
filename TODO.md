@@ -262,16 +262,16 @@
 
 ## 9. Merge Readiness Review
 
-- [ ] Confirm public docs, package exports, examples, tests, and skill guidance
+- [x] Confirm public docs, package exports, examples, tests, and skill guidance
       all describe the same API names and behavior.
-- [ ] Confirm no host runtime, auth provider, process supervisor, tenant model,
+- [x] Confirm no host runtime, auth provider, process supervisor, tenant model,
       workflow orchestrator, or modal manager moved into Agent UI core.
-- [ ] Confirm no host-facing guidance depends on private `.aui-*` selectors.
-- [ ] Confirm no new public React result exposes raw App Server generated
+- [x] Confirm no host-facing guidance depends on private `.aui-*` selectors.
+- [x] Confirm no new public React result exposes raw App Server generated
       payloads.
-- [ ] Confirm local media guidance never maps raw filesystem paths to browser
+- [x] Confirm local media guidance never maps raw filesystem paths to browser
       URLs.
-- [ ] Confirm remote/multi-user guidance still requires host-owned auth,
+- [x] Confirm remote/multi-user guidance still requires host-owned auth,
       isolation, admission, resource limits, and audit logging.
-- [ ] Inspect GitHub Actions after pushing an implementation branch and follow
+- [x] Inspect GitHub Actions after pushing an implementation branch and follow
       running workflows to concrete success or failure before claiming ready.
