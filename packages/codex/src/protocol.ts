@@ -10,8 +10,8 @@ import {
   generatedStableServerRequestMethods,
 } from "./generated/protocol-capabilities";
 
-export const CODEX_PROTOCOL_COMMIT = "3e7baa00e43419967d90d6ad9cef40f58d5ac89f";
-export const CODEX_PROTOCOL_GENERATED_AT = "2026-05-30T10:05:29.106Z";
+export const CODEX_PROTOCOL_COMMIT = "87b808bb570f01f4b6fc8485c5459052fac0e320";
+export const CODEX_PROTOCOL_GENERATED_AT = "2026-06-06T08:22:19.514Z";
 
 export type CodexCapabilityStatus =
   | "stableAvailable"
