@@ -7130,6 +7130,9 @@ describe("AgentChat", () => {
     expect(container.querySelector(".aui-sidebar")).toBeInTheDocument();
     expect(container.querySelector(".aui-chat")).toHaveAttribute("inert");
     expect(container.querySelector(".aui-chat")).toHaveAttribute("aria-hidden", "true");
+    await waitFor(() => {
+      expect(screen.getByLabelText("Search history")).toHaveFocus();
+    });
 
     await user.keyboard("{Escape}");
 
@@ -7140,6 +7143,33 @@ describe("AgentChat", () => {
       expect(trigger).toHaveFocus();
     });
     expect(container.querySelector(".aui-chat")).not.toHaveAttribute("inert");
+  });
+
+  it("returns mobile drawer focus to the matching chat trigger", async () => {
+    mockCompactLayout();
+    const user = userEvent.setup();
+    render(
+      <>
+        <AgentProvider transport={new FakeAgentTransport()}>
+          <AgentChat />
+        </AgentProvider>
+        <AgentProvider transport={new FakeAgentTransport()}>
+          <AgentChat />
+        </AgentProvider>
+      </>,
+    );
+
+    const triggers = await screen.findAllByRole("button", { name: "Open thread history" });
+    await user.click(triggers[1]!);
+    await waitFor(() => {
+      expect(screen.getByLabelText("Search history")).toHaveFocus();
+    });
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(triggers[1]).toHaveFocus();
+    });
   });
 
   it("closes the mobile history drawer from the backdrop and returns focus", async () => {
