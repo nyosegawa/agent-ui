@@ -212,6 +212,7 @@ function AgentChatInner({
   const [sidebarOpenDesktop, setSidebarOpenDesktop] = useState(true);
   const [sidebarOpenMobile, setSidebarOpenMobile] = useState(false);
   const chatRootRef = useRef<HTMLDivElement>(null);
+  const sidebarSlotRef = useRef<HTMLDivElement>(null);
   const isSidebarCollapsed = compact ? !sidebarOpenMobile : !sidebarOpenDesktop;
   const setSidebarCollapsed = useCallback(
     (next: boolean) => {
@@ -237,8 +238,7 @@ function AgentChatInner({
     let cancelled = false;
     const focusDrawer = () => {
       if (cancelled) return;
-      const shell = chatRootRef.current?.closest<HTMLElement>(".aui-shell");
-      const sidebar = shell?.querySelector<HTMLElement>(".aui-sidebar");
+      const sidebar = sidebarSlotRef.current?.querySelector<HTMLElement>(".aui-sidebar");
       const target =
         sidebar?.querySelector<HTMLElement>("input") ??
         sidebar?.querySelector<HTMLElement>(
@@ -299,15 +299,17 @@ function AgentChatInner({
       data-sidebar-drawer={drawerOpen ? "open" : "closed"}
       sidebar={
         sidebar && Sidebar ? (
-          <Sidebar
-            Default={AgentThreadSidebar}
-            activeThreadId={activeThreadId}
-            collapsed={isSidebarCollapsed}
-            onCreateThread={navigateHome}
-            onCollapsedChange={setSidebarCollapsed}
-            onSelectThread={navigateToThread}
-            threads={sidebarThreads}
-          />
+          <div className="aui-sidebar-slot" ref={sidebarSlotRef}>
+            <Sidebar
+              Default={AgentThreadSidebar}
+              activeThreadId={activeThreadId}
+              collapsed={isSidebarCollapsed}
+              onCreateThread={navigateHome}
+              onCollapsedChange={setSidebarCollapsed}
+              onSelectThread={navigateToThread}
+              threads={sidebarThreads}
+            />
+          </div>
         ) : undefined
       }
       theme={theme}

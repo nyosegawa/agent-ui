@@ -7172,6 +7172,38 @@ describe("AgentChat", () => {
     });
   });
 
+  it("moves mobile drawer focus when a custom shell renders the sidebar slot", async () => {
+    mockCompactLayout();
+    const user = userEvent.setup();
+    render(
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <AgentChat
+          components={{
+            Shell: ({ children, sidebar }) => (
+              <section data-testid="host-shell">
+                {sidebar}
+                {children}
+              </section>
+            ),
+          }}
+        />
+      </AgentProvider>,
+    );
+
+    const trigger = await screen.findByRole("button", { name: "Open thread history" });
+    await user.click(trigger);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Search history")).toHaveFocus();
+    });
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
+  });
+
   it("closes the mobile history drawer from the backdrop and returns focus", async () => {
     mockCompactLayout();
     const user = userEvent.setup();

@@ -25,6 +25,10 @@
   grid-template-columns: minmax(0, 1fr);
 }
 
+.aui-sidebar-slot {
+  display: contents;
+}
+
 @media (min-width: 721px) {
   .aui-shell {
     height: 100%;
