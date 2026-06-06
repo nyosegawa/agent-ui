@@ -50,14 +50,25 @@ describe("React protocol exposure registry", () => {
       "evidence-fixture.ts",
       `
         const notEvidence = "codex.account.usageRead(";
+        const alsoNotEvidence = "codex.account.logout(";
         // codex.account.usageRead();
+        // codex.account.logout();
         codex.account.read(false);
+        codex.account["rateLimitsRead"]();
+        const { usageRead } = codex.account;
+        usageRead();
+        const renamedUsageRead = codex.account.usageRead;
+        renamedUsageRead();
+        const { usageRead: destructuredUsageRead } = codex.account;
+        destructuredUsageRead();
         forkThread();
       `,
     );
 
-    expect(hasCallee(callees, ["codex", "account", "usageRead"])).toBe(false);
+    expect(hasCallee(callees, ["codex", "account", "usageRead"])).toBe(true);
+    expect(hasCallee(callees, ["codex", "account", "logout"])).toBe(false);
     expect(hasCallee(callees, ["codex", "account", "read"])).toBe(true);
+    expect(hasCallee(callees, ["codex", "account", "rateLimitsRead"])).toBe(true);
     expect(hasCallee(callees, ["forkThread"])).toBe(true);
   });
 });
@@ -102,10 +113,11 @@ function readSourceCallees(path: string, source: string): string[][] {
     path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   );
   const callees: string[][] = [];
+  const aliases = collectCalleeAliases(sourceFile);
 
   function visit(node: ts.Node) {
     if (ts.isCallExpression(node)) {
-      const callee = calleePath(node.expression);
+      const callee = calleePath(node.expression, aliases);
       if (callee) callees.push(callee);
     }
     ts.forEachChild(node, visit);
@@ -115,12 +127,71 @@ function readSourceCallees(path: string, source: string): string[][] {
   return callees;
 }
 
-function calleePath(expression: ts.Expression): string[] | undefined {
-  if (ts.isIdentifier(expression)) return [expression.text];
+function collectCalleeAliases(sourceFile: ts.SourceFile): Map<string, string[]> {
+  const aliases = new Map<string, string[]>();
+
+  function visit(node: ts.Node) {
+    if (ts.isVariableDeclaration(node) && node.initializer) {
+      collectVariableAlias(node, aliases);
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return aliases;
+}
+
+function collectVariableAlias(
+  declaration: ts.VariableDeclaration,
+  aliases: Map<string, string[]>,
+) {
+  const initializerPath = calleePath(declaration.initializer, aliases);
+  if (!initializerPath) return;
+
+  if (ts.isIdentifier(declaration.name)) {
+    aliases.set(declaration.name.text, initializerPath);
+    return;
+  }
+
+  if (!ts.isObjectBindingPattern(declaration.name)) return;
+
+  for (const element of declaration.name.elements) {
+    if (!ts.isIdentifier(element.name)) continue;
+    const propertyName = bindingPropertyName(element.propertyName ?? element.name);
+    if (!propertyName) continue;
+    aliases.set(element.name.text, [...initializerPath, propertyName]);
+  }
+}
+
+function bindingPropertyName(
+  name: ts.PropertyName | ts.BindingName,
+): string | undefined {
+  if (ts.isIdentifier(name) || ts.isStringLiteral(name) || ts.isNumericLiteral(name)) {
+    return name.text;
+  }
+  return undefined;
+}
+
+function calleePath(
+  expression: ts.Expression,
+  aliases: ReadonlyMap<string, string[]>,
+): string[] | undefined {
+  if (ts.isIdentifier(expression)) return aliases.get(expression.text) ?? [expression.text];
+  if (ts.isElementAccessExpression(expression)) {
+    const parent = calleePath(expression.expression, aliases);
+    if (!parent) return undefined;
+    const property = elementAccessPropertyName(expression.argumentExpression);
+    return property ? [...parent, property] : undefined;
+  }
   if (!ts.isPropertyAccessExpression(expression)) return undefined;
 
-  const parent = calleePath(expression.expression);
+  const parent = calleePath(expression.expression, aliases);
   return parent ? [...parent, expression.name.text] : undefined;
+}
+
+function elementAccessPropertyName(expression: ts.Expression): string | undefined {
+  if (ts.isStringLiteral(expression) || ts.isNumericLiteral(expression)) return expression.text;
+  return undefined;
 }
 
 function hasCallee(callees: readonly string[][], expected: readonly string[]): boolean {

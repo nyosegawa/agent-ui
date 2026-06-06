@@ -14,7 +14,8 @@ same test checks source evidence for those decisions: required evidence must
 stay present for `default-ui` and `hook` decisions, and forbidden evidence must
 stay absent for `client-only` and `no-default-ui` decisions. Evidence is checked
 as TypeScript call expressions, so comments, strings, and unrelated text do not
-satisfy the registry.
+satisfy the registry. The check also resolves simple variable aliases,
+destructured method aliases, and string-literal computed property calls.
 
 Exposure values:
 
