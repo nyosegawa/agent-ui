@@ -113,7 +113,7 @@ and changelog changes are package-surface changes, not docs-only changes.
 
 The manual `Package Validation` workflow repeats build/package checks for
 publish confidence without duplicating every PR run. Compatibility CI covers
-Node 20, 22, and 24 import/require smoke plus pnpm workspace smoke when changes
+Node 22 and 24 import/require smoke plus pnpm workspace smoke when changes
 are not docs-only. The API snapshot gate is driven by package export maps:
 missing, changed, and stale public declaration snapshots fail unless
 `bun run test:api-snapshots:update` is run intentionally after reviewing the

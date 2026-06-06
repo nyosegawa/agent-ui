@@ -27,7 +27,7 @@ describe("npm release readiness", () => {
       expect(manifest.bugs?.url).toBe("https://github.com/nyosegawa/agent-ui/issues");
       expect(manifest.homepage).toBe("https://github.com/nyosegawa/agent-ui#readme");
       expect(manifest.license).toBe("MIT");
-      expect(manifest.engines?.node).toMatch(/^>=20/);
+      expect(manifest.engines?.node).toMatch(/^>=22/);
       expect(manifest.files).toContain("dist");
       expect(manifest.exports).toBeDefined();
       expect(existsSync(join(root, workspacePackage.directory, "README.md"))).toBe(true);

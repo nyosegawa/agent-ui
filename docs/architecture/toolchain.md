@@ -12,7 +12,7 @@ Current repo-pinned baseline:
 ```text
 package manager: bun@1.3.13
 CI setup-bun: 1.3.13
-Node compatibility target: Node 20 / 22 / 24
+Node compatibility target: Node 22 / 24
 pnpm compatibility smoke: pnpm@10.15.0
 TypeScript: 6.0.3
 Vite: 8.0.11
