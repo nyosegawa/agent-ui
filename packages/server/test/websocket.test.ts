@@ -8,6 +8,7 @@ import {
   attachAgentUiWebSocketBridge,
   createMcpDynamicToolHandler,
   type AgentUiWebSocketBridgeOptions,
+  type AgentUiResolvedWebSocketBridgeOptions,
   type AgentUiBridgeHealthEvent,
   type BrowserMethodCapability,
   type CodexChildProcess,
@@ -129,6 +130,48 @@ describe("attachAgentUiWebSocketBridge", () => {
       httpServer.close();
       webSocketServer.close();
     }
+  });
+
+  it("does not spawn when the socket closes while bridge option resolution is pending", async () => {
+    let resolveOptions:
+      | ((options: AgentUiResolvedWebSocketBridgeOptions | false | null | undefined) => void)
+      | undefined;
+    let resolverStarted: (() => void) | undefined;
+    const resolverStartedPromise = new Promise<void>((resolve) => {
+      resolverStarted = resolve;
+    });
+    let spawnCount = 0;
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      bridgePolicy: { admission: { mode: "unsafe-no-admission", reason: "resolver disconnect test" } },
+      resolveBridgeOptions() {
+        resolverStarted?.();
+        return new Promise((resolve) => {
+          resolveOptions = resolve;
+        });
+      },
+      server: httpServer,
+      spawn: () => {
+        spawnCount += 1;
+        return createSocketTestProcess();
+      },
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
+    await resolverStartedPromise;
+    await onceOpen(client);
+    client.close();
+    await onceCloseWithInfo(client);
+    resolveOptions?.({ cwd: "/tmp/closed-before-resolve" });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(spawnCount).toBe(0);
   });
 
   it("requires a reason before unsafe no-admission mode can spawn", async () => {
