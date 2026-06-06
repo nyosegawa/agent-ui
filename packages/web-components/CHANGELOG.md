@@ -1,5 +1,12 @@
 # @nyosegawa/agent-ui-web-components
 
+## 0.4.0
+
+### Patch Changes
+
+- @nyosegawa/agent-ui-react@0.4.0
+- @nyosegawa/agent-ui-core@0.4.0
+
 ## 0.3.0
 
 ### Patch Changes
