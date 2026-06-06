@@ -43,8 +43,8 @@ bun run test:package-resolution
 
 ## Publish
 
-Current releases use reviewed Changesets version PRs. After the version PR
-merge, the trusted `main` push workflow validates the repo, publishes with
+Current releases use reviewed release PRs. After the release PR merge, the
+trusted `main` push workflow validates the repo, publishes with
 provenance from GitHub Actions, creates GitHub Releases, and runs post-publish
 smoke.
 

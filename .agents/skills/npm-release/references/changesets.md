@@ -6,10 +6,10 @@ Agent UI uses Changesets for package versioning and changelogs.
 
 - Do not bump versions on every `main` push.
 - `main` push runs release target detection. It publishes only when a reviewed
-  version PR merge leaves public package versions that are not yet on npm.
+  release PR merge leaves public package versions that are not yet on npm.
 - Add a changeset only when a package behavior or public surface should be
   released.
-- Normal changes accumulate until a version PR or explicit release commit.
+- Normal changes accumulate until an intentional release PR.
 - The first public release is `0.1.0` for all public packages.
 - Public Agent UI packages are fixed-versioned together so internal
   `workspace:^<version>` dependency ranges stay aligned.
@@ -25,14 +25,21 @@ Agent UI uses Changesets for package versioning and changelogs.
 
 ## Workflow
 
-The Release workflow can either:
+The operator creates one release PR:
 
-- create a version PR when manually dispatched in `prepare` mode, or
-- publish automatically after a reviewed version PR merge when versioned package
-  manifests and changelogs are already committed, no unpublished changesets
-  remain, and npm does not already have the target versions.
+1. Ensure package-facing changes have changesets.
+2. Create a release branch from `main`.
+3. Run `bunx changeset version` locally.
+4. Review the generated package versions, changelogs, and
+   `workspace:^<version>` ranges.
+5. Open a release PR whose title includes the target version.
 
-When using the workflow, ensure `GITHUB_TOKEN` or `CHANGESETS_GITHUB_TOKEN` can
-create/update pull requests and GitHub Releases, and `NPM_TOKEN` is available as
-a repository secret for publishing `@nyosegawa` packages from trusted `main`
-pushes.
+The Release workflow publishes automatically after that reviewed release PR
+merge when versioned package manifests and changelogs are already committed, no
+unpublished changesets remain, and npm does not already have the target
+versions.
+
+When using the workflow, ensure `NPM_TOKEN` is available as a repository secret
+for publishing `@nyosegawa` packages from trusted `main` pushes.
+`CHANGESETS_GITHUB_TOKEN` is optional for GitHub Release creation; the workflow
+falls back to GitHub Actions' `GITHUB_TOKEN`.
