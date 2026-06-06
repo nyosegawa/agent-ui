@@ -294,6 +294,8 @@ test("host workflow reference layers a host sheet above the mobile drawer", asyn
   await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toBeVisible();
   await expect(hostSheetIsAboveDrawer(page)).resolves.toBe(true);
   await expect(closeHostReviewHasFocus(page)).resolves.toBe(true);
+  await page.keyboard.press("Tab");
+  await expect(closeHostReviewHasFocus(page)).resolves.toBe(true);
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
 
   await page.keyboard.press("Escape");

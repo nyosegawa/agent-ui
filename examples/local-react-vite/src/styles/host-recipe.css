@@ -93,6 +93,13 @@
   background: var(--aui-primary-strong);
 }
 
+.aui-host-action:disabled {
+  background: var(--aui-panel-alt);
+  border-color: var(--aui-border);
+  color: var(--aui-fg-faint);
+  cursor: not-allowed;
+}
+
 .aui-host-action:focus-visible {
   box-shadow: var(--aui-shadow-focus);
   outline: 2px solid transparent;

@@ -758,10 +758,16 @@ function HostReviewSheet({
       window.requestAnimationFrame(focusCloseButton);
     };
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
       event.preventDefault();
       event.stopPropagation();
-      onClose();
+      focusCloseButton();
     };
     document.addEventListener("focusin", handleFocusIn);
     document.addEventListener("keydown", handleKeyDown);
@@ -773,7 +779,6 @@ function HostReviewSheet({
   return (
     <section
       aria-label="Host-owned review sheet"
-      aria-modal="true"
       className="aui-host-review-sheet"
       ref={sheetRef}
       role="dialog"
@@ -951,7 +956,7 @@ function HostWorkflowPanel() {
             : "Host actions are deferred until the verification command is captured."}
         </span>
         <button
-          className="aui-btn aui-btn-secondary aui-btn-sm"
+          className="aui-host-action"
           disabled={!verificationCommand || approvals.length > 0}
           type="button"
         >
