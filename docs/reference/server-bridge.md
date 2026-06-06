@@ -434,6 +434,7 @@ Default one-shot methods:
 
 - `account/read`
 - `account/rateLimits/read`
+- `account/usage/read`
 - `model/list`
 - `thread/list`
 - `thread/loaded/list`

@@ -398,6 +398,7 @@ Stable productized methods:
 - `account/login/cancel` with `{ loginId }`
 - `account/logout` without params
 - `account/rateLimits/read` without params
+- `account/usage/read` without params
 - `model/list` with `{}` or stable pagination params
 - `thread/start`
 - `thread/resume`
@@ -517,6 +518,10 @@ Experimental available methods:
 - `process/kill`
 - `remoteControl/enable`
 - `remoteControl/disable`
+- `remoteControl/client/list`
+- `remoteControl/client/revoke`
+- `remoteControl/pairing/start`
+- `remoteControl/pairing/status`
 - `remoteControl/status/read`
 - `thread/backgroundTerminals/clean`
 - `thread/increment_elicitation`

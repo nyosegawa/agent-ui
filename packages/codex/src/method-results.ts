@@ -3,6 +3,7 @@ import type { InitializeResponse } from "./generated/stable";
 import type {
   CancelLoginAccountResponse,
   GetAccountRateLimitsResponse,
+  GetAccountTokenUsageResponse,
   GetAccountResponse,
   HooksListResponse,
   LoginAccountResponse,
@@ -39,6 +40,10 @@ import type {
   ProcessWriteStdinResponse,
   RemoteControlDisableResponse,
   RemoteControlEnableResponse,
+  RemoteControlClientsListResponse,
+  RemoteControlClientsRevokeResponse,
+  RemoteControlPairingStartResponse,
+  RemoteControlPairingStatusResponse,
   RemoteControlStatusReadResponse,
   ThreadBackgroundTerminalsCleanResponse,
   ThreadDecrementElicitationResponse,
@@ -68,6 +73,7 @@ interface StableMethodResultMap {
   "account/login/start": LoginAccountResponse;
   "account/logout": LogoutAccountResponse;
   "account/rateLimits/read": GetAccountRateLimitsResponse;
+  "account/usage/read": GetAccountTokenUsageResponse;
   "account/read": GetAccountResponse;
   "app/list": AppsListResponse;
   "hooks/list": HooksListResponse;
@@ -107,6 +113,10 @@ interface ExperimentalMethodResultMap {
   "process/writeStdin": ProcessWriteStdinResponse;
   "remoteControl/disable": RemoteControlDisableResponse;
   "remoteControl/enable": RemoteControlEnableResponse;
+  "remoteControl/client/list": RemoteControlClientsListResponse;
+  "remoteControl/client/revoke": RemoteControlClientsRevokeResponse;
+  "remoteControl/pairing/start": RemoteControlPairingStartResponse;
+  "remoteControl/pairing/status": RemoteControlPairingStatusResponse;
   "remoteControl/status/read": RemoteControlStatusReadResponse;
   "thread/backgroundTerminals/clean": ThreadBackgroundTerminalsCleanResponse;
   "thread/decrement_elicitation": ThreadDecrementElicitationResponse;

@@ -1,5 +1,5 @@
 {
-  "schemaCommit": "3e7baa00e43419967d90d6ad9cef40f58d5ac89f",
+  "schemaCommit": "87b808bb570f01f4b6fc8485c5459052fac0e320",
   "fixtureSourceCommit": "6a225e4005209f2325ab3c681c7c6beba2907d4d",
   "divergenceReason": "Raw JSON-RPC fixtures are hand-curated from Codex App Server v2 suite coverage and outgoing_message.rs shape checks, while generated Agent UI protocol types track the schema import commit.",
   "source": "openai/codex codex-rs/app-server/tests/suite/v2 plus app-server outgoing_message.rs shape checks",

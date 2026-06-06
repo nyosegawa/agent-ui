@@ -66,6 +66,7 @@ export const stableNotificationCoverage: Record<
   "thread/unarchived": "mapped",
   "turn/completed": "mapped",
   "turn/diff/updated": "mapped",
+  "turn/moderationMetadata": "raw",
   "turn/plan/updated": "mapped",
   "turn/started": "mapped",
   warning: "mapped",

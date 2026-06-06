@@ -97,6 +97,7 @@ export interface CodexAccountClient {
   logout(): Promise<CodexStableMethodResult<"account/logout">>;
   read(refreshToken?: boolean): Promise<CodexStableMethodResult<"account/read">>;
   rateLimitsRead(): Promise<CodexStableMethodResult<"account/rateLimits/read">>;
+  usageRead(): Promise<CodexStableMethodResult<"account/usage/read">>;
 }
 
 export interface CodexAppsClient {
@@ -199,6 +200,7 @@ const codexClientMethods = [
   "account/login/cancel",
   "account/logout",
   "account/rateLimits/read",
+  "account/usage/read",
   "model/list",
   "thread/start",
   "thread/resume",
@@ -239,6 +241,7 @@ export function createCodexClients(
       rateLimitsRead: () => request(transport, "account/rateLimits/read"),
       read: (refreshToken) =>
         request(transport, "account/read", accountReadParams(refreshToken)),
+      usageRead: () => request(transport, "account/usage/read"),
     },
     apps: {
       list: (params) => request(transport, "app/list", appsListParams(params)),

@@ -1,8 +1,8 @@
 import { RequestId, AgentError, AgentRequestOptions, AgentTransport } from '@nyosegawa/agent-ui-core';
-import { CodexStableMethodResult, AppsListParams, HooksListParams, ModelListParams, CodexExperimentalMethodResult, SkillsConfigWriteParams, SkillsListParams, ThreadForkParams, ThreadInjectItemsParams, ThreadListParams, ThreadLoadedListParams, ThreadMetadataUpdateParams, ThreadResumeParams, ThreadStartParams, TurnStartParams, TurnSteerParams } from './request-builders.js';
-import { C as CodexInitializeOptions, E as ExperimentalAvailableMethod } from './protocol-iDYFX3vA.js';
-import { C as CodexExperimentalMethodParams, U as UserInput } from './method-params-Cp7iY5rD.js';
-import './InitializeParams-CDX1c2T9.js';
+import { CodexStableMethodResult, AppsListParams, HooksListParams, ModelListParams, CodexExperimentalMethodResult, SkillsConfigWriteParams, SkillsListParams, ThreadForkParams, ThreadInjectItemsParams, ThreadListParams, ThreadLoadedListParams, ThreadMetadataUpdateParams, ThreadResumeParams, ThreadStartParams, TurnStartParams, TurnSteerParams } from './request-<chunk>.js';
+import { C as CodexInitializeOptions, E as ExperimentalAvailableMethod } from './protocol-<chunk>.js';
+import { C as CodexExperimentalMethodParams, U as UserInput } from './method-params-<chunk>.js';
+import './InitializeParams-<chunk>.js';
 
 interface CodexClientsOptions {
     experimental?: boolean;
@@ -27,6 +27,7 @@ interface CodexAccountClient {
     logout(): Promise<CodexStableMethodResult<"account/logout">>;
     read(refreshToken?: boolean): Promise<CodexStableMethodResult<"account/read">>;
     rateLimitsRead(): Promise<CodexStableMethodResult<"account/rateLimits/read">>;
+    usageRead(): Promise<CodexStableMethodResult<"account/usage/read">>;
 }
 interface CodexAppsClient {
     list(params?: AppsListParams): Promise<CodexStableMethodResult<"app/list">>;
