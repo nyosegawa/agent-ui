@@ -1,5 +1,13 @@
 # @nyosegawa/agent-ui-server
 
+## 0.4.0
+
+### Patch Changes
+
+- Updated dependencies [b138db0]
+  - @nyosegawa/agent-ui-codex@0.4.0
+  - @nyosegawa/agent-ui-core@0.4.0
+
 ## 0.3.0
 
 ### Patch Changes

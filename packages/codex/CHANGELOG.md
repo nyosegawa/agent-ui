@@ -1,5 +1,18 @@
 # @nyosegawa/agent-ui-codex
 
+## 0.4.0
+
+### Minor Changes
+
+- b138db0: Refresh the vendored Codex App Server schema to upstream `87b808bb570f`, adding
+  stable account usage reads, turn moderation metadata notifications, and updated
+  protocol metadata for generated clients, request builders, normalizers, server
+  policies, and React protocol exposure tracking.
+
+### Patch Changes
+
+- @nyosegawa/agent-ui-core@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes
