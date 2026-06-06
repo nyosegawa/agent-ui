@@ -11,8 +11,8 @@ export interface ReactProtocolExposureEntry {
 }
 
 export interface ReactProtocolExposureEvidence {
+  callee: readonly string[];
   file: string;
-  includes: string;
   kind: "required" | "forbidden";
 }
 
@@ -21,7 +21,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src",
-        includes: ".initialize(",
+        callee: ["codex", "connection", "initialize"],
         kind: "forbidden",
       },
     ],
@@ -33,7 +33,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/account.ts",
-        includes: "codex.account.read(",
+        callee: ["codex", "account", "read"],
         kind: "required",
       },
     ],
@@ -44,7 +44,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/account.ts",
-        includes: "codex.account.loginDeviceCode(",
+        callee: ["codex", "account", "loginDeviceCode"],
         kind: "required",
       },
     ],
@@ -55,7 +55,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/account.ts",
-        includes: "codex.account.cancelLogin(",
+        callee: ["codex", "account", "cancelLogin"],
         kind: "required",
       },
     ],
@@ -66,7 +66,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/account.ts",
-        includes: "codex.account.logout(",
+        callee: ["codex", "account", "logout"],
         kind: "required",
       },
     ],
@@ -77,7 +77,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/usage.ts",
-        includes: "codex.account.rateLimitsRead(",
+        callee: ["codex", "account", "rateLimitsRead"],
         kind: "required",
       },
     ],
@@ -88,7 +88,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src",
-        includes: "usageRead(",
+        callee: ["codex", "account", "usageRead"],
         kind: "forbidden",
       },
     ],
@@ -100,7 +100,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/models.ts",
-        includes: "codex.models.list(",
+        callee: ["codex", "models", "list"],
         kind: "required",
       },
     ],
@@ -111,7 +111,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/thread.ts",
-        includes: "codex.thread.start(",
+        callee: ["codex", "thread", "start"],
         kind: "required",
       },
     ],
@@ -122,7 +122,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/thread.ts",
-        includes: "codex.thread.resume(",
+        callee: ["codex", "thread", "resume"],
         kind: "required",
       },
     ],
@@ -133,12 +133,12 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/thread.ts",
-        includes: "codex.thread.fork(",
+        callee: ["codex", "thread", "fork"],
         kind: "required",
       },
       {
         file: "packages/react/src/components/thread.tsx",
-        includes: "forkThread()",
+        callee: ["forkThread"],
         kind: "required",
       },
     ],
@@ -149,7 +149,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/thread-list.ts",
-        includes: "codex.thread.list(",
+        callee: ["codex", "thread", "list"],
         kind: "required",
       },
     ],
@@ -160,7 +160,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src",
-        includes: "loadedList(",
+        callee: ["codex", "thread", "loadedList"],
         kind: "forbidden",
       },
     ],
@@ -172,7 +172,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/thread.ts",
-        includes: "codex.thread.read(",
+        callee: ["codex", "thread", "read"],
         kind: "required",
       },
     ],
@@ -183,12 +183,12 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/thread.ts",
-        includes: "codex.thread.archive(",
+        callee: ["codex", "thread", "archive"],
         kind: "required",
       },
       {
         file: "packages/react/src/components/thread.tsx",
-        includes: "archiveThread()",
+        callee: ["archiveThread"],
         kind: "required",
       },
     ],
@@ -199,12 +199,12 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/thread.ts",
-        includes: "codex.thread.unarchive(",
+        callee: ["codex", "thread", "unarchive"],
         kind: "required",
       },
       {
         file: "packages/react/src/components/thread.tsx",
-        includes: "unarchiveThread()",
+        callee: ["unarchiveThread"],
         kind: "required",
       },
     ],
@@ -215,12 +215,12 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/thread.ts",
-        includes: "codex.thread.setName(",
+        callee: ["codex", "thread", "setName"],
         kind: "required",
       },
       {
         file: "packages/react/src/components/thread.tsx",
-        includes: "renameThread(",
+        callee: ["renameThread"],
         kind: "required",
       },
     ],
@@ -231,7 +231,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src",
-        includes: "metadataUpdate(",
+        callee: ["codex", "thread", "metadataUpdate"],
         kind: "forbidden",
       },
     ],
@@ -243,12 +243,12 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/thread.ts",
-        includes: "codex.thread.compactStart(",
+        callee: ["codex", "thread", "compactStart"],
         kind: "required",
       },
       {
         file: "packages/react/src/components/thread.tsx",
-        includes: "compactThread()",
+        callee: ["compactThread"],
         kind: "required",
       },
     ],
@@ -259,12 +259,12 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/thread.ts",
-        includes: "codex.thread.rollback(",
+        callee: ["codex", "thread", "rollback"],
         kind: "required",
       },
       {
         file: "packages/react/src/components/thread.tsx",
-        includes: "rollbackThread(",
+        callee: ["rollbackThread"],
         kind: "required",
       },
     ],
@@ -275,7 +275,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src",
-        includes: "injectItems(",
+        callee: ["codex", "thread", "injectItems"],
         kind: "forbidden",
       },
     ],
@@ -287,7 +287,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src",
-        includes: "unsubscribe(",
+        callee: ["codex", "thread", "unsubscribe"],
         kind: "forbidden",
       },
     ],
@@ -299,7 +299,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/turn.ts",
-        includes: "codex.turn.start(",
+        callee: ["codex", "turn", "start"],
         kind: "required",
       },
     ],
@@ -310,7 +310,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/turn.ts",
-        includes: "codex.turn.steer(",
+        callee: ["codex", "turn", "steer"],
         kind: "required",
       },
     ],
@@ -321,7 +321,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/turn.ts",
-        includes: "codex.turn.interrupt(",
+        callee: ["codex", "turn", "interrupt"],
         kind: "required",
       },
     ],
@@ -332,7 +332,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/connectors.ts",
-        includes: "codex.skills.list(",
+        callee: ["codex", "skills", "list"],
         kind: "required",
       },
     ],
@@ -343,7 +343,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/connectors.ts",
-        includes: "codex.skills.configWrite(",
+        callee: ["codex", "skills", "configWrite"],
         kind: "required",
       },
     ],
@@ -354,7 +354,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/connectors.ts",
-        includes: "codex.hooks.list(",
+        callee: ["codex", "hooks", "list"],
         kind: "required",
       },
     ],
@@ -365,7 +365,7 @@ export const reactProtocolExposure = {
     evidence: [
       {
         file: "packages/react/src/hooks/apps.ts",
-        includes: "codex.apps.list(",
+        callee: ["codex", "apps", "list"],
         kind: "required",
       },
     ],

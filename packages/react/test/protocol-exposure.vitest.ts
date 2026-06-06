@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import * as ts from "typescript";
 import { stableProductizedMethods } from "@nyosegawa/agent-ui-codex";
 import { reactProtocolExposure } from "../src/protocol-exposure";
 
 const repoRoot = join(import.meta.dirname, "../../..");
+const evidenceCalleeCache = new Map<string, string[][]>();
 
 describe("React protocol exposure registry", () => {
   it("classifies every productized stable method by React exposure", () => {
@@ -16,16 +18,13 @@ describe("React protocol exposure registry", () => {
   it("keeps React source evidence aligned with exposure decisions", () => {
     for (const [method, entry] of Object.entries(reactProtocolExposure)) {
       for (const evidence of entry.evidence ?? []) {
-        const source = readEvidenceSource(evidence.file);
-        const hasEvidence = source.includes(evidence.includes);
+        const callees = readEvidenceCallees(evidence.file);
+        const hasEvidence = hasCallee(callees, evidence.callee);
+        const callee = evidence.callee.join(".");
         if (evidence.kind === "required") {
-          expect.soft(hasEvidence, `${method} must keep evidence ${evidence.includes}`).toBe(
-            true,
-          );
+          expect.soft(hasEvidence, `${method} must keep call evidence ${callee}`).toBe(true);
         } else {
-          expect
-            .soft(hasEvidence, `${method} must not gain evidence ${evidence.includes}`)
-            .toBe(false);
+          expect.soft(hasEvidence, `${method} must not gain call evidence ${callee}`).toBe(false);
         }
       }
     }
@@ -36,7 +35,7 @@ describe("React protocol exposure registry", () => {
       evidence: [
         {
           file: "packages/react/src",
-          includes: "usageRead(",
+          callee: ["codex", "account", "usageRead"],
           kind: "forbidden",
         },
       ],
@@ -45,25 +44,89 @@ describe("React protocol exposure registry", () => {
         "Hosts can build usage-history panels, but default React UI does not render token usage history yet.",
     });
   });
+
+  it("matches call expressions instead of raw source text", () => {
+    const callees = readSourceCallees(
+      "evidence-fixture.ts",
+      `
+        const notEvidence = "codex.account.usageRead(";
+        // codex.account.usageRead();
+        codex.account.read(false);
+        forkThread();
+      `,
+    );
+
+    expect(hasCallee(callees, ["codex", "account", "usageRead"])).toBe(false);
+    expect(hasCallee(callees, ["codex", "account", "read"])).toBe(true);
+    expect(hasCallee(callees, ["forkThread"])).toBe(true);
+  });
 });
 
-function readEvidenceSource(relativePath: string): string {
+function readEvidenceCallees(relativePath: string): string[][] {
+  const cached = evidenceCalleeCache.get(relativePath);
+  if (cached) return cached;
+
   const absolutePath = join(repoRoot, relativePath);
   if (!existsSync(absolutePath)) throw new Error(`Missing evidence path: ${relativePath}`);
   const stats = statSync(absolutePath);
-  if (stats.isDirectory()) return readDirectorySource(absolutePath);
-  return readFileSync(absolutePath, "utf8");
+  const callees = stats.isDirectory()
+    ? readDirectoryCallees(absolutePath)
+    : readFileCallees(absolutePath);
+  evidenceCalleeCache.set(relativePath, callees);
+  return callees;
 }
 
-function readDirectorySource(directory: string): string {
+function readDirectoryCallees(directory: string): string[][] {
   return readdirSync(directory, { withFileTypes: true })
     .toSorted((a, b) => a.name.localeCompare(b.name))
     .flatMap((entry) => {
       const path = join(directory, entry.name);
-      if (entry.isDirectory()) return [readDirectorySource(path)];
+      if (entry.isDirectory()) return readDirectoryCallees(path);
       if (!/\.(ts|tsx)$/.test(entry.name)) return [];
       if (entry.name === "protocol-exposure.ts") return [];
-      return [readFileSync(path, "utf8")];
-    })
-    .join("\n");
+      return readFileCallees(path);
+    });
+}
+
+function readFileCallees(path: string): string[][] {
+  const source = readFileSync(path, "utf8");
+  return readSourceCallees(path, source);
+}
+
+function readSourceCallees(path: string, source: string): string[][] {
+  const sourceFile = ts.createSourceFile(
+    path,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+    path.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  );
+  const callees: string[][] = [];
+
+  function visit(node: ts.Node) {
+    if (ts.isCallExpression(node)) {
+      const callee = calleePath(node.expression);
+      if (callee) callees.push(callee);
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sourceFile);
+  return callees;
+}
+
+function calleePath(expression: ts.Expression): string[] | undefined {
+  if (ts.isIdentifier(expression)) return [expression.text];
+  if (!ts.isPropertyAccessExpression(expression)) return undefined;
+
+  const parent = calleePath(expression.expression);
+  return parent ? [...parent, expression.name.text] : undefined;
+}
+
+function hasCallee(callees: readonly string[][], expected: readonly string[]): boolean {
+  return callees.some(
+    (callee) =>
+      callee.length === expected.length &&
+      callee.every((part, index) => part === expected[index]),
+  );
 }

@@ -12,7 +12,9 @@ The source of truth is `packages/react/src/protocol-exposure.ts`.
 to `stableProductizedMethods` without an explicit React exposure decision. The
 same test checks source evidence for those decisions: required evidence must
 stay present for `default-ui` and `hook` decisions, and forbidden evidence must
-stay absent for `client-only` and `no-default-ui` decisions.
+stay absent for `client-only` and `no-default-ui` decisions. Evidence is checked
+as TypeScript call expressions, so comments, strings, and unrelated text do not
+satisfy the registry.
 
 Exposure values:
 
@@ -30,6 +32,8 @@ Evidence policy:
   part of React source without reclassification.
 - Keep evidence specific to source files or `packages/react/src`; the registry
   file itself is excluded from source scans.
+- Record callees as exact property paths, for example
+  `["codex", "account", "usageRead"]`.
 
 Do not duplicate the current per-method table in docs. Review the registry for
 the live list of `client-only` and `no-default-ui` decisions so upstream syncs,
