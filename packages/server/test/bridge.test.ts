@@ -54,6 +54,30 @@ describe("createCodexAppServerBridge", () => {
     expect(killed).toBe(true);
   });
 
+  it("passes cwd and env to the spawn callback", async () => {
+    const stdin = new PassThrough();
+    const stdout = new PassThrough();
+    const fakeProcess: CodexChildProcess = {
+      kill: () => true,
+      stdin,
+      stdout,
+    };
+
+    const bridge = createCodexAppServerBridge({
+      cwd: "/tmp/agent-ui-project",
+      env: { AGENT_UI_TEST: "1" },
+      spawn(_command, _args, options) {
+        expect(options).toEqual({
+          cwd: "/tmp/agent-ui-project",
+          env: { AGENT_UI_TEST: "1" },
+        });
+        return fakeProcess;
+      },
+    });
+
+    await bridge.close();
+  });
+
   it("redacts stderr for callbacks and transport events", async () => {
     const stdin = new PassThrough();
     const stdout = new PassThrough();

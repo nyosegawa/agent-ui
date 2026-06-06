@@ -251,13 +251,13 @@ the same names. The public result contract for `AgentThreadStartResult`,
   maps, canonical-id alias maps, and reducer reconciliation records stay out of
   the React package root.
 
-Server bridge exports may add a per-connection resolver type only if it remains
-a thin option-resolution boundary before spawn. The exported shape must cover
-explicit bridge options such as `cwd`, `env`, `initialize`,
-`bridgePolicy.admission`, `browserMethodPolicy`, `serverRequestPolicy`,
-`dynamicToolPolicy`, `hostEvents`, inbound limits, idle timeout, and
-backpressure settings without introducing auth providers, token stores,
-workspace registries, tenant/session models, or process supervisors.
+Server bridge exports include a per-connection resolver type as a thin
+option-resolution boundary before spawn. The exported shape covers explicit
+bridge options such as `cwd`, `env`, `initialize`, `bridgePolicy.admission`,
+`browserMethodPolicy`, `serverRequestPolicy`, `dynamicToolPolicy`, `hostEvents`,
+inbound limits, idle timeout, and backpressure settings without introducing auth
+providers, token stores, workspace registries, tenant/session models, or process
+supervisors.
 
 Composer styled parts exported at the React root are `AgentComposerPanel`,
 `AgentComposerInput`, `AgentComposerToolbar`, `AgentAttachmentChips`,

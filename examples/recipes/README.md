@@ -15,7 +15,8 @@ Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
   composer controller.
 - `src/local-media-helper.tsx`: upload/static handlers paired with structured
   attachment and transcript media resolvers.
-- `src/bridge-policy.ts`: loopback bridge policy and host health-event logging.
+- `src/bridge-policy.ts`: loopback bridge policy, local desktop admission, and
+  host health-event logging.
 - `src/diagnostics-panel.tsx`: standalone diagnostics rail composition.
 - `src/host-integration-checklist.ts`: host integration checklist for Agent UI
   boundaries.

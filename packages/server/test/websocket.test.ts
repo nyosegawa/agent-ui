@@ -11,6 +11,7 @@ import {
   type AgentUiBridgeHealthEvent,
   type BrowserMethodCapability,
   type CodexChildProcess,
+  type CodexSpawnOptions,
   type DynamicToolDebugEvent,
   type DynamicToolHelperPermissionPolicy,
 } from "../src";
@@ -54,6 +55,80 @@ describe("attachAgentUiWebSocketBridge", () => {
     expect(close.code).toBe(1008);
     expect(sawRequest).toBe(true);
     expect(spawnCount).toBe(0);
+  });
+
+  it("resolves per-connection cwd and env before spawning", async () => {
+    const spawns: Array<CodexSpawnOptions> = [];
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      bridgePolicy: { admission: { mode: "unsafe-no-admission", reason: "resolver test" } },
+      resolveBridgeOptions({ request }) {
+        const url = new URL(request?.url ?? "/", "http://127.0.0.1");
+        const workspace = url.searchParams.get("workspace") ?? "default";
+        return {
+          cwd: `/tmp/${workspace}`,
+          env: { AGENT_UI_WORKSPACE: workspace },
+        };
+      },
+      server: httpServer,
+      spawn: (_command, _args, options) => {
+        spawns.push(options);
+        return createSocketTestProcess();
+      },
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const first = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws?workspace=one`);
+    const second = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws?workspace=two`);
+    await Promise.all([onceOpen(first), onceOpen(second)]);
+
+    expect(spawns).toEqual([
+      { cwd: "/tmp/one", env: { AGENT_UI_WORKSPACE: "one" } },
+      { cwd: "/tmp/two", env: { AGENT_UI_WORKSPACE: "two" } },
+    ]);
+    first.close();
+    second.close();
+  });
+
+  it("closes rejected or failed bridge option resolvers before spawning", async () => {
+    for (const resolveBridgeOptions of [
+      () => false,
+      () => Promise.reject(new Error("token: resolver-secret")),
+    ]) {
+      let spawnCount = 0;
+      const logs: string[] = [];
+      const httpServer = createServer();
+      servers.push(httpServer);
+      const webSocketServer = attachAgentUiWebSocketBridge({
+        bridgePolicy: { admission: { mode: "unsafe-no-admission", reason: "resolver rejection test" } },
+        resolveBridgeOptions,
+        server: httpServer,
+        spawn: () => {
+          spawnCount += 1;
+          throw new Error("spawn should not run");
+        },
+        stderr: (line) => logs.push(line),
+      });
+      servers.push(webSocketServer);
+
+      await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+      const address = httpServer.address();
+      if (!address || typeof address === "string") throw new Error("missing server address");
+
+      const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
+      const close = await onceCloseWithInfo(client);
+
+      expect(spawnCount).toBe(0);
+      expect([1008, 1011]).toContain(close.code);
+      expect(logs.join("")).not.toContain("resolver-secret");
+      httpServer.close();
+      webSocketServer.close();
+    }
   });
 
   it("requires a reason before unsafe no-admission mode can spawn", async () => {
@@ -1134,6 +1209,21 @@ describe("attachAgentUiWebSocketBridge", () => {
         contentItems: [{ text: "screen visible after approval", type: "inputText" }],
         success: true,
       },
+    });
+    await transport.close();
+  });
+
+  it("starts dynamic tool helper threads with the resolved connection cwd", async () => {
+    const { transport, writes } = await createStartedDynamicHelper({
+      resolveBridgeOptions: () => ({ cwd: "/tmp/resolved-project" }),
+    });
+
+    const helperThreadStart = writes
+      .map((line) => JSON.parse(line))
+      .find((message) => message.method === "thread/start");
+
+    expect(helperThreadStart.params).toMatchObject({
+      cwd: "/tmp/resolved-project",
     });
     await transport.close();
   });
@@ -2453,7 +2543,9 @@ describe("attachAgentUiWebSocketBridge", () => {
 });
 
 async function createStartedDynamicHelper(
-  options: { helperPermissions?: DynamicToolHelperPermissionPolicy } = {},
+  options: Pick<AgentUiWebSocketBridgeOptions, "resolveBridgeOptions"> & {
+    helperPermissions?: DynamicToolHelperPermissionPolicy;
+  } = {},
 ) {
   const setup = await createBridgeBackedTransport({
     dynamicToolPolicy: {
@@ -2469,6 +2561,7 @@ async function createStartedDynamicHelper(
       helperPermissions: options.helperPermissions,
       mode: "host-callback",
     },
+    resolveBridgeOptions: options.resolveBridgeOptions,
   });
   const { stdout, transport, writes } = setup;
   const connected = transport.connect();
@@ -2512,6 +2605,7 @@ async function createBridgeBackedTransport(
     | "dynamicToolPolicy"
     | "hostEvents"
     | "maxBufferedBytes"
+    | "resolveBridgeOptions"
     | "serverRequestPolicy"
     | "stderr"
   > = {},
@@ -2600,6 +2694,15 @@ async function createBridgeBackedSocket(
   const socket = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
   await onceOpen(socket);
   return { socket, stderr, stdout, writes };
+}
+
+function createSocketTestProcess(): CodexChildProcess {
+  return {
+    kill: () => true,
+    stderr: new PassThrough(),
+    stdin: new PassThrough(),
+    stdout: new PassThrough(),
+  };
 }
 
 function onceOpen(socket: WebSocket): Promise<void> {

@@ -15,7 +15,7 @@ Purpose:
 - scoped thread lists
 - host-owned composer controls
 - local media upload/static resolution
-- bridge policy and diagnostics composition
+- bridge policy, local desktop admission, and diagnostics composition
 - host integration checklist
 - theming
 - optional same-origin WebSocket transport wiring

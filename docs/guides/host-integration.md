@@ -99,11 +99,9 @@ Do not use `createAgentUiNextRpcRoute()` for chat. It is a one-shot HTTP RPC
 helper for one allowlisted method per request.
 
 For local desktop or sidecar hosts, resolve per-connection bridge options on
-the server before Codex App Server is spawned. The selected future resolver
-shape is:
+the server before Codex App Server is spawned:
 
 ```ts
-// Planned API shape; not exported until the resolver implementation lands.
 attachAgentUiWebSocketBridge({
   server,
   path: "/agent-ui/ws",
@@ -123,9 +121,9 @@ attachAgentUiWebSocketBridge({
 });
 ```
 
-Until that resolver is exported, keep per-connection workspace/session decisions
-around `handleAgentUiWebSocketConnection()` or a host-owned route wrapper, and
-pass Agent UI only the already validated bridge options.
+Keep workspace/session decisions server-owned, and pass Agent UI only validated
+bridge options. Static bridge options on the route remain defaults; resolver
+output overrides them for the connection.
 
 Bind local desktop bridges to loopback by default. Treat `Origin` as a signal,
 not authentication. Use a sidecar/session token or host callback when needed,

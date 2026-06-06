@@ -80,37 +80,36 @@
 
 ## 3. Server Bridge Resolver And Local Desktop Admission
 
-- [ ] Decide whether the public shape is:
-  - [ ] `attachAgentUiWebSocketBridge({ resolveBridgeOptions })`, or
-  - [ ] a new helper/recipe around `handleAgentUiWebSocketConnection()`.
-- [ ] Ensure bridge options are resolved before `createCodexAppServerBridge()`
+- [x] Select `attachAgentUiWebSocketBridge({ resolveBridgeOptions })` as the
+      public shape instead of a separate handler wrapper.
+- [x] Ensure bridge options are resolved before `createCodexAppServerBridge()`
       spawns Codex App Server.
-- [ ] Ensure resolver rejection closes the socket without spawning a child
+- [x] Ensure resolver rejection closes the socket without spawning a child
       process.
-- [ ] Keep the resolved option set explicit:
-  - [ ] `cwd`
-  - [ ] `env`
-  - [ ] `initialize`
-  - [ ] `bridgePolicy.admission`
-  - [ ] `browserMethodPolicy`
-  - [ ] `serverRequestPolicy`
-  - [ ] `dynamicToolPolicy`
-  - [ ] `hostEvents`
-  - [ ] inbound limits and idle/backpressure settings
-- [ ] Add a local desktop admission recipe for Tauri/Electron/sidecar-style
+- [x] Keep the resolved option set explicit:
+  - [x] `cwd`
+  - [x] `env`
+  - [x] `initialize`
+  - [x] `bridgePolicy.admission`
+  - [x] `browserMethodPolicy`
+  - [x] `serverRequestPolicy`
+  - [x] `dynamicToolPolicy`
+  - [x] `hostEvents`
+  - [x] inbound limits and idle/backpressure settings
+- [x] Add a local desktop admission recipe for Tauri/Electron/sidecar-style
       hosts.
-  - [ ] Require loopback binding by default.
-  - [ ] Treat `Origin` as signal, not authentication.
-  - [ ] Use an explicit sidecar/session token or host callback when needed.
-  - [ ] Describe no-Origin request handling as a host decision.
-  - [ ] Keep packaged app CSP coordination host-owned.
-  - [ ] Validate selected workspaces server-side before assigning bridge `cwd`.
-- [ ] Add server tests proving:
-  - [ ] different connections can spawn with different `cwd`/`env`
-  - [ ] rejected resolver/admission paths do not spawn
-  - [ ] dynamic-tool helper threads use the resolved connection cwd
-  - [ ] `createCodexAppServerBridge()` passes `cwd`/`env` to the spawn callback
-- [ ] Update `examples/recipes` with typed bridge/admission snippets if the
+  - [x] Require loopback binding by default.
+  - [x] Treat `Origin` as signal, not authentication.
+  - [x] Use an explicit sidecar/session token or host callback when needed.
+  - [x] Describe no-Origin request handling as a host decision.
+  - [x] Keep packaged app CSP coordination host-owned.
+  - [x] Validate selected workspaces server-side before assigning bridge `cwd`.
+- [x] Add server tests proving:
+  - [x] different connections can spawn with different `cwd`/`env`
+  - [x] rejected resolver/admission paths do not spawn
+  - [x] dynamic-tool helper threads use the resolved connection cwd
+  - [x] `createCodexAppServerBridge()` passes `cwd`/`env` to the spawn callback
+- [x] Update `examples/recipes` with typed bridge/admission snippets if the
       recipe is not a full runnable example.
 
 ## 4. Mobile Drawer And Overlay Layers

@@ -45,6 +45,7 @@ export interface AgentUiWebSocketBridgeOptions extends CodexAppServerBridgeOptio
   serverRequestPolicy?: ServerRequestPolicy;
   path?: string;
   browserMethodPolicy?: BrowserMethodPolicy;
+  resolveBridgeOptions?: AgentUiWebSocketBridgeOptionsResolver;
 }
 
 export interface AgentUiWebSocketInboundLimits {
@@ -52,6 +53,24 @@ export interface AgentUiWebSocketInboundLimits {
   rateLimitIntervalMs?: number;
   rateLimitMessages?: number;
 }
+
+export interface AgentUiWebSocketBridgeOptionsResolverContext {
+  request?: IncomingMessage;
+}
+
+export type AgentUiResolvedWebSocketBridgeOptions = Omit<
+  AgentUiWebSocketBridgeOptions,
+  "resolveBridgeOptions"
+>;
+
+export type AgentUiWebSocketBridgeOptionsResolver = (
+  context: AgentUiWebSocketBridgeOptionsResolverContext,
+) =>
+  | AgentUiResolvedWebSocketBridgeOptions
+  | false
+  | null
+  | undefined
+  | Promise<AgentUiResolvedWebSocketBridgeOptions | false | null | undefined>;
 
 export interface AgentUiWebSocketServerOptions extends AgentUiWebSocketBridgeOptions {
   server: Server;
@@ -173,6 +192,12 @@ export async function handleAgentUiWebSocketConnection(
   options: AgentUiWebSocketBridgeOptions = {},
   request?: IncomingMessage,
 ): Promise<void> {
+  const resolvedOptions = await resolveConnectionBridgeOptions({
+    options,
+    request,
+    socket,
+  });
+  if (!resolvedOptions) return;
   const {
     admission,
     bridgePolicy,
@@ -184,7 +209,7 @@ export async function handleAgentUiWebSocketConnection(
     maxBufferedBytes,
     serverRequestPolicy,
     ...bridgeOptions
-  } = options;
+  } = resolvedOptions;
   const bridgeHealth: AgentUiBridgeHealthState = {
     admissionChecked: false,
     connected: false,
@@ -498,6 +523,35 @@ export async function handleAgentUiWebSocketConnection(
       });
     });
   });
+}
+
+async function resolveConnectionBridgeOptions({
+  options,
+  request,
+  socket,
+}: {
+  options: AgentUiWebSocketBridgeOptions;
+  request?: IncomingMessage;
+  socket: WebSocket;
+}): Promise<AgentUiResolvedWebSocketBridgeOptions | undefined> {
+  const { resolveBridgeOptions, ...baseOptions } = options;
+  if (!resolveBridgeOptions) return baseOptions;
+  try {
+    const resolved = await resolveBridgeOptions({ request });
+    if (!resolved) {
+      socket.close(1008, "Agent UI bridge options rejected");
+      return undefined;
+    }
+    return { ...baseOptions, ...resolved };
+  } catch (error) {
+    baseOptions.stderr?.(
+      redactSecrets(
+        `[agent-ui] bridge option resolver failed message=${error instanceof Error ? error.message : String(error)}\n`,
+      ),
+    );
+    socket.close(1011, "Agent UI bridge option resolver failed");
+    return undefined;
+  }
 }
 
 function resolveBridgeAdmissionPolicy({

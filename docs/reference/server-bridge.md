@@ -165,13 +165,13 @@ original `IncomingMessage` as the third argument. Without a request object,
 
 Local desktop, Electron, Tauri, and sidecar-style hosts often need each browser
 connection to resolve a user-selected workspace, environment, or policy before
-Codex App Server starts. The current public bridge API accepts explicit options
-per attached endpoint or low-level connection handler call. The planned
-promotion path is a thin per-connection resolver that returns explicit bridge
-options before spawn.
+Codex App Server starts. `attachAgentUiWebSocketBridge()` and the lower-level
+`handleAgentUiWebSocketConnection()` accept `resolveBridgeOptions`, a thin
+per-connection resolver that runs before admission and spawn. Static bridge
+options remain route defaults; resolver output overrides them for that
+connection.
 
 ```ts
-// Planned API shape; not exported until the resolver implementation lands.
 attachAgentUiWebSocketBridge({
   server,
   path: "/agent-ui/ws",
@@ -192,17 +192,13 @@ attachAgentUiWebSocketBridge({
 });
 ```
 
-The `resolveBridgeOptions` shape above is the selected implementation target,
-not a currently exported option. When it is exported, resolver rejection,
-missing options, or failed admission must close the socket without spawning a
-child process. Until then, hosts that need per-connection decisions should keep
-that logic around `handleAgentUiWebSocketConnection()` and pass only validated
-bridge options into Agent UI. Resolver output is bridge configuration only;
-Agent UI does not provide a workspace registry, auth provider, token store,
-tenant/session model, packaged-app CSP policy, or process supervisor. The host
-must validate selected workspaces server-side before assigning `cwd`, and
-browser-provided `cwd`, `env`, or method policy values must not be trusted
-directly.
+Resolver rejection, missing options, resolver failure, or failed admission
+closes the socket without spawning a child process. Resolver output is bridge
+configuration only; Agent UI does not provide a workspace registry, auth
+provider, token store, tenant/session model, packaged-app CSP policy, or process
+supervisor. The host must validate selected workspaces server-side before
+assigning `cwd`, and browser-provided `cwd`, `env`, or method policy values must
+not be trusted directly.
 
 Local desktop admission should bind the HTTP/WebSocket server to loopback by
 default. Treat the `Origin` header as a useful signal for browser provenance,
