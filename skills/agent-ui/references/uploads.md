@@ -18,10 +18,12 @@ attachment metadata, but the host owns:
 ## React Resolver
 
 The composer calls `resolveLocalAttachment(file, kind)` when the host wires it.
-Return Codex input items from `@nyosegawa/agent-ui-codex/request-builders`:
+Return structured attachment metadata with explicit Codex input items from
+`@nyosegawa/agent-ui-codex/request-builders`:
 
 ```tsx
 import { localImageInput, textInput } from "@nyosegawa/agent-ui-codex/request-builders";
+import type { AgentResolvedLocalAttachment } from "@nyosegawa/agent-ui-react";
 
 <AgentChat
   resolveLocalAttachment={async (file, kind) => {
@@ -32,8 +34,14 @@ import { localImageInput, textInput } from "@nyosegawa/agent-ui-codex/request-bu
       },
       method: "POST",
     });
-    const { path } = await response.json();
-    return kind === "image" ? localImageInput(path) : textInput(`Attached file: ${path}`);
+    const asset = await response.json();
+    return {
+      ...asset,
+      input:
+        kind === "image"
+          ? localImageInput(asset.path)
+          : textInput(`Attached file: ${asset.path}`),
+    } satisfies AgentResolvedLocalAttachment;
   }}
 />;
 ```
@@ -78,7 +86,17 @@ render the local-media fallback.
 
 ## Local Helper
 
-`@nyosegawa/agent-ui-server` exports `createAgentUiLocalUploadHandler()` for
+`@nyosegawa/agent-ui-server` exports `createAgentUiLocalMediaHelper()` for
 local apps. It accepts `POST`, sanitizes `x-agent-ui-filename`, enforces a 16 MB
 default limit, stores files in per-session temp directories, expires sessions
-after a one hour default TTL, and returns JSON with `path`.
+after a one hour default TTL, registers opaque asset IDs, and returns structured
+JSON with `path`, `url`, `previewUrl`, `id`, `displayName`, `redactedPath`,
+`mimeType`, and `sizeBytes`.
+
+Use `path` only for explicit App Server input such as `localImageInput(path)`.
+Use `url` or `previewUrl` for browser rendering. The helper does not install a
+static route by itself; hosts must intentionally route asset requests to
+`serveAssetHandler`, which serves only registered asset IDs and supports
+host-owned admission checks. The older `createAgentUiLocalUploadHandler()`
+remains available as an upload-only compatibility entry point, but new examples
+should prefer the local media helper.

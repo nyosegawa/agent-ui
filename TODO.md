@@ -165,18 +165,18 @@
 
 ## 6. Local Media Guidance Alignment
 
-- [ ] Confirm current local media implementation still matches docs:
-  - [ ] `createAgentUiLocalMediaHelper()`
-  - [ ] structured `AgentResolvedResource`
-  - [ ] `AgentResolvedLocalAttachment`
-  - [ ] `resolveLocalMediaUrl(path, item)`
-  - [ ] missing-media fallback
-  - [ ] asset-id URLs rather than raw filesystem browser URLs
-  - [ ] `serveAssetHandler` opt-in admission
-  - [ ] SVG rejection and content-type behavior
-- [ ] Update examples or docs if any local media guidance still recommends
+- [x] Confirm current local media implementation still matches docs:
+  - [x] `createAgentUiLocalMediaHelper()`
+  - [x] structured `AgentResolvedResource`
+  - [x] `AgentResolvedLocalAttachment`
+  - [x] `resolveLocalMediaUrl(path, item)`
+  - [x] missing-media fallback
+  - [x] asset-id URLs rather than raw filesystem browser URLs
+  - [x] `serveAssetHandler` opt-in admission
+  - [x] SVG rejection and content-type behavior
+- [x] Update examples or docs if any local media guidance still recommends
       raw paths, string URL shorthands, or upload-only helpers as the primary path.
-- [ ] Preserve `createAgentUiLocalUploadHandler()` as compatibility guidance,
+- [x] Preserve `createAgentUiLocalUploadHandler()` as compatibility guidance,
       but present `createAgentUiLocalMediaHelper()` as the main helper.
 
 ## 7. Installable `skills/agent-ui` Refresh
