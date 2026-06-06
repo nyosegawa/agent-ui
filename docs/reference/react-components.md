@@ -230,6 +230,22 @@ attachment points.
 Copied `dist/styles/*` files and internal `.aui-*` selectors are private
 implementation details, not stable host imports or styling contracts.
 
+Shared Agent UI overlay order is public through layer tokens, not raw z-index
+numbers or private selectors:
+
+- `--aui-z-backdrop`
+- `--aui-z-drawer`
+- `--aui-z-popover`
+- `--aui-z-sheet`
+- `--aui-z-dialog`
+- `--aui-z-toast`
+
+Agent UI owns the relative order of its own backdrops, drawers, popovers,
+sheets, dialogs, and toasts. Hosts own their own modal/sheet managers and may
+place host surfaces above or below Agent UI by choosing values relative to
+those tokens on a wrapper or root theme. Do not style host integration behavior
+by targeting private `.aui-*` selectors.
+
 The default stylesheet is warm and typography-led, not card-heavy. Every
 interactive primitive (button, input, composer, approval) owns its visual
 quality directly instead of depending on a page-level shell:
@@ -307,7 +323,11 @@ quality directly instead of depending on a page-level shell:
   single subtle `Load more` fallback. The header includes a `+` new-thread
   action that returns to the start screen without creating a thread. Refined
   thread list items with a coloured status dot. On mobile the sidebar is an
-  off-canvas drawer opened from the `Threads` trigger in the status bar.
+  off-canvas drawer opened from the `Threads` trigger in the status bar. The
+  drawer closes on backdrop click, Escape, and thread selection; focus returns
+  to the trigger after close; the chat/composer surface behind the drawer is
+  inert or equivalently non-interactive while the drawer is open; drawer search
+  and selection remain reachable.
 - **Context / status / usage / status pills**: per-thread context usage appears
   as a compact percent indicator beside the composer controls when
   `thread/tokenUsage/updated` has nonzero restored or live usage. Opening it
@@ -585,7 +605,12 @@ status bar, not a permanently stacked panel. Mode / model / effort menus open
 as bottom sheets that stay inside the viewport, the approval surface stays
 inside the transcript scroll area (so it never crushes the message list), and
 the secondary rail (status, usage, diagnostics) is a compact
-horizontally-scrolling strip rather than hidden.
+horizontally-scrolling strip rather than hidden. While the drawer is open, the
+background chat region does not accept pointer or keyboard interaction. Drawer
+content owns its own scroll area; Agent UI does not impose global page scroll
+policy outside the preset shell. Host-owned mobile sheets or modals should be
+layered relative to the public `--aui-z-*` tokens instead of depending on
+drawer DOM structure.
 
 ## Usage
 

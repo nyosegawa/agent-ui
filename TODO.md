@@ -2,45 +2,45 @@
 
 ## 0. Planning Baseline
 
-- [ ] Confirm the branch is not `main` before implementation work.
-- [ ] Re-read `docs/architecture/product-boundary.md` before changing public
+- [x] Confirm the branch is not `main` before implementation work.
+- [x] Re-read `docs/architecture/product-boundary.md` before changing public
       API, bridge behavior, examples, or skills.
-- [ ] Keep all implementation changes outside `third_party/codex`.
-- [ ] Do not hand-edit generated schema or package `dist` output.
-- [ ] Add or update a changeset when public package behavior changes.
+- [x] Keep all implementation changes outside `third_party/codex`.
+- [x] Do not hand-edit generated schema or package `dist` output.
+- [x] Add or update a changeset when public package behavior changes.
 
 ## 1. Contract Documentation First
 
-- [ ] Update `docs/architecture/host-integration-design-gates.md` with a design
+- [x] Update `docs/architecture/host-integration-design-gates.md` with a design
       gate for public thread start/resume handles.
-  - [ ] State that optimistic operation maps, alias maps, raw App Server
+  - [x] State that optimistic operation maps, alias maps, raw App Server
         responses, and reducer reconciliation remain internal.
-  - [ ] State that public results must identify the thread id hosts should
+  - [x] State that public results must identify the thread id hosts should
         persist after start/resume.
-  - [ ] Name the examples and tests that prove the contract.
-- [ ] Update `docs/architecture/host-integration-design-gates.md` with a design
+  - [x] Name the examples and tests that prove the contract.
+- [x] Update `docs/architecture/host-integration-design-gates.md` with a design
       gate for per-connection bridge option resolution.
-  - [ ] Keep auth, workspace policy, token storage, tenant/session mapping, and
+  - [x] Keep auth, workspace policy, token storage, tenant/session mapping, and
         process supervision host-owned.
-  - [ ] State that `attachAgentUiWebSocketBridge()` remains the simple local
+  - [x] State that `attachAgentUiWebSocketBridge()` remains the simple local
         helper unless the resolver stays thin.
-- [ ] Update `docs/architecture/host-integration-design-gates.md` with a design
+- [x] Update `docs/architecture/host-integration-design-gates.md` with a design
       gate for overlay layers and mobile drawer behavior.
-  - [ ] Define which layer decisions are Agent UI-owned.
-  - [ ] Define how hosts place their own sheets/modals relative to Agent UI.
-- [ ] Update `docs/architecture/host-integration-design-gates.md` with a design
+  - [x] Define which layer decisions are Agent UI-owned.
+  - [x] Define how hosts place their own sheets/modals relative to Agent UI.
+- [x] Update `docs/architecture/host-integration-design-gates.md` with a design
       gate for host-gated workflow composition.
-  - [ ] Keep product workflow state machines host-owned.
-  - [ ] Prefer primitives/recipes over workflow-specific core APIs.
-- [ ] Update `docs/reference/package-exports.md` before exporting any new public
+  - [x] Keep product workflow state machines host-owned.
+  - [x] Prefer primitives/recipes over workflow-specific core APIs.
+- [x] Update `docs/reference/package-exports.md` before exporting any new public
       React or server types.
-- [ ] Update `docs/reference/hooks.md` with the selected thread start/resume
+- [x] Update `docs/reference/hooks.md` with the selected thread start/resume
       public result shape.
-- [ ] Update `docs/reference/server-bridge.md` with the selected
+- [x] Update `docs/reference/server-bridge.md` with the selected
       per-connection resolver/helper pattern.
-- [ ] Update `docs/reference/react-components.md` with drawer and overlay layer
+- [x] Update `docs/reference/react-components.md` with drawer and overlay layer
       public behavior.
-- [ ] Update `docs/guides/host-integration.md` with the new host integration
+- [x] Update `docs/guides/host-integration.md` with the new host integration
       checklist.
 
 ## 2. React Thread Lifecycle API

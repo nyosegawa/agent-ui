@@ -234,6 +234,28 @@ view plus `AgentComposerSubmitMode`, `AgentComposerDisabledReason`, and
 `AgentComposerFailedPendingMessage`. Internal first-message operation maps,
 rollback payloads, and generated protocol payloads remain source-level only.
 
+Thread lifecycle controller exports may add raw-free start/resume result or
+handle types only after the implementation, examples, tests, and snapshots use
+the same names. The public result contract is:
+
+- `threadId` is the canonical id the host should persist after start, first
+  message start, or resume.
+- `requestedThreadId` is optional diagnostic metadata for resume paths where
+  the host asked for an alias or stale persisted id.
+- Stable first-turn metadata such as `startedTurnId` may be included only as an
+  Agent UI view-model field, not as a generated `TurnStartResponse`.
+- Raw App Server responses, generated protocol payloads, optimistic operation
+  maps, canonical-id alias maps, and reducer reconciliation records stay out of
+  the React package root.
+
+Server bridge exports may add a per-connection resolver type only if it remains
+a thin option-resolution boundary before spawn. The exported shape must cover
+explicit bridge options such as `cwd`, `env`, `initialize`,
+`bridgePolicy.admission`, `browserMethodPolicy`, `serverRequestPolicy`,
+`dynamicToolPolicy`, `hostEvents`, inbound limits, idle timeout, and
+backpressure settings without introducing auth providers, token stores,
+workspace registries, tenant/session models, or process supervisors.
+
 Composer styled parts exported at the React root are `AgentComposerPanel`,
 `AgentComposerInput`, `AgentComposerToolbar`, `AgentAttachmentChips`,
 `AgentComposerSubmitButton`, and `AgentStartComposer`. They expose browser UI

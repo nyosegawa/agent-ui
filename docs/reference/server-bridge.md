@@ -161,6 +161,54 @@ original `IncomingMessage` as the third argument. Without a request object,
 `local-loopback` and `host-callback` admission reject before spawning; only
 `unsafe-no-admission` with a non-empty reason can proceed.
 
+## Per-Connection Bridge Options
+
+Local desktop, Electron, Tauri, and sidecar-style hosts often need each browser
+connection to resolve a user-selected workspace, environment, or policy before
+Codex App Server starts. Keep that resolution host-owned and perform it before
+calling the bridge spawn path. The public pattern is a thin resolver that
+returns explicit bridge options:
+
+```ts
+attachAgentUiWebSocketBridge({
+  server,
+  path: "/agent-ui/ws",
+  resolveBridgeOptions: async ({ request }) => {
+    const session = await requireDesktopSession(request);
+    const workspace = await resolveAllowedWorkspace(session);
+
+    return {
+      cwd: workspace.cwd,
+      env: codexBridgeEnv(session),
+      bridgePolicy: { admission: desktopAdmission(session) },
+      browserMethodPolicy: { capabilities: ["connection", "models", "threadLifecycle", "turns"] },
+      dynamicToolPolicy: { mode: "disabled" },
+      serverRequestPolicy: hostServerRequestPolicy(session),
+      initialize: desktopInitializePayload(session),
+    };
+  },
+});
+```
+
+If the resolver rejects, returns no options, or fails admission, the socket
+closes without spawning a child process. Resolver output is bridge configuration
+only; Agent UI does not provide a workspace registry, auth provider, token
+store, tenant/session model, packaged-app CSP policy, or process supervisor.
+The host must validate selected workspaces server-side before assigning
+`cwd`, and browser-provided `cwd`, `env`, or method policy values must not be
+trusted directly.
+
+Local desktop admission should bind the HTTP/WebSocket server to loopback by
+default. Treat the `Origin` header as a useful signal for browser provenance,
+not authentication. Use an explicit sidecar/session token, signed local
+callback, or host callback when the bridge must distinguish one packaged UI
+session from another. Requests without an `Origin` header are a host decision:
+some native sidecars legitimately omit it, but accepting them should still be
+paired with loopback binding or a stronger session check. Non-loopback exposure
+requires host-owned authentication, isolation, resource limits, and audit
+logging. Do not use `browserMethodPolicy: "all"` or
+`unsafe-no-admission` as a desktop convenience default.
+
 Server-side redaction helpers are public exports from
 `@nyosegawa/agent-ui-server`: `redactSecrets()`, `redactStructuredValue()`, and
 `redactTransportEvent()`. They are part of the server API snapshot. Any new

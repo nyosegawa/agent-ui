@@ -27,12 +27,19 @@ follow the active thread or lock to a supplied `threadId`. Use `startThread()`
 for a new Codex thread and `resumeThread(threadId)` only when the host explicitly
 wants to rejoin a stored session. Both actions return stable Agent UI result
 objects such as `{ threadId }`, not generated App Server response payloads.
+For thread lifecycle actions, `threadId` is the canonical id the host should
+persist after the operation completes. First-message start results use the same
+rule: if the action also starts a turn, any returned turn metadata is stable
+Agent UI view-model metadata, not a raw `TurnStartResponse`.
 `resumeThread()` dispatches the normalized App Server `thread/resume` response in
 order: the active thread id comes from the returned canonical `thread.id`, and
 upstream active/running status is not overwritten to ready. When the requested id
 differs from the returned canonical id, Agent UI reconciles the requested id into
 the canonical id so active-thread state, scoped collections, pending operations,
-and server requests stay consistent. Its React options stay stable-only;
+and server requests stay consistent. Public resume results may include
+`requestedThreadId` for host diagnostics, but they do not expose alias maps,
+reducer reconciliation records, or raw generated protocol payloads. Its React
+options stay stable-only;
 experimental resume fields such as `excludeTurns`, `initialTurnsPage`,
 path/history resume, and cursor ownership remain host-managed raw protocol
 usage.
@@ -125,7 +132,12 @@ constraints are applied. The default `AgentComposerPanel` still blocks
 submission for approval-waiting threads and stored read-only previews.
 The source-level first-message start helper is not public package API; hosts
 start empty threads with `useAgentThreadController().startThread()` or submit
-through the public composer controller.
+through the public composer controller. Headless hosts that need to start a
+thread and send the first user input should use the documented public
+first-message lifecycle action once exported, because it shares the same
+canonical-id reconciliation and optimistic pending-message behavior as
+`AgentChat`. Do not sequence a raw `thread/start` result into
+`turn/start` through stale render state.
 
 `useAgentRunSettings()` exposes execution modes, available models, supported
 efforts, cwd, current selections, and setters. Execution modes map to React-owned
