@@ -41,7 +41,9 @@ Routes:
 - `/fixture-gallery`: component close-ups plus route previews.
 - `/host-workflow-recipe`: host integration reference shell with a host header,
   embedded `AgentChat`, host side panel, mobile drawer behavior, and a
-  host-owned review sheet layered with public `--aui-z-*` tokens.
+  host-owned review sheet layered with public `--aui-z-*` tokens. The route
+  also resolves browser file attachments through a host-owned resolver that
+  returns structured, redacted resource metadata.
 - `/composer-retry`: failed optimistic first-message retry through the public
   composer controller.
 - `/transcript-density`: compact transcript route with verbose command/file
@@ -66,7 +68,10 @@ fixture app. It keeps workflow context, review sheet state, and product chrome
 host-owned while embedding `AgentChat` as the reusable Codex App Server UI
 surface. The route also proves that host-owned overlays can sit above Agent UI
 drawers by choosing values relative to the public layer tokens, not by styling
-private `.aui-*` implementation selectors.
+private `.aui-*` implementation selectors. Its local attachment resolver is a
+fixture-only stand-in for host upload storage: it returns id, MIME type, size,
+preview, and redacted path metadata so the host side panel can display safe
+resource details without exposing raw local paths.
 
 `bun run test:e2e:fixtures` starts its own preview server on port 4173 for the
 fixture browser checks. Do not rely on a manually running 5174 server for this

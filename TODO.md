@@ -152,7 +152,7 @@
 - [x] Cover mobile drawer open/close.
 - [x] Cover mobile drawer plus a host-owned sheet/modal with documented layer
       order.
-- [ ] Cover local attachment upload with structured resource metadata.
+- [x] Cover local attachment upload with structured resource metadata.
 - [ ] Cover transcript local media preview and missing-media fallback.
 - [ ] Cover first-message optimistic rendering.
 - [ ] Cover scoped thread history loading.

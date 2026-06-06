@@ -264,6 +264,9 @@ test("renders primitive composition examples", async ({ page }) => {
   await expect(page.getByLabel("Host-owned panel")).toContainText("Validation status");
   await expect(page.getByLabel("Host-owned panel")).toContainText("Pending requests");
   await expect(page.getByLabel("Host-owned panel")).toContainText("Usage windows");
+  await expect(page.getByLabel("Host-owned panel")).toContainText(
+    "Local attachment metadata",
+  );
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   await expect(page.getByRole("button", { name: "Open host review" })).toBeVisible();
   await page.getByRole("button", { name: "Open host review" }).click();
@@ -276,6 +279,28 @@ test("renders primitive composition examples", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Rich transcript fixture" }),
   ).toBeVisible();
+});
+
+test("host workflow reference resolves local attachments as structured metadata", async ({
+  page,
+}) => {
+  await page.goto("/host-workflow-recipe");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+
+  await page.locator('input[aria-label="Attach files"]').setInputFiles({
+    buffer: Buffer.from("fixture-model"),
+    mimeType: "model/3mf",
+    name: "fixture part.3mf",
+  });
+
+  await expect(page.getByLabel("Pending attachments")).toContainText("fixture part.3mf");
+  const metadata = page.getByLabel("Latest local attachment metadata");
+  await expect(metadata).toContainText("fixture part.3mf");
+  await expect(metadata).toContainText("fixture-upload:fixture_part.3mf");
+  await expect(metadata).toContainText("model/3mf");
+  await expect(metadata).toContainText("[agent-ui-fixture-upload]/fixture_part.3mf");
+  await expect(page.getByText("/agent-ui-fixture-upload/fixture_part.3mf")).toHaveCount(0);
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
 });
 
 test("host workflow reference layers a host sheet above the mobile drawer", async ({

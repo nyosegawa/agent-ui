@@ -7,6 +7,10 @@ import {
   type ThreadId,
 } from "@nyosegawa/agent-ui-core";
 import {
+  localImageInput,
+  textInput,
+} from "@nyosegawa/agent-ui-codex/request-builders";
+import {
   AgentAppsPanel,
   AgentChat,
   AgentDiagnosticsPanel,
@@ -22,7 +26,9 @@ import {
   AgentThreadView,
   AgentUsagePanel,
   AgentUsageSummary,
+  type AgentLocalAttachmentKind,
   type AgentLocale,
+  type AgentResolvedLocalAttachment,
   type AgentTheme,
   normalizeUsageWindows,
   useAgentApprovals,
@@ -33,7 +39,14 @@ import {
   useAgentUsage,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { createRoot, type Root } from "react-dom/client";
 import "./styles/closeups.css";
 import "./styles/fixture-gallery.css";
@@ -639,6 +652,18 @@ function HostWorkflowRecipe() {
   );
 }
 
+interface HostAttachmentMetadata {
+  displayName: string;
+  id: string;
+  kind: AgentLocalAttachmentKind;
+  mimeType: string;
+  redactedPath: string;
+  sizeBytes: number;
+}
+
+const hostAttachmentPreviewUrl =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
 function TranscriptDensityExample() {
   const initialState = useMemo(() => createRichTranscriptInitialState(), []);
   const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
@@ -673,6 +698,42 @@ function HostWorkflowComposition() {
   const { thread } = useAgentThread();
   const [hostSheetOpen, setHostSheetOpen] = useState(() =>
     new URLSearchParams(window.location.search).get("hostSheet") === "open",
+  );
+  const [latestAttachment, setLatestAttachment] =
+    useState<HostAttachmentMetadata | null>(null);
+  const resolveHostAttachment = useCallback(
+    (
+      file: File,
+      kind: AgentLocalAttachmentKind,
+    ): AgentResolvedLocalAttachment => {
+      const safeName = sanitizeFixtureUploadName(file.name || "upload");
+      const path = `/agent-ui-fixture-upload/${safeName}`;
+      const redactedPath = `[agent-ui-fixture-upload]/${safeName}`;
+      const metadata: HostAttachmentMetadata = {
+        displayName: file.name || safeName,
+        id: `fixture-upload:${safeName}`,
+        kind,
+        mimeType: file.type || "application/octet-stream",
+        redactedPath,
+        sizeBytes: file.size,
+      };
+      setLatestAttachment(metadata);
+      return {
+        displayName: metadata.displayName,
+        id: metadata.id,
+        input:
+          kind === "image"
+            ? localImageInput(path)
+            : textInput(`Attached file: ${redactedPath}`),
+        mimeType: metadata.mimeType,
+        name: metadata.displayName,
+        path,
+        previewUrl: kind === "image" ? hostAttachmentPreviewUrl : undefined,
+        redactedPath,
+        sizeBytes: metadata.sizeBytes,
+      };
+    },
+    [],
   );
   if (!thread) return null;
   const turnCount = thread.orderedTurnIds.length;
@@ -710,7 +771,12 @@ function HostWorkflowComposition() {
           aria-label="Host integration reference"
         >
           <div className="aui-host-thread">
-            <AgentChat sidebar usage={false} diagnostics={false} />
+            <AgentChat
+              diagnostics={false}
+              resolveLocalAttachment={resolveHostAttachment}
+              sidebar
+              usage={false}
+            />
           </div>
           <aside
             className="aui-host-context"
@@ -720,7 +786,7 @@ function HostWorkflowComposition() {
               <AgentStatusSummary />
               <AgentUsageSummary />
             </div>
-            <HostWorkflowPanel />
+            <HostWorkflowPanel latestAttachment={latestAttachment} />
             <AgentStatusDetails />
             <AgentDiagnosticsPanel bootstrap={bootstrap} />
           </aside>
@@ -734,6 +800,10 @@ function HostWorkflowComposition() {
       ) : null}
     </main>
   );
+}
+
+function sanitizeFixtureUploadName(name: string) {
+  return name.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^[._-]+/, "") || "upload";
 }
 
 function HostReviewSheet({
@@ -814,7 +884,11 @@ function HostReviewSheet({
   );
 }
 
-function HostWorkflowPanel() {
+function HostWorkflowPanel({
+  latestAttachment,
+}: {
+  latestAttachment: HostAttachmentMetadata | null;
+}) {
   const { thread } = useAgentThread();
   const { approvals } = useAgentApprovals(thread?.thread.id);
   const { rateLimits } = useAgentUsage();
@@ -939,6 +1013,41 @@ function HostWorkflowPanel() {
             ))}
           </ul>
         ) : null}
+      </div>
+      <header className="aui-host-block-header">
+        <strong>Local attachment metadata</strong>
+        <small>{latestAttachment ? latestAttachment.kind : "waiting"}</small>
+      </header>
+      <div className="aui-host-block-body">
+        {latestAttachment ? (
+          <dl className="aui-host-attachment-meta" aria-label="Latest local attachment metadata">
+            <div>
+              <dt>Name</dt>
+              <dd>{latestAttachment.displayName}</dd>
+            </div>
+            <div>
+              <dt>Id</dt>
+              <dd>{latestAttachment.id}</dd>
+            </div>
+            <div>
+              <dt>MIME</dt>
+              <dd>{latestAttachment.mimeType}</dd>
+            </div>
+            <div>
+              <dt>Size</dt>
+              <dd>{latestAttachment.sizeBytes} B</dd>
+            </div>
+            <div>
+              <dt>Path</dt>
+              <dd>{latestAttachment.redactedPath}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="aui-host-empty">
+            Attach a local file to verify the host resolver returns structured,
+            browser-safe metadata.
+          </p>
+        )}
       </div>
       <header className="aui-host-block-header">
         <strong>Usage windows</strong>

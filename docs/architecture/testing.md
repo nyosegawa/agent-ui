@@ -241,7 +241,8 @@ The fixture routes are:
 - `/?state=bridge-error`: connection diagnostics
 - `/fixture-gallery`: component close-ups plus full-route previews
 - `/host-workflow-recipe`: host integration reference shell with host header,
-  embedded `AgentChat`, side panel, mobile drawer, and host-owned review sheet
+  embedded `AgentChat`, side panel, local attachment metadata, mobile drawer,
+  and host-owned review sheet
 - `/composer-retry`: failed first-message retry through the public composer
   controller
 - `/resource-resolution`: structured local-media resource rendering without

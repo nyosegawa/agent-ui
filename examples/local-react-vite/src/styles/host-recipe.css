@@ -499,6 +499,34 @@
   white-space: pre-wrap;
 }
 
+.aui-host-attachment-meta {
+  display: grid;
+  gap: var(--aui-space-150);
+  margin: 0;
+}
+
+.aui-host-attachment-meta > div {
+  display: grid;
+  gap: var(--aui-space-075);
+  min-width: 0;
+}
+
+.aui-host-attachment-meta dt {
+  color: var(--aui-fg-faint);
+  font-size: var(--aui-font-size-2xs-plus);
+  font-weight: 700;
+  letter-spacing: var(--aui-letter-spacing-meta);
+  text-transform: uppercase;
+}
+
+.aui-host-attachment-meta dd {
+  color: var(--aui-fg);
+  font-family: var(--aui-font-mono);
+  font-size: var(--aui-font-size-xs-plus);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
 .aui-host-block-actions {
   align-items: center;
   border-top: 1px solid var(--aui-rule);

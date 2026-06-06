@@ -75,7 +75,8 @@ Useful routes:
 - `/rich-transcript`: intentionally dense transcript and approval stress fixture
 - `/fixture-gallery`: visual QA gallery and component close-ups
 - `/host-workflow-recipe`: host integration reference shell with embedded
-  `AgentChat`, side panel, mobile drawer, and host-owned review sheet
+  `AgentChat`, side panel, mobile drawer, local attachment metadata, and
+  host-owned review sheet
 - `/usage-only`: usage primitives without chat chrome
 - `/scoped-thread-pane`: fixed-thread composition
 - `/app-connectors`: Codex Apps/connectors metadata
