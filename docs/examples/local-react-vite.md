@@ -46,7 +46,9 @@ Routes:
   returns structured, redacted resource metadata, and resolves transcript local
   media through browser-safe preview and missing-media fallback records. Add
   `?firstMessage=optimistic` to start from an empty host shell with delayed
-  first-message reconciliation.
+  first-message reconciliation. The side panel also includes a scoped thread
+  history loader that refreshes, paginates, and previews stored sessions through
+  `useAgentThreadListController`.
 - `/composer-retry`: failed optimistic first-message retry through the public
   composer controller.
 - `/transcript-density`: compact transcript route with verbose command/file

@@ -363,6 +363,38 @@ test("host workflow reference preserves first-message optimistic rendering", asy
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
 });
 
+test("host workflow reference loads scoped thread history without changing active thread", async ({
+  page,
+}) => {
+  await page.goto("/host-workflow-recipe");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  const scopedHistory = page.getByRole("region", { name: "Host scoped history" });
+  const status = scopedHistory.getByLabel("Host scoped history status");
+
+  await scopedHistory.getByRole("button", { name: "Load scoped history" }).click();
+  await expect(scopedHistory.getByLabel("Host scoped history threads")).toContainText(
+    "Host scoped review",
+  );
+  await expect(status).toContainText("Threads1");
+  await expect(status).toContainText("Cursorhost-scope-page-2");
+  await expect(status).toContainText("Activethread-rich-transcript");
+
+  await scopedHistory.getByRole("button", { name: "Load next scoped page" }).click();
+  await expect(scopedHistory.getByLabel("Host scoped history threads")).toContainText(
+    "Host scoped follow-up",
+  );
+  await expect(status).toContainText("Threads2");
+  await expect(status).toContainText("Cursornone");
+
+  await scopedHistory.getByRole("button", { name: "Preview scoped thread" }).click();
+  await expect(scopedHistory.getByLabel("Host scoped preview state")).toHaveText(
+    "Preview: thread-host-scope-review",
+  );
+  await expect(page.getByText("Scoped history preview hydrated")).toBeVisible();
+  await expect(status).toContainText("Activethread-rich-transcript");
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+});
+
 test("host workflow reference layers a host sheet above the mobile drawer", async ({
   page,
 }) => {

@@ -37,6 +37,7 @@ import {
   useAgentComposerController,
   useAgentContext,
   useAgentThread,
+  useAgentThreadListController,
   useAgentUsage,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
@@ -666,7 +667,7 @@ function HostWorkflowRecipe() {
         : createHostWorkflowInitialState(),
     [firstMessageMode],
   );
-  const fallbackTransport = useMemo(() => createFixtureTransport("rich-transcript"), []);
+  const fallbackTransport = useMemo(() => createFixtureTransport("host-workflow"), []);
   const transport = firstMessageControls?.transport ?? fallbackTransport;
   return (
     <AgentProvider initialState={initialState} transport={transport}>
@@ -942,6 +943,7 @@ function HostWorkflowComposition({
               <AgentUsageSummary />
             </div>
             <HostWorkflowPanel latestAttachment={latestAttachment} />
+            <HostScopedHistoryPanel />
             {firstMessageControls ? (
               <HostFirstMessagePanel
                 controls={firstMessageControls}
@@ -1088,6 +1090,117 @@ function HostFirstMessagePanel({
         </button>
       </div>
     </section>
+  );
+}
+
+function HostScopedHistoryPanel() {
+  const { thread: activeThread } = useAgentThread();
+  const [previewThreadId, setPreviewThreadId] = useState<string>("none");
+  const scopedHistory = useAgentThreadListController({
+    key: "host-workflow-reference",
+    kind: "history",
+    searchTerm: "host scoped",
+  });
+  const firstThread = scopedHistory.threads[0];
+  const activeThreadId = activeThread?.thread.id ?? "none";
+  return (
+    <section className="aui-host-block" aria-label="Host scoped history">
+      <header className="aui-host-block-header">
+        <strong>Scoped history</strong>
+        <small>{scopedHistory.isLoading ? "loading" : "ready"}</small>
+      </header>
+      <div className="aui-host-block-body">
+        <dl className="aui-host-stat-row" aria-label="Host scoped history status">
+          <div>
+            <dt>Threads</dt>
+            <dd>{scopedHistory.threads.length}</dd>
+          </div>
+          <div>
+            <dt>Cursor</dt>
+            <dd>{scopedHistory.nextCursor ?? "none"}</dd>
+          </div>
+          <div>
+            <dt>Active</dt>
+            <dd>{activeThreadId}</dd>
+          </div>
+        </dl>
+        <ul className="aui-host-pending" aria-label="Host scoped history threads">
+          {scopedHistory.threads.length === 0 ? (
+            <li>
+              <span className="aui-host-pending-title">No scoped threads loaded</span>
+            </li>
+          ) : (
+            scopedHistory.threads.map((thread) => (
+              <li key={thread.id}>
+                <span className="aui-host-pending-kind">history</span>
+                <span className="aui-host-pending-title">
+                  {thread.title}
+                </span>
+                <span className="aui-host-pending-detail">{thread.id}</span>
+              </li>
+            ))
+          )}
+        </ul>
+        <p className="aui-host-empty" aria-label="Host scoped preview state">
+          Preview: {previewThreadId}
+        </p>
+        {previewThreadId !== "none" ? (
+          <HostScopedPreview threadId={previewThreadId} />
+        ) : null}
+      </div>
+      <div className="aui-host-block-actions">
+        <span>
+          {scopedHistory.nextCursor
+            ? `Next page: ${scopedHistory.nextCursor}`
+            : "No next scoped page"}
+        </span>
+        <button
+          className="aui-host-action"
+          onClick={() => {
+            void scopedHistory.refresh();
+          }}
+          type="button"
+        >
+          Load scoped history
+        </button>
+        <button
+          className="aui-host-action"
+          disabled={!scopedHistory.nextCursor}
+          onClick={() => {
+            void scopedHistory.loadNextPage();
+          }}
+          type="button"
+        >
+          Load next scoped page
+        </button>
+        <button
+          className="aui-host-action"
+          disabled={!firstThread}
+          onClick={() => {
+            if (!firstThread) return;
+            void scopedHistory.previewThread(firstThread.id).then(() => {
+              setPreviewThreadId(firstThread.id);
+            });
+          }}
+          type="button"
+        >
+          Preview scoped thread
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function HostScopedPreview({ threadId }: { threadId: string }) {
+  const { thread } = useAgentThread(threadId);
+  if (!thread) return null;
+  return (
+    <div aria-label="Host scoped preview transcript">
+      <AgentThreadSurface className="aui-host-scoped-preview">
+        <AgentThreadHeader thread={thread} threadId={threadId} />
+        <AgentMessageList thread={thread} />
+      </AgentThreadSurface>
+    </div>
   );
 }
 

@@ -3,6 +3,7 @@ export type FixtureScenario =
   | "empty"
   | "unauth"
   | "bridge-error"
+  | "host-workflow"
   | "rich-transcript";
 
 export type FixtureGroup = "core" | "states" | "primitives";

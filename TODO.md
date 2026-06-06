@@ -155,7 +155,7 @@
 - [x] Cover local attachment upload with structured resource metadata.
 - [x] Cover transcript local media preview and missing-media fallback.
 - [x] Cover first-message optimistic rendering.
-- [ ] Cover scoped thread history loading.
+- [x] Cover scoped thread history loading.
 - [ ] Cover host-gated workflow composition without adding Watcher-specific
       semantics to Agent UI core.
 - [ ] Add Playwright tests for layout, stacking, hit testing, focus, scroll, and
