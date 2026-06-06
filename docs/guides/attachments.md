@@ -25,6 +25,8 @@ host route or a temporary object URL for unresolved local image drafts.
 import { localImageInput, textInput } from "@nyosegawa/agent-ui-codex/request-builders";
 import { AgentChat } from "@nyosegawa/agent-ui-react";
 
+const localMediaUrlsByPath = new Map<string, string>();
+
 <AgentChat
   resolveLocalAttachment={async (file, kind) => {
     const response = await fetch("/agent-ui/upload", {
@@ -35,6 +37,10 @@ import { AgentChat } from "@nyosegawa/agent-ui-react";
       method: "POST",
     });
     const asset = await response.json();
+    const previewUrl = asset.previewUrl ?? asset.url;
+    if (typeof asset.path === "string" && typeof previewUrl === "string") {
+      localMediaUrlsByPath.set(asset.path, previewUrl);
+    }
     return {
       ...asset,
       input:
@@ -43,10 +49,10 @@ import { AgentChat } from "@nyosegawa/agent-ui-react";
           : textInput(`Attached file: ${asset.path}`),
     };
   }}
-  resolveLocalMediaUrl={(path) => ({
-    kind: "url",
-    previewUrl: assetUrlForLocalPath(path),
-  })}
+  resolveLocalMediaUrl={(path) => {
+    const previewUrl = localMediaUrlsByPath.get(path);
+    return previewUrl ? { kind: "url", previewUrl } : null;
+  }}
 />
 ```
 
@@ -74,12 +80,12 @@ and saves them. If a preview URL fails to load, the chip falls back to the
 attachment icon without changing the Codex input payload.
 
 Transcript image and video blocks use `resolveLocalMediaUrl(path, item)` rather
-than raw local paths. The host should map a Codex local media path to a
-browser-safe URL served by its local media route. Returning a structured
-resource lets the host provide a safe caption without exposing the raw local
-path. If the resolver is missing, returns no URL, or the browser media load
-fails, Agent UI renders the default local-media fallback card instead of a
-broken image/video.
+than raw local paths. The host should resolve a Codex local media path only
+through known registered assets, such as the asset ID URL returned by
+`createAgentUiLocalMediaHelper()`. Returning a structured resource lets the host
+provide a safe caption without exposing the raw local path. If the resolver is
+missing, returns no URL, or the browser media load fails, Agent UI renders the
+default local-media fallback card instead of a broken image/video.
 
 ## Local Media Helper
 

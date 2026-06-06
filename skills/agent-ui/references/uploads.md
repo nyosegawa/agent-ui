@@ -74,15 +74,18 @@ those paths to browser-safe URLs with `resolveLocalMediaUrl(path, item)` and
 return a structured resource object:
 
 ```tsx
-resolveLocalMediaUrl={(path) => ({
-  kind: "url",
-  previewUrl: assetUrlForLocalPath(path),
-})}
+const localMediaUrlsByPath = new Map<string, string>();
+
+resolveLocalMediaUrl={(path) => {
+  const previewUrl = localMediaUrlsByPath.get(path);
+  return previewUrl ? { kind: "url", previewUrl } : null;
+}}
 ```
 
 Do not return raw strings or pass filesystem paths to browser `src` attributes.
-Return `null`/`undefined` when the host cannot serve the path; Agent UI will
-render the local-media fallback.
+Populate the lookup only from registered asset URLs returned by the host upload
+or local media helper. Return `null`/`undefined` when the host cannot serve the
+path; Agent UI will render the local-media fallback.
 
 ## Local Helper
 

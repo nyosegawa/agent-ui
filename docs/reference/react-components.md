@@ -47,6 +47,8 @@ import {
   textInput,
 } from "@nyosegawa/agent-ui-codex/request-builders";
 
+const localMediaUrlsByPath = new Map<string, string>();
+
 <AgentChat
   locale="ja"
   sidebar={false}
@@ -58,6 +60,10 @@ import {
   onRequestWorkingDirectory={openDirectoryPicker}
   resolveLocalAttachment={async (file, kind) => {
     const asset = await uploadAttachmentToLocalMedia(file);
+    const previewUrl = asset.previewUrl ?? asset.url;
+    if (typeof asset.path === "string" && typeof previewUrl === "string") {
+      localMediaUrlsByPath.set(asset.path, previewUrl);
+    }
     return {
       ...asset,
       input:
@@ -66,10 +72,10 @@ import {
           : textInput(`Attached file: ${asset.path}`),
     };
   }}
-  resolveLocalMediaUrl={(path) => ({
-    kind: "url",
-    previewUrl: localMediaAssetUrlForPath(path),
-  })}
+  resolveLocalMediaUrl={(path) => {
+    const previewUrl = localMediaUrlsByPath.get(path);
+    return previewUrl ? { kind: "url", previewUrl } : null;
+  }}
   messages={{
     "composer.placeholder": "フォローアップの変更を求める",
   }}

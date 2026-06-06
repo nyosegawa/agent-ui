@@ -144,8 +144,14 @@ resolveLocalAttachment={async (file) => ({
 After:
 
 ```tsx
+const localMediaUrlsByPath = new Map<string, string>();
+
 resolveLocalAttachment={async (file, kind) => {
   const asset = await uploadToHostLocalMedia(file);
+  const previewUrl = asset.previewUrl ?? asset.url;
+  if (typeof asset.path === "string" && typeof previewUrl === "string") {
+    localMediaUrlsByPath.set(asset.path, previewUrl);
+  }
   return {
     ...asset,
     input:
@@ -154,10 +160,10 @@ resolveLocalAttachment={async (file, kind) => {
         : textInput(`Attached file: ${asset.path}`),
   };
 }}
-resolveLocalMediaUrl={(path) => ({
-  kind: "url",
-  previewUrl: browserUrlForLocalMediaPath(path),
-})}
+resolveLocalMediaUrl={(path) => {
+  const previewUrl = localMediaUrlsByPath.get(path);
+  return previewUrl ? { kind: "url", previewUrl } : null;
+}}
 ```
 
 The host owns upload authorization, static serving, persistence, cleanup, and
