@@ -267,6 +267,10 @@ export async function handleAgentUiWebSocketConnection(
     request,
     stderr: bridgeOptions.stderr,
   });
+  if (closed || socket.readyState !== WEB_SOCKET_OPEN_STATE) {
+    closeBridge();
+    return;
+  }
   bridgeHealth.admissionChecked = true;
   emitBridgeHealthEvent("admissionChecked", {
     ...(admissionResult.accepted === false

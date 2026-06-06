@@ -164,11 +164,57 @@ describe("attachAgentUiWebSocketBridge", () => {
     if (!address || typeof address === "string") throw new Error("missing server address");
 
     const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
+    const clientOpened = onceOpen(client);
     await resolverStartedPromise;
-    await onceOpen(client);
+    await clientOpened;
     client.close();
     await onceCloseWithInfo(client);
     resolveOptions?.({ cwd: "/tmp/closed-before-resolve" });
+    await new Promise((resolve) => setTimeout(resolve, 50));
+
+    expect(spawnCount).toBe(0);
+  });
+
+  it("does not spawn when the socket closes while host admission is pending", async () => {
+    let resolveAdmission: ((accepted: boolean) => void) | undefined;
+    let admissionStarted: (() => void) | undefined;
+    const admissionStartedPromise = new Promise<void>((resolve) => {
+      admissionStarted = resolve;
+    });
+    let spawnCount = 0;
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      bridgePolicy: {
+        admission: {
+          admit() {
+            admissionStarted?.();
+            return new Promise((resolve) => {
+              resolveAdmission = resolve;
+            });
+          },
+          mode: "host-callback",
+        },
+      },
+      server: httpServer,
+      spawn: () => {
+        spawnCount += 1;
+        return createSocketTestProcess();
+      },
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
+    const clientOpened = onceOpen(client);
+    await admissionStartedPromise;
+    await clientOpened;
+    client.close();
+    await onceCloseWithInfo(client);
+    resolveAdmission?.(true);
     await new Promise((resolve) => setTimeout(resolve, 50));
 
     expect(spawnCount).toBe(0);
