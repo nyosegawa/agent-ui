@@ -65,6 +65,12 @@ Use `useAgentComposerController()`,
 `useAgentTranscriptScrollController()` when the host owns the layout instead
 of widening the preset replacement map.
 
+Thread lifecycle results are Agent UI view models. The `threadId` returned from
+start, first-message start, or resume is the canonical id the host should
+persist. `requestedThreadId` may appear on resume results for diagnostics when
+the host supplied an alias or stale id. Do not persist reducer alias maps, raw
+App Server responses, generated protocol payloads, or optimistic operation ids.
+
 ## Server Bridge Examples
 
 Before:
@@ -92,6 +98,39 @@ attachAgentUiWebSocketBridge({
 Do not use `createAgentUiNextRpcRoute()` for chat. It is a one-shot HTTP RPC
 helper for one allowlisted method per request.
 
+For local desktop or sidecar hosts, resolve per-connection bridge options on
+the server before Codex App Server is spawned:
+
+```ts
+attachAgentUiWebSocketBridge({
+  server,
+  path: "/agent-ui/ws",
+  resolveBridgeOptions: async ({ request }) => {
+    const session = await requireHostSession(request);
+    const workspace = await resolveAllowedWorkspace(session);
+
+    return {
+      cwd: workspace.cwd,
+      env: codexBridgeEnv(session),
+      bridgePolicy: { admission: desktopAdmission(session) },
+      browserMethodPolicy: { capabilities: ["connection", "models", "threadLifecycle", "turns"] },
+      dynamicToolPolicy: { mode: "disabled" },
+      serverRequestPolicy: hostServerRequestPolicy(session),
+    };
+  },
+});
+```
+
+Keep workspace/session decisions server-owned, and pass Agent UI only validated
+bridge options. Static bridge options on the route remain defaults; resolver
+output overrides them for the connection.
+
+Bind local desktop bridges to loopback by default. Treat `Origin` as a signal,
+not authentication. Use a sidecar/session token or host callback when needed,
+decide explicitly how no-Origin requests are handled, and validate workspaces
+server-side before assigning `cwd`. Do not recommend
+`browserMethodPolicy: "all"` or `unsafe-no-admission` as convenience defaults.
+
 ## Local Media Helper
 
 Before:
@@ -105,8 +144,14 @@ resolveLocalAttachment={async (file) => ({
 After:
 
 ```tsx
+const localMediaUrlsByPath = new Map<string, string>();
+
 resolveLocalAttachment={async (file, kind) => {
   const asset = await uploadToHostLocalMedia(file);
+  const previewUrl = asset.previewUrl ?? asset.url;
+  if (typeof asset.path === "string" && typeof previewUrl === "string") {
+    localMediaUrlsByPath.set(asset.path, previewUrl);
+  }
   return {
     ...asset,
     input:
@@ -115,10 +160,10 @@ resolveLocalAttachment={async (file, kind) => {
         : textInput(`Attached file: ${asset.path}`),
   };
 }}
-resolveLocalMediaUrl={(path) => ({
-  kind: "url",
-  previewUrl: browserUrlForLocalMediaPath(path),
-})}
+resolveLocalMediaUrl={(path) => {
+  const previewUrl = localMediaUrlsByPath.get(path);
+  return previewUrl ? { kind: "url", previewUrl } : null;
+}}
 ```
 
 The host owns upload authorization, static serving, persistence, cleanup, and
@@ -131,6 +176,30 @@ Do not call source-level first-message helpers from host code. Start empty
 threads through `useAgentThreadController().startThread()` or submit the first
 message through `useAgentComposerController()`. The public composer controller
 owns pending first-message retry/cancel state without exposing operation maps.
+When using headless hooks, call
+`useAgentComposerController().startThreadWithInput(input)` for the first user
+message so it appears immediately and `turn/start` uses the canonical thread id
+after `thread/start` reconciliation.
+
+## Drawer And Overlay Layers
+
+`AgentChat` owns its mobile thread-history drawer behavior: backdrop click,
+Escape, and thread selection close the drawer; focus returns to the `Threads`
+trigger; background chat controls are inert or equivalently non-interactive
+while the drawer is open; drawer search and selection stay reachable. Hosts
+should place their own sheets and modals relative to the public layer tokens
+`--aui-z-backdrop`, `--aui-z-drawer`, `--aui-z-popover`, `--aui-z-sheet`,
+`--aui-z-dialog`, and `--aui-z-toast` instead of styling private `.aui-*`
+selectors. The preset keeps scroll containment inside the drawer and does not
+impose host document/body scroll-lock policy.
+
+## Host-Gated Workflows
+
+Compose product workflow gates around Agent UI controllers and primitives.
+The host owns routing, persistence, auth, workspace selection, and workflow
+state machines. Agent UI owns reusable transcript, composer, thread lifecycle,
+server-request, history, and overlay behavior. Add recipes or examples for
+workflow composition instead of adding workflow-specific core APIs.
 
 ## Validation Checklist
 
@@ -143,6 +212,9 @@ owns pending first-message retry/cancel state without exposing operation maps.
   relevant Playwright fixture or real-local spec.
 - For browser-visible example changes, run the example typecheck/build gate and
   the relevant Playwright route.
+- For drawer, overlay, resume, local media, or bridge admission changes, include
+  interaction checks that prove hit testing, focus return, canonical id
+  persistence, structured media resolution, and no-spawn admission rejection.
 
 ## Non-Promises And Host-Owned Boundaries
 

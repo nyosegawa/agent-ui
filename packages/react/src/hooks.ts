@@ -52,16 +52,19 @@ export {
   useAgentThreadHistory,
   useAgentThreadReader,
   useAgentThreads,
-  type AgentThreadForkResult,
-  type AgentThreadHistoryResult,
-  type AgentThreadReadResult,
-  type AgentThreadResumeResult,
-  type AgentThreadStartResult,
   type ThreadForkOptions,
   type ThreadHistoryParams,
   type ThreadResumeOptions,
   type ThreadStartOptions,
 } from "./hooks/thread";
+export type {
+  AgentThreadForkResult,
+  AgentThreadHistoryResult,
+  AgentThreadReadResult,
+  AgentThreadResumeResult,
+  AgentThreadStartWithInputResult,
+  AgentThreadStartResult,
+} from "./hooks/thread-lifecycle-types";
 export {
   useAgentThreadListController,
   type AgentThreadHistorySyncedEvent,

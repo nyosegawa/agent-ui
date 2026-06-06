@@ -74,7 +74,11 @@ Useful routes:
 - `/`: default transcript-first surface
 - `/rich-transcript`: intentionally dense transcript and approval stress fixture
 - `/fixture-gallery`: visual QA gallery and component close-ups
-- `/host-workflow-recipe`: host-composed primitive layout
+- `/host-workflow-recipe`: host integration reference shell with embedded
+  `AgentChat`, side panel, mobile drawer, local attachment metadata, transcript
+  local-media preview/fallback metadata, scoped thread history loading,
+  host-owned workflow gate, first-message optimistic mode, and host-owned review
+  sheet
 - `/usage-only`: usage primitives without chat chrome
 - `/scoped-thread-pane`: fixed-thread composition
 - `/app-connectors`: Codex Apps/connectors metadata

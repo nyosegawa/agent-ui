@@ -52,7 +52,12 @@ Use the package root for React components, and use
 ## Local Safety Defaults
 
 - Bind unauthenticated examples to loopback.
+- Use `bridgePolicy.admission` with the `local-loopback` default for local
+  desktop sidecars.
 - Keep non-loopback binding opt-in and noisy.
+- For non-loopback use, require host-owned auth/session admission, explicit
+  browser method policy, upload isolation, and an audit reason before exposing
+  the bridge.
 - Choose a specific `cwd`; do not derive arbitrary local paths from browser
   input.
 - Keep dynamic tools disabled unless the user asks for host-owned tool

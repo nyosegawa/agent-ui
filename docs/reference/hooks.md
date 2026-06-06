@@ -27,12 +27,19 @@ follow the active thread or lock to a supplied `threadId`. Use `startThread()`
 for a new Codex thread and `resumeThread(threadId)` only when the host explicitly
 wants to rejoin a stored session. Both actions return stable Agent UI result
 objects such as `{ threadId }`, not generated App Server response payloads.
+For thread lifecycle actions, `threadId` is the canonical id the host should
+persist after the operation completes. First-message start results use the same
+rule: if the action also starts a turn, any returned turn metadata is stable
+Agent UI view-model metadata, not a raw `TurnStartResponse`.
 `resumeThread()` dispatches the normalized App Server `thread/resume` response in
 order: the active thread id comes from the returned canonical `thread.id`, and
 upstream active/running status is not overwritten to ready. When the requested id
 differs from the returned canonical id, Agent UI reconciles the requested id into
 the canonical id so active-thread state, scoped collections, pending operations,
-and server requests stay consistent. Its React options stay stable-only;
+and server requests stay consistent. Public resume results may include
+`requestedThreadId` for host diagnostics, but they do not expose alias maps,
+reducer reconciliation records, or raw generated protocol payloads. Its React
+options stay stable-only;
 experimental resume fields such as `excludeTurns`, `initialTurnsPage`,
 path/history resume, and cursor ownership remain host-managed raw protocol
 usage.
@@ -74,7 +81,11 @@ flag, cursor, ids, loading state, and sync timestamp for that list, while the
 host still owns what those dimensions mean in its product. `onHistorySynced`
 reports normalized sync metadata such as scope, thread ids, cursor, append
 mode, search term, and timestamp; it does not expose raw App Server
-`thread/list` payloads or ask Agent UI to persist history.
+`thread/list` payloads or ask Agent UI to persist history. The scoped
+controller keeps `resumeThread(threadId)` returning the canonical thread id for
+existing callers, and exposes `resumeThreadWithResult(threadId)` when hosts need
+the same `{ threadId, requestedThreadId? }` diagnostic result shape as
+`useAgentThreadController().resumeThread()`.
 
 `useAgentThreadReader().readThread(threadId, { includeTurns: true })` calls
 `thread/read` and hydrates persisted turns/items before activation. This is the
@@ -107,8 +118,14 @@ turn controller. `useAgentComposer()` remains a public alias for the same
 raw-free controller view. The public view exposes `value`, `setValue`,
 `canSubmit`, `submitMode`, `disabledReason`, `isSubmitting`, `isInterrupting`,
 `activeTurnId`, queued follow-ups, failed first-message pending messages, and
-retry/cancel actions for those failed pending messages. It does not expose the
-internal operation map or raw generated protocol payloads. Idle threads submit
+retry/cancel actions for those failed pending messages. It also exposes
+`startThreadWithInput(input)` for headless hosts that need the same safe
+first-message behavior as `AgentChat`: the first user message appears
+immediately, `thread/start` uses the current run settings, `turn/start` waits
+for the canonical thread id returned by `thread/start`, and the returned
+`{ threadId }` is the id hosts should persist. It does not expose the internal
+operation map, raw `ThreadStartResponse`, raw `TurnStartResponse`, or reducer
+reconciliation records. Idle threads submit
 `turn/start`. Running threads keep the textarea editable: Enter adds to
 `queuedFollowUps`, Cmd/Ctrl+Enter calls `turn/steer` immediately, and
 `sendQueuedFollowUp(id)` calls `turn/steer` for that item with its stored
@@ -125,7 +142,9 @@ constraints are applied. The default `AgentComposerPanel` still blocks
 submission for approval-waiting threads and stored read-only previews.
 The source-level first-message start helper is not public package API; hosts
 start empty threads with `useAgentThreadController().startThread()` or submit
-through the public composer controller.
+the first message through `useAgentComposerController().startThreadWithInput()`.
+Do not sequence a raw `thread/start` result into `turn/start` through stale
+render state.
 
 `useAgentRunSettings()` exposes execution modes, available models, supported
 efforts, cwd, current selections, and setters. Execution modes map to React-owned

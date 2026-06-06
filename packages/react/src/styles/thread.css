@@ -174,7 +174,7 @@
   position: absolute;
   right: 0;
   top: calc(100% + 6px);
-  z-index: 10;
+  z-index: var(--aui-z-popover);
 }
 
 .aui-thread-action-menu:not([open]) > div {

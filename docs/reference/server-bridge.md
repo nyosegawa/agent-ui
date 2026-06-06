@@ -37,12 +37,7 @@ attachAgentUiWebSocketBridge({
   path: "/agent-ui/ws",
   cwd: process.cwd(),
   bridgePolicy: {
-    admission: {
-      admit(request) {
-        return request.headers.origin === "http://127.0.0.1:5175";
-      },
-      mode: "host-callback",
-    },
+    admission: { mode: "local-loopback" },
   },
   initialize: {
     capabilities: {
@@ -160,6 +155,56 @@ cookies, the `Origin` header, or loopback remote address checks, pass the
 original `IncomingMessage` as the third argument. Without a request object,
 `local-loopback` and `host-callback` admission reject before spawning; only
 `unsafe-no-admission` with a non-empty reason can proceed.
+
+## Per-Connection Bridge Options
+
+Local desktop, Electron, Tauri, and sidecar-style hosts often need each browser
+connection to resolve a user-selected workspace, environment, or policy before
+Codex App Server starts. `attachAgentUiWebSocketBridge()` and the lower-level
+`handleAgentUiWebSocketConnection()` accept `resolveBridgeOptions`, a thin
+per-connection resolver that runs before admission and spawn. Static bridge
+options remain route defaults; resolver output overrides them for that
+connection.
+
+```ts
+attachAgentUiWebSocketBridge({
+  server,
+  path: "/agent-ui/ws",
+  resolveBridgeOptions: async ({ request }) => {
+    const session = await requireDesktopSession(request);
+    const workspace = await resolveAllowedWorkspace(session);
+
+    return {
+      cwd: workspace.cwd,
+      env: codexBridgeEnv(session),
+      bridgePolicy: { admission: desktopAdmission(session) },
+      browserMethodPolicy: { capabilities: ["connection", "models", "threadLifecycle", "turns"] },
+      dynamicToolPolicy: { mode: "disabled" },
+      serverRequestPolicy: hostServerRequestPolicy(session),
+      initialize: desktopInitializePayload(session),
+    };
+  },
+});
+```
+
+Resolver rejection, missing options, resolver failure, or failed admission
+closes the socket without spawning a child process. Resolver output is bridge
+configuration only; Agent UI does not provide a workspace registry, auth
+provider, token store, tenant/session model, packaged-app CSP policy, or process
+supervisor. The host must validate selected workspaces server-side before
+assigning `cwd`, and browser-provided `cwd`, `env`, or method policy values must
+not be trusted directly.
+
+Local desktop admission should bind the HTTP/WebSocket server to loopback by
+default. Treat the `Origin` header as a useful signal for browser provenance,
+not authentication. Use an explicit sidecar/session token, signed local
+callback, or host callback when the bridge must distinguish one packaged UI
+session from another. Requests without an `Origin` header are a host decision:
+some native sidecars legitimately omit it, but accepting them should still be
+paired with loopback binding or a stronger session check. Non-loopback exposure
+requires host-owned authentication, isolation, resource limits, and audit
+logging. Do not use `browserMethodPolicy: "all"` or
+`unsafe-no-admission` as a desktop convenience default.
 
 Server-side redaction helpers are public exports from
 `@nyosegawa/agent-ui-server`: `redactSecrets()`, `redactStructuredValue()`, and

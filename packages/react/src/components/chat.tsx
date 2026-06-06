@@ -6,7 +6,7 @@ import type {
   TurnState,
 } from "@nyosegawa/agent-ui-core";
 import { selectThreadView } from "@nyosegawa/agent-ui-core";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useAgentBootstrap,
   useAgentThread,
@@ -211,6 +211,8 @@ function AgentChatInner({
   // with the wrong default.
   const [sidebarOpenDesktop, setSidebarOpenDesktop] = useState(true);
   const [sidebarOpenMobile, setSidebarOpenMobile] = useState(false);
+  const chatRootRef = useRef<HTMLDivElement>(null);
+  const sidebarSlotRef = useRef<HTMLDivElement>(null);
   const isSidebarCollapsed = compact ? !sidebarOpenMobile : !sidebarOpenDesktop;
   const setSidebarCollapsed = useCallback(
     (next: boolean) => {
@@ -221,6 +223,51 @@ function AgentChatInner({
   );
   const hasRail = usage || diagnostics;
   const drawerOpen = compact && sidebar && !isSidebarCollapsed;
+  const closeDrawer = useCallback(() => {
+    setSidebarCollapsed(true);
+    const deferFocus =
+      typeof window.requestAnimationFrame === "function"
+        ? window.requestAnimationFrame
+        : (callback: FrameRequestCallback) => window.setTimeout(callback, 0);
+    deferFocus(() => {
+      chatRootRef.current?.querySelector<HTMLButtonElement>(".aui-threads-trigger")?.focus();
+    });
+  }, [setSidebarCollapsed]);
+  useEffect(() => {
+    if (!drawerOpen) return;
+    let cancelled = false;
+    const focusDrawer = () => {
+      if (cancelled) return;
+      const sidebar = sidebarSlotRef.current?.querySelector<HTMLElement>(".aui-sidebar");
+      const target =
+        sidebar?.querySelector<HTMLElement>("input") ??
+        sidebar?.querySelector<HTMLElement>(
+          "button, a, [tabindex]:not([tabindex='-1'])",
+        );
+      target?.focus();
+    };
+    const cancelFocus =
+      typeof window.requestAnimationFrame === "function"
+        ? (() => {
+            const frame = window.requestAnimationFrame(focusDrawer);
+            return () => window.cancelAnimationFrame(frame);
+          })()
+        : (() => {
+            const timeout = window.setTimeout(focusDrawer, 0);
+            return () => window.clearTimeout(timeout);
+          })();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      closeDrawer();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      cancelled = true;
+      cancelFocus();
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closeDrawer, drawerOpen]);
   const componentMap = { ...defaultAgentComponents, ...components };
   const EmptyState = componentMap.EmptyState;
   const Shell = componentMap.Shell;
@@ -252,15 +299,17 @@ function AgentChatInner({
       data-sidebar-drawer={drawerOpen ? "open" : "closed"}
       sidebar={
         sidebar && Sidebar ? (
-          <Sidebar
-            Default={AgentThreadSidebar}
-            activeThreadId={activeThreadId}
-            collapsed={isSidebarCollapsed}
-            onCreateThread={navigateHome}
-            onCollapsedChange={setSidebarCollapsed}
-            onSelectThread={navigateToThread}
-            threads={sidebarThreads}
-          />
+          <div className="aui-sidebar-slot" ref={sidebarSlotRef}>
+            <Sidebar
+              Default={AgentThreadSidebar}
+              activeThreadId={activeThreadId}
+              collapsed={isSidebarCollapsed}
+              onCreateThread={navigateHome}
+              onCollapsedChange={setSidebarCollapsed}
+              onSelectThread={navigateToThread}
+              threads={sidebarThreads}
+            />
+          </div>
         ) : undefined
       }
       theme={theme}
@@ -269,11 +318,16 @@ function AgentChatInner({
         <button
           aria-label={t("aria.dismissThreadHistory")}
           className="aui-sidebar-backdrop"
-          onClick={() => setSidebarCollapsed(true)}
+          onClick={closeDrawer}
           type="button"
         />
       ) : null}
-      <div className="aui-chat">
+      <div
+        aria-hidden={drawerOpen ? "true" : undefined}
+        className="aui-chat"
+        inert={drawerOpen ? true : undefined}
+        ref={chatRootRef}
+      >
         <AgentStatusBar
           end={statusBarEnd}
           onNavigateHome={navigateHome}

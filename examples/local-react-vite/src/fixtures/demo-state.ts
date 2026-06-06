@@ -14,7 +14,9 @@ import type { FixtureScenario } from "./gallery";
 
 export function createFixtureInitialState(scenario: FixtureScenario): AgentSessionState {
   if (scenario === "default") return runEventFixture(demoFixture as FixtureStep[]);
-  if (scenario === "rich-transcript") return createRichTranscriptInitialState();
+  if (scenario === "host-workflow" || scenario === "rich-transcript") {
+    return createRichTranscriptInitialState();
+  }
   const state = createInitialAgentState();
   if (scenario === "unauth") {
     state.account = { status: "unauthenticated" };
@@ -68,6 +70,37 @@ function handleFixtureRequest(request: FakeTransportRequest, scenario: FixtureSc
   }
   if (request.method === "thread/list") {
     if (scenario === "empty" || scenario === "unauth") return { data: [] };
+    if (scenario === "host-workflow") {
+      const params = request.params as
+        | { cursor?: string | null; searchTerm?: string }
+        | undefined;
+      if (params?.cursor === "host-scope-page-2") {
+        return {
+          data: [
+            {
+              id: "thread-host-scope-page",
+              name: "Host scoped follow-up",
+              preview: "Second page stored session",
+              status: { type: "notLoaded" },
+            },
+          ],
+          nextCursor: null,
+        };
+      }
+      if (params?.searchTerm === "host scoped") {
+        return {
+          data: [
+            {
+              id: "thread-host-scope-review",
+              name: "Host scoped review",
+              preview: "Stored session scoped to host panel",
+              status: { type: "notLoaded" },
+            },
+          ],
+          nextCursor: "host-scope-page-2",
+        };
+      }
+    }
     return {
       data: [
         {
@@ -81,6 +114,35 @@ function handleFixtureRequest(request: FakeTransportRequest, scenario: FixtureSc
     };
   }
   if (request.method === "thread/read") {
+    const params = request.params as { threadId?: string } | undefined;
+    if (scenario === "host-workflow" && params?.threadId === "thread-host-scope-review") {
+      return {
+        thread: {
+          id: "thread-host-scope-review",
+          name: "Host scoped review",
+          path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+          status: { type: "notLoaded" },
+          turns: [
+            {
+              id: "turn-host-scope-review",
+              items: [
+                {
+                  content: [{ text: "Preview the host scoped session.", type: "text" }],
+                  id: "item-host-scope-user",
+                  type: "userMessage",
+                },
+                {
+                  id: "item-host-scope-agent",
+                  text: "Scoped history preview hydrated without changing the active thread.",
+                  type: "agentMessage",
+                },
+              ],
+              status: "completed",
+            },
+          ],
+        },
+      };
+    }
     return {
       thread: {
         id: "thread-stored-preview",

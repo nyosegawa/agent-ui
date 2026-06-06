@@ -99,6 +99,7 @@ describe("public Agent UI skill", () => {
       "@nyosegawa/agent-ui-react/styles.css",
       "createCodexWebSocketTransport",
       "attachAgentUiWebSocketBridge",
+      "createAgentUiLocalMediaHelper",
       "createAgentUiLocalUploadHandler",
       "createMcpDynamicToolHandler",
       "createAgentUiNextRpcRoute",
@@ -114,6 +115,17 @@ describe("public Agent UI skill", () => {
     expect(allSkillText).toContain(
       "Same-origin routing and upstream `Origin` checks are not authentication.",
     );
+    expect(allSkillText).toContain("canonical resume");
+    expect(allSkillText).toContain("thread/read` preview hydration versus `thread/resume` activation");
+    expect(allSkillText).toContain("bridgePolicy.admission");
+    expect(allSkillText).toContain("local-loopback");
+    expect(allSkillText).toContain("host-callback");
+    expect(allSkillText).toContain("unsafe-no-admission");
+    expect(allSkillText).toContain("per-connection resolver pattern");
+    expect(allSkillText).toContain("mobile thread history drawer");
+    expect(allSkillText).toContain("--aui-z-sheet");
+    expect(allSkillText).toContain("host-owned workflow gates");
+    expect(allSkillText).toContain("structured asset URLs");
     expect(allSkillText).toContain("Match the existing lockfile");
     expect(allSkillText).toMatch(/do not\s+create a second lockfile/);
     expect(allSkillText).toContain("Use published Agent UI packages from the registry");

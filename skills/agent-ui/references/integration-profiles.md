@@ -15,6 +15,10 @@ Expected shape:
 - Browser method policy stays on the productized full-chat surface.
 - The host chooses a working directory and owns process lifetime.
 - Any upload route is local and cleaned up by host policy.
+- Per-connection bridge options come from trusted local host state, not browser
+  supplied `cwd`, `env`, or method policy.
+- Host workflow gates are route-local product controls around Agent UI
+  primitives, not Agent UI core state machines.
 
 This is the primary profile for the first implementation pass.
 
@@ -32,6 +36,8 @@ Do not treat Agent UI as a managed remote service. The host must own:
 - upload storage, cleanup, and path redaction
 - resource limits and audit logging
 - explicit non-loopback exposure policy
+- per-connection bridge option resolution before spawn
+- product workflow gates in host UI and persistence
 
 If these decisions are missing, stop at design guidance and ask the user for the
 host policy before implementing a browser bridge.
@@ -50,6 +56,8 @@ First inspect:
 - App Server startup stderr
 - approval and server-request handling
 - upload path resolution
+- canonical resume and stored-history preview behavior
+- mobile drawer reachability
 - layout overflow and composer reachability
 
 Then use [debug](debug.md) and [validation](validation.md).

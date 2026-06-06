@@ -240,7 +240,11 @@ The fixture routes are:
 - `/?state=unauth`: first-run device-code login state
 - `/?state=bridge-error`: connection diagnostics
 - `/fixture-gallery`: component close-ups plus full-route previews
-- `/host-workflow-recipe`: host-composed primitive recipe
+- `/host-workflow-recipe`: host integration reference shell with host header,
+  embedded `AgentChat`, side panel, local attachment metadata, transcript
+  local-media preview/fallback metadata, scoped thread history loading,
+  host-owned workflow gate, first-message optimistic mode, mobile drawer, and
+  host-owned review sheet
 - `/composer-retry`: failed first-message retry through the public composer
   controller
 - `/resource-resolution`: structured local-media resource rendering without
@@ -268,6 +272,8 @@ The deterministic fixture Playwright files are split by contract ownership:
 - `visual-layout.e2e.ts` owns shell layout contracts, viewport containment,
   menu reachability, and host layout examples. It checks presence, overflow,
   hit-testing, and viewport-relative dimensions instead of exact pixel snapshots.
+  Host integration smoke checks also cover the mobile drawer plus host-owned
+  sheet stacking contract.
 - `visual-closeups.e2e.ts` owns the component close-up gallery and verifies that
   close-ups render real primitives instead of iframe or hand-written DOM
   substitutes.
@@ -278,6 +284,10 @@ The deterministic fixture Playwright files are split by contract ownership:
 - `transcript-density.e2e.ts` owns density-mode behavior and overflow checks on
   desktop and mobile.
 - `scoped-thread-lists.e2e.ts` owns independent scoped history list behavior.
+  `smoke.e2e.ts` also verifies the host workflow route composes scoped history
+  refresh, pagination, and read-only preview hydration without changing the
+  active thread, plus a host-owned workflow gate that controls only host actions
+  while Agent UI keeps composer and approval ownership.
 - `visual-approvals.e2e.ts` owns approval layout, queue behavior, and hit-test
   reachability in transcript flow.
 - `design-system-contract.e2e.ts` owns concrete token-backed UI contracts such

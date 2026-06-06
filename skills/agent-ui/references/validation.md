@@ -33,6 +33,14 @@ For browser-visible work, verify interactions, not only screenshots:
 - queue a running-turn follow-up
 - approve and decline a pending approval when available
 - attach image and non-image files when uploads are wired
+- open and close the mobile thread history drawer
+- open host sheets or dialogs over Agent UI overlays and verify focus returns
+- preview stored history with `thread/read`, then resume and verify the
+  canonical thread id the host should persist
+- verify transcript local media uses structured asset URLs and missing media
+  renders the fallback
+- verify bridge admission accepts and rejects the expected connections before
+  App Server spawn
 - check mobile width for overflow and reachable composer controls
 
 Public boundary check:

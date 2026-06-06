@@ -34,6 +34,14 @@ runtime, sidecar manager, or workflow orchestrator.
 - Avoid nested vertical scroll traps. The transcript should own normal reading
   scroll.
 - Thread history should preserve readable titles and metadata.
+- On mobile, the thread history drawer owns its own focus/close behavior and
+  should leave the transcript/composer reachable after close.
+- Use public layer tokens such as `--aui-z-drawer`, `--aui-z-popover`,
+  `--aui-z-dialog`, `--aui-z-sheet`, and `--aui-z-toast` when placing
+  host-owned sheets or modals relative to Agent UI overlays.
+- Keep host-owned workflow gates outside Agent UI core. Gate host actions around
+  public controllers/primitives; do not add workflow-specific state machines,
+  plan approval semantics, persistence, or modal managers to Agent UI.
 
 ## Regression Checks
 
@@ -43,6 +51,8 @@ Look for:
 - clipped thread titles
 - hidden composer controls
 - unreachable approval actions
+- drawers, dialogs, or menus that trap focus after close
+- host sheets hidden behind Agent UI drawers or popovers
 - markdown/code blocks that trap the page scroll
 - token usage that dominates the header instead of supporting the active
   conversation context

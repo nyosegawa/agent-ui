@@ -45,6 +45,7 @@ export interface AgentUiWebSocketBridgeOptions extends CodexAppServerBridgeOptio
   serverRequestPolicy?: ServerRequestPolicy;
   path?: string;
   browserMethodPolicy?: BrowserMethodPolicy;
+  resolveBridgeOptions?: AgentUiWebSocketBridgeOptionsResolver;
 }
 
 export interface AgentUiWebSocketInboundLimits {
@@ -52,6 +53,24 @@ export interface AgentUiWebSocketInboundLimits {
   rateLimitIntervalMs?: number;
   rateLimitMessages?: number;
 }
+
+export interface AgentUiWebSocketBridgeOptionsResolverContext {
+  request?: IncomingMessage;
+}
+
+export type AgentUiResolvedWebSocketBridgeOptions = Omit<
+  AgentUiWebSocketBridgeOptions,
+  "resolveBridgeOptions"
+>;
+
+export type AgentUiWebSocketBridgeOptionsResolver = (
+  context: AgentUiWebSocketBridgeOptionsResolverContext,
+) =>
+  | AgentUiResolvedWebSocketBridgeOptions
+  | false
+  | null
+  | undefined
+  | Promise<AgentUiResolvedWebSocketBridgeOptions | false | null | undefined>;
 
 export interface AgentUiWebSocketServerOptions extends AgentUiWebSocketBridgeOptions {
   server: Server;
@@ -97,6 +116,7 @@ const DEFAULT_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const DEFAULT_MAX_INBOUND_MESSAGE_BYTES = 256 * 1024;
 const DEFAULT_INBOUND_RATE_LIMIT_INTERVAL_MS = 1_000;
 const DEFAULT_INBOUND_RATE_LIMIT_MESSAGES = 60;
+const WEB_SOCKET_OPEN_STATE = 1;
 const DISABLED_DYNAMIC_TOOL_POLICY = { mode: "disabled" } as const satisfies AgentUiDynamicToolPolicy;
 const DEFAULT_BROWSER_METHOD_CAPABILITIES = [
   "connection",
@@ -173,6 +193,28 @@ export async function handleAgentUiWebSocketConnection(
   options: AgentUiWebSocketBridgeOptions = {},
   request?: IncomingMessage,
 ): Promise<void> {
+  let closed = false;
+  let bridge: ReturnType<typeof createCodexAppServerBridge> | undefined;
+  let idleTimer: ReturnType<typeof setTimeout> | undefined;
+  const closeBridge = () => {
+    if (closed) return;
+    closed = true;
+    if (idleTimer) clearTimeout(idleTimer);
+    void bridge?.close().catch(() => undefined);
+  };
+  socket.on("close", closeBridge);
+  socket.on("error", closeBridge);
+
+  const resolvedOptions = await resolveConnectionBridgeOptions({
+    options,
+    request,
+    socket,
+  });
+  if (!resolvedOptions) return;
+  if (closed || socket.readyState !== WEB_SOCKET_OPEN_STATE) {
+    closeBridge();
+    return;
+  }
   const {
     admission,
     bridgePolicy,
@@ -184,7 +226,7 @@ export async function handleAgentUiWebSocketConnection(
     maxBufferedBytes,
     serverRequestPolicy,
     ...bridgeOptions
-  } = options;
+  } = resolvedOptions;
   const bridgeHealth: AgentUiBridgeHealthState = {
     admissionChecked: false,
     connected: false,
@@ -225,6 +267,10 @@ export async function handleAgentUiWebSocketConnection(
     request,
     stderr: bridgeOptions.stderr,
   });
+  if (closed || socket.readyState !== WEB_SOCKET_OPEN_STATE) {
+    closeBridge();
+    return;
+  }
   bridgeHealth.admissionChecked = true;
   emitBridgeHealthEvent("admissionChecked", {
     ...(admissionResult.accepted === false
@@ -255,7 +301,6 @@ export async function handleAgentUiWebSocketConnection(
   const log = (message: string) => {
     bridgeOptions.stderr?.(setBridgeDiagnostic(message));
   };
-  let bridge: ReturnType<typeof createCodexAppServerBridge>;
   try {
     bridge = createCodexAppServerBridge(bridgeOptions);
     bridgeHealth.processSpawned = true;
@@ -265,6 +310,7 @@ export async function handleAgentUiWebSocketConnection(
     socket.close(1011, "Agent UI bridge startup failed");
     return;
   }
+  const activeBridge = bridge;
   const bridgeOwnsInitialize = bridgeOptions.initialize !== undefined;
   const backpressure = createWebSocketBackpressureGuard({ maxBufferedBytes });
   const effectiveServerRequestPolicy =
@@ -283,9 +329,7 @@ export async function handleAgentUiWebSocketConnection(
       );
     }
   };
-  let closed = false;
   let dynamicToolHelperThreadId: Promise<string> | undefined;
-  let idleTimer: ReturnType<typeof setTimeout> | undefined;
   const pendingRequestIds = new Set<NonNullable<AgentTransportEvent["requestId"]>>();
   const incrementPendingRequestCount = (requestId: NonNullable<AgentTransportEvent["requestId"]>) => {
     pendingRequestIds.add(requestId);
@@ -299,18 +343,12 @@ export async function handleAgentUiWebSocketConnection(
   };
   const getMcpThreadId = () => {
     dynamicToolHelperThreadId ??= dynamicTools.createDynamicToolHelperThread(
-      bridge.transport,
+      activeBridge.transport,
       bridgeOptions.cwd,
     );
     return dynamicToolHelperThreadId;
   };
 
-  const closeBridge = () => {
-    if (closed) return;
-    closed = true;
-    if (idleTimer) clearTimeout(idleTimer);
-    void bridge.close().catch(() => undefined);
-  };
   const resetIdleTimer = () => {
     if (idleTimeoutMs === false) return;
     if (idleTimer) clearTimeout(idleTimer);
@@ -323,18 +361,16 @@ export async function handleAgentUiWebSocketConnection(
     idleTimer.unref?.();
   };
 
-  socket.on("close", closeBridge);
-  socket.on("error", closeBridge);
   resetIdleTimer();
 
-  void bridge.transport
+  void activeBridge.transport
     .connect()
     .then(async () => {
       bridgeHealth.initialized = true;
       emitBridgeHealthEvent("initialized");
       bridgeHealth.connected = true;
       emitBridgeHealthEvent("connected");
-      for await (const event of bridge.transport.events) {
+      for await (const event of activeBridge.transport.events) {
         if (event.type === "response") continue;
         const safeEvent = redactTransportEvent(event);
         emitHostEvent(hostEvents, safeEvent);
@@ -498,6 +534,35 @@ export async function handleAgentUiWebSocketConnection(
       });
     });
   });
+}
+
+async function resolveConnectionBridgeOptions({
+  options,
+  request,
+  socket,
+}: {
+  options: AgentUiWebSocketBridgeOptions;
+  request?: IncomingMessage;
+  socket: WebSocket;
+}): Promise<AgentUiResolvedWebSocketBridgeOptions | undefined> {
+  const { resolveBridgeOptions, ...baseOptions } = options;
+  if (!resolveBridgeOptions) return baseOptions;
+  try {
+    const resolved = await resolveBridgeOptions({ request });
+    if (!resolved) {
+      socket.close(1008, "Agent UI bridge options rejected");
+      return undefined;
+    }
+    return { ...baseOptions, ...resolved };
+  } catch (error) {
+    baseOptions.stderr?.(
+      redactSecrets(
+        `[agent-ui] bridge option resolver failed message=${error instanceof Error ? error.message : String(error)}\n`,
+      ),
+    );
+    socket.close(1011, "Agent UI bridge option resolver failed");
+    return undefined;
+  }
 }
 
 function resolveBridgeAdmissionPolicy({
@@ -793,7 +858,7 @@ function backpressureCloseReason(
   guard: ReturnType<typeof createWebSocketBackpressureGuard>,
   value: unknown,
 ): string | undefined {
-  if (socket.readyState !== 1 || guard.maxBufferedBytes === false) return undefined;
+  if (socket.readyState !== WEB_SOCKET_OPEN_STATE || guard.maxBufferedBytes === false) return undefined;
   const payloadBytes = Buffer.byteLength(JSON.stringify(value));
   if (socket.bufferedAmount + payloadBytes > guard.maxBufferedBytes) {
     return "Agent UI bridge backpressure limit exceeded";

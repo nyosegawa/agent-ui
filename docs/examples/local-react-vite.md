@@ -39,7 +39,18 @@ Routes:
 - `/?state=unauth`: device-code login state.
 - `/?state=bridge-error`: local bridge diagnostics state.
 - `/fixture-gallery`: component close-ups plus route previews.
-- `/host-workflow-recipe`: host-composed primitive layout.
+- `/host-workflow-recipe`: host integration reference shell with a host header,
+  embedded `AgentChat`, host side panel, mobile drawer behavior, and a
+  host-owned review sheet layered with public `--aui-z-*` tokens. The route
+  also resolves browser file attachments through a host-owned resolver that
+  returns structured, redacted resource metadata, and resolves transcript local
+  media through browser-safe preview and missing-media fallback records. Add
+  `?firstMessage=optimistic` to start from an empty host shell with delayed
+  first-message reconciliation. The side panel also includes a scoped thread
+  history loader that refreshes, paginates, and previews stored sessions through
+  `useAgentThreadListController`, plus a host-owned workflow gate that toggles
+  host actions without taking over Agent UI transcript, composer, approval, or
+  history behavior.
 - `/composer-retry`: failed optimistic first-message retry through the public
   composer controller.
 - `/transcript-density`: compact transcript route with verbose command/file
@@ -58,6 +69,16 @@ composer, sidebar drawer selection, local media fallback, and optimistic
 pending message examples used for visual review. Its component close-up section
 covers primitive renderers including the custom command/transcript block
 example.
+
+The host workflow route is the deterministic host integration reference for the
+fixture app. It keeps workflow context, review sheet state, and product chrome
+host-owned while embedding `AgentChat` as the reusable Codex App Server UI
+surface. The route also proves that host-owned overlays can sit above Agent UI
+drawers by choosing values relative to the public layer tokens, not by styling
+private `.aui-*` implementation selectors. Its local attachment resolver is a
+fixture-only stand-in for host upload storage: it returns id, MIME type, size,
+preview, and redacted path metadata so the host side panel can display safe
+resource details without exposing raw local paths.
 
 `bun run test:e2e:fixtures` starts its own preview server on port 4173 for the
 fixture browser checks. Do not rely on a manually running 5174 server for this

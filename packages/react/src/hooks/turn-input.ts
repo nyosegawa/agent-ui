@@ -10,6 +10,15 @@ export function normalizeTurnInput(input: string | AgentUserInput[]): string | C
   return typeof input === "string" ? input : input.map(toCodexUserInput);
 }
 
+export function hasSubmittableFirstInput(input: string | AgentUserInput[]) {
+  if (typeof input === "string") return input.trim().length > 0;
+  if (input.length === 0) return false;
+  return input.some((item) => {
+    if (item.type !== "text") return true;
+    return typeof item.text === "string" && item.text.trim().length > 0;
+  });
+}
+
 export function codexReasoningEffort(
   effort: ReasoningEffort | undefined,
 ): CodexReasoningEffort | undefined {

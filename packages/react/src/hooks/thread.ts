@@ -31,6 +31,13 @@ import {
   threadUpsertEvent,
 } from "../thread-history";
 import { useCodexSession } from "./codex-session";
+import type {
+  AgentThreadForkResult,
+  AgentThreadHistoryResult,
+  AgentThreadReadResult,
+  AgentThreadResumeResult,
+  AgentThreadStartResult,
+} from "./thread-lifecycle-types";
 
 export type {
   ThreadForkOptions,
@@ -38,27 +45,14 @@ export type {
   ThreadResumeOptions,
   ThreadStartOptions,
 } from "../request-options";
-
-export interface AgentThreadStartResult {
-  threadId: ThreadId;
-}
-
-export interface AgentThreadResumeResult {
-  threadId: ThreadId;
-}
-
-export interface AgentThreadReadResult {
-  threadId: ThreadId;
-}
-
-export interface AgentThreadForkResult {
-  threadId: ThreadId;
-}
-
-export interface AgentThreadHistoryResult {
-  nextCursor: string | null;
-  threadIds: ThreadId[];
-}
+export type {
+  AgentThreadForkResult,
+  AgentThreadHistoryResult,
+  AgentThreadReadResult,
+  AgentThreadResumeResult,
+  AgentThreadStartResult,
+  AgentThreadStartWithInputResult,
+} from "./thread-lifecycle-types";
 
 export function useAgentThread(threadId?: ThreadId) {
   const { dispatch, state } = useAgentContext();
@@ -117,7 +111,11 @@ export function useAgentThread(threadId?: ThreadId) {
       if (rawThreadRecord && hasThreadId(rawThreadRecord)) {
         syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       }
-      return { threadId: canonicalThreadId ?? id } satisfies AgentThreadResumeResult;
+      const resolvedThreadId = canonicalThreadId ?? id;
+      return {
+        ...(resolvedThreadId !== id ? { requestedThreadId: id } : {}),
+        threadId: resolvedThreadId,
+      } satisfies AgentThreadResumeResult;
     },
     [codex, dispatch],
   );

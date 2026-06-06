@@ -18,6 +18,7 @@ import {
 import { rawThreadId, threadUpsertEvent } from "../thread-history";
 import { useCodexSession } from "./codex-session";
 import { useAgentThread, useAgentThreadReader } from "./thread";
+import type { AgentThreadResumeResult } from "./thread-lifecycle-types";
 
 export interface AgentThreadListController {
   activateThread: (threadId: ThreadId) => Promise<ThreadId>;
@@ -32,6 +33,10 @@ export interface AgentThreadListController {
   previewThread: (threadId: ThreadId) => Promise<void>;
   refresh: () => Promise<AgentThreadListResult>;
   resumeThread: (threadId: ThreadId, params?: ThreadResumeOptions) => Promise<ThreadId>;
+  resumeThreadWithResult: (
+    threadId: ThreadId,
+    params?: ThreadResumeOptions,
+  ) => Promise<AgentThreadResumeResult>;
   scope: AgentThreadScope;
   searchTerm: string;
   setSearchTerm: (searchTerm: string) => void;
@@ -226,12 +231,19 @@ export function useAgentThreadListController(
     [readThread],
   );
 
-  const resumeThread = useCallback(
+  const resumeThreadWithResult = useCallback(
     async (threadId: ThreadId, params?: ThreadResumeOptions) => {
       const result = await threadController.resumeThread(threadId, params);
-      return result.threadId;
+      return result;
     },
     [threadController],
+  );
+  const resumeThread = useCallback(
+    async (threadId: ThreadId, params?: ThreadResumeOptions) => {
+      const result = await resumeThreadWithResult(threadId, params);
+      return result.threadId;
+    },
+    [resumeThreadWithResult],
   );
 
   return {
@@ -247,6 +259,7 @@ export function useAgentThreadListController(
     previewThread,
     refresh,
     resumeThread,
+    resumeThreadWithResult,
     scope: collectionScope,
     searchTerm,
     setSearchTerm,

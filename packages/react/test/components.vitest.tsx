@@ -100,6 +100,8 @@ function ThreadListControllerProbe({
   const { state } = useAgentContext();
   const controller = useAgentThreadListController(scope, { onHistorySynced });
   const activeThreadId = state.threadLifecycle.activeThreadId;
+  const [resumeResult, setResumeResult] = useState("");
+  const [resumeThreadId, setResumeThreadId] = useState("");
   return (
     <section aria-label={label}>
       <input
@@ -125,11 +127,30 @@ function ThreadListControllerProbe({
       <button
         onClick={() => {
           const firstThreadId = controller.threads[0]?.id;
-          if (firstThreadId) void controller.resumeThread(firstThreadId);
+          if (firstThreadId) {
+            void controller.resumeThread(firstThreadId).then((threadId) => {
+              setResumeThreadId(threadId);
+            });
+          }
         }}
         type="button"
       >
         {label} resume first
+      </button>
+      <button
+        onClick={() => {
+          const firstThreadId = controller.threads[0]?.id;
+          if (firstThreadId) {
+            void controller.resumeThreadWithResult(firstThreadId).then((result) => {
+              setResumeResult(
+                `${result.threadId}:${result.requestedThreadId ?? "none"}`,
+              );
+            });
+          }
+        }}
+        type="button"
+      >
+        {label} resume first with result
       </button>
       <output aria-label={`${label} active thread`}>{activeThreadId ?? ""}</output>
       <output aria-label={`${label} cursor`}>{controller.nextCursor ?? ""}</output>
@@ -144,6 +165,10 @@ function ThreadListControllerProbe({
           ? (controller.collection.scope.searchTerm ?? "")
           : ""}
       </output>
+      <output aria-label={`${label} resume result`}>{resumeResult || "none"}</output>
+      <output aria-label={`${label} resume thread id`}>
+        {resumeThreadId || "none"}
+      </output>
     </section>
   );
 }
@@ -157,7 +182,24 @@ expect.extend(toHaveNoViolations);
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
+
+function mockCompactLayout(matches = true) {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((query: string) => ({
+      addEventListener: vi.fn(),
+      addListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      matches: query === "(max-width: 640px)" ? matches : false,
+      media: query,
+      onchange: null,
+      removeEventListener: vi.fn(),
+      removeListener: vi.fn(),
+    })),
+  );
+}
 
 function runningComposerState() {
   const initialState = createInitialAgentState();
@@ -231,19 +273,28 @@ function ActiveThreadHarness(props: React.ComponentProps<typeof AgentChat>) {
 function ResumeThreadHarness({ requestedId }: { requestedId: string }) {
   const { state } = useAgentContext();
   const { resumeThread } = useAgentThread();
+  const [resumeResult, setResumeResult] = useState("");
   const activeThreadId = state.threadLifecycle.activeThreadId;
   const activeThread = activeThreadId ? state.threads[activeThreadId] : undefined;
   const pageItemText = activeThread?.turns["turn-page"]?.items["item-page"]?.text;
 
   return (
     <>
-      <button type="button" onClick={() => void resumeThread(requestedId)}>
+      <button
+        type="button"
+        onClick={() =>
+          void resumeThread(requestedId).then((result) => {
+            setResumeResult(`${result.threadId}:${result.requestedThreadId ?? "none"}`);
+          })
+        }
+      >
         Resume requested thread
       </button>
       <output aria-label="active thread">{activeThreadId ?? "none"}</output>
       <output aria-label="thread status">{activeThread?.status ?? "none"}</output>
       <output aria-label="thread title">{activeThread?.thread.name ?? "none"}</output>
       <output aria-label="initial page item">{pageItemText ?? "none"}</output>
+      <output aria-label="resume result">{resumeResult || "none"}</output>
     </>
   );
 }
@@ -402,6 +453,53 @@ function PublicComposerControllerProbe() {
       >
         Cancel failed pending message
       </button>
+    </>
+  );
+}
+
+function PublicFirstMessageStartProbe() {
+  const [result, setResult] = useState("none");
+  const [error, setError] = useState("none");
+  const composer = useAgentComposerController();
+  return (
+    <>
+      <input
+        aria-label="Public first message"
+        onChange={(event) => composer.setValue(event.currentTarget.value)}
+        value={composer.value}
+      />
+      <button
+        type="button"
+        onClick={() => {
+          void composer
+            .startThreadWithInput(composer.value)
+            .then((nextResult) => {
+              setResult(nextResult.threadId);
+            })
+            .catch((caught: unknown) => {
+              setError(caught instanceof Error ? caught.message : String(caught));
+            });
+        }}
+      >
+        Public start with input
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void composer
+            .startThreadWithInput([{ text: "   ", text_elements: [], type: "text" }])
+            .then((nextResult) => {
+              setResult(nextResult.threadId);
+            })
+            .catch((caught: unknown) => {
+              setError(caught instanceof Error ? caught.message : String(caught));
+            });
+        }}
+      >
+        Public start with blank array input
+      </button>
+      <output aria-label="public start result">{result}</output>
+      <output aria-label="public start error">{error}</output>
     </>
   );
 }
@@ -6139,6 +6237,119 @@ describe("AgentChat", () => {
     );
   });
 
+  it("starts a thread with first input through the public composer controller", async () => {
+    const user = userEvent.setup();
+    let resolveThreadStart:
+      | ((result: {
+          thread: { id: string; name: string; status: { type: string } };
+        }) => void)
+      | undefined;
+    const threadStartResult = new Promise<{
+      thread: { id: string; name: string; status: { type: string } };
+    }>((resolve) => {
+      resolveThreadStart = resolve;
+    });
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/start") {
+          return threadStartResult;
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <PublicFirstMessageStartProbe />
+        <ActiveThreadStateProbe />
+      </AgentProvider>,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: "Public first message" }), "public start");
+    await user.click(screen.getByRole("button", { name: "Public start with input" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("active thread id")).toHaveTextContent(
+        /^pending-thread-/,
+      ),
+    );
+    const pendingUserMessageId =
+      screen.getByLabelText("active item id").textContent ?? "";
+    expect(screen.getByLabelText("active item text")).toHaveTextContent("public start");
+    expect(screen.getByLabelText("active item status")).toHaveTextContent("inProgress");
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+
+    resolveThreadStart?.({
+      thread: {
+        id: "thread-public-start",
+        name: "Public thread",
+        status: { type: "idle" },
+      },
+    });
+
+    await waitFor(() =>
+      expect(
+        transport.requests.find((request) => request.method === "turn/start")?.params,
+      ).toMatchObject({
+        clientUserMessageId: pendingUserMessageId,
+        threadId: "thread-public-start",
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText("public start result")).toHaveTextContent(
+        "thread-public-start",
+      ),
+    );
+    expect(screen.getByLabelText("active thread id")).toHaveTextContent(
+      "thread-public-start",
+    );
+    expect(screen.getByLabelText("public start error")).toHaveTextContent("none");
+  });
+
+  it("does not start blank first-message threads through the public composer controller", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider transport={transport}>
+        <PublicFirstMessageStartProbe />
+        <ActiveThreadStateProbe />
+      </AgentProvider>,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: "Public first message" }), "   ");
+    await user.click(screen.getByRole("button", { name: "Public start with input" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("public start error")).toHaveTextContent(
+        "Cannot start a thread without input.",
+      ),
+    );
+    expect(screen.getByLabelText("active thread id")).toHaveTextContent("none");
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "thread/start",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+
+    await user.click(
+      screen.getByRole("button", { name: "Public start with blank array input" }),
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText("public start error")).toHaveTextContent(
+        "Cannot start a thread without input.",
+      ),
+    );
+    expect(screen.getByLabelText("active thread id")).toHaveTextContent("none");
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "thread/start",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+  });
+
   it("starts new threads with selected model and working directory", async () => {
     const user = userEvent.setup();
     let resolveThreadStart:
@@ -6832,6 +7043,9 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("initial page item")).toHaveTextContent(
       "initial resume page item",
     );
+    expect(screen.getByLabelText("resume result")).toHaveTextContent(
+      "thread-canonical:requested-thread-path",
+    );
     expect(
       transport.requests.find((request) => request.method === "thread/resume")?.params,
     ).toEqual({ threadId: "requested-thread-path" });
@@ -6900,6 +7114,159 @@ describe("AgentChat", () => {
     expect(screen.queryByLabelText("Search history")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Expand history" }));
     expect(screen.getByLabelText("Search history")).toBeInTheDocument();
+  });
+
+  it("closes the mobile history drawer with Escape and returns focus", async () => {
+    mockCompactLayout();
+    const user = userEvent.setup();
+    const { container } = render(
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const trigger = await screen.findByRole("button", { name: "Open thread history" });
+    await user.click(trigger);
+    expect(container.querySelector(".aui-sidebar")).toBeInTheDocument();
+    expect(container.querySelector(".aui-chat")).toHaveAttribute("inert");
+    expect(container.querySelector(".aui-chat")).toHaveAttribute("aria-hidden", "true");
+    await waitFor(() => {
+      expect(screen.getByLabelText("Search history")).toHaveFocus();
+    });
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(container.querySelector(".aui-sidebar")).not.toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
+    expect(container.querySelector(".aui-chat")).not.toHaveAttribute("inert");
+  });
+
+  it("returns mobile drawer focus to the matching chat trigger", async () => {
+    mockCompactLayout();
+    const user = userEvent.setup();
+    render(
+      <>
+        <AgentProvider transport={new FakeAgentTransport()}>
+          <AgentChat />
+        </AgentProvider>
+        <AgentProvider transport={new FakeAgentTransport()}>
+          <AgentChat />
+        </AgentProvider>
+      </>,
+    );
+
+    const triggers = await screen.findAllByRole("button", { name: "Open thread history" });
+    await user.click(triggers[1]!);
+    await waitFor(() => {
+      expect(screen.getByLabelText("Search history")).toHaveFocus();
+    });
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(triggers[1]).toHaveFocus();
+    });
+  });
+
+  it("moves mobile drawer focus when a custom shell renders the sidebar slot", async () => {
+    mockCompactLayout();
+    const user = userEvent.setup();
+    render(
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <AgentChat
+          components={{
+            Shell: ({ children, sidebar }) => (
+              <section data-testid="host-shell">
+                {sidebar}
+                {children}
+              </section>
+            ),
+          }}
+        />
+      </AgentProvider>,
+    );
+
+    const trigger = await screen.findByRole("button", { name: "Open thread history" });
+    await user.click(trigger);
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Search history")).toHaveFocus();
+    });
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
+  });
+
+  it("closes the mobile history drawer from the backdrop and returns focus", async () => {
+    mockCompactLayout();
+    const user = userEvent.setup();
+    const { container } = render(
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const trigger = await screen.findByRole("button", { name: "Open thread history" });
+    await user.click(trigger);
+    await user.click(screen.getByRole("button", { name: "Dismiss thread history" }));
+
+    await waitFor(() => {
+      expect(container.querySelector(".aui-sidebar")).not.toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
+  });
+
+  it("closes the mobile history drawer after thread selection", async () => {
+    mockCompactLayout();
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-mobile-select",
+                name: "Mobile selected thread",
+                status: { type: "notLoaded" },
+                turns: [],
+              },
+            ],
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-mobile-select",
+              name: "Mobile selected thread",
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Open thread history" }));
+    expect(screen.getByLabelText("Search history")).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: /Mobile selected thread/ }));
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText("Search history")).not.toBeInTheDocument();
+    });
   });
 
   it("refreshes usage limits", async () => {
@@ -7955,7 +8322,7 @@ describe("AgentChat", () => {
       "Requested stored thread",
     );
 
-    await user.click(screen.getByRole("button", { name: "resume resume first" }));
+    await user.click(screen.getByRole("button", { name: "resume resume first with result" }));
 
     await waitFor(() =>
       expect(screen.getByLabelText("resume active thread")).toHaveTextContent(
@@ -7967,6 +8334,15 @@ describe("AgentChat", () => {
     );
     expect(screen.getByLabelText("resume threads")).not.toHaveTextContent(
       "Requested stored thread",
+    );
+    expect(screen.getByLabelText("resume resume result")).toHaveTextContent(
+      "thread-canonical-resume:thread-requested",
+    );
+    await user.click(screen.getByRole("button", { name: "resume resume first" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("resume resume thread id")).toHaveTextContent(
+        "thread-canonical-resume",
+      ),
     );
     expect(
       transport.requests.find((request) => request.method === "thread/resume")?.params,

@@ -64,13 +64,32 @@ test("opens the thread history drawer on mobile", async ({ page }) => {
   await page.getByRole("button", { name: "Open thread history" }).click();
   await expect(page.locator(".aui-sidebar")).toBeVisible();
   await expect(page.getByLabel("Search history")).toBeVisible();
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+  await expect(backgroundThreadMenuIsBlocked(page)).resolves.toBe(true);
   await expect(
     page.locator(".aui-sidebar").getByRole("button", { name: "New thread" }),
   ).toBeVisible();
-  await page.locator(".aui-sidebar").getByRole("button", { name: "New thread" }).click();
+  await page.getByLabel("Search history").fill("stored");
+  await expect(
+    page.locator(".aui-sidebar").getByRole("button", { name: /Stored session/ }),
+  ).toBeVisible();
+  await page.locator(".aui-sidebar").getByRole("button", { name: /Stored session/ }).click();
   await expect(page.locator(".aui-sidebar")).toHaveCount(0);
-  await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Stored session" })).toBeVisible();
 });
+
+async function backgroundThreadMenuIsBlocked(page: Page) {
+  return page
+    .locator('.aui-chat .aui-composer-tool[aria-label^="Execution mode"]')
+    .evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const hit = document.elementFromPoint(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+      );
+      return Boolean(hit?.closest(".aui-sidebar-backdrop, .aui-sidebar"));
+    });
+}
 
 async function headerDoesNotOverlapTimeline(page: Page) {
   return page.evaluate(() => {
@@ -238,17 +257,213 @@ test("renders primitive composition examples", async ({ page }) => {
   await expect(page.getByText("Drive")).toBeVisible();
 
   await page.goto("/host-workflow-recipe");
-  await expect(page.getByLabel("Host primitive composition")).toBeVisible();
+  await expect(page.getByLabel("Host integration reference")).toBeVisible();
   await expect(page.getByLabel("Host workflow context")).toContainText(
     "Host workflow context",
   );
   await expect(page.getByLabel("Host-owned panel")).toContainText("Validation status");
   await expect(page.getByLabel("Host-owned panel")).toContainText("Pending requests");
   await expect(page.getByLabel("Host-owned panel")).toContainText("Usage windows");
+  await expect(page.getByLabel("Host-owned panel")).toContainText(
+    "Local attachment metadata",
+  );
+  await expect(page.getByTestId("agent-chat")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open host review" })).toBeVisible();
+  await page.getByRole("button", { name: "Open host review" }).click();
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toContainText(
+    "var(--aui-z-sheet)",
+  );
+  await expect(closeHostReviewHasFocus(page)).resolves.toBe(true);
+  await page.getByRole("button", { name: "Close host review" }).click();
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Rich transcript fixture" }),
   ).toBeVisible();
 });
+
+test("host workflow reference resolves local attachments as structured metadata", async ({
+  page,
+}) => {
+  await page.goto("/host-workflow-recipe");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+
+  await page.locator('input[aria-label="Attach files"]').setInputFiles({
+    buffer: Buffer.from("fixture-model"),
+    mimeType: "model/3mf",
+    name: "fixture part.3mf",
+  });
+
+  await expect(page.getByLabel("Pending attachments")).toContainText("fixture part.3mf");
+  const metadata = page.getByLabel("Latest local attachment metadata");
+  await expect(metadata).toContainText("fixture part.3mf");
+  await expect(metadata).toContainText("fixture-upload:fixture_part.3mf");
+  await expect(metadata).toContainText("model/3mf");
+  await expect(metadata).toContainText("[agent-ui-fixture-upload]/fixture_part.3mf");
+  await expect(page.getByText("/agent-ui-fixture-upload/fixture_part.3mf")).toHaveCount(0);
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+});
+
+test("host workflow reference resolves transcript local media preview and fallback", async ({
+  page,
+}) => {
+  await page.goto("/host-workflow-recipe");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+
+  await expect(page.getByRole("img", { name: "fixture-image.png" })).toHaveAttribute(
+    "src",
+    /^data:image\/gif;base64,/,
+  );
+  await expect(
+    page.locator(".aui-image-block figcaption", { hasText: "missing-dashboard.png" }),
+  ).toBeVisible();
+  await expect(page.locator(".aui-image-block-fallback")).toHaveText(
+    "Local media unavailable",
+  );
+
+  const metadata = page.getByLabel("Transcript local media metadata");
+  await expect(metadata).toContainText("[agent-ui-local-media]/fixture-image.png");
+  await expect(metadata).toContainText("[agent-ui-local-media]/missing-dashboard.png");
+  await expect(page.getByText(/agent-ui-fixture-rich-transcript/)).toHaveCount(0);
+  await expect(page.getByText(/agent-ui-fixture-missing-dashboard/)).toHaveCount(0);
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+});
+
+test("host workflow reference preserves first-message optimistic rendering", async ({
+  page,
+}) => {
+  await page.goto("/host-workflow-recipe?firstMessage=optimistic");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  await expect(page.getByText("No thread selected")).toBeVisible();
+
+  const starter = page.getByRole("form", { name: "Start a Codex thread" });
+  await starter
+    .getByRole("textbox", { name: "Message" })
+    .fill("Host optimistic first message");
+  await starter.getByRole("button", { name: "Start thread" }).click();
+
+  await expect(
+    page.locator(".aui-message[data-kind='userMessage'][data-status='inProgress']"),
+  ).toContainText("Host optimistic first message");
+  await expect(page.getByLabel("Host first-message counters")).toContainText(
+    "thread/start1",
+  );
+  await expect(page.getByLabel("Host first-message counters")).toContainText(
+    "turn/start0",
+  );
+  await expect(page.getByText("Optimistic thread pending")).toBeVisible();
+
+  await page.getByRole("button", { name: "Complete host thread start" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Host first message thread" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Host first-message counters")).toContainText(
+    "turn/start1",
+  );
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+});
+
+test("host workflow reference loads scoped thread history without changing active thread", async ({
+  page,
+}) => {
+  await page.goto("/host-workflow-recipe");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  const scopedHistory = page.getByRole("region", { name: "Host scoped history" });
+  const status = scopedHistory.getByLabel("Host scoped history status");
+
+  await scopedHistory.getByRole("button", { name: "Load scoped history" }).click();
+  await expect(scopedHistory.getByLabel("Host scoped history threads")).toContainText(
+    "Host scoped review",
+  );
+  await expect(status).toContainText("Threads1");
+  await expect(status).toContainText("Cursorhost-scope-page-2");
+  await expect(status).toContainText("Activethread-rich-transcript");
+
+  await scopedHistory.getByRole("button", { name: "Load next scoped page" }).click();
+  await expect(scopedHistory.getByLabel("Host scoped history threads")).toContainText(
+    "Host scoped follow-up",
+  );
+  await expect(status).toContainText("Threads2");
+  await expect(status).toContainText("Cursornone");
+
+  await scopedHistory.getByRole("button", { name: "Preview scoped thread" }).click();
+  await expect(scopedHistory.getByLabel("Host scoped preview state")).toHaveText(
+    "Preview: thread-host-scope-review",
+  );
+  await expect(page.getByText("Scoped history preview hydrated")).toBeVisible();
+  await expect(status).toContainText("Activethread-rich-transcript");
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+});
+
+test("host workflow reference gates host actions without taking over Agent UI", async ({
+  page,
+}) => {
+  await page.goto("/host-workflow-recipe");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  const gate = page.getByRole("region", { name: "Host workflow gate" });
+  const status = gate.getByLabel("Host workflow gate status");
+  const continueAction = gate.getByRole("button", { name: "Continue host workflow" });
+
+  await expect(status).toContainText("Gateheld");
+  await expect(status).toContainText("Requests1");
+  await expect(continueAction).toBeDisabled();
+  await expect(page.getByRole("textbox", { name: "Message" })).toBeVisible();
+  await expect(page.getByLabel("Host-owned panel")).toContainText("commandApproval");
+
+  await gate.getByRole("button", { name: "Open workflow gate" }).click();
+  await expect(status).toContainText("Gateopen");
+  await expect(continueAction).toBeEnabled();
+  await expect(page.getByLabel("Host-owned panel")).toContainText("commandApproval");
+
+  await gate.getByRole("button", { name: "Hold workflow gate" }).click();
+  await expect(status).toContainText("Gateheld");
+  await expect(continueAction).toBeDisabled();
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+});
+
+test("host workflow reference layers a host sheet above the mobile drawer", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/host-workflow-recipe?hostSheet=open");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  await expect(page.getByTestId("agent-chat")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toBeVisible();
+  await expect(closeHostReviewHasFocus(page)).resolves.toBe(true);
+  await expect(page.getByRole("button", { name: "Open thread history" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Open thread history" }).click();
+  await expect(page.locator(".aui-sidebar")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toBeVisible();
+  await expect(hostSheetIsAboveDrawer(page)).resolves.toBe(true);
+  await expect(closeHostReviewHasFocus(page)).resolves.toBe(true);
+  await page.keyboard.press("Tab");
+  await expect(closeHostReviewHasFocus(page)).resolves.toBe(true);
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toHaveCount(0);
+  await expect(page.locator(".aui-sidebar")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".aui-sidebar")).toHaveCount(0);
+});
+
+async function hostSheetIsAboveDrawer(page: Page) {
+  return page.getByRole("dialog", { name: "Host-owned review sheet" }).evaluate((sheet) => {
+    const rect = sheet.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+    );
+    return Boolean(hit?.closest(".aui-host-review-sheet"));
+  });
+}
+
+async function closeHostReviewHasFocus(page: Page) {
+  return page
+    .getByRole("button", { name: "Close host review" })
+    .evaluate((button) => button.ownerDocument.activeElement === button);
+}
 
 test("mobile keeps secondary chrome reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
@@ -278,7 +493,7 @@ test("fixture gallery previews load meaningful content", async ({ page }) => {
     richTranscriptFrame.getByRole("heading", { name: "Rich transcript fixture" }),
   ).toBeVisible();
   const hostFrame = page.frameLocator('iframe[title="Host workflow recipe desktop"]');
-  await expect(hostFrame.getByLabel("Host primitive composition")).toBeVisible();
+  await expect(hostFrame.getByLabel("Host integration reference")).toBeVisible();
   const reloadButtons = await page
     .getByRole("button", { name: "Reload preview" })
     .count();

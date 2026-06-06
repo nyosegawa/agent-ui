@@ -1,6 +1,6 @@
 ---
 name: agent-ui
-description: Integrate, customize, debug, or upgrade Agent UI in external Codex App Server applications. Use when adding Agent UI, building a Codex UI, wiring a same-origin WebSocket bridge, composing React primitives, theming with --aui-* tokens, handling uploads, enabling dynamic tools, fixing Agent UI errors, or when the user says Agent UI導入, Codex UI, ローカルCodexアプリ, bridge, attachments, approvals, or upgrade Agent UI.
+description: Integrate, customize, debug, or upgrade Agent UI in external Codex App Server applications. Use when adding Agent UI, building a Codex UI, wiring a same-origin WebSocket bridge, composing React primitives, handling thread lifecycle, canonical resume, thread history, local media helper uploads, local desktop bridge policy, mobile drawer, overlay layers, host-gated workflow recipes, theming with --aui-* tokens, dynamic tools, Agent UI errors, or when the user says Agent UI導入, Codex UI, ローカルCodexアプリ, bridge, attachments, approvals, resume, local media, or upgrade Agent UI.
 ---
 
 # Agent UI
@@ -14,7 +14,10 @@ generic chatbot kit.
 1. Identify the user's job:
    - new local single-user Codex app integration
    - host-owned remote or multi-user integration review
+   - thread lifecycle, canonical resume, or history integration
    - server bridge, uploads, or dynamic tools
+   - host-owned workflow composition around Agent UI primitives
+   - local desktop bridge policy and admission
    - custom layout or theme work
    - debugging or upgrading an existing integration
 2. Inspect the host app before changing files. Read package manifests,

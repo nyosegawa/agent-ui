@@ -7,10 +7,12 @@ import {
   type ThreadId,
 } from "@nyosegawa/agent-ui-core";
 import {
+  localImageInput,
+  textInput,
+} from "@nyosegawa/agent-ui-codex/request-builders";
+import {
   AgentAppsPanel,
   AgentChat,
-  AgentComposerPanel,
-  AgentCriticalNoticeList,
   AgentDiagnosticsPanel,
   AgentI18nProvider,
   AgentLocaleSelect,
@@ -21,11 +23,13 @@ import {
   AgentThemeToggle,
   AgentThreadHeader,
   AgentThreadSurface,
-  AgentThreadTimeline,
   AgentThreadView,
   AgentUsagePanel,
   AgentUsageSummary,
+  type AgentLocalAttachmentKind,
   type AgentLocale,
+  type AgentResolvedLocalAttachment,
+  type AgentResolvedResource,
   type AgentTheme,
   normalizeUsageWindows,
   useAgentApprovals,
@@ -33,10 +37,18 @@ import {
   useAgentComposerController,
   useAgentContext,
   useAgentThread,
+  useAgentThreadListController,
   useAgentUsage,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
-import { useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { createRoot, type Root } from "react-dom/client";
 import "./styles/closeups.css";
 import "./styles/fixture-gallery.css";
@@ -633,13 +645,160 @@ function AppConnectorsExample() {
 }
 
 function HostWorkflowRecipe() {
-  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
-  const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
+  const firstMessageMode =
+    new URLSearchParams(window.location.search).get("firstMessage") ===
+    "optimistic";
+  const [firstMessageStats, setFirstMessageStats] =
+    useState<HostFirstMessageStats>({
+      threadStartCalls: 0,
+      turnStartCalls: 0,
+    });
+  const firstMessageControls = useMemo(
+    () =>
+      firstMessageMode
+        ? createHostFirstMessageTransport(setFirstMessageStats)
+        : null,
+    [firstMessageMode],
+  );
+  const initialState = useMemo(
+    () =>
+      firstMessageMode
+        ? createFixtureInitialState("empty")
+        : createHostWorkflowInitialState(),
+    [firstMessageMode],
+  );
+  const fallbackTransport = useMemo(() => createFixtureTransport("host-workflow"), []);
+  const transport = firstMessageControls?.transport ?? fallbackTransport;
   return (
     <AgentProvider initialState={initialState} transport={transport}>
-      <HostWorkflowComposition />
+      <HostWorkflowComposition
+        firstMessageControls={firstMessageControls}
+        firstMessageStats={firstMessageStats}
+      />
     </AgentProvider>
   );
+}
+
+interface HostFirstMessageStats {
+  threadStartCalls: number;
+  turnStartCalls: number;
+}
+
+interface HostFirstMessageControls {
+  completeThreadStart: () => void;
+  transport: FakeAgentTransport;
+}
+
+function createHostFirstMessageTransport(
+  onStatsChange: (stats: HostFirstMessageStats) => void,
+): HostFirstMessageControls {
+  let threadStartCalls = 0;
+  let turnStartCalls = 0;
+  let completeThreadStart:
+    | ((result: {
+        thread: { id: string; name: string; path: string; status: { type: string } };
+      }) => void)
+    | undefined;
+  const emitStats = () => {
+    onStatsChange({ threadStartCalls, turnStartCalls });
+  };
+  const transport = new FakeAgentTransport({
+    onRequest(request) {
+      if (request.method === "account/read") {
+        return { account: { email: "fixture@example.com", planType: "pro" } };
+      }
+      if (request.method === "model/list") return { data: fixtureModels() };
+      if (request.method === "account/rateLimits/read") return fixtureRateLimits();
+      if (request.method === "thread/list") return { data: [] };
+      if (request.method === "thread/start") {
+        threadStartCalls += 1;
+        emitStats();
+        return new Promise((resolve) => {
+          completeThreadStart = resolve;
+        });
+      }
+      if (request.method === "turn/start") {
+        turnStartCalls += 1;
+        emitStats();
+        return { turnId: `turn-host-first-message-${turnStartCalls}` };
+      }
+      return {};
+    },
+  });
+  return {
+    completeThreadStart: () => {
+      completeThreadStart?.({
+        thread: {
+          id: "thread-host-first-message",
+          name: "Host first message thread",
+          path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+          status: { type: "idle" },
+        },
+      });
+    },
+    transport,
+  };
+}
+
+interface HostAttachmentMetadata {
+  displayName: string;
+  id: string;
+  kind: AgentLocalAttachmentKind;
+  mimeType: string;
+  redactedPath: string;
+  sizeBytes: number;
+}
+
+const hostAttachmentPreviewUrl =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
+const hostTranscriptMediaPreviewUrl =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
+const hostTranscriptMediaResources = [
+  {
+    displayName: "fixture-image.png",
+    kind: "url",
+    path: "/tmp/agent-ui-fixture-rich-transcript.png",
+    previewUrl: hostTranscriptMediaPreviewUrl,
+    redactedPath: "[agent-ui-local-media]/fixture-image.png",
+  },
+  {
+    displayName: "missing-dashboard.png",
+    kind: "unavailable",
+    path: "/tmp/agent-ui-fixture-missing-dashboard.png",
+    reason: "fixture media intentionally unavailable",
+    redactedPath: "[agent-ui-local-media]/missing-dashboard.png",
+  },
+] as const satisfies ReadonlyArray<
+  AgentResolvedResource & { path: string; redactedPath: string }
+>;
+
+function createHostWorkflowInitialState() {
+  const state = createRichTranscriptInitialState();
+  const thread = state.threads["thread-rich-transcript"];
+  const turn = thread?.turns["turn-rich-transcript"];
+  if (!turn) return state;
+  turn.blocksByItemId["item-missing-media"] = {
+    id: "item-missing-media",
+    kind: "image",
+    path: "/tmp/agent-ui-fixture-missing-dashboard.png",
+    status: "completed",
+  };
+  turn.items["item-missing-media"] = {
+    id: "item-missing-media",
+    kind: "imageView",
+    status: "completed",
+    threadId: "thread-rich-transcript",
+    turnId: "turn-rich-transcript",
+  };
+  const imageIndex = turn.itemOrder.indexOf("item-image");
+  turn.itemOrder.splice(
+    imageIndex === -1 ? turn.itemOrder.length : imageIndex + 1,
+    0,
+    "item-missing-media",
+  );
+  return state;
 }
 
 function TranscriptDensityExample() {
@@ -671,11 +830,68 @@ function TranscriptDensityExample() {
   );
 }
 
-function HostWorkflowComposition() {
+function HostWorkflowComposition({
+  firstMessageControls,
+  firstMessageStats,
+}: {
+  firstMessageControls: HostFirstMessageControls | null;
+  firstMessageStats: HostFirstMessageStats;
+}) {
   const bootstrap = useAgentBootstrap();
-  const { thread, threadId } = useAgentThread();
-  if (!thread) return null;
-  const turnCount = thread.orderedTurnIds.length;
+  const { thread } = useAgentThread();
+  const [hostSheetOpen, setHostSheetOpen] = useState(() =>
+    new URLSearchParams(window.location.search).get("hostSheet") === "open",
+  );
+  const [latestAttachment, setLatestAttachment] =
+    useState<HostAttachmentMetadata | null>(null);
+  const [workflowGateOpen, setWorkflowGateOpen] = useState(false);
+  const resolveHostLocalMediaUrl = useCallback((path: string): AgentResolvedResource => {
+    const resource = hostTranscriptMediaResources.find((candidate) => candidate.path === path);
+    return (
+      resource ?? {
+        displayName: path.split(/[\\/]+/).at(-1) ?? "local-media",
+        kind: "unavailable",
+        redactedPath: "[agent-ui-local-media]/unresolved",
+        reason: "host resolver did not recognize this fixture path",
+      }
+    );
+  }, []);
+  const resolveHostAttachment = useCallback(
+    (
+      file: File,
+      kind: AgentLocalAttachmentKind,
+    ): AgentResolvedLocalAttachment => {
+      const safeName = sanitizeFixtureUploadName(file.name || "upload");
+      const path = `/agent-ui-fixture-upload/${safeName}`;
+      const redactedPath = `[agent-ui-fixture-upload]/${safeName}`;
+      const metadata: HostAttachmentMetadata = {
+        displayName: file.name || safeName,
+        id: `fixture-upload:${safeName}`,
+        kind,
+        mimeType: file.type || "application/octet-stream",
+        redactedPath,
+        sizeBytes: file.size,
+      };
+      setLatestAttachment(metadata);
+      return {
+        displayName: metadata.displayName,
+        id: metadata.id,
+        input:
+          kind === "image"
+            ? localImageInput(path)
+            : textInput(`Attached file: ${redactedPath}`),
+        mimeType: metadata.mimeType,
+        name: metadata.displayName,
+        path,
+        previewUrl: kind === "image" ? hostAttachmentPreviewUrl : undefined,
+        redactedPath,
+        sizeBytes: metadata.sizeBytes,
+      };
+    },
+    [],
+  );
+  const turnCount = thread?.orderedTurnIds.length ?? 0;
+  const threadName = thread?.thread.name ?? thread?.thread.id ?? "No thread selected";
   return (
     <main className="aui-host-recipe">
       <div className="aui-host-recipe-shell">
@@ -683,33 +899,41 @@ function HostWorkflowComposition() {
           <div>
             <h1>Verify Codex local build</h1>
             <p>
-              External host surface composed entirely from Agent UI primitives — no
-              AgentChat preset wrapping. The thread surface, status rail, usage panel,
-              and host workflow context are independent React regions, each placed by
-              the host into its own product chrome.
+              External host surface embedding the AgentChat preset into product
+              chrome. The host owns this header, review sheet, and workflow context;
+              Agent UI owns the thread timeline, composer, and history drawer.
             </p>
           </div>
           <div className="aui-host-recipe-meta">
             <span className="aui-host-recipe-meta-kicker">Selected thread</span>
             <span className="aui-host-recipe-meta-thread">
-              {thread.thread.name ?? thread.thread.id}
+              {threadName}
             </span>
             <span className="aui-host-recipe-meta-status">
-              {turnCount} turn{turnCount === 1 ? "" : "s"} · status {thread.status}
+              {turnCount} turn{turnCount === 1 ? "" : "s"} · status{" "}
+              {thread?.status ?? "idle"}
             </span>
+            <button
+              className="aui-host-action"
+              onClick={() => setHostSheetOpen(true)}
+              type="button"
+            >
+              Open host review
+            </button>
           </div>
         </header>
         <section
           className="aui-host-composition"
-          aria-label="Host primitive composition"
+          aria-label="Host integration reference"
         >
           <div className="aui-host-thread">
-            <AgentThreadSurface>
-              <AgentThreadHeader thread={thread} threadId={threadId} />
-              <AgentCriticalNoticeList />
-              <AgentThreadTimeline thread={thread} threadId={threadId} />
-              <AgentComposerPanel thread={thread} threadId={threadId} />
-            </AgentThreadSurface>
+            <AgentChat
+              diagnostics={false}
+              resolveLocalAttachment={resolveHostAttachment}
+              resolveLocalMediaUrl={resolveHostLocalMediaUrl}
+              sidebar
+              usage={false}
+            />
           </div>
           <aside
             className="aui-host-context"
@@ -719,17 +943,334 @@ function HostWorkflowComposition() {
               <AgentStatusSummary />
               <AgentUsageSummary />
             </div>
-            <HostWorkflowPanel />
+            <HostWorkflowPanel latestAttachment={latestAttachment} />
+            <HostWorkflowGatePanel
+              open={workflowGateOpen}
+              onOpenChange={setWorkflowGateOpen}
+            />
+            <HostScopedHistoryPanel />
+            {firstMessageControls ? (
+              <HostFirstMessagePanel
+                controls={firstMessageControls}
+                stats={firstMessageStats}
+              />
+            ) : null}
             <AgentStatusDetails />
             <AgentDiagnosticsPanel bootstrap={bootstrap} />
           </aside>
         </section>
       </div>
+      {hostSheetOpen ? (
+        <HostReviewSheet
+          threadName={threadName}
+          onClose={() => setHostSheetOpen(false)}
+        />
+      ) : null}
     </main>
   );
 }
 
-function HostWorkflowPanel() {
+function sanitizeFixtureUploadName(name: string) {
+  return name.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^[._-]+/, "") || "upload";
+}
+
+function HostReviewSheet({
+  onClose,
+  threadName,
+}: {
+  onClose: () => void;
+  threadName: string;
+}) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const focusCloseButton = () => closeButtonRef.current?.focus();
+    focusCloseButton();
+    const handleFocusIn = (event: FocusEvent) => {
+      if (
+        event.target instanceof Node &&
+        sheetRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+      window.requestAnimationFrame(focusCloseButton);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      event.preventDefault();
+      event.stopPropagation();
+      focusCloseButton();
+    };
+    document.addEventListener("focusin", handleFocusIn);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("focusin", handleFocusIn);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+  return (
+    <section
+      aria-label="Host-owned review sheet"
+      className="aui-host-review-sheet"
+      ref={sheetRef}
+      role="dialog"
+    >
+      <header>
+        <strong>Host-owned review</strong>
+        <button
+          aria-label="Close host review"
+          className="aui-host-action"
+          data-variant="ghost"
+          onClick={onClose}
+          ref={closeButtonRef}
+          type="button"
+        >
+          Close
+        </button>
+      </header>
+      <p>
+        The host places this sheet above Agent UI drawers using public layer
+        tokens. Agent UI still owns the timeline, composer, and drawer behavior.
+      </p>
+      <dl>
+        <div>
+          <dt>Thread</dt>
+          <dd>{threadName}</dd>
+        </div>
+        <div>
+          <dt>Layer</dt>
+          <dd>var(--aui-z-sheet)</dd>
+        </div>
+      </dl>
+    </section>
+  );
+}
+
+function HostFirstMessagePanel({
+  controls,
+  stats,
+}: {
+  controls: HostFirstMessageControls;
+  stats: HostFirstMessageStats;
+}) {
+  const { thread } = useAgentThread();
+  const pending = thread?.thread.ephemeral === true && stats.turnStartCalls === 0;
+  return (
+    <section className="aui-host-block" aria-label="Host first-message probe">
+      <header className="aui-host-block-header">
+        <strong>First-message state</strong>
+        <small>{pending ? "optimistic" : "stable"}</small>
+      </header>
+      <div className="aui-host-block-body">
+        <dl className="aui-host-stat-row" aria-label="Host first-message counters">
+          <div>
+            <dt>thread/start</dt>
+            <dd>{stats.threadStartCalls}</dd>
+          </div>
+          <div>
+            <dt>turn/start</dt>
+            <dd>{stats.turnStartCalls}</dd>
+          </div>
+        </dl>
+        <p className="aui-host-empty">
+          The host observes public thread state while Agent UI owns optimistic
+          first-message reconciliation.
+        </p>
+      </div>
+      <div className="aui-host-block-actions">
+        <span>{pending ? "Optimistic thread pending" : "Waiting for first message"}</span>
+        <button
+          className="aui-host-action"
+          disabled={stats.threadStartCalls === 0 || stats.turnStartCalls > 0}
+          onClick={controls.completeThreadStart}
+          type="button"
+        >
+          Complete host thread start
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function HostScopedHistoryPanel() {
+  const { thread: activeThread } = useAgentThread();
+  const [previewThreadId, setPreviewThreadId] = useState<string>("none");
+  const scopedHistory = useAgentThreadListController({
+    key: "host-workflow-reference",
+    kind: "history",
+    searchTerm: "host scoped",
+  });
+  const firstThread = scopedHistory.threads[0];
+  const activeThreadId = activeThread?.thread.id ?? "none";
+  return (
+    <section className="aui-host-block" aria-label="Host scoped history">
+      <header className="aui-host-block-header">
+        <strong>Scoped history</strong>
+        <small>{scopedHistory.isLoading ? "loading" : "ready"}</small>
+      </header>
+      <div className="aui-host-block-body">
+        <dl className="aui-host-stat-row" aria-label="Host scoped history status">
+          <div>
+            <dt>Threads</dt>
+            <dd>{scopedHistory.threads.length}</dd>
+          </div>
+          <div>
+            <dt>Cursor</dt>
+            <dd>{scopedHistory.nextCursor ?? "none"}</dd>
+          </div>
+          <div>
+            <dt>Active</dt>
+            <dd>{activeThreadId}</dd>
+          </div>
+        </dl>
+        <ul className="aui-host-pending" aria-label="Host scoped history threads">
+          {scopedHistory.threads.length === 0 ? (
+            <li>
+              <span className="aui-host-pending-title">No scoped threads loaded</span>
+            </li>
+          ) : (
+            scopedHistory.threads.map((thread) => (
+              <li key={thread.id}>
+                <span className="aui-host-pending-kind">history</span>
+                <span className="aui-host-pending-title">
+                  {thread.title}
+                </span>
+                <span className="aui-host-pending-detail">{thread.id}</span>
+              </li>
+            ))
+          )}
+        </ul>
+        <p className="aui-host-empty" aria-label="Host scoped preview state">
+          Preview: {previewThreadId}
+        </p>
+        {previewThreadId !== "none" ? (
+          <HostScopedPreview threadId={previewThreadId} />
+        ) : null}
+      </div>
+      <div className="aui-host-block-actions">
+        <span>
+          {scopedHistory.nextCursor
+            ? `Next page: ${scopedHistory.nextCursor}`
+            : "No next scoped page"}
+        </span>
+        <button
+          className="aui-host-action"
+          onClick={() => {
+            void scopedHistory.refresh();
+          }}
+          type="button"
+        >
+          Load scoped history
+        </button>
+        <button
+          className="aui-host-action"
+          disabled={!scopedHistory.nextCursor}
+          onClick={() => {
+            void scopedHistory.loadNextPage();
+          }}
+          type="button"
+        >
+          Load next scoped page
+        </button>
+        <button
+          className="aui-host-action"
+          disabled={!firstThread}
+          onClick={() => {
+            if (!firstThread) return;
+            void scopedHistory.previewThread(firstThread.id).then(() => {
+              setPreviewThreadId(firstThread.id);
+            });
+          }}
+          type="button"
+        >
+          Preview scoped thread
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function HostScopedPreview({ threadId }: { threadId: string }) {
+  const { thread } = useAgentThread(threadId);
+  if (!thread) return null;
+  return (
+    <div aria-label="Host scoped preview transcript">
+      <AgentThreadSurface className="aui-host-scoped-preview">
+        <AgentThreadHeader thread={thread} threadId={threadId} />
+        <AgentMessageList thread={thread} />
+      </AgentThreadSurface>
+    </div>
+  );
+}
+
+function HostWorkflowGatePanel({
+  onOpenChange,
+  open,
+}: {
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+}) {
+  const { thread } = useAgentThread();
+  const { approvals } = useAgentApprovals(thread?.thread.id);
+  const blocked = !open;
+  return (
+    <section className="aui-host-block" aria-label="Host workflow gate">
+      <header className="aui-host-block-header">
+        <strong>Workflow gate</strong>
+        <small>{blocked ? "held" : "open"}</small>
+      </header>
+      <div className="aui-host-block-body">
+        <dl className="aui-host-stat-row" aria-label="Host workflow gate status">
+          <div>
+            <dt>Gate</dt>
+            <dd>{open ? "open" : "held"}</dd>
+          </div>
+          <div>
+            <dt>Requests</dt>
+            <dd>{approvals.length}</dd>
+          </div>
+        </dl>
+        <p className="aui-host-empty">
+          The host owns this release gate. Agent UI still owns the transcript,
+          composer, approvals, and thread history surfaces.
+        </p>
+      </div>
+      <div className="aui-host-block-actions">
+        <span>
+          {blocked
+            ? "Host action held until the gate opens."
+            : "Host action can continue outside Agent UI."}
+        </span>
+        <button
+          className="aui-host-action"
+          onClick={() => onOpenChange(!open)}
+          type="button"
+        >
+          {open ? "Hold workflow gate" : "Open workflow gate"}
+        </button>
+        <button
+          className="aui-host-action"
+          disabled={blocked}
+          type="button"
+        >
+          Continue host workflow
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function HostWorkflowPanel({
+  latestAttachment,
+}: {
+  latestAttachment: HostAttachmentMetadata | null;
+}) {
   const { thread } = useAgentThread();
   const { approvals } = useAgentApprovals(thread?.thread.id);
   const { rateLimits } = useAgentUsage();
@@ -856,6 +1397,57 @@ function HostWorkflowPanel() {
         ) : null}
       </div>
       <header className="aui-host-block-header">
+        <strong>Local attachment metadata</strong>
+        <small>{latestAttachment ? latestAttachment.kind : "waiting"}</small>
+      </header>
+      <div className="aui-host-block-body">
+        {latestAttachment ? (
+          <dl className="aui-host-attachment-meta" aria-label="Latest local attachment metadata">
+            <div>
+              <dt>Name</dt>
+              <dd>{latestAttachment.displayName}</dd>
+            </div>
+            <div>
+              <dt>Id</dt>
+              <dd>{latestAttachment.id}</dd>
+            </div>
+            <div>
+              <dt>MIME</dt>
+              <dd>{latestAttachment.mimeType}</dd>
+            </div>
+            <div>
+              <dt>Size</dt>
+              <dd>{latestAttachment.sizeBytes} B</dd>
+            </div>
+            <div>
+              <dt>Path</dt>
+              <dd>{latestAttachment.redactedPath}</dd>
+            </div>
+          </dl>
+        ) : (
+          <p className="aui-host-empty">
+            Attach a local file to verify the host resolver returns structured,
+            browser-safe metadata.
+          </p>
+        )}
+      </div>
+      <header className="aui-host-block-header">
+        <strong>Transcript media</strong>
+        <small>{hostTranscriptMediaResources.length} resources</small>
+      </header>
+      <div className="aui-host-block-body">
+        <dl className="aui-host-attachment-meta" aria-label="Transcript local media metadata">
+          {hostTranscriptMediaResources.map((resource) => (
+            <div key={resource.path}>
+              <dt>{resource.kind === "url" ? "Preview" : "Fallback"}</dt>
+              <dd>
+                {resource.displayName} · {resource.redactedPath}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+      <header className="aui-host-block-header">
         <strong>Usage windows</strong>
         <small>
           {windows.length} active
@@ -871,7 +1463,7 @@ function HostWorkflowPanel() {
             : "Host actions are deferred until the verification command is captured."}
         </span>
         <button
-          className="aui-btn aui-btn-secondary aui-btn-sm"
+          className="aui-host-action"
           disabled={!verificationCommand || approvals.length > 0}
           type="button"
         >

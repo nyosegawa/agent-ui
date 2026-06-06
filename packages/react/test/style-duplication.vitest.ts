@@ -250,10 +250,32 @@ describe("packages/react styles.css", () => {
       "--aui-duration-focus",
       "--aui-duration-spin",
       "--aui-duration-pulse",
+      "--aui-z-backdrop",
+      "--aui-z-drawer",
+      "--aui-z-popover",
+      "--aui-z-sheet",
+      "--aui-z-dialog",
+      "--aui-z-toast",
       "--aui-letter-spacing",
       "--aui-letter-spacing-label",
     ]) {
       expect(tokens, token).toContain(token);
+    }
+  });
+
+  it("uses public layer tokens for shared distributed overlays", () => {
+    const styles = readStyles();
+    for (const selector of [
+      ".aui-sidebar-backdrop",
+      ".aui-menu-backdrop",
+      ".aui-menu-panel",
+      ".aui-account-backdrop",
+      ".aui-account-popover",
+      ".aui-context-usage-popover",
+      ".aui-starter-cwd-menu",
+    ]) {
+      const match = styles.match(new RegExp(`${selector.replace(".", "\\.")}[^{}]*{([^}]*)}`));
+      expect(match?.[1] ?? "", selector).toMatch(/z-index:\s*(?:calc\()?var\(--aui-z-/);
     }
   });
 

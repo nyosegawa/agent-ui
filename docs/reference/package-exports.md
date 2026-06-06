@@ -140,9 +140,11 @@ normalization remain internal/source-level boundaries;
 `useAgentComposerController`, `AgentComposerController`, `ThreadList`,
 `AgentThreadSidebar`, and `AgentWorkspace` are rebuilt on explicit session,
 active-thread, thread-list, composer, transcript, scroll, server-request, and
-diagnostics controllers. `startThreadWithInput()` has been removed from the
-thread hook; first-message start behavior now lives on the
-source-level internal composer controller as `startWithMessage()`.
+diagnostics controllers. `startThreadWithInput()` is not a thread hook method;
+the raw-free first-message start behavior is public on
+`AgentComposerController` as `startThreadWithInput(input)`, while the
+source-level internal composer controller keeps its implementation helper named
+`startWithMessage()`.
 
 Move to subpath or keep internal: transcript-window utilities
 (`DEFAULT_TRANSCRIPT_ITEM_LIMIT`, `TRANSCRIPT_ITEM_INCREMENT`,
@@ -233,6 +235,29 @@ Composer controller exports include the raw-free `AgentComposerController`
 view plus `AgentComposerSubmitMode`, `AgentComposerDisabledReason`, and
 `AgentComposerFailedPendingMessage`. Internal first-message operation maps,
 rollback payloads, and generated protocol payloads remain source-level only.
+
+Thread lifecycle controller exports may add raw-free start/resume result or
+handle types only after the implementation, examples, tests, and snapshots use
+the same names. The public result contract for `AgentThreadStartResult`,
+`AgentThreadStartWithInputResult`, and `AgentThreadResumeResult` is:
+
+- `threadId` is the canonical id the host should persist after start, first
+  message start, or resume.
+- `requestedThreadId` is optional diagnostic metadata for resume paths where
+  the host asked for an alias or stale persisted id.
+- Stable first-turn metadata such as `startedTurnId` may be included only as an
+  Agent UI view-model field, not as a generated `TurnStartResponse`.
+- Raw App Server responses, generated protocol payloads, optimistic operation
+  maps, canonical-id alias maps, and reducer reconciliation records stay out of
+  the React package root.
+
+Server bridge exports include a per-connection resolver type as a thin
+option-resolution boundary before spawn. The exported shape covers explicit
+bridge options such as `cwd`, `env`, `initialize`, `bridgePolicy.admission`,
+`browserMethodPolicy`, `serverRequestPolicy`, `dynamicToolPolicy`, `hostEvents`,
+inbound limits, idle timeout, and backpressure settings without introducing auth
+providers, token stores, workspace registries, tenant/session models, or process
+supervisors.
 
 Composer styled parts exported at the React root are `AgentComposerPanel`,
 `AgentComposerInput`, `AgentComposerToolbar`, `AgentAttachmentChips`,

@@ -416,7 +416,7 @@
   pointer-events: auto;
   position: absolute;
   right: 0;
-  z-index: 90;
+  z-index: var(--aui-z-popover);
 }
 
 .aui-context-usage:not([open]) .aui-context-usage-popover {

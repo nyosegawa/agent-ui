@@ -49,7 +49,11 @@ function HeadlessThreadView() {
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            void composer.submit();
+            if (activeThreadId) {
+              void composer.submit();
+            } else if (composer.canSubmit) {
+              void composer.startThreadWithInput(composer.value);
+            }
           }}
         >
           <input
@@ -57,7 +61,7 @@ function HeadlessThreadView() {
             onChange={(event) => composer.setValue(event.currentTarget.value)}
             value={composer.value}
           />
-          <button>Send</button>
+          <button disabled={!composer.canSubmit}>Send</button>
         </form>
       </section>
     </main>
