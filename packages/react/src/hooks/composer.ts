@@ -44,6 +44,7 @@ import { AGENT_EXECUTION_MODES } from "./run-settings";
 import { useAgentTurn } from "./turn";
 import {
   codexReasoningEffort,
+  hasSubmittableFirstInput,
   normalizeTurnInput,
   summarizeUserInput,
   textAgentInput,
@@ -535,15 +536,6 @@ function agentError(caught: unknown) {
   return {
     message: caught instanceof Error ? caught.message : String(caught),
   };
-}
-
-function hasSubmittableFirstInput(input: string | AgentUserInput[]) {
-  if (typeof input === "string") return input.trim().length > 0;
-  if (input.length === 0) return false;
-  return input.some((item) => {
-    if (item.type !== "text") return true;
-    return typeof item.text === "string" && item.text.trim().length > 0;
-  });
 }
 
 function createFirstMessageOperationIds(): FirstMessageOperationIds {

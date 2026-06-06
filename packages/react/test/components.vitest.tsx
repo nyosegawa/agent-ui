@@ -182,7 +182,24 @@ expect.extend(toHaveNoViolations);
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
 });
+
+function mockCompactLayout(matches = true) {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn((query: string) => ({
+      addEventListener: vi.fn(),
+      addListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+      matches: query === "(max-width: 640px)" ? matches : false,
+      media: query,
+      onchange: null,
+      removeEventListener: vi.fn(),
+      removeListener: vi.fn(),
+    })),
+  );
+}
 
 function runningComposerState() {
   const initialState = createInitialAgentState();
@@ -7097,6 +7114,97 @@ describe("AgentChat", () => {
     expect(screen.queryByLabelText("Search history")).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Expand history" }));
     expect(screen.getByLabelText("Search history")).toBeInTheDocument();
+  });
+
+  it("closes the mobile history drawer with Escape and returns focus", async () => {
+    mockCompactLayout();
+    const user = userEvent.setup();
+    const { container } = render(
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const trigger = await screen.findByRole("button", { name: "Open thread history" });
+    await user.click(trigger);
+    expect(container.querySelector(".aui-sidebar")).toBeInTheDocument();
+    expect(container.querySelector(".aui-chat")).toHaveAttribute("inert");
+    expect(container.querySelector(".aui-chat")).toHaveAttribute("aria-hidden", "true");
+
+    await user.keyboard("{Escape}");
+
+    await waitFor(() => {
+      expect(container.querySelector(".aui-sidebar")).not.toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
+    expect(container.querySelector(".aui-chat")).not.toHaveAttribute("inert");
+  });
+
+  it("closes the mobile history drawer from the backdrop and returns focus", async () => {
+    mockCompactLayout();
+    const user = userEvent.setup();
+    const { container } = render(
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    const trigger = await screen.findByRole("button", { name: "Open thread history" });
+    await user.click(trigger);
+    await user.click(screen.getByRole("button", { name: "Dismiss thread history" }));
+
+    await waitFor(() => {
+      expect(container.querySelector(".aui-sidebar")).not.toBeInTheDocument();
+    });
+    await waitFor(() => {
+      expect(trigger).toHaveFocus();
+    });
+  });
+
+  it("closes the mobile history drawer after thread selection", async () => {
+    mockCompactLayout();
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-mobile-select",
+                name: "Mobile selected thread",
+                status: { type: "notLoaded" },
+                turns: [],
+              },
+            ],
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-mobile-select",
+              name: "Mobile selected thread",
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Open thread history" }));
+    expect(screen.getByLabelText("Search history")).toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: /Mobile selected thread/ }));
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText("Search history")).not.toBeInTheDocument();
+    });
   });
 
   it("refreshes usage limits", async () => {

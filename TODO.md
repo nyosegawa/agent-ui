@@ -114,34 +114,34 @@
 
 ## 4. Mobile Drawer And Overlay Layers
 
-- [ ] Add public layer tokens in `packages/react/src/styles/tokens.css`.
-  - [ ] `--aui-z-backdrop`
-  - [ ] `--aui-z-drawer`
-  - [ ] `--aui-z-popover`
-  - [ ] `--aui-z-sheet`
-  - [ ] `--aui-z-dialog`
-  - [ ] `--aui-z-toast`
-- [ ] Replace raw z-index values in distributed React CSS with layer tokens
+- [x] Add public layer tokens in `packages/react/src/styles/tokens.css`.
+  - [x] `--aui-z-backdrop`
+  - [x] `--aui-z-drawer`
+  - [x] `--aui-z-popover`
+  - [x] `--aui-z-sheet`
+  - [x] `--aui-z-dialog`
+  - [x] `--aui-z-toast`
+- [x] Replace raw z-index values in distributed React CSS with layer tokens
       where they represent shared overlay decisions.
-- [ ] Keep one-off example z-index values in example CSS only when they are
+- [x] Keep one-off example z-index values in example CSS only when they are
       specific to the fixture composition.
-- [ ] Implement mobile drawer Escape close.
-- [ ] Implement focus return to the `Open thread history` trigger after drawer
+- [x] Implement mobile drawer Escape close.
+- [x] Implement focus return to the `Open thread history` trigger after drawer
       close.
-- [ ] Make the chat/background region inert or equivalently non-interactive
+- [x] Make the chat/background region inert or equivalently non-interactive
       while the drawer is open.
-- [ ] Decide and document drawer scroll-lock behavior.
-- [ ] Preserve current closed-drawer DOM behavior unless deliberately changing
+- [x] Decide and document drawer scroll-lock behavior.
+- [x] Preserve current closed-drawer DOM behavior unless deliberately changing
       tests and docs.
-- [ ] Add React component tests for drawer Escape, backdrop close, focus return,
+- [x] Add React component tests for drawer Escape, backdrop close, focus return,
       and background non-interaction.
-- [ ] Add Playwright tests that:
-  - [ ] open the drawer on mobile
-  - [ ] verify background composer/menu actions cannot be clicked
-  - [ ] verify drawer search/select still works
-  - [ ] verify no horizontal overflow
-  - [ ] verify the drawer closes after selection
-- [ ] Add style tests that layer tokens exist and shared overlays use them.
+- [x] Add Playwright tests that:
+  - [x] open the drawer on mobile
+  - [x] verify background composer/menu actions cannot be clicked
+  - [x] verify drawer search/select still works
+  - [x] verify no horizontal overflow
+  - [x] verify the drawer closes after selection
+- [x] Add style tests that layer tokens exist and shared overlays use them.
 
 ## 5. Host Integration Reference App
 

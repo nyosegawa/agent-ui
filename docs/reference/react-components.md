@@ -230,10 +230,8 @@ attachment points.
 Copied `dist/styles/*` files and internal `.aui-*` selectors are private
 implementation details, not stable host imports or styling contracts.
 
-Shared Agent UI overlay order is being promoted to public layer tokens instead
-of raw z-index numbers or private selectors. Until the tokens are implemented
-in `packages/react/src/styles/tokens.css`, treat these names as the selected
-contract for upcoming overlay work rather than as current stylesheet API:
+Shared Agent UI overlay order is exposed as public layer tokens instead of raw
+z-index numbers or private selectors:
 
 - `--aui-z-backdrop`
 - `--aui-z-drawer`
@@ -242,11 +240,11 @@ contract for upcoming overlay work rather than as current stylesheet API:
 - `--aui-z-dialog`
 - `--aui-z-toast`
 
-Agent UI will own the relative order of its own backdrops, drawers, popovers,
+Agent UI owns the relative order of its own backdrops, drawers, popovers,
 sheets, dialogs, and toasts through those tokens. Hosts own their own
 modal/sheet managers and should place host surfaces above or below Agent UI by
-choosing values relative to the tokens once they land. Do not style host
-integration behavior by targeting private `.aui-*` selectors.
+choosing values relative to the tokens. Do not style host integration behavior
+by targeting private `.aui-*` selectors.
 
 The default stylesheet is warm and typography-led, not card-heavy. Every
 interactive primitive (button, input, composer, approval) owns its visual
@@ -611,8 +609,8 @@ horizontally-scrolling strip rather than hidden. While the drawer is open, the
 background chat region does not accept pointer or keyboard interaction. Drawer
 content owns its own scroll area; Agent UI does not impose global page scroll
 policy outside the preset shell. Host-owned mobile sheets or modals should be
-layered relative to the planned `--aui-z-*` tokens once implemented, not by
-depending on drawer DOM structure.
+layered relative to the public `--aui-z-*` tokens, not by depending on drawer
+DOM structure.
 
 ## Usage
 

@@ -64,13 +64,32 @@ test("opens the thread history drawer on mobile", async ({ page }) => {
   await page.getByRole("button", { name: "Open thread history" }).click();
   await expect(page.locator(".aui-sidebar")).toBeVisible();
   await expect(page.getByLabel("Search history")).toBeVisible();
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+  await expect(backgroundThreadMenuIsBlocked(page)).resolves.toBe(true);
   await expect(
     page.locator(".aui-sidebar").getByRole("button", { name: "New thread" }),
   ).toBeVisible();
-  await page.locator(".aui-sidebar").getByRole("button", { name: "New thread" }).click();
+  await page.getByLabel("Search history").fill("stored");
+  await expect(
+    page.locator(".aui-sidebar").getByRole("button", { name: /Stored session/ }),
+  ).toBeVisible();
+  await page.locator(".aui-sidebar").getByRole("button", { name: /Stored session/ }).click();
   await expect(page.locator(".aui-sidebar")).toHaveCount(0);
-  await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Stored session" })).toBeVisible();
 });
+
+async function backgroundThreadMenuIsBlocked(page: Page) {
+  return page
+    .locator('.aui-chat .aui-composer-tool[aria-label^="Execution mode"]')
+    .evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const hit = document.elementFromPoint(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+      );
+      return Boolean(hit?.closest(".aui-sidebar-backdrop, .aui-sidebar"));
+    });
+}
 
 async function headerDoesNotOverlapTimeline(page: Page) {
   return page.evaluate(() => {

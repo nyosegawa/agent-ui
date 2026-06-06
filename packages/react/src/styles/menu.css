@@ -12,7 +12,7 @@
   inset: 0;
   padding: 0;
   position: fixed;
-  z-index: 60;
+  z-index: calc(var(--aui-z-popover) - 1);
 }
 
 .aui-menu-backdrop[data-compact="true"] {
@@ -31,7 +31,7 @@
   overflow: hidden;
   position: fixed;
   width: 272px;
-  z-index: 61;
+  z-index: var(--aui-z-popover);
 }
 
 .aui-menu-panel[data-compact="true"] {
@@ -42,6 +42,7 @@
   max-height: 74vh;
   right: 0;
   width: auto;
+  z-index: var(--aui-z-sheet);
 }
 
 .aui-menu-panel-header {

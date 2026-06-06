@@ -181,10 +181,11 @@ after `thread/start` reconciliation.
 Escape, and thread selection close the drawer; focus returns to the `Threads`
 trigger; background chat controls are inert or equivalently non-interactive
 while the drawer is open; drawer search and selection stay reachable. Hosts
-should place their own sheets and modals relative to the planned layer tokens
+should place their own sheets and modals relative to the public layer tokens
 `--aui-z-backdrop`, `--aui-z-drawer`, `--aui-z-popover`, `--aui-z-sheet`,
-`--aui-z-dialog`, and `--aui-z-toast` once those tokens are implemented,
-instead of styling private `.aui-*` selectors.
+`--aui-z-dialog`, and `--aui-z-toast` instead of styling private `.aui-*`
+selectors. The preset keeps scroll containment inside the drawer and does not
+impose host document/body scroll-lock policy.
 
 ## Host-Gated Workflows
 

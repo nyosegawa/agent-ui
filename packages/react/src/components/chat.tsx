@@ -6,7 +6,7 @@ import type {
   TurnState,
 } from "@nyosegawa/agent-ui-core";
 import { selectThreadView } from "@nyosegawa/agent-ui-core";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   useAgentBootstrap,
   useAgentThread,
@@ -221,6 +221,26 @@ function AgentChatInner({
   );
   const hasRail = usage || diagnostics;
   const drawerOpen = compact && sidebar && !isSidebarCollapsed;
+  const closeDrawer = useCallback(() => {
+    setSidebarCollapsed(true);
+    const deferFocus =
+      typeof window.requestAnimationFrame === "function"
+        ? window.requestAnimationFrame
+        : (callback: FrameRequestCallback) => window.setTimeout(callback, 0);
+    deferFocus(() => {
+      document.querySelector<HTMLButtonElement>(".aui-threads-trigger")?.focus();
+    });
+  }, [setSidebarCollapsed]);
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      closeDrawer();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [closeDrawer, drawerOpen]);
   const componentMap = { ...defaultAgentComponents, ...components };
   const EmptyState = componentMap.EmptyState;
   const Shell = componentMap.Shell;
@@ -269,11 +289,15 @@ function AgentChatInner({
         <button
           aria-label={t("aria.dismissThreadHistory")}
           className="aui-sidebar-backdrop"
-          onClick={() => setSidebarCollapsed(true)}
+          onClick={closeDrawer}
           type="button"
         />
       ) : null}
-      <div className="aui-chat">
+      <div
+        aria-hidden={drawerOpen ? "true" : undefined}
+        className="aui-chat"
+        inert={drawerOpen ? true : undefined}
+      >
         <AgentStatusBar
           end={statusBarEnd}
           onNavigateHome={navigateHome}

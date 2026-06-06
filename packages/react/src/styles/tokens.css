@@ -173,6 +173,12 @@
   --aui-duration-meter: 200ms;
   --aui-duration-spin: 0.9s;
   --aui-duration-pulse: 1.4s;
+  --aui-z-backdrop: 40;
+  --aui-z-drawer: 50;
+  --aui-z-popover: 60;
+  --aui-z-sheet: 80;
+  --aui-z-dialog: 100;
+  --aui-z-toast: 110;
 
   color: var(--aui-fg);
   color-scheme: var(--aui-color-scheme);
