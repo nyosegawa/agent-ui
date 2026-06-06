@@ -1053,7 +1053,7 @@ function HostFirstMessagePanel({
   stats: HostFirstMessageStats;
 }) {
   const { thread } = useAgentThread();
-  const pending = thread?.thread.ephemeral === true || thread?.thread.id.startsWith("pending-");
+  const pending = thread?.thread.ephemeral === true && stats.turnStartCalls === 0;
   return (
     <section className="aui-host-block" aria-label="Host first-message probe">
       <header className="aui-host-block-header">
