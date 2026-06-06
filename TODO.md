@@ -236,29 +236,29 @@
 
 ## 8. Validation Matrix
 
-- [ ] After docs-only contract updates, run the focused docs/skill tests that
+- [x] After docs-only contract updates, run the focused docs/skill tests that
       apply.
-- [ ] After React API updates, run:
-  - [ ] focused React component/hook tests
-  - [ ] `bun run test:api-snapshots`
-  - [ ] `bun run test:package-resolution`
-- [ ] After server bridge updates, run:
-  - [ ] focused `packages/server/test/websocket.test.ts`
-  - [ ] focused `packages/server/test/bridge.test.ts`
-  - [ ] package API snapshots if exports changed
-- [ ] After CSS overlay updates, run:
-  - [ ] `bun run test:styles`
-  - [ ] relevant React component tests
-- [ ] After example updates, run:
-  - [ ] relevant example typecheck/build
-  - [ ] focused Playwright specs
-  - [ ] `bun run test:e2e:fixtures`
-- [ ] Before merge readiness, run:
-  - [ ] `bun run validate:fast`
-  - [ ] `bun run validate:protocol`
-  - [ ] `bun run validate:packages`
-  - [ ] `bun run validate:e2e`
-  - [ ] `bun run validate:release`
+- [x] After React API updates, run:
+  - [x] focused React component/hook tests
+  - [x] `bun run test:api-snapshots`
+  - [x] `bun run test:package-resolution`
+- [x] After server bridge updates, run:
+  - [x] focused `packages/server/test/websocket.test.ts`
+  - [x] focused `packages/server/test/bridge.test.ts`
+  - [x] package API snapshots if exports changed
+- [x] After CSS overlay updates, run:
+  - [x] `bun run test:styles`
+  - [x] relevant React component tests
+- [x] After example updates, run:
+  - [x] relevant example typecheck/build
+  - [x] focused Playwright specs
+  - [x] `bun run test:e2e:fixtures`
+- [x] Before merge readiness, run:
+  - [x] `bun run validate:fast`
+  - [x] `bun run validate:protocol`
+  - [x] `bun run validate:packages`
+  - [x] `bun run validate:e2e`
+  - [x] `bun run validate:release`
 
 ## 9. Merge Readiness Review
 
