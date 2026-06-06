@@ -181,58 +181,58 @@
 
 ## 7. Installable `skills/agent-ui` Refresh
 
-- [ ] Keep `skills/agent-ui/SKILL.md` under the progressive-disclosure limit.
-- [ ] Update the skill description with trigger terms for:
-  - [ ] thread lifecycle
-  - [ ] canonical resume
-  - [ ] local media helper
-  - [ ] mobile drawer
-  - [ ] overlay layers
-  - [ ] local desktop bridge
-  - [ ] host-gated workflow
-- [ ] Update `skills/agent-ui/SKILL.md` job classification to include:
-  - [ ] thread lifecycle / resume / history integration
-  - [ ] host-owned workflow composition
-  - [ ] local desktop bridge policy
-- [ ] Update `skills/agent-ui/references/server-bridge.md`.
-  - [ ] `bridgePolicy.admission`
-  - [ ] `local-loopback`
-  - [ ] `host-callback`
-  - [ ] `unsafe-no-admission` as non-default
-  - [ ] `browserMethodPolicy`
-  - [ ] inbound limits
-  - [ ] bridge health events
-  - [ ] initialize ownership
-  - [ ] per-connection resolver pattern
-- [ ] Update `skills/agent-ui/references/local-single-user.md`.
-  - [ ] loopback default
-  - [ ] local desktop sidecar admission
-  - [ ] non-loopback opt-in requirements
-- [ ] Update `skills/agent-ui/references/layout-composition.md`.
-  - [ ] mobile drawer contract
-  - [ ] overlay layer tokens
-  - [ ] Host-owned sheet/modal placement
-  - [ ] host-gated workflow recipe guidance
-- [ ] Update `skills/agent-ui/references/uploads.md`.
-  - [ ] `createAgentUiLocalMediaHelper()` as the main helper
-  - [ ] structured resource metadata
-  - [ ] same-origin asset route
-  - [ ] `serveAssetHandler` opt-in
-  - [ ] no string URL shorthand
-  - [ ] no raw filesystem path as browser `src`
-- [ ] Update `skills/agent-ui/references/integration-profiles.md` with
+- [x] Keep `skills/agent-ui/SKILL.md` under the progressive-disclosure limit.
+- [x] Update the skill description with trigger terms for:
+  - [x] thread lifecycle
+  - [x] canonical resume
+  - [x] local media helper
+  - [x] mobile drawer
+  - [x] overlay layers
+  - [x] local desktop bridge
+  - [x] host-gated workflow
+- [x] Update `skills/agent-ui/SKILL.md` job classification to include:
+  - [x] thread lifecycle / resume / history integration
+  - [x] host-owned workflow composition
+  - [x] local desktop bridge policy
+- [x] Update `skills/agent-ui/references/server-bridge.md`.
+  - [x] `bridgePolicy.admission`
+  - [x] `local-loopback`
+  - [x] `host-callback`
+  - [x] `unsafe-no-admission` as non-default
+  - [x] `browserMethodPolicy`
+  - [x] inbound limits
+  - [x] bridge health events
+  - [x] initialize ownership
+  - [x] per-connection resolver pattern
+- [x] Update `skills/agent-ui/references/local-single-user.md`.
+  - [x] loopback default
+  - [x] local desktop sidecar admission
+  - [x] non-loopback opt-in requirements
+- [x] Update `skills/agent-ui/references/layout-composition.md`.
+  - [x] mobile drawer contract
+  - [x] overlay layer tokens
+  - [x] Host-owned sheet/modal placement
+  - [x] host-gated workflow recipe guidance
+- [x] Update `skills/agent-ui/references/uploads.md`.
+  - [x] `createAgentUiLocalMediaHelper()` as the main helper
+  - [x] structured resource metadata
+  - [x] same-origin asset route
+  - [x] `serveAssetHandler` opt-in
+  - [x] no string URL shorthand
+  - [x] no raw filesystem path as browser `src`
+- [x] Update `skills/agent-ui/references/integration-profiles.md` with
       per-connection bridge and workflow-gate classification.
-- [ ] Update `skills/agent-ui/references/debug.md` with:
-  - [ ] canonical resume
-  - [ ] `thread/read` preview versus `thread/resume`
-  - [ ] mobile drawer reachability
-  - [ ] structured local media resolution
-  - [ ] per-connection admission rejection
-- [ ] Update `skills/agent-ui/references/validation.md` with interaction checks
+- [x] Update `skills/agent-ui/references/debug.md` with:
+  - [x] canonical resume
+  - [x] `thread/read` preview versus `thread/resume`
+  - [x] mobile drawer reachability
+  - [x] structured local media resolution
+  - [x] per-connection admission rejection
+- [x] Update `skills/agent-ui/references/validation.md` with interaction checks
       for drawer, overlay, resume, local media, and bridge admission.
-- [ ] Update `test/agent-ui-skill.test.ts` required strings and forbidden
+- [x] Update `test/agent-ui-skill.test.ts` required strings and forbidden
       strings to guard the refreshed guidance.
-- [ ] Run `bun run test:skills`.
+- [x] Run `bun run test:skills`.
 
 ## 8. Validation Matrix
 
