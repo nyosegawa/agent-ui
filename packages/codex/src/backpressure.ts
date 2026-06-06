@@ -18,6 +18,7 @@ export function delay(ms: number): Promise<void> {
 const BACKPRESSURE_RETRY_SAFE_METHODS = new Set([
   "account/read",
   "account/rateLimits/read",
+  "account/usage/read",
   "app/list",
   "hooks/list",
   "model/list",

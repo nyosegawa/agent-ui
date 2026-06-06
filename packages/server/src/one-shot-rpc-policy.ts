@@ -7,6 +7,7 @@ export interface OneShotRpcMethodPolicyOptions {
 const DEFAULT_ONE_SHOT_METHOD_LIST = [
   "account/read",
   "account/rateLimits/read",
+  "account/usage/read",
   "model/list",
   "thread/list",
   "thread/loaded/list",

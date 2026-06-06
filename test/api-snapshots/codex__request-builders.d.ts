@@ -1,4 +1,4 @@
-import { T as ThreadId, R as RealtimeVoice, A as AbsolutePathBuf, J as JsonValue, d as UserInput, M as MessagePhase, e as ReasoningEffort, f as TurnItemsView, g as ThreadSource, h as ModeKind, b as CodexStableMethod, i as CancelLoginAccountResponse, L as LoginAccountResponse, j as LogoutAccountResponse, G as GetAccountRateLimitsResponse, k as GetAccountResponse, l as AppsListResponse, H as HooksListResponse, I as InitializeResponse, m as ModelListResponse, S as SkillsConfigWriteResponse, n as SkillsListResponse, o as ThreadArchiveResponse, p as ThreadCompactStartResponse, q as ThreadForkResponse, r as ThreadInjectItemsResponse, s as ThreadListResponse, t as ThreadLoadedListResponse, u as ThreadMetadataUpdateResponse, v as ThreadSetNameResponse, w as ThreadReadResponse, x as ThreadResumeResponse, y as ThreadRollbackResponse, z as ThreadStartResponse, B as ThreadUnarchiveResponse, D as ThreadUnsubscribeResponse, E as TurnInterruptResponse, F as TurnStartResponse, K as TurnSteerResponse, a as CodexExperimentalMethod, c as CodexStableMethodParams, U as UserInput$1 } from './method-params-<chunk>.js';
+import { T as ThreadId, R as RealtimeVoice, A as AbsolutePathBuf, J as JsonValue, d as UserInput, M as MessagePhase, e as ReasoningEffort, f as TurnItemsView, g as ThreadSource, h as ModeKind, b as CodexStableMethod, i as CancelLoginAccountResponse, L as LoginAccountResponse, j as LogoutAccountResponse, G as GetAccountRateLimitsResponse, k as GetAccountTokenUsageResponse, l as GetAccountResponse, m as AppsListResponse, H as HooksListResponse, I as InitializeResponse, n as ModelListResponse, S as SkillsConfigWriteResponse, o as SkillsListResponse, p as ThreadArchiveResponse, q as ThreadCompactStartResponse, r as ThreadForkResponse, s as ThreadInjectItemsResponse, t as ThreadListResponse, u as ThreadLoadedListResponse, v as ThreadMetadataUpdateResponse, w as ThreadSetNameResponse, x as ThreadReadResponse, y as ThreadResumeResponse, z as ThreadRollbackResponse, B as ThreadStartResponse, D as ThreadUnarchiveResponse, E as ThreadUnsubscribeResponse, F as TurnInterruptResponse, K as TurnStartResponse, N as TurnSteerResponse, a as CodexExperimentalMethod, c as CodexStableMethodParams, U as UserInput$1 } from './method-params-<chunk>.js';
 export { C as CodexExperimentalMethodParams } from './method-params-<chunk>.js';
 import { i as StableProductizedMethod, E as ExperimentalAvailableMethod } from './protocol-<chunk>.js';
 import './InitializeParams-<chunk>.js';
@@ -402,6 +402,10 @@ type Thread = {
      */
     forkedFromId: string | null;
     /**
+     * The ID of the parent thread. This will only be set if this thread is a subagent.
+     */
+    parentThreadId: string | null;
+    /**
      * Usually the first user message in the thread, if available.
      */
     preview: string;
@@ -511,6 +515,24 @@ type ProcessSpawnResponse = Record<string, never>;
  */
 type ProcessWriteStdinResponse = Record<string, never>;
 
+type RemoteControlClient = {
+    clientId: string;
+    displayName: string | null;
+    deviceType: string | null;
+    platform: string | null;
+    osVersion: string | null;
+    deviceModel: string | null;
+    appVersion: string | null;
+    lastSeenAt: bigint | null;
+};
+
+type RemoteControlClientsListResponse = {
+    data: Array<RemoteControlClient>;
+    nextCursor: string | null;
+};
+
+type RemoteControlClientsRevokeResponse = Record<string, never>;
+
 type RemoteControlDisableResponse = {
     status: RemoteControlConnectionStatus;
     serverName: string;
@@ -523,6 +545,17 @@ type RemoteControlEnableResponse = {
     serverName: string;
     installationId: string;
     environmentId: string | null;
+};
+
+type RemoteControlPairingStartResponse = {
+    pairingCode: string;
+    manualPairingCode: string | null;
+    environmentId: string;
+    expiresAt: bigint;
+};
+
+type RemoteControlPairingStatusResponse = {
+    claimed: boolean;
 };
 
 type RemoteControlStatusReadResponse = {
@@ -635,6 +668,7 @@ interface StableMethodResultMap {
     "account/login/start": LoginAccountResponse;
     "account/logout": LogoutAccountResponse;
     "account/rateLimits/read": GetAccountRateLimitsResponse;
+    "account/usage/read": GetAccountTokenUsageResponse;
     "account/read": GetAccountResponse;
     "app/list": AppsListResponse;
     "hooks/list": HooksListResponse;
@@ -673,6 +707,10 @@ interface ExperimentalMethodResultMap {
     "process/writeStdin": ProcessWriteStdinResponse;
     "remoteControl/disable": RemoteControlDisableResponse;
     "remoteControl/enable": RemoteControlEnableResponse;
+    "remoteControl/client/list": RemoteControlClientsListResponse;
+    "remoteControl/client/revoke": RemoteControlClientsRevokeResponse;
+    "remoteControl/pairing/start": RemoteControlPairingStartResponse;
+    "remoteControl/pairing/status": RemoteControlPairingStatusResponse;
     "remoteControl/status/read": RemoteControlStatusReadResponse;
     "thread/backgroundTerminals/clean": ThreadBackgroundTerminalsCleanResponse;
     "thread/decrement_elicitation": ThreadDecrementElicitationResponse;

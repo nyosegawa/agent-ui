@@ -120,6 +120,7 @@ const BROWSER_METHOD_CAPABILITIES: Record<
       "account/login/cancel",
       "account/logout",
       "account/rateLimits/read",
+      "account/usage/read",
     ],
   },
   apps: { requests: ["app/list"] },

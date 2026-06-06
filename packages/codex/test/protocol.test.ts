@@ -45,10 +45,11 @@ import { generatedExperimentalOnlyClientMethods } from "../src/generated/protoco
 describe("Codex protocol metadata", () => {
   it("records upstream commit and stable release method surface", () => {
     expect(CODEX_PROTOCOL_COMMIT).toMatch(/^[0-9a-f]{40}$/);
-    expect(CODEX_PROTOCOL_COMMIT).toBe("3e7baa00e43419967d90d6ad9cef40f58d5ac89f");
+    expect(CODEX_PROTOCOL_COMMIT).toBe("87b808bb570f01f4b6fc8485c5459052fac0e320");
     expect(CODEX_PROTOCOL_GENERATED_AT).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(stableClientMethods).toBe(stableProductizedMethods);
     expect(stableProductizedMethods).toContain("account/rateLimits/read");
+    expect(stableProductizedMethods).toContain("account/usage/read");
     expect(stableProductizedMethods).toContain("skills/list");
     expect(stableProductizedMethods).toContain("app/list");
     expect(hostOnlyMethods).toContain("command/exec");
@@ -98,6 +99,9 @@ describe("Codex protocol metadata", () => {
     expect(
       codexCapabilityMetadata.filter((entry) => entry.method === "account/rateLimits/read"),
     ).toEqual([{ method: "account/rateLimits/read", status: "stableProductized" }]);
+    expect(
+      codexCapabilityMetadata.filter((entry) => entry.method === "account/usage/read"),
+    ).toEqual([{ method: "account/usage/read", status: "stableProductized" }]);
     expect(codexCapabilityMetadata).toContainEqual({
       method: "thread/turns/list",
       status: "experimentalAvailable",
@@ -146,6 +150,7 @@ describe("Codex protocol metadata", () => {
     expect(isStableProductizedMethod("command/exec")).toBe(false);
     expect(isHostOnlyMethod("command/exec")).toBe(true);
     expect(isExperimentalAvailableMethod("thread/turns/list")).toBe(true);
+    expect(isExperimentalAvailableMethod("remoteControl/pairing/start")).toBe(true);
     expect(isExperimentalAvailableMethod("mock/experimentalMethod")).toBe(false);
     expect(isExperimentalAvailableMethod("thread/turns/items/list")).toBe(false);
     expect(isExperimentalUnsupportedMethod("thread/turns/items/list")).toBe(true);
@@ -1724,6 +1729,7 @@ describe("Codex protocol metadata", () => {
           "account/rateLimits/read",
           "account/read",
           "account/sendAddCreditsNudgeEmail",
+          "account/usage/read",
           "app/list",
           "command/exec",
           "command/exec/resize",
@@ -1872,6 +1878,7 @@ describe("Codex protocol metadata", () => {
           "thread/unarchived",
           "turn/completed",
           "turn/diff/updated",
+          "turn/moderationMetadata",
           "turn/plan/updated",
           "turn/started",
           "warning",
@@ -1927,8 +1934,12 @@ describe("Codex protocol metadata", () => {
         "process/resizePty",
         "process/spawn",
         "process/writeStdin",
+        "remoteControl/client/list",
+        "remoteControl/client/revoke",
         "remoteControl/disable",
         "remoteControl/enable",
+        "remoteControl/pairing/start",
+        "remoteControl/pairing/status",
         "remoteControl/status/read",
         "thread/backgroundTerminals/clean",
         "thread/decrement_elicitation",

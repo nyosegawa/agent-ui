@@ -9,6 +9,7 @@ describe("one-shot RPC method policy", () => {
     expect([...DEFAULT_ONE_SHOT_METHODS].sort()).toEqual([
       "account/rateLimits/read",
       "account/read",
+      "account/usage/read",
       "app/list",
       "hooks/list",
       "model/list",
