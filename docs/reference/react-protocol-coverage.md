@@ -9,7 +9,10 @@ intentionally not exposed by React.
 
 The source of truth is `packages/react/src/protocol-exposure.ts`.
 `packages/react/test/protocol-exposure.vitest.ts` fails when a method is added
-to `stableProductizedMethods` without an explicit React exposure decision.
+to `stableProductizedMethods` without an explicit React exposure decision. The
+same test checks source evidence for those decisions: required evidence must
+stay present for `default-ui` and `hook` decisions, and forbidden evidence must
+stay absent for `client-only` and `no-default-ui` decisions.
 
 Exposure values:
 
@@ -18,6 +21,15 @@ Exposure values:
   by default components.
 - `client-only`: available through the Codex client facade for host-owned UI.
 - `no-default-ui`: intentionally outside React request surfaces.
+
+Evidence policy:
+
+- Use `required` evidence for default UI or hook/controller calls that should
+  keep backing a productized method.
+- Use `forbidden` evidence for client-only methods that must not quietly become
+  part of React source without reclassification.
+- Keep evidence specific to source files or `packages/react/src`; the registry
+  file itself is excluded from source scans.
 
 Current notable client-only decisions:
 
