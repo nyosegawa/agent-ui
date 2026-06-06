@@ -236,7 +236,8 @@ rollback payloads, and generated protocol payloads remain source-level only.
 
 Thread lifecycle controller exports may add raw-free start/resume result or
 handle types only after the implementation, examples, tests, and snapshots use
-the same names. The public result contract is:
+the same names. The public result contract for `AgentThreadStartResult`,
+`AgentThreadStartWithInputResult`, and `AgentThreadResumeResult` is:
 
 - `threadId` is the canonical id the host should persist after start, first
   message start, or resume.

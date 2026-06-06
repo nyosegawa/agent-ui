@@ -5,7 +5,6 @@ import {
   type AgentOperationView,
   type ThreadId,
 } from "@nyosegawa/agent-ui-core";
-import type { CodexStable } from "@nyosegawa/agent-ui-codex/stable-types";
 import {
   useCallback,
   useMemo,
@@ -40,6 +39,7 @@ import type {
   AgentComposerDisabledReason,
   AgentComposerSubmitMode,
 } from "./composer-types";
+import type { AgentThreadStartWithInputResult } from "./thread-lifecycle-types";
 import { AGENT_EXECUTION_MODES } from "./run-settings";
 import { useAgentTurn } from "./turn";
 import {
@@ -57,7 +57,7 @@ export interface InternalAgentComposerController extends AgentComposerController
   startWithMessage: (
     input: string | AgentUserInput[],
     params?: ThreadStartOptions,
-  ) => Promise<CodexStable.v2.ThreadStartResponse>;
+  ) => Promise<AgentThreadStartWithInputResult>;
 }
 
 export function useAgentComposer(threadId?: ThreadId): AgentComposerController {
@@ -79,8 +79,10 @@ export function useAgentComposerController(
   void getOperation;
   void operationsById;
   void retryOperation;
-  void startWithMessage;
-  return composer;
+  return {
+    ...composer,
+    startThreadWithInput: (input) => startWithMessage(input),
+  };
 }
 
 export function useInternalAgentComposerController(
@@ -298,7 +300,7 @@ export function useInternalAgentComposerController(
         });
         forgetFirstMessagePayload(pending.operationId);
         setValue("");
-        return result;
+        return { threadId: nextThreadId } satisfies AgentThreadStartWithInputResult;
       } catch (caught) {
         const error = agentError(caught);
         if (!canonicalThreadId) {
@@ -476,6 +478,7 @@ export function useInternalAgentComposerController(
     sendingFollowUpIds: scopedSendingFollowUpIds,
     setError,
     setValue,
+    startThreadWithInput: startWithMessage,
     steerNow,
     stop,
     submitMode,

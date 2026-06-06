@@ -100,6 +100,7 @@ function ThreadListControllerProbe({
   const { state } = useAgentContext();
   const controller = useAgentThreadListController(scope, { onHistorySynced });
   const activeThreadId = state.threadLifecycle.activeThreadId;
+  const [resumeResult, setResumeResult] = useState("");
   return (
     <section aria-label={label}>
       <input
@@ -125,7 +126,13 @@ function ThreadListControllerProbe({
       <button
         onClick={() => {
           const firstThreadId = controller.threads[0]?.id;
-          if (firstThreadId) void controller.resumeThread(firstThreadId);
+          if (firstThreadId) {
+            void controller.resumeThread(firstThreadId).then((result) => {
+              setResumeResult(
+                `${result.threadId}:${result.requestedThreadId ?? "none"}`,
+              );
+            });
+          }
         }}
         type="button"
       >
@@ -144,6 +151,7 @@ function ThreadListControllerProbe({
           ? (controller.collection.scope.searchTerm ?? "")
           : ""}
       </output>
+      <output aria-label={`${label} resume result`}>{resumeResult || "none"}</output>
     </section>
   );
 }
@@ -231,19 +239,28 @@ function ActiveThreadHarness(props: React.ComponentProps<typeof AgentChat>) {
 function ResumeThreadHarness({ requestedId }: { requestedId: string }) {
   const { state } = useAgentContext();
   const { resumeThread } = useAgentThread();
+  const [resumeResult, setResumeResult] = useState("");
   const activeThreadId = state.threadLifecycle.activeThreadId;
   const activeThread = activeThreadId ? state.threads[activeThreadId] : undefined;
   const pageItemText = activeThread?.turns["turn-page"]?.items["item-page"]?.text;
 
   return (
     <>
-      <button type="button" onClick={() => void resumeThread(requestedId)}>
+      <button
+        type="button"
+        onClick={() =>
+          void resumeThread(requestedId).then((result) => {
+            setResumeResult(`${result.threadId}:${result.requestedThreadId ?? "none"}`);
+          })
+        }
+      >
         Resume requested thread
       </button>
       <output aria-label="active thread">{activeThreadId ?? "none"}</output>
       <output aria-label="thread status">{activeThread?.status ?? "none"}</output>
       <output aria-label="thread title">{activeThread?.thread.name ?? "none"}</output>
       <output aria-label="initial page item">{pageItemText ?? "none"}</output>
+      <output aria-label="resume result">{resumeResult || "none"}</output>
     </>
   );
 }
@@ -402,6 +419,38 @@ function PublicComposerControllerProbe() {
       >
         Cancel failed pending message
       </button>
+    </>
+  );
+}
+
+function PublicFirstMessageStartProbe() {
+  const [result, setResult] = useState("none");
+  const [error, setError] = useState("none");
+  const composer = useAgentComposerController();
+  return (
+    <>
+      <input
+        aria-label="Public first message"
+        onChange={(event) => composer.setValue(event.currentTarget.value)}
+        value={composer.value}
+      />
+      <button
+        type="button"
+        onClick={() => {
+          void composer
+            .startThreadWithInput(composer.value)
+            .then((nextResult) => {
+              setResult(nextResult.threadId);
+            })
+            .catch((caught: unknown) => {
+              setError(caught instanceof Error ? caught.message : String(caught));
+            });
+        }}
+      >
+        Public start with input
+      </button>
+      <output aria-label="public start result">{result}</output>
+      <output aria-label="public start error">{error}</output>
     </>
   );
 }
@@ -6139,6 +6188,76 @@ describe("AgentChat", () => {
     );
   });
 
+  it("starts a thread with first input through the public composer controller", async () => {
+    const user = userEvent.setup();
+    let resolveThreadStart:
+      | ((result: {
+          thread: { id: string; name: string; status: { type: string } };
+        }) => void)
+      | undefined;
+    const threadStartResult = new Promise<{
+      thread: { id: string; name: string; status: { type: string } };
+    }>((resolve) => {
+      resolveThreadStart = resolve;
+    });
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/start") {
+          return threadStartResult;
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <PublicFirstMessageStartProbe />
+        <ActiveThreadStateProbe />
+      </AgentProvider>,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: "Public first message" }), "public start");
+    await user.click(screen.getByRole("button", { name: "Public start with input" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("active thread id")).toHaveTextContent(
+        /^pending-thread-/,
+      ),
+    );
+    const pendingUserMessageId =
+      screen.getByLabelText("active item id").textContent ?? "";
+    expect(screen.getByLabelText("active item text")).toHaveTextContent("public start");
+    expect(screen.getByLabelText("active item status")).toHaveTextContent("inProgress");
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+
+    resolveThreadStart?.({
+      thread: {
+        id: "thread-public-start",
+        name: "Public thread",
+        status: { type: "idle" },
+      },
+    });
+
+    await waitFor(() =>
+      expect(
+        transport.requests.find((request) => request.method === "turn/start")?.params,
+      ).toMatchObject({
+        clientUserMessageId: pendingUserMessageId,
+        threadId: "thread-public-start",
+      }),
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText("public start result")).toHaveTextContent(
+        "thread-public-start",
+      ),
+    );
+    expect(screen.getByLabelText("active thread id")).toHaveTextContent(
+      "thread-public-start",
+    );
+    expect(screen.getByLabelText("public start error")).toHaveTextContent("none");
+  });
+
   it("starts new threads with selected model and working directory", async () => {
     const user = userEvent.setup();
     let resolveThreadStart:
@@ -6831,6 +6950,9 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("thread title")).toHaveTextContent("Canonical resumed thread");
     expect(screen.getByLabelText("initial page item")).toHaveTextContent(
       "initial resume page item",
+    );
+    expect(screen.getByLabelText("resume result")).toHaveTextContent(
+      "thread-canonical:requested-thread-path",
     );
     expect(
       transport.requests.find((request) => request.method === "thread/resume")?.params,
@@ -7967,6 +8089,9 @@ describe("AgentChat", () => {
     );
     expect(screen.getByLabelText("resume threads")).not.toHaveTextContent(
       "Requested stored thread",
+    );
+    expect(screen.getByLabelText("resume resume result")).toHaveTextContent(
+      "thread-canonical-resume:thread-requested",
     );
     expect(
       transport.requests.find((request) => request.method === "thread/resume")?.params,

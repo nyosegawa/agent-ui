@@ -49,7 +49,11 @@ function HeadlessThreadView() {
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            void composer.submit();
+            if (activeThreadId) {
+              void composer.submit();
+            } else {
+              void composer.startThreadWithInput(composer.value);
+            }
           }}
         >
           <input

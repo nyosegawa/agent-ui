@@ -47,36 +47,36 @@
 
 ## 2. React Thread Lifecycle API
 
-- [ ] Design the public result type for safe thread start with first turn.
-  - [ ] Include the id hosts should persist.
-  - [ ] Do not return raw `ThreadStartResponse` or `TurnStartResponse`.
-  - [ ] Do not expose internal optimistic operation ids unless they are
+- [x] Design the public result type for safe thread start with first turn.
+  - [x] Include the id hosts should persist.
+  - [x] Do not return raw `ThreadStartResponse` or `TurnStartResponse`.
+  - [x] Do not expose internal optimistic operation ids unless they are
         converted into a stable public view-model concept.
-- [ ] Design the public resume result type.
-  - [ ] Include `threadId` as the canonical/resolved id.
-  - [ ] Include `requestedThreadId` when useful for host diagnostics.
-  - [ ] Avoid publishing alias maps or reducer reconciliation internals.
-- [ ] Refactor the current internal first-message path in
+- [x] Design the public resume result type.
+  - [x] Include `threadId` as the canonical/resolved id.
+  - [x] Include `requestedThreadId` when useful for host diagnostics.
+  - [x] Avoid publishing alias maps or reducer reconciliation internals.
+- [x] Refactor the current internal first-message path in
       `packages/react/src/hooks/composer.ts` so public headless hosts can use the
       same safe behavior as `AgentChat`.
-- [ ] Preserve current `AgentChat` first-run behavior.
-- [ ] Update `packages/react/src/hooks/thread.ts` and related exports with the
+- [x] Preserve current `AgentChat` first-run behavior.
+- [x] Update `packages/react/src/hooks/thread.ts` and related exports with the
       selected public API.
-- [ ] Update `packages/react/src/hooks/thread-list.ts` if scoped list resume
+- [x] Update `packages/react/src/hooks/thread-list.ts` if scoped list resume
       results should expose the same resolved-id semantics.
-- [ ] Update examples using headless hooks so they no longer teach unsafe
+- [x] Update examples using headless hooks so they no longer teach unsafe
       `startThread()` then `startTurn()` sequencing.
-- [ ] Add focused React tests proving:
-  - [ ] a first user message appears immediately while `thread/start` is
+- [x] Add focused React tests proving:
+  - [x] a first user message appears immediately while `thread/start` is
         pending
-  - [ ] `turn/start` uses the canonical/resolved thread id after thread start
-  - [ ] start failure leaves a stable public failed-message state
-  - [ ] retry/cancel remain raw-free
-  - [ ] `resumeThread()` returns the id hosts should persist
-  - [ ] direct URL and scoped-list resume still reconcile aliases correctly
-- [ ] Preserve core reducer tests for optimistic thread reconciliation,
+  - [x] `turn/start` uses the canonical/resolved thread id after thread start
+  - [x] start failure leaves a stable public failed-message state
+  - [x] retry/cancel remain raw-free
+  - [x] `resumeThread()` returns the id hosts should persist
+  - [x] direct URL and scoped-list resume still reconcile aliases correctly
+- [x] Preserve core reducer tests for optimistic thread reconciliation,
       stale turn/item event canonicalization, and pending server request migration.
-- [ ] Update API snapshots and package-resolution tests.
+- [x] Update API snapshots and package-resolution tests.
 
 ## 3. Server Bridge Resolver And Local Desktop Admission
 

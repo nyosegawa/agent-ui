@@ -114,8 +114,14 @@ turn controller. `useAgentComposer()` remains a public alias for the same
 raw-free controller view. The public view exposes `value`, `setValue`,
 `canSubmit`, `submitMode`, `disabledReason`, `isSubmitting`, `isInterrupting`,
 `activeTurnId`, queued follow-ups, failed first-message pending messages, and
-retry/cancel actions for those failed pending messages. It does not expose the
-internal operation map or raw generated protocol payloads. Idle threads submit
+retry/cancel actions for those failed pending messages. It also exposes
+`startThreadWithInput(input)` for headless hosts that need the same safe
+first-message behavior as `AgentChat`: the first user message appears
+immediately, `thread/start` uses the current run settings, `turn/start` waits
+for the canonical thread id returned by `thread/start`, and the returned
+`{ threadId }` is the id hosts should persist. It does not expose the internal
+operation map, raw `ThreadStartResponse`, raw `TurnStartResponse`, or reducer
+reconciliation records. Idle threads submit
 `turn/start`. Running threads keep the textarea editable: Enter adds to
 `queuedFollowUps`, Cmd/Ctrl+Enter calls `turn/steer` immediately, and
 `sendQueuedFollowUp(id)` calls `turn/steer` for that item with its stored
@@ -132,12 +138,9 @@ constraints are applied. The default `AgentComposerPanel` still blocks
 submission for approval-waiting threads and stored read-only previews.
 The source-level first-message start helper is not public package API; hosts
 start empty threads with `useAgentThreadController().startThread()` or submit
-through the public composer controller. Headless hosts that need to start a
-thread and send the first user input should use the documented public
-first-message lifecycle action once exported, because it shares the same
-canonical-id reconciliation and optimistic pending-message behavior as
-`AgentChat`. Do not sequence a raw `thread/start` result into
-`turn/start` through stale render state.
+the first message through `useAgentComposerController().startThreadWithInput()`.
+Do not sequence a raw `thread/start` result into `turn/start` through stale
+render state.
 
 `useAgentRunSettings()` exposes execution modes, available models, supported
 efforts, cwd, current selections, and setters. Execution modes map to React-owned

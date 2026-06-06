@@ -9,6 +9,7 @@ import { useAgentContext } from "../provider";
 import { codexTurnStartOptions, type ThreadStartOptions } from "../request-options";
 import { useCodexSession } from "./codex-session";
 import { AGENT_EXECUTION_MODES } from "./run-settings";
+import type { AgentThreadStartWithInputResult } from "./thread-lifecycle-types";
 import { codexReasoningEffort } from "./turn-input";
 
 export interface FirstMessageOperationIds {
@@ -43,7 +44,7 @@ export function useFirstMessageOperationController(
   startWithMessage: (
     input: string | AgentUserInput[],
     params?: ThreadStartOptions,
-  ) => Promise<unknown>,
+  ) => Promise<AgentThreadStartWithInputResult>,
 ) {
   const { dispatch, state } = useAgentContext();
   const codex = useCodexSession();

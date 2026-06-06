@@ -172,9 +172,10 @@ Do not call source-level first-message helpers from host code. Start empty
 threads through `useAgentThreadController().startThread()` or submit the first
 message through `useAgentComposerController()`. The public composer controller
 owns pending first-message retry/cancel state without exposing operation maps.
-When using headless hooks, prefer the public first-message lifecycle action once
-available so the first user message appears immediately and `turn/start` uses
-the canonical thread id after `thread/start` reconciliation.
+When using headless hooks, call
+`useAgentComposerController().startThreadWithInput(input)` for the first user
+message so it appears immediately and `turn/start` uses the canonical thread id
+after `thread/start` reconciliation.
 
 ## Drawer And Overlay Layers
 

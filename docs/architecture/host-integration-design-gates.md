@@ -31,10 +31,10 @@ to documented public API.
   queued follow-ups, and stable failed-message state.
 - Host responsibility intentionally not handled: custom persistence of failed
   drafts, product workflow routing after submit, and long-term retry policy.
-- Current proof before public promotion: `examples/codex-local-web` first-run
-  local thread start through the bridge. The headless hook recipe must be
-  updated in the implementation phase before it can prove the public
-  first-message lifecycle action.
+- Examples that prove the design: `examples/codex-local-web` first-run local
+  thread start through the bridge and `examples/recipes/src/headless-hooks.tsx`
+  using `startThreadWithInput()` instead of sequencing raw `thread/start` then
+  `turn/start` calls.
 - Tests that protect the contract: composer/controller unit tests for immediate
   pending state, canonical-id turn start, reconciliation, rollback, retry,
   duplicate prevention, raw-free failed-message controls, resume result
@@ -57,10 +57,9 @@ to documented public API.
   URL routing, localStorage/session storage, workspace/project mapping,
   tenant/session identity, and product workflow transitions after start or
   resume.
-- Examples required before promotion: `examples/recipes/src/headless-hooks.tsx`
-  using the public first-message lifecycle action, the default `AgentChat`
-  first-run path, and the scoped-list/direct-URL resume fixtures in
-  `examples/local-react-vite`.
+- Examples that prove the design: `examples/recipes/src/headless-hooks.tsx`
+  using `startThreadWithInput()`, the default `AgentChat` first-run path, and
+  the scoped-list/direct-URL resume fixtures in `examples/local-react-vite`.
 - Tests that protect the contract: React lifecycle tests for immediate first
   user message rendering while `thread/start` is pending, `turn/start` using
   the canonical thread id after start reconciliation, stable failed-message
