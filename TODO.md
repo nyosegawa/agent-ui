@@ -158,9 +158,9 @@
 - [x] Cover scoped thread history loading.
 - [x] Cover host-gated workflow composition without adding Watcher-specific
       semantics to Agent UI core.
-- [ ] Add Playwright tests for layout, stacking, hit testing, focus, scroll, and
+- [x] Add Playwright tests for layout, stacking, hit testing, focus, scroll, and
       mobile overflow.
-- [ ] Update `docs/examples/local-react-vite.md`, `docs/getting-started.md`, and
+- [x] Update `docs/examples/local-react-vite.md`, `docs/getting-started.md`, and
       `docs/architecture/testing.md` for the new/extended route.
 
 ## 6. Local Media Guidance Alignment
