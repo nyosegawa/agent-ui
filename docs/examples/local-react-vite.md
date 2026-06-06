@@ -48,7 +48,9 @@ Routes:
   `?firstMessage=optimistic` to start from an empty host shell with delayed
   first-message reconciliation. The side panel also includes a scoped thread
   history loader that refreshes, paginates, and previews stored sessions through
-  `useAgentThreadListController`.
+  `useAgentThreadListController`, plus a host-owned workflow gate that toggles
+  host actions without taking over Agent UI transcript, composer, approval, or
+  history behavior.
 - `/composer-retry`: failed optimistic first-message retry through the public
   composer controller.
 - `/transcript-density`: compact transcript route with verbose command/file

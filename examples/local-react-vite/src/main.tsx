@@ -844,6 +844,7 @@ function HostWorkflowComposition({
   );
   const [latestAttachment, setLatestAttachment] =
     useState<HostAttachmentMetadata | null>(null);
+  const [workflowGateOpen, setWorkflowGateOpen] = useState(false);
   const resolveHostLocalMediaUrl = useCallback((path: string): AgentResolvedResource => {
     const resource = hostTranscriptMediaResources.find((candidate) => candidate.path === path);
     return (
@@ -943,6 +944,10 @@ function HostWorkflowComposition({
               <AgentUsageSummary />
             </div>
             <HostWorkflowPanel latestAttachment={latestAttachment} />
+            <HostWorkflowGatePanel
+              open={workflowGateOpen}
+              onOpenChange={setWorkflowGateOpen}
+            />
             <HostScopedHistoryPanel />
             {firstMessageControls ? (
               <HostFirstMessagePanel
@@ -1201,6 +1206,63 @@ function HostScopedPreview({ threadId }: { threadId: string }) {
         <AgentMessageList thread={thread} />
       </AgentThreadSurface>
     </div>
+  );
+}
+
+function HostWorkflowGatePanel({
+  onOpenChange,
+  open,
+}: {
+  onOpenChange: (open: boolean) => void;
+  open: boolean;
+}) {
+  const { thread } = useAgentThread();
+  const { approvals } = useAgentApprovals(thread?.thread.id);
+  const blocked = !open;
+  return (
+    <section className="aui-host-block" aria-label="Host workflow gate">
+      <header className="aui-host-block-header">
+        <strong>Workflow gate</strong>
+        <small>{blocked ? "held" : "open"}</small>
+      </header>
+      <div className="aui-host-block-body">
+        <dl className="aui-host-stat-row" aria-label="Host workflow gate status">
+          <div>
+            <dt>Gate</dt>
+            <dd>{open ? "open" : "held"}</dd>
+          </div>
+          <div>
+            <dt>Requests</dt>
+            <dd>{approvals.length}</dd>
+          </div>
+        </dl>
+        <p className="aui-host-empty">
+          The host owns this release gate. Agent UI still owns the transcript,
+          composer, approvals, and thread history surfaces.
+        </p>
+      </div>
+      <div className="aui-host-block-actions">
+        <span>
+          {blocked
+            ? "Host action held until the gate opens."
+            : "Host action can continue outside Agent UI."}
+        </span>
+        <button
+          className="aui-host-action"
+          onClick={() => onOpenChange(!open)}
+          type="button"
+        >
+          {open ? "Hold workflow gate" : "Open workflow gate"}
+        </button>
+        <button
+          className="aui-host-action"
+          disabled={blocked}
+          type="button"
+        >
+          Continue host workflow
+        </button>
+      </div>
+    </section>
   );
 }
 

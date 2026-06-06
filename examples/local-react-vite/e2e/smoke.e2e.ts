@@ -395,6 +395,32 @@ test("host workflow reference loads scoped thread history without changing activ
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
 });
 
+test("host workflow reference gates host actions without taking over Agent UI", async ({
+  page,
+}) => {
+  await page.goto("/host-workflow-recipe");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  const gate = page.getByRole("region", { name: "Host workflow gate" });
+  const status = gate.getByLabel("Host workflow gate status");
+  const continueAction = gate.getByRole("button", { name: "Continue host workflow" });
+
+  await expect(status).toContainText("Gateheld");
+  await expect(status).toContainText("Requests1");
+  await expect(continueAction).toBeDisabled();
+  await expect(page.getByRole("textbox", { name: "Message" })).toBeVisible();
+  await expect(page.getByLabel("Host-owned panel")).toContainText("commandApproval");
+
+  await gate.getByRole("button", { name: "Open workflow gate" }).click();
+  await expect(status).toContainText("Gateopen");
+  await expect(continueAction).toBeEnabled();
+  await expect(page.getByLabel("Host-owned panel")).toContainText("commandApproval");
+
+  await gate.getByRole("button", { name: "Hold workflow gate" }).click();
+  await expect(status).toContainText("Gateheld");
+  await expect(continueAction).toBeDisabled();
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+});
+
 test("host workflow reference layers a host sheet above the mobile drawer", async ({
   page,
 }) => {
