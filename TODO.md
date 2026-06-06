@@ -7,7 +7,9 @@
       API, bridge behavior, examples, or skills.
 - [x] Keep all implementation changes outside `third_party/codex`.
 - [x] Do not hand-edit generated schema or package `dist` output.
-- [x] Add or update a changeset when public package behavior changes.
+- [x] Add or update a changeset when public package behavior changes. No
+      changeset is needed for the docs-only contract baseline; revisit this on
+      the first public package behavior change.
 
 ## 1. Contract Documentation First
 

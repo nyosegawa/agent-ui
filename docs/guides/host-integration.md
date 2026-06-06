@@ -99,9 +99,11 @@ Do not use `createAgentUiNextRpcRoute()` for chat. It is a one-shot HTTP RPC
 helper for one allowlisted method per request.
 
 For local desktop or sidecar hosts, resolve per-connection bridge options on
-the server before Codex App Server is spawned:
+the server before Codex App Server is spawned. The selected future resolver
+shape is:
 
 ```ts
+// Planned API shape; not exported until the resolver implementation lands.
 attachAgentUiWebSocketBridge({
   server,
   path: "/agent-ui/ws",
@@ -120,6 +122,10 @@ attachAgentUiWebSocketBridge({
   },
 });
 ```
+
+Until that resolver is exported, keep per-connection workspace/session decisions
+around `handleAgentUiWebSocketConnection()` or a host-owned route wrapper, and
+pass Agent UI only the already validated bridge options.
 
 Bind local desktop bridges to loopback by default. Treat `Origin` as a signal,
 not authentication. Use a sidecar/session token or host callback when needed,
@@ -176,10 +182,10 @@ the canonical thread id after `thread/start` reconciliation.
 Escape, and thread selection close the drawer; focus returns to the `Threads`
 trigger; background chat controls are inert or equivalently non-interactive
 while the drawer is open; drawer search and selection stay reachable. Hosts
-should place their own sheets and modals relative to the public layer tokens
+should place their own sheets and modals relative to the planned layer tokens
 `--aui-z-backdrop`, `--aui-z-drawer`, `--aui-z-popover`, `--aui-z-sheet`,
-`--aui-z-dialog`, and `--aui-z-toast` instead of styling private `.aui-*`
-selectors.
+`--aui-z-dialog`, and `--aui-z-toast` once those tokens are implemented,
+instead of styling private `.aui-*` selectors.
 
 ## Host-Gated Workflows
 
