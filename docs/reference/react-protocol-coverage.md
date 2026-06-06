@@ -31,12 +31,6 @@ Evidence policy:
 - Keep evidence specific to source files or `packages/react/src`; the registry
   file itself is excluded from source scans.
 
-Current notable client-only decisions:
-
-- `account/usage/read`: hosts can build account usage-history panels from the
-  stable Codex client response, but default React UI only renders current
-  rate-limit windows through `account/rateLimits/read`.
-- `thread/inject_items`: the Codex client supports item injection, but default
-  React UI does not provide an injection workflow.
-- `thread/unsubscribe`: the Codex client supports unsubscribe, but default React
-  UI does not expose a subscription workflow.
+Do not duplicate the current per-method table in docs. Review the registry for
+the live list of `client-only` and `no-default-ui` decisions so upstream syncs,
+React UI additions, and React UI removals have one maintained source of truth.
