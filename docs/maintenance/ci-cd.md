@@ -47,7 +47,7 @@ classification, bridge policy, or browser-visible contracts should still run
 the focused local validations named in [Testing](../architecture/testing.md)
 before review, even when hosted CI treats the PR as docs-only.
 
-The `Compatibility` workflow covers Node 20, 22, and 24 smoke checks plus pnpm
+The `Compatibility` workflow covers Node 22 and 24 smoke checks plus pnpm
 workspace smoke for package and toolchain compatibility-sensitive changes.
 Docs-only and unrelated non-package surfaces skip it.
 

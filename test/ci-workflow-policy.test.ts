@@ -48,7 +48,7 @@ describe("CI workflow policy", () => {
     expect(ci).toMatch(/name: API snapshots[\s\S]+bun run build[\s\S]+bun run test:api-snapshots/);
     expect(ci).toContain("bun run test:package-resolution");
     expect(ci).toContain("bun run test:e2e:fixtures");
-    expect(ci).toContain("actions/upload-artifact@v4");
+    expect(ci).toContain("actions/upload-artifact@v7");
   });
 
   it("keeps release publishing tied to reviewed single release PR merges", () => {
@@ -85,7 +85,7 @@ describe("CI workflow policy", () => {
     expect(packageValidation).not.toContain("branches: [main]");
     expect(packageValidation).toContain("permissions:\n  contents: read");
     expect(packageValidation).toContain("bun run validate:packages");
-    expect(packageValidation).toContain("actions/upload-artifact@v4");
+    expect(packageValidation).toContain("actions/upload-artifact@v7");
   });
 
   it("keeps compatibility checks path-filtered and read-only", () => {
