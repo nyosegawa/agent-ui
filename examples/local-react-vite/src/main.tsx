@@ -33,7 +33,7 @@ import {
   useAgentUsage,
 } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import "./styles/closeups.css";
 import "./styles/fixture-gallery.css";
@@ -697,7 +697,7 @@ function HostWorkflowComposition() {
               {turnCount} turn{turnCount === 1 ? "" : "s"} · status {thread.status}
             </span>
             <button
-              className="aui-btn aui-btn-secondary aui-btn-sm"
+              className="aui-host-action"
               onClick={() => setHostSheetOpen(true)}
               type="button"
             >
@@ -743,18 +743,49 @@ function HostReviewSheet({
   onClose: () => void;
   threadName: string;
 }) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const sheetRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const focusCloseButton = () => closeButtonRef.current?.focus();
+    focusCloseButton();
+    const handleFocusIn = (event: FocusEvent) => {
+      if (
+        event.target instanceof Node &&
+        sheetRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+      window.requestAnimationFrame(focusCloseButton);
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      event.stopPropagation();
+      onClose();
+    };
+    document.addEventListener("focusin", handleFocusIn);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("focusin", handleFocusIn);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
   return (
     <section
       aria-label="Host-owned review sheet"
+      aria-modal="true"
       className="aui-host-review-sheet"
+      ref={sheetRef}
       role="dialog"
     >
       <header>
         <strong>Host-owned review</strong>
         <button
           aria-label="Close host review"
-          className="aui-btn aui-btn-ghost aui-btn-sm"
+          className="aui-host-action"
+          data-variant="ghost"
           onClick={onClose}
+          ref={closeButtonRef}
           type="button"
         >
           Close

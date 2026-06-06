@@ -270,6 +270,7 @@ test("renders primitive composition examples", async ({ page }) => {
   await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toContainText(
     "var(--aui-z-sheet)",
   );
+  await expect(closeHostReviewHasFocus(page)).resolves.toBe(true);
   await page.getByRole("button", { name: "Close host review" }).click();
   await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toHaveCount(0);
   await expect(
@@ -285,17 +286,21 @@ test("host workflow reference layers a host sheet above the mobile drawer", asyn
   await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toBeVisible();
+  await expect(closeHostReviewHasFocus(page)).resolves.toBe(true);
   await expect(page.getByRole("button", { name: "Open thread history" })).toBeVisible();
 
   await page.getByRole("button", { name: "Open thread history" }).click();
   await expect(page.locator(".aui-sidebar")).toBeVisible();
   await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toBeVisible();
   await expect(hostSheetIsAboveDrawer(page)).resolves.toBe(true);
+  await expect(closeHostReviewHasFocus(page)).resolves.toBe(true);
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
 
   await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toHaveCount(0);
+  await expect(page.locator(".aui-sidebar")).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.locator(".aui-sidebar")).toHaveCount(0);
-  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toBeVisible();
 });
 
 async function hostSheetIsAboveDrawer(page: Page) {
@@ -307,6 +312,12 @@ async function hostSheetIsAboveDrawer(page: Page) {
     );
     return Boolean(hit?.closest(".aui-host-review-sheet"));
   });
+}
+
+async function closeHostReviewHasFocus(page: Page) {
+  return page
+    .getByRole("button", { name: "Close host review" })
+    .evaluate((button) => button.ownerDocument.activeElement === button);
 }
 
 test("mobile keeps secondary chrome reachable", async ({ page }) => {

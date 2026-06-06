@@ -71,7 +71,46 @@
   font-size: var(--aui-font-size-sm);
 }
 
-.aui-host-recipe-meta .aui-btn {
+.aui-host-action {
+  align-items: center;
+  background: var(--aui-primary);
+  border: 1px solid var(--aui-border-strong);
+  border-radius: var(--aui-radius-sm);
+  color: var(--aui-primary-fg);
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-size: var(--aui-font-size-sm);
+  font-weight: 650;
+  gap: var(--aui-space-150);
+  justify-content: center;
+  line-height: 1;
+  min-height: var(--aui-control-height-sm);
+  padding: 0 var(--aui-space-250);
+}
+
+.aui-host-action:hover {
+  background: var(--aui-primary-strong);
+}
+
+.aui-host-action:focus-visible {
+  box-shadow: var(--aui-shadow-focus);
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.aui-host-action[data-variant="ghost"] {
+  background: transparent;
+  border-color: transparent;
+  color: var(--aui-fg-muted);
+}
+
+.aui-host-action[data-variant="ghost"]:hover {
+  background: var(--aui-panel-alt);
+  color: var(--aui-fg);
+}
+
+.aui-host-recipe-meta .aui-host-action {
   margin-top: var(--aui-space-150);
 }
 
@@ -318,7 +357,7 @@
     justify-items: start;
   }
 
-  .aui-host-recipe-meta .aui-btn {
+  .aui-host-recipe-meta .aui-host-action {
     justify-self: start;
   }
 
