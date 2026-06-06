@@ -36,7 +36,7 @@ built and inspected in order.
   dependencies so workspace installers link locally and packed packages resolve
   to the released semver range.
 - Changesets keeps all public Agent UI packages fixed-versioned together, so a
-  version PR aligns package versions and internal `workspace:^<version>` ranges.
+  release PR aligns package versions and internal `workspace:^<version>` ranges.
 - Release workflow runs `bun run release:publish`, which builds package output
   and normalizes npm registry manifests before invoking Changesets publish so
   packages include `dist` and do not keep `workspace:` dependency ranges.
@@ -53,13 +53,14 @@ built and inspected in order.
 
 Use `.agents/skills/npm-release/` for the release flow.
 
-1. Run the `Release` GitHub Actions workflow in `prepare` mode when changesets
-   should become a version PR.
-2. Review and merge the version PR after required checks pass.
-3. Merge the reviewed version PR. The `Release` workflow runs on the resulting
-   `main` push, detects unpublished public package versions, validates, and
-   publishes automatically.
-4. Confirm the workflow completed validation, publish, GitHub Release creation,
+1. Create a release branch from the latest `main`.
+2. Ensure package-facing changes have changesets, then run
+   `bunx changeset version` locally.
+3. Open one release PR whose title includes the target version.
+4. Review and merge the release PR after required checks pass. The `Release`
+   workflow runs on the resulting `main` push, detects unpublished public
+   package versions, validates, and publishes automatically.
+5. Confirm the workflow completed validation, publish, GitHub Release creation,
    and post-publish smoke for the intended commit and package versions.
 
 ## Post-Publish

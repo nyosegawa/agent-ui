@@ -76,13 +76,14 @@ If package exports or declaration output become hard to maintain, evaluate
 ## Release Automation
 
 Changesets configuration lives in `.changeset/config.json`. Use the manually
-dispatched `Release` workflow in `prepare` mode to validate the repo and create
-or update a Changesets version PR. After that reviewed version PR is merged, the
+created release PR flow from `.agents/skills/npm-release/`: create a release
+branch, run `bunx changeset version` locally, and open one release PR whose
+title includes the target version. After that reviewed release PR is merged, the
 trusted `main` push release path validates again and publishes only public
 package versions that are not already on npm. Publishing requires `NPM_TOKEN` as
 a repository secret for trusted `main` push workflows. `CHANGESETS_GITHUB_TOKEN`
-is optional when a stronger token is needed for version PR maintenance or
-GitHub Release creation; otherwise the workflow uses the default `GITHUB_TOKEN`.
+is optional when a stronger token is needed for GitHub Release creation;
+otherwise the workflow uses the default `GITHUB_TOKEN`.
 
 The publish job grants `id-token: write` and sets `NPM_CONFIG_PROVENANCE=true`
 so npm provenance can be attached when the registry and token support it.

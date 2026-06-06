@@ -12,8 +12,8 @@ Normal development is PR based:
 2. Let path-filtered CI run the relevant checks.
 3. Review the PR and required checks.
 4. Merge to `main`.
-5. Treat ordinary `main` pushes as integrated code. A reviewed Changesets
-   version PR merge is the release trigger because it changes package versions.
+5. Treat ordinary `main` pushes as integrated code. A reviewed release PR merge
+   is the release trigger because it changes package versions.
 
 For contributor-facing branch, changeset, validation, and PR template guidance,
 see [Contributing](../../CONTRIBUTING.md).
@@ -56,18 +56,18 @@ duplicating every PR run.
 
 ## Release Flow
 
-npm publishing is driven by reviewed Changesets version PRs. Use
+npm publishing is driven by one reviewed release PR. Use
 `.agents/skills/npm-release/` for the standard release procedure:
 
 1. Confirm a release is needed.
 2. Ensure changesets exist for package consumer changes.
-3. Run the `Release` workflow in `prepare` mode to create or update the
-   Changesets version PR.
-4. Review and merge the version PR after required checks pass.
-5. Merge the reviewed version PR. The `Release` workflow runs on the resulting
-   `main` push, checks local package versions against npm, and publishes only
-   unpublished package versions after release validation passes.
-6. Verify the published packages with registry and clean consumer smoke.
+3. Create a release branch and run `bunx changeset version` locally.
+4. Open one release PR whose title includes the target version.
+5. Review and merge the release PR after required checks pass.
+6. The `Release` workflow runs on the resulting `main` push, checks local
+   package versions against npm, and publishes only unpublished package versions
+   after release validation passes.
+7. Verify the published packages with registry and clean consumer smoke.
 
 The publish job is the only job with npm provenance permissions. Store
 `NPM_TOKEN` as a repository secret available only to trusted `main` push

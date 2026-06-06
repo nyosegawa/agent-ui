@@ -66,7 +66,8 @@ describe("repository development skills", () => {
     expect(browserQa).toContain("Screenshots alone are not enough");
     expect(browserQa).toMatch(/Playwright is the\s+deterministic CI gate/);
     expect(npmRelease).toContain("first public release is `0.1.0`");
-    expect(npmRelease).toContain("reviewed Changesets version PR merge");
+    expect(npmRelease).toContain("reviewed release PR merge");
+    expect(npmRelease).toContain("Release PR titles must include the target version");
     expect(npmRelease).toContain("automatic main-push publishing");
     expect(npmRelease).toContain("bunx changeset publish");
     expect(npmRelease).toMatch(/must not publish packages unless the user\s+explicitly asks/);

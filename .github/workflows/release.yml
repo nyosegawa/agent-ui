@@ -4,14 +4,6 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      mode:
-        description: "Create or update the Changesets version PR."
-        required: true
-        type: choice
-        options:
-          - prepare
 
 permissions:
   contents: read
@@ -48,10 +40,7 @@ jobs:
     if: >-
       always()
       && github.repository == 'nyosegawa/agent-ui'
-      && (
-        github.event_name == 'workflow_dispatch'
-        || needs.check-release.outputs.should_publish == 'true'
-      )
+      && needs.check-release.outputs.should_publish == 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v5
@@ -93,35 +82,6 @@ jobs:
             test-results/
           if-no-files-found: ignore
 
-  prepare-version-pr:
-    name: Prepare version PR
-    needs: validate-release
-    if: github.repository == 'nyosegawa/agent-ui' && github.event_name == 'workflow_dispatch' && inputs.mode == 'prepare'
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: write
-      pull-requests: write
-    steps:
-      - uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.13
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
-          restore-keys: ${{ runner.os }}-bun-
-      - run: bun install --frozen-lockfile
-      - uses: changesets/action@v1
-        with:
-          version: bunx changeset version
-          title: Release Agent UI packages
-          commit: Release Agent UI packages
-        env:
-          GITHUB_TOKEN: ${{ secrets.CHANGESETS_GITHUB_TOKEN || github.token }}
-
   publish:
     name: Publish npm packages
     needs: [check-release, validate-release]
@@ -133,7 +93,6 @@ jobs:
     permissions:
       contents: write
       id-token: write
-      pull-requests: write
     env:
       NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
     steps:
@@ -154,7 +113,7 @@ jobs:
         run: |
           set -euo pipefail
           if compgen -G ".changeset/*.md" > /dev/null; then
-            echo "Unversioned changesets remain. Merge a reviewed Changesets version PR before publishing." >&2
+            echo "Unversioned changesets remain. Merge a reviewed release PR with generated versions and changelogs before publishing." >&2
             exit 1
           fi
       - uses: changesets/action@v1

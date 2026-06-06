@@ -132,7 +132,7 @@ workspace TypeScript dependencies.
 
 The release workflow runs `bun run validate:release` and then
 `bun run validate:e2e`, so the real-local fake App Server suite is release
-evidence without blocking every pull request. On a reviewed version PR merge,
+evidence without blocking every pull request. On a reviewed release PR merge,
 the trusted `main` push path publishes only unpublished package versions after
 release validation. The publish job runs `bun run release:publish`, which
 performs its own package build before Changesets publishes immutable npm

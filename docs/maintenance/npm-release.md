@@ -9,15 +9,17 @@ Agent UI publishes public npm packages under the `@nyosegawa` organization:
 - `@nyosegawa/agent-ui-web-components`
 
 The first public release was `0.1.0`. Releases use Changesets for versioning and
-trusted `main` push automation for provenance-enabled publishing after reviewed
-version PRs merge.
+trusted `main` push automation for provenance-enabled publishing after one
+reviewed release PR merges.
 
 ## Versioning Policy
 
 Do not increment package versions on every `main` push. Add a changeset when a
-package-facing change should be released, then let the release workflow create a
-version PR. main push checks whether already-versioned packages are unpublished;
-only reviewed version PR merges should produce unpublished package versions.
+package-facing change should be released, then create a release branch and run
+`bunx changeset version` locally so one release PR contains package version
+bumps, changelogs, and aligned internal workspace ranges. main push checks
+whether already-versioned packages are unpublished; only reviewed release PR
+merges should produce unpublished package versions.
 
 Before `1.0`, use:
 
@@ -28,17 +30,23 @@ Before `1.0`, use:
 
 ## Release Workflow
 
-The `Release` GitHub Actions workflow has two paths.
+The `Release` GitHub Actions workflow publishes only from trusted `main`
+pushes. It does not create release PRs.
 
-Use `prepare` mode to:
+Create a release PR locally:
 
-1. Installs Bun with the pinned repository version.
-2. Installs Playwright browser dependencies.
-3. Runs `bun run validate:release`.
-4. Runs `bun run validate:e2e`.
-5. Creates or updates the `Release Agent UI packages` Changesets version PR.
+1. Create a release branch from the latest `main`.
+2. Ensure package-facing changes have changesets.
+3. Run `bunx changeset version`.
+4. Confirm `.changeset/*.md` files were consumed.
+5. Confirm package versions, changelogs, and internal
+   `workspace:^<version>` ranges.
+6. Open one release PR whose title includes the target version, for example
+   `Release Agent UI packages v0.4.1`.
+7. Run `bun run validate:release` and `bun run validate:e2e`.
+8. Review and merge that release PR after required checks pass.
 
-After the reviewed version PR has merged, the `main` push path:
+After the reviewed release PR has merged, the `main` push workflow:
 
 1. Runs `node scripts/check-release-targets.mjs` to compare local public package
    versions with npm.
@@ -60,8 +68,8 @@ the publish workflow does not run untrusted PR code. `NPM_TOKEN` must be an
 automation-capable token or otherwise able to publish without an OTP prompt; a
 token that requires interactive 2FA fails in GitHub Actions with `EOTP`.
 
-`CHANGESETS_GITHUB_TOKEN` is optional. If present, it can be used for version PR
-maintenance; otherwise the workflow falls back to GitHub Actions'
+`CHANGESETS_GITHUB_TOKEN` is optional. If present, it can be used for GitHub
+Release creation; otherwise the workflow falls back to GitHub Actions'
 `GITHUB_TOKEN`.
 
 ## Required Local Gates
@@ -97,7 +105,7 @@ Package output must continue to pass `publint`, `attw`, and the local packlist
 smoke. The packlist smoke checks npm's dry-run packlist and fails if a public
 package would publish without `dist` files.
 
-Public Agent UI packages are fixed-versioned together in Changesets. A version
+Public Agent UI packages are fixed-versioned together in Changesets. A release
 PR should align all public package versions and internal `workspace:^<version>`
 ranges so dependency-only packages do not drift to a patch version while their
 dependencies point at a minor version.
