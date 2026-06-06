@@ -644,13 +644,99 @@ function AppConnectorsExample() {
 }
 
 function HostWorkflowRecipe() {
-  const initialState = useMemo(() => createHostWorkflowInitialState(), []);
-  const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
+  const firstMessageMode =
+    new URLSearchParams(window.location.search).get("firstMessage") ===
+    "optimistic";
+  const [firstMessageStats, setFirstMessageStats] =
+    useState<HostFirstMessageStats>({
+      threadStartCalls: 0,
+      turnStartCalls: 0,
+    });
+  const firstMessageControls = useMemo(
+    () =>
+      firstMessageMode
+        ? createHostFirstMessageTransport(setFirstMessageStats)
+        : null,
+    [firstMessageMode],
+  );
+  const initialState = useMemo(
+    () =>
+      firstMessageMode
+        ? createFixtureInitialState("empty")
+        : createHostWorkflowInitialState(),
+    [firstMessageMode],
+  );
+  const fallbackTransport = useMemo(() => createFixtureTransport("rich-transcript"), []);
+  const transport = firstMessageControls?.transport ?? fallbackTransport;
   return (
     <AgentProvider initialState={initialState} transport={transport}>
-      <HostWorkflowComposition />
+      <HostWorkflowComposition
+        firstMessageControls={firstMessageControls}
+        firstMessageStats={firstMessageStats}
+      />
     </AgentProvider>
   );
+}
+
+interface HostFirstMessageStats {
+  threadStartCalls: number;
+  turnStartCalls: number;
+}
+
+interface HostFirstMessageControls {
+  completeThreadStart: () => void;
+  transport: FakeAgentTransport;
+}
+
+function createHostFirstMessageTransport(
+  onStatsChange: (stats: HostFirstMessageStats) => void,
+): HostFirstMessageControls {
+  let threadStartCalls = 0;
+  let turnStartCalls = 0;
+  let completeThreadStart:
+    | ((result: {
+        thread: { id: string; name: string; path: string; status: { type: string } };
+      }) => void)
+    | undefined;
+  const emitStats = () => {
+    onStatsChange({ threadStartCalls, turnStartCalls });
+  };
+  const transport = new FakeAgentTransport({
+    onRequest(request) {
+      if (request.method === "account/read") {
+        return { account: { email: "fixture@example.com", planType: "pro" } };
+      }
+      if (request.method === "model/list") return { data: fixtureModels() };
+      if (request.method === "account/rateLimits/read") return fixtureRateLimits();
+      if (request.method === "thread/list") return { data: [] };
+      if (request.method === "thread/start") {
+        threadStartCalls += 1;
+        emitStats();
+        return new Promise((resolve) => {
+          completeThreadStart = resolve;
+        });
+      }
+      if (request.method === "turn/start") {
+        turnStartCalls += 1;
+        emitStats();
+        return { turnId: `turn-host-first-message-${turnStartCalls}` };
+      }
+      return {};
+    },
+  });
+  return {
+    completeThreadStart: () => {
+      completeThreadStart?.({
+        thread: {
+          id: "thread-host-first-message",
+          name: "Host first message thread",
+          path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+          status: { type: "idle" },
+        },
+      });
+    },
+    transport,
+  };
 }
 
 interface HostAttachmentMetadata {
@@ -743,7 +829,13 @@ function TranscriptDensityExample() {
   );
 }
 
-function HostWorkflowComposition() {
+function HostWorkflowComposition({
+  firstMessageControls,
+  firstMessageStats,
+}: {
+  firstMessageControls: HostFirstMessageControls | null;
+  firstMessageStats: HostFirstMessageStats;
+}) {
   const bootstrap = useAgentBootstrap();
   const { thread } = useAgentThread();
   const [hostSheetOpen, setHostSheetOpen] = useState(() =>
@@ -796,8 +888,8 @@ function HostWorkflowComposition() {
     },
     [],
   );
-  if (!thread) return null;
-  const turnCount = thread.orderedTurnIds.length;
+  const turnCount = thread?.orderedTurnIds.length ?? 0;
+  const threadName = thread?.thread.name ?? thread?.thread.id ?? "No thread selected";
   return (
     <main className="aui-host-recipe">
       <div className="aui-host-recipe-shell">
@@ -813,10 +905,11 @@ function HostWorkflowComposition() {
           <div className="aui-host-recipe-meta">
             <span className="aui-host-recipe-meta-kicker">Selected thread</span>
             <span className="aui-host-recipe-meta-thread">
-              {thread.thread.name ?? thread.thread.id}
+              {threadName}
             </span>
             <span className="aui-host-recipe-meta-status">
-              {turnCount} turn{turnCount === 1 ? "" : "s"} · status {thread.status}
+              {turnCount} turn{turnCount === 1 ? "" : "s"} · status{" "}
+              {thread?.status ?? "idle"}
             </span>
             <button
               className="aui-host-action"
@@ -849,6 +942,12 @@ function HostWorkflowComposition() {
               <AgentUsageSummary />
             </div>
             <HostWorkflowPanel latestAttachment={latestAttachment} />
+            {firstMessageControls ? (
+              <HostFirstMessagePanel
+                controls={firstMessageControls}
+                stats={firstMessageStats}
+              />
+            ) : null}
             <AgentStatusDetails />
             <AgentDiagnosticsPanel bootstrap={bootstrap} />
           </aside>
@@ -856,7 +955,7 @@ function HostWorkflowComposition() {
       </div>
       {hostSheetOpen ? (
         <HostReviewSheet
-          threadName={thread.thread.name ?? thread.thread.id}
+          threadName={threadName}
           onClose={() => setHostSheetOpen(false)}
         />
       ) : null}
@@ -942,6 +1041,52 @@ function HostReviewSheet({
           <dd>var(--aui-z-sheet)</dd>
         </div>
       </dl>
+    </section>
+  );
+}
+
+function HostFirstMessagePanel({
+  controls,
+  stats,
+}: {
+  controls: HostFirstMessageControls;
+  stats: HostFirstMessageStats;
+}) {
+  const { thread } = useAgentThread();
+  const pending = thread?.thread.ephemeral === true || thread?.thread.id.startsWith("pending-");
+  return (
+    <section className="aui-host-block" aria-label="Host first-message probe">
+      <header className="aui-host-block-header">
+        <strong>First-message state</strong>
+        <small>{pending ? "optimistic" : "stable"}</small>
+      </header>
+      <div className="aui-host-block-body">
+        <dl className="aui-host-stat-row" aria-label="Host first-message counters">
+          <div>
+            <dt>thread/start</dt>
+            <dd>{stats.threadStartCalls}</dd>
+          </div>
+          <div>
+            <dt>turn/start</dt>
+            <dd>{stats.turnStartCalls}</dd>
+          </div>
+        </dl>
+        <p className="aui-host-empty">
+          The host observes public thread state while Agent UI owns optimistic
+          first-message reconciliation.
+        </p>
+      </div>
+      <div className="aui-host-block-actions">
+        <span>{pending ? "Optimistic thread pending" : "Waiting for first message"}</span>
+        <button
+          className="aui-host-action"
+          disabled={stats.threadStartCalls === 0 || stats.turnStartCalls > 0}
+          onClick={controls.completeThreadStart}
+          type="button"
+        >
+          Complete host thread start
+        </button>
+      </div>
     </section>
   );
 }

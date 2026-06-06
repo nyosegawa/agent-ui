@@ -76,7 +76,8 @@ Useful routes:
 - `/fixture-gallery`: visual QA gallery and component close-ups
 - `/host-workflow-recipe`: host integration reference shell with embedded
   `AgentChat`, side panel, mobile drawer, local attachment metadata, transcript
-  local-media preview/fallback metadata, and host-owned review sheet
+  local-media preview/fallback metadata, first-message optimistic mode, and
+  host-owned review sheet
 - `/usage-only`: usage primitives without chat chrome
 - `/scoped-thread-pane`: fixed-thread composition
 - `/app-connectors`: Codex Apps/connectors metadata

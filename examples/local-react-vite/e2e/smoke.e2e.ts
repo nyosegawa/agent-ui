@@ -328,6 +328,41 @@ test("host workflow reference resolves transcript local media preview and fallba
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
 });
 
+test("host workflow reference preserves first-message optimistic rendering", async ({
+  page,
+}) => {
+  await page.goto("/host-workflow-recipe?firstMessage=optimistic");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  await expect(page.getByText("No thread selected")).toBeVisible();
+
+  const starter = page.getByRole("form", { name: "Start a Codex thread" });
+  await starter
+    .getByRole("textbox", { name: "Message" })
+    .fill("Host optimistic first message");
+  await starter.getByRole("button", { name: "Start thread" }).click();
+
+  await expect(
+    page.locator(".aui-message[data-kind='userMessage'][data-status='inProgress']"),
+  ).toContainText("Host optimistic first message");
+  await expect(page.getByLabel("Host first-message counters")).toContainText(
+    "thread/start1",
+  );
+  await expect(page.getByLabel("Host first-message counters")).toContainText(
+    "turn/start0",
+  );
+  await expect(page.getByText("Optimistic thread pending")).toBeVisible();
+
+  await page.getByRole("button", { name: "Complete host thread start" }).click();
+
+  await expect(
+    page.getByRole("heading", { name: "Host first message thread" }),
+  ).toBeVisible();
+  await expect(page.getByLabel("Host first-message counters")).toContainText(
+    "turn/start1",
+  );
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+});
+
 test("host workflow reference layers a host sheet above the mobile drawer", async ({
   page,
 }) => {

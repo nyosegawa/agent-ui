@@ -242,8 +242,8 @@ The fixture routes are:
 - `/fixture-gallery`: component close-ups plus full-route previews
 - `/host-workflow-recipe`: host integration reference shell with host header,
   embedded `AgentChat`, side panel, local attachment metadata, transcript
-  local-media preview/fallback metadata, mobile drawer, and host-owned review
-  sheet
+  local-media preview/fallback metadata, first-message optimistic mode, mobile
+  drawer, and host-owned review sheet
 - `/composer-retry`: failed first-message retry through the public composer
   controller
 - `/resource-resolution`: structured local-media resource rendering without
