@@ -1,5 +1,14 @@
 # @nyosegawa/agent-ui-react
 
+## 0.4.1
+
+### Patch Changes
+
+- ce121e6: Add public overlay layer tokens and tighten mobile thread drawer interaction behavior.
+- ce121e6: Add a raw-free first-message lifecycle action and canonical resume result metadata.
+  - @nyosegawa/agent-ui-core@0.4.1
+  - @nyosegawa/agent-ui-codex@0.4.1
+
 ## 0.4.0
 
 ### Patch Changes

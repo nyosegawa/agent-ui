@@ -1,5 +1,11 @@
 # @nyosegawa/agent-ui-codex
 
+## 0.4.1
+
+### Patch Changes
+
+- @nyosegawa/agent-ui-core@0.4.1
+
 ## 0.4.0
 
 ### Minor Changes
