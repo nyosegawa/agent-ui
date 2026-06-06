@@ -145,12 +145,12 @@
 
 ## 5. Host Integration Reference App
 
-- [ ] Decide whether to extend `/host-workflow-recipe` or add a new route.
-- [ ] Cover desktop host header plus `AgentChat`.
-- [ ] Cover desktop `AgentChat` plus host side panel.
-- [ ] Cover mobile host header plus `AgentChat`.
-- [ ] Cover mobile drawer open/close.
-- [ ] Cover mobile drawer plus a host-owned sheet/modal with documented layer
+- [x] Decide whether to extend `/host-workflow-recipe` or add a new route.
+- [x] Cover desktop host header plus `AgentChat`.
+- [x] Cover desktop `AgentChat` plus host side panel.
+- [x] Cover mobile host header plus `AgentChat`.
+- [x] Cover mobile drawer open/close.
+- [x] Cover mobile drawer plus a host-owned sheet/modal with documented layer
       order.
 - [ ] Cover local attachment upload with structured resource metadata.
 - [ ] Cover transcript local media preview and missing-media fallback.

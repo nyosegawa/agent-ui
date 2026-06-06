@@ -9,8 +9,6 @@ import {
 import {
   AgentAppsPanel,
   AgentChat,
-  AgentComposerPanel,
-  AgentCriticalNoticeList,
   AgentDiagnosticsPanel,
   AgentI18nProvider,
   AgentLocaleSelect,
@@ -21,7 +19,6 @@ import {
   AgentThemeToggle,
   AgentThreadHeader,
   AgentThreadSurface,
-  AgentThreadTimeline,
   AgentThreadView,
   AgentUsagePanel,
   AgentUsageSummary,
@@ -673,7 +670,10 @@ function TranscriptDensityExample() {
 
 function HostWorkflowComposition() {
   const bootstrap = useAgentBootstrap();
-  const { thread, threadId } = useAgentThread();
+  const { thread } = useAgentThread();
+  const [hostSheetOpen, setHostSheetOpen] = useState(() =>
+    new URLSearchParams(window.location.search).get("hostSheet") === "open",
+  );
   if (!thread) return null;
   const turnCount = thread.orderedTurnIds.length;
   return (
@@ -683,10 +683,9 @@ function HostWorkflowComposition() {
           <div>
             <h1>Verify Codex local build</h1>
             <p>
-              External host surface composed entirely from Agent UI primitives — no
-              AgentChat preset wrapping. The thread surface, status rail, usage panel,
-              and host workflow context are independent React regions, each placed by
-              the host into its own product chrome.
+              External host surface embedding the AgentChat preset into product
+              chrome. The host owns this header, review sheet, and workflow context;
+              Agent UI owns the thread timeline, composer, and history drawer.
             </p>
           </div>
           <div className="aui-host-recipe-meta">
@@ -697,19 +696,21 @@ function HostWorkflowComposition() {
             <span className="aui-host-recipe-meta-status">
               {turnCount} turn{turnCount === 1 ? "" : "s"} · status {thread.status}
             </span>
+            <button
+              className="aui-btn aui-btn-secondary aui-btn-sm"
+              onClick={() => setHostSheetOpen(true)}
+              type="button"
+            >
+              Open host review
+            </button>
           </div>
         </header>
         <section
           className="aui-host-composition"
-          aria-label="Host primitive composition"
+          aria-label="Host integration reference"
         >
           <div className="aui-host-thread">
-            <AgentThreadSurface>
-              <AgentThreadHeader thread={thread} threadId={threadId} />
-              <AgentCriticalNoticeList />
-              <AgentThreadTimeline thread={thread} threadId={threadId} />
-              <AgentComposerPanel thread={thread} threadId={threadId} />
-            </AgentThreadSurface>
+            <AgentChat sidebar usage={false} diagnostics={false} />
           </div>
           <aside
             className="aui-host-context"
@@ -725,7 +726,55 @@ function HostWorkflowComposition() {
           </aside>
         </section>
       </div>
+      {hostSheetOpen ? (
+        <HostReviewSheet
+          threadName={thread.thread.name ?? thread.thread.id}
+          onClose={() => setHostSheetOpen(false)}
+        />
+      ) : null}
     </main>
+  );
+}
+
+function HostReviewSheet({
+  onClose,
+  threadName,
+}: {
+  onClose: () => void;
+  threadName: string;
+}) {
+  return (
+    <section
+      aria-label="Host-owned review sheet"
+      className="aui-host-review-sheet"
+      role="dialog"
+    >
+      <header>
+        <strong>Host-owned review</strong>
+        <button
+          aria-label="Close host review"
+          className="aui-btn aui-btn-ghost aui-btn-sm"
+          onClick={onClose}
+          type="button"
+        >
+          Close
+        </button>
+      </header>
+      <p>
+        The host places this sheet above Agent UI drawers using public layer
+        tokens. Agent UI still owns the timeline, composer, and drawer behavior.
+      </p>
+      <dl>
+        <div>
+          <dt>Thread</dt>
+          <dd>{threadName}</dd>
+        </div>
+        <div>
+          <dt>Layer</dt>
+          <dd>var(--aui-z-sheet)</dd>
+        </div>
+      </dl>
+    </section>
   );
 }
 

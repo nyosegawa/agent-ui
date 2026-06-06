@@ -12,5 +12,5 @@ bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 ```
 
 Useful routes include `/`, `/rich-transcript`, `/fixture-gallery`,
-`/host-workflow-recipe`, `/usage-only`, `/scoped-thread-pane`, and
-`/app-connectors`.
+`/host-workflow-recipe` for the host integration reference shell,
+`/usage-only`, `/scoped-thread-pane`, and `/app-connectors`.

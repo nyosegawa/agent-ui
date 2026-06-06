@@ -257,17 +257,57 @@ test("renders primitive composition examples", async ({ page }) => {
   await expect(page.getByText("Drive")).toBeVisible();
 
   await page.goto("/host-workflow-recipe");
-  await expect(page.getByLabel("Host primitive composition")).toBeVisible();
+  await expect(page.getByLabel("Host integration reference")).toBeVisible();
   await expect(page.getByLabel("Host workflow context")).toContainText(
     "Host workflow context",
   );
   await expect(page.getByLabel("Host-owned panel")).toContainText("Validation status");
   await expect(page.getByLabel("Host-owned panel")).toContainText("Pending requests");
   await expect(page.getByLabel("Host-owned panel")).toContainText("Usage windows");
+  await expect(page.getByTestId("agent-chat")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open host review" })).toBeVisible();
+  await page.getByRole("button", { name: "Open host review" }).click();
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toContainText(
+    "var(--aui-z-sheet)",
+  );
+  await page.getByRole("button", { name: "Close host review" }).click();
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Rich transcript fixture" }),
   ).toBeVisible();
 });
+
+test("host workflow reference layers a host sheet above the mobile drawer", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.goto("/host-workflow-recipe?hostSheet=open");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  await expect(page.getByTestId("agent-chat")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Open thread history" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Open thread history" }).click();
+  await expect(page.locator(".aui-sidebar")).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toBeVisible();
+  await expect(hostSheetIsAboveDrawer(page)).resolves.toBe(true);
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+
+  await page.keyboard.press("Escape");
+  await expect(page.locator(".aui-sidebar")).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toBeVisible();
+});
+
+async function hostSheetIsAboveDrawer(page: Page) {
+  return page.getByRole("dialog", { name: "Host-owned review sheet" }).evaluate((sheet) => {
+    const rect = sheet.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+    );
+    return Boolean(hit?.closest(".aui-host-review-sheet"));
+  });
+}
 
 test("mobile keeps secondary chrome reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
@@ -297,7 +337,7 @@ test("fixture gallery previews load meaningful content", async ({ page }) => {
     richTranscriptFrame.getByRole("heading", { name: "Rich transcript fixture" }),
   ).toBeVisible();
   const hostFrame = page.frameLocator('iframe[title="Host workflow recipe desktop"]');
-  await expect(hostFrame.getByLabel("Host primitive composition")).toBeVisible();
+  await expect(hostFrame.getByLabel("Host integration reference")).toBeVisible();
   const reloadButtons = await page
     .getByRole("button", { name: "Reload preview" })
     .count();

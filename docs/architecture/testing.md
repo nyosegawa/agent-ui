@@ -240,7 +240,8 @@ The fixture routes are:
 - `/?state=unauth`: first-run device-code login state
 - `/?state=bridge-error`: connection diagnostics
 - `/fixture-gallery`: component close-ups plus full-route previews
-- `/host-workflow-recipe`: host-composed primitive recipe
+- `/host-workflow-recipe`: host integration reference shell with host header,
+  embedded `AgentChat`, side panel, mobile drawer, and host-owned review sheet
 - `/composer-retry`: failed first-message retry through the public composer
   controller
 - `/resource-resolution`: structured local-media resource rendering without
@@ -268,6 +269,8 @@ The deterministic fixture Playwright files are split by contract ownership:
 - `visual-layout.e2e.ts` owns shell layout contracts, viewport containment,
   menu reachability, and host layout examples. It checks presence, overflow,
   hit-testing, and viewport-relative dimensions instead of exact pixel snapshots.
+  Host integration smoke checks also cover the mobile drawer plus host-owned
+  sheet stacking contract.
 - `visual-closeups.e2e.ts` owns the component close-up gallery and verifies that
   close-ups render real primitives instead of iframe or hand-written DOM
   substitutes.
