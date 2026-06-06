@@ -37,12 +37,7 @@ attachAgentUiWebSocketBridge({
   path: "/agent-ui/ws",
   cwd: process.cwd(),
   bridgePolicy: {
-    admission: {
-      admit(request) {
-        return request.headers.origin === "http://127.0.0.1:5175";
-      },
-      mode: "host-callback",
-    },
+    admission: { mode: "local-loopback" },
   },
   initialize: {
     capabilities: {
