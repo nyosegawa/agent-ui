@@ -43,7 +43,8 @@ Routes:
   embedded `AgentChat`, host side panel, mobile drawer behavior, and a
   host-owned review sheet layered with public `--aui-z-*` tokens. The route
   also resolves browser file attachments through a host-owned resolver that
-  returns structured, redacted resource metadata.
+  returns structured, redacted resource metadata, and resolves transcript local
+  media through browser-safe preview and missing-media fallback records.
 - `/composer-retry`: failed optimistic first-message retry through the public
   composer controller.
 - `/transcript-density`: compact transcript route with verbose command/file

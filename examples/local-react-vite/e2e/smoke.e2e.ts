@@ -303,6 +303,31 @@ test("host workflow reference resolves local attachments as structured metadata"
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
 });
 
+test("host workflow reference resolves transcript local media preview and fallback", async ({
+  page,
+}) => {
+  await page.goto("/host-workflow-recipe");
+  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+
+  await expect(page.getByRole("img", { name: "fixture-image.png" })).toHaveAttribute(
+    "src",
+    /^data:image\/gif;base64,/,
+  );
+  await expect(
+    page.locator(".aui-image-block figcaption", { hasText: "missing-dashboard.png" }),
+  ).toBeVisible();
+  await expect(page.locator(".aui-image-block-fallback")).toHaveText(
+    "Local media unavailable",
+  );
+
+  const metadata = page.getByLabel("Transcript local media metadata");
+  await expect(metadata).toContainText("[agent-ui-local-media]/fixture-image.png");
+  await expect(metadata).toContainText("[agent-ui-local-media]/missing-dashboard.png");
+  await expect(page.getByText(/agent-ui-fixture-rich-transcript/)).toHaveCount(0);
+  await expect(page.getByText(/agent-ui-fixture-missing-dashboard/)).toHaveCount(0);
+  await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
+});
+
 test("host workflow reference layers a host sheet above the mobile drawer", async ({
   page,
 }) => {

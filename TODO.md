@@ -153,7 +153,7 @@
 - [x] Cover mobile drawer plus a host-owned sheet/modal with documented layer
       order.
 - [x] Cover local attachment upload with structured resource metadata.
-- [ ] Cover transcript local media preview and missing-media fallback.
+- [x] Cover transcript local media preview and missing-media fallback.
 - [ ] Cover first-message optimistic rendering.
 - [ ] Cover scoped thread history loading.
 - [ ] Cover host-gated workflow composition without adding Watcher-specific

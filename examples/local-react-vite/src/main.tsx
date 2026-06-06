@@ -29,6 +29,7 @@ import {
   type AgentLocalAttachmentKind,
   type AgentLocale,
   type AgentResolvedLocalAttachment,
+  type AgentResolvedResource,
   type AgentTheme,
   normalizeUsageWindows,
   useAgentApprovals,
@@ -643,7 +644,7 @@ function AppConnectorsExample() {
 }
 
 function HostWorkflowRecipe() {
-  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  const initialState = useMemo(() => createHostWorkflowInitialState(), []);
   const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
   return (
     <AgentProvider initialState={initialState} transport={transport}>
@@ -663,6 +664,55 @@ interface HostAttachmentMetadata {
 
 const hostAttachmentPreviewUrl =
   "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
+const hostTranscriptMediaPreviewUrl =
+  "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+
+const hostTranscriptMediaResources = [
+  {
+    displayName: "fixture-image.png",
+    kind: "url",
+    path: "/tmp/agent-ui-fixture-rich-transcript.png",
+    previewUrl: hostTranscriptMediaPreviewUrl,
+    redactedPath: "[agent-ui-local-media]/fixture-image.png",
+  },
+  {
+    displayName: "missing-dashboard.png",
+    kind: "unavailable",
+    path: "/tmp/agent-ui-fixture-missing-dashboard.png",
+    reason: "fixture media intentionally unavailable",
+    redactedPath: "[agent-ui-local-media]/missing-dashboard.png",
+  },
+] as const satisfies ReadonlyArray<
+  AgentResolvedResource & { path: string; redactedPath: string }
+>;
+
+function createHostWorkflowInitialState() {
+  const state = createRichTranscriptInitialState();
+  const thread = state.threads["thread-rich-transcript"];
+  const turn = thread?.turns["turn-rich-transcript"];
+  if (!turn) return state;
+  turn.blocksByItemId["item-missing-media"] = {
+    id: "item-missing-media",
+    kind: "image",
+    path: "/tmp/agent-ui-fixture-missing-dashboard.png",
+    status: "completed",
+  };
+  turn.items["item-missing-media"] = {
+    id: "item-missing-media",
+    kind: "imageView",
+    status: "completed",
+    threadId: "thread-rich-transcript",
+    turnId: "turn-rich-transcript",
+  };
+  const imageIndex = turn.itemOrder.indexOf("item-image");
+  turn.itemOrder.splice(
+    imageIndex === -1 ? turn.itemOrder.length : imageIndex + 1,
+    0,
+    "item-missing-media",
+  );
+  return state;
+}
 
 function TranscriptDensityExample() {
   const initialState = useMemo(() => createRichTranscriptInitialState(), []);
@@ -701,6 +751,17 @@ function HostWorkflowComposition() {
   );
   const [latestAttachment, setLatestAttachment] =
     useState<HostAttachmentMetadata | null>(null);
+  const resolveHostLocalMediaUrl = useCallback((path: string): AgentResolvedResource => {
+    const resource = hostTranscriptMediaResources.find((candidate) => candidate.path === path);
+    return (
+      resource ?? {
+        displayName: path.split(/[\\/]+/).at(-1) ?? "local-media",
+        kind: "unavailable",
+        redactedPath: "[agent-ui-local-media]/unresolved",
+        reason: "host resolver did not recognize this fixture path",
+      }
+    );
+  }, []);
   const resolveHostAttachment = useCallback(
     (
       file: File,
@@ -774,6 +835,7 @@ function HostWorkflowComposition() {
             <AgentChat
               diagnostics={false}
               resolveLocalAttachment={resolveHostAttachment}
+              resolveLocalMediaUrl={resolveHostLocalMediaUrl}
               sidebar
               usage={false}
             />
@@ -1048,6 +1110,22 @@ function HostWorkflowPanel({
             browser-safe metadata.
           </p>
         )}
+      </div>
+      <header className="aui-host-block-header">
+        <strong>Transcript media</strong>
+        <small>{hostTranscriptMediaResources.length} resources</small>
+      </header>
+      <div className="aui-host-block-body">
+        <dl className="aui-host-attachment-meta" aria-label="Transcript local media metadata">
+          {hostTranscriptMediaResources.map((resource) => (
+            <div key={resource.path}>
+              <dt>{resource.kind === "url" ? "Preview" : "Fallback"}</dt>
+              <dd>
+                {resource.displayName} · {resource.redactedPath}
+              </dd>
+            </div>
+          ))}
+        </dl>
       </div>
       <header className="aui-host-block-header">
         <strong>Usage windows</strong>
