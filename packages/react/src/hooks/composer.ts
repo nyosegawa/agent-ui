@@ -83,10 +83,7 @@ export function useAgentComposerController(
     ...composer,
     startThreadWithInput: (input) => {
       const inputItems = typeof input === "string" ? input.trim() : input;
-      if (typeof inputItems === "string" && !inputItems) {
-        return Promise.reject(new Error("Cannot start a thread without input."));
-      }
-      if (Array.isArray(inputItems) && inputItems.length === 0) {
+      if (!hasSubmittableFirstInput(inputItems)) {
         return Promise.reject(new Error("Cannot start a thread without input."));
       }
       return startWithMessage(inputItems);
@@ -538,6 +535,15 @@ function agentError(caught: unknown) {
   return {
     message: caught instanceof Error ? caught.message : String(caught),
   };
+}
+
+function hasSubmittableFirstInput(input: string | AgentUserInput[]) {
+  if (typeof input === "string") return input.trim().length > 0;
+  if (input.length === 0) return false;
+  return input.some((item) => {
+    if (item.type !== "text") return true;
+    return typeof item.text === "string" && item.text.trim().length > 0;
+  });
 }
 
 function createFirstMessageOperationIds(): FirstMessageOperationIds {

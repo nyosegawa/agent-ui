@@ -466,6 +466,21 @@ function PublicFirstMessageStartProbe() {
       >
         Public start with input
       </button>
+      <button
+        type="button"
+        onClick={() => {
+          void composer
+            .startThreadWithInput([{ text: "   ", text_elements: [], type: "text" }])
+            .then((nextResult) => {
+              setResult(nextResult.threadId);
+            })
+            .catch((caught: unknown) => {
+              setError(caught instanceof Error ? caught.message : String(caught));
+            });
+        }}
+      >
+        Public start with blank array input
+      </button>
       <output aria-label="public start result">{result}</output>
       <output aria-label="public start error">{error}</output>
     </>
@@ -6300,6 +6315,22 @@ describe("AgentChat", () => {
     expect(transport.requests.map((request) => request.method)).not.toContain(
       "turn/start",
     );
+
+    await user.click(
+      screen.getByRole("button", { name: "Public start with blank array input" }),
+    );
+    await waitFor(() =>
+      expect(screen.getByLabelText("public start error")).toHaveTextContent(
+        "Cannot start a thread without input.",
+      ),
+    );
+    expect(screen.getByLabelText("active thread id")).toHaveTextContent("none");
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "thread/start",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
   });
 
   it("starts new threads with selected model and working directory", async () => {
@@ -8136,6 +8167,12 @@ describe("AgentChat", () => {
     );
     expect(screen.getByLabelText("resume resume result")).toHaveTextContent(
       "thread-canonical-resume:thread-requested",
+    );
+    await user.click(screen.getByRole("button", { name: "resume resume first" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("resume resume thread id")).toHaveTextContent(
+        "thread-canonical-resume",
+      ),
     );
     expect(
       transport.requests.find((request) => request.method === "thread/resume")?.params,
