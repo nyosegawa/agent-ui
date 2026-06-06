@@ -101,6 +101,7 @@ function ThreadListControllerProbe({
   const controller = useAgentThreadListController(scope, { onHistorySynced });
   const activeThreadId = state.threadLifecycle.activeThreadId;
   const [resumeResult, setResumeResult] = useState("");
+  const [resumeThreadId, setResumeThreadId] = useState("");
   return (
     <section aria-label={label}>
       <input
@@ -127,7 +128,20 @@ function ThreadListControllerProbe({
         onClick={() => {
           const firstThreadId = controller.threads[0]?.id;
           if (firstThreadId) {
-            void controller.resumeThread(firstThreadId).then((result) => {
+            void controller.resumeThread(firstThreadId).then((threadId) => {
+              setResumeThreadId(threadId);
+            });
+          }
+        }}
+        type="button"
+      >
+        {label} resume first
+      </button>
+      <button
+        onClick={() => {
+          const firstThreadId = controller.threads[0]?.id;
+          if (firstThreadId) {
+            void controller.resumeThreadWithResult(firstThreadId).then((result) => {
               setResumeResult(
                 `${result.threadId}:${result.requestedThreadId ?? "none"}`,
               );
@@ -136,7 +150,7 @@ function ThreadListControllerProbe({
         }}
         type="button"
       >
-        {label} resume first
+        {label} resume first with result
       </button>
       <output aria-label={`${label} active thread`}>{activeThreadId ?? ""}</output>
       <output aria-label={`${label} cursor`}>{controller.nextCursor ?? ""}</output>
@@ -152,6 +166,9 @@ function ThreadListControllerProbe({
           : ""}
       </output>
       <output aria-label={`${label} resume result`}>{resumeResult || "none"}</output>
+      <output aria-label={`${label} resume thread id`}>
+        {resumeThreadId || "none"}
+      </output>
     </section>
   );
 }
@@ -6258,6 +6275,33 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("public start error")).toHaveTextContent("none");
   });
 
+  it("does not start blank first-message threads through the public composer controller", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider transport={transport}>
+        <PublicFirstMessageStartProbe />
+        <ActiveThreadStateProbe />
+      </AgentProvider>,
+    );
+
+    await user.type(screen.getByRole("textbox", { name: "Public first message" }), "   ");
+    await user.click(screen.getByRole("button", { name: "Public start with input" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("public start error")).toHaveTextContent(
+        "Cannot start a thread without input.",
+      ),
+    );
+    expect(screen.getByLabelText("active thread id")).toHaveTextContent("none");
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "thread/start",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+  });
+
   it("starts new threads with selected model and working directory", async () => {
     const user = userEvent.setup();
     let resolveThreadStart:
@@ -8077,7 +8121,7 @@ describe("AgentChat", () => {
       "Requested stored thread",
     );
 
-    await user.click(screen.getByRole("button", { name: "resume resume first" }));
+    await user.click(screen.getByRole("button", { name: "resume resume first with result" }));
 
     await waitFor(() =>
       expect(screen.getByLabelText("resume active thread")).toHaveTextContent(

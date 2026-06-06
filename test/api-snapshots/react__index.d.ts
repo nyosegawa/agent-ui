@@ -398,7 +398,8 @@ interface AgentThreadListController {
     nextCursor: string | null;
     previewThread: (threadId: ThreadId) => Promise<void>;
     refresh: () => Promise<AgentThreadListResult>;
-    resumeThread: (threadId: ThreadId, params?: ThreadResumeOptions) => Promise<AgentThreadResumeResult>;
+    resumeThread: (threadId: ThreadId, params?: ThreadResumeOptions) => Promise<ThreadId>;
+    resumeThreadWithResult: (threadId: ThreadId, params?: ThreadResumeOptions) => Promise<AgentThreadResumeResult>;
     scope: AgentThreadScope;
     searchTerm: string;
     setSearchTerm: (searchTerm: string) => void;

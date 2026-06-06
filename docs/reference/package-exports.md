@@ -140,9 +140,11 @@ normalization remain internal/source-level boundaries;
 `useAgentComposerController`, `AgentComposerController`, `ThreadList`,
 `AgentThreadSidebar`, and `AgentWorkspace` are rebuilt on explicit session,
 active-thread, thread-list, composer, transcript, scroll, server-request, and
-diagnostics controllers. `startThreadWithInput()` has been removed from the
-thread hook; first-message start behavior now lives on the
-source-level internal composer controller as `startWithMessage()`.
+diagnostics controllers. `startThreadWithInput()` is not a thread hook method;
+the raw-free first-message start behavior is public on
+`AgentComposerController` as `startThreadWithInput(input)`, while the
+source-level internal composer controller keeps its implementation helper named
+`startWithMessage()`.
 
 Move to subpath or keep internal: transcript-window utilities
 (`DEFAULT_TRANSCRIPT_ITEM_LIMIT`, `TRANSCRIPT_ITEM_INCREMENT`,

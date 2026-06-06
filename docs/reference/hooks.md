@@ -81,7 +81,11 @@ flag, cursor, ids, loading state, and sync timestamp for that list, while the
 host still owns what those dimensions mean in its product. `onHistorySynced`
 reports normalized sync metadata such as scope, thread ids, cursor, append
 mode, search term, and timestamp; it does not expose raw App Server
-`thread/list` payloads or ask Agent UI to persist history.
+`thread/list` payloads or ask Agent UI to persist history. The scoped
+controller keeps `resumeThread(threadId)` returning the canonical thread id for
+existing callers, and exposes `resumeThreadWithResult(threadId)` when hosts need
+the same `{ threadId, requestedThreadId? }` diagnostic result shape as
+`useAgentThreadController().resumeThread()`.
 
 `useAgentThreadReader().readThread(threadId, { includeTurns: true })` calls
 `thread/read` and hydrates persisted turns/items before activation. This is the

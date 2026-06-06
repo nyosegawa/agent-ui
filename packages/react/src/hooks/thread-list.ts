@@ -32,7 +32,8 @@ export interface AgentThreadListController {
   nextCursor: string | null;
   previewThread: (threadId: ThreadId) => Promise<void>;
   refresh: () => Promise<AgentThreadListResult>;
-  resumeThread: (
+  resumeThread: (threadId: ThreadId, params?: ThreadResumeOptions) => Promise<ThreadId>;
+  resumeThreadWithResult: (
     threadId: ThreadId,
     params?: ThreadResumeOptions,
   ) => Promise<AgentThreadResumeResult>;
@@ -230,12 +231,19 @@ export function useAgentThreadListController(
     [readThread],
   );
 
-  const resumeThread = useCallback(
+  const resumeThreadWithResult = useCallback(
     async (threadId: ThreadId, params?: ThreadResumeOptions) => {
       const result = await threadController.resumeThread(threadId, params);
       return result;
     },
     [threadController],
+  );
+  const resumeThread = useCallback(
+    async (threadId: ThreadId, params?: ThreadResumeOptions) => {
+      const result = await resumeThreadWithResult(threadId, params);
+      return result.threadId;
+    },
+    [resumeThreadWithResult],
   );
 
   return {
@@ -251,6 +259,7 @@ export function useAgentThreadListController(
     previewThread,
     refresh,
     resumeThread,
+    resumeThreadWithResult,
     scope: collectionScope,
     searchTerm,
     setSearchTerm,

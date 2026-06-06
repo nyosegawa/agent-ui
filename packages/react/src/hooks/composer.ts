@@ -81,7 +81,16 @@ export function useAgentComposerController(
   void retryOperation;
   return {
     ...composer,
-    startThreadWithInput: (input) => startWithMessage(input),
+    startThreadWithInput: (input) => {
+      const inputItems = typeof input === "string" ? input.trim() : input;
+      if (typeof inputItems === "string" && !inputItems) {
+        return Promise.reject(new Error("Cannot start a thread without input."));
+      }
+      if (Array.isArray(inputItems) && inputItems.length === 0) {
+        return Promise.reject(new Error("Cannot start a thread without input."));
+      }
+      return startWithMessage(inputItems);
+    },
   };
 }
 
