@@ -212,7 +212,8 @@ uses the typed bridge policy and local upload/static routes,
 imports current host integration recipes.
 
 Docs that describe the current API: `docs/reference/hooks.md`,
-`docs/reference/react-components.md`, `docs/reference/server-bridge.md`,
+`docs/reference/react-components.md`, `docs/reference/react-protocol-coverage.md`,
+`docs/reference/server-bridge.md`,
 `docs/guides/react.md`, `docs/guides/attachments.md`,
 `docs/guides/theming.md`, `docs/guides/i18n.md`,
 `docs/guides/approvals.md`, `docs/guides/web-components.md`,

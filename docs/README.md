@@ -59,6 +59,8 @@ boundaries, examples, tests, and host integration docs agree.
 - [React Components](./reference/react-components.md): component API and visual
   contracts.
 - [Hooks](./reference/hooks.md): headless hook surface.
+- [React Protocol Coverage](./reference/react-protocol-coverage.md): React
+  exposure decisions for productized Codex methods.
 - [Server Bridge](./reference/server-bridge.md): WebSocket bridge, upload
   helper, dynamic tool policy, and one-shot RPC helpers.
 - [Codex Protocol](./reference/codex-protocol.md): productized App Server
