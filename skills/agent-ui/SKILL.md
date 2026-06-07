@@ -18,6 +18,9 @@ generic chatbot kit.
    - server bridge, uploads, or dynamic tools
    - host-owned workflow composition around Agent UI primitives
    - local desktop bridge policy and admission
+   - first-message `startThreadWithInput()` options or retry behavior
+   - bearer WebSocket subprotocols for short-lived bridge tokens
+   - local media preview fallback and static asset route behavior
    - custom layout or theme work
    - debugging or upgrading an existing integration
 2. Inspect the host app before changing files. Read package manifests,
@@ -60,10 +63,21 @@ generic chatbot kit.
   dynamic tool execution, and deployment topology.
 - Do not expose host-only App Server methods to the browser unless the host
   explicitly defines a policy for them.
+- Do not bypass structured bridge admission. Local-loopback and host-callback
+  admission should reject before spawning Codex; non-loopback bridges need
+  host-owned auth, workspace isolation, and audit policy.
+- Do not put bridge bearer tokens in query strings. Browser WebSocket
+  constructors cannot send custom headers; use same-origin cookies, server-side
+  token exchange, or the Agent UI bearer subprotocol helper for short-lived
+  tokens.
 - Do not use private Agent UI CSS chunks. Import only
   `@nyosegawa/agent-ui-react/styles.css` and customize with `--aui-*` tokens.
 - Do not target internal `.aui-*` selectors from a host app. Use public props
-  such as `className`, slots, host wrappers, and `--aui-*` token overrides.
+  such as `className`, the `components` map, host wrappers, and `--aui-*` token
+  overrides.
+- Do not expose local filesystem paths as browser preview URLs. Hosts should
+  serve registered local media asset URLs, return `403` or `404` when access is
+  denied or expired, and let Agent UI render the fallback card on load failure.
 - Do not tell production users that Agent UI supplies hosting, accounts,
   credential storage, multi-user authorization, or process orchestration.
 
@@ -80,6 +94,13 @@ generic chatbot kit.
   already has host-owned policies for storage and execution.
 - For Next.js full chat, use a custom Node server or sidecar that can attach a
   WebSocket bridge. A plain Route Handler is only for one-shot RPC.
+- For first-message starts from headless hosts, use
+  `useAgentComposerController().startThreadWithInput(input, { threadOptions,
+  turnOptions })` so thread options go to `thread/start`, turn options go to
+  `turn/start`, and retry preserves the same host-supplied options.
+- For host-gated workflows, compose `AgentThreadTimeline`, a host-owned gate,
+  and a delayed composer. Keep plan/update state in the host and submit only
+  after the host gate approves.
 
 ## Completion
 
@@ -88,5 +109,7 @@ Before finishing, report:
 - selected profile and why
 - packages and public imports used
 - server bridge, upload, dynamic-tool, auth, and remote assumptions
+- first-turn, resume, local-media, and bridge-admission assumptions when those
+  surfaces are involved
 - validation commands run or why they were skipped
 - remaining host-owned production work, especially for remote or multi-user apps

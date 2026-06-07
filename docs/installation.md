@@ -3,6 +3,11 @@
 Agent UI is split into small packages so hosts can choose the surfaces they
 need.
 
+## Requirements
+
+- Node.js `>=22` for published packages and local server helpers.
+- Bun, npm, pnpm, or another package manager that honors package export maps.
+
 ## Packages
 
 ```text

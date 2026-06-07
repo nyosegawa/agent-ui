@@ -220,16 +220,34 @@ Evidence:
 
 ## Docs, Examples, And Skills
 
-- [ ] Update `docs/reference/hooks.md`.
-- [ ] Update `docs/reference/server-bridge.md`.
-- [ ] Update `docs/guides/host-integration.md`.
-- [ ] Update `docs/guides/attachments.md`.
-- [ ] Update `docs/installation.md` with Node `>=22`.
-- [ ] Update `docs/getting-started.md` with Node `>=22`.
-- [ ] Update `docs/examples/recipes.md`.
-- [ ] Update `skills/agent-ui/SKILL.md` for first-turn options, bridge
+- [x] Update `docs/reference/hooks.md`.
+- [x] Update `docs/reference/server-bridge.md`.
+- [x] Update `docs/guides/host-integration.md`.
+- [x] Update `docs/guides/attachments.md`.
+- [x] Update `docs/installation.md` with Node `>=22`.
+- [x] Update `docs/getting-started.md` with Node `>=22`.
+- [x] Update `docs/examples/recipes.md`.
+- [x] Update `skills/agent-ui/SKILL.md` for first-turn options, bridge
   admission, token subprotocols, local media fallback, and no obsolete slot
   language.
+
+Evidence:
+
+- `docs/reference/hooks.md` documents
+  `startThreadWithInput(input, { threadOptions, turnOptions })`, raw-free
+  first-message metadata, retry behavior, and resume diagnostic reason codes.
+- `docs/reference/server-bridge.md` documents structured pre-upgrade
+  rejection, admission/no-spawn semantics, health reason codes, and bearer
+  WebSocket subprotocol handling.
+- `docs/guides/host-integration.md` links first-message options, bridge
+  admission, local-media boundaries, and the host-gated workflow recipe.
+- `docs/guides/attachments.md` documents structured local media resolution,
+  safe host asset URLs, and `403`/`404` fallback behavior.
+- `docs/installation.md` and `docs/getting-started.md` require Node.js `>=22`.
+- `docs/examples/recipes.md` lists the host-gated workflow recipe and boundary.
+- `skills/agent-ui/SKILL.md` covers first-turn options, bridge admission,
+  bearer subprotocols, local media fallback, host-gated workflows, and uses
+  component-map language instead of obsolete slot customization language.
 
 ## Validation
 
