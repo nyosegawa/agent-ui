@@ -19,20 +19,42 @@
 
 ## React First-Turn Contract
 
-- [ ] Add public `AgentThreadStartWithInputOptions` with `threadOptions` and
+- [x] Add public `AgentThreadStartWithInputOptions` with `threadOptions` and
   `turnOptions`.
-- [ ] Update `AgentComposerController.startThreadWithInput()` to accept options.
-- [ ] Thread options through internal `startWithMessage()` without exposing raw
+- [x] Update `AgentComposerController.startThreadWithInput()` to accept options.
+- [x] Thread options through internal `startWithMessage()` without exposing raw
   App Server params or responses.
-- [ ] Merge `turnOptions` after execution-mode defaults for first-turn
+- [x] Merge `turnOptions` after execution-mode defaults for first-turn
   `turn/start`.
-- [ ] Preserve `clientUserMessageId` and canonical thread reconciliation.
-- [ ] Store first-message retry payloads with both thread and turn options.
-- [ ] Return stable first-turn metadata: `threadId`, `operationId`, `turnId`,
+- [x] Preserve `clientUserMessageId` and canonical thread reconciliation.
+- [x] Store first-message retry payloads with both thread and turn options.
+- [x] Return stable first-turn metadata: `threadId`, `operationId`, `turnId`,
   and `userMessageId`.
-- [ ] Add tests for first-turn thread options, turn options, merge order, and
+- [x] Add tests for first-turn thread options, turn options, merge order, and
   canonical id usage.
-- [ ] Add first-turn `localImage` coverage.
+- [x] Add first-turn `localImage` coverage.
+
+Evidence:
+
+- `packages/react/src/hooks/thread-lifecycle-types.ts` defines
+  `AgentThreadStartWithInputOptions` and richer
+  `AgentThreadStartWithInputResult`.
+- `packages/react/src/hooks/composer.ts` passes public `threadOptions` and
+  `turnOptions` through first-message start, merges turn options after
+  execution-mode defaults, and returns operation/thread/turn/user-message ids.
+- `packages/react/src/hooks/first-message-operations.ts` persists
+  `turnOptions` in first-message retry payloads and reuses them for retry.
+- `packages/react/test/components.vitest.tsx` covers thread options, turn
+  option precedence, canonical thread id use, returned metadata, and first-turn
+  `localImage`.
+- `docs/reference/hooks.md`, `docs/reference/package-exports.md`, and
+  `docs/guides/host-integration.md` describe the new public first-turn
+  signature and raw-free metadata.
+- Validation: `bun vitest run --config vitest.config.ts --environment jsdom
+  packages/react/test/components.vitest.tsx`; `bun run --cwd packages/react
+  typecheck`; `bun run typecheck`; `bun run lint`; `bun run build`; `bun run
+  test:api-snapshots:update`; `bun run test:api-snapshots`; `bunx vitest run
+  test/docs-staleness.test.ts`.
 
 ## Canonical Resume Diagnostics
 
@@ -97,13 +119,13 @@
 
 ## Validation
 
-- [ ] Run targeted React/controller tests.
+- [x] Run targeted React/controller tests.
 - [ ] Run targeted server websocket tests.
 - [ ] Run `bun run test:protocol`.
 - [ ] Run `bun run test:fixtures`.
 - [ ] Run `bun run --cwd examples/recipes typecheck`.
 - [ ] Run `bun run test:skills`.
-- [ ] Update and review API snapshots.
+- [x] Update and review API snapshots.
 - [ ] Run `bun run validate:fast`.
 - [ ] Run `bun run validate:protocol`.
 - [ ] Run `bun run validate:packages`.

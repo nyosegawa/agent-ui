@@ -62,6 +62,7 @@ export type {
   AgentThreadHistoryResult,
   AgentThreadReadResult,
   AgentThreadResumeResult,
+  AgentThreadStartWithInputOptions,
   AgentThreadStartWithInputResult,
   AgentThreadStartResult,
 } from "./hooks/thread-lifecycle-types";

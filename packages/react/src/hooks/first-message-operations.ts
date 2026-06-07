@@ -6,7 +6,11 @@ import type { CodexStable } from "@nyosegawa/agent-ui-codex/stable-types";
 import { useCallback } from "react";
 import type { AgentUserInput } from "../agent-input";
 import { useAgentContext } from "../provider";
-import { codexTurnStartOptions, type ThreadStartOptions } from "../request-options";
+import {
+  codexTurnStartOptions,
+  type ThreadStartOptions,
+  type TurnStartOptions,
+} from "../request-options";
 import { useCodexSession } from "./codex-session";
 import { AGENT_EXECUTION_MODES } from "./run-settings";
 import type { AgentThreadStartWithInputResult } from "./thread-lifecycle-types";
@@ -26,6 +30,7 @@ export interface FirstMessageRetryPayload {
   params?: ThreadStartOptions;
   pending: FirstMessageOperationIds;
   threadId?: string;
+  turnOptions?: TurnStartOptions;
 }
 
 const firstMessagePayloads: Record<string, FirstMessageRetryPayload> = {};
@@ -44,6 +49,7 @@ export function useFirstMessageOperationController(
   startWithMessage: (
     input: string | AgentUserInput[],
     params?: ThreadStartOptions,
+    turnOptions?: TurnStartOptions,
   ) => Promise<AgentThreadStartWithInputResult>,
 ) {
   const { dispatch, state } = useAgentContext();
@@ -69,7 +75,7 @@ export function useFirstMessageOperationController(
       retryingOperations.add(operationId);
       if (!payload.threadId) {
         try {
-          await startWithMessage(payload.input, payload.params);
+          await startWithMessage(payload.input, payload.params, payload.turnOptions);
         } finally {
           retryingOperations.delete(operationId);
         }
@@ -117,6 +123,7 @@ export function useFirstMessageOperationController(
           input: payload.normalizedInput,
           model: runSettings.modelId,
           ...codexTurnStartOptions(executionMode?.turnParams),
+          ...codexTurnStartOptions(payload.turnOptions),
           threadId: payload.threadId,
         });
         if (!cancelledOperations.has(operationId)) {

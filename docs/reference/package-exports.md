@@ -142,7 +142,8 @@ normalization remain internal/source-level boundaries;
 active-thread, thread-list, composer, transcript, scroll, server-request, and
 diagnostics controllers. `startThreadWithInput()` is not a thread hook method;
 the raw-free first-message start behavior is public on
-`AgentComposerController` as `startThreadWithInput(input)`, while the
+`AgentComposerController` as
+`startThreadWithInput(input, { threadOptions, turnOptions })`, while the
 source-level internal composer controller keeps its implementation helper named
 `startWithMessage()`.
 
@@ -245,8 +246,9 @@ the same names. The public result contract for `AgentThreadStartResult`,
   message start, or resume.
 - `requestedThreadId` is optional diagnostic metadata for resume paths where
   the host asked for an alias or stale persisted id.
-- Stable first-turn metadata such as `startedTurnId` may be included only as an
-  Agent UI view-model field, not as a generated `TurnStartResponse`.
+- First-message start returns stable `operationId`, `turnId`, and
+  `userMessageId` metadata as Agent UI view-model fields, not as a generated
+  `ThreadStartResponse` or `TurnStartResponse`.
 - Raw App Server responses, generated protocol payloads, optimistic operation
   maps, canonical-id alias maps, and reducer reconciliation records stay out of
   the React package root.

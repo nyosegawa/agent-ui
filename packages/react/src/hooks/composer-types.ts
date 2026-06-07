@@ -4,7 +4,10 @@ import type {
   QueuedFollowUpAttachment,
 } from "../composer-queue";
 import type { Dispatch, SetStateAction } from "react";
-import type { AgentThreadStartWithInputResult } from "./thread-lifecycle-types";
+import type {
+  AgentThreadStartWithInputOptions,
+  AgentThreadStartWithInputResult,
+} from "./thread-lifecycle-types";
 
 export interface AgentComposerController {
   activeTurnId?: string;
@@ -27,6 +30,7 @@ export interface AgentComposerController {
   setValue: Dispatch<SetStateAction<string>>;
   startThreadWithInput: (
     input: string | AgentUserInput[],
+    options?: AgentThreadStartWithInputOptions,
   ) => Promise<AgentThreadStartWithInputResult>;
   steerNow: (items?: AgentUserInput[]) => Promise<void>;
   stop: () => Promise<void>;
@@ -50,3 +54,5 @@ export interface AgentComposerFailedPendingMessage {
 }
 
 export type AgentComposerSubmitMode = "queue" | "send" | "stop";
+
+export type { AgentThreadStartWithInputOptions };

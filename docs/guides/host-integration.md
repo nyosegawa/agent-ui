@@ -177,9 +177,12 @@ threads through `useAgentThreadController().startThread()` or submit the first
 message through `useAgentComposerController()`. The public composer controller
 owns pending first-message retry/cancel state without exposing operation maps.
 When using headless hooks, call
-`useAgentComposerController().startThreadWithInput(input)` for the first user
-message so it appears immediately and `turn/start` uses the canonical thread id
-after `thread/start` reconciliation.
+`useAgentComposerController().startThreadWithInput(input, { threadOptions,
+turnOptions })` for the first user message so it appears immediately,
+`thread/start` can receive host-owned thread options, and `turn/start` uses the
+canonical thread id after `thread/start` reconciliation. Agent UI merges
+`turnOptions` after execution-mode defaults and returns raw-free
+`{ threadId, operationId, turnId, userMessageId }` metadata.
 
 ## Drawer And Overlay Layers
 

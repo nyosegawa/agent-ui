@@ -21,6 +21,7 @@ import {
   codexThreadStartParams,
   codexTurnStartOptions,
   type ThreadStartOptions,
+  type TurnStartOptions,
 } from "../request-options";
 import { rawThreadId, threadProjectPath } from "../thread-history";
 import { useCodexSession } from "./codex-session";
@@ -58,6 +59,7 @@ export interface InternalAgentComposerController extends AgentComposerController
   startWithMessage: (
     input: string | AgentUserInput[],
     params?: ThreadStartOptions,
+    turnOptions?: TurnStartOptions,
   ) => Promise<AgentThreadStartWithInputResult>;
 }
 
@@ -82,12 +84,12 @@ export function useAgentComposerController(
   void retryOperation;
   return {
     ...composer,
-    startThreadWithInput: (input) => {
+    startThreadWithInput: (input, options) => {
       const inputItems = typeof input === "string" ? input.trim() : input;
       if (!hasSubmittableFirstInput(inputItems)) {
         return Promise.reject(new Error("Cannot start a thread without input."));
       }
-      return startWithMessage(inputItems);
+      return startWithMessage(inputItems, options?.threadOptions, options?.turnOptions);
     },
   };
 }
@@ -184,7 +186,11 @@ export function useInternalAgentComposerController(
     [buildInput, isRunning, queueFollowUp, startTurn, t],
   );
   const startWithMessage = useCallback(
-    async (input: string | AgentUserInput[], params?: ThreadStartOptions) => {
+    async (
+      input: string | AgentUserInput[],
+      params?: ThreadStartOptions,
+      turnOptions?: TurnStartOptions,
+    ) => {
       const inputItems = typeof input === "string" ? [textAgentInput(input)] : input;
       const normalizedInput = normalizeTurnInput(inputItems);
       const promptText = summarizeUserInput(inputItems, t);
@@ -196,6 +202,7 @@ export function useInternalAgentComposerController(
         normalizedInput,
         params,
         pending,
+        turnOptions,
       });
       setError(undefined);
       setIsSubmitting(true);
@@ -267,6 +274,7 @@ export function useInternalAgentComposerController(
           params,
           pending,
           threadId: nextThreadId,
+          turnOptions,
         });
         dispatch({
           status: "ready",
@@ -294,6 +302,7 @@ export function useInternalAgentComposerController(
           input: normalizedInput,
           model: runSettings.modelId,
           ...codexTurnStartOptions(executionMode?.turnParams),
+          ...codexTurnStartOptions(turnOptions),
           threadId: nextThreadId,
         });
         dispatch({
@@ -307,7 +316,12 @@ export function useInternalAgentComposerController(
         });
         forgetFirstMessagePayload(pending.operationId);
         setValue("");
-        return { threadId: nextThreadId } satisfies AgentThreadStartWithInputResult;
+        return {
+          operationId: pending.operationId,
+          threadId: nextThreadId,
+          turnId: pending.turnId,
+          userMessageId: pending.userMessageId,
+        } satisfies AgentThreadStartWithInputResult;
       } catch (caught) {
         const error = agentError(caught);
         if (!canonicalThreadId) {
@@ -485,7 +499,8 @@ export function useInternalAgentComposerController(
     sendingFollowUpIds: scopedSendingFollowUpIds,
     setError,
     setValue,
-    startThreadWithInput: startWithMessage,
+    startThreadWithInput: (input, options) =>
+      startWithMessage(input, options?.threadOptions, options?.turnOptions),
     steerNow,
     stop,
     submitMode,
