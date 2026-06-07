@@ -110,14 +110,18 @@ The planned return shape is:
 ```ts
 export interface AgentThreadStartWithInputResult {
   operationId: string;
+  optimisticTurnId: string;
   threadId: ThreadId;
   turnId: string;
   userMessageId: string;
 }
 ```
 
-Because backward compatibility is not required, the result can become richer
-without keeping compatibility aliases.
+`turnId` is the App Server turn id returned by `turn/start` when available.
+`optimisticTurnId` is the transient UI turn id used while the optimistic first
+message is waiting for live turn notifications to reconcile it. Because
+backward compatibility is not required, the result can become richer without
+keeping compatibility aliases.
 
 Retry must remember both `threadOptions` and `turnOptions` so a failed
 first-message turn retries with the same host intent.

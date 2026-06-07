@@ -6520,11 +6520,14 @@ describe("AgentChat", () => {
     ) as Record<string, string>;
     expect(result).toMatchObject({
       operationId: expect.stringMatching(/^first-message-/),
+      optimisticTurnId: expect.stringMatching(/^pending-turn-/),
       threadId: "thread-options-canonical",
-      turnId: expect.stringMatching(/^pending-turn-/),
+      turnId: "turn-options-canonical",
       userMessageId: turnStartParams?.clientUserMessageId,
     });
-    expect(screen.getByLabelText("active turn id")).toHaveTextContent(result.turnId);
+    expect(screen.getByLabelText("active turn id")).toHaveTextContent(
+      result.optimisticTurnId,
+    );
     expect(screen.getByLabelText("active thread id")).toHaveTextContent(
       "thread-options-canonical",
     );

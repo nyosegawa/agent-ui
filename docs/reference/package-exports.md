@@ -255,9 +255,12 @@ the same names. The public result contract for `AgentThreadStartResult`,
   message start, or resume.
 - `requestedThreadId` is optional diagnostic metadata for resume paths where
   the host asked for an alias or stale persisted id.
-- First-message start returns stable `operationId`, `turnId`, and
-  `userMessageId` metadata as Agent UI view-model fields, not as a generated
-  `ThreadStartResponse` or `TurnStartResponse`.
+- First-message start returns stable `operationId`, `turnId`,
+  `optimisticTurnId`, and `userMessageId` metadata as Agent UI view-model
+  fields, not as a generated `ThreadStartResponse` or `TurnStartResponse`.
+- First-message `turnId` is the App Server turn id returned by `turn/start`
+  when available; `optimisticTurnId` is the transient UI turn id used before
+  live turn notifications reconcile the first user message.
 - Raw App Server responses, generated protocol payloads, optimistic operation
   maps, canonical-id alias maps, and reducer reconciliation records stay out of
   the React package root.

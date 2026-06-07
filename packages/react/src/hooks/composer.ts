@@ -295,7 +295,7 @@ export function useInternalAgentComposerController(
         const executionMode = AGENT_EXECUTION_MODES.find(
           (mode) => mode.id === runSettings.executionMode,
         );
-        await codex.turn.start({
+        const turnStartResult = await codex.turn.start({
           clientUserMessageId: pending.userMessageId,
           cwd: runSettings.cwd,
           effort: codexReasoningEffort(runSettings.effort),
@@ -305,6 +305,7 @@ export function useInternalAgentComposerController(
           ...codexTurnStartOptions(turnOptions),
           threadId: nextThreadId,
         });
+        const startedTurnId = turnStartResultId(turnStartResult) ?? pending.turnId;
         dispatch({
           operation: {
             id: pending.operationId,
@@ -318,8 +319,9 @@ export function useInternalAgentComposerController(
         setValue("");
         return {
           operationId: pending.operationId,
+          optimisticTurnId: pending.turnId,
           threadId: nextThreadId,
-          turnId: pending.turnId,
+          turnId: startedTurnId,
           userMessageId: pending.userMessageId,
         } satisfies AgentThreadStartWithInputResult;
       } catch (caught) {
@@ -545,6 +547,12 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
+}
+
+function turnStartResultId(response: unknown): string | undefined {
+  const responseRecord = asRecord(response);
+  const rawTurn = asRecord(responseRecord?.turn) ?? responseRecord;
+  return stringValue(rawTurn?.id);
 }
 
 function agentError(caught: unknown) {

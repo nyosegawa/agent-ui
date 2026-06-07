@@ -182,7 +182,10 @@ turnOptions })` for the first user message so it appears immediately,
 `thread/start` can receive host-owned thread options, and `turn/start` uses the
 canonical thread id after `thread/start` reconciliation. Agent UI merges
 `turnOptions` after execution-mode defaults and returns raw-free
-`{ threadId, operationId, turnId, userMessageId }` metadata.
+`{ threadId, operationId, turnId, optimisticTurnId, userMessageId }` metadata.
+Use `turnId` for host records that need the App Server turn id; the
+`optimisticTurnId` is only the transient UI turn id used before live turn
+notifications reconcile the first user message.
 
 ## Drawer And Overlay Layers
 

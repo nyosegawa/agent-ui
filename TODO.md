@@ -41,7 +41,9 @@ Evidence:
   `AgentThreadStartWithInputResult`.
 - `packages/react/src/hooks/composer.ts` passes public `threadOptions` and
   `turnOptions` through first-message start, merges turn options after
-  execution-mode defaults, and returns operation/thread/turn/user-message ids.
+  execution-mode defaults, and returns operation/thread/optimistic-turn/user-message
+  ids with `turnId` sourced from the App Server `turn/start` response when
+  available.
 - `packages/react/src/hooks/first-message-operations.ts` persists
   `turnOptions` in first-message retry payloads and reuses them for retry.
 - `packages/react/test/components.vitest.tsx` covers thread options, turn

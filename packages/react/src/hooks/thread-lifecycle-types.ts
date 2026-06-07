@@ -10,6 +10,7 @@ export interface AgentThreadStartResult {
 
 export interface AgentThreadStartWithInputResult {
   operationId: string;
+  optimisticTurnId: string;
   threadId: ThreadId;
   turnId: string;
   userMessageId: string;

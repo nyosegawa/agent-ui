@@ -265,6 +265,7 @@ interface AgentThreadStartResult {
 }
 interface AgentThreadStartWithInputResult {
     operationId: string;
+    optimisticTurnId: string;
     threadId: ThreadId;
     turnId: string;
     userMessageId: string;
