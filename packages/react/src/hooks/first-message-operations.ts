@@ -45,6 +45,16 @@ export function forgetFirstMessagePayload(operationId: string) {
   delete firstMessagePayloads[operationId];
 }
 
+export function createFirstMessageOperationIds(): FirstMessageOperationIds {
+  const id = randomOperationSuffix();
+  return {
+    operationId: `first-message-${id}`,
+    threadId: `pending-thread-${id}`,
+    turnId: `pending-turn-${id}`,
+    userMessageId: `pending-user-message-${id}`,
+  };
+}
+
 export function useFirstMessageOperationController(
   startWithMessage: (
     input: string | AgentUserInput[],
@@ -199,4 +209,10 @@ function agentError(caught: unknown) {
   return {
     message: caught instanceof Error ? caught.message : String(caught),
   };
+}
+
+function randomOperationSuffix() {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid) return uuid;
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }

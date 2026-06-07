@@ -253,13 +253,39 @@ Evidence:
 
 - [x] Run targeted React/controller tests.
 - [x] Run targeted server websocket tests.
-- [ ] Run `bun run test:protocol`.
-- [ ] Run `bun run test:fixtures`.
+- [x] Run `bun run test:protocol`.
+- [x] Run `bun run test:fixtures`.
 - [x] Run `bun run --cwd examples/recipes typecheck`.
-- [ ] Run `bun run test:skills`.
+- [x] Run `bun run test:skills`.
 - [x] Update and review API snapshots.
-- [ ] Run `bun run validate:fast`.
-- [ ] Run `bun run validate:protocol`.
-- [ ] Run `bun run validate:packages`.
-- [ ] Run `bun run test:package-resolution`.
-- [ ] Run relevant Playwright fixture or real-local browser specs.
+- [x] Run `bun run validate:fast`.
+- [x] Run `bun run validate:protocol`.
+- [x] Run `bun run validate:packages`.
+- [x] Run `bun run test:package-resolution`.
+- [x] Run relevant Playwright fixture or real-local browser specs.
+
+Evidence:
+
+- Targeted React/controller validation passed, including
+  `packages/react/test/components.vitest.tsx`,
+  `packages/react/test/thread-resume-diagnostics.vitest.tsx`, and
+  `packages/core/test/reducer.test.ts` during the first-turn, resume, and local
+  media slices.
+- Targeted server websocket validation passed for bridge admission, bearer
+  subprotocol parsing/verification, and redaction.
+- `bun run test:protocol` passed: 12 files, 88 tests.
+- `bun run test:fixtures` passed: 72 core fixture/reducer tests.
+- `bun run --cwd examples/recipes typecheck` passed after adding the
+  host-gated workflow recipe.
+- `bun run test:skills` passed: 5 skill tests.
+- `bun run test:api-snapshots` passed after API snapshot updates.
+- `bun run validate:fast` passed after moving first-message operation id
+  generation out of `packages/react/src/hooks/composer.ts`.
+- `bun run validate:protocol` passed.
+- `bun run validate:packages` passed; existing publint repository URL
+  suggestions and Vite chunk-size warnings remained non-fatal.
+- `bun run test:package-resolution` passed.
+- Targeted Playwright fixture validation passed for
+  `examples/local-react-vite/e2e/smoke.e2e.ts` and
+  `examples/local-react-vite/e2e/visual-layout.e2e.ts` host-workflow cases:
+  10 chromium tests passed.
