@@ -174,10 +174,25 @@ Evidence:
 
 ## Local Media Fallback
 
-- [ ] Add transcript image fallback tests when a returned URL fails to load.
-- [ ] Add transcript video fallback tests when a returned URL fails to load.
-- [ ] Document host route `403` and `404` fallback behavior explicitly.
-- [ ] Keep raw filesystem paths out of browser preview URLs.
+- [x] Add transcript image fallback tests when a returned URL fails to load.
+- [x] Add transcript video fallback tests when a returned URL fails to load.
+- [x] Document host route `403` and `404` fallback behavior explicitly.
+- [x] Keep raw filesystem paths out of browser preview URLs.
+
+Evidence:
+
+- `packages/react/test/components.vitest.tsx` covers image fallback when a
+  resolved preview URL fails to load and verifies the image element is removed.
+- `packages/react/test/components.vitest.tsx` covers video fallback when a
+  resolved preview URL fails to load and verifies the raw local path is not
+  rendered.
+- Existing local media tests in `packages/react/test/components.vitest.tsx`
+  cover no-resolver fallback, structured resource captions, browser-safe
+  resource URLs, Windows path redaction, and retry when the resolver returns a
+  new URL.
+- `docs/guides/attachments.md` documents that host asset routes may return
+  `403` for unauthorized assets or `404` for unknown/expired assets and that
+  both should render the local-media fallback without exposing filesystem paths.
 
 ## Host-Gated Workflow Recipe
 

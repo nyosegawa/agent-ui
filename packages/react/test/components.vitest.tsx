@@ -4335,6 +4335,56 @@ describe("AgentChat", () => {
     expect(screen.getByText("recording")).toBeInTheDocument();
   });
 
+  it("falls back when resolved video media fails to load", async () => {
+    const initialState = runEventFixture([
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-video-failure" },
+          turns: [{ id: "turn-video-failure", threadId: "thread-video-failure" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "video",
+            kind: "imageView",
+            metadata: { path: "/tmp/private-recording.mp4" },
+            threadId: "thread-video-failure",
+            turnId: "turn-video-failure",
+          },
+          threadId: "thread-video-failure",
+          turnId: "turn-video-failure",
+          type: "item/completed",
+        },
+      },
+    ] as FixtureStep[]);
+    initialState.threadLifecycle.activeThreadId = "thread-video-failure";
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          resolveLocalMediaUrl={() => ({
+            displayName: "private-recording.mp4",
+            mimeType: "video/mp4",
+            previewUrl: "/agent-ui/assets/missing-video",
+          })}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const video = document.querySelector(".aui-image-block video");
+    expect(video).toHaveAttribute("src", "/agent-ui/assets/missing-video");
+    fireEvent.error(video!);
+    expect(screen.getByText("Local media unavailable")).toBeInTheDocument();
+    expect(document.querySelector(".aui-image-block video")).toBeNull();
+    expect(screen.queryByText(/tmp/)).toBeNull();
+  });
+
   it("falls back when resolved local media fails to load", async () => {
     const initialState = runEventFixture([
       {
