@@ -85,7 +85,11 @@ through known registered assets, such as the asset ID URL returned by
 `createAgentUiLocalMediaHelper()`. Returning a structured resource lets the host
 provide a safe caption without exposing the raw local path. If the resolver is
 missing, returns no URL, or the browser media load fails, Agent UI renders the
-default local-media fallback card instead of a broken image/video.
+default local-media fallback card instead of a broken image/video. Host static
+routes may return `403` when the authenticated session cannot access an asset or
+`404` when the asset ID is unknown or expired; both are browser load failures
+from Agent UI's perspective and should fall back without exposing filesystem
+paths.
 
 ## Local Media Helper
 

@@ -119,12 +119,19 @@ raw-free controller view. The public view exposes `value`, `setValue`,
 `canSubmit`, `submitMode`, `disabledReason`, `isSubmitting`, `isInterrupting`,
 `activeTurnId`, queued follow-ups, failed first-message pending messages, and
 retry/cancel actions for those failed pending messages. It also exposes
-`startThreadWithInput(input)` for headless hosts that need the same safe
-first-message behavior as `AgentChat`: the first user message appears
-immediately, `thread/start` uses the current run settings, `turn/start` waits
-for the canonical thread id returned by `thread/start`, and the returned
-`{ threadId }` is the id hosts should persist. It does not expose the internal
-operation map, raw `ThreadStartResponse`, raw `TurnStartResponse`, or reducer
+`startThreadWithInput(input, { threadOptions, turnOptions })` for headless hosts
+that need the same safe first-message behavior as `AgentChat`: the first user
+message appears immediately, `thread/start` uses the current run settings plus
+the supplied `threadOptions`, `turn/start` waits for the canonical thread id
+returned by `thread/start`, and `turnOptions` are merged after the selected
+execution mode defaults. The returned
+`{ threadId, operationId, turnId, optimisticTurnId, userMessageId }` is raw-free
+Agent UI metadata; `threadId` is the canonical id hosts should persist,
+`turnId` is the App Server turn id returned by `turn/start`, `optimisticTurnId`
+is the transient UI turn id used before live turn notifications reconcile the
+first user message, and `userMessageId` is the client id supplied to
+`turn/start`. It does not expose the internal operation map, raw
+`ThreadStartResponse`, raw `TurnStartResponse`, or reducer
 reconciliation records. Idle threads submit
 `turn/start`. Running threads keep the textarea editable: Enter adds to
 `queuedFollowUps`, Cmd/Ctrl+Enter calls `turn/steer` immediately, and

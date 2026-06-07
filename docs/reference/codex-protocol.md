@@ -136,7 +136,11 @@ Implementation status:
 - Uploads, dynamic-tool handling, one-shot HTTP RPC, and bridge security
   boundaries are documented in [Server Bridge](./server-bridge.md).
 - `examples/codex-local-web` is the primary real local web app path.
-- The transport accepts `url`, optional `protocols`, optional initialize metadata, and optional reconnect settings.
+- The transport accepts `url`, optional `protocols`, optional initialize
+  metadata, and optional reconnect settings. Browser hosts that need a
+  short-lived bridge token during the WebSocket handshake can pass
+  `createAgentUiBearerSubprotocol(token)` in `protocols`; server-side bridge
+  admission must validate it and keep the token out of URLs and logs.
 - Authentication belongs to the host endpoint, for example same-origin cookies or a reverse proxy session.
 - Reconnect is opt-in with bounded exponential backoff. On close, pending requests are rejected so callers do not hang across a broken socket.
 - Like stdio, WebSocket transport reports protocol readiness after initialize

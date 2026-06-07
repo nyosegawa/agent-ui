@@ -9,6 +9,7 @@ This page gets a checkout into the normal local development loop:
 
 ## Prerequisites
 
+- Node.js `>=22`, matching the published package engine range.
 - Bun, using the version pinned in the repository `packageManager` field.
 - `agent-browser` for local agent-driven browser checks. Install it with the
   commands below if it is not already available.

@@ -1933,6 +1933,9 @@ describe("agentReducer", () => {
             audience: ["developer", "audit"],
             id: "debug-warning",
             message: "Debug-only warning",
+            reasonCode: "canonical_thread_id_mismatch",
+            requestedThreadId: "thread-requested",
+            threadId: "thread-canonical",
           },
         },
       },
@@ -1966,6 +1969,11 @@ describe("agentReducer", () => {
     expect(selectDeveloperDiagnostics(state).warnings.map((warning) => warning.id)).toEqual([
       "debug-warning",
     ]);
+    expect(selectDeveloperDiagnostics(state).warnings[0]).toMatchObject({
+      reasonCode: "canonical_thread_id_mismatch",
+      requestedThreadId: "thread-requested",
+      threadId: "thread-canonical",
+    });
     expect(
       selectDeveloperDiagnostics(state).protocolNotifications.map(
         (notification) => notification.id,

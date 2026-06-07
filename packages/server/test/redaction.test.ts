@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createAgentUiBearerSubprotocol } from "../../codex/src/websocket";
 import { redactSecrets, redactStructuredValue, redactTransportEvent } from "../src";
 
 describe("redactSecrets", () => {
@@ -56,6 +57,14 @@ describe("redactSecrets", () => {
     expect(redacted).not.toContain("refresh_token=b");
     expect(redacted).not.toContain("id_token=c");
     expect(redacted).not.toContain("client_secret=d");
+  });
+
+  it("redacts Agent UI bearer WebSocket subprotocol tokens", () => {
+    const protocol = createAgentUiBearerSubprotocol("session-token");
+    const redacted = redactSecrets(`Sec-WebSocket-Protocol: ${protocol}`);
+
+    expect(redacted).toBe("Sec-WebSocket-Protocol: agent-ui-bearer.[REDACTED]");
+    expect(redacted).not.toContain(protocol);
   });
 
   it("redacts Authorization headers line-by-line without consuming later diagnostics", () => {

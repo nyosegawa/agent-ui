@@ -6,7 +6,11 @@ import type { CodexStable } from "@nyosegawa/agent-ui-codex/stable-types";
 import { useCallback } from "react";
 import type { AgentUserInput } from "../agent-input";
 import { useAgentContext } from "../provider";
-import { codexTurnStartOptions, type ThreadStartOptions } from "../request-options";
+import {
+  codexTurnStartOptions,
+  type ThreadStartOptions,
+  type TurnStartOptions,
+} from "../request-options";
 import { useCodexSession } from "./codex-session";
 import { AGENT_EXECUTION_MODES } from "./run-settings";
 import type { AgentThreadStartWithInputResult } from "./thread-lifecycle-types";
@@ -26,6 +30,7 @@ export interface FirstMessageRetryPayload {
   params?: ThreadStartOptions;
   pending: FirstMessageOperationIds;
   threadId?: string;
+  turnOptions?: TurnStartOptions;
 }
 
 const firstMessagePayloads: Record<string, FirstMessageRetryPayload> = {};
@@ -40,10 +45,21 @@ export function forgetFirstMessagePayload(operationId: string) {
   delete firstMessagePayloads[operationId];
 }
 
+export function createFirstMessageOperationIds(): FirstMessageOperationIds {
+  const id = randomOperationSuffix();
+  return {
+    operationId: `first-message-${id}`,
+    threadId: `pending-thread-${id}`,
+    turnId: `pending-turn-${id}`,
+    userMessageId: `pending-user-message-${id}`,
+  };
+}
+
 export function useFirstMessageOperationController(
   startWithMessage: (
     input: string | AgentUserInput[],
     params?: ThreadStartOptions,
+    turnOptions?: TurnStartOptions,
   ) => Promise<AgentThreadStartWithInputResult>,
 ) {
   const { dispatch, state } = useAgentContext();
@@ -69,7 +85,7 @@ export function useFirstMessageOperationController(
       retryingOperations.add(operationId);
       if (!payload.threadId) {
         try {
-          await startWithMessage(payload.input, payload.params);
+          await startWithMessage(payload.input, payload.params, payload.turnOptions);
         } finally {
           retryingOperations.delete(operationId);
         }
@@ -117,6 +133,7 @@ export function useFirstMessageOperationController(
           input: payload.normalizedInput,
           model: runSettings.modelId,
           ...codexTurnStartOptions(executionMode?.turnParams),
+          ...codexTurnStartOptions(payload.turnOptions),
           threadId: payload.threadId,
         });
         if (!cancelledOperations.has(operationId)) {
@@ -192,4 +209,10 @@ function agentError(caught: unknown) {
   return {
     message: caught instanceof Error ? caught.message : String(caught),
   };
+}
+
+function randomOperationSuffix() {
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid) return uuid;
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
 }

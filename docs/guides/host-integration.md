@@ -177,9 +177,15 @@ threads through `useAgentThreadController().startThread()` or submit the first
 message through `useAgentComposerController()`. The public composer controller
 owns pending first-message retry/cancel state without exposing operation maps.
 When using headless hooks, call
-`useAgentComposerController().startThreadWithInput(input)` for the first user
-message so it appears immediately and `turn/start` uses the canonical thread id
-after `thread/start` reconciliation.
+`useAgentComposerController().startThreadWithInput(input, { threadOptions,
+turnOptions })` for the first user message so it appears immediately,
+`thread/start` can receive host-owned thread options, and `turn/start` uses the
+canonical thread id after `thread/start` reconciliation. Agent UI merges
+`turnOptions` after execution-mode defaults and returns raw-free
+`{ threadId, operationId, turnId, optimisticTurnId, userMessageId }` metadata.
+Use `turnId` for host records that need the App Server turn id; the
+`optimisticTurnId` is only the transient UI turn id used before live turn
+notifications reconcile the first user message.
 
 ## Drawer And Overlay Layers
 
@@ -200,6 +206,12 @@ The host owns routing, persistence, auth, workspace selection, and workflow
 state machines. Agent UI owns reusable transcript, composer, thread lifecycle,
 server-request, history, and overlay behavior. Add recipes or examples for
 workflow composition instead of adding workflow-specific core APIs.
+
+Use `examples/recipes/src/host-gated-workflow.tsx` as the typed starting point
+for plan/update-driven gates. It composes `AgentThreadTimeline`, a host-owned
+approval bar, and a delayed composer, then submits the first approved turn with
+`startThreadWithInput(input, { threadOptions, turnOptions })`. Keep the gate
+state, plan persistence, routing, and audit trail in the host.
 
 ## Validation Checklist
 

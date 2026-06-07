@@ -6,6 +6,7 @@ import type { DynamicToolDebugEvent } from "./dynamic-tools";
 
 export type AgentUiBridgeHealthPhase =
   | "admissionChecked"
+  | "rejected"
   | "processSpawned"
   | "initialized"
   | "connected"
@@ -29,6 +30,7 @@ export interface AgentUiBridgeHealthEvent {
   closeReason?: string;
   diagnostic?: string;
   phase: AgentUiBridgeHealthPhase;
+  reasonCode?: string;
   state: AgentUiBridgeHealthState;
   timestamp: number;
   type: "bridgeHealth";

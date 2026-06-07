@@ -89,6 +89,10 @@ experimental method lists), `CodexSession`, `createCodexSession`,
 `createCodexStdioTransport`, `createCodexWebSocketTransport`,
 `createCodexSdkTransportAdapter`, `startDeviceCodeLogin`, and
 `cancelDeviceCodeLogin`.
+Keep the WebSocket transport bearer-subprotocol helper
+`createAgentUiBearerSubprotocol()` public for browser hosts that need to pass a
+short-lived bridge token through the WebSocket handshake without query strings
+or impossible custom headers.
 
 Move to subpath: generated method params/results and request-construction
 types should stay on `stable-types`, `clients`, `request-builders`, or
@@ -142,7 +146,8 @@ normalization remain internal/source-level boundaries;
 active-thread, thread-list, composer, transcript, scroll, server-request, and
 diagnostics controllers. `startThreadWithInput()` is not a thread hook method;
 the raw-free first-message start behavior is public on
-`AgentComposerController` as `startThreadWithInput(input)`, while the
+`AgentComposerController` as
+`startThreadWithInput(input, { threadOptions, turnOptions })`, while the
 source-level internal composer controller keeps its implementation helper named
 `startWithMessage()`.
 
@@ -166,7 +171,12 @@ Keep public: `attachAgentUiWebSocketBridge`,
 `handleAgentUiWebSocketConnection`, `createCodexAppServerBridge`,
 `createAgentUiNextRpcRoute`, `createAgentUiExpressMiddleware`,
 one-shot method policy helpers, bridge option types, browser method capability
-policy types, `AgentUiBridgePolicy` admission mode types,
+policy types, `AgentUiBridgePolicy` admission mode types, structured bridge
+rejection/result types such as `AgentUiBridgeRejection`,
+`AgentUiBridgeResult`, `AgentUiBridgeAdmissionDecision`, and
+`AgentUiBridgeRejectionReason`,
+bearer WebSocket subprotocol parser/verifier helpers
+`parseAgentUiBearerSubprotocol()` and `verifyAgentUiBearerSubprotocol()`,
 `AgentUiDynamicToolPolicy`, dynamic tool handler/helper types and explicit MCP
 mapping factories, dynamic tool debug event types, host event sink helpers,
 bridge health event types, context-rich server-request policy callback/helper
@@ -245,8 +255,12 @@ the same names. The public result contract for `AgentThreadStartResult`,
   message start, or resume.
 - `requestedThreadId` is optional diagnostic metadata for resume paths where
   the host asked for an alias or stale persisted id.
-- Stable first-turn metadata such as `startedTurnId` may be included only as an
-  Agent UI view-model field, not as a generated `TurnStartResponse`.
+- First-message start returns stable `operationId`, `turnId`,
+  `optimisticTurnId`, and `userMessageId` metadata as Agent UI view-model
+  fields, not as a generated `ThreadStartResponse` or `TurnStartResponse`.
+- First-message `turnId` is the App Server turn id returned by `turn/start`
+  when available; `optimisticTurnId` is the transient UI turn id used before
+  live turn notifications reconcile the first user message.
 - Raw App Server responses, generated protocol payloads, optimistic operation
   maps, canonical-id alias maps, and reducer reconciliation records stay out of
   the React package root.

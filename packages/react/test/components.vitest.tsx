@@ -283,9 +283,13 @@ function ResumeThreadHarness({ requestedId }: { requestedId: string }) {
       <button
         type="button"
         onClick={() =>
-          void resumeThread(requestedId).then((result) => {
-            setResumeResult(`${result.threadId}:${result.requestedThreadId ?? "none"}`);
-          })
+          void resumeThread(requestedId)
+            .then((result) => {
+              setResumeResult(`${result.threadId}:${result.requestedThreadId ?? "none"}`);
+            })
+            .catch((caught: unknown) => {
+              setResumeResult(caught instanceof Error ? caught.message : String(caught));
+            })
         }
       >
         Resume requested thread
@@ -295,6 +299,36 @@ function ResumeThreadHarness({ requestedId }: { requestedId: string }) {
       <output aria-label="thread title">{activeThread?.thread.name ?? "none"}</output>
       <output aria-label="initial page item">{pageItemText ?? "none"}</output>
       <output aria-label="resume result">{resumeResult || "none"}</output>
+    </>
+  );
+}
+
+function ResumeDiagnosticsProbe() {
+  const { developerDiagnostics, auditDiagnostics, userDiagnostics } = useAgentDiagnostics();
+  return (
+    <>
+      <output aria-label="developer resume diagnostics">
+        {developerDiagnostics.warnings
+          .map((warning) =>
+            JSON.stringify({
+              id: warning.id,
+              message: warning.message,
+              raw: warning.raw,
+              reasonCode: warning.reasonCode,
+              requestedThreadId: warning.requestedThreadId,
+              threadId: warning.threadId,
+            }),
+          )
+          .join("\n") || "none"}
+      </output>
+      <output aria-label="audit resume diagnostics">
+        {auditDiagnostics.warnings.map((warning) => warning.reasonCode).join(",") ||
+          "none"}
+      </output>
+      <output aria-label="user resume diagnostics">
+        {userDiagnostics.warnings.map((warning) => warning.reasonCode).join(",") ||
+          "none"}
+      </output>
     </>
   );
 }
@@ -500,6 +534,61 @@ function PublicFirstMessageStartProbe() {
       </button>
       <output aria-label="public start result">{result}</output>
       <output aria-label="public start error">{error}</output>
+    </>
+  );
+}
+
+function PublicFirstMessageStartWithOptionsProbe() {
+  const [result, setResult] = useState("none");
+  const [error, setError] = useState("none");
+  const composer = useAgentComposerController();
+  const { setExecutionMode } = useAgentRunSettings();
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setExecutionMode("review")}
+      >
+        Set review mode
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void composer
+            .startThreadWithInput(
+              [
+                textInput("inspect image"),
+                localImageInput("/tmp/agent-ui-first-turn.png"),
+              ],
+              {
+                threadOptions: {
+                  approvalPolicy: "on-request",
+                  cwd: "/host/project",
+                  model: "thread-model",
+                  sandbox: "workspace-write",
+                  threadSource: "user",
+                },
+                turnOptions: {
+                  approvalPolicy: "never",
+                  cwd: "/host/project/turn",
+                  effort: "high",
+                  model: "turn-model",
+                  serviceTier: "flex",
+                },
+              },
+            )
+            .then((nextResult) => {
+              setResult(JSON.stringify(nextResult));
+            })
+            .catch((caught: unknown) => {
+              setError(caught instanceof Error ? caught.message : String(caught));
+            });
+        }}
+      >
+        Public start with options
+      </button>
+      <output aria-label="public start options result">{result}</output>
+      <output aria-label="public start options error">{error}</output>
     </>
   );
 }
@@ -4246,6 +4335,56 @@ describe("AgentChat", () => {
     expect(screen.getByText("recording")).toBeInTheDocument();
   });
 
+  it("falls back when resolved video media fails to load", async () => {
+    const initialState = runEventFixture([
+      {
+        event: {
+          snapshot: true,
+          status: "loaded",
+          thread: { id: "thread-video-failure" },
+          turns: [{ id: "turn-video-failure", threadId: "thread-video-failure" }],
+          type: "thread/upserted",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "video",
+            kind: "imageView",
+            metadata: { path: "/tmp/private-recording.mp4" },
+            threadId: "thread-video-failure",
+            turnId: "turn-video-failure",
+          },
+          threadId: "thread-video-failure",
+          turnId: "turn-video-failure",
+          type: "item/completed",
+        },
+      },
+    ] as FixtureStep[]);
+    initialState.threadLifecycle.activeThreadId = "thread-video-failure";
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          resolveLocalMediaUrl={() => ({
+            displayName: "private-recording.mp4",
+            mimeType: "video/mp4",
+            previewUrl: "/agent-ui/assets/missing-video",
+          })}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    const video = document.querySelector(".aui-image-block video");
+    expect(video).toHaveAttribute("src", "/agent-ui/assets/missing-video");
+    fireEvent.error(video!);
+    expect(screen.getByText("Local media unavailable")).toBeInTheDocument();
+    expect(document.querySelector(".aui-image-block video")).toBeNull();
+    expect(screen.queryByText(/tmp/)).toBeNull();
+  });
+
   it("falls back when resolved local media fails to load", async () => {
     const initialState = runEventFixture([
       {
@@ -6307,6 +6446,157 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("public start error")).toHaveTextContent("none");
   });
 
+  it("passes first-turn thread and turn options, local images, and stable metadata through the public composer controller", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-options-canonical",
+              name: "Options thread",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "turn/start") {
+          return {
+            turn: {
+              id: "turn-options-canonical",
+              status: "inProgress",
+              threadId: "thread-options-canonical",
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <PublicFirstMessageStartWithOptionsProbe />
+        <ActiveThreadStateProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Set review mode" }));
+    await user.click(screen.getByRole("button", { name: "Public start with options" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("public start options result")).toHaveTextContent(
+        "thread-options-canonical",
+      ),
+    );
+    const threadStartParams = transport.requests.find(
+      (request) => request.method === "thread/start",
+    )?.params;
+    expect(threadStartParams).toMatchObject({
+      approvalPolicy: "on-request",
+      cwd: "/host/project",
+      model: "thread-model",
+      sandbox: "workspace-write",
+      threadSource: "user",
+    });
+    const turnStartParams = transport.requests.find(
+      (request) => request.method === "turn/start",
+    )?.params;
+    expect(turnStartParams).toMatchObject({
+      approvalPolicy: "never",
+      clientUserMessageId: expect.stringMatching(/^pending-user-message-/),
+      cwd: "/host/project/turn",
+      effort: "high",
+      input: [
+        { text: "inspect image", text_elements: [], type: "text" },
+        { path: "/tmp/agent-ui-first-turn.png", type: "localImage" },
+      ],
+      model: "turn-model",
+      sandboxPolicy: {
+        type: "workspaceWrite",
+      },
+      serviceTier: "flex",
+      threadId: "thread-options-canonical",
+    });
+    const result = JSON.parse(
+      screen.getByLabelText("public start options result").textContent ?? "{}",
+    ) as Record<string, string>;
+    expect(result).toMatchObject({
+      operationId: expect.stringMatching(/^first-message-/),
+      optimisticTurnId: expect.stringMatching(/^pending-turn-/),
+      threadId: "thread-options-canonical",
+      turnId: "turn-options-canonical",
+      userMessageId: turnStartParams?.clientUserMessageId,
+    });
+    expect(screen.getByLabelText("active turn id")).toHaveTextContent(
+      result.optimisticTurnId,
+    );
+    expect(screen.getByLabelText("active thread id")).toHaveTextContent(
+      "thread-options-canonical",
+    );
+    expect(screen.getByLabelText("public start options error")).toHaveTextContent(
+      "none",
+    );
+  });
+
+  it("retries first messages with the original turn options", async () => {
+    const user = userEvent.setup();
+    let turnStartCalls = 0;
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-options-retry",
+              name: "Options retry thread",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "turn/start") {
+          turnStartCalls += 1;
+          if (turnStartCalls === 1) throw new Error("turn failed once");
+          return {};
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <PublicFirstMessageStartWithOptionsProbe />
+        <PublicComposerControllerProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Set review mode" }));
+    await user.click(screen.getByRole("button", { name: "Public start with options" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("public failed pending count")).toHaveTextContent(
+        "1",
+      ),
+    );
+    await user.click(screen.getByRole("button", { name: "Retry failed pending message" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("public failed pending count")).toHaveTextContent(
+        "0",
+      ),
+    );
+    const turnStartRequests = transport.requests.filter(
+      (request) => request.method === "turn/start",
+    );
+    expect(turnStartRequests).toHaveLength(2);
+    expect(turnStartRequests[1]?.params).toMatchObject({
+      approvalPolicy: "never",
+      cwd: "/host/project/turn",
+      effort: "high",
+      model: "turn-model",
+      sandboxPolicy: {
+        type: "workspaceWrite",
+      },
+      serviceTier: "flex",
+      threadId: "thread-options-retry",
+    });
+  });
+
   it("does not start blank first-message threads through the public composer controller", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
@@ -7049,6 +7339,94 @@ describe("AgentChat", () => {
     expect(
       transport.requests.find((request) => request.method === "thread/resume")?.params,
     ).toEqual({ threadId: "requested-thread-path" });
+  });
+
+  it("emits raw-free diagnostics when resume returns a canonical id alias", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/resume") {
+          return {
+            thread: {
+              id: "thread-canonical-diagnostic",
+              name: "Canonical diagnostic thread",
+              status: { type: "idle" },
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <ResumeThreadHarness requestedId="thread-requested-diagnostic" />
+        <ResumeDiagnosticsProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Resume requested thread" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("developer resume diagnostics")).toHaveTextContent(
+        "canonical_thread_id_mismatch",
+      ),
+    );
+    const developerDiagnostics = screen.getByLabelText(
+      "developer resume diagnostics",
+    );
+    expect(developerDiagnostics).toHaveTextContent("thread-requested-diagnostic");
+    expect(developerDiagnostics).toHaveTextContent("thread-canonical-diagnostic");
+    expect(developerDiagnostics).not.toHaveTextContent("raw");
+    expect(developerDiagnostics).not.toHaveTextContent("Canonical diagnostic thread");
+    expect(screen.getByLabelText("audit resume diagnostics")).toHaveTextContent(
+      "canonical_thread_id_mismatch",
+    );
+    expect(screen.getByLabelText("user resume diagnostics")).toHaveTextContent(
+      "none",
+    );
+  });
+
+  it("emits raw-free diagnostics when resume normalization fails", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/resume") {
+          return {
+            thread: {
+              name: "Raw thread name should not leak",
+              status: { type: "idle" },
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <ResumeThreadHarness requestedId="thread-missing-id" />
+        <ResumeDiagnosticsProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Resume requested thread" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("developer resume diagnostics")).toHaveTextContent(
+        "resume_response_missing_thread_id",
+      ),
+    );
+    const developerDiagnostics = screen.getByLabelText(
+      "developer resume diagnostics",
+    );
+    expect(developerDiagnostics).toHaveTextContent("thread-missing-id");
+    expect(developerDiagnostics).not.toHaveTextContent("Raw thread name should not leak");
+    expect(developerDiagnostics).not.toHaveTextContent('"raw":');
+    expect(screen.getByLabelText("audit resume diagnostics")).toHaveTextContent(
+      "resume_response_missing_thread_id",
+    );
+    expect(screen.getByLabelText("user resume diagnostics")).toHaveTextContent(
+      "none",
+    );
   });
 
   it("reads thread previews without replacing the active thread", async () => {

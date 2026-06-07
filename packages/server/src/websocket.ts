@@ -6,7 +6,9 @@ import {
   parseJsonRpcLine,
 } from "@nyosegawa/agent-ui-codex";
 import type { AgentTransportEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
-import type { IncomingMessage, Server } from "node:http";
+import { createHash, timingSafeEqual } from "node:crypto";
+import { STATUS_CODES, type IncomingMessage, type Server } from "node:http";
+import type { Duplex } from "node:stream";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
 import { createCodexAppServerBridge, type CodexAppServerBridgeOptions } from "./bridge";
 import * as dynamicTools from "./dynamic-tools";
@@ -67,10 +69,17 @@ export type AgentUiWebSocketBridgeOptionsResolver = (
   context: AgentUiWebSocketBridgeOptionsResolverContext,
 ) =>
   | AgentUiResolvedWebSocketBridgeOptions
+  | AgentUiBridgeResult
   | false
   | null
   | undefined
-  | Promise<AgentUiResolvedWebSocketBridgeOptions | false | null | undefined>;
+  | Promise<
+      | AgentUiResolvedWebSocketBridgeOptions
+      | AgentUiBridgeResult
+      | false
+      | null
+      | undefined
+    >;
 
 export interface AgentUiWebSocketServerOptions extends AgentUiWebSocketBridgeOptions {
   server: Server;
@@ -84,12 +93,46 @@ export type AgentUiDynamicToolPolicy =
       helperPermissions?: dynamicTools.DynamicToolHelperPermissionPolicy;
       mode: "host-callback";
     };
+export type AgentUiBridgeRejectionReason =
+  | "request_context_missing"
+  | "loopback_required"
+  | "resolver_rejected"
+  | "resolver_failed"
+  | "admission_rejected"
+  | "admission_failed"
+  | "unsafe_admission_reason_missing"
+  | "bearer_subprotocol_missing"
+  | "bearer_subprotocol_malformed"
+  | "bearer_subprotocol_mismatch"
+  | (string & {});
+export interface AgentUiBridgeRejection {
+  body?: string | Buffer;
+  closeCode?: number;
+  closeReason?: string;
+  reason: AgentUiBridgeRejectionReason;
+  status?: number;
+  statusText?: string;
+}
+export type AgentUiBridgeResult =
+  | { accepted: true }
+  | ({ accepted: false } & AgentUiBridgeRejection);
+export type AgentUiBridgeAdmissionDecision =
+  | boolean
+  | AgentUiBridgeResult;
 export type AgentUiBridgeAdmissionHook = (
   request: IncomingMessage,
-) => boolean | Promise<boolean>;
+) => AgentUiBridgeAdmissionDecision | Promise<AgentUiBridgeAdmissionDecision>;
 export interface AgentUiBridgePolicy {
   admission?: AgentUiBridgeAdmissionPolicy;
 }
+export type AgentUiBearerSubprotocolParseResult =
+  | { ok: true; protocol: string; token: string }
+  | {
+      ok: false;
+      reason:
+        | "bearer_subprotocol_missing"
+        | "bearer_subprotocol_malformed";
+    };
 export type AgentUiBridgeAdmissionPolicy =
   | { mode: "local-loopback" }
   | { mode: "host-callback"; admit: AgentUiBridgeAdmissionHook }
@@ -116,6 +159,7 @@ const DEFAULT_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const DEFAULT_MAX_INBOUND_MESSAGE_BYTES = 256 * 1024;
 const DEFAULT_INBOUND_RATE_LIMIT_INTERVAL_MS = 1_000;
 const DEFAULT_INBOUND_RATE_LIMIT_MESSAGES = 60;
+export const AGENT_UI_BEARER_SUBPROTOCOL_PREFIX = "agent-ui-bearer.";
 const WEB_SOCKET_OPEN_STATE = 1;
 const DISABLED_DYNAMIC_TOOL_POLICY = { mode: "disabled" } as const satisfies AgentUiDynamicToolPolicy;
 const DEFAULT_BROWSER_METHOD_CAPABILITIES = [
@@ -179,19 +223,152 @@ export function attachAgentUiWebSocketBridge(
   const { path = DEFAULT_PATH, server, ...bridgeOptions } = options;
   const webSocketServer = new WebSocketServer({
     maxPayload: bridgeOptions.inbound?.maxMessageBytes ?? DEFAULT_MAX_INBOUND_MESSAGE_BYTES,
-    path,
-    server,
+    noServer: true,
   });
-  webSocketServer.on("connection", (socket, request) => {
-    void handleAgentUiWebSocketConnection(socket, bridgeOptions, request);
+  const onUpgrade = (
+    request: IncomingMessage,
+    socket: Duplex,
+    head: Buffer,
+  ) => {
+    if (!requestMatchesPath(request, path)) {
+      if (server.listenerCount("upgrade") <= 1) {
+        sendHttpBridgeRejection(
+          socket,
+          bridgeRejection(
+            { reason: "path_not_found", status: 404 },
+            {
+              closeCode: 1008,
+              closeReason: "Agent UI bridge path not found",
+            },
+          ),
+        );
+      }
+      return;
+    }
+    let upgradeSocketClosed = false;
+    socket.once("close", () => {
+      upgradeSocketClosed = true;
+    });
+    request.once("close", () => {
+      upgradeSocketClosed = true;
+    });
+    request.once("aborted", () => {
+      upgradeSocketClosed = true;
+    });
+    void (async () => {
+      const preflight = await evaluateBridgePreflight({
+        options: bridgeOptions,
+        request,
+      });
+      if (preflight.accepted === false) {
+        sendHttpBridgeRejection(socket, preflight.rejection);
+        return;
+      }
+      if (
+        upgradeSocketClosed ||
+        request.destroyed ||
+        request.socket.destroyed ||
+        socket.destroyed ||
+        !socket.writable
+      ) return;
+      webSocketServer.handleUpgrade(request, socket, head, (webSocket) => {
+        void handleAgentUiWebSocketConnectionInternal(
+          webSocket,
+          preflight.options,
+          request,
+          preflight.bridgeHealth,
+        );
+        webSocketServer.emit("connection", webSocket, request);
+      });
+    })().catch((error: unknown) => {
+      const rejection = bridgeRejection(
+        {
+          reason: "resolver_failed",
+          status: 500,
+        },
+        {
+          closeCode: 1011,
+          closeReason: "Agent UI bridge option resolver failed",
+        },
+      );
+      bridgeOptions.stderr?.(
+        redactSecrets(
+          `[agent-ui] bridge upgrade failed message=${error instanceof Error ? error.message : String(error)}\n`,
+        ),
+      );
+      sendHttpBridgeRejection(socket, rejection);
+    });
+  };
+  server.on("upgrade", onUpgrade);
+  webSocketServer.on("close", () => {
+    server.off("upgrade", onUpgrade);
   });
   return webSocketServer;
+}
+
+export function parseAgentUiBearerSubprotocol(
+  requestOrHeader: IncomingMessage | string | string[] | undefined,
+): AgentUiBearerSubprotocolParseResult {
+  const header = isIncomingMessage(requestOrHeader)
+    ? requestOrHeader.headers["sec-websocket-protocol"]
+    : requestOrHeader;
+  const matches = protocolHeaderValues(header).filter((protocol) =>
+    protocol.startsWith(AGENT_UI_BEARER_SUBPROTOCOL_PREFIX),
+  );
+  if (matches.length === 0) return { ok: false, reason: "bearer_subprotocol_missing" };
+  if (matches.length !== 1) return { ok: false, reason: "bearer_subprotocol_malformed" };
+  const protocol = matches[0]!;
+  const encoded = protocol.slice(AGENT_UI_BEARER_SUBPROTOCOL_PREFIX.length);
+  const token = decodeBearerSubprotocolToken(encoded);
+  if (token === undefined) return { ok: false, reason: "bearer_subprotocol_malformed" };
+  return { ok: true, protocol, token };
+}
+
+export function verifyAgentUiBearerSubprotocol(
+  request: IncomingMessage,
+  expectedToken: string | undefined,
+): AgentUiBridgeResult {
+  const parsed = parseAgentUiBearerSubprotocol(request);
+  if (parsed.ok === false) {
+    return {
+      accepted: false,
+      ...bridgeRejection(
+        { reason: parsed.reason, status: 403 },
+        {
+          closeCode: 1008,
+          closeReason: "Agent UI bridge bearer token rejected",
+        },
+      ),
+    };
+  }
+  if (!expectedToken || !constantTimeTokenEqual(parsed.token, expectedToken)) {
+    return {
+      accepted: false,
+      ...bridgeRejection(
+        { reason: "bearer_subprotocol_mismatch", status: 403 },
+        {
+          closeCode: 1008,
+          closeReason: "Agent UI bridge bearer token rejected",
+        },
+      ),
+    };
+  }
+  return { accepted: true };
 }
 
 export async function handleAgentUiWebSocketConnection(
   socket: WebSocket,
   options: AgentUiWebSocketBridgeOptions = {},
   request?: IncomingMessage,
+): Promise<void> {
+  return handleAgentUiWebSocketConnectionInternal(socket, options, request);
+}
+
+async function handleAgentUiWebSocketConnectionInternal(
+  socket: WebSocket,
+  options: AgentUiWebSocketBridgeOptions = {},
+  request?: IncomingMessage,
+  preflightBridgeHealth?: AgentUiBridgeHealthState,
 ): Promise<void> {
   let closed = false;
   let bridge: ReturnType<typeof createCodexAppServerBridge> | undefined;
@@ -205,16 +382,32 @@ export async function handleAgentUiWebSocketConnection(
   socket.on("close", closeBridge);
   socket.on("error", closeBridge);
 
-  const resolvedOptions = await resolveConnectionBridgeOptions({
-    options,
-    request,
-    socket,
+  const preflight = preflightBridgeHealth
+    ? {
+        accepted: true as const,
+        bridgeHealth: preflightBridgeHealth,
+        options: options as AgentUiResolvedWebSocketBridgeOptions,
+      }
+    : await evaluateBridgePreflight({
+        options,
+        request,
   });
-  if (!resolvedOptions) return;
+  if (preflight.accepted === false) {
+    const closeCode = sanitizeWebSocketCloseCode(preflight.rejection.closeCode);
+    const closeReason = sanitizeWebSocketCloseReason(
+      bridgeCloseReason(preflight.rejection),
+    );
+    socket.close(
+      closeCode,
+      closeReason,
+    );
+    return;
+  }
   if (closed || socket.readyState !== WEB_SOCKET_OPEN_STATE) {
     closeBridge();
     return;
   }
+  const resolvedOptions = preflight.options;
   const {
     admission,
     bridgePolicy,
@@ -227,13 +420,9 @@ export async function handleAgentUiWebSocketConnection(
     serverRequestPolicy,
     ...bridgeOptions
   } = resolvedOptions;
-  const bridgeHealth: AgentUiBridgeHealthState = {
-    admissionChecked: false,
-    connected: false,
-    initialized: false,
-    pendingRequestCount: 0,
-    processSpawned: false,
-  };
+  void admission;
+  void bridgePolicy;
+  const bridgeHealth: AgentUiBridgeHealthState = preflight.bridgeHealth;
   const emitBridgeHealthEvent = (
     phase: AgentUiBridgeHealthPhase,
     extra: Omit<AgentUiBridgeHealthEvent, "audience" | "phase" | "state" | "timestamp" | "type"> = {},
@@ -261,29 +450,6 @@ export async function handleAgentUiWebSocketConnection(
     emitBridgeHealthEvent("diagnostic", { diagnostic });
     return diagnostic;
   };
-  const admissionPolicy = resolveBridgeAdmissionPolicy({ admission, bridgePolicy });
-  const admissionResult = await checkBridgeAdmission({
-    policy: admissionPolicy,
-    request,
-    stderr: bridgeOptions.stderr,
-  });
-  if (closed || socket.readyState !== WEB_SOCKET_OPEN_STATE) {
-    closeBridge();
-    return;
-  }
-  bridgeHealth.admissionChecked = true;
-  emitBridgeHealthEvent("admissionChecked", {
-    ...(admissionResult.accepted === false
-      ? {
-          closeCode: admissionResult.closeCode,
-          closeReason: admissionResult.reason,
-        }
-      : {}),
-  });
-  if (admissionResult.accepted === false) {
-    socket.close(admissionResult.closeCode, admissionResult.reason);
-    return;
-  }
   let methodPolicy: ResolvedBrowserMethodPolicy;
   try {
     methodPolicy = resolveBrowserMethodPolicy(browserMethodPolicy);
@@ -536,33 +702,115 @@ export async function handleAgentUiWebSocketConnection(
   });
 }
 
-async function resolveConnectionBridgeOptions({
+async function evaluateBridgePreflight({
   options,
   request,
-  socket,
 }: {
   options: AgentUiWebSocketBridgeOptions;
   request?: IncomingMessage;
-  socket: WebSocket;
-}): Promise<AgentUiResolvedWebSocketBridgeOptions | undefined> {
-  const { resolveBridgeOptions, ...baseOptions } = options;
-  if (!resolveBridgeOptions) return baseOptions;
-  try {
-    const resolved = await resolveBridgeOptions({ request });
-    if (!resolved) {
-      socket.close(1008, "Agent UI bridge options rejected");
-      return undefined;
+}): Promise<
+  | {
+      accepted: true;
+      bridgeHealth: AgentUiBridgeHealthState;
+      options: AgentUiResolvedWebSocketBridgeOptions;
     }
-    return { ...baseOptions, ...resolved };
-  } catch (error) {
-    baseOptions.stderr?.(
-      redactSecrets(
-        `[agent-ui] bridge option resolver failed message=${error instanceof Error ? error.message : String(error)}\n`,
-      ),
-    );
-    socket.close(1011, "Agent UI bridge option resolver failed");
-    return undefined;
+  | {
+      accepted: false;
+      bridgeHealth: AgentUiBridgeHealthState;
+      rejection: AgentUiBridgeRejection;
+    }
+> {
+  const bridgeHealth = createInitialBridgeHealthState();
+  const { resolveBridgeOptions, ...baseOptions } = options;
+  let resolvedOptions: AgentUiResolvedWebSocketBridgeOptions = baseOptions;
+  if (resolveBridgeOptions) {
+    try {
+      const resolved = await resolveBridgeOptions({ request });
+      if (isBridgeResult(resolved)) {
+        if (resolved.accepted === false) {
+          const rejection = bridgeRejection(resolved, {
+            closeCode: 1008,
+            closeReason: "Agent UI bridge options rejected",
+            status: 403,
+          });
+          emitBridgeHealthEventForOptions(baseOptions, bridgeHealth, "rejected", {
+            closeCode: rejection.closeCode,
+            closeReason: bridgeCloseReason(rejection),
+            reasonCode: rejection.reason,
+          });
+          return { accepted: false, bridgeHealth, rejection };
+        }
+      } else if (!resolved) {
+        const rejection = bridgeRejection(
+          { reason: "resolver_rejected" },
+          {
+            closeCode: 1008,
+            closeReason: "Agent UI bridge options rejected",
+            status: 403,
+          },
+        );
+        emitBridgeHealthEventForOptions(baseOptions, bridgeHealth, "rejected", {
+          closeCode: rejection.closeCode,
+          closeReason: bridgeCloseReason(rejection),
+          reasonCode: rejection.reason,
+        });
+        return { accepted: false, bridgeHealth, rejection };
+      } else {
+        resolvedOptions = { ...baseOptions, ...resolved };
+      }
+    } catch (error) {
+      baseOptions.stderr?.(
+        redactSecrets(
+          `[agent-ui] bridge option resolver failed message=${error instanceof Error ? error.message : String(error)}\n`,
+        ),
+      );
+      const rejection = bridgeRejection(
+        { reason: "resolver_failed", status: 500 },
+        {
+          closeCode: 1011,
+          closeReason: "Agent UI bridge option resolver failed",
+        },
+      );
+      emitBridgeHealthEventForOptions(baseOptions, bridgeHealth, "rejected", {
+        closeCode: rejection.closeCode,
+        closeReason: bridgeCloseReason(rejection),
+        reasonCode: rejection.reason,
+      });
+      return { accepted: false, bridgeHealth, rejection };
+    }
   }
+  const admissionPolicy = resolveBridgeAdmissionPolicy({
+    admission: resolvedOptions.admission,
+    bridgePolicy: resolvedOptions.bridgePolicy,
+  });
+  const admissionResult = await checkBridgeAdmission({
+    policy: admissionPolicy,
+    request,
+    stderr: resolvedOptions.stderr,
+  });
+  bridgeHealth.admissionChecked = true;
+  emitBridgeHealthEventForOptions(resolvedOptions, bridgeHealth, "admissionChecked", {
+    ...(admissionResult.accepted === false
+      ? {
+          closeCode: admissionResult.rejection.closeCode,
+          closeReason: bridgeCloseReason(admissionResult.rejection),
+          reasonCode: admissionResult.rejection.reason,
+        }
+      : {}),
+  });
+  if (admissionResult.accepted === false) {
+    emitBridgeHealthEventForOptions(resolvedOptions, bridgeHealth, "rejected", {
+      closeCode: admissionResult.rejection.closeCode,
+      closeReason: bridgeCloseReason(admissionResult.rejection),
+      reasonCode: admissionResult.rejection.reason,
+    });
+    return {
+      accepted: false,
+      bridgeHealth,
+      rejection: admissionResult.rejection,
+    };
+  }
+  return { accepted: true, bridgeHealth, options: resolvedOptions };
 }
 
 function resolveBridgeAdmissionPolicy({
@@ -585,11 +833,20 @@ async function checkBridgeAdmission({
   policy: AgentUiBridgeAdmissionPolicy;
   request?: IncomingMessage;
   stderr?: (line: string) => void;
-}): Promise<{ accepted: true } | { accepted: false; closeCode: number; reason: string }> {
+}): Promise<{ accepted: true } | { accepted: false; rejection: AgentUiBridgeRejection }> {
   if (policy.mode === "unsafe-no-admission") {
     if (!policy.reason.trim()) {
       stderr?.(redactSecrets("[agent-ui] unsafe admission rejected: reason is required\n"));
-      return { accepted: false, closeCode: 1011, reason: "Agent UI bridge admission failed" };
+      return {
+        accepted: false,
+        rejection: bridgeRejection(
+          { reason: "unsafe_admission_reason_missing", status: 500 },
+          {
+            closeCode: 1011,
+            closeReason: "Agent UI bridge admission failed",
+          },
+        ),
+      };
     }
     stderr?.(
       redactSecrets(
@@ -600,27 +857,75 @@ async function checkBridgeAdmission({
   }
   if (!request) {
     stderr?.(redactSecrets("[agent-ui] admission rejected: request context is required\n"));
-    return { accepted: false, closeCode: 1008, reason: "Agent UI bridge admission rejected" };
+    return {
+      accepted: false,
+      rejection: bridgeRejection(
+        { reason: "request_context_missing", status: 400 },
+        {
+          closeCode: 1008,
+          closeReason: "Agent UI bridge admission rejected",
+        },
+      ),
+    };
   }
   if (policy.mode === "local-loopback") {
     return isLoopbackRequest(request)
       ? { accepted: true }
-      : { accepted: false, closeCode: 1008, reason: "Agent UI bridge admission rejected" };
+      : {
+          accepted: false,
+          rejection: bridgeRejection(
+            { reason: "loopback_required", status: 403 },
+            {
+              closeCode: 1008,
+              closeReason: "Agent UI bridge admission rejected",
+            },
+          ),
+        };
   }
-  let accepted: boolean;
+  let decision: AgentUiBridgeAdmissionDecision;
   try {
-    accepted = await policy.admit(request);
+    decision = await policy.admit(request);
   } catch (error) {
     stderr?.(
       redactSecrets(
         `[agent-ui] admission failed message=${error instanceof Error ? error.message : String(error)}\n`,
       ),
     );
-    return { accepted: false, closeCode: 1011, reason: "Agent UI bridge admission failed" };
+    return {
+      accepted: false,
+      rejection: bridgeRejection(
+        { reason: "admission_failed", status: 500 },
+        {
+          closeCode: 1011,
+          closeReason: "Agent UI bridge admission failed",
+        },
+      ),
+    };
   }
-  return accepted
+  if (isBridgeResult(decision)) {
+    return decision.accepted === true
+      ? { accepted: true }
+      : {
+          accepted: false,
+          rejection: bridgeRejection(decision, {
+            closeCode: 1008,
+            closeReason: "Agent UI bridge admission rejected",
+            status: 403,
+          }),
+        };
+  }
+  return decision
     ? { accepted: true }
-    : { accepted: false, closeCode: 1008, reason: "Agent UI bridge admission rejected" };
+    : {
+        accepted: false,
+        rejection: bridgeRejection(
+          { reason: "admission_rejected", status: 403 },
+          {
+            closeCode: 1008,
+            closeReason: "Agent UI bridge admission rejected",
+          },
+        ),
+      };
 }
 
 function isLoopbackRequest(request: IncomingMessage): boolean {
@@ -630,6 +935,162 @@ function isLoopbackRequest(request: IncomingMessage): boolean {
   if (remoteAddress.startsWith("127.")) return true;
   if (remoteAddress === "::ffff:127.0.0.1") return true;
   return remoteAddress.startsWith("::ffff:127.");
+}
+
+function createInitialBridgeHealthState(): AgentUiBridgeHealthState {
+  return {
+    admissionChecked: false,
+    connected: false,
+    initialized: false,
+    pendingRequestCount: 0,
+    processSpawned: false,
+  };
+}
+
+function emitBridgeHealthEventForOptions(
+  options: Pick<AgentUiWebSocketBridgeOptions, "hostEvents" | "stderr">,
+  bridgeHealth: AgentUiBridgeHealthState,
+  phase: AgentUiBridgeHealthPhase,
+  extra: Omit<AgentUiBridgeHealthEvent, "audience" | "phase" | "state" | "timestamp" | "type"> = {},
+) {
+  try {
+    options.hostEvents?.onBridgeHealthEvent?.({
+      ...extra,
+      audience: ["developer", "audit"],
+      phase,
+      state: { ...bridgeHealth },
+      timestamp: Date.now(),
+      type: "bridgeHealth",
+    });
+  } catch (error) {
+    options.stderr?.(
+      redactSecrets(
+        `[agent-ui] bridge health event sink failed phase=${phase} message=${error instanceof Error ? error.message : String(error)}\n`,
+      ),
+    );
+  }
+}
+
+function bridgeRejection(
+  rejection: AgentUiBridgeRejection,
+  defaults: Required<Pick<AgentUiBridgeRejection, "closeCode" | "closeReason">> &
+    Pick<AgentUiBridgeRejection, "status" | "statusText">,
+): AgentUiBridgeRejection {
+  return {
+    ...rejection,
+    closeCode: rejection.closeCode ?? defaults.closeCode,
+    closeReason: rejection.closeReason ?? defaults.closeReason,
+    status: rejection.status ?? defaults.status,
+    statusText: rejection.statusText ?? defaults.statusText,
+  };
+}
+
+function isBridgeResult(value: unknown): value is AgentUiBridgeResult {
+  return isRecord(value) && typeof value.accepted === "boolean";
+}
+
+function bridgeCloseReason(rejection: AgentUiBridgeRejection): string {
+  return rejection.closeReason ?? `Agent UI bridge rejected: ${rejection.reason}`;
+}
+
+function sendHttpBridgeRejection(
+  socket: Duplex,
+  rejection: AgentUiBridgeRejection,
+) {
+  const status = sanitizeHttpStatus(rejection.status);
+  const statusText = sanitizeHttpStatusText(rejection.statusText, status);
+  const body = Buffer.isBuffer(rejection.body)
+    ? rejection.body
+    : Buffer.from(
+        rejection.body ?? `Agent UI bridge rejected: ${rejection.reason}\n`,
+        "utf8",
+      );
+  const headers = Buffer.from(
+    [
+      `HTTP/1.1 ${status} ${statusText}`,
+      "Connection: close",
+      "Content-Type: text/plain; charset=utf-8",
+      `Content-Length: ${body.byteLength}`,
+      "",
+      "",
+    ].join("\r\n"),
+    "utf8",
+  );
+  socket.end(Buffer.concat([headers, body]));
+}
+
+function sanitizeHttpStatus(status: number | undefined): number {
+  if (typeof status !== "number" || !Number.isInteger(status)) return 403;
+  const integerStatus = status;
+  return integerStatus >= 400 && integerStatus <= 599 ? integerStatus : 403;
+}
+
+function sanitizeHttpStatusText(statusText: string | undefined, status: number): string {
+  const fallback = STATUS_CODES[status] ?? "Forbidden";
+  if (!statusText) return fallback;
+  const sanitized = statusText.replace(/[\r\n]/g, " ").trim();
+  return sanitized.length > 0 ? sanitized : fallback;
+}
+
+function sanitizeWebSocketCloseCode(closeCode: number | undefined): number {
+  if (typeof closeCode !== "number" || !Number.isInteger(closeCode)) return 1008;
+  const integerCloseCode = closeCode;
+  return integerCloseCode !== 1004 &&
+    integerCloseCode !== 1005 &&
+    integerCloseCode !== 1006 &&
+    integerCloseCode >= 1000 &&
+    integerCloseCode <= 4999
+    ? integerCloseCode
+    : 1008;
+}
+
+function sanitizeWebSocketCloseReason(closeReason: string): string {
+  const buffer = Buffer.from(closeReason, "utf8");
+  if (buffer.byteLength <= 123) return closeReason;
+  return "Agent UI bridge rejected";
+}
+
+function isIncomingMessage(value: unknown): value is IncomingMessage {
+  return isRecord(value) && isRecord(value.headers);
+}
+
+function protocolHeaderValues(
+  header: string | string[] | undefined,
+): string[] {
+  const values = Array.isArray(header) ? header : header === undefined ? [] : [header];
+  return values
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+function decodeBearerSubprotocolToken(encoded: string): string | undefined {
+  if (!encoded || !/^[A-Za-z0-9_-]+$/.test(encoded)) return undefined;
+  try {
+    const decoded = Buffer.from(encoded, "base64url").toString("utf8");
+    if (base64UrlEncodeUtf8(decoded) !== encoded) return undefined;
+    return decoded;
+  } catch {
+    return undefined;
+  }
+}
+
+function base64UrlEncodeUtf8(value: string): string {
+  return Buffer.from(value, "utf8").toString("base64url");
+}
+
+function constantTimeTokenEqual(actual: string, expected: string): boolean {
+  const actualHash = createHash("sha256").update(actual).digest();
+  const expectedHash = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(actualHash, expectedHash);
+}
+
+function requestMatchesPath(request: IncomingMessage, path: string): boolean {
+  try {
+    return new URL(request.url ?? "/", "http://agent-ui.local").pathname === path;
+  } catch {
+    return false;
+  }
 }
 
 function threadIdFromRequest(request: PendingServerRequest): string | undefined {

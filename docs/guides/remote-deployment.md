@@ -27,9 +27,15 @@ Do not expose a personal Codex App Server directly to the open network.
 `@nyosegawa/agent-ui-codex` includes `createCodexWebSocketTransport()` for hosts that already provide an authenticated WebSocket endpoint that speaks the same JSON-RPC-lite App Server message shape.
 
 ```ts
-import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
+import {
+  createAgentUiBearerSubprotocol,
+  createCodexWebSocketTransport,
+} from "@nyosegawa/agent-ui-codex/websocket";
 
 const transport = createCodexWebSocketTransport({
+  protocols: [
+    createAgentUiBearerSubprotocol(shortLivedBridgeToken),
+  ],
   reconnect: {
     initialDelayMs: 500,
     maxAttempts: 5,
@@ -39,7 +45,12 @@ const transport = createCodexWebSocketTransport({
 });
 ```
 
-Authentication is a host responsibility. The transport intentionally does not put bearer tokens in query strings. Prefer same-origin cookies, a reverse proxy session, or a server-side token exchange.
+Authentication is a host responsibility. The transport intentionally does not
+put bearer tokens in query strings. Prefer same-origin cookies, a reverse proxy
+session, or a server-side token exchange. If the host must pass a short-lived
+browser bridge token during the WebSocket handshake, use the bearer
+subprotocol helper above and validate it in server-side bridge admission; do not
+try to use browser custom headers.
 The browser transport is only a client for a host-owned endpoint. It does not
 prove that an upstream App Server WebSocket is safe to expose directly.
 
