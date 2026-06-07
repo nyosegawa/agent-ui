@@ -196,13 +196,27 @@ Evidence:
 
 ## Host-Gated Workflow Recipe
 
-- [ ] Add typed recipe source for `AgentThreadTimeline` plus host approval bar
+- [x] Add typed recipe source for `AgentThreadTimeline` plus host approval bar
   plus delayed composer.
-- [ ] Use `startThreadWithInput(input, { threadOptions, turnOptions })` in the
+- [x] Use `startThreadWithInput(input, { threadOptions, turnOptions })` in the
   recipe.
-- [ ] Show plan/update-driven host gate without moving gate state into core.
-- [ ] Add docs cross-links from recipe docs and host integration docs.
-- [ ] Add focused fixture coverage if browser-visible behavior changes.
+- [x] Show plan/update-driven host gate without moving gate state into core.
+- [x] Add docs cross-links from recipe docs and host integration docs.
+- [x] Add focused fixture coverage if browser-visible behavior changes.
+
+Evidence:
+
+- `examples/recipes/src/host-gated-workflow.tsx` composes
+  `AgentThreadTimeline`, a host-owned approval bar, and a delayed composer.
+- The recipe calls `startThreadWithInput(input, { threadOptions, turnOptions })`
+  after the host plan gate is approved.
+- Host plan state stays in the recipe component; the approved plan id and
+  workspace policy are passed through typed thread/turn options, with no core
+  workflow state or runtime policy added.
+- `examples/recipes/README.md`, `docs/examples/recipes.md`, and
+  `docs/guides/host-integration.md` link the recipe and describe the boundary.
+- No browser fixture route changed; focused fixture coverage is not applicable
+  for this typed recipe-only slice.
 
 ## Docs, Examples, And Skills
 

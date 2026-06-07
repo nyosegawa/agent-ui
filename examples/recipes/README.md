@@ -13,6 +13,10 @@ Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
   pagination.
 - `src/host-owned-composer.tsx`: transcript plus host toolbar using the public
   composer controller.
+- `src/host-gated-workflow.tsx`: `AgentThreadTimeline` plus a host-owned
+  approval bar and delayed composer that calls
+  `startThreadWithInput(input, { threadOptions, turnOptions })` only after the
+  host plan gate is approved.
 - `src/local-media-helper.tsx`: upload/static handlers paired with structured
   attachment and transcript media resolvers.
 - `src/bridge-policy.ts`: loopback bridge policy, local desktop admission, and
@@ -38,5 +42,7 @@ tokens.
 External product workflows should compose Agent UI primitives rather than add
 workflow-specific APIs to the library. Use `AgentThreadView` and headless hooks
 for fixed-thread flows, `AgentUsagePanel` for usage-only chrome, `AgentAppsPanel`
-for Codex Apps/connectors metadata, and `AgentWorkspace`'s `panel` /
-`panelClassName` props for host-owned panels.
+for Codex Apps/connectors metadata, `AgentThreadTimeline` plus a host-owned
+composer for delayed workflow gates, and `AgentWorkspace`'s `panel` /
+`panelClassName` props for host-owned panels. Keep plan, routing, persistence,
+and approval state in the host.

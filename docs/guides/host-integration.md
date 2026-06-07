@@ -204,6 +204,12 @@ state machines. Agent UI owns reusable transcript, composer, thread lifecycle,
 server-request, history, and overlay behavior. Add recipes or examples for
 workflow composition instead of adding workflow-specific core APIs.
 
+Use `examples/recipes/src/host-gated-workflow.tsx` as the typed starting point
+for plan/update-driven gates. It composes `AgentThreadTimeline`, a host-owned
+approval bar, and a delayed composer, then submits the first approved turn with
+`startThreadWithInput(input, { threadOptions, turnOptions })`. Keep the gate
+state, plan persistence, routing, and audit trail in the host.
+
 ## Validation Checklist
 
 - Run docs validation for host integration docs:

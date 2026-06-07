@@ -14,6 +14,7 @@ Purpose:
 - public controller composition
 - scoped thread lists
 - host-owned composer controls
+- host-gated workflow composition with delayed first-message submission
 - local media upload/static resolution
 - bridge policy, local desktop admission, and diagnostics composition
 - host integration checklist
@@ -29,6 +30,7 @@ Files:
 - `src/headless-hooks.tsx`
 - `src/scoped-thread-list.tsx`
 - `src/host-owned-composer.tsx`
+- `src/host-gated-workflow.tsx`
 - `src/local-media-helper.tsx`
 - `src/bridge-policy.ts`
 - `src/diagnostics-panel.tsx`
@@ -47,6 +49,11 @@ The bridge, diagnostics, and local-media recipes intentionally stop at typed
 integration points. Host applications still own authentication, bridge
 admission, tenant and workspace scoping, upload authorization, audit sinks,
 Codex process lifecycle, persistence, billing, and deployment policy.
+
+`src/host-gated-workflow.tsx` composes `AgentThreadTimeline`, a host-owned
+approval bar, and a delayed composer. The recipe keeps plan/update state in the
+host and calls `startThreadWithInput(input, { threadOptions, turnOptions })`
+only after the host gate approves the first Codex turn.
 
 `src/themed.css` intentionally demonstrates host theming by overriding `--aui-*`
 tokens on a wrapper. It should not be read as permission to import
