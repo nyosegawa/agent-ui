@@ -7,6 +7,17 @@
 - Planning date:
 - Requested outcome:
 
+## Freshness Check
+
+- Manifest path:
+- Last full research commit:
+- Current commit:
+- Watched input result:
+- Refresh mode: reused / targeted refresh / full refresh
+- Files or globs refreshed:
+- Manifest updated:
+- Notes:
+
 ## Investigation Method
 
 - Repo root:
@@ -78,7 +89,11 @@
 
 -
 
-## Protected File Findings
+## Freshness / Staleness Findings
+
+-
+
+## Generated / Vendored / Protected File Findings
 
 -
 

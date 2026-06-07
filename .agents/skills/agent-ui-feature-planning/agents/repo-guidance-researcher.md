@@ -19,5 +19,6 @@ Return concise findings:
 - existing skill frontmatter/style
 - trigger and non-trigger boundaries
 - validation command for repository skills
+- watched guidance inputs that should trigger targeted or full freshness refresh
 - docs/test files that must change if a new repo skill is added
 - repo rules the feature-planning skill must embed

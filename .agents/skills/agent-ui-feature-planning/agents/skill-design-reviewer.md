@@ -16,7 +16,9 @@ Return findings ordered by severity:
 - trigger or non-trigger problems
 - missing repo constraints
 - artifact contract violations
-- vague or oversized TODO tasks
+- missing freshness check evidence
+- task-first TODO structure that should be phase-first
+- vague or oversized TODO phases or tasks
 - missing validation/review/commit/PR/CI evidence
 - unsupported assumptions
 - product-boundary violations

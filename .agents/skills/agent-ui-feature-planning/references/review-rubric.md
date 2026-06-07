@@ -6,6 +6,7 @@ Use this rubric before declaring a planning package ready.
 
 - The artifact directory is exactly `.agent-work/features/<date>-<slug>/`.
 - `research.md`, `plan.md`, `todo.md`, and `goal-prompt.md` all exist.
+- The freshness check result is recorded in `research.md`.
 - Research cites actual repo files inspected, not only memory or filenames.
 - Web/current research is present when external or time-sensitive facts affect
   the plan, or the skip reason is explicit.
@@ -18,11 +19,12 @@ Use this rubric before declaring a planning package ready.
   forbid direct vendored Codex edits outside upstream sync.
 - Browser-visible changes include Playwright and/or `agent-browser` evidence.
 - Protected file handling is explicit.
-- Each TODO task has scope, files/areas, validation, review, commit, and
-  push/evidence fields.
-- Tasks are small enough to implement, validate, review, and commit
-  independently.
-- `goal-prompt.md` includes absolute artifact paths, one-task-per-iteration,
+- `todo.md` is phase-first: each phase has goal, scope, files/areas,
+  validation, review, commit, push, PR/CI, evidence, and included tasks.
+- Each phase is small enough to implement, validate, review, and commit as one
+  unit, or `todo.md` records why task-level fallback is required.
+- `goal-prompt.md` includes absolute artifact paths, freshness result,
+  one-phase-per-iteration,
   validation-before-completion, independent review, bounded remediation, commit,
   push, PR, CI, evidence, stop, and escalation rules.
 
@@ -38,8 +40,8 @@ Use this rubric before declaring a planning package ready.
 - It omits validation for the changed surface.
 - It relies on current external facts without web/current research or an
   explicit skip reason.
-- It has vague tasks such as "finish integration" or "update docs" without
-  evidence and expected files.
+- It has vague phases or tasks such as "finish integration" or "update docs"
+  without evidence and expected files.
 - It says CI will be watched but does not define concrete success/failure
   recording.
 - It hides a known unresolved decision as a task instead of recording an open

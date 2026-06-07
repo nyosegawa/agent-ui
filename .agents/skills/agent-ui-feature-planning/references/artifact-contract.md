@@ -21,6 +21,7 @@ Do not create root-level aliases such as `PLAN.md`, `TODO.md`, or
 Required sections:
 
 - Scope
+- Freshness Check
 - Investigation Method
 - Subagent Rounds
 - Sources Inspected
@@ -30,7 +31,8 @@ Required sections:
 - Validation / CI Findings
 - Existing Skill / Command Findings
 - Web / Current-State Findings
-- Protected File Findings
+- Freshness / Staleness Findings
+- Generated / Vendored / Protected File Findings
 - Risks
 - Decisions
 - Rejected Approaches
@@ -40,6 +42,8 @@ Research must cite repo paths inspected. If subagents are unavailable, record
 that the same lanes were researched sequentially by the main agent. When
 external or time-sensitive facts affect the plan, research must cite web/current
 sources or record why live research was intentionally skipped.
+Every planning run must record the freshness check result before research
+findings are finalized.
 
 ## `plan.md`
 
@@ -67,34 +71,50 @@ protected, example-only, docs-only, or release-sensitive.
 Required sections:
 
 - Status Summary
-- Task Checklist
+- Phase Checklist
+- Task Checklist By Phase
 - Implementation Notes
 - Validation Evidence
 - Review Evidence
 - Commit Log
 - Final Checklist
 
-Every task must use this shape:
+Every phase must use this shape:
 
 ```md
-- [ ] T001 <task title>
+- [ ] P001 <phase title>
+  - Goal:
   - Scope:
   - Expected files/areas:
   - Validation:
   - Review:
   - Commit:
   - Push:
+  - PR/CI:
   - Evidence:
     - Implementation:
     - Validation:
     - Review:
     - Commit:
     - Push:
+  - Tasks:
+    - [ ] T001 <task title>
+      - Expected files/areas:
+      - Validation note:
+    - [ ] T002 <task title>
+      - Expected files/areas:
+      - Validation note:
 ```
 
-Tasks must be independently reviewable and coherent to validate. Split tasks
-that mix package API changes, protocol behavior, UI layout, docs, and release
-automation unless the plan records why they are mechanically inseparable.
+Phases are the standard unit for implementation, validation, review, commit,
+push, PR, and CI follow-through. Tasks are checklists within phases. Split a
+phase before implementation if it is too large, mixes unrelated
+responsibilities, has incompatible validation methods, cannot be reviewed
+meaningfully, cannot be committed or reverted coherently, or carries public API,
+migration, security, or data-loss risk that needs isolation.
+
+Task-level execution, review, or commit is a fallback only. If used, `todo.md`
+must record why the phase could not remain the execution unit.
 
 ## `goal-prompt.md`
 
@@ -103,6 +123,7 @@ Required sections:
 - `/goal` command
 - source artifact paths
 - repo guidance paths
+- freshness policy and freshness result
 - execution rules
 - validation rules
 - review rules
@@ -115,4 +136,5 @@ Required sections:
 - escalation conditions
 
 The prompt must include absolute paths to `research.md`, `plan.md`, and
-`todo.md`, plus repo-specific forbidden edits and required checks.
+`todo.md`, plus repo-specific forbidden edits, required checks, freshness
+result, and phase-first execution rules.
