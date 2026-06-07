@@ -41,6 +41,7 @@ import type {
   AgentComposerSubmitMode,
 } from "./composer-types";
 import type { AgentThreadStartWithInputResult } from "./thread-lifecycle-types";
+import { turnStartResultId } from "./thread-lifecycle-results";
 import { AGENT_EXECUTION_MODES } from "./run-settings";
 import { useAgentTurn } from "./turn";
 import {
@@ -547,12 +548,6 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 
 function stringValue(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
-}
-
-function turnStartResultId(response: unknown): string | undefined {
-  const responseRecord = asRecord(response);
-  const rawTurn = asRecord(responseRecord?.turn) ?? responseRecord;
-  return stringValue(rawTurn?.id);
 }
 
 function agentError(caught: unknown) {
