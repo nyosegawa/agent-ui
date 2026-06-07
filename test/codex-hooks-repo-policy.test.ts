@@ -45,6 +45,19 @@ describe("Codex repo policy hooks", () => {
     ).toContain("generated or built output");
   });
 
+  it("checks patch target paths instead of blocking protected path mentions in patch bodies", () => {
+    expect(
+      patchPolicy(
+        [
+          "*** Update File: docs/maintenance/codex-hooks.md",
+          "@@",
+          "+Mention third_party/codex in policy prose without editing it.",
+          "+Mention packages/codex/src/generated/ in policy prose without editing it.",
+        ].join("\n"),
+      ),
+    ).toBeUndefined();
+  });
+
   it("adds prompt context for host boundary, publishing, and upstream edits", () => {
     expect(promptWarnings("please edit third_party/codex directly")).toHaveLength(1);
     expect(promptWarnings("publish package to npm")).toHaveLength(1);
@@ -111,5 +124,31 @@ describe("Codex repo policy hooks", () => {
     expect(result.stdout).toMatchObject({
       systemMessage: expect.stringContaining("working tree is dirty"),
     });
+  });
+
+  it("keeps PostToolUse quiet and leaves dirty-tree validation reminders to Stop", () => {
+    const status = " M docs/maintenance/codex-hooks.md\n";
+
+    expect(
+      evaluateHook(
+        {
+          cwd: process.cwd(),
+          hook_event_name: "PostToolUse",
+          tool_name: "Bash",
+        },
+        { gitStatus: status },
+      ),
+    ).toEqual({});
+
+    expect(
+      evaluateHook(
+        {
+          cwd: process.cwd(),
+          hook_event_name: "PostToolUse",
+          tool_name: "apply_patch",
+        },
+        { gitStatus: status },
+      ),
+    ).toEqual({});
   });
 });

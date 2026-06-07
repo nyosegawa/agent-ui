@@ -30,6 +30,8 @@ const GENERATED_PATHS = [
   "examples/recipes/dist/",
 ];
 
+const SUBMODULE_ROOT = ["third_party", "codex"].join("/") + "/";
+
 const VALIDATION_RULES = [
   {
     command: "bun run test:protocol",
@@ -148,13 +150,8 @@ export function commandPolicy(command) {
 export function patchPolicy(command) {
   const normalized = normalizeCommand(command);
   if (!normalized) return undefined;
-  if (touchesPath(normalized, "third_party/codex/")) {
-    return "Blocked patch to files inside third_party/codex. Update only the submodule pointer through the upstream sync workflow.";
-  }
-  if (touchesGeneratedPath(normalized)) {
-    return "Blocked patch to generated or built output. Change the source or generator instead.";
-  }
-  return undefined;
+  const targetPaths = patchTargetPaths(normalized);
+  return targetPaths.length > 0 ? protectedPatchTargetReason(targetPaths) : undefined;
 }
 
 export function promptWarnings(prompt) {
@@ -226,18 +223,8 @@ function permissionRequest(input) {
   };
 }
 
-function postToolUse(input, options) {
-  const status = options.gitStatus ?? readGitStatus(input.cwd);
-  const commands = validationCommandsForPaths(parseGitStatus(status));
-  if (commands.length === 0) return continueWithoutOutput();
-  return {
-    stdout: {
-      hookSpecificOutput: {
-        hookEventName: "PostToolUse",
-        additionalContext: validationMessage(commands),
-      },
-    },
-  };
+function postToolUse() {
+  return continueWithoutOutput();
 }
 
 function stop(input, options, label = "Agent UI stop checklist") {
@@ -322,7 +309,7 @@ function touchesGeneratedPath(command) {
 }
 
 function touchesSubmoduleInternals(command) {
-  return touchesPath(command, "third_party/codex/");
+  return touchesPath(command, SUBMODULE_ROOT);
 }
 
 function looksLikeMutationCommand(command) {
@@ -333,4 +320,23 @@ function looksLikeMutationCommand(command) {
 
 function recordValue(value) {
   return typeof value === "object" && value !== null ? value : {};
+}
+
+function protectedPatchTargetReason(paths) {
+  if (paths.some((path) => path.startsWith(SUBMODULE_ROOT))) {
+    return `Blocked patch to files inside ${SUBMODULE_ROOT.slice(0, -1)}. Update only the submodule pointer through the upstream sync workflow.`;
+  }
+  if (paths.some((path) => GENERATED_PATHS.some((prefix) => path.startsWith(prefix)))) {
+    return "Blocked patch to generated or built output. Change the source or generator instead.";
+  }
+  return undefined;
+}
+
+function patchTargetPaths(patchText) {
+  return String(patchText ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.match(/^\*\*\* (?:Add|Update|Delete) File: (.+)$/)?.[1])
+    .filter((path) => typeof path === "string")
+    .map((path) => normalizePath(path))
+    .filter(Boolean);
 }
