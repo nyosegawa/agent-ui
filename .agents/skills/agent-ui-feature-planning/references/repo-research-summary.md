@@ -14,6 +14,21 @@ Existing maintainer skills use concise `SKILL.md` files with `name` and
 `description` frontmatter, one-level `references/*.md` links, and focused
 completion/validation sections.
 
+## Freshness Baseline
+
+Planning must run a lightweight freshness check every invocation before relying
+on this summary. The canonical manifest is
+`.agents/skills/agent-ui-feature-planning/references/freshness-manifest.json`.
+Use targeted refresh when watched files or globs changed; update only affected
+summary sections and manifest entries. Use full refresh only when repo
+structure, CI/build systems, package boundaries, release policy, protected-file
+rules, or agent guidance changed materially, or when the user asks for a
+re-research pass.
+
+This repo can execute local Node scripts, so the skill includes deterministic
+artifact validation in `scripts/validate-artifacts.mjs` and a lightweight
+freshness helper in `scripts/check-freshness.mjs`.
+
 ## Core Repo Guidance
 
 Start with:
@@ -128,10 +143,12 @@ Use concise imperative commit subjects. PR bodies should cover summary, test
 plan, release impact, UI impact, protocol/upstream impact, docs impact, and
 security/secrets.
 
-Completed task commits should be pushed to the feature branch before PR
+Completed phase commits should be pushed to the feature branch before PR
 creation or update. Record branch, remote, pushed commit hash, and push result
-in `todo.md`. Escalate when authentication, network, remote protection, or
-missing upstream blocks push and therefore PR or CI follow-through.
+in `todo.md`. Task-level commits are a fallback only when a phase is not
+reviewable or committable as one unit; record the reason in `todo.md`. Escalate
+when authentication, network, remote protection, or missing upstream blocks push
+and therefore PR or CI follow-through.
 
 Add a changeset for npm-consumer-facing changes: public API, components, hooks,
 adapters, exports, types, CSS package surface, Codex adapter behavior, package

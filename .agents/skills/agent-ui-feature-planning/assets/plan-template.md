@@ -55,7 +55,8 @@
 ## Commit, PR, And CI Plan
 
 - Branch:
-- Commit policy:
+- Phase commit policy:
+- Task-level fallback policy:
 - PR title/body expectations:
 - Required checks:
 - CI follow-through:

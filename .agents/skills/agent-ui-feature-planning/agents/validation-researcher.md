@@ -21,3 +21,4 @@ Return concise findings:
 - order-sensitive commands
 - protected output rules
 - exact commands to embed in `plan.md`, `todo.md`, and `goal-prompt.md`
+- phase-level validation gates and any task-level fallback conditions
