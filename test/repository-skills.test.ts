@@ -12,7 +12,12 @@ const m4SkillNames = [
   "release-validation",
 ];
 const releaseOperationSkillNames = ["npm-release"];
-const repositorySkillNames = [...m4SkillNames, ...releaseOperationSkillNames];
+const planningSkillNames = ["agent-ui-feature-planning"];
+const repositorySkillNames = [
+  ...m4SkillNames,
+  ...releaseOperationSkillNames,
+  ...planningSkillNames,
+];
 
 describe("repository development skills", () => {
   it("keeps repository skills discoverable with portable frontmatter", async () => {
@@ -53,6 +58,7 @@ describe("repository development skills", () => {
     const examples = await readSkillText("example-authoring");
     const browserQa = await readSkillText("browser-qa");
     const npmRelease = await readSkillText("npm-release");
+    const featurePlanning = await readSkillText("agent-ui-feature-planning");
 
     expect(review).toContain("Lead with findings");
     expect(review).toContain("Host applications own");
@@ -71,6 +77,9 @@ describe("repository development skills", () => {
     expect(npmRelease).toContain("automatic main-push publishing");
     expect(npmRelease).toContain("bunx changeset publish");
     expect(npmRelease).toMatch(/must not publish packages unless the user\s+explicitly asks/);
+    expect(featurePlanning).toContain(".agent-work/features/<date>-<slug>/");
+    expect(featurePlanning).toContain("Do not implement the feature");
+    expect(featurePlanning).toContain("Host applications own");
   });
 
   it("keeps M4 skills focused on ownership boundaries instead of narrow host names", async () => {

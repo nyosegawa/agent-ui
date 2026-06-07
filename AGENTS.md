@@ -51,6 +51,10 @@ of expanding this file.
   Prefer concise imperative commit subjects that describe the shipped outcome.
 - Work through pull requests for `main`. Do not push directly to `main` unless
   the user explicitly requests an emergency repository operation.
+- For small direct fixes requested while on `main`, create a purpose-based
+  branch before or immediately after the first scoped edit, then carry the work
+  through focused validation, commit, push, pull request creation, and concrete
+  CI success or failure unless the user explicitly asks to stop earlier.
 
 ## Validation
 

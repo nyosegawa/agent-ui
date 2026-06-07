@@ -17,6 +17,9 @@ source under `skills/agent-ui`.
 - `.agents/skills/npm-release/`: Changesets versioning, single release PR
   creation and review, automatic trusted `main` push publishing, npm provenance,
   GitHub Releases, post-publish smoke, rollback, and deprecation operations.
+- `.agents/skills/agent-ui-feature-planning/`: pre-implementation feature
+  planning packages with repo research, plan, executable TODO, and Codex
+  `/goal` prompt artifacts under `.agent-work/features/<date>-<slug>/`.
 - `.agents/skills/example-authoring/`: examples, recipes, fixture routes,
   docs-site examples, and example docs.
 - `.agents/skills/browser-qa/`: Playwright and agent-browser QA for
@@ -44,6 +47,11 @@ merge-readiness validation.
 Use `npm-release` when preparing a Changesets release, creating or reviewing a
 release PR, monitoring the automatic npm publish workflow, verifying
 `NPM_TOKEN` and provenance behavior, or handling post-publish support tasks.
+
+Use `agent-ui-feature-planning` when the user asks to plan a feature, solve a
+problem group, research before implementation, or produce plan/TODO/goal-prompt
+artifacts before coding. It should create planning artifacts only under
+`.agent-work/features/<date>-<slug>/` and should not implement the feature.
 
 Use `example-authoring` when changing `examples/`, `docs/examples/`, recipes,
 fixture routes, Next.js/Vite integrations, uploads examples, dynamic tools

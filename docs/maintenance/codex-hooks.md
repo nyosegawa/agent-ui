@@ -58,12 +58,18 @@ skill-with-app logic.
 - direct mutation inside `third_party/codex`
 - direct mutation of generated schema or package `dist` output
 
+For patch-style tools, protection is based on the file targets declared by the
+patch header, not arbitrary prose in the patch body. This lets docs and skills
+mention protected paths while still blocking patches that actually target them.
+
 `PermissionRequest` applies the same deny policy before elevated tool approval.
 When it denies, Codex does not show the normal approval prompt.
 
-`PostToolUse` reads `git status --short` and adds validation context when dirty
-paths match validation-sensitive areas such as protocol generated files, public
-API sources, CSS tokens, package exports, or docs.
+`PostToolUse` intentionally stays quiet. Earlier versions emitted validation
+reminders after tool calls, but that made normal editing noisy because the same
+dirty-tree checklist repeated after almost every patch. `Stop` and
+`SubagentStop` now summarize validation-sensitive dirty paths before the agent
+finishes.
 
 `SubagentStart` adds review context for repository-focused subagents.
 
