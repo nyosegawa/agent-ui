@@ -92,17 +92,44 @@ Evidence:
 
 ## Server Bridge Admission And Rejection
 
-- [ ] Add structured bridge rejection/result types.
-- [ ] Allow resolver rejection to carry status, body, close code, and reason.
-- [ ] Allow admission callbacks to return structured accept/reject decisions.
-- [ ] Rework `attachAgentUiWebSocketBridge()` to evaluate resolver/admission
+- [x] Add structured bridge rejection/result types.
+- [x] Allow resolver rejection to carry status, body, close code, and reason.
+- [x] Allow admission callbacks to return structured accept/reject decisions.
+- [x] Rework `attachAgentUiWebSocketBridge()` to evaluate resolver/admission
   before upgrade and send host-controlled HTTP status/body.
-- [ ] Keep `handleAgentUiWebSocketConnection()` usable for already-upgraded
+- [x] Keep `handleAgentUiWebSocketConnection()` usable for already-upgraded
   manual hosts.
-- [ ] Add bridge health event reason codes for rejection and resolver failures.
-- [ ] Prove rejected resolver/admission paths never spawn Codex.
-- [ ] Add HTTP `403` and `409` bridge rejection tests.
-- [ ] Update server API snapshots.
+- [x] Add bridge health event reason codes for rejection and resolver failures.
+- [x] Prove rejected resolver/admission paths never spawn Codex.
+- [x] Add HTTP `403` and `409` bridge rejection tests.
+- [x] Update server API snapshots.
+
+Evidence:
+
+- `packages/server/src/websocket.ts` defines structured bridge rejection/result
+  and admission decision types, lets option resolvers and host admission
+  callbacks return host-controlled rejection metadata, and evaluates
+  resolver/admission before `attachAgentUiWebSocketBridge()` upgrades the HTTP
+  request.
+- `packages/server/src/websocket.ts` keeps
+  `handleAgentUiWebSocketConnection()` compatible with already-upgraded manual
+  hosts by translating the same structured rejection to WebSocket close
+  code/reason.
+- `packages/server/src/host-events.ts` adds the `rejected` health phase and
+  stable `reasonCode` field for developer/audit health events.
+- `packages/server/test/websocket.test.ts` covers pre-upgrade HTTP `403` and
+  `409` resolver/admission rejections, rejected no-spawn paths, reason-coded
+  health events, redacted resolver/admission failures, and the already-upgraded
+  manual host close path.
+- `docs/reference/server-bridge.md` and `docs/reference/package-exports.md`
+  document the structured rejection API, HTTP-versus-WebSocket rejection
+  behavior, health reason codes, and host-owned boundary.
+- Validation: `bun vitest run --config vitest.config.ts
+  packages/server/test/websocket.test.ts`; `bun run --cwd packages/server
+  typecheck`; `bun run test:api-snapshots:update`; `bun run
+  test:api-snapshots`; `bunx vitest run test/docs-staleness.test.ts`; `bun
+  run lint`; `bun run typecheck`; `bun run validate:packages`; `git diff
+  --check`.
 
 ## WebSocket Token Subprotocol
 
@@ -146,7 +173,7 @@ Evidence:
 ## Validation
 
 - [x] Run targeted React/controller tests.
-- [ ] Run targeted server websocket tests.
+- [x] Run targeted server websocket tests.
 - [ ] Run `bun run test:protocol`.
 - [ ] Run `bun run test:fixtures`.
 - [ ] Run `bun run --cwd examples/recipes typecheck`.

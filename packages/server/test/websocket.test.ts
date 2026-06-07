@@ -1,14 +1,15 @@
 import type { AgentTransportEvent } from "@nyosegawa/agent-ui-core";
 import { createServer } from "node:http";
+import { connect } from "node:net";
 import { PassThrough } from "node:stream";
-import WebSocket from "ws";
+import WebSocket, { WebSocketServer } from "ws";
 import { afterEach, describe, expect, it } from "vitest";
 import { createCodexWebSocketTransport } from "../../codex/src/websocket";
 import {
   attachAgentUiWebSocketBridge,
   createMcpDynamicToolHandler,
+  handleAgentUiWebSocketConnection,
   type AgentUiWebSocketBridgeOptions,
-  type AgentUiResolvedWebSocketBridgeOptions,
   type AgentUiBridgeHealthEvent,
   type BrowserMethodCapability,
   type CodexChildProcess,
@@ -51,10 +52,71 @@ describe("attachAgentUiWebSocketBridge", () => {
     const address = httpServer.address();
     if (!address || typeof address === "string") throw new Error("missing server address");
 
-    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
-    const close = await onceCloseWithInfo(client);
-    expect(close.code).toBe(1008);
+    const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
+    expect(response.statusLine).toContain("403 Forbidden");
+    expect(response.body).toContain("admission_rejected");
     expect(sawRequest).toBe(true);
+    expect(spawnCount).toBe(0);
+  });
+
+  it("closes unmatched upgrade paths when no other upgrade handler owns them", async () => {
+    let spawnCount = 0;
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      server: httpServer,
+      spawn: () => {
+        spawnCount += 1;
+        throw new Error("spawn should not run");
+      },
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const response = await rawUpgradeResponse(address.port, "/not-agent-ui/ws");
+
+    expect(response.statusLine).toContain("404 Not Found");
+    expect(response.body).toContain("path_not_found");
+    expect(spawnCount).toBe(0);
+  });
+
+  it("leaves unmatched upgrade paths for another handler", async () => {
+    let spawnCount = 0;
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      server: httpServer,
+      spawn: () => {
+        spawnCount += 1;
+        throw new Error("spawn should not run");
+      },
+    });
+    servers.push(webSocketServer);
+    httpServer.on("upgrade", (request, socket) => {
+      if (request.url !== "/other/ws") return;
+      socket.write(
+        [
+          "HTTP/1.1 418 Other Handler",
+          "Connection: close",
+          "Content-Length: 13",
+          "",
+          "other handler",
+        ].join("\r\n"),
+      );
+      socket.destroy();
+    });
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const response = await rawUpgradeResponse(address.port, "/other/ws");
+
+    expect(response.statusLine).toContain("418 Other Handler");
+    expect(response.body).toBe("other handler");
     expect(spawnCount).toBe(0);
   });
 
@@ -121,85 +183,40 @@ describe("attachAgentUiWebSocketBridge", () => {
       const address = httpServer.address();
       if (!address || typeof address === "string") throw new Error("missing server address");
 
-      const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
-      const close = await onceCloseWithInfo(client);
+      const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
 
       expect(spawnCount).toBe(0);
-      expect([1008, 1011]).toContain(close.code);
+      expect([403, 500]).toContain(response.status);
       expect(logs.join("")).not.toContain("resolver-secret");
       httpServer.close();
       webSocketServer.close();
     }
   });
 
-  it("does not spawn when the socket closes while bridge option resolution is pending", async () => {
-    let resolveOptions:
-      | ((options: AgentUiResolvedWebSocketBridgeOptions | false | null | undefined) => void)
-      | undefined;
-    let resolverStarted: (() => void) | undefined;
-    const resolverStartedPromise = new Promise<void>((resolve) => {
-      resolverStarted = resolve;
-    });
+  it("continues admission after an accepted resolver result", async () => {
     let spawnCount = 0;
-    const httpServer = createServer();
-    servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
-      bridgePolicy: { admission: { mode: "unsafe-no-admission", reason: "resolver disconnect test" } },
-      resolveBridgeOptions() {
-        resolverStarted?.();
-        return new Promise((resolve) => {
-          resolveOptions = resolve;
-        });
-      },
-      server: httpServer,
-      spawn: () => {
-        spawnCount += 1;
-        return createSocketTestProcess();
-      },
-    });
-    servers.push(webSocketServer);
-
-    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
-    const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
-
-    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
-    const clientOpened = onceOpen(client);
-    await resolverStartedPromise;
-    await clientOpened;
-    client.close();
-    await onceCloseWithInfo(client);
-    resolveOptions?.({ cwd: "/tmp/closed-before-resolve" });
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    expect(spawnCount).toBe(0);
-  });
-
-  it("does not spawn when the socket closes while host admission is pending", async () => {
-    let resolveAdmission: ((accepted: boolean) => void) | undefined;
-    let admissionStarted: (() => void) | undefined;
-    const admissionStartedPromise = new Promise<void>((resolve) => {
-      admissionStarted = resolve;
-    });
-    let spawnCount = 0;
+    let sawAdmission = false;
+    const healthEvents: AgentUiBridgeHealthEvent[] = [];
     const httpServer = createServer();
     servers.push(httpServer);
     const webSocketServer = attachAgentUiWebSocketBridge({
       bridgePolicy: {
         admission: {
-          admit() {
-            admissionStarted?.();
-            return new Promise((resolve) => {
-              resolveAdmission = resolve;
-            });
+          admit: () => {
+            sawAdmission = true;
+            return false;
           },
           mode: "host-callback",
         },
       },
+      hostEvents: {
+        onBridgeHealthEvent: (event) => healthEvents.push(event),
+      },
+      resolveBridgeOptions: () => ({ accepted: true }),
       server: httpServer,
       spawn: () => {
         spawnCount += 1;
-        return createSocketTestProcess();
+        throw new Error("spawn should not run");
       },
     });
     servers.push(webSocketServer);
@@ -208,15 +225,242 @@ describe("attachAgentUiWebSocketBridge", () => {
     const address = httpServer.address();
     if (!address || typeof address === "string") throw new Error("missing server address");
 
-    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
-    const clientOpened = onceOpen(client);
-    await admissionStartedPromise;
-    await clientOpened;
-    client.close();
-    await onceCloseWithInfo(client);
-    resolveAdmission?.(true);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
 
+    expect(response.statusLine).toContain("403 Forbidden");
+    expect(response.body).toContain("admission_rejected");
+    expect(sawAdmission).toBe(true);
+    expect(spawnCount).toBe(0);
+    expect(healthEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          phase: "admissionChecked",
+          reasonCode: "admission_rejected",
+        }),
+        expect.objectContaining({
+          phase: "rejected",
+          reasonCode: "admission_rejected",
+        }),
+      ]),
+    );
+  });
+
+  it("returns structured HTTP 409 resolver rejections before spawning", async () => {
+    let spawnCount = 0;
+    const healthEvents: AgentUiBridgeHealthEvent[] = [];
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      hostEvents: {
+        onBridgeHealthEvent: (event) => healthEvents.push(event),
+      },
+      resolveBridgeOptions: () => ({
+        accepted: false,
+        body: "workspace missing",
+        reason: "workspace_missing",
+        status: 409,
+        statusText: "Workspace Missing",
+      }),
+      server: httpServer,
+      spawn: () => {
+        spawnCount += 1;
+        throw new Error("spawn should not run");
+      },
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
+
+    expect(response).toMatchObject({
+      body: "workspace missing",
+      status: 409,
+      statusLine: "HTTP/1.1 409 Workspace Missing",
+    });
+    expect(spawnCount).toBe(0);
+    expect(healthEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          phase: "rejected",
+          reasonCode: "workspace_missing",
+        }),
+      ]),
+    );
+  });
+
+  it("sanitizes structured HTTP rejection status metadata", async () => {
+    let spawnCount = 0;
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      resolveBridgeOptions: () => ({
+        accepted: false,
+        body: "bad status",
+        reason: "bad_status",
+        status: 200,
+        statusText: "Bad\r\nInjected: header",
+      }),
+      server: httpServer,
+      spawn: () => {
+        spawnCount += 1;
+        throw new Error("spawn should not run");
+      },
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
+
+    expect(response.statusLine).toBe("HTTP/1.1 403 Bad  Injected: header");
+    expect(response.headers).not.toContain("Injected: header");
+    expect(response.body).toBe("bad status");
+    expect(spawnCount).toBe(0);
+  });
+
+  it("returns structured HTTP 403 admission rejections before spawning", async () => {
+    let spawnCount = 0;
+    const healthEvents: AgentUiBridgeHealthEvent[] = [];
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      bridgePolicy: {
+        admission: {
+          admit: () => ({
+            accepted: false,
+            body: "token rejected",
+            closeCode: 1008,
+            closeReason: "Agent UI bridge token rejected",
+            reason: "token_rejected",
+            status: 403,
+          }),
+          mode: "host-callback",
+        },
+      },
+      hostEvents: {
+        onBridgeHealthEvent: (event) => healthEvents.push(event),
+      },
+      server: httpServer,
+      spawn: () => {
+        spawnCount += 1;
+        throw new Error("spawn should not run");
+      },
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
+
+    expect(response).toMatchObject({
+      body: "token rejected",
+      status: 403,
+    });
+    expect(spawnCount).toBe(0);
+    expect(healthEvents).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          phase: "admissionChecked",
+          reasonCode: "token_rejected",
+        }),
+        expect.objectContaining({
+          phase: "rejected",
+          reasonCode: "token_rejected",
+        }),
+      ]),
+    );
+  });
+
+  it("keeps already-upgraded manual hosts on WebSocket close rejection", async () => {
+    let spawnCount = 0;
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = new WebSocketServer({
+      path: "/manual/ws",
+      server: httpServer,
+    });
+    webSocketServer.on("connection", (socket, request) => {
+      void handleAgentUiWebSocketConnection(socket, {
+        bridgePolicy: {
+          admission: {
+            admit: () => ({
+              accepted: false,
+              closeCode: 1008,
+              closeReason: "Agent UI bridge manual admission rejected",
+              reason: "token_rejected",
+            }),
+            mode: "host-callback",
+          },
+        },
+        spawn: () => {
+          spawnCount += 1;
+          throw new Error("spawn should not run");
+        },
+      }, request);
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const client = new WebSocket(`ws://127.0.0.1:${address.port}/manual/ws`);
+    const close = await onceCloseWithInfo(client);
+
+    expect(close).toMatchObject({
+      code: 1008,
+      reason: "Agent UI bridge manual admission rejected",
+    });
+    expect(spawnCount).toBe(0);
+  });
+
+  it("sanitizes already-upgraded structured WebSocket close metadata", async () => {
+    let spawnCount = 0;
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = new WebSocketServer({
+      path: "/manual/ws",
+      server: httpServer,
+    });
+    webSocketServer.on("connection", (socket, request) => {
+      void handleAgentUiWebSocketConnection(socket, {
+        bridgePolicy: {
+          admission: {
+            admit: () => ({
+              accepted: false,
+              closeCode: 999,
+              closeReason: "x".repeat(124),
+              reason: "bad_close_metadata",
+            }),
+            mode: "host-callback",
+          },
+        },
+        spawn: () => {
+          spawnCount += 1;
+          throw new Error("spawn should not run");
+        },
+      }, request);
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const client = new WebSocket(`ws://127.0.0.1:${address.port}/manual/ws`);
+    const close = await onceCloseWithInfo(client);
+
+    expect(close).toMatchObject({
+      code: 1008,
+      reason: "Agent UI bridge rejected",
+    });
     expect(spawnCount).toBe(0);
   });
 
@@ -240,12 +484,9 @@ describe("attachAgentUiWebSocketBridge", () => {
     const address = httpServer.address();
     if (!address || typeof address === "string") throw new Error("missing server address");
 
-    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
-    const close = await onceCloseWithInfo(client);
-    expect(close).toMatchObject({
-      code: 1011,
-      reason: "Agent UI bridge admission failed",
-    });
+    const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
+    expect(response.statusLine).toContain("500 Internal Server Error");
+    expect(response.body).toContain("unsafe_admission_reason_missing");
     expect(logs.join("")).toContain("reason is required");
     expect(spawnCount).toBe(0);
   });
@@ -284,9 +525,9 @@ describe("attachAgentUiWebSocketBridge", () => {
     const address = httpServer.address();
     if (!address || typeof address === "string") throw new Error("missing server address");
 
-    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
-    const close = await onceCloseWithInfo(client);
-    expect(close.code).toBe(1008);
+    const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
+    expect(response.statusLine).toContain("403 Forbidden");
+    expect(response.body).toContain("admission_rejected");
     expect(spawnCount).toBe(0);
   });
 
@@ -316,10 +557,10 @@ describe("attachAgentUiWebSocketBridge", () => {
       const address = httpServer.address();
       if (!address || typeof address === "string") throw new Error("missing server address");
 
-      const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
-      const close = await onceCloseWithInfo(client);
+      const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
 
-      expect(close.code).toBe(1011);
+      expect(response.statusLine).toContain("500 Internal Server Error");
+      expect(response.body).toContain("admission_failed");
       expect(spawnCount).toBe(0);
       expect(logs.join("")).toContain("admission failed");
       expect(logs.join("")).toContain("token: [REDACTED]");
@@ -2807,6 +3048,46 @@ function onceCloseWithInfo(socket: WebSocket): Promise<{ code: number; reason: s
       resolve({ code, reason: reason.toString() }),
     );
     socket.once("error", reject);
+  });
+}
+
+function rawUpgradeResponse(
+  port: number,
+  path: string,
+): Promise<{ body: string; headers: string; status: number; statusLine: string }> {
+  return new Promise((resolve, reject) => {
+    const socket = connect(port, "127.0.0.1");
+    let data = "";
+    socket.setEncoding("utf8");
+    socket.on("connect", () => {
+      socket.write(
+        [
+          `GET ${path} HTTP/1.1`,
+          `Host: 127.0.0.1:${port}`,
+          "Connection: Upgrade",
+          "Upgrade: websocket",
+          "Sec-WebSocket-Version: 13",
+          "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==",
+          "",
+          "",
+        ].join("\r\n"),
+      );
+    });
+    socket.on("data", (chunk) => {
+      data += chunk;
+    });
+    socket.on("error", reject);
+    socket.on("close", () => {
+      const [head = "", body = ""] = data.split("\r\n\r\n");
+      const [statusLine = "", ...headerLines] = head.split("\r\n");
+      const status = Number(statusLine.match(/^HTTP\/1\.1\s+(\d+)/)?.[1] ?? 0);
+      resolve({
+        body,
+        headers: headerLines.join("\n"),
+        status,
+        statusLine,
+      });
+    });
   });
 }
 

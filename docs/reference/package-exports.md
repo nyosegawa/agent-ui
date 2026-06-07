@@ -167,7 +167,10 @@ Keep public: `attachAgentUiWebSocketBridge`,
 `handleAgentUiWebSocketConnection`, `createCodexAppServerBridge`,
 `createAgentUiNextRpcRoute`, `createAgentUiExpressMiddleware`,
 one-shot method policy helpers, bridge option types, browser method capability
-policy types, `AgentUiBridgePolicy` admission mode types,
+policy types, `AgentUiBridgePolicy` admission mode types, structured bridge
+rejection/result types such as `AgentUiBridgeRejection`,
+`AgentUiBridgeResult`, `AgentUiBridgeAdmissionDecision`, and
+`AgentUiBridgeRejectionReason`,
 `AgentUiDynamicToolPolicy`, dynamic tool handler/helper types and explicit MCP
 mapping factories, dynamic tool debug event types, host event sink helpers,
 bridge health event types, context-rich server-request policy callback/helper

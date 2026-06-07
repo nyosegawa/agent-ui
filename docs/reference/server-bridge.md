@@ -83,8 +83,12 @@ rate limit of 60 messages per second; exceeding it closes the socket with code
 
 The default idle timeout is 30 minutes. When the connection is idle for that
 long, the bridge closes the browser socket with `1000` and shuts down the App
-Server process. Startup failures close with `1011`; admission rejections close
-with `1008`; admission errors close with `1011`.
+Server process. Startup failures close with `1011`. When using
+`attachAgentUiWebSocketBridge()`, resolver and admission checks run before the
+HTTP upgrade; structured rejections can return host-controlled HTTP status and
+body such as `403` for token/session rejection or `409` for missing workspace
+state. When using the already-upgraded `handleAgentUiWebSocketConnection()`
+path, the same rejection is translated to a WebSocket close code and reason.
 
 `bridgePolicy.admission` is checked before the Codex child process is spawned.
 The explicit modes are:
@@ -92,9 +96,11 @@ The explicit modes are:
 - `local-loopback`: the default. Only loopback remote addresses such as
   `127.0.0.1` and `::1` are admitted.
 - `host-callback`: calls a host callback with the original HTTP request. A
-  `false` result closes the socket with `1008`; thrown or rejected errors close
-  with `1011`, do not spawn the child process, and have diagnostics redacted
-  before host stderr callbacks.
+  `false` result rejects with reason code `admission_rejected`. The callback may
+  also return `{ accepted: false, reason, status, body, closeCode,
+  closeReason }` for host-controlled HTTP rejection before upgrade. Thrown or
+  rejected errors reject with `admission_failed`, do not spawn the child
+  process, and have diagnostics redacted before host stderr callbacks.
 - `unsafe-no-admission`: admits without request checks only when the host
   supplies a non-empty `reason`. This mode is for explicit host-owned
   experiments and should be paired with external auth, isolation, and audit
@@ -112,11 +118,16 @@ The event carries a snapshot with `admissionChecked`, `processSpawned`,
 `initialized`, `connected`, `pendingRequestCount`, and
 `lastRedactedDiagnostic`. Health phases include `admissionChecked`,
 `processSpawned`, `initialized`, `connected`, `pendingRequestCount`,
-`diagnostic`, `idleClosed`, and `backpressureClosed`. Events carry
-`audience: ["developer", "audit"]`. The bridge updates the pending count when
-App Server requests arrive and when browser or bridge policy responses resolve
-them. The health stream is for host developer/audit tooling; Agent UI does not
-persist it, attach tenant meaning to it, or turn it into a deployment policy.
+`diagnostic`, `rejected`, `idleClosed`, and `backpressureClosed`. Rejection
+events include stable `reasonCode` values such as `resolver_rejected`,
+`resolver_failed`, `admission_rejected`, `admission_failed`,
+`loopback_required`, `request_context_missing`, and
+`unsafe_admission_reason_missing`, plus host-owned reason strings such as
+`token_rejected` or `workspace_missing`. Events carry `audience: ["developer",
+"audit"]`. The bridge updates the pending count when App Server requests arrive
+and when browser or bridge policy responses resolve them. The health stream is
+for host developer/audit tooling; Agent UI does not persist it, attach tenant
+meaning to it, or turn it into a deployment policy.
 
 - `connection`: `initialize` and `initialized`
 - `account`: account read, device login, logout, and rate-limit read
@@ -188,12 +199,14 @@ attachAgentUiWebSocketBridge({
 ```
 
 Resolver rejection, missing options, resolver failure, or failed admission
-closes the socket without spawning a child process. Resolver output is bridge
-configuration only; Agent UI does not provide a workspace registry, auth
-provider, token store, tenant/session model, packaged-app CSP policy, or process
-supervisor. The host must validate selected workspaces server-side before
-assigning `cwd`, and browser-provided `cwd`, `env`, or method policy values must
-not be trusted directly.
+rejects without spawning a child process. A resolver may return
+`{ accepted: false, reason, status, body, closeCode, closeReason }` to control
+the pre-upgrade HTTP response from `attachAgentUiWebSocketBridge()`. Resolver
+output is bridge configuration only; Agent UI does not provide a workspace
+registry, auth provider, token store, tenant/session model, packaged-app CSP
+policy, or process supervisor. The host must validate selected workspaces
+server-side before assigning `cwd`, and browser-provided `cwd`, `env`, or
+method policy values must not be trusted directly.
 
 Local desktop admission should bind the HTTP/WebSocket server to loopback by
 default. Treat the `Origin` header as a useful signal for browser provenance,

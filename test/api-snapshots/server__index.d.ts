@@ -157,7 +157,7 @@ interface MinimalExpressResponse {
 type AgentUiExpressMiddlewareOptions = CodexAppServerBridgeOptions & OneShotRpcMethodPolicyOptions;
 declare function createAgentUiExpressMiddleware(options?: AgentUiExpressMiddlewareOptions): (req: MinimalExpressRequest, res: MinimalExpressResponse) => Promise<void>;
 
-type AgentUiBridgeHealthPhase = "admissionChecked" | "processSpawned" | "initialized" | "connected" | "idleClosed" | "backpressureClosed" | "pendingRequestCount" | "diagnostic";
+type AgentUiBridgeHealthPhase = "admissionChecked" | "rejected" | "processSpawned" | "initialized" | "connected" | "idleClosed" | "backpressureClosed" | "pendingRequestCount" | "diagnostic";
 interface AgentUiBridgeHealthState {
     admissionChecked: boolean;
     connected: boolean;
@@ -172,6 +172,7 @@ interface AgentUiBridgeHealthEvent {
     closeReason?: string;
     diagnostic?: string;
     phase: AgentUiBridgeHealthPhase;
+    reasonCode?: string;
     state: AgentUiBridgeHealthState;
     timestamp: number;
     type: "bridgeHealth";
@@ -379,7 +380,7 @@ interface AgentUiWebSocketBridgeOptionsResolverContext {
     request?: IncomingMessage;
 }
 type AgentUiResolvedWebSocketBridgeOptions = Omit<AgentUiWebSocketBridgeOptions, "resolveBridgeOptions">;
-type AgentUiWebSocketBridgeOptionsResolver = (context: AgentUiWebSocketBridgeOptionsResolverContext) => AgentUiResolvedWebSocketBridgeOptions | false | null | undefined | Promise<AgentUiResolvedWebSocketBridgeOptions | false | null | undefined>;
+type AgentUiWebSocketBridgeOptionsResolver = (context: AgentUiWebSocketBridgeOptionsResolverContext) => AgentUiResolvedWebSocketBridgeOptions | AgentUiBridgeResult | false | null | undefined | Promise<AgentUiResolvedWebSocketBridgeOptions | AgentUiBridgeResult | false | null | undefined>;
 interface AgentUiWebSocketServerOptions extends AgentUiWebSocketBridgeOptions {
     server: Server;
 }
@@ -391,7 +392,22 @@ type AgentUiDynamicToolPolicy = {
     helperPermissions?: DynamicToolHelperPermissionPolicy;
     mode: "host-callback";
 };
-type AgentUiBridgeAdmissionHook = (request: IncomingMessage) => boolean | Promise<boolean>;
+type AgentUiBridgeRejectionReason = "request_context_missing" | "loopback_required" | "resolver_rejected" | "resolver_failed" | "admission_rejected" | "admission_failed" | "unsafe_admission_reason_missing" | (string & {});
+interface AgentUiBridgeRejection {
+    body?: string | Buffer;
+    closeCode?: number;
+    closeReason?: string;
+    reason: AgentUiBridgeRejectionReason;
+    status?: number;
+    statusText?: string;
+}
+type AgentUiBridgeResult = {
+    accepted: true;
+} | ({
+    accepted: false;
+} & AgentUiBridgeRejection);
+type AgentUiBridgeAdmissionDecision = boolean | AgentUiBridgeResult;
+type AgentUiBridgeAdmissionHook = (request: IncomingMessage) => AgentUiBridgeAdmissionDecision | Promise<AgentUiBridgeAdmissionDecision>;
 interface AgentUiBridgePolicy {
     admission?: AgentUiBridgeAdmissionPolicy;
 }
@@ -411,4 +427,4 @@ type BrowserMethodCapability = "connection" | "account" | "models" | "threadHist
 declare function attachAgentUiWebSocketBridge(options: AgentUiWebSocketServerOptions): WebSocketServer;
 declare function handleAgentUiWebSocketConnection(socket: WebSocket, options?: AgentUiWebSocketBridgeOptions, request?: IncomingMessage): Promise<void>;
 
-export { type AgentResolvedAttachment, type AgentUiBridgeAdmissionHook, type AgentUiBridgeAdmissionPolicy, type AgentUiBridgeHealthEvent, type AgentUiBridgeHealthPhase, type AgentUiBridgeHealthState, type AgentUiBridgePolicy, type AgentUiDynamicToolPolicy, type AgentUiExpressMiddlewareOptions, type AgentUiHostEventSink, type AgentUiLocalMediaHelper, type AgentUiLocalMediaHelperOptions, type AgentUiLocalMediaServeContext, type AgentUiNextRpcRouteOptions, type AgentUiResolvedWebSocketBridgeOptions, type AgentUiUploadHandler, type AgentUiUploadHandlerOptions, type AgentUiWebSocketBridgeOptions, type AgentUiWebSocketBridgeOptionsResolver, type AgentUiWebSocketBridgeOptionsResolverContext, type AgentUiWebSocketInboundLimits, type AgentUiWebSocketServerOptions, type BrowserMethodCapability, type BrowserMethodPolicy, type CodexAppServerBridge, type CodexAppServerBridgeOptions, type CodexBridgeShutdownOptions, type CodexChildProcess, type CodexSpawnOptions, type CommandApprovalContext, type CommandApprovalDecision, type CommandApprovalPolicy, DEFAULT_ONE_SHOT_METHODS, type DynamicToolCallOutputContentItem, type DynamicToolCallResponse, type DynamicToolDebugEvent, type DynamicToolDebugEventDetails, type DynamicToolDebugPhase, type DynamicToolDebugRequest, type DynamicToolHandler, type DynamicToolHandlerContext, type DynamicToolHelperPermissionContext, type DynamicToolHelperPermissionDecision, type DynamicToolHelperPermissionPolicy, type DynamicToolRequest, type FileChangeApprovalContext, type FileChangeApprovalDecision, type FileChangeApprovalPolicy, type McpDynamicToolHandlerOptions, type McpDynamicToolMapping, type MinimalExpressRequest, type MinimalExpressResponse, type OneShotRpcAllowedMethods, type OneShotRpcMethodPolicyOptions, type PermissionApprovalContext, type PermissionApprovalDecision, type PermissionApprovalPolicy, type ResolvedServerRequestPolicy, type ServerRequestPolicy$1 as ServerRequestPolicy, type ServerRequestPolicyCallback, type ServerRequestPolicyContext, type ServerRequestPolicyDecision, attachAgentUiWebSocketBridge, createAgentUiExpressMiddleware, createAgentUiLocalMediaHelper, createAgentUiLocalUploadHandler, createAgentUiNextRpcRoute, createCodexAppServerBridge, createDynamicToolHelperThread, createMcpDynamicToolHandler, dynamicToolFailure, emitHostEvent, handleAgentUiWebSocketConnection, handleDynamicToolRequest, isOneShotRpcMethodAllowed, maybeResolveHelperThreadRequest, oneShotRpcInvalidRequestError, oneShotRpcMethodNotAllowedError, redactSecrets, redactStructuredValue, redactTransportEvent, resolveServerRequestPolicy, responseForServerRequest };
+export { type AgentResolvedAttachment, type AgentUiBridgeAdmissionDecision, type AgentUiBridgeAdmissionHook, type AgentUiBridgeAdmissionPolicy, type AgentUiBridgeHealthEvent, type AgentUiBridgeHealthPhase, type AgentUiBridgeHealthState, type AgentUiBridgePolicy, type AgentUiBridgeRejection, type AgentUiBridgeRejectionReason, type AgentUiBridgeResult, type AgentUiDynamicToolPolicy, type AgentUiExpressMiddlewareOptions, type AgentUiHostEventSink, type AgentUiLocalMediaHelper, type AgentUiLocalMediaHelperOptions, type AgentUiLocalMediaServeContext, type AgentUiNextRpcRouteOptions, type AgentUiResolvedWebSocketBridgeOptions, type AgentUiUploadHandler, type AgentUiUploadHandlerOptions, type AgentUiWebSocketBridgeOptions, type AgentUiWebSocketBridgeOptionsResolver, type AgentUiWebSocketBridgeOptionsResolverContext, type AgentUiWebSocketInboundLimits, type AgentUiWebSocketServerOptions, type BrowserMethodCapability, type BrowserMethodPolicy, type CodexAppServerBridge, type CodexAppServerBridgeOptions, type CodexBridgeShutdownOptions, type CodexChildProcess, type CodexSpawnOptions, type CommandApprovalContext, type CommandApprovalDecision, type CommandApprovalPolicy, DEFAULT_ONE_SHOT_METHODS, type DynamicToolCallOutputContentItem, type DynamicToolCallResponse, type DynamicToolDebugEvent, type DynamicToolDebugEventDetails, type DynamicToolDebugPhase, type DynamicToolDebugRequest, type DynamicToolHandler, type DynamicToolHandlerContext, type DynamicToolHelperPermissionContext, type DynamicToolHelperPermissionDecision, type DynamicToolHelperPermissionPolicy, type DynamicToolRequest, type FileChangeApprovalContext, type FileChangeApprovalDecision, type FileChangeApprovalPolicy, type McpDynamicToolHandlerOptions, type McpDynamicToolMapping, type MinimalExpressRequest, type MinimalExpressResponse, type OneShotRpcAllowedMethods, type OneShotRpcMethodPolicyOptions, type PermissionApprovalContext, type PermissionApprovalDecision, type PermissionApprovalPolicy, type ResolvedServerRequestPolicy, type ServerRequestPolicy$1 as ServerRequestPolicy, type ServerRequestPolicyCallback, type ServerRequestPolicyContext, type ServerRequestPolicyDecision, attachAgentUiWebSocketBridge, createAgentUiExpressMiddleware, createAgentUiLocalMediaHelper, createAgentUiLocalUploadHandler, createAgentUiNextRpcRoute, createCodexAppServerBridge, createDynamicToolHelperThread, createMcpDynamicToolHandler, dynamicToolFailure, emitHostEvent, handleAgentUiWebSocketConnection, handleDynamicToolRequest, isOneShotRpcMethodAllowed, maybeResolveHelperThreadRequest, oneShotRpcInvalidRequestError, oneShotRpcMethodNotAllowedError, redactSecrets, redactStructuredValue, redactTransportEvent, resolveServerRequestPolicy, responseForServerRequest };
