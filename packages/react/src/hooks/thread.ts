@@ -35,6 +35,7 @@ import type {
   AgentThreadForkResult,
   AgentThreadHistoryResult,
   AgentThreadReadResult,
+  AgentThreadResumeDiagnosticReasonCode,
   AgentThreadResumeResult,
   AgentThreadStartResult,
 } from "./thread-lifecycle-types";
@@ -49,6 +50,7 @@ export type {
   AgentThreadForkResult,
   AgentThreadHistoryResult,
   AgentThreadReadResult,
+  AgentThreadResumeDiagnosticReasonCode,
   AgentThreadResumeResult,
   AgentThreadStartResult,
   AgentThreadStartWithInputResult,
@@ -96,16 +98,33 @@ export function useAgentThread(threadId?: ThreadId) {
   const resumeThread = useCallback(
     async (id: ThreadId, params?: ThreadResumeOptions) => {
       const result = await codex.thread.resume(id, codexThreadResumeParams(params));
-      const normalized = normalizeThreadResumeResponse(result, { activate: true });
-      for (const event of normalized.events) dispatch(event);
       const rawThread = asRecord(result)?.thread ?? result;
       const rawThreadRecord = asRecord(rawThread);
       const canonicalThreadId = rawThreadRecord ? rawThreadId(rawThreadRecord) : undefined;
+      let normalized: ReturnType<typeof normalizeThreadResumeResponse>;
+      try {
+        normalized = normalizeThreadResumeResponse(result, { activate: true });
+      } catch (caught) {
+        dispatchResumeDiagnostic(dispatch, {
+          reasonCode: canonicalThreadId
+            ? "resume_response_normalization_failed"
+            : "resume_response_missing_thread_id",
+          requestedThreadId: id,
+          threadId: canonicalThreadId,
+        });
+        throw caught;
+      }
+      for (const event of normalized.events) dispatch(event);
       if (canonicalThreadId && canonicalThreadId !== id) {
         dispatch({
           canonicalThreadId,
           threadId: id,
           type: "thread/reconciled",
+        });
+        dispatchResumeDiagnostic(dispatch, {
+          reasonCode: "canonical_thread_id_mismatch",
+          requestedThreadId: id,
+          threadId: canonicalThreadId,
         });
       }
       if (rawThreadRecord && hasThreadId(rawThreadRecord)) {
@@ -328,8 +347,57 @@ function stringValue(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+function dispatchResumeDiagnostic(
+  dispatch: ReturnType<typeof useAgentContext>["dispatch"],
+  diagnostic: {
+    reasonCode: AgentThreadResumeDiagnosticReasonCode;
+    requestedThreadId: ThreadId;
+    threadId?: ThreadId;
+  },
+) {
+  dispatch({
+    type: "warning/added",
+    warning: {
+      audience: ["developer", "audit"],
+      id: [
+        "thread-resume",
+        diagnostic.reasonCode,
+        diagnostic.requestedThreadId,
+        diagnostic.threadId,
+      ]
+        .filter(Boolean)
+        .join(":"),
+      message: resumeDiagnosticMessage(diagnostic),
+      reasonCode: diagnostic.reasonCode,
+      requestedThreadId: diagnostic.requestedThreadId,
+      threadId: diagnostic.threadId,
+    },
+  });
+}
+
+function resumeDiagnosticMessage(diagnostic: {
+  reasonCode: AgentThreadResumeDiagnosticReasonCode;
+  requestedThreadId: ThreadId;
+  threadId?: ThreadId;
+}) {
+  switch (diagnostic.reasonCode) {
+    case "canonical_thread_id_mismatch":
+      return `thread/resume returned canonical thread id ${diagnostic.threadId} for requested thread id ${diagnostic.requestedThreadId}.`;
+    case "resume_response_missing_thread_id":
+      return `thread/resume response did not include a usable thread id for requested thread id ${diagnostic.requestedThreadId}.`;
+    case "resume_response_normalization_failed":
+      return `thread/resume response normalization failed for requested thread id ${diagnostic.requestedThreadId}.`;
+    default:
+      return assertNever(diagnostic.reasonCode);
+  }
+}
+
 function responseThreadId(response: unknown): ThreadId | undefined {
   const responseRecord = asRecord(response);
   const rawThread = asRecord(responseRecord?.thread) ?? responseRecord;
   return rawThread ? rawThreadId(rawThread) : undefined;
+}
+
+function assertNever(value: never): never {
+  throw new Error(`Unhandled resume diagnostic reason: ${String(value)}`);
 }

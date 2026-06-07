@@ -283,9 +283,13 @@ function ResumeThreadHarness({ requestedId }: { requestedId: string }) {
       <button
         type="button"
         onClick={() =>
-          void resumeThread(requestedId).then((result) => {
-            setResumeResult(`${result.threadId}:${result.requestedThreadId ?? "none"}`);
-          })
+          void resumeThread(requestedId)
+            .then((result) => {
+              setResumeResult(`${result.threadId}:${result.requestedThreadId ?? "none"}`);
+            })
+            .catch((caught: unknown) => {
+              setResumeResult(caught instanceof Error ? caught.message : String(caught));
+            })
         }
       >
         Resume requested thread
@@ -295,6 +299,36 @@ function ResumeThreadHarness({ requestedId }: { requestedId: string }) {
       <output aria-label="thread title">{activeThread?.thread.name ?? "none"}</output>
       <output aria-label="initial page item">{pageItemText ?? "none"}</output>
       <output aria-label="resume result">{resumeResult || "none"}</output>
+    </>
+  );
+}
+
+function ResumeDiagnosticsProbe() {
+  const { developerDiagnostics, auditDiagnostics, userDiagnostics } = useAgentDiagnostics();
+  return (
+    <>
+      <output aria-label="developer resume diagnostics">
+        {developerDiagnostics.warnings
+          .map((warning) =>
+            JSON.stringify({
+              id: warning.id,
+              message: warning.message,
+              raw: warning.raw,
+              reasonCode: warning.reasonCode,
+              requestedThreadId: warning.requestedThreadId,
+              threadId: warning.threadId,
+            }),
+          )
+          .join("\n") || "none"}
+      </output>
+      <output aria-label="audit resume diagnostics">
+        {auditDiagnostics.warnings.map((warning) => warning.reasonCode).join(",") ||
+          "none"}
+      </output>
+      <output aria-label="user resume diagnostics">
+        {userDiagnostics.warnings.map((warning) => warning.reasonCode).join(",") ||
+          "none"}
+      </output>
     </>
   );
 }
@@ -7252,6 +7286,94 @@ describe("AgentChat", () => {
     expect(
       transport.requests.find((request) => request.method === "thread/resume")?.params,
     ).toEqual({ threadId: "requested-thread-path" });
+  });
+
+  it("emits raw-free diagnostics when resume returns a canonical id alias", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/resume") {
+          return {
+            thread: {
+              id: "thread-canonical-diagnostic",
+              name: "Canonical diagnostic thread",
+              status: { type: "idle" },
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <ResumeThreadHarness requestedId="thread-requested-diagnostic" />
+        <ResumeDiagnosticsProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Resume requested thread" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("developer resume diagnostics")).toHaveTextContent(
+        "canonical_thread_id_mismatch",
+      ),
+    );
+    const developerDiagnostics = screen.getByLabelText(
+      "developer resume diagnostics",
+    );
+    expect(developerDiagnostics).toHaveTextContent("thread-requested-diagnostic");
+    expect(developerDiagnostics).toHaveTextContent("thread-canonical-diagnostic");
+    expect(developerDiagnostics).not.toHaveTextContent("raw");
+    expect(developerDiagnostics).not.toHaveTextContent("Canonical diagnostic thread");
+    expect(screen.getByLabelText("audit resume diagnostics")).toHaveTextContent(
+      "canonical_thread_id_mismatch",
+    );
+    expect(screen.getByLabelText("user resume diagnostics")).toHaveTextContent(
+      "none",
+    );
+  });
+
+  it("emits raw-free diagnostics when resume normalization fails", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/resume") {
+          return {
+            thread: {
+              name: "Raw thread name should not leak",
+              status: { type: "idle" },
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <ResumeThreadHarness requestedId="thread-missing-id" />
+        <ResumeDiagnosticsProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Resume requested thread" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("developer resume diagnostics")).toHaveTextContent(
+        "resume_response_missing_thread_id",
+      ),
+    );
+    const developerDiagnostics = screen.getByLabelText(
+      "developer resume diagnostics",
+    );
+    expect(developerDiagnostics).toHaveTextContent("thread-missing-id");
+    expect(developerDiagnostics).not.toHaveTextContent("Raw thread name should not leak");
+    expect(developerDiagnostics).not.toHaveTextContent('"raw":');
+    expect(screen.getByLabelText("audit resume diagnostics")).toHaveTextContent(
+      "resume_response_missing_thread_id",
+    );
+    expect(screen.getByLabelText("user resume diagnostics")).toHaveTextContent(
+      "none",
+    );
   });
 
   it("reads thread previews without replacing the active thread", async () => {

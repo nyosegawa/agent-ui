@@ -58,11 +58,37 @@ Evidence:
 
 ## Canonical Resume Diagnostics
 
-- [ ] Define stable resume diagnostic reason codes.
-- [ ] Emit a diagnostic when requested and canonical thread ids differ.
-- [ ] Emit a diagnostic when resume response normalization fails.
-- [ ] Keep diagnostics redacted and raw-free.
-- [ ] Add reducer/React tests for resume diagnostics.
+- [x] Define stable resume diagnostic reason codes.
+- [x] Emit a diagnostic when requested and canonical thread ids differ.
+- [x] Emit a diagnostic when resume response normalization fails.
+- [x] Keep diagnostics redacted and raw-free.
+- [x] Add reducer/React tests for resume diagnostics.
+
+Evidence:
+
+- `packages/core/src/state/diagnostics.ts` defines typed
+  `AgentThreadResumeDiagnosticReasonCode` / `AgentDiagnosticReasonCode` and
+  preserves structured requested/canonical thread ids on warning diagnostics.
+- `packages/react/src/hooks/thread-lifecycle-types.ts` re-exports
+  `AgentThreadResumeDiagnosticReasonCode` for React hook consumers.
+- `packages/react/src/hooks/thread.ts` emits developer/audit diagnostics for
+  `canonical_thread_id_mismatch`, `resume_response_missing_thread_id`, and
+  `resume_response_normalization_failed` without storing raw responses, alias
+  maps, or reducer internals.
+- `packages/react/test/components.vitest.tsx` covers canonical mismatch,
+  normalization failure, audience filtering, and raw-free diagnostic contents.
+- `packages/react/test/thread-resume-diagnostics.vitest.tsx` covers
+  `resume_response_normalization_failed` when a canonical id is known before
+  normalization throws.
+- `packages/core/test/reducer.test.ts` covers reducer retention of structured
+  diagnostic fields and audience filtering.
+- Validation: `bun vitest run --config vitest.config.ts --environment jsdom
+  packages/react/test/components.vitest.tsx
+  packages/react/test/thread-resume-diagnostics.vitest.tsx`; `bun vitest run
+  --config vitest.config.ts packages/core/test/reducer.test.ts`; `bun run --cwd
+  packages/react typecheck`; `bun run --cwd packages/core typecheck`; `bun run
+  build`; `bun run test:api-snapshots:update`; `bun run test:api-snapshots`;
+  `bun run lint`; `bun run typecheck`.
 
 ## Server Bridge Admission And Rejection
 

@@ -61,6 +61,7 @@ export type {
   AgentThreadForkResult,
   AgentThreadHistoryResult,
   AgentThreadReadResult,
+  AgentThreadResumeDiagnosticReasonCode,
   AgentThreadResumeResult,
   AgentThreadStartWithInputOptions,
   AgentThreadStartWithInputResult,

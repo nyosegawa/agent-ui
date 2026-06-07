@@ -1,6 +1,7 @@
 import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as _nyosegawa_agent_ui_core from '@nyosegawa/agent-ui-core';
 import { AgentEvent, AgentSessionState, AgentTransport, ReasoningEffort, AgentApp, AgentModel, ThreadId, RequestId, AgentError, ExecutionModeId, ThreadState, AgentThreadScope, AgentThreadCollection, AgentThreadView as AgentThreadView$1, PendingServerRequest, AgentItemBlock, AgentItemState, AgentItemBlockKind, ThreadTokenUsage, AgentThread, TurnState } from '@nyosegawa/agent-ui-core';
+export { AgentThreadResumeDiagnosticReasonCode } from '@nyosegawa/agent-ui-core';
 import React$1, { PropsWithChildren, Dispatch, SetStateAction } from 'react';
 
 interface AgentContextValue {
@@ -276,6 +277,7 @@ interface AgentThreadResumeResult {
     requestedThreadId?: ThreadId;
     threadId: ThreadId;
 }
+
 interface AgentThreadReadResult {
     threadId: ThreadId;
 }

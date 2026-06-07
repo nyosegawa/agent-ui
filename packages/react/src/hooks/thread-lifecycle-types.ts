@@ -1,4 +1,7 @@
-import type { ThreadId } from "@nyosegawa/agent-ui-core";
+import type {
+  AgentThreadResumeDiagnosticReasonCode,
+  ThreadId,
+} from "@nyosegawa/agent-ui-core";
 import type { ThreadStartOptions, TurnStartOptions } from "../request-options";
 
 export interface AgentThreadStartResult {
@@ -21,6 +24,8 @@ export interface AgentThreadResumeResult {
   requestedThreadId?: ThreadId;
   threadId: ThreadId;
 }
+
+export type { AgentThreadResumeDiagnosticReasonCode };
 
 export interface AgentThreadReadResult {
   threadId: ThreadId;

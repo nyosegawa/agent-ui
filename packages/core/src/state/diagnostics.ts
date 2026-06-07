@@ -1,10 +1,20 @@
-import type { AgentDiagnosticAudience, AgentError } from "./common";
+import type { AgentDiagnosticAudience, AgentError, ThreadId } from "./common";
+
+export type AgentThreadResumeDiagnosticReasonCode =
+  | "canonical_thread_id_mismatch"
+  | "resume_response_missing_thread_id"
+  | "resume_response_normalization_failed";
+
+export type AgentDiagnosticReasonCode = AgentThreadResumeDiagnosticReasonCode;
 
 export interface WarningState {
   audience?: readonly AgentDiagnosticAudience[];
   id: string;
   message: string;
   raw?: unknown;
+  reasonCode?: AgentDiagnosticReasonCode;
+  requestedThreadId?: ThreadId;
+  threadId?: ThreadId;
 }
 
 export type StatusBannerKind =
