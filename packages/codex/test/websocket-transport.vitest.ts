@@ -1,7 +1,32 @@
 import { describe, expect, it } from "vitest";
-import { createCodexWebSocketTransport } from "../src/websocket-transport";
+import {
+  createAgentUiBearerSubprotocol,
+  createCodexWebSocketTransport,
+} from "../src/websocket-transport";
 
 describe("CodexWebSocketTransport", () => {
+  it("builds a bearer WebSocket subprotocol and forwards it to the socket", async () => {
+    const protocol = createAgentUiBearerSubprotocol("token:with/slash+unicode-雪");
+    expect(protocol).toMatch(/^agent-ui-bearer\.[A-Za-z0-9_-]+$/);
+    expect(protocol).not.toContain("token:with");
+
+    const sockets: FakeWebSocket[] = [];
+    const transport = createCodexWebSocketTransport({
+      protocols: [protocol],
+      reconnect: false,
+      url: "ws://localhost/agent-ui",
+      webSocketImpl: fakeWebSocketFactory(sockets) as any,
+    });
+    await transport.connect();
+
+    expect(sockets[0]?.protocols).toEqual([protocol]);
+    await transport.close();
+  });
+
+  it("rejects empty bearer subprotocol tokens", () => {
+    expect(() => createAgentUiBearerSubprotocol("")).toThrow("token is required");
+  });
+
   it("reconnects when explicitly configured", async () => {
     const sockets: FakeWebSocket[] = [];
     const transport = createCodexWebSocketTransport({

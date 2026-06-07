@@ -535,6 +535,13 @@ Use `examples/next-rpc-route` for one-shot RPC. Use
 - Keep unauthenticated bridges bound to loopback.
 - Add explicit auth before exposing non-loopback WebSocket endpoints.
 - Do not put bearer tokens in query strings.
+- Browser WebSocket constructors cannot send arbitrary custom headers. For
+  short-lived browser-to-host bridge tokens, use
+  `createAgentUiBearerSubprotocol()` from
+  `@nyosegawa/agent-ui-codex/websocket` and validate it with
+  `parseAgentUiBearerSubprotocol()` or `verifyAgentUiBearerSubprotocol()` in a
+  host-callback admission policy. Prefer same-origin cookies or server-side
+  token exchange when the host already has those session primitives.
 - Redact stderr, structured host events, and browser-forwarded transport
   envelopes before forwarding. The redaction policy covers bearer strings, API
   keys, token fields, passwords, secrets, and device/user codes with `=`,

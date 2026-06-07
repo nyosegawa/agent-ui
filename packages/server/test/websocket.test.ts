@@ -4,11 +4,15 @@ import { connect } from "node:net";
 import { PassThrough } from "node:stream";
 import WebSocket, { WebSocketServer } from "ws";
 import { afterEach, describe, expect, it } from "vitest";
-import { createCodexWebSocketTransport } from "../../codex/src/websocket";
+import {
+  createAgentUiBearerSubprotocol,
+  createCodexWebSocketTransport,
+} from "../../codex/src/websocket";
 import {
   attachAgentUiWebSocketBridge,
   createMcpDynamicToolHandler,
   handleAgentUiWebSocketConnection,
+  parseAgentUiBearerSubprotocol,
   type AgentUiWebSocketBridgeOptions,
   type AgentUiBridgeHealthEvent,
   type BrowserMethodCapability,
@@ -16,6 +20,7 @@ import {
   type CodexSpawnOptions,
   type DynamicToolDebugEvent,
   type DynamicToolHelperPermissionPolicy,
+  verifyAgentUiBearerSubprotocol,
 } from "../src";
 
 const servers: Array<{ close: () => void }> = [];
@@ -25,6 +30,65 @@ afterEach(() => {
 });
 
 describe("attachAgentUiWebSocketBridge", () => {
+  it("parses bearer WebSocket subprotocol tokens without exposing query secrets", () => {
+    const protocol = createAgentUiBearerSubprotocol("session-token");
+
+    expect(parseAgentUiBearerSubprotocol(protocol)).toEqual({
+      ok: true,
+      protocol,
+      token: "session-token",
+    });
+    expect(parseAgentUiBearerSubprotocol(undefined)).toEqual({
+      ok: false,
+      reason: "bearer_subprotocol_missing",
+    });
+    expect(parseAgentUiBearerSubprotocol("agent-ui-bearer.not_base64!")).toEqual({
+      ok: false,
+      reason: "bearer_subprotocol_malformed",
+    });
+    expect(parseAgentUiBearerSubprotocol(`${protocol}, ${protocol}`)).toEqual({
+      ok: false,
+      reason: "bearer_subprotocol_malformed",
+    });
+  });
+
+  it("uses bearer WebSocket subprotocol admission before spawning", async () => {
+    let spawnCount = 0;
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridge({
+      bridgePolicy: {
+        admission: {
+          admit: (request) => verifyAgentUiBearerSubprotocol(request, "expected-token"),
+          mode: "host-callback",
+        },
+      },
+      server: httpServer,
+      spawn: () => {
+        spawnCount += 1;
+        throw new Error("spawn should not run");
+      },
+    });
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string") throw new Error("missing server address");
+
+    const missing = await rawUpgradeResponse(address.port, "/agent-ui/ws");
+    const malformed = await rawUpgradeResponse(address.port, "/agent-ui/ws", [
+      "agent-ui-bearer.not_base64!",
+    ]);
+    const mismatched = await rawUpgradeResponse(address.port, "/agent-ui/ws", [
+      createAgentUiBearerSubprotocol("wrong-token"),
+    ]);
+
+    expect(missing.body).toContain("bearer_subprotocol_missing");
+    expect(malformed.body).toContain("bearer_subprotocol_malformed");
+    expect(mismatched.body).toContain("bearer_subprotocol_mismatch");
+    expect(spawnCount).toBe(0);
+  });
+
   it("uses explicit host-callback admission mode before spawning", async () => {
     let spawnCount = 0;
     let sawRequest = false;
@@ -3054,6 +3118,7 @@ function onceCloseWithInfo(socket: WebSocket): Promise<{ code: number; reason: s
 function rawUpgradeResponse(
   port: number,
   path: string,
+  protocols: string[] = [],
 ): Promise<{ body: string; headers: string; status: number; statusLine: string }> {
   return new Promise((resolve, reject) => {
     const socket = connect(port, "127.0.0.1");
@@ -3068,6 +3133,9 @@ function rawUpgradeResponse(
           "Upgrade: websocket",
           "Sec-WebSocket-Version: 13",
           "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==",
+          ...(protocols.length > 0
+            ? [`Sec-WebSocket-Protocol: ${protocols.join(", ")}`]
+            : []),
           "",
           "",
         ].join("\r\n"),

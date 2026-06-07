@@ -32,6 +32,13 @@ export interface CodexWebSocketReconnectOptions {
   multiplier?: number;
 }
 
+export const AGENT_UI_BEARER_SUBPROTOCOL_PREFIX = "agent-ui-bearer.";
+
+export function createAgentUiBearerSubprotocol(token: string): string {
+  if (!token) throw new Error("Agent UI bearer subprotocol token is required");
+  return `${AGENT_UI_BEARER_SUBPROTOCOL_PREFIX}${base64UrlEncodeUtf8(token)}`;
+}
+
 export function createCodexWebSocketTransport(
   options: CodexWebSocketTransportOptions,
 ): AgentTransport {
@@ -337,6 +344,13 @@ function requestPayload(
     ...(params === undefined ? {} : { params }),
     ...(options?.trace === undefined ? {} : { trace: options.trace }),
   };
+}
+
+function base64UrlEncodeUtf8(value: string): string {
+  const bytes = new TextEncoder().encode(value);
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
 }
 
 function abortError(): Error {

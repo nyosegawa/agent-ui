@@ -30,7 +30,10 @@ Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
 The WebSocket recipe only creates the browser transport for a host-owned
 `/agent-ui/ws` endpoint. It does not implement authentication by itself. The
 host endpoint must enforce authentication before it is exposed beyond loopback,
-and bearer tokens must not be placed in query strings.
+and bearer tokens must not be placed in query strings. Browser WebSocket
+constructors cannot send custom headers; use same-origin cookies, server-side
+token exchange, or the Agent UI bearer subprotocol helper for short-lived bridge
+tokens.
 
 External product workflows should compose Agent UI primitives rather than add
 workflow-specific APIs to the library. Use `AgentThreadView` and headless hooks

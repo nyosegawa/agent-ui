@@ -133,12 +133,44 @@ Evidence:
 
 ## WebSocket Token Subprotocol
 
-- [ ] Add browser helper for bearer subprotocol construction.
-- [ ] Add server parser for bearer subprotocol extraction.
-- [ ] Reject malformed or mismatched subprotocol tokens safely.
-- [ ] Add redaction tests for bearer subprotocol diagnostics.
-- [ ] Update bridge recipes to avoid impossible browser custom headers.
-- [ ] Document when to use cookies, server-side exchange, or subprotocol tokens.
+- [x] Add browser helper for bearer subprotocol construction.
+- [x] Add server parser for bearer subprotocol extraction.
+- [x] Reject malformed or mismatched subprotocol tokens safely.
+- [x] Add redaction tests for bearer subprotocol diagnostics.
+- [x] Update bridge recipes to avoid impossible browser custom headers.
+- [x] Document when to use cookies, server-side exchange, or subprotocol tokens.
+
+Evidence:
+
+- `packages/codex/src/websocket-transport.ts` exports
+  `createAgentUiBearerSubprotocol()` for browser-safe WebSocket protocol
+  construction without query-string tokens or custom headers.
+- `packages/server/src/websocket.ts` exports
+  `parseAgentUiBearerSubprotocol()` and `verifyAgentUiBearerSubprotocol()` for
+  host-callback admission, with stable rejection reason codes for missing,
+  malformed, and mismatched tokens.
+- `packages/server/src/redaction.ts` redacts encoded `agent-ui-bearer.*`
+  values before diagnostics or host logs can preserve the browser token form.
+- `packages/codex/test/websocket-transport.vitest.ts`,
+  `packages/server/test/websocket.test.ts`, and
+  `packages/server/test/redaction.test.ts` cover helper construction, parser
+  failure modes, no-spawn admission rejection, and subprotocol redaction.
+- `examples/recipes/src/websocket-remote-demo.tsx` uses the bearer subprotocol
+  helper for optional short-lived bridge tokens, and
+  `examples/recipes/src/bridge-policy.ts` parses the subprotocol server-side
+  instead of expecting browser custom headers.
+- `docs/reference/server-bridge.md`, `docs/guides/remote-deployment.md`,
+  `docs/reference/codex-protocol.md`, `docs/reference/package-exports.md`, and
+  `examples/recipes/README.md` document cookies, reverse-proxy/server-side
+  exchange, and bearer subprotocol tradeoffs.
+- Validation: `bun vitest run --config vitest.config.ts
+  packages/codex/test/websocket-transport.vitest.ts
+  packages/server/test/websocket.test.ts packages/server/test/redaction.test.ts`;
+  `bun run --cwd packages/codex typecheck`; `bun run --cwd packages/server
+  typecheck`; `bun run --cwd examples/recipes typecheck`; `bun run
+  test:api-snapshots:update`; `bun run test:api-snapshots`; `bunx vitest run
+  test/docs-staleness.test.ts`; `bun run lint`; `bun run typecheck`; `bun run
+  validate:packages`.
 
 ## Local Media Fallback
 
@@ -176,7 +208,7 @@ Evidence:
 - [x] Run targeted server websocket tests.
 - [ ] Run `bun run test:protocol`.
 - [ ] Run `bun run test:fixtures`.
-- [ ] Run `bun run --cwd examples/recipes typecheck`.
+- [x] Run `bun run --cwd examples/recipes typecheck`.
 - [ ] Run `bun run test:skills`.
 - [x] Update and review API snapshots.
 - [ ] Run `bun run validate:fast`.

@@ -6,6 +6,7 @@ import {
   parseJsonRpcLine,
 } from "@nyosegawa/agent-ui-codex";
 import type { AgentTransportEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { STATUS_CODES, type IncomingMessage, type Server } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocketServer, type RawData, type WebSocket } from "ws";
@@ -100,6 +101,9 @@ export type AgentUiBridgeRejectionReason =
   | "admission_rejected"
   | "admission_failed"
   | "unsafe_admission_reason_missing"
+  | "bearer_subprotocol_missing"
+  | "bearer_subprotocol_malformed"
+  | "bearer_subprotocol_mismatch"
   | (string & {});
 export interface AgentUiBridgeRejection {
   body?: string | Buffer;
@@ -121,6 +125,14 @@ export type AgentUiBridgeAdmissionHook = (
 export interface AgentUiBridgePolicy {
   admission?: AgentUiBridgeAdmissionPolicy;
 }
+export type AgentUiBearerSubprotocolParseResult =
+  | { ok: true; protocol: string; token: string }
+  | {
+      ok: false;
+      reason:
+        | "bearer_subprotocol_missing"
+        | "bearer_subprotocol_malformed";
+    };
 export type AgentUiBridgeAdmissionPolicy =
   | { mode: "local-loopback" }
   | { mode: "host-callback"; admit: AgentUiBridgeAdmissionHook }
@@ -147,6 +159,7 @@ const DEFAULT_IDLE_TIMEOUT_MS = 30 * 60 * 1000;
 const DEFAULT_MAX_INBOUND_MESSAGE_BYTES = 256 * 1024;
 const DEFAULT_INBOUND_RATE_LIMIT_INTERVAL_MS = 1_000;
 const DEFAULT_INBOUND_RATE_LIMIT_MESSAGES = 60;
+export const AGENT_UI_BEARER_SUBPROTOCOL_PREFIX = "agent-ui-bearer.";
 const WEB_SOCKET_OPEN_STATE = 1;
 const DISABLED_DYNAMIC_TOOL_POLICY = { mode: "disabled" } as const satisfies AgentUiDynamicToolPolicy;
 const DEFAULT_BROWSER_METHOD_CAPABILITIES = [
@@ -291,6 +304,56 @@ export function attachAgentUiWebSocketBridge(
     server.off("upgrade", onUpgrade);
   });
   return webSocketServer;
+}
+
+export function parseAgentUiBearerSubprotocol(
+  requestOrHeader: IncomingMessage | string | string[] | undefined,
+): AgentUiBearerSubprotocolParseResult {
+  const header = isIncomingMessage(requestOrHeader)
+    ? requestOrHeader.headers["sec-websocket-protocol"]
+    : requestOrHeader;
+  const matches = protocolHeaderValues(header).filter((protocol) =>
+    protocol.startsWith(AGENT_UI_BEARER_SUBPROTOCOL_PREFIX),
+  );
+  if (matches.length === 0) return { ok: false, reason: "bearer_subprotocol_missing" };
+  if (matches.length !== 1) return { ok: false, reason: "bearer_subprotocol_malformed" };
+  const protocol = matches[0]!;
+  const encoded = protocol.slice(AGENT_UI_BEARER_SUBPROTOCOL_PREFIX.length);
+  const token = decodeBearerSubprotocolToken(encoded);
+  if (token === undefined) return { ok: false, reason: "bearer_subprotocol_malformed" };
+  return { ok: true, protocol, token };
+}
+
+export function verifyAgentUiBearerSubprotocol(
+  request: IncomingMessage,
+  expectedToken: string | undefined,
+): AgentUiBridgeResult {
+  const parsed = parseAgentUiBearerSubprotocol(request);
+  if (parsed.ok === false) {
+    return {
+      accepted: false,
+      ...bridgeRejection(
+        { reason: parsed.reason, status: 403 },
+        {
+          closeCode: 1008,
+          closeReason: "Agent UI bridge bearer token rejected",
+        },
+      ),
+    };
+  }
+  if (!expectedToken || !constantTimeTokenEqual(parsed.token, expectedToken)) {
+    return {
+      accepted: false,
+      ...bridgeRejection(
+        { reason: "bearer_subprotocol_mismatch", status: 403 },
+        {
+          closeCode: 1008,
+          closeReason: "Agent UI bridge bearer token rejected",
+        },
+      ),
+    };
+  }
+  return { accepted: true };
 }
 
 export async function handleAgentUiWebSocketConnection(
@@ -985,6 +1048,41 @@ function sanitizeWebSocketCloseReason(closeReason: string): string {
   const buffer = Buffer.from(closeReason, "utf8");
   if (buffer.byteLength <= 123) return closeReason;
   return "Agent UI bridge rejected";
+}
+
+function isIncomingMessage(value: unknown): value is IncomingMessage {
+  return isRecord(value) && isRecord(value.headers);
+}
+
+function protocolHeaderValues(
+  header: string | string[] | undefined,
+): string[] {
+  const values = Array.isArray(header) ? header : header === undefined ? [] : [header];
+  return values
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
+function decodeBearerSubprotocolToken(encoded: string): string | undefined {
+  if (!encoded || !/^[A-Za-z0-9_-]+$/.test(encoded)) return undefined;
+  try {
+    const decoded = Buffer.from(encoded, "base64url").toString("utf8");
+    if (base64UrlEncodeUtf8(decoded) !== encoded) return undefined;
+    return decoded;
+  } catch {
+    return undefined;
+  }
+}
+
+function base64UrlEncodeUtf8(value: string): string {
+  return Buffer.from(value, "utf8").toString("base64url");
+}
+
+function constantTimeTokenEqual(actual: string, expected: string): boolean {
+  const actualHash = createHash("sha256").update(actual).digest();
+  const expectedHash = createHash("sha256").update(expected).digest();
+  return timingSafeEqual(actualHash, expectedHash);
 }
 
 function requestMatchesPath(request: IncomingMessage, path: string): boolean {

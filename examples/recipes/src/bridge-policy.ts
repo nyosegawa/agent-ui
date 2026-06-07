@@ -1,5 +1,8 @@
 import type { IncomingMessage, Server } from "node:http";
-import { attachAgentUiWebSocketBridge } from "@nyosegawa/agent-ui-server";
+import {
+  attachAgentUiWebSocketBridge,
+  parseAgentUiBearerSubprotocol,
+} from "@nyosegawa/agent-ui-server";
 
 export function attachLoopbackProductizedBridge({
   cwd,
@@ -74,9 +77,8 @@ function resolveDesktopSidecarSession(
   request: IncomingMessage | undefined,
   sessions: ReadonlyMap<string, DesktopSidecarSession>,
 ): DesktopSidecarSession | undefined {
-  const token = request?.headers["x-agent-ui-session"];
-  if (typeof token !== "string") return undefined;
-  return sessions.get(token);
+  const parsed = parseAgentUiBearerSubprotocol(request);
+  return parsed.ok ? sessions.get(parsed.token) : undefined;
 }
 
 function validateDesktopWorkspace(cwd: string): string {

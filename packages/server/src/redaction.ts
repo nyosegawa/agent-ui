@@ -4,6 +4,7 @@ export function redactSecrets(input: string): string {
   return input
     .replace(/(^|[\r\n])(Authorization\s*:\s*)[^\r\n]*/gi, "$1$2[REDACTED]")
     .replace(/\b(Bearer\s+)[A-Za-z0-9._~+/=-]+/gi, "$1[REDACTED]")
+    .replace(/\bagent-ui-bearer\.[A-Za-z0-9_-]+/g, "agent-ui-bearer.[REDACTED]")
     .replace(
       new RegExp(`"(${CREDENTIAL_KEY_SOURCE})"\\s*:\\s*"[^"]+"`, "gi"),
       "\"$1\":\"[REDACTED]\"",

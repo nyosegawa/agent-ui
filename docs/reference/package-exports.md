@@ -89,6 +89,10 @@ experimental method lists), `CodexSession`, `createCodexSession`,
 `createCodexStdioTransport`, `createCodexWebSocketTransport`,
 `createCodexSdkTransportAdapter`, `startDeviceCodeLogin`, and
 `cancelDeviceCodeLogin`.
+Keep the WebSocket transport bearer-subprotocol helper
+`createAgentUiBearerSubprotocol()` public for browser hosts that need to pass a
+short-lived bridge token through the WebSocket handshake without query strings
+or impossible custom headers.
 
 Move to subpath: generated method params/results and request-construction
 types should stay on `stable-types`, `clients`, `request-builders`, or
@@ -171,6 +175,8 @@ policy types, `AgentUiBridgePolicy` admission mode types, structured bridge
 rejection/result types such as `AgentUiBridgeRejection`,
 `AgentUiBridgeResult`, `AgentUiBridgeAdmissionDecision`, and
 `AgentUiBridgeRejectionReason`,
+bearer WebSocket subprotocol parser/verifier helpers
+`parseAgentUiBearerSubprotocol()` and `verifyAgentUiBearerSubprotocol()`,
 `AgentUiDynamicToolPolicy`, dynamic tool handler/helper types and explicit MCP
 mapping factories, dynamic tool debug event types, host event sink helpers,
 bridge health event types, context-rich server-request policy callback/helper
