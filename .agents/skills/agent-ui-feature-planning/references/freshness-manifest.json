@@ -2,7 +2,7 @@
   "schema_version": 1,
   "last_full_research_commit": "499a9020c1613923ae547411ad930e0bcefb8ed9",
   "last_full_research_at": "2026-06-07T08:55:35Z",
-  "last_checked_at": "2026-06-07T08:55:35Z",
+  "last_checked_at": "2026-06-08T00:00:00Z",
   "watched_files": {
     "AGENTS.md": {
       "sha256": "ec6c4e86fbe6304589c322ed91b39b2e0fc4eca21fef47501cf0800c53f3b7a0",
@@ -65,27 +65,27 @@
     {
       "glob": ".agents/skills/*/SKILL.md",
       "reason": "repository skill trigger and workflow conventions",
-      "fingerprint": "e02808e690df3a68c2dbdcedbfefdf7ff64234e43f36b3f8ef8d5743ea444622"
+      "fingerprint": "013a12b430c3691924f877676f336920096b5889c1bf96ab8b7b0f3691f28da3"
     },
     {
       "glob": ".agents/skills/*/references/*.md",
       "reason": "repository skill reference conventions",
-      "fingerprint": "a1247370090acb0d4ecc60bafaecad6bd815e5d4d1ce87f95e37982e3574f20d"
+      "fingerprint": "58eccb354c787b6b709ffe147210f8e6bd4427fa4675c8fb14ddfa9b9002c95e"
     },
     {
       "glob": "docs/architecture/*.md",
       "reason": "architecture, boundary, testing, security, and toolchain guidance",
-      "fingerprint": "11dc1da78dc1b85da22f163a8d0a02932df3f6b617aacb7530615f29b00598f4"
+      "fingerprint": "f357521e824375f6fd5221f301aee9a575e1d4a7f696c5c331f8b2279ff8c3e6"
     },
     {
       "glob": "docs/maintenance/*.md",
       "reason": "CI, release, upstream sync, and repository skill guidance",
-      "fingerprint": "a456a1b194d563a0500cef74b147a88f021a6f69c945c50ff386bd071883887a"
+      "fingerprint": "a14a3ba10c6202f7062ef6752389975a0b171437b6c016a056b762e9a0b17f93"
     },
     {
       "glob": "docs/reference/*.md",
       "reason": "public API, protocol, and package export guidance",
-      "fingerprint": "106b092473c2850e3e066c99e20f50636e1db6d7e716af54e739214c3f0e7eb1"
+      "fingerprint": "2c4a5c68d5c0bffb26231a5bd41e1fc37c30f98d4f888b7abbf0cbb5634b7cd8"
     }
   ],
   "refresh_policy": {

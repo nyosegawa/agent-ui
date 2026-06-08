@@ -39,7 +39,7 @@ for (const [file, meta] of Object.entries(manifest.watched_files ?? {})) {
 for (const entry of manifest.watched_globs ?? []) {
   const files = expandSimpleGlob(entry.glob);
   const fingerprint = hashLines(
-    files.map((file) => `${file}:${sha256(readFileSync(join(root, file)))}`),
+    files.map((file) => `${file}\0${sha256(readFileSync(join(root, file)))}`),
   );
   watchedGlobs.push({
     glob: entry.glob,
@@ -97,13 +97,22 @@ function runGit(args) {
 }
 
 function expandSimpleGlob(glob) {
-  if (!glob.includes("*")) return existsSync(join(root, glob)) ? [glob] : [];
+  if (!glob.includes("*")) {
+    return existsSync(join(root, glob)) && glob !== manifestRelativePath() ? [glob] : [];
+  }
   const regex = globToRegExp(glob);
   const tracked = runGit(["ls-files"]);
   const candidates = tracked
     ? tracked.split(/\r?\n/).filter(Boolean)
     : walk(root).map((path) => relative(root, path));
-  return candidates.filter((path) => regex.test(path)).sort();
+  return candidates
+    .filter((path) => path !== manifestRelativePath())
+    .filter((path) => regex.test(path))
+    .sort();
+}
+
+function manifestRelativePath() {
+  return relative(root, manifestPath);
 }
 
 function globToRegExp(glob) {

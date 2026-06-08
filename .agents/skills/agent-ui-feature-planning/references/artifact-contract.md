@@ -44,6 +44,8 @@ external or time-sensitive facts affect the plan, research must cite web/current
 sources or record why live research was intentionally skipped.
 Every planning run must record the freshness check result before research
 findings are finalized.
+Research must also record the branch decision, whether the branch was created
+or reused, and any blocker that prevents a safe planning commit or push.
 
 ## `plan.md`
 
@@ -71,6 +73,7 @@ protected, example-only, docs-only, or release-sensitive.
 Required sections:
 
 - Status Summary
+- Branch And Planning Commit
 - Phase Checklist
 - Task Checklist By Phase
 - Implementation Notes
@@ -78,6 +81,16 @@ Required sections:
 - Review Evidence
 - Commit Log
 - Final Checklist
+
+`Branch And Planning Commit` must include these fields:
+
+```md
+- Branch:
+- Planning commit:
+- Remote:
+- Push result:
+- Blockers:
+```
 
 Every phase must use this shape:
 
@@ -123,6 +136,7 @@ Required sections:
 - `/goal` command
 - source artifact paths
 - repo guidance paths
+- branch and planning commit
 - freshness policy and freshness result
 - execution rules
 - validation rules
@@ -132,9 +146,16 @@ Required sections:
 - PR rules
 - CI follow-through rules
 - evidence rules
+- repo-specific forbidden edits
+- repo-specific checks
 - stop conditions
 - escalation conditions
 
 The prompt must include absolute paths to `research.md`, `plan.md`, and
-`todo.md`, plus repo-specific forbidden edits, required checks, freshness
-result, and phase-first execution rules.
+`todo.md`, the planning branch name, planning commit status or hash,
+repo-specific forbidden edits, required checks, freshness result, and
+phase-first execution rules. It must tell `/goal` to continue implementation on
+the same branch used for planning and to rely on `research.md`, `plan.md`, and
+`todo.md` instead of duplicating their long contents.
+
+`goal-prompt.md` must be 4000 characters or fewer. Count characters, not bytes.
