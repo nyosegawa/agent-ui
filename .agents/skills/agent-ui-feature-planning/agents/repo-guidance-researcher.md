@@ -11,7 +11,7 @@ Inspect:
 - `skills/agent-ui/`
 - `docs/maintenance/repository-skills.md`
 - `docs/maintenance/agent-ui-skills.md`
-- `/Users/sakasegawa/.agents/agent-skill-best-practices.md`
+- any provided portable agent-skill best-practice guidance
 
 Return concise findings:
 

@@ -9,6 +9,14 @@
 - Last review:
 - PR/CI:
 
+## Branch And Planning Commit
+
+- Branch:
+- Planning commit:
+- Remote:
+- Push result:
+- Blockers:
+
 ## Phase Checklist
 
 - [ ] P001 <phase title>
@@ -45,13 +53,6 @@
   - Expected files/areas:
   - Validation note:
 
-## Task-Level Fallbacks
-
-- Record task-level execution/review/commit only when a phase is too large,
-  mixes unrelated responsibilities, has incompatible validation, cannot be
-  reviewed meaningfully, cannot be committed/reverted coherently, or carries
-  public API / migration / security / data-loss risk requiring separation.
-
 ## Implementation Notes
 
 -
@@ -75,6 +76,7 @@
 - [ ] Every completion criterion in `plan.md` is satisfied.
 - [ ] Required validation passed or an explicit user-approved exception is recorded.
 - [ ] Review evidence is recorded.
+- [ ] Branch, planning commit, remote, push result, and blockers are recorded.
 - [ ] Commit hashes are recorded for completed phases.
 - [ ] Push evidence is recorded when commits need to be shared or a PR will be created.
 - [ ] PR URL is recorded when applicable.

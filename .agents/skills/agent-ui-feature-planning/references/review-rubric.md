@@ -7,6 +7,8 @@ Use this rubric before declaring a planning package ready.
 - The artifact directory is exactly `.agent-work/features/<date>-<slug>/`.
 - `research.md`, `plan.md`, `todo.md`, and `goal-prompt.md` all exist.
 - The freshness check result is recorded in `research.md`.
+- The branch decision is recorded in `research.md` and `todo.md`; planning and
+  implementation share one branch.
 - Research cites actual repo files inspected, not only memory or filenames.
 - Web/current research is present when external or time-sensitive facts affect
   the plan, or the skip reason is explicit.
@@ -21,12 +23,15 @@ Use this rubric before declaring a planning package ready.
 - Protected file handling is explicit.
 - `todo.md` is phase-first: each phase has goal, scope, files/areas,
   validation, review, commit, push, PR/CI, evidence, and included tasks.
+- `todo.md` records branch, planning commit, remote, push result, and blockers.
 - Each phase is small enough to implement, validate, review, and commit as one
   unit, or `todo.md` records why task-level fallback is required.
-- `goal-prompt.md` includes absolute artifact paths, freshness result,
+- `goal-prompt.md` is 4000 characters or fewer and includes absolute artifact
+  paths, branch name, same-branch implementation rule, freshness result,
   one-phase-per-iteration,
   validation-before-completion, independent review, bounded remediation, commit,
-  push, PR, CI, evidence, stop, and escalation rules.
+  push, PR, CI, evidence, repo-specific forbidden edits/checks, stop, and
+  escalation rules.
 
 ## Reject The Package If
 

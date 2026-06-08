@@ -138,17 +138,21 @@ was skipped.
 
 ## Release And PR Rules
 
-Create purpose-based branches from `main`. Do not push directly to `main`.
-Use concise imperative commit subjects. PR bodies should cover summary, test
-plan, release impact, UI impact, protocol/upstream impact, docs impact, and
-security/secrets.
+Create purpose-based branches from `main`. Use one branch for both planning and
+implementation; do not create planning-only branches. Do not push directly to
+`main`. Use concise imperative commit subjects. PR bodies should cover summary,
+test plan, release impact, UI impact, protocol/upstream impact, docs impact,
+and security/secrets.
 
-Completed phase commits should be pushed to the feature branch before PR
-creation or update. Record branch, remote, pushed commit hash, and push result
-in `todo.md`. Task-level commits are a fallback only when a phase is not
-reviewable or committable as one unit; record the reason in `todo.md`. Escalate
-when authentication, network, remote protection, or missing upstream blocks push
-and therefore PR or CI follow-through.
+After planning artifacts pass validation, commit the planning package on the
+same branch with one planning commit such as `Plan <feature slug>`. Push the
+planning commit when remote push is possible. Completed phase commits should be
+pushed to the feature branch before PR creation or update. Record branch,
+planning commit, remote, pushed commit hash, push result, and blockers in
+`todo.md`. Task-level commits are a fallback only when a phase is not reviewable
+or committable as one unit; record the reason in `todo.md`. Escalate when
+authentication, network, remote protection, or missing upstream blocks push and
+therefore PR or CI follow-through.
 
 Add a changeset for npm-consumer-facing changes: public API, components, hooks,
 adapters, exports, types, CSS package surface, Codex adapter behavior, package

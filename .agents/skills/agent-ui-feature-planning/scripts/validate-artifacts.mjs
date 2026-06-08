@@ -61,6 +61,7 @@ checkSections("plan.md", [
 
 checkSections("todo.md", [
   "Status Summary",
+  "Branch And Planning Commit",
   "Phase Checklist",
   "Task Checklist By Phase",
   "Implementation Notes",
@@ -70,22 +71,44 @@ checkSections("todo.md", [
   "Final Checklist",
 ]);
 
-checkPromptSections(files["goal-prompt.md"] ?? "");
+checkSections("goal-prompt.md", [
+  "/goal command",
+  "source artifact paths",
+  "repo guidance paths",
+  "branch and planning commit",
+  "freshness policy and freshness result",
+  "execution rules",
+  "validation rules",
+  "review rules",
+  "commit rules",
+  "push rules",
+  "PR rules",
+  "CI follow-through rules",
+  "evidence rules",
+  "repo-specific forbidden edits",
+  "repo-specific checks",
+  "stop conditions",
+  "escalation conditions",
+]);
 
-if (files["todo.md"]) checkTodo(files["todo.md"]);
-if (files["goal-prompt.md"]) checkGoalPrompt(files["goal-prompt.md"]);
+let branchName = null;
+if (files["todo.md"]) branchName = checkTodo(files["todo.md"]);
+if (files["goal-prompt.md"]) checkGoalPrompt(files["goal-prompt.md"], branchName);
 
 if (errors.length > 0) {
   process.stderr.write(`Artifact validation failed for ${artifactDir}\n`);
   for (const error of errors) process.stderr.write(`- ${error}\n`);
+  process.stderr.write(`Summary: ${errors.length} failure(s)\n`);
   process.exit(1);
 }
 
 process.stdout.write(`Artifact validation passed for ${artifactDir}\n`);
 process.stdout.write("- required files exist\n");
 process.stdout.write("- required top-level sections exist\n");
-process.stdout.write("- todo.md is phase-first with phase/task fields\n");
-process.stdout.write("- goal-prompt.md references absolute research/plan/todo paths\n");
+process.stdout.write("- goal-prompt.md is 4000 characters or fewer\n");
+process.stdout.write("- todo.md records branch, planning commit, remote, push result, and blockers\n");
+process.stdout.write("- todo.md is phase-first with required phase/task fields\n");
+process.stdout.write("- goal-prompt.md references absolute research/plan/todo paths and same-branch implementation\n");
 
 function checkSections(file, sections) {
   const text = files[file];
@@ -97,39 +120,32 @@ function checkSections(file, sections) {
   }
 }
 
-function checkPromptSections(text) {
-  if (!text) return;
-  const labels = [
-    "/goal command",
-    "source artifact paths",
-    "repo guidance paths",
-    "freshness policy and freshness result",
-    "execution rules",
-    "validation rules",
-    "review rules",
-    "commit rules",
-    "push rules",
-    "PR rules",
-    "CI follow-through rules",
-    "evidence rules",
-    "stop conditions",
-    "escalation conditions",
-  ];
-  const lower = text.toLowerCase();
-  for (const label of labels) {
-    if (!lower.includes(label.toLowerCase())) {
-      errors.push(`goal-prompt.md: missing required section or label "${label}"`);
-    }
-  }
-}
-
 function checkTodo(text) {
+  const branchFields = [
+    ["Branch", true],
+    ["Planning commit", false],
+    ["Remote", false],
+    ["Push result", false],
+    ["Blockers", false],
+  ];
+  let branchName = null;
+
+  for (const [field, requireValue] of branchFields) {
+    const match = text.match(new RegExp(`^- ${escapeRegExp(field)}:\\s*(.*)$`, "im"));
+    if (!match) {
+      errors.push(`todo.md: Branch And Planning Commit missing field "${field}:"`);
+      continue;
+    }
+    if (requireValue && match[1].trim().length === 0) {
+      errors.push(`todo.md: Branch And Planning Commit field "${field}:" must include a value`);
+    }
+    if (field === "Branch") branchName = match[1].trim();
+  }
+
   const phaseMatches = [...text.matchAll(/^- \[[ xX]\] (P\d{3})\s+(.+)$/gm)];
   if (phaseMatches.length === 0) {
-    errors.push(
-      "todo.md: expected at least one phase checkbox like '- [ ] P001 <title>'",
-    );
-    return;
+    errors.push("todo.md: expected at least one phase checkbox like '- [ ] P001 <title>'");
+    return branchName;
   }
 
   for (const [phaseId, block] of splitPhaseBlocks(text)) {
@@ -148,6 +164,12 @@ function checkTodo(text) {
     for (const field of fields) {
       if (!new RegExp(`^\\s+- ${escapeRegExp(field)}:`, "m").test(block)) {
         errors.push(`todo.md: ${phaseId} missing field "${field}"`);
+      }
+    }
+
+    for (const evidenceField of ["Implementation", "Validation", "Review", "Commit", "Push"]) {
+      if (!new RegExp(`^\\s+- ${escapeRegExp(evidenceField)}:`, "m").test(block)) {
+        errors.push(`todo.md: ${phaseId} Evidence missing "${evidenceField}"`);
       }
     }
 
@@ -171,6 +193,8 @@ function checkTodo(text) {
       }
     }
   }
+
+  return branchName;
 }
 
 function splitPhaseBlocks(text) {
@@ -182,14 +206,20 @@ function splitPhaseBlocks(text) {
   });
 }
 
-function checkGoalPrompt(text) {
-  for (const file of ["research.md", "plan.md", "todo.md"]) {
-    const regex = new RegExp(`(?:/[^\\s]+)?${escapeRegExp(file)}`);
-    if (!regex.test(text)) errors.push(`goal-prompt.md: missing reference to ${file}`);
+function checkGoalPrompt(text, branchName) {
+  const charCount = [...text].length;
+  if (charCount > 4000) {
+    errors.push(`goal-prompt.md: expected 4000 characters or fewer, found ${charCount}`);
   }
+
   const absoluteRefs = [
     ...text.matchAll(/(?:^|\s)(\/[^\s`]+(?:research|plan|todo)\.md)/gm),
   ].map((match) => match[1]);
+  for (const file of ["research.md", "plan.md", "todo.md"]) {
+    if (!new RegExp(`(?:^|\\s)/[^\\s\`]*${escapeRegExp(file)}(?:\\s|$)`).test(text)) {
+      errors.push(`goal-prompt.md: missing absolute path to ${file}`);
+    }
+  }
   if (!absoluteRefs.some((path) => isAbsolute(path) && path.endsWith("research.md"))) {
     errors.push("goal-prompt.md: missing absolute path to research.md");
   }
@@ -198,6 +228,16 @@ function checkGoalPrompt(text) {
   }
   if (!absoluteRefs.some((path) => isAbsolute(path) && path.endsWith("todo.md"))) {
     errors.push("goal-prompt.md: missing absolute path to todo.md");
+  }
+
+  if (branchName && !text.includes(branchName)) {
+    errors.push(`goal-prompt.md: missing branch name "${branchName}"`);
+  }
+  if (!/same branch|same-branch/i.test(text)) {
+    errors.push("goal-prompt.md: missing same-branch implementation rule");
+  }
+  if (!/continue (implementation )?on|continue on/i.test(text)) {
+    errors.push("goal-prompt.md: must instruct implementation to continue on the planning branch");
   }
 }
 
