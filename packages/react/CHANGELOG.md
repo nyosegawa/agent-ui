@@ -1,5 +1,19 @@
 # @nyosegawa/agent-ui-react
 
+## 0.5.0
+
+### Minor Changes
+
+- Add host integration contracts for gated workflows, resumable thread startup, and WebSocket bridge lifecycle diagnostics.
+
+  This release exposes typed first-message and thread lifecycle results in React, reports structured bridge diagnostics through core state, expands server-side WebSocket session handling and redaction, and documents the updated host, hook, package export, remote deployment, and server bridge contracts.
+
+### Patch Changes
+
+- Updated dependencies
+  - @nyosegawa/agent-ui-core@0.5.0
+  - @nyosegawa/agent-ui-codex@0.5.0
+
 ## 0.4.1
 
 ### Patch Changes
