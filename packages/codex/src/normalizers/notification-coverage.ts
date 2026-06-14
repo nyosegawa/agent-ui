@@ -48,6 +48,7 @@ export const stableNotificationCoverage: Record<
   "thread/archived": "mapped",
   "thread/closed": "mapped",
   "thread/compacted": "raw",
+  "thread/deleted": "raw",
   "thread/goal/cleared": "raw",
   "thread/goal/updated": "raw",
   "thread/name/updated": "mapped",

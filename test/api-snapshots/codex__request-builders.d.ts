@@ -156,6 +156,8 @@ type MemoryCitation = {
 
 type PatchApplyStatus = "inProgress" | "completed" | "failed" | "declined";
 
+type SubAgentActivityKind = "started" | "interacted" | "interrupted";
+
 type WebSearchAction = {
     "type": "search";
     query: string | null;
@@ -304,6 +306,12 @@ type ThreadItem = {
     agentsStates: {
         [key in string]?: CollabAgentState;
     };
+} | {
+    "type": "subAgentActivity";
+    id: string;
+    kind: SubAgentActivityKind;
+    agentThreadId: string;
+    agentPath: string;
 } | {
     "type": "webSearch";
     id: string;
@@ -565,7 +573,30 @@ type RemoteControlStatusReadResponse = {
     environmentId: string | null;
 };
 
+type ThreadBackgroundTerminal = {
+    itemId: string;
+    processId: string;
+    command: string;
+    cwd: AbsolutePathBuf;
+    osPid: number | null;
+    cpuPercent: number | null;
+    rssKb: bigint | null;
+};
+
 type ThreadBackgroundTerminalsCleanResponse = Record<string, never>;
+
+type ThreadBackgroundTerminalsListResponse = {
+    data: Array<ThreadBackgroundTerminal>;
+    /**
+     * Opaque cursor to pass to the next call to continue after the last item.
+     * If None, there are no more items to return.
+     */
+    nextCursor: string | null;
+};
+
+type ThreadBackgroundTerminalsTerminateResponse = {
+    terminated: boolean;
+};
 
 /**
  * Response for `thread/decrement_elicitation`.
@@ -713,6 +744,8 @@ interface ExperimentalMethodResultMap {
     "remoteControl/pairing/status": RemoteControlPairingStatusResponse;
     "remoteControl/status/read": RemoteControlStatusReadResponse;
     "thread/backgroundTerminals/clean": ThreadBackgroundTerminalsCleanResponse;
+    "thread/backgroundTerminals/list": ThreadBackgroundTerminalsListResponse;
+    "thread/backgroundTerminals/terminate": ThreadBackgroundTerminalsTerminateResponse;
     "thread/decrement_elicitation": ThreadDecrementElicitationResponse;
     "thread/increment_elicitation": ThreadIncrementElicitationResponse;
     "thread/memoryMode/set": ThreadMemoryModeSetResponse;
