@@ -46,6 +46,8 @@ import type {
   RemoteControlPairingStatusResponse,
   RemoteControlStatusReadResponse,
   ThreadBackgroundTerminalsCleanResponse,
+  ThreadBackgroundTerminalsListResponse,
+  ThreadBackgroundTerminalsTerminateResponse,
   ThreadDecrementElicitationResponse,
   ThreadIncrementElicitationResponse,
   ThreadMemoryModeSetResponse,
@@ -119,6 +121,8 @@ interface ExperimentalMethodResultMap {
   "remoteControl/pairing/status": RemoteControlPairingStatusResponse;
   "remoteControl/status/read": RemoteControlStatusReadResponse;
   "thread/backgroundTerminals/clean": ThreadBackgroundTerminalsCleanResponse;
+  "thread/backgroundTerminals/list": ThreadBackgroundTerminalsListResponse;
+  "thread/backgroundTerminals/terminate": ThreadBackgroundTerminalsTerminateResponse;
   "thread/decrement_elicitation": ThreadDecrementElicitationResponse;
   "thread/increment_elicitation": ThreadIncrementElicitationResponse;
   "thread/memoryMode/set": ThreadMemoryModeSetResponse;

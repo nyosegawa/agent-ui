@@ -45,7 +45,7 @@ import { generatedExperimentalOnlyClientMethods } from "../src/generated/protoco
 describe("Codex protocol metadata", () => {
   it("records upstream commit and stable release method surface", () => {
     expect(CODEX_PROTOCOL_COMMIT).toMatch(/^[0-9a-f]{40}$/);
-    expect(CODEX_PROTOCOL_COMMIT).toBe("87b808bb570f01f4b6fc8485c5459052fac0e320");
+    expect(CODEX_PROTOCOL_COMMIT).toBe("5e9249ec0266f6331d1cb811d472c4d20cd5131d");
     expect(CODEX_PROTOCOL_GENERATED_AT).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(stableClientMethods).toBe(stableProductizedMethods);
     expect(stableProductizedMethods).toContain("account/rateLimits/read");
@@ -53,7 +53,12 @@ describe("Codex protocol metadata", () => {
     expect(stableProductizedMethods).toContain("skills/list");
     expect(stableProductizedMethods).toContain("app/list");
     expect(hostOnlyMethods).toContain("command/exec");
+    expect(hostOnlyMethods).toContain("thread/delete");
     expect(experimentalAvailableMethods).toContain("thread/turns/list");
+    expect(experimentalAvailableMethods).toContain("thread/backgroundTerminals/list");
+    expect(experimentalAvailableMethods).toContain(
+      "thread/backgroundTerminals/terminate",
+    );
     expect(experimentalUnsupportedMethods).toContain("thread/turns/items/list");
     expect(stableServerRequestMethods).toContain("item/commandExecution/requestApproval");
     expect(stableServerRequestMethods).toContain("attestation/generate");
@@ -147,8 +152,10 @@ describe("Codex protocol metadata", () => {
     expect(getCodexCapabilityStatus("not/a/method")).toBeNull();
 
     expect(isStableProductizedMethod("thread/start")).toBe(true);
+    expect(isStableProductizedMethod("thread/delete")).toBe(false);
     expect(isStableProductizedMethod("command/exec")).toBe(false);
     expect(isHostOnlyMethod("command/exec")).toBe(true);
+    expect(isHostOnlyMethod("thread/delete")).toBe(true);
     expect(isExperimentalAvailableMethod("thread/turns/list")).toBe(true);
     expect(isExperimentalAvailableMethod("remoteControl/pairing/start")).toBe(true);
     expect(isExperimentalAvailableMethod("mock/experimentalMethod")).toBe(false);
@@ -297,6 +304,7 @@ describe("Codex protocol metadata", () => {
     expect(stableNotificationCoverage["item/agentMessage/delta"]).toBe("mapped");
     expect(stableNotificationCoverage["rawResponseItem/completed"]).toBe("raw");
     expect(stableNotificationCoverage["thread/compacted"]).toBe("raw");
+    expect(stableNotificationCoverage["thread/deleted"]).toBe("raw");
     expect(stableNotificationCoverage["thread/goal/cleared"]).toBe("raw");
     expect(stableNotificationCoverage["thread/goal/updated"]).toBe("raw");
     expect(stableNotificationCoverage["thread/settings/updated"]).toBe("raw");
@@ -1788,6 +1796,7 @@ describe("Codex protocol metadata", () => {
           "thread/approveGuardianDeniedAction",
           "thread/archive",
           "thread/compact/start",
+          "thread/delete",
           "thread/fork",
           "thread/goal/clear",
           "thread/goal/get",
@@ -1860,6 +1869,7 @@ describe("Codex protocol metadata", () => {
           "thread/archived",
           "thread/closed",
           "thread/compacted",
+          "thread/deleted",
           "thread/goal/cleared",
           "thread/goal/updated",
           "thread/name/updated",
@@ -1942,6 +1952,8 @@ describe("Codex protocol metadata", () => {
         "remoteControl/pairing/status",
         "remoteControl/status/read",
         "thread/backgroundTerminals/clean",
+        "thread/backgroundTerminals/list",
+        "thread/backgroundTerminals/terminate",
         "thread/decrement_elicitation",
         "thread/increment_elicitation",
         "thread/memoryMode/set",

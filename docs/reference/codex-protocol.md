@@ -500,6 +500,7 @@ Host-only or advanced local tooling:
 - `thread/goal/clear`
 - `thread/goal/get`
 - `thread/goal/set`
+- `thread/delete`
 - `windowsSandbox/readiness`
 - `windowsSandbox/setupStart`
 
@@ -528,6 +529,8 @@ Experimental available methods:
 - `remoteControl/pairing/status`
 - `remoteControl/status/read`
 - `thread/backgroundTerminals/clean`
+- `thread/backgroundTerminals/list`
+- `thread/backgroundTerminals/terminate`
 - `thread/increment_elicitation`
 - `thread/decrement_elicitation`
 - `thread/memoryMode/set`

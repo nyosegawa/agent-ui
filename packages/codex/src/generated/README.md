@@ -4,10 +4,10 @@ This directory contains vendored TypeScript schema generated from the upstream
 Codex App Server protocol.
 
 - Upstream repository: `third_party/codex`
-- Upstream commit: `87b808bb570f01f4b6fc8485c5459052fac0e320`
-- Upstream commit date: `2026-06-05T22:54:57-07:00`
-- Upstream subject: `fix(remote-control): preserve enrollment on generic websocket 404s (#26741)`
-- Generated at: `2026-06-06T08:22:19.514Z`
+- Upstream commit: `5e9249ec0266f6331d1cb811d472c4d20cd5131d`
+- Upstream commit date: `2026-06-14T05:26:49Z`
+- Upstream subject: `path-uri: render native paths across platforms (#27819)`
+- Generated at: `2026-06-14T06:08:20.624Z`
 - Generator command: `bun --filter @nyosegawa/agent-ui-codex generate:schema`
 
 The generator exports both stable and experimental schema from

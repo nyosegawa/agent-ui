@@ -10,8 +10,8 @@ import {
   generatedStableServerRequestMethods,
 } from "./generated/protocol-capabilities";
 
-export const CODEX_PROTOCOL_COMMIT = "87b808bb570f01f4b6fc8485c5459052fac0e320";
-export const CODEX_PROTOCOL_GENERATED_AT = "2026-06-06T08:22:19.514Z";
+export const CODEX_PROTOCOL_COMMIT = "5e9249ec0266f6331d1cb811d472c4d20cd5131d";
+export const CODEX_PROTOCOL_GENERATED_AT = "2026-06-14T06:08:20.624Z";
 
 export type CodexCapabilityStatus =
   | "stableAvailable"
@@ -106,6 +106,7 @@ export const hostOnlyMethods = [
   "review/start",
   "skills/extraRoots/set",
   "thread/approveGuardianDeniedAction",
+  "thread/delete",
   "thread/shellCommand",
   "thread/goal/clear",
   "thread/goal/get",
@@ -133,6 +134,8 @@ export const experimentalAvailableMethods = [
   "remoteControl/pairing/status",
   "remoteControl/status/read",
   "thread/backgroundTerminals/clean",
+  "thread/backgroundTerminals/list",
+  "thread/backgroundTerminals/terminate",
   "thread/decrement_elicitation",
   "thread/increment_elicitation",
   "thread/memoryMode/set",
