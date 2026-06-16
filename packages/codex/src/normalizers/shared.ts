@@ -30,7 +30,8 @@ export function normalizeThreadStatus(value: unknown): ThreadStatus {
   const record = asRecord(value);
   const type = record?.type;
   if (type === "active" && record) {
-    return activeFlags(record).includes("waitingOnUserInput")
+    const flags = activeFlags(record);
+    return flags.includes("waitingOnUserInput") || flags.includes("waitingOnApproval")
       ? "waitingForInput"
       : "running";
   }

@@ -38,6 +38,7 @@ import { turnStartResultId } from "./thread-lifecycle-results";
 import { AGENT_EXECUTION_MODES } from "./run-settings";
 import { useAgentTurn } from "./turn";
 import { useComposerTurnStart } from "./composer-turn-start";
+import { syncRunSettingsFromRawThread } from "./thread-run-settings";
 import {
   codexReasoningEffort,
   hasSubmittableFirstInput,
@@ -119,16 +120,21 @@ export function useInternalAgentComposerController(
     [value],
   );
   const queueFollowUp = useCallback(
-    (items: AgentUserInput[] = [], attachments: QueuedFollowUpAttachment[] = []) => {
+    (
+      items: AgentUserInput[] = [],
+      attachments: QueuedFollowUpAttachment[] = [],
+      options: { expectedTurnId?: string; threadId?: ThreadId } = {},
+    ) => {
       const built = buildInput(items);
-      if (!built || !resolvedThreadId) return;
-      const expectedTurnId = activeTurnId;
+      const queueThreadId = options.threadId ?? resolvedThreadId;
+      if (!built || !queueThreadId) return;
+      const expectedTurnId = options.expectedTurnId ?? activeTurnId;
       const id = composerQueue.enqueueFollowUp({
         attachments,
         expectedTurnId,
         input: built.input,
         text: built.text || summarizeUserInput(built.input, t),
-        threadId: resolvedThreadId,
+        threadId: queueThreadId,
       });
       setValue("");
       return id;
@@ -167,7 +173,17 @@ export function useInternalAgentComposerController(
       setError(undefined);
       setIsSubmitting(true);
       try {
-        await startComposerTurn(built.input);
+        const result = await startComposerTurn(built.input);
+        if (result.type === "resumedRunning") {
+          return queueFollowUp(items, options.attachments, {
+            expectedTurnId: result.activeTurnId,
+            threadId: result.threadId,
+          });
+        }
+        if (result.type === "resumedWaitingForInput") {
+          setError(t("composer.resolveApprovalReason"));
+          return;
+        }
         setValue("");
         return "sent";
       } catch (caught) {
@@ -516,23 +532,6 @@ export type {
   AgentComposerFailedPendingMessage,
   AgentComposerSubmitMode,
 } from "./composer-types";
-
-function syncRunSettingsFromRawThread(
-  dispatch: ReturnType<typeof useAgentContext>["dispatch"],
-  rawThread: Record<string, unknown>,
-) {
-  const cwd = threadProjectPath(rawThread);
-  const modelId = stringValue(rawThread.modelId) ?? stringValue(rawThread.model);
-  const effort = stringValue(rawThread.effort) ?? stringValue(rawThread.reasoningEffort);
-  if (cwd || modelId || effort) {
-    dispatch({
-      cwd,
-      effort,
-      modelId,
-      type: "runSettings/updated",
-    });
-  }
-}
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   return typeof value === "object" && value !== null

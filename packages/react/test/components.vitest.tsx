@@ -7998,6 +7998,9 @@ describe("AgentChat", () => {
         }
         if (request.method === "thread/resume") {
           return {
+            cwd: "/Users/example/resumed",
+            model: "gpt-resumed",
+            reasoningEffort: "high",
             thread: {
               id: "thread-rich-history",
               name: "Rich stored session",
@@ -8053,7 +8056,10 @@ describe("AgentChat", () => {
       ).toMatchObject({
         method: "turn/start",
         params: {
+          cwd: "/Users/example/resumed",
+          effort: "high",
           input: [{ text: "continue this session", text_elements: [], type: "text" }],
+          model: "gpt-resumed",
           threadId: "thread-rich-history",
         },
       }),
@@ -8068,6 +8074,247 @@ describe("AgentChat", () => {
     expect(
       transport.requests.find((request) => request.method === "thread/resume")?.params,
     ).toEqual({ threadId: "thread-rich-history" });
+  });
+
+  it("queues a submit when stored thread resume rejoins a running turn", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-running-history",
+                name: "Running stored session",
+                status: { type: "notLoaded" },
+                turns: [],
+                updatedAt: 1778000000,
+              },
+            ],
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-running-history",
+              name: "Running stored session",
+              status: { type: "notLoaded" },
+              turns: [
+                {
+                  id: "turn-running-history",
+                  items: [
+                    {
+                      id: "item-running-history",
+                      text: "Running transcript remains readable.",
+                      type: "agentMessage",
+                    },
+                  ],
+                  status: "running",
+                },
+              ],
+            },
+          };
+        }
+        if (request.method === "thread/resume") {
+          return {
+            thread: {
+              id: "thread-running-history",
+              name: "Running stored session",
+              status: { activeFlags: [], type: "active" },
+              turns: [
+                {
+                  id: "turn-running-history",
+                  items: [],
+                  status: "inProgress",
+                },
+              ],
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /Running stored session/ }));
+    expect(await screen.findByText("Running transcript remains readable.")).toBeInTheDocument();
+
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "resume while running");
+    await user.keyboard("{Enter}");
+
+    expect(screen.getByLabelText("Queued follow-ups")).toHaveTextContent(
+      "resume while running",
+    );
+    expect(message).toHaveValue("");
+    expect(
+      transport.requests
+        .filter((request) =>
+          ["thread/read", "thread/resume", "turn/start"].includes(request.method),
+        )
+        .map((request) => request.method),
+    ).toEqual(["thread/read", "thread/resume"]);
+
+    await user.click(
+      await screen.findByRole("button", { name: "Send now" }),
+    );
+
+    await waitFor(() =>
+      expect(transport.requests.findLast((request) => request.method === "turn/steer"))
+        .toMatchObject({
+          method: "turn/steer",
+          params: {
+            expectedTurnId: "turn-running-history",
+            input: [{ text: "resume while running", text_elements: [], type: "text" }],
+            threadId: "thread-running-history",
+          },
+        }),
+    );
+  });
+
+  it("keeps attachments when stored thread resume waits on approval", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-approval-history",
+                name: "Approval stored session",
+                status: { type: "notLoaded" },
+                turns: [],
+                updatedAt: 1778000000,
+              },
+            ],
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-approval-history",
+              name: "Approval stored session",
+              status: { type: "notLoaded" },
+              turns: [],
+            },
+          };
+        }
+        if (request.method === "thread/resume") {
+          return {
+            thread: {
+              id: "thread-approval-history",
+              name: "Approval stored session",
+              status: { activeFlags: ["waitingOnApproval"], type: "active" },
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat
+          resolveLocalAttachment={(file) =>
+            resolvedTextAttachment(`/uploads/${file.name}`, file.name)
+          }
+        />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /Approval stored session/ }));
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    await user.upload(fileInput, new File(["notes"], "approval-notes.txt", { type: "" }));
+    await screen.findByText("approval-notes.txt");
+    const message = screen.getByRole("textbox", { name: "Message" });
+    await user.type(message, "send after approval");
+    await user.keyboard("{Enter}");
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Resolve the pending approval before sending another message.",
+    );
+    expect(message).toHaveValue("send after approval");
+    expect(screen.getByLabelText("Pending attachments")).toHaveTextContent(
+      "approval-notes.txt",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+  });
+
+  it("does not carry the current effort into an idle resumed thread with null effort", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.runSettings.effort = "high";
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-null-effort",
+                name: "Null effort stored session",
+                status: { type: "notLoaded" },
+                turns: [],
+                updatedAt: 1778000000,
+              },
+            ],
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              id: "thread-null-effort",
+              name: "Null effort stored session",
+              status: { type: "notLoaded" },
+              turns: [],
+            },
+          };
+        }
+        if (request.method === "thread/resume") {
+          return {
+            cwd: "/Users/example/null-effort",
+            model: "gpt-resumed",
+            reasoningEffort: null,
+            thread: {
+              id: "thread-null-effort",
+              name: "Null effort stored session",
+              status: { type: "idle" },
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /Null effort stored session/ }));
+    await user.type(screen.getByRole("textbox", { name: "Message" }), "continue");
+    await user.keyboard("{Enter}");
+
+    await waitFor(() =>
+      expect(
+        transport.requests.findLast((request) => request.method === "turn/start")
+          ?.params,
+      ).toMatchObject({
+        cwd: "/Users/example/null-effort",
+        effort: undefined,
+        model: "gpt-resumed",
+        threadId: "thread-null-effort",
+      }),
+    );
   });
 
   it("does not expose a manual resume button for stored threads", async () => {

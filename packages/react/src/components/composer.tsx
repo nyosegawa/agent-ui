@@ -270,6 +270,7 @@ function AgentComposerForm({
             ? await composer.steerNow(input)
             : await composer.submit(input, { attachments: pendingAttachments });
         if (result !== "sent" && mode !== "steer") {
+          if (!result) return;
           clearSubmittedAttachments(pendingAttachments);
           return;
         }

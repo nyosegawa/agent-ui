@@ -5,8 +5,10 @@ import {
   selectRunSettings,
   selectThread,
   selectThreadLifecycle,
+  type AgentEvent,
   type ThreadId,
   type ThreadState,
+  type ThreadStatus,
 } from "@nyosegawa/agent-ui-core";
 import {
   normalizeThreadReadResponse,
@@ -39,6 +41,10 @@ import type {
   AgentThreadResumeResult,
   AgentThreadStartResult,
 } from "./thread-lifecycle-types";
+import {
+  runSettingsFromRawThread,
+  syncRunSettingsFromRawThread,
+} from "./thread-run-settings";
 
 export type {
   ThreadForkOptions,
@@ -98,9 +104,13 @@ export function useAgentThread(threadId?: ThreadId) {
   const resumeThread = useCallback(
     async (id: ThreadId, params?: ThreadResumeOptions) => {
       const result = await codex.thread.resume(id, codexThreadResumeParams(params));
-      const rawThread = asRecord(result)?.thread ?? result;
+      const resultRecord = asRecord(result) ?? {};
+      const rawThread = resultRecord.thread ?? result;
       const rawThreadRecord = asRecord(rawThread);
       const canonicalThreadId = rawThreadRecord ? rawThreadId(rawThreadRecord) : undefined;
+      const resumeRunSettings = rawThreadRecord
+        ? runSettingsFromRawThread({ ...rawThreadRecord, ...resultRecord })
+        : undefined;
       let normalized: ReturnType<typeof normalizeThreadResumeResponse>;
       try {
         normalized = normalizeThreadResumeResponse(result, { activate: true });
@@ -128,11 +138,24 @@ export function useAgentThread(threadId?: ThreadId) {
         });
       }
       if (rawThreadRecord && hasThreadId(rawThreadRecord)) {
-        syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
+        if (resumeRunSettings) {
+          dispatch({
+            ...resumeRunSettings,
+            type: "runSettings/updated",
+          });
+        }
       }
       const resolvedThreadId = canonicalThreadId ?? id;
+      const status = threadStatusFromEvents(normalized.events, resolvedThreadId);
+      const activeTurnId = latestRunningTurnIdFromEvents(
+        normalized.events,
+        resolvedThreadId,
+      );
       return {
+        ...(activeTurnId ? { activeTurnId } : {}),
+        ...(status ? { activity: threadActivityFromStatus(status), status } : {}),
         ...(resolvedThreadId !== id ? { requestedThreadId: id } : {}),
+        ...(resumeRunSettings ? { runSettings: resumeRunSettings } : {}),
         threadId: resolvedThreadId,
       } satisfies AgentThreadResumeResult;
     },
@@ -320,21 +343,71 @@ function isRecordWithThreadId(value: unknown): value is Record<string, unknown> 
   return hasThreadId(value);
 }
 
-function syncRunSettingsFromRawThread(
-  dispatch: ReturnType<typeof useAgentContext>["dispatch"],
-  rawThread: Record<string, unknown>,
-) {
-  const cwd = threadProjectPath(rawThread);
-  const modelId = stringValue(rawThread.modelId) ?? stringValue(rawThread.model);
-  const effort = stringValue(rawThread.effort) ?? stringValue(rawThread.reasoningEffort);
-  if (cwd || modelId || effort) {
-    dispatch({
-      cwd,
-      effort,
-      modelId,
-      type: "runSettings/updated",
-    });
+function threadStatusFromEvents(
+  events: readonly AgentEvent[],
+  threadId: ThreadId,
+): ThreadStatus | undefined {
+  let status: ThreadStatus | undefined;
+  for (const event of events) {
+    if (event.type === "thread/status/changed" && event.threadId === threadId) {
+      status = event.status;
+    }
+    if (
+      (event.type === "thread/started" || event.type === "thread/upserted") &&
+      event.thread.id === threadId &&
+      event.status
+    ) {
+      status = event.status;
+    }
   }
+  return status;
+}
+
+function latestRunningTurnIdFromEvents(
+  events: readonly AgentEvent[],
+  threadId: ThreadId,
+): string | undefined {
+  let turnId: string | undefined;
+  for (const event of events) {
+    if (
+      event.type === "turn/started" &&
+      event.threadId === threadId &&
+      isRunningTurnStatus(event.turn.status)
+    ) {
+      turnId = event.turn.id;
+    }
+    if (
+      (event.type === "thread/started" || event.type === "thread/upserted") &&
+      event.thread.id === threadId
+    ) {
+      for (const turn of event.turns ?? []) {
+        if (isRunningTurnStatus(turn.status, event.status)) turnId = turn.id;
+      }
+    }
+  }
+  return turnId;
+}
+
+function isRunningTurnStatus(
+  turnStatus: string | undefined,
+  threadStatus?: ThreadStatus,
+): boolean {
+  return (
+    turnStatus === "running" ||
+    turnStatus === "inProgress" ||
+    (threadStatus === "running" &&
+      turnStatus !== "completed" &&
+      turnStatus !== "interrupted")
+  );
+}
+
+function threadActivityFromStatus(status: ThreadStatus): ThreadState["activity"] {
+  if (status === "running") return "running";
+  if (status === "waitingForInput") return "waitingForInput";
+  if (status === "error" || status === "failed" || status === "systemError") {
+    return "failed";
+  }
+  return "idle";
 }
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
