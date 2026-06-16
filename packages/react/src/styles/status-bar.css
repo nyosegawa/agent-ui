@@ -1,5 +1,10 @@
 /* --- Status bar ----------------------------------------------------- */
 
+.aui-status-shell {
+  min-width: 0;
+  width: 100%;
+}
+
 .aui-status {
   align-items: center;
   background: var(--aui-panel);
@@ -7,23 +12,24 @@
   color: var(--aui-fg-muted);
   display: flex;
   gap: var(--aui-space-300);
-  justify-content: space-between;
+  justify-content: flex-start;
   min-height: 48px;
   padding: var(--aui-space-200) var(--aui-space-400);
 }
 
 .aui-brand {
-  align-items: baseline;
+  align-items: center;
   background: transparent;
   border: 0;
   border-radius: var(--aui-radius-sm);
   color: inherit;
   display: flex;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   font: inherit;
   gap: var(--aui-space-250);
+  min-height: var(--aui-control-height-lg);
   min-width: 0;
-  padding: var(--aui-space-050) var(--aui-space-100);
+  padding: 0 var(--aui-space-300);
   text-align: left;
 }
 
@@ -49,22 +55,38 @@
   white-space: nowrap;
 }
 
-.aui-brand span {
-  color: var(--aui-fg-muted);
-  flex: 1 1 auto;
-  font-size: var(--aui-font-size-sm);
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .aui-status-actions {
   align-items: center;
   display: flex;
   flex: 0 0 auto;
   gap: var(--aui-space-200);
+  margin-left: auto;
   min-width: 0;
+}
+
+.aui-agent-context-trigger {
+  align-items: center;
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-md);
+  color: var(--aui-fg-muted);
+  cursor: pointer;
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: var(--aui-control-height-lg);
+  justify-content: center;
+  padding: 0;
+  width: var(--aui-control-height-lg);
+}
+
+.aui-agent-context-trigger:hover {
+  background: var(--aui-panel-alt);
+  color: var(--aui-fg);
+}
+
+.aui-agent-context-trigger:focus-visible {
+  box-shadow: var(--aui-focus-ring);
+  outline: none;
 }
 
 .aui-login-code {
@@ -91,7 +113,29 @@
 }
 
 @media (max-width: 640px) {
-  .aui-brand span {
+  .aui-status {
+    gap: var(--aui-space-150);
+    padding: var(--aui-space-175) var(--aui-space-300);
+  }
+
+  .aui-brand {
+    flex: 0 0 auto;
+    gap: 0;
+    min-width: max-content;
+    padding-inline: var(--aui-space-250);
+  }
+
+  .aui-status-actions {
+    flex: 1 1 auto;
+    gap: var(--aui-space-150);
+    justify-content: flex-end;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+  }
+
+  .aui-status-actions::-webkit-scrollbar {
     display: none;
   }
 }

@@ -1116,6 +1116,26 @@ describe("Codex protocol metadata", () => {
     }
   });
 
+  it("normalizes active thread waiting flags as waiting for input", () => {
+    for (const activeFlag of ["waitingOnUserInput", "waitingOnApproval"]) {
+      const events = normalizeCodexServerMessage({
+        method: "thread/status/changed",
+        params: {
+          status: { activeFlags: [activeFlag], type: "active" },
+          threadId: "thread-waiting",
+        },
+      });
+
+      expect(events).toEqual([
+        {
+          status: "waitingForInput",
+          threadId: "thread-waiting",
+          type: "thread/status/changed",
+        },
+      ]);
+    }
+  });
+
   it("normalizes dynamic tool call requests", () => {
     expect(
       normalizeCodexServerMessage({

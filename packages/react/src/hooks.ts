@@ -63,6 +63,7 @@ export type {
   AgentThreadReadResult,
   AgentThreadResumeDiagnosticReasonCode,
   AgentThreadResumeResult,
+  AgentThreadResumeRunSettings,
   AgentThreadStartWithInputOptions,
   AgentThreadStartWithInputResult,
   AgentThreadStartResult,

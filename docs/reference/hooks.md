@@ -64,8 +64,9 @@ const reader = useAgentThreadReader();
 ```
 
 `useAgentThreads()` returns normalized thread state in `selectOrderedThreads()`
-order: the active thread first, then the default lifecycle collection newest
-first, with uncollected in-memory thread entities appended last as a fallback.
+order: the default lifecycle collection newest first, with uncollected
+in-memory thread entities appended last as a fallback. Selecting a thread does
+not promote it to the top of the collection.
 
 `useAgentThreadHistory().listThreads()` calls `thread/list`, supports search and
 pagination cursor inputs, tracks the latest cursor, and upserts returned thread
@@ -133,11 +134,14 @@ first user message, and `userMessageId` is the client id supplied to
 `turn/start`. It does not expose the internal operation map, raw
 `ThreadStartResponse`, raw `TurnStartResponse`, or reducer
 reconciliation records. Idle threads submit
-`turn/start`. Running threads keep the textarea editable: Enter adds to
-`queuedFollowUps`, Cmd/Ctrl+Enter calls `turn/steer` immediately, and
-`sendQueuedFollowUp(id)` calls `turn/steer` for that item with its stored
-`expectedTurnId`. Cmd/Ctrl+Enter on an idle or complete thread still submits
-through `turn/start`. Queued items are scoped by thread, retain structured
+`turn/start`. Stored and preview threads automatically resume before submit; if
+resume rejoins a running turn, Enter follows the same local queue path as any
+running thread instead of starting a second turn. Running threads keep the
+textarea editable: Enter adds to `queuedFollowUps`, Cmd/Ctrl+Enter calls
+`turn/steer` immediately, and `sendQueuedFollowUp(id)` calls `turn/steer` for
+that item with its stored `expectedTurnId`. Cmd/Ctrl+Enter on an idle or
+complete thread still submits through `turn/start`. Queued items are scoped by
+thread, retain structured
 attachment metadata for Edit, and remain queued with an item error if the active
 turn no longer matches their stored `expectedTurnId`. `Stop` calls only
 `turn/interrupt` and does not clear unsent queued follow-ups. The hook keeps

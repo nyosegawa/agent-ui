@@ -46,6 +46,10 @@
   padding: var(--aui-space-350);
 }
 
+.aui-agent-context-backdrop {
+  display: none;
+}
+
 /* Header, optional critical notices, the transcript scroll area, then the
  * composer. Pending approvals render inside the transcript scroll area, either
  * anchored after source metadata or at the tail fallback. */
@@ -208,7 +212,8 @@
   align-items: center;
   display: grid;
   gap: var(--aui-space-450);
-  justify-content: center;
+  justify-content: stretch;
+  justify-items: center;
   min-height: 360px;
   padding: var(--aui-space-600);
 }
@@ -247,9 +252,9 @@
   border-radius: 0;
   box-shadow: none;
   gap: var(--aui-space-250);
-  max-width: min(760px, 100%);
+  max-width: 760px;
   padding: 0;
-  width: min(760px, 100%);
+  width: 100%;
 }
 
 .aui-starter-card {

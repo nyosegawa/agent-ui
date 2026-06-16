@@ -42,10 +42,7 @@ objects, transcript window bookkeeping, and generated protocol payloads stay
 inside Agent UI.
 
 ```tsx
-import {
-  localImageInput,
-  textInput,
-} from "@nyosegawa/agent-ui-codex/request-builders";
+import { localImageInput, textInput } from "@nyosegawa/agent-ui-codex/request-builders";
 
 const localMediaUrlsByPath = new Map<string, string>();
 
@@ -83,7 +80,7 @@ const localMediaUrlsByPath = new Map<string, string>();
     Approval: ({ approval }) => <CustomApproval approval={approval} />,
     Item: ({ item, turn }) => <CustomItem item={item} turn={turn} />,
   }}
-/>
+/>;
 ```
 
 The preset composes `AgentShell`, optional `AgentThreadSidebar`,
@@ -404,7 +401,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentThemeToggle`: controlled light / dark / system segmented control for
   host-owned theme state. It is not rendered by `AgentChat` automatically.
 - `AgentLocaleSelect`: controlled compact locale menu for hosts that want an
-  Agent UI-native language switcher. It is not rendered by `AgentChat`
+  Agent UI-native language switcher. It opens as a compact header menu on
+  desktop and as a bottom sheet on mobile. It is not rendered by `AgentChat`
   automatically.
 - `AgentContextUsageIndicator`: compact per-thread context usage popover for
   App Server `thread/tokenUsage/updated` totals.
@@ -610,8 +608,9 @@ history is an off-canvas drawer opened from the `Threads` trigger in the
 status bar, not a permanently stacked panel. Mode / model / effort menus open
 as bottom sheets that stay inside the viewport, the approval surface stays
 inside the transcript scroll area (so it never crushes the message list), and
-the secondary rail (status, usage, diagnostics) is a compact
-horizontally-scrolling strip rather than hidden. While the drawer is open, the
+secondary context (status, usage, diagnostics) opens from the status bar as a
+mobile sheet instead of becoming a persistent strip below the chat. While the
+drawer or context sheet is open, the
 background chat region does not accept pointer or keyboard interaction. Drawer
 content owns its own scroll area; Agent UI does not impose global page scroll
 policy outside the preset shell. Host-owned mobile sheets or modals should be

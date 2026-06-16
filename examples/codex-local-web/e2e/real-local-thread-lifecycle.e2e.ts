@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import {
   APP_READY_TIMEOUT,
   FAST_EXPECT_TIMEOUT,
@@ -19,9 +19,6 @@ test("hydrates and resumes a stored thread through the browser websocket transpo
   await page.setViewportSize({ width: 1920, height: 900 });
   await assertLocalAppBackgroundFullBleed(page);
   await readyMessageInput(page);
-  await expect(page.getByLabel("Agent context")).toBeVisible({
-    timeout: FAST_EXPECT_TIMEOUT,
-  });
   expect(page.url()).toMatch(/\/threads\/thread-stored$/);
 });
 
@@ -45,9 +42,7 @@ test("searches, paginates, and selects sidebar history in a real browser", async
   await openRealLocalApp(page, { width: 1280, height: 900 });
 
   const sidebar = page.locator(".aui-sidebar");
-  await expect(
-    sidebar.getByRole("button", { name: /Stored real smoke/ }),
-  ).toBeVisible({
+  await expect(sidebar.getByRole("button", { name: /Stored real smoke/ })).toBeVisible({
     timeout: APP_READY_TIMEOUT,
   });
   await expect(
@@ -69,12 +64,15 @@ test("searches, paginates, and selects sidebar history in a real browser", async
 
   await openRealLocalApp(page, { width: 1280, height: 900 });
   const freshSidebar = page.locator(".aui-sidebar");
-  await expect(freshSidebar.getByRole("button", { name: /Stored real smoke/ })).toBeVisible({
+  await expect(
+    freshSidebar.getByRole("button", { name: /Stored real smoke/ }),
+  ).toBeVisible({
     timeout: FAST_EXPECT_TIMEOUT,
   });
   await expect(freshSidebar.getByRole("button", { name: "Load more" })).toHaveCount(0, {
     timeout: FAST_EXPECT_TIMEOUT,
   });
+  const orderBeforeSelection = await sidebarThreadOrder(freshSidebar);
   const secondPageThread = freshSidebar.getByRole("button", {
     name: /Second page real smoke/,
   });
@@ -91,6 +89,9 @@ test("searches, paginates, and selects sidebar history in a real browser", async
       timeout: FAST_EXPECT_TIMEOUT,
     },
   );
+  await expect
+    .poll(() => sidebarThreadOrder(freshSidebar), { timeout: FAST_EXPECT_TIMEOUT })
+    .toEqual(orderBeforeSelection);
 });
 
 test("opens the mobile history drawer and closes it after selecting a thread", async ({
@@ -109,11 +110,11 @@ test("opens the mobile history drawer and closes it after selecting a thread", a
     timeout: FAST_EXPECT_TIMEOUT,
   });
   const drawer = page.locator(".aui-sidebar");
-  await expect(
-    drawer.getByRole("button", { name: /Searchable real smoke/ }),
-  ).toBeVisible({
-    timeout: APP_READY_TIMEOUT,
-  });
+  await expect(drawer.getByRole("button", { name: /Searchable real smoke/ })).toBeVisible(
+    {
+      timeout: APP_READY_TIMEOUT,
+    },
+  );
 
   await drawer.getByRole("button", { name: /Searchable real smoke/ }).click({
     timeout: FAST_EXPECT_TIMEOUT,
@@ -131,6 +132,12 @@ test("opens the mobile history drawer and closes it after selecting a thread", a
 
 test("sends a normal turn on an auto-resumed stored thread", async ({ page }) => {
   await openStoredThread(page, { width: 1280, height: 900 });
+  await expect(page.getByText(/stored thread is loading/i)).toHaveCount(0, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(page.getByText(/Loading thread/i)).toHaveCount(0, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
   await fillMessage(page, "resume smoke");
   await submitComposer(page);
   await expect(page.getByText("Echo: resume smoke")).toBeVisible({
@@ -182,9 +189,7 @@ test("shows the first user message before assistant output in a real browser", a
   await routeHome(page);
   await startThread(page, "slow smoke");
 
-  const userMessage = page.locator(
-    ".aui-message-list article[data-kind='userMessage']",
-  );
+  const userMessage = page.locator(".aui-message-list article[data-kind='userMessage']");
   await expect(userMessage).toContainText("slow smoke", {
     timeout: FAST_EXPECT_TIMEOUT,
   });
@@ -232,3 +237,12 @@ test("reacts to popstate and sidebar selection without leaking stale thread cont
     timeout: FAST_EXPECT_TIMEOUT,
   });
 });
+
+async function sidebarThreadOrder(sidebar: Locator) {
+  return sidebar.getByRole("button").evaluateAll((buttons) =>
+    buttons
+      .map((button) => button.textContent?.replace(/\s+/g, " ").trim() ?? "")
+      .filter((text) => text.includes("real smoke"))
+      .map((text) => text.replace(/(?:Preview|Ready)\s*·.*$/, "").trim()),
+  );
+}

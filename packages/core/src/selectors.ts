@@ -27,21 +27,16 @@ export function selectThread(state: AgentSessionState, threadId: ThreadId) {
 
 export function selectOrderedTurns(state: AgentSessionState, threadId: ThreadId) {
   const thread = selectThread(state, threadId);
-  return thread?.orderedTurnIds.map((turnId) => thread.turns[turnId]).filter(Boolean) ?? [];
+  return (
+    thread?.orderedTurnIds.map((turnId) => thread.turns[turnId]).filter(Boolean) ?? []
+  );
 }
 
-export function selectTurn(
-  state: AgentSessionState,
-  threadId: ThreadId,
-  turnId: TurnId,
-) {
+export function selectTurn(state: AgentSessionState, threadId: ThreadId, turnId: TurnId) {
   return selectThread(state, threadId)?.turns[turnId];
 }
 
-export function selectLatestRunningTurnId(
-  state: AgentSessionState,
-  threadId: ThreadId,
-) {
+export function selectLatestRunningTurnId(state: AgentSessionState, threadId: ThreadId) {
   const thread = selectThread(state, threadId);
   if (!thread) return undefined;
   return [...thread.orderedTurnIds].reverse().find((turnId) => {
@@ -54,10 +49,7 @@ export function selectLatestRunningTurnId(
   });
 }
 
-export function selectLatestRunningTurn(
-  state: AgentSessionState,
-  threadId: ThreadId,
-) {
+export function selectLatestRunningTurn(state: AgentSessionState, threadId: ThreadId) {
   const turnId = selectLatestRunningTurnId(state, threadId);
   return turnId ? selectTurn(state, threadId, turnId) : undefined;
 }
@@ -92,7 +84,6 @@ export function selectItemBlock(
 export function selectOrderedThreads(state: AgentSessionState) {
   const lifecycle = state.threadLifecycle;
   const orderedIds = [
-    threadLifecycleStore.activeThreadId(lifecycle),
     ...[...(lifecycle.collections[lifecycle.defaultCollectionKey]?.ids ?? [])].reverse(),
     ...Object.keys(state.threads),
   ];
@@ -147,9 +138,7 @@ export function selectThreadView(
   const thread = selectThread(state, threadId);
   if (!thread) return undefined;
   const operations = Object.values(thread.operations ?? {});
-  const pending = operations.find(
-    (operation) => operation.status === "pending",
-  );
+  const pending = operations.find((operation) => operation.status === "pending");
   return {
     cwd: thread.metadata.cwd,
     error:
@@ -204,11 +193,13 @@ export function selectServerRequestQueue(state: AgentSessionState, threadId?: Th
 
 export function selectApps(state: AgentSessionState, threadId?: ThreadId) {
   const appScope = threadId ?? "";
-  return state.apps.byScope[appScope] ?? {
-    apps: threadId ? [] : state.apps.apps,
-    nextCursor: threadId ? null : state.apps.nextCursor,
-    threadId,
-  };
+  return (
+    state.apps.byScope[appScope] ?? {
+      apps: threadId ? [] : state.apps.apps,
+      nextCursor: threadId ? null : state.apps.nextCursor,
+      threadId,
+    }
+  );
 }
 
 export function selectDiagnostics(state: AgentSessionState) {
@@ -226,8 +217,9 @@ export function selectDiagnosticsForAudience(
     errors: state.diagnostics.errors.filter((error) =>
       hasDiagnosticAudience(error, audience, ["user"]),
     ),
-    protocolNotifications: state.diagnostics.protocolNotifications.filter((notification) =>
-      hasDiagnosticAudience(notification, audience, ["developer", "audit"]),
+    protocolNotifications: state.diagnostics.protocolNotifications.filter(
+      (notification) =>
+        hasDiagnosticAudience(notification, audience, ["developer", "audit"]),
     ),
     warnings: state.diagnostics.warnings.filter((warning) =>
       hasDiagnosticAudience(warning, audience, ["user"]),
@@ -264,11 +256,7 @@ export function selectProtocolNotifications(state: AgentSessionState) {
 }
 
 function hasDiagnosticAudience(
-  value:
-    | AgentError
-    | ProtocolNotificationState
-    | StatusBannerState
-    | WarningState,
+  value: AgentError | ProtocolNotificationState | StatusBannerState | WarningState,
   audience: AgentDiagnosticAudience,
   fallback: readonly AgentDiagnosticAudience[],
 ): boolean {

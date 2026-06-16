@@ -255,6 +255,9 @@ the same names. The public result contract for `AgentThreadStartResult`,
   message start, or resume.
 - `requestedThreadId` is optional diagnostic metadata for resume paths where
   the host asked for an alias or stale persisted id.
+- Resume may also return raw-free `status`, `activity`, `activeTurnId`, and
+  `runSettings` metadata so hosts can distinguish idle resumes from rejoined
+  running or approval-waiting threads without inspecting App Server payloads.
 - First-message start returns stable `operationId`, `turnId`,
   `optimisticTurnId`, and `userMessageId` metadata as Agent UI view-model
   fields, not as a generated `ThreadStartResponse` or `TurnStartResponse`.

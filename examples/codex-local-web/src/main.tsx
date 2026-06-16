@@ -1,7 +1,4 @@
-import {
-  localImageInput,
-  textInput,
-} from "@nyosegawa/agent-ui-codex/request-builders";
+import { localImageInput, textInput } from "@nyosegawa/agent-ui-codex/request-builders";
 import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
 import {
   AgentChat,
@@ -83,8 +80,7 @@ async function resolveLocalAttachment(
     previewUrl: browserUrl,
     redactedPath:
       typeof result.redactedPath === "string" ? result.redactedPath : undefined,
-    sizeBytes:
-      typeof result.sizeBytes === "number" ? result.sizeBytes : file.size,
+    sizeBytes: typeof result.sizeBytes === "number" ? result.sizeBytes : file.size,
     url: typeof result.url === "string" ? result.url : undefined,
   };
 }

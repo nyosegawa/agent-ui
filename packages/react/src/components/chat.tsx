@@ -9,6 +9,7 @@ import { selectThreadView } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useAgentBootstrap,
+  useAgentDiagnostics,
   useAgentThread,
   useAgentThreads,
 } from "../hooks";
@@ -21,10 +22,7 @@ import {
   type AgentLocale,
 } from "../i18n";
 import { AgentThreadView } from "./thread";
-import {
-  AgentComposerPanel,
-  type AgentComposerPanelProps,
-} from "./composer";
+import { AgentComposerPanel, type AgentComposerPanelProps } from "./composer";
 import type {
   AgentComposerMentionResolver,
   AgentLocalAttachmentResolver,
@@ -34,10 +32,7 @@ import type { AgentWorkingDirectoryResolver } from "./run-settings";
 import { AgentThreadSidebar } from "./sidebar";
 import { useCompactLayout } from "./shared";
 import type { AgentTheme } from "./theme";
-import type {
-  AgentTranscriptBlock,
-  AgentTranscriptItem,
-} from "../hooks/transcript";
+import type { AgentTranscriptBlock, AgentTranscriptItem } from "../hooks/transcript";
 import {
   threadPath,
   threadUrlRoutingBasePath,
@@ -53,6 +48,7 @@ import {
   AgentUsagePanel,
 } from "./status";
 import type { AgentLocalMediaUrlResolver } from "../timeline";
+import { IconGauge } from "../components-internal";
 
 export interface AgentApprovalComponentProps {
   approval: PendingServerRequest;
@@ -78,13 +74,15 @@ export interface AgentShellComponentProps extends AgentShellProps {
   Default: React.ComponentType<AgentShellProps>;
 }
 
-export interface AgentSidebarComponentProps
-  extends React.ComponentProps<typeof AgentThreadSidebar> {
+export interface AgentSidebarComponentProps extends React.ComponentProps<
+  typeof AgentThreadSidebar
+> {
   Default: React.ComponentType<React.ComponentProps<typeof AgentThreadSidebar>>;
 }
 
-export interface AgentEmptyStateComponentProps
-  extends React.ComponentProps<typeof AgentFirstRun> {
+export interface AgentEmptyStateComponentProps extends React.ComponentProps<
+  typeof AgentFirstRun
+> {
   Default: React.ComponentType<React.ComponentProps<typeof AgentFirstRun>>;
 }
 
@@ -192,6 +190,7 @@ function AgentChatInner({
   usage = false,
 }: AgentChatProps) {
   const bootstrap = useAgentBootstrap();
+  const { userDiagnostics } = useAgentDiagnostics();
   const compact = useCompactLayout();
   const { t } = useAgentI18n();
   const { thread, threadId, startThread } = useAgentThread();
@@ -211,7 +210,9 @@ function AgentChatInner({
   // with the wrong default.
   const [sidebarOpenDesktop, setSidebarOpenDesktop] = useState(true);
   const [sidebarOpenMobile, setSidebarOpenMobile] = useState(false);
+  const [contextOpenMobile, setContextOpenMobile] = useState(false);
   const chatRootRef = useRef<HTMLDivElement>(null);
+  const contextRailRef = useRef<HTMLElement>(null);
   const sidebarSlotRef = useRef<HTMLDivElement>(null);
   const isSidebarCollapsed = compact ? !sidebarOpenMobile : !sidebarOpenDesktop;
   const setSidebarCollapsed = useCallback(
@@ -221,8 +222,46 @@ function AgentChatInner({
     },
     [compact],
   );
-  const hasRail = usage || diagnostics;
+  const hasDiagnosticsContent =
+    diagnostics &&
+    (bootstrap.isBootstrapping ||
+      bootstrap.errors.length > 0 ||
+      userDiagnostics.banners.length > 0 ||
+      userDiagnostics.errors.length > 0 ||
+      userDiagnostics.warnings.length > 0);
+  const hasRail = usage || hasDiagnosticsContent;
+  const showRail = hasRail && (!compact || contextOpenMobile);
   const drawerOpen = compact && sidebar && !isSidebarCollapsed;
+  const contextSheetOpen = compact && hasRail && contextOpenMobile;
+  const statusEnd =
+    compact && hasRail ? (
+      <>
+        <button
+          aria-label={t("aria.agentContext")}
+          className="aui-agent-context-trigger"
+          onClick={() => setContextOpenMobile(true)}
+          title={t("aria.agentContext")}
+          type="button"
+        >
+          <IconGauge size={16} />
+        </button>
+        {statusBarEnd}
+      </>
+    ) : (
+      statusBarEnd
+    );
+  const closeContextSheet = useCallback(() => {
+    setContextOpenMobile(false);
+    const deferFocus =
+      typeof window.requestAnimationFrame === "function"
+        ? window.requestAnimationFrame
+        : (callback: FrameRequestCallback) => window.setTimeout(callback, 0);
+    deferFocus(() => {
+      chatRootRef.current
+        ?.querySelector<HTMLButtonElement>(".aui-agent-context-trigger")
+        ?.focus();
+    });
+  }, []);
   const closeDrawer = useCallback(() => {
     setSidebarCollapsed(true);
     const deferFocus =
@@ -230,7 +269,9 @@ function AgentChatInner({
         ? window.requestAnimationFrame
         : (callback: FrameRequestCallback) => window.setTimeout(callback, 0);
     deferFocus(() => {
-      chatRootRef.current?.querySelector<HTMLButtonElement>(".aui-threads-trigger")?.focus();
+      chatRootRef.current
+        ?.querySelector<HTMLButtonElement>(".aui-threads-trigger")
+        ?.focus();
     });
   }, [setSidebarCollapsed]);
   useEffect(() => {
@@ -241,9 +282,7 @@ function AgentChatInner({
       const sidebar = sidebarSlotRef.current?.querySelector<HTMLElement>(".aui-sidebar");
       const target =
         sidebar?.querySelector<HTMLElement>("input") ??
-        sidebar?.querySelector<HTMLElement>(
-          "button, a, [tabindex]:not([tabindex='-1'])",
-        );
+        sidebar?.querySelector<HTMLElement>("button, a, [tabindex]:not([tabindex='-1'])");
       target?.focus();
     };
     const cancelFocus =
@@ -268,6 +307,35 @@ function AgentChatInner({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [closeDrawer, drawerOpen]);
+  useEffect(() => {
+    if (!contextSheetOpen) return;
+    let cancelled = false;
+    const focusSheet = () => {
+      if (cancelled) return;
+      contextRailRef.current?.focus();
+    };
+    const cancelFocus =
+      typeof window.requestAnimationFrame === "function"
+        ? (() => {
+            const frame = window.requestAnimationFrame(focusSheet);
+            return () => window.cancelAnimationFrame(frame);
+          })()
+        : (() => {
+            const timeout = window.setTimeout(focusSheet, 0);
+            return () => window.clearTimeout(timeout);
+          })();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      closeContextSheet();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      cancelled = true;
+      cancelFocus();
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closeContextSheet, contextSheetOpen]);
   const componentMap = { ...defaultAgentComponents, ...components };
   const EmptyState = componentMap.EmptyState;
   const Shell = componentMap.Shell;
@@ -328,13 +396,23 @@ function AgentChatInner({
         inert={drawerOpen ? true : undefined}
         ref={chatRootRef}
       >
-        <AgentStatusBar
-          end={statusBarEnd}
-          onNavigateHome={navigateHome}
-          onOpenThreads={sidebar ? () => setSidebarCollapsed(false) : undefined}
-        />
-        <div className="aui-chat-body" data-rail={hasRail ? "visible" : "hidden"}>
-          <div className="aui-thread-column">
+        <div
+          aria-hidden={contextSheetOpen ? "true" : undefined}
+          className="aui-status-shell"
+          inert={contextSheetOpen ? true : undefined}
+        >
+          <AgentStatusBar
+            end={statusEnd}
+            onNavigateHome={navigateHome}
+            onOpenThreads={sidebar ? () => setSidebarCollapsed(false) : undefined}
+          />
+        </div>
+        <div className="aui-chat-body" data-rail={showRail ? "visible" : "hidden"}>
+          <div
+            aria-hidden={contextSheetOpen ? "true" : undefined}
+            className="aui-thread-column"
+            inert={contextSheetOpen ? true : undefined}
+          >
             {thread ? (
               <AgentThreadView
                 onRequestAppMention={onRequestAppMention}
@@ -359,8 +437,22 @@ function AgentChatInner({
               </div>
             )}
           </div>
-          {hasRail ? (
-            <aside className="aui-chat-rail" aria-label={t("aria.agentContext")}>
+          {contextSheetOpen ? (
+            <button
+              aria-label={t("aria.agentContext")}
+              className="aui-agent-context-backdrop"
+              onClick={closeContextSheet}
+              type="button"
+            />
+          ) : null}
+          {showRail ? (
+            <aside
+              aria-label={t("aria.agentContext")}
+              className="aui-chat-rail"
+              data-compact-sheet={contextSheetOpen ? "true" : undefined}
+              ref={contextRailRef}
+              tabIndex={contextSheetOpen ? -1 : undefined}
+            >
               <AgentStatusSummary />
               <AgentStatusDetails />
               {usage ? <AgentUsagePanel autoRefresh={false} /> : null}

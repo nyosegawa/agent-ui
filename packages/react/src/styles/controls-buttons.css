@@ -182,3 +182,16 @@
 .aui-locale-trigger .aui-composer-tool-label {
   max-width: 8rem;
 }
+
+@media (max-width: 640px) {
+  .aui-locale-trigger {
+    gap: 0;
+    padding-inline: 0;
+    width: var(--aui-control-height-lg);
+  }
+
+  .aui-locale-trigger .aui-composer-tool-label,
+  .aui-locale-trigger > svg:last-child {
+    display: none;
+  }
+}
