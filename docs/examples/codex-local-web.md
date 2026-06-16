@@ -53,12 +53,14 @@ route CSS token-based. Any `.aui-*` classes produced by the React package are
 internal implementation details of that stylesheet, not selectors this example
 documents as a host contract.
 
-The default chat surface enables the diagnostics rail so user-facing
-bootstrap/status diagnostics have a visible place in the layout. Bridge health
-events are emitted through the server-side `hostEvents.onBridgeHealthEvent`
-hook and logged as redacted developer/audit phases; they are not persisted by
-Agent UI and do not imply hosted-service admission, auth, tenant isolation, or
-deployment policy.
+This example passes diagnostics into `AgentChat` so bootstrap/status issues
+have a visible place in the layout. Diagnostics remain secondary chrome:
+desktop can show them beside the transcript, while mobile keeps the primary
+chat surface intact and opens diagnostics from the status bar context action.
+Bridge health events are emitted through the server-side
+`hostEvents.onBridgeHealthEvent` hook and logged as redacted developer/audit
+phases; they are not persisted by Agent UI and do not imply hosted-service
+admission, auth, tenant isolation, or deployment policy.
 
 Thread URL routing keeps browser history aligned with the visible thread. The
 root route `/` remains the no-thread start screen while the sidebar loads

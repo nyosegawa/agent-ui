@@ -650,7 +650,6 @@ interface AgentI18nDictionary {
     "composer.mentionPlugin": string;
     "composer.plugin": string;
     "composer.placeholder": string;
-    "composer.previewOnlyReason": string;
     "composer.removeAttachment": string;
     "composer.resolveApprovalReason": string;
     "composer.send": string;
@@ -1254,7 +1253,7 @@ declare function AgentDiagnosticsPanel({ bootstrap, }: {
     bootstrap: ReturnType<typeof useAgentBootstrap>;
 }): react_jsx_runtime.JSX.Element | null;
 declare function AgentStatusSummary(): react_jsx_runtime.JSX.Element | null;
-declare function AgentStatusDetails({ includeCritical }: {
+declare function AgentStatusDetails({ includeCritical, }: {
     includeCritical?: boolean;
 }): react_jsx_runtime.JSX.Element | null;
 declare function AgentCriticalNoticeList(): react_jsx_runtime.JSX.Element | null;

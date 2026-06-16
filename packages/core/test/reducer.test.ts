@@ -70,10 +70,16 @@ describe("agentReducer", () => {
       delta: "x".repeat(AGENT_RETENTION_POLICY.commandOutputMaxChars + 10),
     });
     expect(
-      state.threads["thread-retention"]?.turns["turn-retention"]?.commandOutputByItemId["cmd-retention"].length,
+      state.threads["thread-retention"]?.turns["turn-retention"]?.commandOutputByItemId[
+        "cmd-retention"
+      ].length,
     ).toBe(AGENT_RETENTION_POLICY.commandOutputMaxChars);
 
-    for (let index = 0; index < AGENT_RETENTION_POLICY.filePatchesPerTurnMax + 5; index += 1) {
+    for (
+      let index = 0;
+      index < AGENT_RETENTION_POLICY.filePatchesPerTurnMax + 5;
+      index += 1
+    ) {
       state = agentReducer(state, {
         type: "item/filePatch/updated",
         threadId: "thread-retention",
@@ -83,7 +89,10 @@ describe("agentReducer", () => {
       });
     }
     expect(
-      Object.keys(state.threads["thread-retention"]?.turns["turn-retention"]?.filePatchByItemId ?? {}),
+      Object.keys(
+        state.threads["thread-retention"]?.turns["turn-retention"]?.filePatchByItemId ??
+          {},
+      ),
     ).toHaveLength(AGENT_RETENTION_POLICY.filePatchesPerTurnMax);
     state = agentReducer(state, {
       type: "item/filePatch/updated",
@@ -101,7 +110,9 @@ describe("agentReducer", () => {
     });
     const retainedPatches =
       state.threads["thread-retention"]?.turns["turn-retention"]?.filePatchByItemId ?? {};
-    expect(Object.keys(retainedPatches)).toHaveLength(AGENT_RETENTION_POLICY.filePatchesPerTurnMax);
+    expect(Object.keys(retainedPatches)).toHaveLength(
+      AGENT_RETENTION_POLICY.filePatchesPerTurnMax,
+    );
     expect(retainedPatches["patch-5"]).toBeUndefined();
     expect(retainedPatches["patch-6"]).toEqual({ index: 6 });
     expect(retainedPatches["patch-new"]).toEqual({ newest: true });
@@ -109,7 +120,11 @@ describe("agentReducer", () => {
       state.threads["thread-retention"]?.turns["turn-retention"]?.itemOrder,
     ).not.toContain("patch-5");
 
-    for (let index = 0; index < AGENT_RETENTION_POLICY.threadCollectionEntriesMax + 5; index += 1) {
+    for (
+      let index = 0;
+      index < AGENT_RETENTION_POLICY.threadCollectionEntriesMax + 5;
+      index += 1
+    ) {
       state = agentReducer(state, {
         status: "notLoaded",
         thread: { id: `thread-${index}` },
@@ -192,7 +207,11 @@ describe("agentReducer", () => {
       type: "thread/started",
     });
 
-    for (let index = 0; index < AGENT_RETENTION_POLICY.filePatchesPerTurnMax + 8; index += 1) {
+    for (
+      let index = 0;
+      index < AGENT_RETENTION_POLICY.filePatchesPerTurnMax + 8;
+      index += 1
+    ) {
       state = agentReducer(state, {
         itemId: `patch-only-${index}`,
         patch: { index },
@@ -236,7 +255,11 @@ describe("agentReducer", () => {
       type: "item/filePatch/updated",
     });
 
-    for (let index = 0; index < AGENT_RETENTION_POLICY.filePatchesPerTurnMax; index += 1) {
+    for (
+      let index = 0;
+      index < AGENT_RETENTION_POLICY.filePatchesPerTurnMax;
+      index += 1
+    ) {
       state = agentReducer(state, {
         itemId: `patch-fill-${index}`,
         patch: { index },
@@ -281,7 +304,11 @@ describe("agentReducer", () => {
       type: "serverRequest/created",
     });
 
-    for (let index = 0; index < AGENT_RETENTION_POLICY.threadCollectionEntriesMax + 5; index += 1) {
+    for (
+      let index = 0;
+      index < AGENT_RETENTION_POLICY.threadCollectionEntriesMax + 5;
+      index += 1
+    ) {
       state = agentReducer(state, {
         status: "notLoaded",
         thread: { id: `thread-cold-${index}` },
@@ -313,7 +340,9 @@ describe("agentReducer", () => {
     expect(state.threads["thread-preview-204"]).toBeDefined();
     expect(state.threads["thread-loaded-204"]).toBeDefined();
 
-    const orderedThreadIds = selectOrderedThreads(state).map((thread) => thread.thread.id);
+    const orderedThreadIds = selectOrderedThreads(state).map(
+      (thread) => thread.thread.id,
+    );
     expect(orderedThreadIds).toContain("thread-active");
     expect(orderedThreadIds).toContain("thread-live");
     expect(orderedThreadIds).toContain("thread-pending");
@@ -357,7 +386,7 @@ describe("agentReducer", () => {
     expect(defaultThreadIds(state).at(-1)).toBe("thread-cold-2");
   });
 
-  it("selects ordered threads by active thread, lifecycle collection, and orphan fallback", () => {
+  it("selects ordered threads by lifecycle collection and orphan fallback without promoting active thread", () => {
     const state = createInitialAgentState();
     state.threadLifecycle.activeThreadId = "thread-old";
     state.threadLifecycle.collections[state.threadLifecycle.defaultCollectionKey]!.ids = [
@@ -383,8 +412,8 @@ describe("agentReducer", () => {
     };
 
     expect(selectOrderedThreads(state).map((thread) => thread.thread.id)).toEqual([
-      "thread-old",
       "thread-new",
+      "thread-old",
       "thread-orphan",
     ]);
   });
@@ -475,13 +504,21 @@ describe("agentReducer", () => {
 
   it("tracks independent thread collections with pagination and sync state", () => {
     let state = createInitialAgentState();
-    const alphaScope = { kind: "history", key: "history:alpha", searchTerm: "alpha" } as const;
+    const alphaScope = {
+      kind: "history",
+      key: "history:alpha",
+      searchTerm: "alpha",
+    } as const;
     const changedAlphaScope = {
       kind: "history",
       key: "history:alpha",
       searchTerm: "alpha changed",
     } as const;
-    const betaScope = { kind: "history", key: "history:beta", searchTerm: "beta" } as const;
+    const betaScope = {
+      kind: "history",
+      key: "history:beta",
+      searchTerm: "beta",
+    } as const;
 
     state = agentReducer(state, {
       scope: alphaScope,
@@ -609,9 +646,7 @@ describe("agentReducer", () => {
       "thread-project-old",
       "pending-thread",
     ]);
-    expect(selectThreadCollection(state, otherScope)?.ids).toEqual([
-      "thread-other-old",
-    ]);
+    expect(selectThreadCollection(state, otherScope)?.ids).toEqual(["thread-other-old"]);
   });
 
   it("rolls back optimistic first-message threads before server thread creation", () => {
@@ -646,9 +681,7 @@ describe("agentReducer", () => {
     expect(selectThreadLifecycle(state).activeThreadId).toBe("pending-thread");
     expect(selectPendingOperations(state)).toHaveLength(1);
     expect(selectThreadCollection(state, "all")?.ids).toContain("pending-thread");
-    expect(selectThreadCollection(state, projectScope)?.ids).toContain(
-      "pending-thread",
-    );
+    expect(selectThreadCollection(state, projectScope)?.ids).toContain("pending-thread");
 
     state = agentReducer(state, {
       operationId: "op-first-message",
@@ -956,16 +989,9 @@ describe("agentReducer", () => {
       name: "Delayed upsert",
     });
     expect(thread?.status).toBe("waitingForInput");
-    expect(thread?.orderedTurnIds).toEqual([
-      "turn-stale-start",
-      "turn-stale-upsert",
-    ]);
-    expect(thread?.turns["turn-stale-start"]?.turn.threadId).toBe(
-      "thread-canonical",
-    );
-    expect(thread?.turns["turn-stale-upsert"]?.turn.threadId).toBe(
-      "thread-canonical",
-    );
+    expect(thread?.orderedTurnIds).toEqual(["turn-stale-start", "turn-stale-upsert"]);
+    expect(thread?.turns["turn-stale-start"]?.turn.threadId).toBe("thread-canonical");
+    expect(thread?.turns["turn-stale-upsert"]?.turn.threadId).toBe("thread-canonical");
     expect(selectThreadView(state, "pending-thread")).toMatchObject({
       id: "thread-canonical",
       needsInput: true,
@@ -1078,9 +1104,9 @@ describe("agentReducer", () => {
     expect(canonical?.orderedTurnIds).toEqual(["turn-canonical", "turn-pending"]);
     expect(canonical?.turns["turn-canonical"]).toBeDefined();
     expect(canonical?.turns["turn-pending"]?.turn.threadId).toBe("thread-canonical");
-    expect(
-      canonical?.turns["turn-pending"]?.items["item-pending-user"]?.threadId,
-    ).toBe("thread-canonical");
+    expect(canonical?.turns["turn-pending"]?.items["item-pending-user"]?.threadId).toBe(
+      "thread-canonical",
+    );
     expect(canonical?.operations["op-first-message"]).toMatchObject({
       id: "op-first-message",
       status: "pending",
@@ -1103,12 +1129,12 @@ describe("agentReducer", () => {
     });
 
     expect(selectThreadView(state, "pending-thread")?.pending).toBeUndefined();
-    expect(state.threads["thread-canonical"]?.operations["op-first-message"]).toMatchObject(
-      {
-        status: "succeeded",
-        threadId: "thread-canonical",
-      },
-    );
+    expect(
+      state.threads["thread-canonical"]?.operations["op-first-message"],
+    ).toMatchObject({
+      status: "succeeded",
+      threadId: "thread-canonical",
+    });
   });
 
   it("reconciles server user messages to optimistic first-message items by client id", () => {
@@ -1159,7 +1185,10 @@ describe("agentReducer", () => {
       item: {
         id: "server-user-message-1",
         kind: "userMessage",
-        metadata: { clientUserMessageId: "pending-user-message-1", content: "Pending user message" },
+        metadata: {
+          clientUserMessageId: "pending-user-message-1",
+          content: "Pending user message",
+        },
         status: "completed",
         text: "Pending user message",
         threadId: "thread-canonical",
@@ -1265,13 +1294,11 @@ describe("agentReducer", () => {
 
     const thread = state.threads["thread-canonical"];
     expect(thread).toBeDefined();
-    expect(thread?.turns["turn-pending"]?.items["pending-user-message-1"]).toMatchObject(
-      {
-        status: "failed",
-        text: "Pending user message",
-        threadId: "thread-canonical",
-      },
-    );
+    expect(thread?.turns["turn-pending"]?.items["pending-user-message-1"]).toMatchObject({
+      status: "failed",
+      text: "Pending user message",
+      threadId: "thread-canonical",
+    });
     expect(
       thread?.turns["turn-pending"]?.blocksByItemId["pending-user-message-1"],
     ).toMatchObject({
@@ -1300,7 +1327,11 @@ describe("agentReducer", () => {
       type: "thread/collection/pageReceived",
     });
 
-    for (let index = 0; index < AGENT_RETENTION_POLICY.threadCollectionEntriesMax + 5; index += 1) {
+    for (
+      let index = 0;
+      index < AGENT_RETENTION_POLICY.threadCollectionEntriesMax + 5;
+      index += 1
+    ) {
       state = agentReducer(state, {
         status: "loaded",
         thread: { id: `thread-stale-${index}` },
@@ -1310,9 +1341,11 @@ describe("agentReducer", () => {
 
     expect(state.threads["thread-retained-by-collection"]).toBeDefined();
     expect(state.threads["thread-stale-0"]).toBeUndefined();
-    expect(selectOrderedCollectionThreads(state, "history:retained").map((thread) => thread.id)).toEqual([
-      "thread-retained-by-collection",
-    ]);
+    expect(
+      selectOrderedCollectionThreads(state, "history:retained").map(
+        (thread) => thread.id,
+      ),
+    ).toEqual(["thread-retained-by-collection"]);
   });
 
   it("bounds backing entity maps when lifecycle collections and retained turn maps evict stale entries", () => {
@@ -1371,7 +1404,11 @@ describe("agentReducer", () => {
     expect(state.threads["thread-active"]).toBeDefined();
     expect(state.threads["thread-pending"]).toBeDefined();
 
-    for (let index = 0; index < AGENT_RETENTION_POLICY.filePatchesPerTurnMax + 3; index += 1) {
+    for (
+      let index = 0;
+      index < AGENT_RETENTION_POLICY.filePatchesPerTurnMax + 3;
+      index += 1
+    ) {
       state = agentReducer(state, {
         type: "item/filePatch/updated",
         threadId: "thread-active",
@@ -1444,9 +1481,9 @@ describe("agentReducer", () => {
     expect(state.threads["thread-approval"]?.status).toBe("waitingForInput");
     expect(state.threads["thread-approval"]?.activity).toBe("waitingForInput");
     expect(defaultThreadIds(state)).toContain("thread-approval");
-    expect(selectServerRequestQueue(state, "thread-approval").map((request) => request.id)).toEqual([
-      "approval-1",
-    ]);
+    expect(
+      selectServerRequestQueue(state, "thread-approval").map((request) => request.id),
+    ).toEqual(["approval-1"]);
 
     const resolved = runEventFixture([
       { event: { thread: { id: "thread-approval" }, type: "thread/started" } },
@@ -1589,9 +1626,11 @@ describe("agentReducer", () => {
       { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
     ]);
     expect(firstResolved.threads["thread-multi"]?.status).toBe("waitingForInput");
-    expect(selectServerRequestQueue(firstResolved, "thread-multi").map((request) => request.id)).toEqual([
-      "approval-2",
-    ]);
+    expect(
+      selectServerRequestQueue(firstResolved, "thread-multi").map(
+        (request) => request.id,
+      ),
+    ).toEqual(["approval-2"]);
     expect(defaultThreadIds(firstResolved)).toContain("thread-multi");
 
     const secondRejected = agentReducer(firstResolved, {
@@ -1631,15 +1670,12 @@ describe("agentReducer", () => {
       order: ["string:10", "string:1", "string:2"],
     };
 
-    expect(selectPendingApprovals(state, "thread-fifo").map((request) => request.id)).toEqual([
-      "10",
-      "2",
-    ]);
-    expect(selectServerRequestQueue(state, "thread-fifo").map((request) => request.id)).toEqual([
-      "10",
-      "1",
-      "2",
-    ]);
+    expect(
+      selectPendingApprovals(state, "thread-fifo").map((request) => request.id),
+    ).toEqual(["10", "2"]);
+    expect(
+      selectServerRequestQueue(state, "thread-fifo").map((request) => request.id),
+    ).toEqual(["10", "1", "2"]);
   });
 
   it("does not retain dynamic tool calls in the default server request queue", () => {
@@ -1769,19 +1805,18 @@ describe("agentReducer", () => {
     expect(state.serverRequestQueue.order).toEqual(["number:0", "string:0"]);
     expect(state.serverRequestQueue.byId["number:0"]?.id).toBe(0);
     expect(state.serverRequestQueue.byId["string:0"]?.id).toBe("0");
-    expect(selectServerRequestQueue(state, "thread-ids").map((request) => request.id)).toEqual([
-      0,
-      "0",
-    ]);
+    expect(
+      selectServerRequestQueue(state, "thread-ids").map((request) => request.id),
+    ).toEqual([0, "0"]);
 
     const resolvedNumber = agentReducer(state, {
       requestId: 0,
       type: "serverRequest/resolved",
     });
     expect(resolvedNumber.serverRequestQueue.order).toEqual(["string:0"]);
-    expect(selectServerRequestQueue(resolvedNumber, "thread-ids").map((request) => request.id)).toEqual([
-      "0",
-    ]);
+    expect(
+      selectServerRequestQueue(resolvedNumber, "thread-ids").map((request) => request.id),
+    ).toEqual(["0"]);
   });
 
   it("dequeues host-seeded server request state with public typed request id keys", () => {
@@ -1966,9 +2001,9 @@ describe("agentReducer", () => {
       "User-visible error",
     ]);
     expect(selectUserDiagnostics(state).warnings).toEqual([]);
-    expect(selectDeveloperDiagnostics(state).warnings.map((warning) => warning.id)).toEqual([
-      "debug-warning",
-    ]);
+    expect(
+      selectDeveloperDiagnostics(state).warnings.map((warning) => warning.id),
+    ).toEqual(["debug-warning"]);
     expect(selectDeveloperDiagnostics(state).warnings[0]).toMatchObject({
       reasonCode: "canonical_thread_id_mismatch",
       requestedThreadId: "thread-requested",
@@ -2073,10 +2108,7 @@ describe("agentReducer", () => {
     expect(state.threadLifecycle.activeThreadId).toBe("thread-active");
     expect(selectThreadLifecycle(state).activeThreadId).toBe("thread-active");
     expect(selectThreadLifecycle(state).activeThreadId).toBe("thread-active");
-    expect(defaultThreadIds(state)).toEqual([
-      "thread-active",
-      "thread-preview",
-    ]);
+    expect(defaultThreadIds(state)).toEqual(["thread-active", "thread-preview"]);
   });
 
   it("preserves stored turns and preview classification when later thread payloads omit turns", () => {
@@ -2089,7 +2121,9 @@ describe("agentReducer", () => {
             id: "thread-history",
             path: "/workspace/history",
           },
-          turns: [{ id: "turn-history", threadId: "thread-history", status: "completed" }],
+          turns: [
+            { id: "turn-history", threadId: "thread-history", status: "completed" },
+          ],
           type: "thread/upserted",
         },
       },
@@ -2161,7 +2195,11 @@ describe("agentReducer", () => {
           status: "loaded",
           thread: { id: "thread-items-view" },
           turns: [
-            { id: "turn-not-loaded", itemsView: "notLoaded", threadId: "thread-items-view" },
+            {
+              id: "turn-not-loaded",
+              itemsView: "notLoaded",
+              threadId: "thread-items-view",
+            },
             { id: "turn-summary", itemsView: "summary", threadId: "thread-items-view" },
             { id: "turn-full", itemsView: "full", threadId: "thread-items-view" },
           ],
@@ -2170,13 +2208,15 @@ describe("agentReducer", () => {
       },
     ]);
 
-    expect(state.threads["thread-items-view"]?.turns["turn-not-loaded"]?.turn.itemsView).toBe(
-      "notLoaded",
+    expect(
+      state.threads["thread-items-view"]?.turns["turn-not-loaded"]?.turn.itemsView,
+    ).toBe("notLoaded");
+    expect(
+      state.threads["thread-items-view"]?.turns["turn-summary"]?.turn.itemsView,
+    ).toBe("summary");
+    expect(state.threads["thread-items-view"]?.turns["turn-full"]?.turn.itemsView).toBe(
+      "full",
     );
-    expect(state.threads["thread-items-view"]?.turns["turn-summary"]?.turn.itemsView).toBe(
-      "summary",
-    );
-    expect(state.threads["thread-items-view"]?.turns["turn-full"]?.turn.itemsView).toBe("full");
   });
 
   it("merges turn item view completeness without downgrading full item data", () => {
@@ -2213,7 +2253,11 @@ describe("agentReducer", () => {
           ],
           snapshot: true,
           threadId: "thread-view-merge",
-          turn: { id: "turn-view-merge", itemsView: "full", threadId: "thread-view-merge" },
+          turn: {
+            id: "turn-view-merge",
+            itemsView: "full",
+            threadId: "thread-view-merge",
+          },
           type: "turn/completed",
         },
       },
@@ -2231,7 +2275,11 @@ describe("agentReducer", () => {
           ],
           snapshot: true,
           threadId: "thread-view-merge",
-          turn: { id: "turn-view-merge", itemsView: "summary", threadId: "thread-view-merge" },
+          turn: {
+            id: "turn-view-merge",
+            itemsView: "summary",
+            threadId: "thread-view-merge",
+          },
           type: "turn/completed",
         },
       },
@@ -2265,7 +2313,11 @@ describe("agentReducer", () => {
           ],
           snapshot: true,
           threadId: "thread-view-upgrade",
-          turn: { id: "turn-view-upgrade", itemsView: "summary", threadId: "thread-view-upgrade" },
+          turn: {
+            id: "turn-view-upgrade",
+            itemsView: "summary",
+            threadId: "thread-view-upgrade",
+          },
           type: "turn/completed",
         },
       },
@@ -2283,13 +2335,18 @@ describe("agentReducer", () => {
           ],
           snapshot: true,
           threadId: "thread-view-upgrade",
-          turn: { id: "turn-view-upgrade", itemsView: "full", threadId: "thread-view-upgrade" },
+          turn: {
+            id: "turn-view-upgrade",
+            itemsView: "full",
+            threadId: "thread-view-upgrade",
+          },
           type: "turn/completed",
         },
       },
     ]);
 
-    const upgradedTurn = upgraded.threads["thread-view-upgrade"]?.turns["turn-view-upgrade"];
+    const upgradedTurn =
+      upgraded.threads["thread-view-upgrade"]?.turns["turn-view-upgrade"];
     expect(upgradedTurn?.turn.itemsView).toBe("full");
     expect(upgradedTurn?.items["item-message"]?.text).toBe("full text");
   });
@@ -2328,7 +2385,9 @@ describe("agentReducer", () => {
         event: {
           status: "loaded",
           thread: { id: "thread-preview" },
-          turns: [{ id: "turn-preview", threadId: "thread-preview", status: "completed" }],
+          turns: [
+            { id: "turn-preview", threadId: "thread-preview", status: "completed" },
+          ],
           type: "thread/started",
         },
       },
@@ -2433,8 +2492,7 @@ describe("agentReducer", () => {
         },
       },
     ]);
-    const turn =
-      state.threads["thread-active-snapshot"]?.turns["turn-active-snapshot"];
+    const turn = state.threads["thread-active-snapshot"]?.turns["turn-active-snapshot"];
 
     expect(state.threads["thread-active-snapshot"]?.status).toBe("running");
     expect(state.threads["thread-active-snapshot"]?.orderedTurnIds).toEqual([
@@ -2555,7 +2613,8 @@ describe("agentReducer", () => {
 
     expect(state.threads["thread-interrupted-history"]?.status).toBe("loaded");
     expect(
-      state.threads["thread-interrupted-history"]?.turns["turn-interrupted-history"]?.turn.status,
+      state.threads["thread-interrupted-history"]?.turns["turn-interrupted-history"]?.turn
+        .status,
     ).toBe("interrupted");
     expect(defaultThreadIds(state)).toContain("thread-interrupted-history");
   });
@@ -2565,7 +2624,12 @@ describe("agentReducer", () => {
       {
         event: {
           cwd: "/repo",
-          skills: [{ name: "agent-browser", path: "/repo/.agents/skills/agent-browser/SKILL.md" }],
+          skills: [
+            {
+              name: "agent-browser",
+              path: "/repo/.agents/skills/agent-browser/SKILL.md",
+            },
+          ],
           type: "skills/updated",
         },
       },
@@ -2742,8 +2806,8 @@ describe("agentReducer", () => {
     expect(state.account.status).toBe("authenticated");
     expect(state.threadLifecycle.activeThreadId).toBe("thread-demo");
     expect(threads.map((thread) => thread.thread.id)).toEqual([
-      "thread-demo",
       "thread-docs",
+      "thread-demo",
     ]);
     expect(turns[0]?.streamingTextByItemId["item-agent"]).toContain("Approval UI");
     expect(turns[0]?.streamingTextByItemId["item-reasoning"]).toContain("reviewable");
@@ -2820,7 +2884,12 @@ describe("agentReducer", () => {
           item: {
             id: "command",
             kind: "commandExecution",
-            metadata: { command: "bun test", cwd: "/repo", durationMs: 1500, exitCode: 0 },
+            metadata: {
+              command: "bun test",
+              cwd: "/repo",
+              durationMs: 1500,
+              exitCode: 0,
+            },
             threadId: "thread-blocks",
             turnId: "turn-blocks",
           },
@@ -2917,7 +2986,10 @@ describe("agentReducer", () => {
       tool: "snapshot",
       toolType: "mcp",
     });
-    expect(blocks?.search).toMatchObject({ kind: "webSearch", query: "Codex App Server" });
+    expect(blocks?.search).toMatchObject({
+      kind: "webSearch",
+      query: "Codex App Server",
+    });
     expect(blocks?.image).toMatchObject({
       kind: "image",
       path: "/tmp/screenshot.png",
@@ -2975,7 +3047,11 @@ describe("agentReducer", () => {
             {
               id: "stored-tool",
               kind: "toolCall",
-              metadata: { arguments: { q: "agent-ui" }, result: { ok: true }, tool: "search" },
+              metadata: {
+                arguments: { q: "agent-ui" },
+                result: { ok: true },
+                tool: "search",
+              },
               status: "completed",
               threadId: "thread-stored-blocks",
               turnId: "turn-stored-blocks",
@@ -3034,7 +3110,12 @@ describe("agentReducer", () => {
       summary: "stored summary",
     });
     expect(
-      selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-command"),
+      selectItemBlock(
+        state,
+        "thread-stored-blocks",
+        "turn-stored-blocks",
+        "stored-command",
+      ),
     ).toMatchObject({ command: "bun test", cwd: "/repo", exitCode: 0 });
     expect(
       selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-file"),
@@ -3046,17 +3127,32 @@ describe("agentReducer", () => {
       selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-mcp"),
     ).toMatchObject({ kind: "mcpToolCall", server: "browser", toolType: "mcp" });
     expect(
-      selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-search"),
+      selectItemBlock(
+        state,
+        "thread-stored-blocks",
+        "turn-stored-blocks",
+        "stored-search",
+      ),
     ).toMatchObject({ kind: "webSearch", query: "Codex App Server" });
     expect(
-      selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-image"),
+      selectItemBlock(
+        state,
+        "thread-stored-blocks",
+        "turn-stored-blocks",
+        "stored-image",
+      ),
     ).toMatchObject({
       kind: "image",
       path: "/tmp/stored.png",
       resource: { kind: "local-media", path: "/tmp/stored.png" },
     });
     expect(
-      selectItemBlock(state, "thread-stored-blocks", "turn-stored-blocks", "stored-system"),
+      selectItemBlock(
+        state,
+        "thread-stored-blocks",
+        "turn-stored-blocks",
+        "stored-system",
+      ),
     ).toMatchObject({ kind: "systemInfo", text: "Stored status" });
   });
 
@@ -3081,9 +3177,9 @@ describe("agentReducer", () => {
 
     const failed = runEventFixture(failedFixture as FixtureStep[]);
     expect(failed.threads["thread-failed"]?.status).toBe("failed");
-    expect("raw" in (failed.threads["thread-failed"]?.turns["turn-failed"]?.turn ?? {})).toBe(
-      false,
-    );
+    expect(
+      "raw" in (failed.threads["thread-failed"]?.turns["turn-failed"]?.turn ?? {}),
+    ).toBe(false);
 
     const rateLimited = runEventFixture(rateLimitFixture as FixtureStep[]);
     expect(rateLimited.usage.accountRateLimits).toEqual({

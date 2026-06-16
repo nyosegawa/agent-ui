@@ -5,11 +5,7 @@ import {
   type AgentOperationView,
   type ThreadId,
 } from "@nyosegawa/agent-ui-core";
-import {
-  useCallback,
-  useMemo,
-  useState,
-} from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { AgentUserInput } from "../agent-input";
 import {
   useAgentComposerQueueStore,
@@ -31,10 +27,7 @@ import {
   rememberFirstMessagePayload,
   useFirstMessageOperationController,
 } from "./first-message-operations";
-import {
-  composerActionError,
-  followUpSendPreflightError,
-} from "./composer-errors";
+import { composerActionError, followUpSendPreflightError } from "./composer-errors";
 import type {
   AgentComposerController,
   AgentComposerDisabledReason,
@@ -44,6 +37,7 @@ import type { AgentThreadStartWithInputResult } from "./thread-lifecycle-types";
 import { turnStartResultId } from "./thread-lifecycle-results";
 import { AGENT_EXECUTION_MODES } from "./run-settings";
 import { useAgentTurn } from "./turn";
+import { useComposerTurnStart } from "./composer-turn-start";
 import {
   codexReasoningEffort,
   hasSubmittableFirstInput,
@@ -68,9 +62,7 @@ export function useAgentComposer(threadId?: ThreadId): AgentComposerController {
   return useAgentComposerController(threadId);
 }
 
-export function useAgentComposerController(
-  threadId?: ThreadId,
-): AgentComposerController {
+export function useAgentComposerController(threadId?: ThreadId): AgentComposerController {
   const {
     cancelOperation,
     getOperation,
@@ -109,7 +101,8 @@ export function useInternalAgentComposerController(
   const resolvedThreadId = threadId ?? state.threadLifecycle.activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;
   const runSettings = selectRunSettings(state);
-  const { interruptTurn, startTurn, steerTurn } = useAgentTurn(threadId);
+  const { interruptTurn, steerTurn } = useAgentTurn(threadId);
+  const startComposerTurn = useComposerTurnStart(threadId);
   const activeTurnId = resolvedThreadId
     ? selectLatestRunningTurnId(state, resolvedThreadId)
     : undefined;
@@ -174,7 +167,7 @@ export function useInternalAgentComposerController(
       setError(undefined);
       setIsSubmitting(true);
       try {
-        await startTurn(built.input);
+        await startComposerTurn(built.input);
         setValue("");
         return "sent";
       } catch (caught) {
@@ -184,7 +177,7 @@ export function useInternalAgentComposerController(
         setIsSubmitting(false);
       }
     },
-    [buildInput, isRunning, queueFollowUp, startTurn, t],
+    [buildInput, isRunning, queueFollowUp, startComposerTurn, t],
   );
   const startWithMessage = useCallback(
     async (
@@ -414,7 +407,8 @@ export function useInternalAgentComposerController(
       : !isRunning && !hasTextInput
         ? "empty"
         : undefined;
-  const canSubmit = !disabledReason || disabledReason === "empty" ? isRunning || hasTextInput : false;
+  const canSubmit =
+    !disabledReason || disabledReason === "empty" ? isRunning || hasTextInput : false;
   const sendQueuedFollowUp = useCallback(
     async (id: string) => {
       const item = composerQueue.queuedFollowUps.find(

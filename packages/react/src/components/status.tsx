@@ -62,12 +62,10 @@ export function AgentStatusBar({
           type="button"
         >
           <strong>Agent UI</strong>
-          <span>{statusText}</span>
         </button>
       ) : (
         <div className="aui-brand">
           <strong>Agent UI</strong>
-          <span>{statusText}</span>
         </div>
       )}
       <div className="aui-status-actions">
@@ -97,7 +95,9 @@ export function AgentStatusBar({
             disabled
             type="button"
           >
-            {state.connection.status === "connected" ? t("account.checking") : t("account.connecting")}
+            {state.connection.status === "connected"
+              ? t("account.checking")
+              : t("account.connecting")}
           </button>
         ) : null}
         {account.status === "unauthenticated" ? (
@@ -110,10 +110,7 @@ export function AgentStatusBar({
           </button>
         ) : null}
         {account.status === "authenticated" ? (
-          <AgentAccountControl
-            account={account.account}
-            statusText={statusText}
-          />
+          <AgentAccountControl account={account.account} statusText={statusText} />
         ) : null}
       </div>
     </header>
@@ -142,7 +139,10 @@ export function AgentDiagnosticsPanel({
   if (messages.length === 0) return null;
   const title = diagnosticsTitle(messages);
   return (
-    <details className="aui-diagnostics aui-diagnostics-details" aria-label={t("diagnostics.label")}>
+    <details
+      className="aui-diagnostics aui-diagnostics-details"
+      aria-label={t("diagnostics.label")}
+    >
       <summary>
         <span>{title}</span>
         <small>
@@ -176,7 +176,11 @@ export function AgentStatusSummary() {
   );
 }
 
-export function AgentStatusDetails({ includeCritical = false }: { includeCritical?: boolean }) {
+export function AgentStatusDetails({
+  includeCritical = false,
+}: {
+  includeCritical?: boolean;
+}) {
   const { t } = useAgentI18n();
   const { userDiagnostics } = useAgentDiagnostics();
   const notices = normalizedStatusNotices(userDiagnostics.banners)
@@ -232,10 +236,7 @@ export function AgentCriticalNoticeList() {
   );
 }
 
-function accountStatusLabel(
-  status: string,
-  t: (key: AgentI18nKey) => string,
-): string {
+function accountStatusLabel(status: string, t: (key: AgentI18nKey) => string): string {
   switch (status) {
     case "authenticated":
       return t("account.authenticated");

@@ -71,12 +71,12 @@ Focused example gates:
   sidecar example. Run them when sidecar bridge policy, upload/media handling,
   or related docs change.
 - `bun run --cwd examples/codex-local-web typecheck`, `bun run --cwd
-  examples/codex-local-web build`, and the relevant
+examples/codex-local-web build`, and the relevant
   `playwright.real-local.config.ts` spec: real local browser behavior. Run
   these when bridge policy, diagnostics, first-message, thread routing, or
   local media behavior changes.
 - `bun run --cwd examples/local-react-vite typecheck`, `bun run --cwd
-  examples/local-react-vite build`, and the relevant
+examples/local-react-vite build`, and the relevant
   `playwright.fixtures.config.ts` spec: deterministic fixture and visual
   contract behavior. Run these when fixture routes, close-ups, density,
   resource resolution, scoped lists, or mobile layout changes.
@@ -322,7 +322,7 @@ The real-local specs are split by App Server integration contract:
 
 - `real-local-thread-lifecycle.e2e.ts` owns stored-thread hydration, direct
   thread URLs, browser back/forward, first-message immediate reflection, and
-  diagnostics rail presence.
+  diagnostics context presence.
 - `real-local-attachments.e2e.ts` owns image paste, arbitrary file attachment
   payloads, same-origin transcript local-media URLs, missing-media fallback,
   and queued attachment restoration.

@@ -39,7 +39,7 @@ test("renders Agent UI chat", async ({ page }) => {
   await page.getByRole("button", { name: /Stored session/ }).click();
   await expect(page.getByRole("heading", { name: "Stored session" })).toBeVisible();
   await expect(page.locator(".aui-status-pill")).toContainText("Preview");
-  await expect(page.getByLabel("Message", { exact: true })).toBeDisabled();
+  await expect(page.getByLabel("Message", { exact: true })).toBeEnabled();
 
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
   await expect(headerDoesNotOverlapTimeline(page)).resolves.toBe(true);
@@ -73,7 +73,10 @@ test("opens the thread history drawer on mobile", async ({ page }) => {
   await expect(
     page.locator(".aui-sidebar").getByRole("button", { name: /Stored session/ }),
   ).toBeVisible();
-  await page.locator(".aui-sidebar").getByRole("button", { name: /Stored session/ }).click();
+  await page
+    .locator(".aui-sidebar")
+    .getByRole("button", { name: /Stored session/ })
+    .click();
   await expect(page.locator(".aui-sidebar")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Stored session" })).toBeVisible();
 });
@@ -270,12 +273,14 @@ test("renders primitive composition examples", async ({ page }) => {
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   await expect(page.getByRole("button", { name: "Open host review" })).toBeVisible();
   await page.getByRole("button", { name: "Open host review" }).click();
-  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toContainText(
-    "var(--aui-z-sheet)",
-  );
+  await expect(
+    page.getByRole("dialog", { name: "Host-owned review sheet" }),
+  ).toContainText("var(--aui-z-sheet)");
   await expect(closeHostReviewHasFocus(page)).resolves.toBe(true);
   await page.getByRole("button", { name: "Close host review" }).click();
-  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toHaveCount(
+    0,
+  );
   await expect(
     page.getByRole("heading", { name: "Rich transcript fixture" }),
   ).toBeVisible();
@@ -285,7 +290,9 @@ test("host workflow reference resolves local attachments as structured metadata"
   page,
 }) => {
   await page.goto("/host-workflow-recipe");
-  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Verify Codex local build" }),
+  ).toBeVisible();
 
   await page.locator('input[aria-label="Attach files"]').setInputFiles({
     buffer: Buffer.from("fixture-model"),
@@ -299,7 +306,9 @@ test("host workflow reference resolves local attachments as structured metadata"
   await expect(metadata).toContainText("fixture-upload:fixture_part.3mf");
   await expect(metadata).toContainText("model/3mf");
   await expect(metadata).toContainText("[agent-ui-fixture-upload]/fixture_part.3mf");
-  await expect(page.getByText("/agent-ui-fixture-upload/fixture_part.3mf")).toHaveCount(0);
+  await expect(page.getByText("/agent-ui-fixture-upload/fixture_part.3mf")).toHaveCount(
+    0,
+  );
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
 });
 
@@ -307,7 +316,9 @@ test("host workflow reference resolves transcript local media preview and fallba
   page,
 }) => {
   await page.goto("/host-workflow-recipe");
-  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Verify Codex local build" }),
+  ).toBeVisible();
 
   await expect(page.getByRole("img", { name: "fixture-image.png" })).toHaveAttribute(
     "src",
@@ -332,7 +343,9 @@ test("host workflow reference preserves first-message optimistic rendering", asy
   page,
 }) => {
   await page.goto("/host-workflow-recipe?firstMessage=optimistic");
-  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Verify Codex local build" }),
+  ).toBeVisible();
   await expect(page.getByText("No thread selected")).toBeVisible();
 
   const starter = page.getByRole("form", { name: "Start a Codex thread" });
@@ -367,7 +380,9 @@ test("host workflow reference loads scoped thread history without changing activ
   page,
 }) => {
   await page.goto("/host-workflow-recipe");
-  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Verify Codex local build" }),
+  ).toBeVisible();
   const scopedHistory = page.getByRole("region", { name: "Host scoped history" });
   const status = scopedHistory.getByLabel("Host scoped history status");
 
@@ -399,7 +414,9 @@ test("host workflow reference gates host actions without taking over Agent UI", 
   page,
 }) => {
   await page.goto("/host-workflow-recipe");
-  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Verify Codex local build" }),
+  ).toBeVisible();
   const gate = page.getByRole("region", { name: "Host workflow gate" });
   const status = gate.getByLabel("Host workflow gate status");
   const continueAction = gate.getByRole("button", { name: "Continue host workflow" });
@@ -426,15 +443,21 @@ test("host workflow reference layers a host sheet above the mobile drawer", asyn
 }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/host-workflow-recipe?hostSheet=open");
-  await expect(page.getByRole("heading", { name: "Verify Codex local build" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Verify Codex local build" }),
+  ).toBeVisible();
   await expect(page.getByTestId("agent-chat")).toBeVisible();
-  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toBeVisible();
+  await expect(
+    page.getByRole("dialog", { name: "Host-owned review sheet" }),
+  ).toBeVisible();
   await expect(closeHostReviewHasFocus(page)).resolves.toBe(true);
   await expect(page.getByRole("button", { name: "Open thread history" })).toBeVisible();
 
   await page.getByRole("button", { name: "Open thread history" }).click();
   await expect(page.locator(".aui-sidebar")).toBeVisible();
-  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toBeVisible();
+  await expect(
+    page.getByRole("dialog", { name: "Host-owned review sheet" }),
+  ).toBeVisible();
   await expect(hostSheetIsAboveDrawer(page)).resolves.toBe(true);
   await expect(closeHostReviewHasFocus(page)).resolves.toBe(true);
   await page.keyboard.press("Tab");
@@ -442,21 +465,25 @@ test("host workflow reference layers a host sheet above the mobile drawer", asyn
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
 
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Host-owned review sheet" })).toHaveCount(
+    0,
+  );
   await expect(page.locator(".aui-sidebar")).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.locator(".aui-sidebar")).toHaveCount(0);
 });
 
 async function hostSheetIsAboveDrawer(page: Page) {
-  return page.getByRole("dialog", { name: "Host-owned review sheet" }).evaluate((sheet) => {
-    const rect = sheet.getBoundingClientRect();
-    const hit = document.elementFromPoint(
-      rect.left + rect.width / 2,
-      rect.top + rect.height / 2,
-    );
-    return Boolean(hit?.closest(".aui-host-review-sheet"));
-  });
+  return page
+    .getByRole("dialog", { name: "Host-owned review sheet" })
+    .evaluate((sheet) => {
+      const rect = sheet.getBoundingClientRect();
+      const hit = document.elementFromPoint(
+        rect.left + rect.width / 2,
+        rect.top + rect.height / 2,
+      );
+      return Boolean(hit?.closest(".aui-host-review-sheet"));
+    });
 }
 
 async function closeHostReviewHasFocus(page: Page) {
@@ -468,7 +495,10 @@ async function closeHostReviewHasFocus(page: Page) {
 test("mobile keeps secondary chrome reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await page.goto("/rich-transcript");
-  await expect(page.getByLabel("Agent context")).toBeVisible();
+  await expect(page.locator(".aui-chat-rail")).toHaveCount(0);
+  await page.getByRole("button", { name: "Agent context" }).click();
+  const contextSheet = page.locator(".aui-chat-rail");
+  await expect(contextSheet).toBeVisible();
   await expect(page.getByLabel("Status summary")).toBeVisible();
   await expect(page.getByLabel("Usage limits")).toBeVisible();
   const railDisplay = await page

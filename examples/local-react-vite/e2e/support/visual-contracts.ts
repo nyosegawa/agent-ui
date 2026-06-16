@@ -7,7 +7,6 @@ const alwaysVisibleSurfaceSelectors = [
   ["shell", ".aui-shell"],
   ["chat", ".aui-chat"],
   ["status", ".aui-status"],
-  ["usage", ".aui-usage"],
   ["threadHeader", ".aui-thread-header"],
   ["messageList", ".aui-message-list"],
   ["activity", ".aui-transcript-card"],
@@ -19,6 +18,7 @@ const alwaysVisibleSurfaceSelectors = [
 
 const desktopOnlySurfaceSelectors = [
   ["sidebar", ".aui-sidebar"],
+  ["usage", ".aui-usage"],
 ] as const;
 
 export const viewportSurfaceSelectors = [
@@ -42,14 +42,12 @@ export function firstApprovalActionButtons(approval: Locator) {
   ];
 }
 
-export async function expectVisualLayoutContract(
-  page: Page,
-  mode: "desktop" | "mobile",
-) {
+export async function expectVisualLayoutContract(page: Page, mode: "desktop" | "mobile") {
   const contract = await visualContract(page);
-  expect(contract.document.scrollWidth, JSON.stringify(contract.document)).toBeLessThanOrEqual(
-    contract.document.clientWidth + 1,
-  );
+  expect(
+    contract.document.scrollWidth,
+    JSON.stringify(contract.document),
+  ).toBeLessThanOrEqual(contract.document.clientWidth + 1);
   const expectedSurfaces =
     mode === "desktop"
       ? [...alwaysVisibleSurfaceSelectors, ...desktopOnlySurfaceSelectors]
@@ -61,7 +59,9 @@ export async function expectVisualLayoutContract(
     expect(surface.visible, selector).toBe(true);
     expect(surface.display, selector).not.toBe("none");
     if (mode === "mobile") {
-      expect(surface.width, selector).toBeLessThanOrEqual(contract.document.clientWidth + 1);
+      expect(surface.width, selector).toBeLessThanOrEqual(
+        contract.document.clientWidth + 1,
+      );
     }
   }
   const shell = contract.surfaces.shell;
@@ -263,48 +263,51 @@ interface VisualContract {
 }
 
 async function visualContract(page: Page): Promise<VisualContract> {
-  return page.evaluate((entries) => {
-    const gridColumnCount = (gridTemplateColumns: string): number => {
-      if (!gridTemplateColumns || gridTemplateColumns === "none") return 1;
-      return gridTemplateColumns.trim().split(/\s+/).length;
-    };
-    const snapshot: VisualContract = {
-      document: {
-        clientWidth: document.documentElement.clientWidth,
-        scrollWidth: document.documentElement.scrollWidth,
-      },
-      surfaces: {},
-    };
-
-    for (const [name, selector] of entries) {
-      const element = document.querySelector<HTMLElement>(selector);
-      if (!element) {
-        snapshot.surfaces[name] = {
-          display: "none",
-          gridColumnCount: 0,
-          height: 0,
-          overflowX: "missing",
-          overflowY: "missing",
-          present: false,
-          visible: false,
-          width: 0,
-        };
-        continue;
-      }
-      const rect = element.getBoundingClientRect();
-      const styles = getComputedStyle(element);
-      snapshot.surfaces[name] = {
-        display: styles.display,
-        gridColumnCount: gridColumnCount(styles.gridTemplateColumns),
-        height: Math.round(rect.height),
-        overflowX: styles.overflowX,
-        overflowY: styles.overflowY,
-        present: true,
-        visible: styles.visibility !== "hidden" && rect.width > 0 && rect.height > 0,
-        width: Math.round(rect.width),
+  return page.evaluate(
+    (entries) => {
+      const gridColumnCount = (gridTemplateColumns: string): number => {
+        if (!gridTemplateColumns || gridTemplateColumns === "none") return 1;
+        return gridTemplateColumns.trim().split(/\s+/).length;
       };
-    }
+      const snapshot: VisualContract = {
+        document: {
+          clientWidth: document.documentElement.clientWidth,
+          scrollWidth: document.documentElement.scrollWidth,
+        },
+        surfaces: {},
+      };
 
-    return snapshot;
-  }, [...alwaysVisibleSurfaceSelectors, ...desktopOnlySurfaceSelectors]);
+      for (const [name, selector] of entries) {
+        const element = document.querySelector<HTMLElement>(selector);
+        if (!element) {
+          snapshot.surfaces[name] = {
+            display: "none",
+            gridColumnCount: 0,
+            height: 0,
+            overflowX: "missing",
+            overflowY: "missing",
+            present: false,
+            visible: false,
+            width: 0,
+          };
+          continue;
+        }
+        const rect = element.getBoundingClientRect();
+        const styles = getComputedStyle(element);
+        snapshot.surfaces[name] = {
+          display: styles.display,
+          gridColumnCount: gridColumnCount(styles.gridTemplateColumns),
+          height: Math.round(rect.height),
+          overflowX: styles.overflowX,
+          overflowY: styles.overflowY,
+          present: true,
+          visible: styles.visibility !== "hidden" && rect.width > 0 && rect.height > 0,
+          width: Math.round(rect.width),
+        };
+      }
+
+      return snapshot;
+    },
+    [...alwaysVisibleSurfaceSelectors, ...desktopOnlySurfaceSelectors],
+  );
 }

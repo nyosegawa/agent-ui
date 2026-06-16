@@ -134,7 +134,6 @@ export interface AgentI18nDictionary {
   "composer.mentionPlugin": string;
   "composer.plugin": string;
   "composer.placeholder": string;
-  "composer.previewOnlyReason": string;
   "composer.removeAttachment": string;
   "composer.resolveApprovalReason": string;
   "composer.send": string;
