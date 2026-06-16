@@ -138,8 +138,6 @@ export const en = {
   "composer.mentionPlugin": "Mention a plugin",
   "composer.plugin": "Plugin",
   "composer.placeholder": "Ask Codex to work in this thread",
-  "composer.previewOnlyReason":
-    "This stored thread is loading before new messages can be sent.",
   "composer.removeAttachment": "Remove {label}",
   "composer.resolveApprovalReason":
     "Resolve the pending approval before sending another message.",

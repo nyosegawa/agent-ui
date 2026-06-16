@@ -2,7 +2,7 @@ import type React from "react";
 import type { useAgentBootstrap } from "../hooks";
 import { useAgentAccount, useAgentDiagnostics } from "../hooks";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
-import { IconHistory, buttonClass } from "../components-internal";
+import { IconGauge, IconHistory, buttonClass } from "../components-internal";
 import { useAgentContext } from "../provider";
 import { AgentAccountControl } from "./account-popover";
 import {
@@ -23,11 +23,15 @@ export {
 } from "./usage-panels";
 
 export function AgentStatusBar({
+  backgroundInert = false,
   end,
+  onOpenContext,
   onNavigateHome,
   onOpenThreads,
 }: {
+  backgroundInert?: boolean;
   end?: React.ReactNode;
+  onOpenContext?: () => void;
   onNavigateHome?: () => void;
   onOpenThreads?: () => void;
 } = {}) {
@@ -41,7 +45,11 @@ export function AgentStatusBar({
         : t("account.connecting")
       : accountStatusLabel(account.status, t);
   return (
-    <header className="aui-status">
+    <header
+      aria-hidden={backgroundInert ? "true" : undefined}
+      className="aui-status"
+      inert={backgroundInert ? true : undefined}
+    >
       {onOpenThreads ? (
         <button
           aria-label={t("thread.openHistory")}
@@ -62,15 +70,24 @@ export function AgentStatusBar({
           type="button"
         >
           <strong>Agent UI</strong>
-          <span>{statusText}</span>
         </button>
       ) : (
         <div className="aui-brand">
           <strong>Agent UI</strong>
-          <span>{statusText}</span>
         </div>
       )}
       <div className="aui-status-actions">
+        {onOpenContext ? (
+          <button
+            aria-label={t("aria.agentContext")}
+            className="aui-agent-context-trigger"
+            onClick={onOpenContext}
+            title={t("aria.agentContext")}
+            type="button"
+          >
+            <IconGauge size={16} />
+          </button>
+        ) : null}
         {end}
         {account.login ? (
           <div className="aui-login-code" role="status">
@@ -97,7 +114,9 @@ export function AgentStatusBar({
             disabled
             type="button"
           >
-            {state.connection.status === "connected" ? t("account.checking") : t("account.connecting")}
+            {state.connection.status === "connected"
+              ? t("account.checking")
+              : t("account.connecting")}
           </button>
         ) : null}
         {account.status === "unauthenticated" ? (
@@ -110,10 +129,7 @@ export function AgentStatusBar({
           </button>
         ) : null}
         {account.status === "authenticated" ? (
-          <AgentAccountControl
-            account={account.account}
-            statusText={statusText}
-          />
+          <AgentAccountControl account={account.account} statusText={statusText} />
         ) : null}
       </div>
     </header>
@@ -142,7 +158,10 @@ export function AgentDiagnosticsPanel({
   if (messages.length === 0) return null;
   const title = diagnosticsTitle(messages);
   return (
-    <details className="aui-diagnostics aui-diagnostics-details" aria-label={t("diagnostics.label")}>
+    <details
+      className="aui-diagnostics aui-diagnostics-details"
+      aria-label={t("diagnostics.label")}
+    >
       <summary>
         <span>{title}</span>
         <small>
@@ -176,7 +195,11 @@ export function AgentStatusSummary() {
   );
 }
 
-export function AgentStatusDetails({ includeCritical = false }: { includeCritical?: boolean }) {
+export function AgentStatusDetails({
+  includeCritical = false,
+}: {
+  includeCritical?: boolean;
+}) {
   const { t } = useAgentI18n();
   const { userDiagnostics } = useAgentDiagnostics();
   const notices = normalizedStatusNotices(userDiagnostics.banners)
@@ -232,10 +255,7 @@ export function AgentCriticalNoticeList() {
   );
 }
 
-function accountStatusLabel(
-  status: string,
-  t: (key: AgentI18nKey) => string,
-): string {
+function accountStatusLabel(status: string, t: (key: AgentI18nKey) => string): string {
   switch (status) {
     case "authenticated":
       return t("account.authenticated");

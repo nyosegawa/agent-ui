@@ -530,29 +530,3 @@
   color: var(--aui-fg-faint);
   flex: 0 0 auto;
 }
-
-/* --- Mobile composer ----------------------------------------------------- */
-
-@media (max-width: 640px) {
-  .aui-compose-panel {
-    max-width: 100%;
-    min-width: 0;
-    padding: var(--aui-space-250) var(--aui-space-300) var(--aui-space-350);
-    width: 100%;
-  }
-  .aui-composer {
-    max-width: 100%;
-    min-width: 0;
-    padding: var(--aui-space-200) var(--aui-space-250) var(--aui-space-150);
-    width: 100%;
-  }
-  .aui-composer .aui-composer-input {
-    font-size: var(--aui-font-size-lg);
-  }
-  .aui-composer-hint {
-    display: none;
-  }
-  .aui-composer-tool {
-    max-width: 100%;
-  }
-}

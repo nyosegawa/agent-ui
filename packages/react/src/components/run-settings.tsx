@@ -16,10 +16,7 @@ import { AuiMenu } from "./disclosure";
 import { isUserFacingPath } from "./sidebar";
 import { useCompactLayout } from "./shared";
 
-export {
-  AgentStarterCwd,
-  type AgentWorkingDirectoryResolver,
-} from "./starter-cwd";
+export { AgentStarterCwd, type AgentWorkingDirectoryResolver } from "./starter-cwd";
 
 export interface AgentRunControlsProps {
   autoRefresh?: boolean;
@@ -88,7 +85,9 @@ export function AgentRunControls({
                 ? 0
                 : event.key === "End"
                   ? executionModes.length - 1
-                  : (currentIndex + (event.key === "ArrowRight" ? 1 : -1) + executionModes.length) %
+                  : (currentIndex +
+                      (event.key === "ArrowRight" ? 1 : -1) +
+                      executionModes.length) %
                     executionModes.length;
             const next = executionModes[nextIndex];
             if (next) setExecutionMode(next.id);
@@ -140,7 +139,9 @@ export function AgentRunControls({
           value={runSettings.effort ?? ""}
         >
           <option value="">
-            {selectedModel && hasEffortOptions ? t("run.modelDefault") : t("common.serverDefault")}
+            {selectedModel && hasEffortOptions
+              ? t("run.modelDefault")
+              : t("common.serverDefault")}
           </option>
           {supportedEfforts.map((effort) => (
             <option key={effort} value={effort}>
@@ -201,13 +202,7 @@ function formatModelOption(model: { id: string; name?: string }): string {
   return `${model.name} (${model.id})`;
 }
 
-function MenuSection({
-  children,
-  label,
-}: {
-  children: React.ReactNode;
-  label: string;
-}) {
+function MenuSection({ children, label }: { children: React.ReactNode; label: string }) {
   return (
     <div aria-label={label} className="aui-menu-section" role="group">
       <span className="aui-menu-section-label">{label}</span>
@@ -245,9 +240,7 @@ function MenuOption({
       ) : null}
       <span className="aui-menu-item-body">
         <span className="aui-menu-item-label">{label}</span>
-        {description ? (
-          <span className="aui-menu-item-desc">{description}</span>
-        ) : null}
+        {description ? <span className="aui-menu-item-desc">{description}</span> : null}
       </span>
       <span className="aui-menu-item-check" aria-hidden="true">
         {selected ? <IconCheck size={14} /> : null}
@@ -364,7 +357,7 @@ export function ComposerRunSettings() {
       <AuiMenu
         ariaLabel={t("run.modelAndEffort")}
         compact={compact}
-        icon={<IconCpu size={14} />}
+        icon={<IconGauge size={14} />}
         label={`${composerModelLabel(selectedModel, runSettings.modelId, t)} · ${composerEffortLabel(
           runSettings.effort,
           hasEfforts,
@@ -401,7 +394,9 @@ export function ComposerRunSettings() {
                 <>
                   <MenuOption
                     icon={<IconGauge size={14} />}
-                    label={selectedModel ? t("run.modelDefault") : t("common.serverDefault")}
+                    label={
+                      selectedModel ? t("run.modelDefault") : t("common.serverDefault")
+                    }
                     onSelect={() => {
                       setEffort("");
                       close();
@@ -422,9 +417,7 @@ export function ComposerRunSettings() {
                   ))}
                 </>
               ) : (
-                <p className="aui-menu-empty">
-                  {t("run.noSelectableEffort")}
-                </p>
+                <p className="aui-menu-empty">{t("run.noSelectableEffort")}</p>
               )}
             </MenuSection>
           </>

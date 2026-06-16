@@ -1,0 +1,63 @@
+/* --- Mobile composer ----------------------------------------------------- */
+
+@media (max-width: 640px) {
+  .aui-compose-panel {
+    max-width: 100%;
+    min-width: 0;
+    padding: var(--aui-space-250) var(--aui-space-300) var(--aui-space-350);
+    width: 100%;
+  }
+
+  .aui-composer {
+    max-width: 100%;
+    min-width: 0;
+    padding: var(--aui-space-200) var(--aui-space-250) var(--aui-space-150);
+    width: 100%;
+  }
+
+  .aui-composer .aui-composer-input {
+    font-size: var(--aui-font-size-lg);
+  }
+
+  .aui-composer-toolbar {
+    flex-wrap: nowrap;
+  }
+
+  .aui-composer-toolbar-start,
+  .aui-composer-toolbar-end {
+    flex-wrap: nowrap;
+    width: auto;
+  }
+
+  .aui-composer-toolbar-start {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .aui-composer-toolbar-end {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  .aui-composer-settings {
+    flex-wrap: nowrap;
+    gap: var(--aui-space-100);
+  }
+
+  .aui-composer-tool {
+    gap: 0;
+    justify-content: center;
+    min-height: var(--aui-control-height-lg);
+    padding: 0;
+    width: var(--aui-control-height-lg);
+  }
+
+  .aui-composer-tool-label,
+  .aui-composer-tool > svg:last-child {
+    display: none;
+  }
+
+  .aui-composer-hint {
+    display: none;
+  }
+}

@@ -13,7 +13,6 @@
     grid-auto-flow: column;
     grid-template-columns: none;
     max-height: 96px;
-    order: -1;
     overflow-x: auto;
     overflow-y: hidden;
     padding: var(--aui-space-300) var(--aui-space-400);
@@ -61,6 +60,14 @@
     border-right: 0;
   }
 
+  .aui-empty {
+    padding: var(--aui-space-350) var(--aui-space-250);
+  }
+
+  .aui-starter-card {
+    padding: var(--aui-space-300) var(--aui-space-300) var(--aui-space-250);
+  }
+
   .aui-workspace {
     grid-template-columns: minmax(0, 1fr);
     overflow: visible;
@@ -68,22 +75,38 @@
   }
 
   .aui-chat-rail {
+    background: var(--aui-bg-soft);
+    border-top: 1px solid var(--aui-border);
+    bottom: 0;
+    box-shadow: var(--aui-shadow-lift);
     display: grid;
-    gap: var(--aui-space-200);
-    grid-auto-columns: minmax(208px, 78vw);
-    grid-auto-flow: column;
-    grid-template-columns: none;
-    max-height: 84px;
-    order: -1;
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-x: contain;
-    padding: var(--aui-space-200) var(--aui-space-300);
+    gap: var(--aui-space-250);
+    left: 0;
+    max-height: min(70dvh, 560px);
+    overflow: auto;
+    padding: var(--aui-space-300) var(--aui-space-350)
+      max(var(--aui-space-350), env(safe-area-inset-bottom));
+    position: fixed;
+    right: 0;
+    z-index: var(--aui-z-popover);
   }
 
   .aui-chat-rail > * {
     align-self: start;
-    flex: 0 0 min(78vw, 280px);
+  }
+
+  .aui-agent-context-backdrop {
+    background: var(--aui-overlay);
+    border: 0;
+    bottom: 0;
+    cursor: pointer;
+    display: block;
+    left: 0;
+    padding: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: calc(var(--aui-z-popover) - 1);
   }
 
   .aui-thread-header {
@@ -127,16 +150,17 @@
   }
 
   .aui-composer-toolbar {
-    align-items: stretch;
+    align-items: center;
   }
 
   .aui-composer-toolbar-start,
   .aui-composer-toolbar-end {
-    width: 100%;
+    width: auto;
   }
 
   .aui-composer-toolbar-end {
-    justify-content: space-between;
+    justify-content: flex-end;
+    margin-left: auto;
   }
 
   .aui-composer-hint {

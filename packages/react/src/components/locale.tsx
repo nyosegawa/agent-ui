@@ -1,10 +1,7 @@
 import { IconCheck, IconGlobe } from "../components-internal";
-import {
-  agentLocales,
-  useAgentI18n,
-  type AgentLocale,
-} from "../i18n";
+import { agentLocales, useAgentI18n, type AgentLocale } from "../i18n";
 import { AuiMenu } from "./disclosure";
+import { useCompactLayout } from "./shared";
 
 export interface AgentLocaleSelectProps {
   "aria-label"?: string;
@@ -20,12 +17,13 @@ export function AgentLocaleSelect({
   value,
 }: AgentLocaleSelectProps) {
   const { t } = useAgentI18n();
+  const compact = useCompactLayout();
   const label = ariaLabel ?? t("locale.label");
   return (
     <AuiMenu
       ariaLabel={label}
       className="aui-locale-menu"
-      compact={false}
+      compact={compact}
       disabled={disabled}
       icon={<IconGlobe size={14} />}
       label={t(`locale.${value}`)}

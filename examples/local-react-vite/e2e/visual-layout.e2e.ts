@@ -24,6 +24,57 @@ test("matches the mobile shell layout contract", async ({ page }) => {
   await expectVisualLayoutContract(page, "mobile");
 });
 
+test("mobile first-run keeps primary chat wide and header controls icon-only", async ({
+  page,
+}) => {
+  await page.setViewportSize(mobileViewport);
+  await page.goto("/?state=empty");
+  await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible();
+
+  const metrics = await page.evaluate(() => {
+    const rect = (selector: string) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const box = element.getBoundingClientRect();
+      return {
+        height: Math.round(box.height),
+        left: Math.round(box.left),
+        text: element.textContent?.trim().replace(/\s+/g, " ") ?? "",
+        width: Math.round(box.width),
+      };
+    };
+    const tools = Array.from(
+      document.querySelectorAll(".aui-first-run-toolbar .aui-composer-tool"),
+    ).map((element) => {
+      const box = element.getBoundingClientRect();
+      return {
+        height: Math.round(box.height),
+        left: Math.round(box.left),
+        text: element.textContent?.trim().replace(/\s+/g, " ") ?? "",
+        width: Math.round(box.width),
+      };
+    });
+    return {
+      firstRun: rect(".aui-first-run-starter"),
+      submit: rect(".aui-first-run-submit"),
+      toolbar: rect(".aui-first-run-toolbar"),
+      threads: rect(".aui-threads-trigger"),
+      tools,
+      viewportWidth: document.documentElement.clientWidth,
+    };
+  });
+
+  expect(metrics.firstRun?.width, JSON.stringify(metrics)).toBeGreaterThanOrEqual(360);
+  expect(metrics.threads?.width, JSON.stringify(metrics)).toBe(36);
+  expect(metrics.tools, JSON.stringify(metrics)).toHaveLength(2);
+  for (const tool of metrics.tools) {
+    expect(tool.width, JSON.stringify(metrics)).toBeLessThanOrEqual(36);
+  }
+  expect(metrics.submit?.left, JSON.stringify(metrics)).toBeGreaterThan(320);
+  expect(metrics.toolbar?.height, JSON.stringify(metrics)).toBeLessThanOrEqual(40);
+  await expect(page.locator(".aui-chat-rail")).toHaveCount(0);
+});
+
 test("rich transcript mobile keeps approval and composer surfaces inside the viewport", async ({
   page,
 }) => {
@@ -33,6 +84,65 @@ test("rich transcript mobile keeps approval and composer surfaces inside the vie
   for (const selector of viewportSurfaceSelectors) {
     await expectWithinViewport(page, selector);
   }
+  const toolSizes = await page
+    .locator(".aui-composer-settings .aui-composer-tool")
+    .evaluateAll((tools) =>
+      tools.map((tool) => {
+        const box = tool.getBoundingClientRect();
+        return {
+          height: Math.round(box.height),
+          text: tool.textContent?.trim().replace(/\s+/g, " ") ?? "",
+          width: Math.round(box.width),
+        };
+      }),
+    );
+  expect(toolSizes).toHaveLength(2);
+  for (const tool of toolSizes) {
+    expect(tool.width, JSON.stringify(toolSizes)).toBe(36);
+    expect(tool.height, JSON.stringify(toolSizes)).toBeGreaterThanOrEqual(36);
+  }
+});
+
+test("mobile opens secondary chrome from the status bar context sheet", async ({
+  page,
+}) => {
+  await page.setViewportSize(mobileViewport);
+  await page.goto("/rich-transcript");
+  await expect(page.getByTestId("agent-chat")).toBeVisible();
+  await expect(page.locator(".aui-chat-rail")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Agent context" }).click();
+  const contextSheet = page.locator(".aui-chat-rail");
+  await expect(contextSheet).toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(() => Boolean(document.activeElement?.closest(".aui-chat-rail"))),
+    )
+    .toBe(true);
+  await expect(page.getByLabel("Status summary")).toBeVisible();
+  await expect(page.getByLabel("Usage limits")).toBeVisible();
+  await expectWithinViewport(page, ".aui-chat-rail");
+
+  await page.keyboard.press("Tab");
+  expect(
+    await page.evaluate(() => ({
+      inComposer: Boolean(document.activeElement?.closest(".aui-composer")),
+      inSheet: Boolean(document.activeElement?.closest(".aui-chat-rail")),
+      inStatus: Boolean(document.activeElement?.closest(".aui-status")),
+    })),
+  ).toEqual({ inComposer: false, inSheet: true, inStatus: false });
+
+  await page.keyboard.press("Escape");
+  await expect(contextSheet).toHaveCount(0);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () =>
+          document.activeElement?.classList.contains("aui-agent-context-trigger") ??
+          false,
+      ),
+    )
+    .toBe(true);
 });
 
 for (const route of ["/", "/host-workflow-recipe"] as const) {
