@@ -43,7 +43,7 @@ export const visualQaStates: FixtureState[] = [
   },
   {
     description:
-      "Inquiry desk fixture with host-owned ticket state, customer context, reply review, audit policy, and an embedded Agent UI assistant pane.",
+      "Inquiry desk demo with ticket triage, customer context, reply review, audit policy, and an embedded support assistant.",
     group: "primitives",
     href: "/support-console",
     meta: "primitives · support SaaS",

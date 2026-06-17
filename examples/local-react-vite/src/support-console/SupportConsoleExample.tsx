@@ -14,7 +14,6 @@ import {
   useAgentBootstrap,
 } from "@nyosegawa/agent-ui-react";
 import { useMemo, useState } from "react";
-import { fixtureModels, fixtureRateLimits } from "../fixtures/demo-state";
 
 interface SupportTicket {
   account: string;
@@ -90,7 +89,7 @@ const supportTickets: SupportTicket[] = [
       "The EU catalog sync completed overnight. Draft reply: confirm the successful sync and note that the host dashboard lag is being checked separately.",
     auditTrail: [
       "Customer tier read from host billing system",
-      "Helpdesk timeline retained outside Agent UI",
+      "Helpdesk timeline retained in the CRM record",
       "Codex output marked as internal note until reviewed",
     ],
     customer: "Eli Morgan",
@@ -150,12 +149,12 @@ function SupportConsoleShell({
     <main className="aui-support-console" data-aui-theme="light">
       <header className="aui-support-console-header">
         <div>
-          <span className="aui-support-kicker">Fixture route · support SaaS</span>
+          <span className="aui-support-kicker">Support operations</span>
           <h1>Support console</h1>
           <p>
-            A host-owned inquiry desk embeds Agent UI beside deterministic ticket
-            context. The host owns queue state, tenant data, reply review, CRM
-            links, PII policy, and audit logging.
+            A support workspace embeds Codex assistance beside selected ticket
+            context. Queue state, tenant data, reply review, CRM links, PII
+            policy, and audit logging stay under the team's controls.
           </p>
         </div>
         <div className="aui-support-header-status">
@@ -218,17 +217,17 @@ function SupportConsoleShell({
             <section aria-label="Conversation detail" className="aui-support-panel">
               <div className="aui-support-section-header">
                 <strong>Case detail</strong>
-                <span>host CRM data</span>
+                <span>CRM record</span>
               </div>
               <div className="aui-support-thread">
                 <p>
                   <strong>{selectedTicket.customer}</strong>
                   <span>{selectedTicket.lastMessage}</span>
                 </p>
-                <p>
+                <p className="aui-support-note">
                   <strong>Support note</strong>
                   <span>
-                    Agent UI can help draft investigation steps, but this timeline,
+                    Codex can help draft investigation steps, while this timeline,
                     customer identity, and retention policy stay in the helpdesk.
                   </span>
                 </p>
@@ -239,7 +238,7 @@ function SupportConsoleShell({
               <section aria-label="Reply review" className="aui-support-panel">
                 <div className="aui-support-section-header">
                   <strong>Reply review</strong>
-                  <span>{replySentCount} sent in fixture</span>
+                  <span>{replySentCount === 1 ? "1 reply sent" : `${replySentCount} replies sent`}</span>
                 </div>
                 <p className="aui-support-reply">{selectedTicket.replyDraft}</p>
                 <button className="aui-support-primary-action" onClick={onSendReply} type="button">
@@ -250,7 +249,7 @@ function SupportConsoleShell({
               <section aria-label="Audit trail" className="aui-support-panel">
                 <div className="aui-support-section-header">
                   <strong>Audit trail</strong>
-                  <span>host retained</span>
+                  <span>retained</span>
                 </div>
                 <ul className="aui-support-audit-list">
                   {selectedTicket.auditTrail.map((entry) => (
@@ -277,7 +276,7 @@ function SupportConsoleShell({
             <section aria-label="Agent status" className="aui-support-panel">
               <div className="aui-support-section-header">
                 <strong>Status details</strong>
-                <span>scoped</span>
+                <span>session</span>
               </div>
               <AgentStatusDetails />
             </section>
@@ -291,7 +290,7 @@ function SupportConsoleShell({
             <section aria-label="Helpdesk connectors" className="aui-support-panel">
               <div className="aui-support-section-header">
                 <strong>Connectors</strong>
-                <span>app/list</span>
+                <span>2 connected</span>
               </div>
               <AgentAppsPanel threadId={selectedTicket.threadId} />
             </section>
@@ -315,10 +314,10 @@ function createSupportConsoleTransport() {
   return new FakeAgentTransport({
     onRequest(request, transport) {
       if (request.method === "account/read") {
-        return { account: { email: "fixture@example.com", planType: "pro" } };
+        return { account: { email: "support-ops@example.com", planType: "pro" } };
       }
-      if (request.method === "model/list") return { data: fixtureModels() };
-      if (request.method === "account/rateLimits/read") return fixtureRateLimits();
+      if (request.method === "model/list") return { data: supportConsoleModels() };
+      if (request.method === "account/rateLimits/read") return supportConsoleRateLimits();
       if (request.method === "thread/list") {
         return {
           data: supportTickets.map((ticket) => ({
@@ -363,7 +362,7 @@ function createSupportConsoleTransport() {
                 id: agentItemId,
                 kind: "agentMessage",
                 status: "completed",
-                text: `Fixture response recorded for ${ticket.id}: keep customer data in the host system and route the reviewed reply through the helpdesk.`,
+                text: `Safe reply workflow updated for ${ticket.id}: customer data stays in the helpdesk, and the reviewed summary is ready for the next agent handoff.`,
                 threadId,
                 turnId,
               },
@@ -377,25 +376,7 @@ function createSupportConsoleTransport() {
         return { turnId };
       }
       if (request.method === "app/list") {
-        return {
-          data: [
-            {
-              id: "salesforce",
-              installUrl: "app://salesforce",
-              isAccessible: true,
-              isEnabled: true,
-              name: "Salesforce",
-            },
-            {
-              id: "linear",
-              installUrl: "app://linear",
-              isAccessible: true,
-              isEnabled: false,
-              name: "Linear",
-            },
-          ],
-          nextCursor: null,
-        };
+        return { data: supportConsoleApps(), nextCursor: null };
       }
       return {};
     },
@@ -405,11 +386,11 @@ function createSupportConsoleTransport() {
 function createSupportConsoleInitialState(): AgentSessionState {
   const state = createInitialAgentState();
   state.account = {
-    account: { email: "fixture@example.com", planType: "pro" },
+    account: { email: "support-ops@example.com", planType: "pro" },
     status: "authenticated",
   };
-  state.usage.accountRateLimits = fixtureRateLimits();
-  state.models = { models: fixtureModels(), selectedModelId: "fixture-demo-model" };
+  state.usage.accountRateLimits = supportConsoleRateLimits();
+  state.models = { models: supportConsoleModels(), selectedModelId: "support-assistant" };
   state.threadLifecycle.activeThreadId = supportTickets[0]!.threadId;
   state.threadLifecycle.collections[state.threadLifecycle.defaultCollectionKey]!.ids = [
     ...supportTickets.map((ticket) => ticket.threadId),
@@ -465,9 +446,63 @@ function createSupportConsoleInitialState(): AgentSessionState {
         turn: { id: turnId, status: "completed", threadId: ticket.threadId },
       },
     },
-  };
+	  };
+    state.apps.byScope[ticket.threadId] = {
+      apps: supportConsoleApps(),
+      nextCursor: null,
+      threadId: ticket.threadId,
+    };
   }
   return state;
+}
+
+function supportConsoleApps() {
+  return [
+    {
+      accessible: true,
+      enabled: true,
+      id: "salesforce",
+      installUrl: "app://salesforce",
+      name: "Salesforce",
+    },
+    {
+      accessible: true,
+      enabled: false,
+      id: "linear",
+      installUrl: "app://linear",
+      name: "Linear",
+    },
+  ];
+}
+
+function supportConsoleModels() {
+  return [
+    {
+      defaultReasoningEffort: "medium",
+      displayName: "Support assistant",
+      id: "support-assistant",
+      name: "Support assistant",
+      supportedReasoningEfforts: ["medium", "high"],
+    },
+  ];
+}
+
+function supportConsoleRateLimits() {
+  return {
+    rateLimits: {
+      limitName: "Support assistant",
+      primary: {
+        resetsAt: "2026-07-09T12:00:00.000Z",
+        usedPercent: 12,
+        windowDurationMins: 300,
+      },
+      secondary: {
+        resetsAt: "2026-07-12T12:00:00.000Z",
+        usedPercent: 34,
+        windowDurationMins: 10080,
+      },
+    },
+  };
 }
 
 function requestInputText(params: { input?: unknown } | undefined): string {

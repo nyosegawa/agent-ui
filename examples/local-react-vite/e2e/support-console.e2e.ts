@@ -7,7 +7,9 @@ import {
   mobileViewport,
 } from "./support/visual-contracts";
 
-test("renders a host-owned support console around Agent UI", async ({ page }) => {
+const tabletViewport = { height: 900, width: 900 } as const;
+
+test("renders a support console operations surface around Agent UI", async ({ page }) => {
   await page.setViewportSize(desktopViewport);
   await page.goto("/support-console");
 
@@ -47,16 +49,16 @@ test("renders a host-owned support console around Agent UI", async ({ page }) =>
   await expect(page.getByLabel("Support assistant")).toContainText("macro cache");
 
   await page.getByRole("button", { name: "Send reviewed reply" }).click();
-  await expect(page.getByLabel("Reply review")).toContainText("1 sent in fixture");
+  await expect(page.getByLabel("Reply review")).toContainText("1 reply sent");
   await page.getByLabel("Message", { exact: true }).fill("Can we send the safe summary?");
   await page.locator(".aui-composer button[aria-label='Send']").first().click();
   await expect(page.getByLabel("Support assistant")).toContainText(
-    "Fixture response recorded for SUP-2051",
+    "Safe reply workflow updated for SUP-2051",
   );
   await expect(expectNoDocumentOverflow(page)).resolves.toBe(true);
 });
 
-test("keeps support console assistant controls reachable on mobile", async ({ page }) => {
+test("keeps support console workflow reachable on mobile", async ({ page }) => {
   await page.setViewportSize(mobileViewport);
   await page.goto("/support-console");
 
@@ -66,21 +68,32 @@ test("keeps support console assistant controls reachable on mobile", async ({ pa
   await expectWithinViewport(page, ".aui-support-console-grid");
   await expectWithinViewport(page, ".aui-support-ticket-list");
   await expectWithinViewport(page, ".aui-support-ticket:first-child");
-  await expectVisibleInViewport(page, ".aui-support-agent-header");
-  await expectVisibleInViewport(page, ".aui-composer");
-  await expectVisibleInViewport(page, ".aui-thread-surface");
-  await expectVisibleInViewport(page, ".aui-composer");
-  await expectVisibleInViewport(page, ".aui-composer-settings .aui-composer-tool");
+  await expectMobileSupportOrder(page);
+  await expectVisibleInViewport(page, ".aui-support-case-header");
+  await expectVisibleInViewport(page, ".aui-support-workflow-grid");
+  await expectVisibleInViewport(page, ".aui-support-primary-action");
+  await expectPrimaryActionSize(page);
 
-  const sendButton = page.locator(".aui-composer button[aria-label='Send']").first();
-  await sendButton.scrollIntoViewIfNeeded();
+  const sendButton = page.getByRole("button", { name: "Send reviewed reply" });
   await expectActuallyHitTestable(sendButton);
+  await expect(expectNoDocumentOverflow(page)).resolves.toBe(true);
+});
 
-  const modeMenu = page.getByRole("button", { name: "Execution mode" }).first();
-  await modeMenu.scrollIntoViewIfNeeded();
-  await modeMenu.click();
-  await expect(page.getByRole("menu", { name: "Execution mode" })).toBeVisible();
-  await expectWithinViewport(page, ".aui-menu-panel");
+test("keeps support console hierarchy usable on tablet", async ({ page }) => {
+  await page.setViewportSize(tabletViewport);
+  await page.goto("/support-console");
+
+  await expect(page.getByLabel("Ticket queue")).toBeVisible();
+  await expect(page.getByLabel("Support assistant")).toBeVisible();
+  await expect(page.getByLabel("Selected inquiry")).toBeVisible();
+  await expectTabletSupportOrder(page);
+  await expectVisibleInViewport(page, ".aui-support-case-header");
+  await expectVisibleInViewport(page, ".aui-support-workflow-grid");
+  await expectVisibleInViewport(page, ".aui-support-primary-action");
+  await expectPrimaryActionSize(page);
+  await expectActuallyHitTestable(
+    page.getByRole("button", { name: "Send reviewed reply" }),
+  );
   await expect(expectNoDocumentOverflow(page)).resolves.toBe(true);
 });
 
@@ -96,4 +109,61 @@ async function expectCompactTicketQueue(page: Page) {
     .first()
     .evaluate((element) => element.getBoundingClientRect().height);
   expect(firstTicketHeight).toBeLessThanOrEqual(92);
+}
+
+async function expectPrimaryActionSize(page: Page) {
+  const buttonHeight = await page
+    .getByRole("button", { name: "Send reviewed reply" })
+    .evaluate((element) => element.getBoundingClientRect().height);
+  expect(buttonHeight).toBeGreaterThanOrEqual(40);
+}
+
+async function expectMobileSupportOrder(page: Page) {
+  const metrics = await supportRegionMetrics(page);
+  expect(metrics.queue.top, JSON.stringify(metrics)).toBeLessThan(metrics.case.top);
+  expect(metrics.case.top, JSON.stringify(metrics)).toBeLessThan(metrics.assistant.top);
+}
+
+async function expectTabletSupportOrder(page: Page) {
+  const metrics = await supportRegionMetrics(page);
+  expect(Math.abs(metrics.queue.top - metrics.case.top), JSON.stringify(metrics)).toBeLessThan(
+    32,
+  );
+  expect(metrics.queue.right, JSON.stringify(metrics)).toBeLessThanOrEqual(metrics.case.left + 1);
+  expect(metrics.assistant.top, JSON.stringify(metrics)).toBeGreaterThan(metrics.case.top);
+}
+
+async function supportRegionMetrics(page: Page) {
+  return page.evaluate(() => {
+    const selectorEntries = {
+      assistant: ".aui-support-agent",
+      case: ".aui-support-case",
+      queue: ".aui-support-queue",
+    };
+    const regions = Object.fromEntries(
+      Object.entries(selectorEntries).map(([name, selector]) => {
+        const element = document.querySelector<HTMLElement>(selector);
+        if (!element) throw new Error(`Missing support console region: ${selector}`);
+        const rect = element.getBoundingClientRect();
+        return [
+          name,
+          {
+            bottom: Math.round(rect.bottom),
+            left: Math.round(rect.left),
+            right: Math.round(rect.right),
+            top: Math.round(rect.top),
+          },
+        ];
+      }),
+    );
+    return {
+      ...regions,
+      viewportHeight: window.innerHeight,
+    } as {
+      assistant: { bottom: number; left: number; right: number; top: number };
+      case: { bottom: number; left: number; right: number; top: number };
+      queue: { bottom: number; left: number; right: number; top: number };
+      viewportHeight: number;
+    };
+  });
 }
