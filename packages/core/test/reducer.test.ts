@@ -478,7 +478,7 @@ describe("agentReducer", () => {
     });
     state = agentReducer(state, {
       status: "ready",
-      thread: { id: "thread-canonical", name: "Live real smoke" },
+      thread: { id: "thread-canonical" },
       type: "thread/started",
     });
     state = agentReducer(state, {
@@ -505,6 +505,43 @@ describe("agentReducer", () => {
     expect(state.threads["thread-canonical"]?.thread.name).toBe("Server generated title");
     expect(state.threads["thread-canonical"]?.metadata.title).toBe(
       "Server generated title",
+    );
+  });
+
+  it("keeps a canonical first-message title when the server returns one", () => {
+    let state = createInitialAgentState();
+    state = agentReducer(state, {
+      operation: {
+        id: "operation-first",
+        kind: "firstMessage",
+        status: "pending",
+        threadId: "thread-pending",
+      },
+      status: "running",
+      thread: {
+        id: "thread-pending",
+        metadata: { operationId: "operation-first", optimistic: true },
+        name: "Host optimistic first message",
+        path: "/repo/agent-ui",
+      },
+      type: "thread/optimistic/created",
+    });
+    state = agentReducer(state, {
+      status: "ready",
+      thread: { id: "thread-canonical", name: "Host first message thread" },
+      type: "thread/started",
+    });
+    state = agentReducer(state, {
+      canonicalThreadId: "thread-canonical",
+      threadId: "thread-pending",
+      type: "thread/reconciled",
+    });
+
+    expect(state.threads["thread-canonical"]?.thread.name).toBe(
+      "Host first message thread",
+    );
+    expect(state.threads["thread-canonical"]?.metadata.title).toBe(
+      "Host first message thread",
     );
   });
 
