@@ -32,7 +32,7 @@ type FakeServerState = {
 
 const statePath = join(
   tmpdir(),
-  `agent-ui-fake-codex-app-server-${process.ppid}.json`,
+  `agent-ui-fake-codex-app-server-${safeStateNamespace()}.json`,
 );
 const persistedState = readState();
 let nextRequestId = 10_000;
@@ -342,14 +342,18 @@ function threadSnapshot(
       durationMs: turn.completedAt - turn.startedAt,
       error: null,
       id: turn.id,
+      itemsView: "full",
       items: [
         {
+          clientId: `client-${turn.id}`,
           content: [{ text: turn.prompt, type: "text" }],
           id: `user-${turn.id}`,
           type: "userMessage",
         },
         {
           id: `item-${turn.id}`,
+          memoryCitation: null,
+          phase: null,
           text: turn.agentText,
           type: "agentMessage",
         },
@@ -494,7 +498,7 @@ function updateLiveThreadTitle(threadId: string, prompt: string) {
   saveState();
   schedule(5, () =>
     notify("thread/name/updated", {
-      name,
+      threadName: name,
       threadId,
     }),
   );
@@ -528,6 +532,11 @@ function recordLiveTurn({
 
 function titleFromPrompt(prompt: string): string {
   return prompt.trim().replace(/\s+/g, " ").slice(0, 48) || "Live real smoke";
+}
+
+function safeStateNamespace(): string {
+  const namespace = process.env.AGENT_UI_FAKE_CODEX_STATE_NAMESPACE ?? String(process.ppid);
+  return namespace.replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 120) || String(process.ppid);
 }
 
 function readState(): FakeServerState {

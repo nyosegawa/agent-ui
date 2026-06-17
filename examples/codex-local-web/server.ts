@@ -119,6 +119,19 @@ attachAgentUiWebSocketBridge({
   bridgePolicy: { admission: { mode: "local-loopback" } },
   browserMethodPolicy: "productized",
   cwd,
+  resolveBridgeOptions({ request }) {
+    const stateNamespace = request
+      ? new URL(request.url ?? "/", `http://${request.headers.host ?? "127.0.0.1"}`)
+          .searchParams.get("agentUiState")
+      : null;
+    if (!stateNamespace) return {};
+    return {
+      env: {
+        ...process.env,
+        AGENT_UI_FAKE_CODEX_STATE_NAMESPACE: stateNamespace,
+      },
+    };
+  },
   hostEvents: {
     onBridgeHealthEvent(event) {
       process.stderr.write(
