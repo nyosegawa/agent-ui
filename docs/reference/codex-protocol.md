@@ -595,6 +595,12 @@ Raw protocol notifications and unsupported notification warnings carry the
 `developer` and `audit` diagnostic audiences by default; they are not
 user-facing diagnostics until a productized normalizer maps them to explicit UI
 state.
+MCP server startup status follows the same split. App-scoped startup failures
+are developer/audit diagnostics because they usually describe host or Codex
+configuration, not a user action inside the current chat. Thread-scoped MCP
+startup failures may synthesize a user warning banner for that thread, and later
+non-failed startup updates remove that banner instead of leaving stale status
+chrome behind.
 
 Current protocol non-goals:
 

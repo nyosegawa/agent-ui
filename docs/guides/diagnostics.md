@@ -30,6 +30,12 @@ audiences. Agent UI does not persist those logs, attach tenant or workspace
 meaning, send them to hosted storage, or choose retention/alerting policy for a
 host.
 
+App-scoped MCP server startup failures are developer/audit diagnostics by
+default. They can explain why a configured Codex MCP server failed to start, but
+they are not shown as primary chat status unless the failure is tied to the
+current thread and mapped to a user warning banner. When the App Server later
+reports a non-failed startup state for that thread, Agent UI removes the banner.
+
 ## Redaction And Host Events
 
 Server-side redaction helpers are exported from
