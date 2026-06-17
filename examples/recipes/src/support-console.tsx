@@ -1,4 +1,4 @@
-import type { AgentTransport } from "@nyosegawa/agent-ui-core";
+import type { AgentSessionState, AgentTransport } from "@nyosegawa/agent-ui-core";
 import {
   AgentDiagnosticsPanel,
   AgentProvider,
@@ -62,14 +62,16 @@ function SupportConsole({ ticket }: { ticket: SupportConsoleTicket }) {
 }
 
 export function SupportConsoleExample({
+  initialState,
   ticket,
   transport,
 }: {
+  initialState: AgentSessionState;
   ticket: SupportConsoleTicket;
   transport: AgentTransport;
 }) {
   return (
-    <AgentProvider transport={transport}>
+    <AgentProvider initialState={initialState} transport={transport}>
       <SupportConsole ticket={ticket} />
     </AgentProvider>
   );

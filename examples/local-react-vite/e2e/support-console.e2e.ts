@@ -43,9 +43,16 @@ test("renders a host-owned support console around Agent UI", async ({ page }) =>
   await expect(page.getByLabel("Selected inquiry")).toContainText(
     "patient fields stay in the CRM",
   );
+  await expect(page.getByLabel("Agent assistant pane")).toContainText("SUP-2051");
+  await expect(page.getByLabel("Agent assistant pane")).toContainText("macro cache");
 
   await page.getByRole("button", { name: "Send reviewed reply" }).click();
   await expect(page.getByLabel("Reply review")).toContainText("1 sent in fixture");
+  await page.getByLabel("Message", { exact: true }).fill("Can we send the safe summary?");
+  await page.locator(".aui-composer button[aria-label='Send']").first().click();
+  await expect(page.getByLabel("Agent assistant pane")).toContainText(
+    "Fixture response recorded for SUP-2051",
+  );
   await expect(expectNoDocumentOverflow(page)).resolves.toBe(true);
 });
 
@@ -59,7 +66,8 @@ test("keeps support console assistant controls reachable on mobile", async ({ pa
   await expectWithinViewport(page, ".aui-support-console-grid");
   await expectWithinViewport(page, ".aui-support-ticket-list");
   await expectWithinViewport(page, ".aui-support-ticket:first-child");
-  await page.getByLabel("Agent assistant pane").scrollIntoViewIfNeeded();
+  await expectVisibleInViewport(page, ".aui-support-agent-header");
+  await expectVisibleInViewport(page, ".aui-composer");
   await expectVisibleInViewport(page, ".aui-thread-surface");
   await expectVisibleInViewport(page, ".aui-composer");
   await expectVisibleInViewport(page, ".aui-composer-settings .aui-composer-tool");

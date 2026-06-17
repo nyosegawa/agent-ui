@@ -18,6 +18,7 @@ import { fixtureModels, fixtureRateLimits } from "../fixtures/demo-state";
 
 interface SupportTicket {
   account: string;
+  assistantBrief: string;
   auditTrail: string[];
   customer: string;
   id: string;
@@ -30,14 +31,15 @@ interface SupportTicket {
   status: "waiting" | "investigating" | "ready";
   subject: string;
   tenant: string;
+  threadId: string;
+  userPrompt: string;
 }
-
-const supportThreadId = "thread-support-console";
-const supportTurnId = "turn-support-console";
 
 const supportTickets: SupportTicket[] = [
   {
     account: "Northstar Logistics",
+    assistantBrief:
+      "Likely cause: a billing export filter mismatch. Draft reply: prepare a corrected CSV, verify the row count, and keep raw invoice IDs in the host helpdesk record.",
     auditTrail: [
       "PII fields redacted before Codex context",
       "CRM case SF-2091 linked by host workflow",
@@ -55,9 +57,13 @@ const supportTickets: SupportTicket[] = [
     status: "investigating",
     subject: "Invoice export dropped rows",
     tenant: "workspace-northstar",
+    threadId: "thread-support-sup-2048",
+    userPrompt: "Summarize SUP-2048 and prepare a support-safe reply draft.",
   },
   {
     account: "Atlas Health",
+    assistantBrief:
+      "Likely cause: reconnect state is replaying stale macro cache entries. Draft reply: acknowledge the duplicate suggestions and say support is comparing reconnect logs with cache updates.",
     auditTrail: [
       "Workspace limited to support-readonly scope",
       "No attachments shared with Codex",
@@ -75,9 +81,13 @@ const supportTickets: SupportTicket[] = [
     status: "waiting",
     subject: "Duplicate macros after reconnect",
     tenant: "workspace-atlas-health",
+    threadId: "thread-support-sup-2051",
+    userPrompt: "Summarize SUP-2051 without exposing patient or CRM fields.",
   },
   {
     account: "Cedar Retail",
+    assistantBrief:
+      "The EU catalog sync completed overnight. Draft reply: confirm the successful sync and note that the host dashboard lag is being checked separately.",
     auditTrail: [
       "Customer tier read from host billing system",
       "Helpdesk timeline retained outside Agent UI",
@@ -95,6 +105,8 @@ const supportTickets: SupportTicket[] = [
     status: "ready",
     subject: "Catalog sync confirmation",
     tenant: "workspace-cedar-retail",
+    threadId: "thread-support-sup-2054",
+    userPrompt: "Confirm the catalog sync status and keep order details out of the response.",
   },
 ];
 
@@ -259,7 +271,7 @@ function SupportConsoleShell({
             <span>{selectedTicket.id}</span>
           </div>
           <div className="aui-support-agent-chat">
-            <AgentThreadView threadId={supportThreadId} />
+            <AgentThreadView threadId={selectedTicket.threadId} />
           </div>
           <div className="aui-support-agent-context">
             <section aria-label="Agent status" className="aui-support-panel">
@@ -281,7 +293,7 @@ function SupportConsoleShell({
                 <strong>Connectors</strong>
                 <span>app/list</span>
               </div>
-              <AgentAppsPanel threadId={supportThreadId} />
+              <AgentAppsPanel threadId={selectedTicket.threadId} />
             </section>
           </div>
         </aside>
@@ -301,7 +313,7 @@ function HostFact({ label, value }: { label: string; value: string }) {
 
 function createSupportConsoleTransport() {
   return new FakeAgentTransport({
-    onRequest(request) {
+    onRequest(request, transport) {
       if (request.method === "account/read") {
         return { account: { email: "fixture@example.com", planType: "pro" } };
       }
@@ -309,16 +321,60 @@ function createSupportConsoleTransport() {
       if (request.method === "account/rateLimits/read") return fixtureRateLimits();
       if (request.method === "thread/list") {
         return {
-          data: [
-            {
-              id: supportThreadId,
-              name: "Invoice export investigation",
-              preview: "Summarize evidence and draft a support-safe reply.",
-              status: { type: "loaded" },
-            },
-          ],
+          data: supportTickets.map((ticket) => ({
+            id: ticket.threadId,
+            name: `${ticket.id} investigation`,
+            preview: ticket.assistantBrief,
+            status: { type: "loaded" },
+          })),
           nextCursor: null,
         };
+      }
+      if (request.method === "turn/start") {
+        const params = request.params as { input?: unknown; threadId?: string } | undefined;
+        const threadId = params?.threadId ?? supportTickets[0]!.threadId;
+        const ticket =
+          supportTickets.find((candidate) => candidate.threadId === threadId) ??
+          supportTickets[0]!;
+        const turnId = `turn-support-follow-up-${request.id}`;
+        const userItemId = `item-support-follow-up-user-${request.id}`;
+        const agentItemId = `item-support-follow-up-agent-${request.id}`;
+        const text = requestInputText(params);
+        transport.push({
+          event: {
+            threadId,
+            turn: { id: turnId, status: "running", threadId },
+            type: "turn/started",
+          },
+          type: "event",
+        });
+        transport.push({
+          event: {
+            items: [
+              {
+                id: userItemId,
+                kind: "userMessage",
+                status: "completed",
+                text,
+                threadId,
+                turnId,
+              },
+              {
+                id: agentItemId,
+                kind: "agentMessage",
+                status: "completed",
+                text: `Fixture response recorded for ${ticket.id}: keep customer data in the host system and route the reviewed reply through the helpdesk.`,
+                threadId,
+                turnId,
+              },
+            ],
+            threadId,
+            turn: { id: turnId, status: "completed", threadId },
+            type: "turn/completed",
+          },
+          type: "event",
+        });
+        return { turnId };
       }
       if (request.method === "app/list") {
         return {
@@ -354,25 +410,27 @@ function createSupportConsoleInitialState(): AgentSessionState {
   };
   state.usage.accountRateLimits = fixtureRateLimits();
   state.models = { models: fixtureModels(), selectedModelId: "fixture-demo-model" };
-  state.threadLifecycle.activeThreadId = supportThreadId;
+  state.threadLifecycle.activeThreadId = supportTickets[0]!.threadId;
   state.threadLifecycle.collections[state.threadLifecycle.defaultCollectionKey]!.ids = [
-    supportThreadId,
+    ...supportTickets.map((ticket) => ticket.threadId),
   ];
-  state.threads[supportThreadId] = {
+  for (const ticket of supportTickets) {
+    const turnId = `turn-${ticket.threadId}`;
+    state.threads[ticket.threadId] = {
     activity: "idle",
     availability: "available",
-    id: supportThreadId,
+    id: ticket.threadId,
     metadata: {
       cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
-      title: "Invoice export investigation",
+      title: `${ticket.id} investigation`,
     },
     operations: {},
-    orderedTurnIds: [supportTurnId],
+    orderedTurnIds: [turnId],
     status: "ready",
     storage: "unknown",
     thread: {
-      id: supportThreadId,
-      name: "Invoice export investigation",
+      id: ticket.threadId,
+      name: `${ticket.id} investigation`,
       path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
     },
     tokenUsage: {
@@ -382,35 +440,48 @@ function createSupportConsoleInitialState(): AgentSessionState {
       totalTokens: 1870,
     },
     turns: {
-      [supportTurnId]: {
+      [turnId]: {
         blocksByItemId: {},
         commandOutputByItemId: {},
         filePatchByItemId: {},
-        itemOrder: ["item-support-user", "item-support-agent-summary"],
+        itemOrder: [`item-support-user-${ticket.id}`, `item-support-agent-${ticket.id}`],
         items: {
-          "item-support-agent-summary": {
-            id: "item-support-agent-summary",
+          [`item-support-agent-${ticket.id}`]: {
+            id: `item-support-agent-${ticket.id}`,
             kind: "agentMessage",
             status: "completed",
-            text:
-              "Likely cause: a billing export filter mismatch. Draft reply: we are preparing a corrected CSV and will confirm the row count before sending it back. Customer identifiers and invoice IDs should stay in the host helpdesk record.",
-            threadId: supportThreadId,
-            turnId: supportTurnId,
+            text: ticket.assistantBrief,
+            threadId: ticket.threadId,
+            turnId,
           },
-          "item-support-user": {
-            id: "item-support-user",
+          [`item-support-user-${ticket.id}`]: {
+            id: `item-support-user-${ticket.id}`,
             kind: "userMessage",
             status: "completed",
-            text:
-              "Summarize SUP-2048 and prepare a support-safe reply draft.",
-            threadId: supportThreadId,
-            turnId: supportTurnId,
+            text: ticket.userPrompt,
+            threadId: ticket.threadId,
+            turnId,
           },
         },
         streamingTextByItemId: {},
-        turn: { id: supportTurnId, status: "completed", threadId: supportThreadId },
+        turn: { id: turnId, status: "completed", threadId: ticket.threadId },
       },
     },
   };
+  }
   return state;
+}
+
+function requestInputText(params: { input?: unknown } | undefined): string {
+  const input = params?.input;
+  if (typeof input === "string") return input;
+  if (!Array.isArray(input)) return "";
+  return input
+    .map((item) =>
+      item && typeof item === "object" && "text" in item
+        ? String((item as { text?: unknown }).text ?? "")
+        : "",
+    )
+    .filter(Boolean)
+    .join("\n");
 }

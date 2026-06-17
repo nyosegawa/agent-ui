@@ -60,7 +60,9 @@ only after the host gate approves the first Codex turn.
 case routing, customer data, tenant mapping, PII policy, reply delivery, and
 helpdesk audit state while embedding Agent UI for transcript, composer, status,
 usage, and diagnostics. The recipe uses a fixed thread view rather than the full
-chat preset so product chrome and queue state stay in the host shell.
+chat preset so product chrome and queue state stay in the host shell. Hosts
+must seed or read the ticket thread before rendering the recipe; the example
+accepts an `initialState` to make that ownership explicit.
 
 `src/themed.css` intentionally demonstrates host theming by overriding `--aui-*`
 tokens on a wrapper. It should not be read as permission to import

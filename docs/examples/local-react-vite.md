@@ -94,9 +94,12 @@ the embedded Codex App Server surface for transcript, composer, approvals,
 status, usage, diagnostics, and connector metadata. The assistant pane embeds a
 fixed thread primitive instead of the full `AgentChat` preset so the SaaS shell
 keeps product chrome, account controls, and queue state host-owned. Desktop
-layout is viewport-bounded like a working console; mobile uses a horizontal
-ticket selector and compact case context so the workflow stays navigable without
-cramming every secondary panel into the first viewport.
+layout is viewport-bounded like a working console, with one assistant thread per
+ticket so switching the queue also switches the Codex context. Tablet and mobile
+layouts promote the assistant before the full case detail: the queue becomes a
+horizontal selector, the composer remains reachable early, and detailed customer
+context, reply review, and audit trail continue below without being crammed into
+the first viewport.
 
 `bun run test:e2e:fixtures` starts its own preview server on port 4173 for the
 fixture browser checks. Do not rely on a manually running 5174 server for this

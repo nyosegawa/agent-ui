@@ -426,15 +426,28 @@
     min-height: 0;
   }
 
-  .aui-support-case-grid,
-  .aui-support-workflow-grid {
-    grid-template-columns: 1fr 1fr;
+  .aui-support-queue {
+    grid-column: 1;
+    grid-row: 1;
   }
 
   .aui-support-agent {
-    border-left: 0;
+    border-left: 1px solid var(--aui-border);
+    border-top: 0;
+    grid-column: 2;
+    grid-row: 1;
+    min-height: 620px;
+  }
+
+  .aui-support-case {
     border-top: 1px solid var(--aui-border);
     grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .aui-support-case-grid,
+  .aui-support-workflow-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -460,7 +473,10 @@
   .aui-support-queue {
     border-right: 0;
     border-bottom: 1px solid var(--aui-border);
+    grid-column: auto;
+    grid-row: auto;
     max-height: none;
+    order: 1;
   }
 
   .aui-support-ticket-list {
@@ -482,6 +498,10 @@
   }
 
   .aui-support-case {
+    border-top: 0;
+    grid-column: auto;
+    grid-row: auto;
+    order: 3;
     padding: var(--aui-space-300);
   }
 
@@ -502,6 +522,12 @@
   }
 
   .aui-support-agent {
-    grid-template-rows: auto minmax(560px, 70vh) auto;
+    border-left: 0;
+    border-top: 1px solid var(--aui-border);
+    grid-column: auto;
+    grid-row: auto;
+    grid-template-rows: auto minmax(500px, 62vh) auto;
+    min-height: 0;
+    order: 2;
   }
 }
