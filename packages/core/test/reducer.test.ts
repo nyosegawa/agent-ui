@@ -367,8 +367,8 @@ describe("agentReducer", () => {
     }
 
     expect(defaultThreadIds(state)).toHaveLength(max);
-    expect(defaultThreadIds(state)[0]).toBe("thread-cold-2");
-    expect(defaultThreadIds(state).at(-1)).toBe(`thread-cold-${max + 1}`);
+    expect(defaultThreadIds(state)[0]).toBe(`thread-cold-${max + 1}`);
+    expect(defaultThreadIds(state).at(-1)).toBe("thread-cold-2");
 
     state = agentReducer(state, {
       status: "loaded",
@@ -383,7 +383,7 @@ describe("agentReducer", () => {
 
     expect(defaultThreadIds(state)).toHaveLength(max);
     expect(defaultThreadIds(state)).toContain("thread-cold-3");
-    expect(defaultThreadIds(state).at(-1)).toBe("thread-cold-2");
+    expect(defaultThreadIds(state)[0]).toBe("thread-cold-2");
   });
 
   it("selects ordered threads by lifecycle collection and orphan fallback without promoting active thread", () => {
@@ -412,8 +412,8 @@ describe("agentReducer", () => {
     };
 
     expect(selectOrderedThreads(state).map((thread) => thread.thread.id)).toEqual([
-      "thread-new",
       "thread-old",
+      "thread-new",
       "thread-orphan",
     ]);
   });
@@ -428,9 +428,9 @@ describe("agentReducer", () => {
       });
     }
     expect(defaultThreadIds(state)).toEqual([
-      "thread-old",
-      "thread-middle",
       "thread-new",
+      "thread-middle",
+      "thread-old",
     ]);
 
     state = agentReducer(state, {
@@ -441,9 +441,9 @@ describe("agentReducer", () => {
     });
     expect(state.threadLifecycle.activeThreadId).toBe("thread-middle");
     expect(defaultThreadIds(state)).toEqual([
-      "thread-old",
-      "thread-middle",
       "thread-new",
+      "thread-middle",
+      "thread-old",
     ]);
 
     state = agentReducer(state, {
@@ -452,9 +452,9 @@ describe("agentReducer", () => {
       type: "thread/status/changed",
     });
     expect(defaultThreadIds(state)).toEqual([
-      "thread-old",
-      "thread-middle",
       "thread-new",
+      "thread-middle",
+      "thread-old",
     ]);
   });
 
@@ -708,6 +708,57 @@ describe("agentReducer", () => {
     });
   });
 
+  it("preserves scoped thread collection response order across hydration and active selection", () => {
+    let state = createInitialAgentState();
+    const historyScope = { kind: "history", key: "history:server-order" } as const;
+
+    for (const id of ["thread-oldest", "thread-newest", "thread-middle"]) {
+      state = agentReducer(state, {
+        status: "loaded",
+        thread: { id, name: id },
+        type: "thread/upserted",
+      });
+    }
+    state = agentReducer(state, {
+      ids: ["thread-newest", "thread-middle", "thread-oldest"],
+      replace: true,
+      scope: historyScope,
+      type: "thread/collection/pageReceived",
+    });
+
+    const orderedHistoryIds = () =>
+      selectOrderedCollectionThreads(state, historyScope).map(
+        (thread) => thread.thread.id,
+      );
+    expect(orderedHistoryIds()).toEqual([
+      "thread-newest",
+      "thread-middle",
+      "thread-oldest",
+    ]);
+
+    state = agentReducer(state, {
+      snapshot: true,
+      status: "loaded",
+      thread: { id: "thread-middle", name: "Hydrated middle" },
+      type: "thread/started",
+    });
+    state = agentReducer(state, {
+      threadId: "thread-middle",
+      type: "thread/active/set",
+    });
+
+    expect(orderedHistoryIds()).toEqual([
+      "thread-newest",
+      "thread-middle",
+      "thread-oldest",
+    ]);
+    expect(selectOrderedThreads(state).map((thread) => thread.thread.id)).toEqual([
+      "thread-middle",
+      "thread-newest",
+      "thread-oldest",
+    ]);
+  });
+
   it("bounds thread collection page results by the lifecycle retention limit", () => {
     let state = createInitialAgentState();
     const max = AGENT_RETENTION_POLICY.threadCollectionEntriesMax;
@@ -721,9 +772,9 @@ describe("agentReducer", () => {
     });
 
     expect(selectThreadCollection(state, scope)?.ids).toHaveLength(max);
-    expect(selectThreadCollection(state, scope)?.ids[0]).toBe("thread-page-5");
+    expect(selectThreadCollection(state, scope)?.ids[0]).toBe("thread-page-0");
     expect(selectThreadCollection(state, scope)?.ids.at(-1)).toBe(
-      `thread-page-${max + 4}`,
+      `thread-page-${max - 1}`,
     );
   });
 
@@ -770,8 +821,8 @@ describe("agentReducer", () => {
 
     expect(selectThreadCollection(state, "all")?.ids).toContain("pending-thread");
     expect(selectThreadCollection(state, projectScope)?.ids).toEqual([
-      "thread-project-old",
       "pending-thread",
+      "thread-project-old",
     ]);
     expect(selectThreadCollection(state, otherScope)?.ids).toEqual(["thread-other-old"]);
   });
@@ -2235,7 +2286,7 @@ describe("agentReducer", () => {
     expect(state.threadLifecycle.activeThreadId).toBe("thread-active");
     expect(selectThreadLifecycle(state).activeThreadId).toBe("thread-active");
     expect(selectThreadLifecycle(state).activeThreadId).toBe("thread-active");
-    expect(defaultThreadIds(state)).toEqual(["thread-active", "thread-preview"]);
+    expect(defaultThreadIds(state)).toEqual(["thread-preview", "thread-active"]);
   });
 
   it("preserves stored turns and preview classification when later thread payloads omit turns", () => {

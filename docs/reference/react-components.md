@@ -321,11 +321,14 @@ quality directly instead of depending on a page-level shell:
   code surface. `COMPLETED` status labels are suppressed on user/assistant
   bubbles so they stop competing with the content.
 - **Sidebar**: a leading-icon search input that loads the first history page
-  without selecting a thread and debounce-filters as you type. There is no
-  standalone Load button; pagination is an IntersectionObserver sentinel with a
-  single subtle `Load more` fallback. The header includes a `+` new-thread
-  action that returns to the start screen without creating a thread. Refined
-  thread list items with a coloured status dot. On mobile the sidebar is an
+  without selecting a thread and debounce-filters as you type. Rows follow the
+  scoped `thread/list` collection order, defaulting to App Server
+  `updated_at` descending, and selecting or preview-hydrating a stored thread
+  does not promote it. There is no standalone Load button; pagination is an
+  IntersectionObserver sentinel with a single subtle `Load more` fallback. The
+  header includes a `+` new-thread action that returns to the start screen
+  without creating a thread. Refined thread list items with a coloured status
+  dot. On mobile the sidebar is an
   off-canvas drawer opened from the `Threads` trigger in the status bar. The
   drawer closes on backdrop click, Escape, and thread selection; focus returns
   to the trigger after close; the chat/composer surface behind the drawer is
@@ -356,12 +359,16 @@ The token override contract lives in [Theming](../guides/theming.md).
 Use these primitives when embedding Agent UI into existing product chrome:
 
 - `AgentShell`: app viewport layout with an optional sidebar slot.
-- `AgentThreadSidebar`: persisted Codex thread history browser. It follows
-  `thread/list` cursors with an IntersectionObserver sentinel and keeps the
-  visible fallback to a single Load more action. Its optional new-thread action
-  is a host navigation callback; it should return the user to the thread-start
-  screen rather than eagerly calling `thread/start`. Selecting stored history
-  uses `thread/read` preview hydration, not `thread/resume`.
+- `AgentThreadSidebar`: persisted Codex thread history browser. It renders the
+  scoped collection owned by `useAgentThreadListController()`, follows
+  `thread/list` cursors with an IntersectionObserver sentinel, and keeps the
+  visible fallback to a single Load more action. The row order is the
+  `thread/list` response order; the default request asks for `updated_at`
+  descending, and stored-thread selection does not reorder the collection. Its
+  optional new-thread action is a host navigation callback; it should return the
+  user to the thread-start screen rather than eagerly calling `thread/start`.
+  Selecting stored history uses `thread/read` preview hydration, not
+  `thread/resume`.
 - `AgentThreadSurface`: unopinionated thread column surface for a host-arranged
   header, notices, timeline, and composer. Its grid rows are header, optional
   critical notices, the transcript scroll area, then the composer; pending

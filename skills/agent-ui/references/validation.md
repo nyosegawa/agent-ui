@@ -38,8 +38,9 @@ For browser-visible work, verify interactions, not only screenshots:
 - preview stored history with `thread/read`, then resume and verify the
   canonical thread id the host should persist
 - verify stored-history preview or status updates do not reorder the visible
-  thread list unless a collection refresh or new thread actually changes
-  recency
+  thread list; rows should keep the scoped `thread/list` collection order unless
+  a collection refresh, pagination response, or new thread changes that
+  collection
 - create a new thread, wait for the first title update and assistant response,
   reload its `/threads/<threadId>` URL, and verify the title, transcript, and
   editable composer remain available

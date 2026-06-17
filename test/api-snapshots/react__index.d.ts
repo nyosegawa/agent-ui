@@ -1037,13 +1037,12 @@ declare function formatThreadStatus(status: string, options?: {
 }): string;
 declare function threadSubtitle(thread: AgentThread, t?: (key: AgentI18nKey) => string): string;
 declare function isUserFacingPath(path: string): boolean;
-declare function AgentThreadSidebar({ activeThreadId, collapsed, onCreateThread, onCollapsedChange, onSelectThread, threads, }: {
+declare function AgentThreadSidebar({ activeThreadId, collapsed, onCreateThread, onCollapsedChange, onSelectThread, }: {
     activeThreadId?: string;
     collapsed?: boolean;
     onCreateThread?: () => void;
     onCollapsedChange?: (collapsed: boolean) => void;
     onSelectThread?: (threadId: string) => void;
-    threads: AgentThreadView$1[];
 }): react_jsx_runtime.JSX.Element | null;
 
 type AgentTheme = "light" | "dark" | "system";

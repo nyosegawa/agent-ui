@@ -39,3 +39,7 @@ export function boundedRecordEntry<T>(
 export function boundedUniqueAppend<T>(items: readonly T[], item: T, max: number): T[] {
   return [...items.filter((candidate) => candidate !== item), item].slice(-max);
 }
+
+export function boundedUniquePrepend<T>(items: readonly T[], item: T, max: number): T[] {
+  return [item, ...items.filter((candidate) => candidate !== item)].slice(0, max);
+}

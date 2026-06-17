@@ -12,7 +12,6 @@ import {
   runEventFixture,
   selectDiagnosticWarnings,
   selectPendingOperations,
-  type AgentThreadView as AgentThreadViewModel,
   type AgentThreadScope,
   type FixtureStep,
 } from "@nyosegawa/agent-ui-core";
@@ -2465,48 +2464,32 @@ describe("AgentChat", () => {
     expect(collab).toHaveTextContent("new-1");
   });
 
-  it("keeps thread list title and metadata visible for stored threads", () => {
-    const storedThread = {
-      orderedTurnIds: ["turn-stored"],
-      status: "loaded" as const,
-      thread: {
-        id: "thread-stored",
-        name: "Review stored transcript",
-        path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+  it("keeps thread list title and metadata visible for stored threads", async () => {
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                cwd: "/Users/sakasegawa/src/agent-ui",
+                id: "thread-stored",
+                name: "Review stored transcript",
+                status: { type: "notLoaded" },
+              },
+            ],
+          };
+        }
+        return {};
       },
-      turns: {
-        "turn-stored": {
-          commandOutputByItemId: {},
-          filePatchByItemId: {},
-          itemOrder: [],
-          items: {},
-          streamingTextByItemId: {},
-          turn: { id: "turn-stored", threadId: "thread-stored" },
-        },
-      },
-    };
-    const storedThreadView: AgentThreadViewModel = {
-      cwd: "/Users/sakasegawa/src/agent-ui",
-      id: "thread-stored",
-      isActive: true,
-      isArchived: false,
-      isPreview: true,
-      isRunning: false,
-      needsInput: false,
-      subtitle: "/Users/sakasegawa/src/agent-ui",
-      title: "Review stored transcript",
-    };
-    const initialState = createInitialAgentState();
-    initialState.connection.status = "connected";
-    initialState.threads["thread-stored"] = storedThread;
+    });
 
     render(
-      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentThreadSidebar activeThreadId="thread-stored" threads={[storedThreadView]} />
+      <AgentProvider transport={transport}>
+        <AgentThreadSidebar activeThreadId="thread-stored" />
       </AgentProvider>,
     );
 
-    const row = screen.getByRole("button", { name: /Review stored transcript/ });
+    const row = await screen.findByRole("button", { name: /Review stored transcript/ });
     expect(row).toHaveTextContent("Review stored transcript");
     expect(row).toHaveTextContent("Preview");
     expect(row).toHaveTextContent("agent-ui");
@@ -2515,30 +2498,20 @@ describe("AgentChat", () => {
 
   it("reports the canonical thread id after sidebar hydration", async () => {
     const user = userEvent.setup();
-    const storedThread = {
-      orderedTurnIds: [],
-      status: "notLoaded" as const,
-      thread: {
-        id: "thread-alias",
-        name: "Aliased stored transcript",
-      },
-      turns: {},
-    };
-    const initialState = createInitialAgentState();
-    initialState.connection.status = "connected";
-    initialState.threads["thread-alias"] = storedThread;
-    const storedThreadView: AgentThreadViewModel = {
-      id: "thread-alias",
-      isActive: true,
-      isArchived: false,
-      isPreview: true,
-      isRunning: false,
-      needsInput: false,
-      title: "Aliased stored transcript",
-    };
     const onSelectThread = vi.fn();
     const transport = new FakeAgentTransport({
       onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-alias",
+                name: "Aliased stored transcript",
+                status: { type: "notLoaded" },
+              },
+            ],
+          };
+        }
         if (request.method === "thread/read") {
           return {
             thread: {
@@ -2554,16 +2527,15 @@ describe("AgentChat", () => {
     });
 
     render(
-      <AgentProvider initialState={initialState} transport={transport}>
+      <AgentProvider transport={transport}>
         <AgentThreadSidebar
           activeThreadId="thread-alias"
           onSelectThread={onSelectThread}
-          threads={[storedThreadView]}
         />
       </AgentProvider>,
     );
 
-    await user.click(screen.getByRole("button", { name: /Aliased stored transcript/ }));
+    await user.click(await screen.findByRole("button", { name: /Aliased stored transcript/ }));
 
     await waitFor(() => expect(onSelectThread).toHaveBeenCalledWith("thread-canonical"));
     expect(
@@ -2576,46 +2548,35 @@ describe("AgentChat", () => {
 
   it("does not report sidebar selection when hydration fails", async () => {
     const user = userEvent.setup();
-    const storedThread = {
-      orderedTurnIds: [],
-      status: "notLoaded" as const,
-      thread: {
-        id: "thread-read-fails",
-        name: "Read fails",
-      },
-      turns: {},
-    };
-    const initialState = createInitialAgentState();
-    initialState.connection.status = "connected";
-    initialState.threads["thread-read-fails"] = storedThread;
-    const storedThreadView: AgentThreadViewModel = {
-      id: "thread-read-fails",
-      isActive: true,
-      isArchived: false,
-      isPreview: true,
-      isRunning: false,
-      needsInput: false,
-      title: "Read fails",
-    };
     const onSelectThread = vi.fn();
     const transport = new FakeAgentTransport({
       onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-read-fails",
+                name: "Read fails",
+                status: { type: "notLoaded" },
+              },
+            ],
+          };
+        }
         if (request.method === "thread/read") throw new Error("read failed");
         return {};
       },
     });
 
     render(
-      <AgentProvider initialState={initialState} transport={transport}>
+      <AgentProvider transport={transport}>
         <AgentThreadSidebar
           activeThreadId="thread-read-fails"
           onSelectThread={onSelectThread}
-          threads={[storedThreadView]}
         />
       </AgentProvider>,
     );
 
-    await user.click(screen.getByRole("button", { name: /Read fails/ }));
+    await user.click(await screen.findByRole("button", { name: /Read fails/ }));
 
     await waitFor(() =>
       expect(transport.requests.some((request) => request.method === "thread/read")).toBe(
@@ -5942,7 +5903,22 @@ describe("AgentChat", () => {
 
   it("renders the fixture UI and resolves file-change approvals", async () => {
     const user = userEvent.setup();
-    const transport = new FakeAgentTransport();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                id: "thread-docs",
+                name: "Protocol docs update",
+                status: { type: "notLoaded" },
+              },
+            ],
+          };
+        }
+        return {};
+      },
+    });
     const { container } = render(
       <AgentProvider
         initialState={runEventFixture(demoFixture as FixtureStep[])}
@@ -5956,7 +5932,7 @@ describe("AgentChat", () => {
       await screen.findByRole("heading", { name: "Implement approval UI" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("navigation", { name: "Threads" })).toBeInTheDocument();
-    expect(screen.getByText("Protocol docs update")).toBeInTheDocument();
+    expect(await screen.findByText("Protocol docs update")).toBeInTheDocument();
     expect(document.querySelector("[class*=work][class*=trace]")).not.toBeInTheDocument();
     await user.click(screen.getByLabelText("Command output").querySelector("summary")!);
     expect(screen.getByLabelText("Command output")).toHaveTextContent("7 tests passed");
@@ -9376,6 +9352,85 @@ describe("AgentChat", () => {
           (request.params as { cursor?: string | null }).cursor === "page-2",
       ),
     ).toBeTruthy();
+  });
+
+  it("renders sidebar history in thread/list response order without promoting selection", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/list") {
+          return {
+            data: [
+              {
+                cwd: "/Users/example/newest",
+                id: "thread-server-newest",
+                name: "Server newest",
+                status: { type: "notLoaded" },
+                updatedAt: 10,
+              },
+              {
+                cwd: "/Users/example/middle",
+                id: "thread-server-middle",
+                name: "Server middle",
+                status: { type: "notLoaded" },
+                updatedAt: 30,
+              },
+              {
+                cwd: "/Users/example/oldest",
+                id: "thread-server-oldest",
+                name: "Server oldest",
+                status: { type: "notLoaded" },
+                updatedAt: 20,
+              },
+            ],
+            nextCursor: null,
+          };
+        }
+        if (request.method === "thread/read") {
+          return {
+            thread: {
+              cwd: "/Users/example/middle",
+              id: "thread-server-middle",
+              name: "Server middle",
+              status: { type: "idle" },
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat threadUrlRouting />
+      </AgentProvider>,
+    );
+
+    const sidebarOrder = () =>
+      screen
+        .getAllByRole("button")
+        .map((button) => button.textContent?.replace(/\s+/g, " ").trim() ?? "")
+        .filter((label) => label.startsWith("Server "))
+        .map((label) => label.replace(/(Preview|Ready).*$/, ""));
+
+    await waitFor(() =>
+      expect(sidebarOrder()).toEqual([
+        "Server newest",
+        "Server middle",
+        "Server oldest",
+      ]),
+    );
+
+    await user.click(screen.getByRole("button", { name: /Server middle/ }));
+    expect(await screen.findByRole("heading", { name: "Server middle" })).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/threads/thread-server-middle");
+    await waitFor(() =>
+      expect(sidebarOrder()).toEqual([
+        "Server newest",
+        "Server middle",
+        "Server oldest",
+      ]),
+    );
   });
 
   it("does not expose bulk pagination in the default thread sidebar", async () => {

@@ -1,11 +1,9 @@
 import type React from "react";
 import type {
-  AgentThreadView as AgentThreadViewModel,
   AgentItemState,
   PendingServerRequest,
   TurnState,
 } from "@nyosegawa/agent-ui-core";
-import { selectThreadView } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useAgentBootstrap,
@@ -13,7 +11,6 @@ import {
   useAgentThread,
   useAgentThreads,
 } from "../hooks";
-import { useAgentContext } from "../provider";
 import { useInternalAgentComposerController } from "../hooks/composer";
 import {
   AgentI18nProvider,
@@ -196,12 +193,7 @@ function AgentChatInner({
   const { t } = useAgentI18n();
   const { thread, threadId, startThread } = useAgentThread();
   const composer = useInternalAgentComposerController();
-  const { threads, activeThreadId, setActiveThread } = useAgentThreads();
-  const { state } = useAgentContext();
-  const sidebarThreads: AgentThreadViewModel[] = threads.flatMap((thread) => {
-    const view = selectThreadView(state, thread.id);
-    return view ? [view] : [];
-  });
+  const { activeThreadId, setActiveThread } = useAgentThreads();
   useThreadUrlRouting(threadUrlRouting, activeThreadId);
   const urlRoutingEnabled = Boolean(threadUrlRouting);
   const routingBasePath = threadUrlRoutingBasePath(threadUrlRouting);
@@ -376,7 +368,6 @@ function AgentChatInner({
               onCreateThread={navigateHome}
               onCollapsedChange={setSidebarCollapsed}
               onSelectThread={navigateToThread}
-              threads={sidebarThreads}
             />
           </div>
         ) : undefined

@@ -24,7 +24,7 @@ Check:
 - whether app-scoped MCP startup failures are being surfaced as user status
   instead of developer/audit diagnostics
 - whether preview hydration, status updates, or resume are reordering the
-  sidebar unexpectedly
+  sidebar instead of preserving the scoped `thread/list` collection order
 - approval and server-request events
 - browser console, network frames, and server stderr
 
@@ -40,7 +40,9 @@ Check:
 - If resume opens the wrong thread, verify the host persists the canonical
   `threadId` returned by Agent UI instead of a stale requested id.
 - If browsing history changes the active thread unexpectedly, check whether the
-  host used preview hydration or resume activation.
+  host used preview hydration or resume activation. If it changes row order,
+  check whether the sidebar is rendering a fallback thread list instead of the
+  scoped history controller.
 - If local media is broken, return structured resources from
   `resolveLocalMediaUrl(path, item)` and avoid raw filesystem `src` values.
 - If bridge admission rejects, inspect the configured admission mode and any
