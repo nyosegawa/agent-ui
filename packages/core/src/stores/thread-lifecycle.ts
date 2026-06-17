@@ -25,7 +25,11 @@ export interface ThreadLifecycleStore {
   upsertThread(
     state: ThreadLifecycleState,
     thread: ThreadState,
-    options?: { activeThreadId?: ThreadId; collectionKeys?: readonly string[] },
+    options?: {
+      activeThreadId?: ThreadId;
+      collectionKeys?: readonly string[];
+      preserveOrder?: boolean;
+    },
   ): ThreadLifecycleState;
   setActiveThread(
     state: ThreadLifecycleState,
@@ -144,7 +148,11 @@ export function ensureCollection(
 export function upsertThread(
   state: ThreadLifecycleState,
   thread: ThreadState,
-  options: { activeThreadId?: ThreadId; collectionKeys?: readonly string[] } = {},
+  options: {
+    activeThreadId?: ThreadId;
+    collectionKeys?: readonly string[];
+    preserveOrder?: boolean;
+  } = {},
 ): ThreadLifecycleState {
   let next = state;
   const activeThreadId = options.activeThreadId ?? state.activeThreadId;
@@ -155,17 +163,21 @@ export function upsertThread(
   const collectionKeys = options.collectionKeys ?? [state.defaultCollectionKey];
   for (const key of collectionKeys) {
     const existing = next.collections[key] ?? createCollection({ kind: "custom", key });
+    const ids =
+      options.preserveOrder && existing.ids.includes(thread.id)
+        ? existing.ids
+        : boundedUniqueAppend(
+            existing.ids.filter((id) => id !== thread.id),
+            thread.id,
+            AGENT_RETENTION_POLICY.threadCollectionEntriesMax,
+          );
     next = {
       ...next,
       collections: {
         ...next.collections,
         [key]: {
           ...existing,
-          ids: boundedUniqueAppend(
-            existing.ids.filter((id) => id !== thread.id),
-            thread.id,
-            AGENT_RETENTION_POLICY.threadCollectionEntriesMax,
-          ),
+          ids,
         },
       },
     };
@@ -341,8 +353,8 @@ export function threadStorageFromThread(thread: AgentThread): ThreadState["stora
 
 export function threadMetadataFromThread(thread: AgentThread): ThreadState["metadata"] {
   return {
-    cwd: thread.path ?? undefined,
-    title: thread.name,
+    ...(thread.path ? { cwd: thread.path } : {}),
+    ...(thread.name ? { title: thread.name } : {}),
   };
 }
 

@@ -37,11 +37,20 @@ For browser-visible work, verify interactions, not only screenshots:
 - open host sheets or dialogs over Agent UI overlays and verify focus returns
 - preview stored history with `thread/read`, then resume and verify the
   canonical thread id the host should persist
+- verify stored-history preview or status updates do not reorder the visible
+  thread list unless a collection refresh or new thread actually changes
+  recency
+- create a new thread, wait for the first title update and assistant response,
+  reload its `/threads/<threadId>` URL, and verify the title, transcript, and
+  editable composer remain available
+- verify MCP startup failures stay in developer/audit diagnostics unless the
+  host intentionally promotes them in host-owned UI
 - verify transcript local media uses structured asset URLs and missing media
   renders the fallback
 - verify bridge admission accepts and rejects the expected connections before
   App Server spawn
-- check mobile width for overflow and reachable composer controls
+- check mobile and tablet widths for overflow, reachable composer controls, and
+  secondary status/usage/diagnostics opening from an explicit context trigger
 
 Public boundary check:
 
@@ -63,6 +72,12 @@ bun run test
 
 For package or CSS changes, follow the repository docs for broader package,
 style, Playwright, and build validation.
+
+For Agent UI changes touching thread history, diagnostics, or responsive chat
+chrome, include the focused reducer/protocol/component tests plus the real-local
+thread lifecycle Playwright spec. Browser-visible layout changes should also run
+the relevant fixture or real-local layout gate for desktop, tablet, and mobile
+widths.
 
 ## Finish Report Template
 

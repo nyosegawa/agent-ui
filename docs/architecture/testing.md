@@ -322,7 +322,9 @@ The real-local specs are split by App Server integration contract:
 
 - `real-local-thread-lifecycle.e2e.ts` owns stored-thread hydration, direct
   thread URLs, browser back/forward, first-message immediate reflection, and
-  diagnostics context presence.
+  diagnostics context presence. It also protects live-thread title updates,
+  transcript recovery after reload, and sidebar ordering when history rows are
+  read or resumed.
 - `real-local-attachments.e2e.ts` owns image paste, arbitrary file attachment
   payloads, same-origin transcript local-media URLs, missing-media fallback,
   and queued attachment restoration.
@@ -355,7 +357,9 @@ App Server integration contract:
 
 - `real-local-thread-lifecycle.e2e.ts` covers stored-thread hydration and
   auto-resume, thread creation, URL routing, browser history, and stale-thread
-  cleanup on popstate.
+  cleanup on popstate. It must keep selected history rows in place, not promote
+  them as a side effect of preview hydration or status updates, and must prove
+  a newly created thread can be reloaded with its title and transcript intact.
 - `real-local-attachments.e2e.ts` covers paste/upload handling, image chips,
   arbitrary file chips, attachment restoration, and App Server payload text for
   non-image files.

@@ -10,7 +10,11 @@ import {
 export function commitThreadEntity(
   state: AgentSessionState,
   thread: ThreadState,
-  options: { activeThreadId?: ThreadId; collectionKeys?: readonly string[] } = {},
+  options: {
+    activeThreadId?: ThreadId;
+    collectionKeys?: readonly string[];
+    preserveOrder?: boolean;
+  } = {},
 ): AgentSessionState {
   const activity = threadActivityFromStatus(thread.status);
   const availability = threadAvailabilityFromStatus(thread.status);

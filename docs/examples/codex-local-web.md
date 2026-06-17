@@ -114,7 +114,8 @@ Server integration contract:
 
 - `real-local-thread-lifecycle.e2e.ts` protects stored-thread hydration,
   auto-resume, new-thread creation, direct thread URLs, browser back/forward,
-  sidebar selection, and popstate cleanup.
+  sidebar selection order, live-thread title updates, reload transcript
+  recovery, and popstate cleanup.
 - `real-local-attachments.e2e.ts` protects image paste, arbitrary file upload
   chips, attachment restoration for queued edits, and non-image upload payload
   text.

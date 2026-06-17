@@ -182,13 +182,28 @@ afterEach(() => {
 });
 
 function mockCompactLayout(matches = true) {
+  mockResponsiveLayout({ compact: matches, contextSheet: matches });
+}
+
+function mockResponsiveLayout({
+  compact = false,
+  contextSheet = compact,
+}: {
+  compact?: boolean;
+  contextSheet?: boolean;
+}) {
   vi.stubGlobal(
     "matchMedia",
     vi.fn((query: string) => ({
       addEventListener: vi.fn(),
       addListener: vi.fn(),
       dispatchEvent: vi.fn(),
-      matches: query === "(max-width: 640px)" ? matches : false,
+      matches:
+        query === "(max-width: 640px)"
+          ? compact
+          : query === "(max-width: 980px)"
+            ? contextSheet
+            : false,
       media: query,
       onchange: null,
       removeEventListener: vi.fn(),
@@ -3325,6 +3340,38 @@ describe("AgentChat", () => {
     );
     expect(screen.getByLabelText("Status details")).toHaveTextContent("Model rerouted");
     expect(screen.getByLabelText("Status details")).toHaveTextContent("MCP OAuth");
+  });
+
+  it("keeps mid-width status details behind the context trigger", async () => {
+    const user = userEvent.setup();
+    mockResponsiveLayout({ compact: false, contextSheet: true });
+    const initialState = createInitialAgentState();
+    initialState.threadLifecycle.activeThreadId = "thread-banner";
+    initialState.diagnostics.banners = [
+      {
+        id: "model-reroute",
+        kind: "modelReroute",
+        message: "Model rerouted from gpt-5.5 to gpt-5.4.",
+      },
+    ];
+    initialState.threads["thread-banner"] = {
+      orderedTurnIds: [],
+      status: "loaded",
+      thread: { id: "thread-banner", name: "Banners" },
+      turns: {},
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat diagnostics sidebar={false} usage={false} />
+      </AgentProvider>,
+    );
+
+    expect(screen.queryByLabelText("Status details")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Agent context" }));
+
+    expect(screen.getByLabelText("Status details")).toHaveTextContent("Model rerouted");
   });
 
   it("sends thread action requests through generated method params", async () => {

@@ -9,22 +9,32 @@ export function compactPath(path: string): string {
 
 
 export function useCompactLayout(): boolean {
+  return useMediaQuery("(max-width: 640px)");
+}
+
+
+export function useContextSheetLayout(): boolean {
+  return useMediaQuery("(max-width: 980px)");
+}
+
+
+function useMediaQuery(queryText: string): boolean {
   const [isCompact, setIsCompact] = useState(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
       return false;
     }
-    return window.matchMedia("(max-width: 640px)").matches;
+    return window.matchMedia(queryText).matches;
   });
   useEffect(() => {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
       return;
     }
-    const query = window.matchMedia("(max-width: 640px)");
+    const query = window.matchMedia(queryText);
     const update = () => setIsCompact(query.matches);
     update();
     query.addEventListener("change", update);
     return () => query.removeEventListener("change", update);
-  }, []);
+  }, [queryText]);
   return isCompact;
 }
 
@@ -45,5 +55,4 @@ export function deferAction(action: () => void | Promise<unknown>) {
     void action();
   }, 0);
 }
-
 

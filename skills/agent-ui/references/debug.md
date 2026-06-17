@@ -19,7 +19,12 @@ Check:
 - structured local media resolution and missing-media fallback
 - `thread/read` preview hydration versus `thread/resume` activation
 - canonical thread id returned after resume
-- mobile drawer open/close and composer reachability
+- mobile drawer open/close, tablet context sheet behavior, and composer
+  reachability
+- whether app-scoped MCP startup failures are being surfaced as user status
+  instead of developer/audit diagnostics
+- whether preview hydration, status updates, or resume are reordering the
+  sidebar unexpectedly
 - approval and server-request events
 - browser console, network frames, and server stderr
 

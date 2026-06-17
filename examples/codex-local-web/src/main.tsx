@@ -126,7 +126,7 @@ function App() {
           maxAttempts: 5,
           maxDelayMs: 5000,
         },
-        url: `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/agent-ui/ws`,
+        url: `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/agent-ui/ws?agentUiState=${encodeURIComponent(agentUiStateNamespace())}`,
       }),
     [],
   );
@@ -169,6 +169,18 @@ function localeFromLocation(): AgentLocale {
     locale === "en"
     ? locale
     : "en";
+}
+
+function agentUiStateNamespace(): string {
+  const key = "agent-ui-codex-local-web-state";
+  const existing = window.sessionStorage.getItem(key);
+  if (existing) return existing;
+  const value =
+    typeof window.crypto?.randomUUID === "function"
+      ? window.crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  window.sessionStorage.setItem(key, value);
+  return value;
 }
 
 const rootElement = document.getElementById("root");

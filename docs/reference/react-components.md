@@ -609,7 +609,8 @@ status bar, not a permanently stacked panel. Mode / model / effort menus open
 as bottom sheets that stay inside the viewport, the approval surface stays
 inside the transcript scroll area (so it never crushes the message list), and
 secondary context (status, usage, diagnostics) opens from the status bar as a
-mobile sheet instead of becoming a persistent strip below the chat. While the
+sheet below tablet width instead of becoming a persistent strip below the chat.
+Desktop keeps secondary context as a rail beside the transcript. While the
 drawer or context sheet is open, the
 background chat region does not accept pointer or keyboard interaction. Drawer
 content owns its own scroll area; Agent UI does not impose global page scroll

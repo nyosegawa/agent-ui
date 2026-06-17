@@ -116,19 +116,25 @@ export function normalizeStatusNotification(
         },
       ];
     case "mcpServer/startupStatus/updated":
-      return [
-        {
-          type: "status/banner/added",
-          banner: {
-            audience: ["user"],
-            id: `mcp-startup:${params.name ?? "server"}`,
-            kind: "system",
-            message: `MCP server ${String(params.name ?? "server")} status: ${String(params.status ?? "unknown")}.`,
-            raw: params,
-          },
-        },
-      ];
+      return normalizeMcpServerStartupStatus(params);
     default:
       return undefined;
   }
+}
+
+function normalizeMcpServerStartupStatus(params: Record<string, unknown>): AgentEvent[] {
+  const name = String(params.name ?? "server");
+  const status = String(params.status ?? "unknown");
+  const threadId = typeof params.threadId === "string" ? params.threadId : "global";
+  return [
+    {
+      type: "notification/received",
+      notification: {
+        audience: ["developer", "audit"],
+        id: `mcp-startup:${threadId}:${name}:${status}`,
+        method: "mcpServer/startupStatus/updated",
+        params,
+      },
+    },
+  ];
 }

@@ -30,7 +30,7 @@ import type {
 import { AgentFirstRun } from "./first-run";
 import type { AgentWorkingDirectoryResolver } from "./run-settings";
 import { AgentThreadSidebar } from "./sidebar";
-import { useCompactLayout } from "./shared";
+import { useCompactLayout, useContextSheetLayout } from "./shared";
 import type { AgentTheme } from "./theme";
 import type { AgentTranscriptBlock, AgentTranscriptItem } from "../hooks/transcript";
 import {
@@ -192,6 +192,7 @@ function AgentChatInner({
   const bootstrap = useAgentBootstrap();
   const { userDiagnostics } = useAgentDiagnostics();
   const compact = useCompactLayout();
+  const contextSheetLayout = useContextSheetLayout();
   const { t } = useAgentI18n();
   const { thread, threadId, startThread } = useAgentThread();
   const composer = useInternalAgentComposerController();
@@ -230,11 +231,11 @@ function AgentChatInner({
       userDiagnostics.errors.length > 0 ||
       userDiagnostics.warnings.length > 0);
   const hasRail = usage || hasDiagnosticsContent;
-  const showRail = hasRail && (!compact || contextOpenMobile);
+  const showRail = hasRail && (!contextSheetLayout || contextOpenMobile);
   const drawerOpen = compact && sidebar && !isSidebarCollapsed;
-  const contextSheetOpen = compact && hasRail && contextOpenMobile;
+  const contextSheetOpen = contextSheetLayout && hasRail && contextOpenMobile;
   const statusEnd =
-    compact && hasRail ? (
+    contextSheetLayout && hasRail ? (
       <>
         <button
           aria-label={t("aria.agentContext")}

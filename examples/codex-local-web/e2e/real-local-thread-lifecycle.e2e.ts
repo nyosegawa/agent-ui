@@ -182,6 +182,67 @@ test("starts a new thread from home and preserves browser back/forward state", a
   });
 });
 
+test("persists a live thread title and transcript across reload", async ({ page }) => {
+  await openRealLocalApp(page, { width: 1280, height: 900 });
+  await startThread(page, "older smoke");
+  await expect(page.getByText("Echo: older smoke")).toBeVisible({
+    timeout: APP_READY_TIMEOUT,
+  });
+  await routeHome(page);
+
+  await startThread(page, "reload smoke");
+  await expect(page).toHaveURL(/\/threads\/thread-live-\d+$/, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(page.getByRole("heading", { name: "reload smoke" })).toBeVisible({
+    timeout: APP_READY_TIMEOUT,
+  });
+  await expect(page.getByRole("button", { name: /reload smoke/ })).toBeVisible({
+    timeout: APP_READY_TIMEOUT,
+  });
+  await expect(page.getByText("Echo: reload smoke")).toBeVisible({
+    timeout: APP_READY_TIMEOUT,
+  });
+  await expect
+    .poll(() => sidebarThreadOrder(page.locator(".aui-sidebar")), {
+      timeout: FAST_EXPECT_TIMEOUT,
+    })
+    .toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/^reload smoke$/),
+        expect.stringMatching(/^older smoke$/),
+      ]),
+    );
+
+  const liveThreadUrl = page.url();
+  await page.reload({ waitUntil: "domcontentloaded" });
+
+  await expect(page).toHaveURL(liveThreadUrl, { timeout: FAST_EXPECT_TIMEOUT });
+  await expect(page.getByRole("heading", { name: "reload smoke" })).toBeVisible({
+    timeout: APP_READY_TIMEOUT,
+  });
+  await expect(page.getByText("Echo: reload smoke")).toBeVisible({
+    timeout: APP_READY_TIMEOUT,
+  });
+  await expect
+    .poll(() => sidebarThreadOrder(page.locator(".aui-sidebar")), {
+      timeout: FAST_EXPECT_TIMEOUT,
+    })
+    .toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/^reload smoke$/),
+        expect.stringMatching(/^older smoke$/),
+      ]),
+    );
+  await expect
+    .poll(async () => {
+      const order = await sidebarThreadOrder(page.locator(".aui-sidebar"));
+      return order.indexOf("reload smoke") < order.indexOf("older smoke");
+    }, { timeout: FAST_EXPECT_TIMEOUT })
+    .toBe(true);
+  await readyMessageInput(page);
+});
+
 test("shows the first user message before assistant output in a real browser", async ({
   page,
 }) => {
@@ -242,7 +303,7 @@ async function sidebarThreadOrder(sidebar: Locator) {
   return sidebar.getByRole("button").evaluateAll((buttons) =>
     buttons
       .map((button) => button.textContent?.replace(/\s+/g, " ").trim() ?? "")
-      .filter((text) => text.includes("real smoke"))
+      .filter((text) => text.includes("smoke"))
       .map((text) => text.replace(/(?:Preview|Ready)\s*·.*$/, "").trim()),
   );
 }
