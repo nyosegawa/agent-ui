@@ -1434,6 +1434,121 @@ describe("Codex protocol metadata", () => {
         type: "status/banner/added",
       },
     ]);
+
+    expect(
+      normalizeCodexServerMessage({
+        method: "mcpServer/startupStatus/updated",
+        params: {
+          error: "missing API key",
+          name: "sentry",
+          status: "failed",
+          threadId: null,
+        },
+      }),
+    ).toEqual([
+      {
+        notification: {
+          audience: ["developer", "audit"],
+          id: "mcp-startup:global:sentry:failed",
+          method: "mcpServer/startupStatus/updated",
+          params: {
+            error: "missing API key",
+            name: "sentry",
+            status: "failed",
+            threadId: null,
+          },
+        },
+        type: "notification/received",
+      },
+    ]);
+
+    expect(
+      normalizeCodexServerMessage({
+        method: "mcpServer/startupStatus/updated",
+        params: {
+          error: "missing API key",
+          name: "github",
+          status: "failed",
+          threadId: "thread-1",
+        },
+      }),
+    ).toEqual([
+      {
+        notification: {
+          audience: ["developer", "audit"],
+          id: "mcp-startup:thread-1:github:failed",
+          method: "mcpServer/startupStatus/updated",
+          params: {
+            error: "missing API key",
+            name: "github",
+            status: "failed",
+            threadId: "thread-1",
+          },
+        },
+        type: "notification/received",
+      },
+      {
+        banner: {
+          audience: ["user"],
+          id: "mcp-startup:thread-1:github",
+          kind: "system",
+          message: "MCP server github failed to start for this thread.",
+          raw: {
+            error: "missing API key",
+            name: "github",
+            status: "failed",
+            threadId: "thread-1",
+          },
+          severity: "warning",
+        },
+        type: "status/banner/added",
+      },
+    ]);
+
+    for (const status of ["starting", "ready", "cancelled"]) {
+      expect(
+        normalizeCodexServerMessage({
+          method: "mcpServer/startupStatus/updated",
+          params: { error: null, name: "github", status, threadId: "thread-1" },
+        }),
+      ).toEqual([
+        {
+          notification: {
+            audience: ["developer", "audit"],
+            id: `mcp-startup:thread-1:github:${status}`,
+            method: "mcpServer/startupStatus/updated",
+            params: { error: null, name: "github", status, threadId: "thread-1" },
+          },
+          type: "notification/received",
+        },
+        {
+          id: "mcp-startup:thread-1:github",
+          type: "status/banner/removed",
+        },
+      ]);
+    }
+
+    let state = createInitialAgentState();
+    for (const message of [
+      {
+        method: "mcpServer/startupStatus/updated",
+        params: {
+          error: "missing API key",
+          name: "github",
+          status: "failed",
+          threadId: "thread-1",
+        },
+      },
+      {
+        method: "mcpServer/startupStatus/updated",
+        params: { error: null, name: "github", status: "ready", threadId: "thread-1" },
+      },
+    ]) {
+      for (const event of normalizeCodexServerMessage(message)) {
+        state = agentReducer(state, event);
+      }
+    }
+    expect(state.diagnostics.banners).toEqual([]);
   });
 
   it("normalizes app/list pagination responses and refresh notifications", () => {

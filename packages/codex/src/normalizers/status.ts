@@ -116,19 +116,42 @@ export function normalizeStatusNotification(
         },
       ];
     case "mcpServer/startupStatus/updated":
-      return [
-        {
-          type: "status/banner/added",
-          banner: {
-            audience: ["user"],
-            id: `mcp-startup:${params.name ?? "server"}`,
-            kind: "system",
-            message: `MCP server ${String(params.name ?? "server")} status: ${String(params.status ?? "unknown")}.`,
-            raw: params,
-          },
-        },
-      ];
+      return normalizeMcpServerStartupStatus(params);
     default:
       return undefined;
   }
+}
+
+function normalizeMcpServerStartupStatus(params: Record<string, unknown>): AgentEvent[] {
+  const name = String(params.name ?? "server");
+  const status = String(params.status ?? "unknown");
+  const threadId = typeof params.threadId === "string" ? params.threadId : undefined;
+  const events: AgentEvent[] = [
+    {
+      type: "notification/received",
+      notification: {
+        audience: ["developer", "audit"],
+        id: `mcp-startup:${threadId ?? "global"}:${name}:${status}`,
+        method: "mcpServer/startupStatus/updated",
+        params,
+      },
+    },
+  ];
+  if (!threadId) return events;
+  if (status !== "failed") {
+    events.push({ id: `mcp-startup:${threadId}:${name}`, type: "status/banner/removed" });
+    return events;
+  }
+  events.push({
+    type: "status/banner/added",
+    banner: {
+      audience: ["user"],
+      id: `mcp-startup:${threadId}:${name}`,
+      kind: "system",
+      message: `MCP server ${name} failed to start for this thread.`,
+      raw: params,
+      severity: "warning",
+    },
+  });
+  return events;
 }
