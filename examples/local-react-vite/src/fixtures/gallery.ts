@@ -43,11 +43,11 @@ export const visualQaStates: FixtureState[] = [
   },
   {
     description:
-      "Inquiry desk demo with ticket triage, customer context, reply review, audit policy, and an embedded support assistant.",
+      "Support reply desk with ticket triage, case readiness, response planning, reviewed replies, collapsed system details, and an embedded assistant.",
     group: "primitives",
     href: "/support-console",
     meta: "primitives · support SaaS",
-    title: "Support console",
+    title: "Support reply desk",
   },
   {
     description:

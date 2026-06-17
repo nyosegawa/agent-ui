@@ -246,10 +246,12 @@ The fixture routes are:
   host-owned workflow gate, first-message optimistic mode, mobile drawer, and
   host-owned review sheet
 - `/support-console`: support SaaS demo with host-owned ticket queue, customer
-  context, PII policy, reply review, audit trail, and an embedded support
-  assistant. Its browser checks keep the desktop shell viewport-bounded, the
-  ticket queue compact, tablet/mobile content ordered around the assistant, and
-  the human reply action reachable before the assistant on narrow viewports.
+  context, response plan, PII policy, reply review, audit trail, and an embedded
+  support assistant. Its browser checks keep the desktop shell viewport-bounded,
+  the ticket queue compact, queue filters synchronized with the selected case,
+  the summary and response-plan sections styled, ticket-scoped reply state
+  isolated, and the human reply action reachable before the assistant on narrow
+  viewports.
 - `/composer-retry`: failed first-message retry through the public composer
   controller
 - `/resource-resolution`: structured local-media resource rendering without
@@ -287,8 +289,9 @@ The deterministic fixture Playwright files are split by contract ownership:
 - `resource-resolution.e2e.ts` owns transcript local-media rendering through
   structured browser-safe metadata on desktop and mobile.
 - `support-console.e2e.ts` owns the support SaaS route workflow, desktop bounded
-  shell, ticket switching, deterministic assistant replies, and mobile/tablet
-  workflow ordering with human reply reachability.
+  shell, ticket switching, response-plan layout, ticket-scoped reply state,
+  deterministic assistant replies, and mobile/tablet workflow ordering with
+  human reply reachability.
 - `transcript-density.e2e.ts` owns density-mode behavior and overflow checks on
   desktop and mobile.
 - `scoped-thread-lists.e2e.ts` owns independent scoped history list behavior.

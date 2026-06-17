@@ -8,9 +8,7 @@ import {
   AgentDiagnosticsPanel,
   AgentProvider,
   AgentStatusDetails,
-  AgentStatusSummary,
   AgentThreadView,
-  AgentUsageSummary,
   useAgentBootstrap,
 } from "@nyosegawa/agent-ui-react";
 import { useMemo, useState } from "react";
@@ -19,17 +17,26 @@ interface SupportTicket {
   account: string;
   assistantBrief: string;
   auditTrail: string[];
+  channel: string;
   customer: string;
   id: string;
+  impact: string;
+  internalNote: string;
   lastMessage: string;
+  nextAction: string;
   owner: string;
+  policyChecks: string[];
   piiPolicy: string;
   priority: "urgent" | "high" | "normal";
+  priorityLabel: string;
   productArea: string;
   replyDraft: string;
+  risk: string;
+  sla: string;
   status: "waiting" | "investigating" | "ready";
+  statusLabel: string;
   subject: string;
-  tenant: string;
+  tier: string;
   threadId: string;
   userPrompt: string;
 }
@@ -44,18 +51,28 @@ const supportTickets: SupportTicket[] = [
       "CRM case SF-2091 linked by host workflow",
       "Reply draft requires support lead review",
     ],
+    channel: "Email",
     customer: "Ari Kim",
     id: "SUP-2048",
+    impact: "Invoice exports are missing billable rows for a priority account.",
+    internalNote:
+      "Billing export job EXP-4417 and the CRM case remain in the helpdesk. The assistant receives only the redacted issue summary and approved investigation notes.",
     lastMessage: "The export job finished but the invoice CSV is missing three rows.",
+    nextAction: "Verify corrected CSV row count",
     owner: "Mika",
+    policyChecks: ["PII redacted", "CRM linked", "Lead review"],
     piiPolicy: "Redact emails, phone numbers, and invoice IDs before sending context.",
     priority: "urgent",
+    priorityLabel: "Urgent",
     productArea: "Billing exports",
     replyDraft:
       "We found the export filter mismatch and are preparing a corrected CSV for review.",
+    risk: "Billing data mismatch",
+    sla: "42 min remaining",
     status: "investigating",
+    statusLabel: "Lead review",
     subject: "Invoice export dropped rows",
-    tenant: "workspace-northstar",
+    tier: "Enterprise",
     threadId: "thread-support-sup-2048",
     userPrompt: "Summarize SUP-2048 and prepare a support-safe reply draft.",
   },
@@ -68,18 +85,28 @@ const supportTickets: SupportTicket[] = [
       "No attachments shared with Codex",
       "Escalation linked to incident INC-118",
     ],
+    channel: "In-app chat",
     customer: "Nora Patel",
     id: "SUP-2051",
+    impact: "Support agents may send duplicate macro guidance after reconnect.",
+    internalNote:
+      "Reconnect logs and incident INC-118 stay in the helpdesk. Codex receives the symptom pattern, cache timing, and approved support-safe summary only.",
     lastMessage: "Agents see duplicate macro suggestions after reconnecting.",
+    nextAction: "Compare reconnect logs",
     owner: "Jon",
+    policyChecks: ["PHI withheld", "Incident linked", "Readonly scope"],
     piiPolicy: "Share symptom summary only; patient fields stay in the CRM.",
     priority: "high",
+    priorityLabel: "High",
     productArea: "Agent workspace",
     replyDraft:
       "We are comparing reconnect events with macro cache updates before suggesting a workaround.",
+    risk: "Agent productivity regression",
+    sla: "2h 10m remaining",
     status: "waiting",
+    statusLabel: "Needs evidence",
     subject: "Duplicate macros after reconnect",
-    tenant: "workspace-atlas-health",
+    tier: "Healthcare",
     threadId: "thread-support-sup-2051",
     userPrompt: "Summarize SUP-2051 without exposing patient or CRM fields.",
   },
@@ -92,18 +119,28 @@ const supportTickets: SupportTicket[] = [
       "Helpdesk timeline retained in the CRM record",
       "Codex output marked as internal note until reviewed",
     ],
+    channel: "Email",
     customer: "Eli Morgan",
     id: "SUP-2054",
+    impact: "Customer needs a clear confirmation before regional catalog review.",
+    internalNote:
+      "Catalog sync metadata is safe to summarize. Order details and regional customer records remain in the host dashboard.",
     lastMessage: "Can we confirm whether the EU catalog sync ran last night?",
+    nextAction: "Send confirmation",
     owner: "Rin",
+    policyChecks: ["Order data withheld", "Tier verified", "Internal note"],
     piiPolicy: "Catalog IDs are allowed; customer order details are not.",
     priority: "normal",
+    priorityLabel: "Normal",
     productArea: "Catalog sync",
     replyDraft:
       "The EU sync completed at 02:14 UTC; we are checking why the dashboard lagged.",
+    risk: "Low risk confirmation",
+    sla: "Next business day",
     status: "ready",
+    statusLabel: "Ready to send",
     subject: "Catalog sync confirmation",
-    tenant: "workspace-cedar-retail",
+    tier: "Business",
     threadId: "thread-support-sup-2054",
     userPrompt: "Confirm the catalog sync status and keep order details out of the response.",
   },
@@ -111,21 +148,47 @@ const supportTickets: SupportTicket[] = [
 
 export function SupportConsoleExample() {
   const [selectedTicketId, setSelectedTicketId] = useState(supportTickets[0]!.id);
-  const [replySentCount, setReplySentCount] = useState(0);
+  const [queueFilter, setQueueFilter] = useState<"all" | SupportTicket["priority"]>(
+    "all",
+  );
+  const [replySentCounts, setReplySentCounts] = useState<Record<string, number>>({});
+  const visibleTickets =
+    queueFilter === "all"
+      ? supportTickets
+      : supportTickets.filter((ticket) => ticket.priority === queueFilter);
   const selectedTicket =
     supportTickets.find((ticket) => ticket.id === selectedTicketId) ??
     supportTickets[0]!;
+  const handleSelectQueueFilter = (nextFilter: "all" | SupportTicket["priority"]) => {
+    setQueueFilter(nextFilter);
+    const nextVisibleTickets =
+      nextFilter === "all"
+        ? supportTickets
+        : supportTickets.filter((ticket) => ticket.priority === nextFilter);
+    if (!nextVisibleTickets.some((ticket) => ticket.id === selectedTicketId)) {
+      setSelectedTicketId(nextVisibleTickets[0]?.id ?? supportTickets[0]!.id);
+    }
+  };
   const transport = useMemo(() => createSupportConsoleTransport(), []);
   const initialState = useMemo(() => createSupportConsoleInitialState(), []);
+  const replySentCount = replySentCounts[selectedTicket.id] ?? 0;
 
   return (
     <AgentProvider initialState={initialState} transport={transport}>
       <SupportConsoleShell
         onSelectTicket={setSelectedTicketId}
-        onSendReply={() => setReplySentCount((count) => count + 1)}
+        onSelectQueueFilter={handleSelectQueueFilter}
+        onSendReply={() =>
+          setReplySentCounts((counts) => ({
+            ...counts,
+            [selectedTicket.id]: (counts[selectedTicket.id] ?? 0) + 1,
+          }))
+        }
         replySentCount={replySentCount}
+        queueFilter={queueFilter}
         selectedTicket={selectedTicket}
         selectedTicketId={selectedTicketId}
+        visibleTickets={visibleTickets}
       />
     </AgentProvider>
   );
@@ -133,33 +196,61 @@ export function SupportConsoleExample() {
 
 function SupportConsoleShell({
   onSelectTicket,
+  onSelectQueueFilter,
   onSendReply,
   replySentCount,
+  queueFilter,
   selectedTicket,
   selectedTicketId,
+  visibleTickets,
 }: {
   onSelectTicket: (ticketId: string) => void;
+  onSelectQueueFilter: (filter: "all" | SupportTicket["priority"]) => void;
   onSendReply: () => void;
   replySentCount: number;
+  queueFilter: "all" | SupportTicket["priority"];
   selectedTicket: SupportTicket;
   selectedTicketId: string;
+  visibleTickets: SupportTicket[];
 }) {
   const bootstrap = useAgentBootstrap();
+  const workflowSteps = reviewWorkflowSteps(selectedTicket.status);
   return (
     <main className="aui-support-console" data-aui-theme="light">
       <header className="aui-support-console-header">
         <div>
           <span className="aui-support-kicker">Support operations</span>
-          <h1>Support console</h1>
+          <h1>Support reply desk</h1>
           <p>
-            A support workspace embeds Codex assistance beside selected ticket
-            context. Queue state, tenant data, reply review, CRM links, PII
-            policy, and audit logging stay under the team's controls.
+            Triage priority cases, review redaction, and send approved customer
+            replies from a host-owned support workspace with Codex embedded where
+            it helps.
           </p>
+          <div aria-label="Review workflow" className="aui-support-workflow-steps">
+            {workflowSteps.map((step) => (
+              <span data-state={step.state} key={step.label}>
+                {step.label}
+              </span>
+            ))}
+          </div>
         </div>
         <div className="aui-support-header-status">
-          <AgentStatusSummary />
-          <AgentUsageSummary />
+          <div className="aui-support-header-metric">
+            <span>Queue</span>
+            <strong>{supportTickets.length} open</strong>
+          </div>
+          <div className="aui-support-header-metric">
+            <span>SLA</span>
+            <strong>{selectedTicket.sla}</strong>
+          </div>
+          <div className="aui-support-header-metric">
+            <span>Approval</span>
+            <strong>{selectedTicket.statusLabel}</strong>
+          </div>
+          <div className="aui-support-header-metric">
+            <span>Risk</span>
+            <strong>{selectedTicket.risk}</strong>
+          </div>
         </div>
       </header>
 
@@ -167,10 +258,40 @@ function SupportConsoleShell({
         <aside aria-label="Ticket queue" className="aui-support-queue">
           <div className="aui-support-section-header">
             <strong>Ticket queue</strong>
-            <span>{supportTickets.length} open</span>
+            <span>{visibleTickets.length} shown</span>
+          </div>
+          <div aria-label="Queue filters" className="aui-support-filter-row">
+            <button
+              aria-pressed={queueFilter === "all"}
+              onClick={() => onSelectQueueFilter("all")}
+              type="button"
+            >
+              All
+            </button>
+            <button
+              aria-pressed={queueFilter === "urgent"}
+              onClick={() => onSelectQueueFilter("urgent")}
+              type="button"
+            >
+              Urgent
+            </button>
+            <button
+              aria-pressed={queueFilter === "high"}
+              onClick={() => onSelectQueueFilter("high")}
+              type="button"
+            >
+              High
+            </button>
+            <button
+              aria-pressed={queueFilter === "normal"}
+              onClick={() => onSelectQueueFilter("normal")}
+              type="button"
+            >
+              Normal
+            </button>
           </div>
           <div className="aui-support-ticket-list">
-            {supportTickets.map((ticket) => (
+            {visibleTickets.map((ticket) => (
               <button
                 aria-pressed={ticket.id === selectedTicketId}
                 className="aui-support-ticket"
@@ -181,11 +302,11 @@ function SupportConsoleShell({
               >
                 <span className="aui-support-ticket-row">
                   <strong>{ticket.id}</strong>
-                  <span>{ticket.priority}</span>
+                  <span>{ticket.priorityLabel}</span>
                 </span>
                 <span className="aui-support-ticket-subject">{ticket.subject}</span>
                 <span className="aui-support-ticket-meta">
-                  {ticket.account} · {ticket.status}
+                  {ticket.owner} · {ticket.sla}
                 </span>
               </button>
             ))}
@@ -200,47 +321,61 @@ function SupportConsoleShell({
               <p>{selectedTicket.lastMessage}</p>
             </div>
             <span className="aui-support-state" data-state={selectedTicket.status}>
-              {selectedTicket.status}
+              {selectedTicket.statusLabel}
             </span>
           </header>
 
-          <dl className="aui-support-case-grid">
+          <section aria-label="Case readiness" className="aui-support-readiness">
+            <div>
+              <span className="aui-support-kicker">Customer impact</span>
+              <strong>{selectedTicket.impact}</strong>
+            </div>
+            <div>
+              <span className="aui-support-kicker">Review status</span>
+              <strong>{selectedTicket.statusLabel}</strong>
+            </div>
+            <div>
+              <span className="aui-support-kicker">SLA</span>
+              <strong>{selectedTicket.sla}</strong>
+            </div>
+          </section>
+
+          <dl className="aui-support-summary-grid">
             <HostFact label="Customer" value={selectedTicket.customer} />
             <HostFact label="Account" value={selectedTicket.account} />
-            <HostFact label="Tenant" value={selectedTicket.tenant} />
             <HostFact label="Owner" value={selectedTicket.owner} />
-            <HostFact label="Product area" value={selectedTicket.productArea} />
-            <HostFact label="PII policy" value={selectedTicket.piiPolicy} />
+            <HostFact label="Channel" value={selectedTicket.channel} />
+            <HostFact label="Tier" value={selectedTicket.tier} />
+            <HostFact label="Product" value={selectedTicket.productArea} />
           </dl>
 
-          <div className="aui-support-workflow-grid">
-            <section aria-label="Conversation detail" className="aui-support-panel">
-              <div className="aui-support-section-header">
-                <strong>Case detail</strong>
-                <span>CRM record</span>
-              </div>
-              <div className="aui-support-thread">
-                <p>
-                  <strong>{selectedTicket.customer}</strong>
-                  <span>{selectedTicket.lastMessage}</span>
-                </p>
-                <p className="aui-support-note">
-                  <strong>Support note</strong>
-                  <span>
-                    Codex can help draft investigation steps, while this timeline,
-                    customer identity, and retention policy stay in the helpdesk.
-                  </span>
-                </p>
-              </div>
-            </section>
+          <section aria-label="Response plan" className="aui-support-response-plan">
+            <div>
+              <span className="aui-support-kicker">Next action</span>
+              <strong>{selectedTicket.nextAction}</strong>
+            </div>
+            <div>
+              <span className="aui-support-kicker">PII policy</span>
+              <strong>{selectedTicket.piiPolicy}</strong>
+            </div>
+          </section>
 
+          <div className="aui-support-workflow-grid">
             <div className="aui-support-review-stack">
               <section aria-label="Reply review" className="aui-support-panel">
                 <div className="aui-support-section-header">
                   <strong>Reply review</strong>
                   <span>{replySentCount === 1 ? "1 reply sent" : `${replySentCount} replies sent`}</span>
                 </div>
-                <p className="aui-support-reply">{selectedTicket.replyDraft}</p>
+                <div aria-label="Policy checks" className="aui-support-check-row">
+                  {selectedTicket.policyChecks.map((check) => (
+                    <span key={check}>{check}</span>
+                  ))}
+                </div>
+                <div className="aui-support-reply-box">
+                  <span>Reviewed customer response</span>
+                  <p className="aui-support-reply">{selectedTicket.replyDraft}</p>
+                </div>
                 <button className="aui-support-primary-action" onClick={onSendReply} type="button">
                   Send reviewed reply
                 </button>
@@ -258,6 +393,25 @@ function SupportConsoleShell({
                 </ul>
               </section>
             </div>
+
+            <section aria-label="Conversation detail" className="aui-support-panel">
+              <div className="aui-support-section-header">
+                <strong>Case timeline</strong>
+                <span>CRM record</span>
+              </div>
+              <div className="aui-support-thread">
+                <p>
+                  <strong>{selectedTicket.customer}</strong>
+                  <span>{selectedTicket.lastMessage}</span>
+                </p>
+                <p className="aui-support-note">
+                  <strong>Internal note</strong>
+                  <span>
+                    {selectedTicket.internalNote}
+                  </span>
+                </p>
+              </div>
+            </section>
           </div>
         </section>
 
@@ -273,27 +427,27 @@ function SupportConsoleShell({
             <AgentThreadView threadId={selectedTicket.threadId} />
           </div>
           <div className="aui-support-agent-context">
-            <section aria-label="Agent status" className="aui-support-panel">
-              <div className="aui-support-section-header">
+            <details aria-label="Agent status" className="aui-support-disclosure">
+              <summary>
                 <strong>Status details</strong>
                 <span>session</span>
-              </div>
+              </summary>
               <AgentStatusDetails />
-            </section>
-            <section aria-label="Agent diagnostics" className="aui-support-panel">
-              <div className="aui-support-section-header">
+            </details>
+            <details aria-label="Agent diagnostics" className="aui-support-disclosure">
+              <summary>
                 <strong>Diagnostics</strong>
                 <span>redacted</span>
-              </div>
+              </summary>
               <AgentDiagnosticsPanel bootstrap={bootstrap} />
-            </section>
-            <section aria-label="Helpdesk connectors" className="aui-support-panel">
-              <div className="aui-support-section-header">
-                <strong>Connectors</strong>
-                <span>2 connected</span>
-              </div>
+            </details>
+            <details aria-label="Codex apps" className="aui-support-disclosure">
+              <summary>
+                <strong>Codex apps</strong>
+                <span>available</span>
+              </summary>
               <AgentAppsPanel threadId={selectedTicket.threadId} />
-            </section>
+            </details>
           </div>
         </aside>
       </div>
@@ -303,11 +457,25 @@ function SupportConsoleShell({
 
 function HostFact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="aui-support-fact" data-wide={label === "PII policy" ? "true" : undefined}>
+    <div className="aui-support-fact">
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>
   );
+}
+
+function reviewWorkflowSteps(status: SupportTicket["status"]) {
+  const currentIndexByStatus: Record<SupportTicket["status"], number> = {
+    investigating: 2,
+    ready: 3,
+    waiting: 1,
+  };
+  const currentIndex = currentIndexByStatus[status];
+  return ["Review", "Evidence", "Lead approval", "Send"].map((label, index) => ({
+    label,
+    state:
+      index < currentIndex ? "complete" : index === currentIndex ? "current" : undefined,
+  }));
 }
 
 function createSupportConsoleTransport() {
@@ -398,55 +566,55 @@ function createSupportConsoleInitialState(): AgentSessionState {
   for (const ticket of supportTickets) {
     const turnId = `turn-${ticket.threadId}`;
     state.threads[ticket.threadId] = {
-    activity: "idle",
-    availability: "available",
-    id: ticket.threadId,
-    metadata: {
-      title: `${ticket.id} investigation`,
-    },
-    operations: {},
-    orderedTurnIds: [turnId],
-    status: "ready",
-    storage: "unknown",
-    thread: {
+      activity: "idle",
+      availability: "available",
       id: ticket.threadId,
-      name: `${ticket.id} investigation`,
-    },
-    tokenUsage: {
-      inputTokens: 1450,
-      modelContextWindow: 10000,
-      outputTokens: 420,
-      totalTokens: 1870,
-    },
-    turns: {
-      [turnId]: {
-        blocksByItemId: {},
-        commandOutputByItemId: {},
-        filePatchByItemId: {},
-        itemOrder: [`item-support-user-${ticket.id}`, `item-support-agent-${ticket.id}`],
-        items: {
-          [`item-support-agent-${ticket.id}`]: {
-            id: `item-support-agent-${ticket.id}`,
-            kind: "agentMessage",
-            status: "completed",
-            text: ticket.assistantBrief,
-            threadId: ticket.threadId,
-            turnId,
-          },
-          [`item-support-user-${ticket.id}`]: {
-            id: `item-support-user-${ticket.id}`,
-            kind: "userMessage",
-            status: "completed",
-            text: ticket.userPrompt,
-            threadId: ticket.threadId,
-            turnId,
-          },
-        },
-        streamingTextByItemId: {},
-        turn: { id: turnId, status: "completed", threadId: ticket.threadId },
+      metadata: {
+        title: `${ticket.id} investigation`,
       },
-    },
-	  };
+      operations: {},
+      orderedTurnIds: [turnId],
+      status: "ready",
+      storage: "unknown",
+      thread: {
+        id: ticket.threadId,
+        name: `${ticket.id} investigation`,
+      },
+      tokenUsage: {
+        inputTokens: 1450,
+        modelContextWindow: 10000,
+        outputTokens: 420,
+        totalTokens: 1870,
+      },
+      turns: {
+        [turnId]: {
+          blocksByItemId: {},
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: [`item-support-user-${ticket.id}`, `item-support-agent-${ticket.id}`],
+          items: {
+            [`item-support-agent-${ticket.id}`]: {
+              id: `item-support-agent-${ticket.id}`,
+              kind: "agentMessage",
+              status: "completed",
+              text: ticket.assistantBrief,
+              threadId: ticket.threadId,
+              turnId,
+            },
+            [`item-support-user-${ticket.id}`]: {
+              id: `item-support-user-${ticket.id}`,
+              kind: "userMessage",
+              status: "completed",
+              text: ticket.userPrompt,
+              threadId: ticket.threadId,
+              turnId,
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: turnId, status: "completed", threadId: ticket.threadId },
+        },
+      },
+    };
     state.apps.byScope[ticket.threadId] = {
       apps: supportConsoleApps(),
       nextCursor: null,
