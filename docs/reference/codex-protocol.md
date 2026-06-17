@@ -582,7 +582,8 @@ Notifications:
 - account updated/login completed
 - app list updates
 - skills changed invalidation
-- model reroutes, deprecation notices, config warnings, and MCP OAuth/status banners
+- model reroutes, deprecation notices, config warnings, and MCP OAuth banners
+- MCP startup status diagnostics
 - warnings/errors
 
 `process/outputDelta` and `process/exited` are stable App Server
