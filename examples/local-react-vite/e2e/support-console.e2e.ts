@@ -28,7 +28,7 @@ test("renders a host-owned support console around Agent UI", async ({ page }) =>
   await expectVisibleInViewport(page, ".aui-support-review-stack");
   await expectVisibleInViewport(page, ".aui-support-primary-action");
   await expectVisibleInViewport(page, ".aui-support-audit-list");
-  await expect(page.getByLabel("Agent assistant pane")).toBeVisible();
+  await expect(page.getByLabel("Support assistant")).toBeVisible();
   await expect(page.locator(".aui-thread-surface")).toBeVisible();
   await expect(page.getByLabel("Message", { exact: true })).toBeVisible();
   await expectVisibleInViewport(page, ".aui-composer");
@@ -43,14 +43,14 @@ test("renders a host-owned support console around Agent UI", async ({ page }) =>
   await expect(page.getByLabel("Selected inquiry")).toContainText(
     "patient fields stay in the CRM",
   );
-  await expect(page.getByLabel("Agent assistant pane")).toContainText("SUP-2051");
-  await expect(page.getByLabel("Agent assistant pane")).toContainText("macro cache");
+  await expect(page.getByLabel("Support assistant")).toContainText("SUP-2051");
+  await expect(page.getByLabel("Support assistant")).toContainText("macro cache");
 
   await page.getByRole("button", { name: "Send reviewed reply" }).click();
   await expect(page.getByLabel("Reply review")).toContainText("1 sent in fixture");
   await page.getByLabel("Message", { exact: true }).fill("Can we send the safe summary?");
   await page.locator(".aui-composer button[aria-label='Send']").first().click();
-  await expect(page.getByLabel("Agent assistant pane")).toContainText(
+  await expect(page.getByLabel("Support assistant")).toContainText(
     "Fixture response recorded for SUP-2051",
   );
   await expect(expectNoDocumentOverflow(page)).resolves.toBe(true);
@@ -62,7 +62,7 @@ test("keeps support console assistant controls reachable on mobile", async ({ pa
 
   await expect(page.getByRole("heading", { name: "Support console" })).toBeVisible();
   await expect(page.getByLabel("Ticket queue")).toBeVisible();
-  await expect(page.getByLabel("Agent assistant pane")).toBeVisible();
+  await expect(page.getByLabel("Support assistant")).toBeVisible();
   await expectWithinViewport(page, ".aui-support-console-grid");
   await expectWithinViewport(page, ".aui-support-ticket-list");
   await expectWithinViewport(page, ".aui-support-ticket:first-child");

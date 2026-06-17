@@ -262,11 +262,11 @@ function SupportConsoleShell({
           </div>
         </section>
 
-        <aside aria-label="Agent assistant pane" className="aui-support-agent">
+        <aside aria-label="Support assistant" className="aui-support-agent">
           <div className="aui-support-agent-header">
             <div>
-              <span className="aui-support-kicker">Agent UI owned</span>
-              <h2>Assistant pane</h2>
+              <span className="aui-support-kicker">Codex assistant</span>
+              <h2>Investigation assistant</h2>
             </div>
             <span>{selectedTicket.id}</span>
           </div>
