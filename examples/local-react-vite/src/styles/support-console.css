@@ -5,7 +5,7 @@
   color: var(--aui-fg);
   font: var(--aui-font-size-md)/var(--aui-line-normal) var(--aui-font);
   min-height: 100vh;
-  padding: var(--aui-space-500);
+  padding: var(--aui-space-300);
 }
 
 .aui-support-console *,
@@ -17,26 +17,26 @@
 .aui-support-console-header {
   align-items: end;
   display: grid;
-  gap: var(--aui-space-450);
+  gap: var(--aui-space-300);
   grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
-  margin: 0 auto var(--aui-space-450);
+  margin: 0 auto var(--aui-space-250);
   max-width: 1480px;
 }
 
 .aui-support-console-header h1 {
   color: var(--aui-fg-strong);
-  font-size: var(--aui-font-size-3xl);
+  font-size: var(--aui-font-size-2xl);
   letter-spacing: var(--aui-letter-spacing);
   line-height: var(--aui-line-tight);
-  margin: var(--aui-space-100) 0;
+  margin: var(--aui-space-050) 0;
 }
 
 .aui-support-console-header p {
   color: var(--aui-fg-muted);
-  font-size: var(--aui-font-size-md-plus);
-  line-height: var(--aui-line-loose);
+  font-size: var(--aui-font-size-sm-plus);
+  line-height: var(--aui-line-normal);
   margin: 0;
-  max-width: 760px;
+  max-width: 860px;
 }
 
 .aui-support-header-status {
@@ -65,9 +65,10 @@
   box-shadow: var(--aui-shadow-card);
   display: grid;
   grid-template-columns: minmax(240px, 280px) minmax(380px, 1fr) minmax(360px, 430px);
+  height: min(820px, calc(100vh - 112px));
   margin: 0 auto;
   max-width: 1480px;
-  min-height: min(800px, calc(100vh - 150px));
+  min-height: 620px;
   overflow: hidden;
 }
 
@@ -91,7 +92,7 @@
   gap: var(--aui-space-200);
   justify-content: space-between;
   min-width: 0;
-  padding: var(--aui-space-250) var(--aui-space-300);
+  padding: var(--aui-space-175) var(--aui-space-250);
 }
 
 .aui-support-section-header strong,
@@ -116,10 +117,11 @@
 }
 
 .aui-support-ticket-list {
+  align-content: start;
   display: grid;
-  gap: var(--aui-space-150);
+  gap: var(--aui-space-100);
   overflow: auto;
-  padding: var(--aui-space-250);
+  padding: var(--aui-space-200);
 }
 
 .aui-support-ticket {
@@ -129,9 +131,9 @@
   color: var(--aui-fg);
   cursor: pointer;
   display: grid;
-  gap: var(--aui-space-100);
+  gap: var(--aui-space-075);
   min-width: 0;
-  padding: var(--aui-space-250);
+  padding: var(--aui-space-175) var(--aui-space-200);
   text-align: left;
 }
 
@@ -182,7 +184,7 @@
 
 .aui-support-ticket-subject {
   color: var(--aui-fg);
-  font-size: var(--aui-font-size-sm-plus);
+  font-size: var(--aui-font-size-sm);
   font-weight: 650;
   line-height: var(--aui-line-snug);
 }
@@ -195,28 +197,29 @@
 .aui-support-case {
   align-content: start;
   display: grid;
-  gap: var(--aui-space-300);
+  gap: var(--aui-space-200);
   overflow: auto;
-  padding: var(--aui-space-400);
+  padding: var(--aui-space-300);
 }
 
 .aui-support-case-header {
   align-items: start;
   display: flex;
-  gap: var(--aui-space-300);
+  gap: var(--aui-space-200);
   justify-content: space-between;
 }
 
 .aui-support-case-header h2,
 .aui-support-agent-header h2 {
-  font-size: var(--aui-font-size-xl);
+  font-size: var(--aui-font-size-lg);
   line-height: var(--aui-line-tight);
-  margin: var(--aui-space-075) 0;
+  margin: var(--aui-space-050) 0;
 }
 
 .aui-support-case-header p {
   color: var(--aui-fg-muted);
-  line-height: var(--aui-line-loose);
+  font-size: var(--aui-font-size-sm);
+  line-height: var(--aui-line-normal);
   margin: 0;
   overflow-wrap: anywhere;
 }
@@ -241,8 +244,8 @@
 
 .aui-support-case-grid {
   display: grid;
-  gap: var(--aui-space-200);
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--aui-space-150);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   margin: 0;
 }
 
@@ -251,8 +254,12 @@
   border: 1px solid var(--aui-border);
   border-radius: var(--aui-radius-sm);
   display: grid;
-  gap: var(--aui-space-100);
-  padding: var(--aui-space-250);
+  gap: var(--aui-space-050);
+  padding: var(--aui-space-175) var(--aui-space-200);
+}
+
+.aui-support-fact[data-wide="true"] {
+  grid-column: span 2;
 }
 
 .aui-support-fact dt {
@@ -265,7 +272,7 @@
 
 .aui-support-fact dd {
   color: var(--aui-fg);
-  font-size: var(--aui-font-size-sm);
+  font-size: var(--aui-font-size-xs-plus);
   margin: 0;
   overflow-wrap: anywhere;
 }
@@ -281,8 +288,8 @@
 
 .aui-support-thread {
   display: grid;
-  gap: var(--aui-space-200);
-  padding: var(--aui-space-300);
+  gap: var(--aui-space-150);
+  padding: var(--aui-space-200);
 }
 
 .aui-support-thread p {
@@ -290,37 +297,39 @@
   border: 1px solid var(--aui-rule);
   border-radius: var(--aui-radius-sm);
   display: grid;
-  gap: var(--aui-space-100);
+  gap: var(--aui-space-075);
   margin: 0;
-  padding: var(--aui-space-250);
+  padding: var(--aui-space-175) var(--aui-space-200);
 }
 
 .aui-support-thread strong {
   color: var(--aui-fg-strong);
-  font-size: var(--aui-font-size-sm);
+  font-size: var(--aui-font-size-xs-plus);
 }
 
 .aui-support-thread span,
 .aui-support-reply {
   color: var(--aui-fg-muted);
-  line-height: var(--aui-line-loose);
+  font-size: var(--aui-font-size-sm);
+  line-height: var(--aui-line-normal);
 }
 
 .aui-support-reply {
   margin: 0;
-  padding: var(--aui-space-300) var(--aui-space-300) 0;
+  padding: var(--aui-space-200) var(--aui-space-200) 0;
 }
 
 .aui-support-audit-list {
   display: grid;
-  gap: var(--aui-space-150);
+  gap: var(--aui-space-100);
   margin: 0;
-  padding: var(--aui-space-300) var(--aui-space-300) var(--aui-space-350);
+  padding: var(--aui-space-200) var(--aui-space-200) var(--aui-space-250);
 }
 
 .aui-support-audit-list li {
   color: var(--aui-fg-muted);
-  line-height: var(--aui-line-loose);
+  font-size: var(--aui-font-size-sm);
+  line-height: var(--aui-line-normal);
   margin-left: var(--aui-space-250);
   overflow-wrap: anywhere;
 }
@@ -336,9 +345,23 @@
   font-size: var(--aui-font-size-sm);
   font-weight: 700;
   justify-self: start;
-  margin: var(--aui-space-300);
+  margin: var(--aui-space-200);
   min-height: var(--aui-control-height-sm);
   padding: 0 var(--aui-space-300);
+}
+
+.aui-support-workflow-grid {
+  align-items: start;
+  display: grid;
+  gap: var(--aui-space-200);
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+  min-height: 0;
+}
+
+.aui-support-review-stack {
+  display: grid;
+  gap: var(--aui-space-200);
+  min-width: 0;
 }
 
 .aui-support-primary-action:hover {
@@ -355,7 +378,7 @@
   background: var(--aui-bg-soft);
   border-left: 1px solid var(--aui-border);
   display: grid;
-  grid-template-rows: auto minmax(460px, 1fr) minmax(0, auto);
+  grid-template-rows: auto minmax(0, 1fr) minmax(0, auto);
   min-height: 0;
 }
 
@@ -374,7 +397,7 @@
   overflow: hidden;
 }
 
-.aui-support-agent-chat .aui-chat {
+.aui-support-agent-chat .aui-thread-surface {
   border: 0;
   border-radius: 0;
   height: 100%;
@@ -382,10 +405,10 @@
 
 .aui-support-agent-context {
   display: grid;
-  gap: var(--aui-space-250);
-  max-height: 320px;
+  gap: var(--aui-space-150);
+  max-height: 190px;
   overflow: auto;
-  padding: var(--aui-space-300);
+  padding: var(--aui-space-200);
 }
 
 .aui-support-agent-context .aui-status,
@@ -399,6 +422,13 @@
 @media (max-width: 1180px) {
   .aui-support-console-grid {
     grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+    height: auto;
+    min-height: 0;
+  }
+
+  .aui-support-case-grid,
+  .aui-support-workflow-grid {
+    grid-template-columns: 1fr 1fr;
   }
 
   .aui-support-agent {
@@ -425,13 +455,30 @@
 
   .aui-support-console-grid {
     grid-template-columns: 1fr;
-    min-height: 0;
   }
 
   .aui-support-queue {
     border-right: 0;
     border-bottom: 1px solid var(--aui-border);
-    max-height: 300px;
+    max-height: none;
+  }
+
+  .aui-support-ticket-list {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: var(--aui-space-250);
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .aui-support-ticket-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .aui-support-ticket {
+    min-width: min(270px, 82vw);
+    scroll-snap-align: start;
   }
 
   .aui-support-case {
@@ -443,6 +490,14 @@
   }
 
   .aui-support-case-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .aui-support-fact[data-wide="true"] {
+    grid-column: 1 / -1;
+  }
+
+  .aui-support-workflow-grid {
     grid-template-columns: 1fr;
   }
 

@@ -1,20 +1,20 @@
-import { FakeAgentTransport } from "@nyosegawa/agent-ui-core";
+import {
+  createInitialAgentState,
+  FakeAgentTransport,
+  type AgentSessionState,
+} from "@nyosegawa/agent-ui-core";
 import {
   AgentAppsPanel,
-  AgentChat,
   AgentDiagnosticsPanel,
   AgentProvider,
   AgentStatusDetails,
   AgentStatusSummary,
+  AgentThreadView,
   AgentUsageSummary,
   useAgentBootstrap,
 } from "@nyosegawa/agent-ui-react";
 import { useMemo, useState } from "react";
-import {
-  createRichTranscriptInitialState,
-  fixtureModels,
-  fixtureRateLimits,
-} from "../fixtures/demo-state";
+import { fixtureModels, fixtureRateLimits } from "../fixtures/demo-state";
 
 interface SupportTicket {
   account: string;
@@ -31,6 +31,9 @@ interface SupportTicket {
   subject: string;
   tenant: string;
 }
+
+const supportThreadId = "thread-support-console";
+const supportTurnId = "turn-support-console";
 
 const supportTickets: SupportTicket[] = [
   {
@@ -102,7 +105,7 @@ export function SupportConsoleExample() {
     supportTickets.find((ticket) => ticket.id === selectedTicketId) ??
     supportTickets[0]!;
   const transport = useMemo(() => createSupportConsoleTransport(), []);
-  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  const initialState = useMemo(() => createSupportConsoleInitialState(), []);
 
   return (
     <AgentProvider initialState={initialState} transport={transport}>
@@ -199,48 +202,52 @@ function SupportConsoleShell({
             <HostFact label="PII policy" value={selectedTicket.piiPolicy} />
           </dl>
 
-          <section aria-label="Conversation detail" className="aui-support-panel">
-            <div className="aui-support-section-header">
-              <strong>Case detail</strong>
-              <span>host CRM data</span>
-            </div>
-            <div className="aui-support-thread">
-              <p>
-                <strong>{selectedTicket.customer}</strong>
-                <span>{selectedTicket.lastMessage}</span>
-              </p>
-              <p>
-                <strong>Support note</strong>
-                <span>
-                  Agent UI can help draft investigation steps, but this timeline,
-                  customer identity, and retention policy stay in the helpdesk.
-                </span>
-              </p>
-            </div>
-          </section>
+          <div className="aui-support-workflow-grid">
+            <section aria-label="Conversation detail" className="aui-support-panel">
+              <div className="aui-support-section-header">
+                <strong>Case detail</strong>
+                <span>host CRM data</span>
+              </div>
+              <div className="aui-support-thread">
+                <p>
+                  <strong>{selectedTicket.customer}</strong>
+                  <span>{selectedTicket.lastMessage}</span>
+                </p>
+                <p>
+                  <strong>Support note</strong>
+                  <span>
+                    Agent UI can help draft investigation steps, but this timeline,
+                    customer identity, and retention policy stay in the helpdesk.
+                  </span>
+                </p>
+              </div>
+            </section>
 
-          <section aria-label="Reply review" className="aui-support-panel">
-            <div className="aui-support-section-header">
-              <strong>Reply review</strong>
-              <span>{replySentCount} sent in fixture</span>
-            </div>
-            <p className="aui-support-reply">{selectedTicket.replyDraft}</p>
-            <button className="aui-support-primary-action" onClick={onSendReply} type="button">
-              Send reviewed reply
-            </button>
-          </section>
+            <div className="aui-support-review-stack">
+              <section aria-label="Reply review" className="aui-support-panel">
+                <div className="aui-support-section-header">
+                  <strong>Reply review</strong>
+                  <span>{replySentCount} sent in fixture</span>
+                </div>
+                <p className="aui-support-reply">{selectedTicket.replyDraft}</p>
+                <button className="aui-support-primary-action" onClick={onSendReply} type="button">
+                  Send reviewed reply
+                </button>
+              </section>
 
-          <section aria-label="Audit trail" className="aui-support-panel">
-            <div className="aui-support-section-header">
-              <strong>Audit trail</strong>
-              <span>host retained</span>
+              <section aria-label="Audit trail" className="aui-support-panel">
+                <div className="aui-support-section-header">
+                  <strong>Audit trail</strong>
+                  <span>host retained</span>
+                </div>
+                <ul className="aui-support-audit-list">
+                  {selectedTicket.auditTrail.map((entry) => (
+                    <li key={entry}>{entry}</li>
+                  ))}
+                </ul>
+              </section>
             </div>
-            <ul className="aui-support-audit-list">
-              {selectedTicket.auditTrail.map((entry) => (
-                <li key={entry}>{entry}</li>
-              ))}
-            </ul>
-          </section>
+          </div>
         </section>
 
         <aside aria-label="Agent assistant pane" className="aui-support-agent">
@@ -252,7 +259,7 @@ function SupportConsoleShell({
             <span>{selectedTicket.id}</span>
           </div>
           <div className="aui-support-agent-chat">
-            <AgentChat diagnostics={false} sidebar={false} usage={false} />
+            <AgentThreadView threadId={supportThreadId} />
           </div>
           <div className="aui-support-agent-context">
             <section aria-label="Agent status" className="aui-support-panel">
@@ -274,7 +281,7 @@ function SupportConsoleShell({
                 <strong>Connectors</strong>
                 <span>app/list</span>
               </div>
-              <AgentAppsPanel threadId="thread-rich-transcript" />
+              <AgentAppsPanel threadId={supportThreadId} />
             </section>
           </div>
         </aside>
@@ -285,7 +292,7 @@ function SupportConsoleShell({
 
 function HostFact({ label, value }: { label: string; value: string }) {
   return (
-    <div className="aui-support-fact">
+    <div className="aui-support-fact" data-wide={label === "PII policy" ? "true" : undefined}>
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>
@@ -304,9 +311,9 @@ function createSupportConsoleTransport() {
         return {
           data: [
             {
-              id: "thread-rich-transcript",
-              name: "Support investigation",
-              preview: "Draft support-safe investigation steps.",
+              id: supportThreadId,
+              name: "Invoice export investigation",
+              preview: "Summarize evidence and draft a support-safe reply.",
               status: { type: "loaded" },
             },
           ],
@@ -337,4 +344,73 @@ function createSupportConsoleTransport() {
       return {};
     },
   });
+}
+
+function createSupportConsoleInitialState(): AgentSessionState {
+  const state = createInitialAgentState();
+  state.account = {
+    account: { email: "fixture@example.com", planType: "pro" },
+    status: "authenticated",
+  };
+  state.usage.accountRateLimits = fixtureRateLimits();
+  state.models = { models: fixtureModels(), selectedModelId: "fixture-demo-model" };
+  state.threadLifecycle.activeThreadId = supportThreadId;
+  state.threadLifecycle.collections[state.threadLifecycle.defaultCollectionKey]!.ids = [
+    supportThreadId,
+  ];
+  state.threads[supportThreadId] = {
+    activity: "idle",
+    availability: "available",
+    id: supportThreadId,
+    metadata: {
+      cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+      title: "Invoice export investigation",
+    },
+    operations: {},
+    orderedTurnIds: [supportTurnId],
+    status: "ready",
+    storage: "unknown",
+    thread: {
+      id: supportThreadId,
+      name: "Invoice export investigation",
+      path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+    },
+    tokenUsage: {
+      inputTokens: 1450,
+      modelContextWindow: 10000,
+      outputTokens: 420,
+      totalTokens: 1870,
+    },
+    turns: {
+      [supportTurnId]: {
+        blocksByItemId: {},
+        commandOutputByItemId: {},
+        filePatchByItemId: {},
+        itemOrder: ["item-support-user", "item-support-agent-summary"],
+        items: {
+          "item-support-agent-summary": {
+            id: "item-support-agent-summary",
+            kind: "agentMessage",
+            status: "completed",
+            text:
+              "Likely cause: a billing export filter mismatch. Draft reply: we are preparing a corrected CSV and will confirm the row count before sending it back. Customer identifiers and invoice IDs should stay in the host helpdesk record.",
+            threadId: supportThreadId,
+            turnId: supportTurnId,
+          },
+          "item-support-user": {
+            id: "item-support-user",
+            kind: "userMessage",
+            status: "completed",
+            text:
+              "Summarize SUP-2048 and prepare a support-safe reply draft.",
+            threadId: supportThreadId,
+            turnId: supportTurnId,
+          },
+        },
+        streamingTextByItemId: {},
+        turn: { id: supportTurnId, status: "completed", threadId: supportThreadId },
+      },
+    },
+  };
+  return state;
 }

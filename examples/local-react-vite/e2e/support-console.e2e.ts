@@ -22,9 +22,18 @@ test("renders a host-owned support console around Agent UI", async ({ page }) =>
   await expect(page.getByLabel("Audit trail")).toContainText(
     "PII fields redacted before Codex context",
   );
+  await expectVisibleInViewport(page, ".aui-support-case-header");
+  await expectVisibleInViewport(page, ".aui-support-workflow-grid");
+  await expectVisibleInViewport(page, ".aui-support-thread");
+  await expectVisibleInViewport(page, ".aui-support-review-stack");
+  await expectVisibleInViewport(page, ".aui-support-primary-action");
+  await expectVisibleInViewport(page, ".aui-support-audit-list");
   await expect(page.getByLabel("Agent assistant pane")).toBeVisible();
-  await expect(page.getByTestId("agent-chat")).toBeVisible();
+  await expect(page.locator(".aui-thread-surface")).toBeVisible();
   await expect(page.getByLabel("Message", { exact: true })).toBeVisible();
+  await expectVisibleInViewport(page, ".aui-composer");
+  await expectVisibleInViewport(page, ".aui-support-ticket");
+  await expectCompactTicketQueue(page);
   await expect(page.getByLabel("Agent diagnostics")).toContainText("redacted");
 
   await page.getByRole("button", { name: /SUP-2051/ }).click();
@@ -48,7 +57,8 @@ test("keeps support console assistant controls reachable on mobile", async ({ pa
   await expect(page.getByLabel("Ticket queue")).toBeVisible();
   await expect(page.getByLabel("Agent assistant pane")).toBeVisible();
   await expectWithinViewport(page, ".aui-support-console-grid");
-  await expectWithinViewport(page, ".aui-support-ticket");
+  await expectWithinViewport(page, ".aui-support-ticket-list");
+  await expectWithinViewport(page, ".aui-support-ticket:first-child");
   await page.getByLabel("Agent assistant pane").scrollIntoViewIfNeeded();
   await expectVisibleInViewport(page, ".aui-thread-surface");
   await expectVisibleInViewport(page, ".aui-composer");
@@ -70,4 +80,12 @@ async function expectNoDocumentOverflow(page: Page) {
   return page.evaluate(
     () => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1,
   );
+}
+
+async function expectCompactTicketQueue(page: Page) {
+  const firstTicketHeight = await page
+    .locator(".aui-support-ticket")
+    .first()
+    .evaluate((element) => element.getBoundingClientRect().height);
+  expect(firstTicketHeight).toBeLessThanOrEqual(92);
 }

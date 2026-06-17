@@ -91,7 +91,12 @@ realistic inquiry desk shape without turning Agent UI into a helpdesk product:
 the route owns ticket selection, customer and tenant metadata, reply review,
 audit notes, PII policy, and CRM/helpdesk integration labels. Agent UI remains
 the embedded Codex App Server surface for transcript, composer, approvals,
-status, usage, diagnostics, and connector metadata.
+status, usage, diagnostics, and connector metadata. The assistant pane embeds a
+fixed thread primitive instead of the full `AgentChat` preset so the SaaS shell
+keeps product chrome, account controls, and queue state host-owned. Desktop
+layout is viewport-bounded like a working console; mobile uses a horizontal
+ticket selector and compact case context so the workflow stays navigable without
+cramming every secondary panel into the first viewport.
 
 `bun run test:e2e:fixtures` starts its own preview server on port 4173 for the
 fixture browser checks. Do not rely on a manually running 5174 server for this

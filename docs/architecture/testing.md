@@ -247,7 +247,9 @@ The fixture routes are:
   host-owned review sheet
 - `/support-console`: support SaaS fixture with host-owned ticket queue,
   customer context, PII policy, reply review, audit trail, and an embedded Agent
-  UI assistant pane
+  UI assistant pane. Its browser checks keep the desktop shell viewport-bounded,
+  the ticket queue compact, and the assistant composer reachable without page
+  scrolling.
 - `/composer-retry`: failed first-message retry through the public composer
   controller
 - `/resource-resolution`: structured local-media resource rendering without

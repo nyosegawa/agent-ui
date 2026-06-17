@@ -1,9 +1,9 @@
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 import {
-  AgentChat,
   AgentDiagnosticsPanel,
   AgentProvider,
   AgentStatusSummary,
+  AgentThreadView,
   AgentUsageSummary,
   useAgentBootstrap,
 } from "@nyosegawa/agent-ui-react";
@@ -16,6 +16,7 @@ interface SupportConsoleTicket {
   status: "waiting" | "investigating" | "ready";
   subject: string;
   tenantId: string;
+  threadId: string;
 }
 
 function SupportConsole({ ticket }: { ticket: SupportConsoleTicket }) {
@@ -53,7 +54,7 @@ function SupportConsole({ ticket }: { ticket: SupportConsoleTicket }) {
       <aside aria-label="Agent-owned assistance">
         <AgentStatusSummary />
         <AgentUsageSummary />
-        <AgentChat diagnostics={false} sidebar={false} usage={false} />
+        <AgentThreadView threadId={ticket.threadId} />
         <AgentDiagnosticsPanel bootstrap={bootstrap} />
       </aside>
     </main>

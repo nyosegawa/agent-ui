@@ -59,7 +59,8 @@ only after the host gate approves the first Codex turn.
 `src/support-console.tsx` shows a support SaaS composition where the host owns
 case routing, customer data, tenant mapping, PII policy, reply delivery, and
 helpdesk audit state while embedding Agent UI for transcript, composer, status,
-usage, and diagnostics.
+usage, and diagnostics. The recipe uses a fixed thread view rather than the full
+chat preset so product chrome and queue state stay in the host shell.
 
 `src/themed.css` intentionally demonstrates host theming by overriding `--aui-*`
 tokens on a wrapper. It should not be read as permission to import

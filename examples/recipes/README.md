@@ -19,7 +19,8 @@ Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
   host plan gate is approved.
 - `src/support-console.tsx`: support SaaS composition where ticket routing,
   customer context, PII policy, reply review, and audit retention stay
-  host-owned while Agent UI owns the assistant transcript and composer surface.
+  host-owned while a fixed Agent UI thread primitive owns the assistant
+  transcript and composer surface.
 - `src/local-media-helper.tsx`: upload/static handlers paired with structured
   attachment and transcript media resolvers.
 - `src/bridge-policy.ts`: loopback bridge policy, local desktop admission, and
