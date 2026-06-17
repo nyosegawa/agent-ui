@@ -1,11 +1,46 @@
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { createInterface } from "node:readline";
 
 const lines = createInterface({ input: process.stdin });
-let nextRequestId = 10_000;
-let nextThreadOrdinal = 1;
-let nextTurnOrdinal = 1;
 const approvalIds = new Set<string>();
 const activeTurns = new Map<string, string>();
+
+type StoredThread = {
+  readonly createdAt: number;
+  readonly cwd: string;
+  readonly id: string;
+  name: string;
+  readonly turns: StoredTurn[];
+  updatedAt: number;
+};
+
+type StoredTurn = {
+  readonly agentText: string;
+  readonly completedAt: number;
+  readonly id: string;
+  readonly prompt: string;
+  readonly startedAt: number;
+};
+
+type FakeServerState = {
+  readonly liveThreads?: StoredThread[];
+  readonly nextThreadOrdinal?: number;
+  readonly nextTurnOrdinal?: number;
+};
+
+const statePath = join(
+  tmpdir(),
+  `agent-ui-fake-codex-app-server-${process.ppid}.json`,
+);
+const persistedState = readState();
+let nextRequestId = 10_000;
+let nextThreadOrdinal = persistedState.nextThreadOrdinal ?? 1;
+let nextTurnOrdinal = persistedState.nextTurnOrdinal ?? 1;
+const liveThreads = new Map<string, StoredThread>(
+  (persistedState.liveThreads ?? []).map((thread) => [thread.id, thread]),
+);
 
 lines.on("line", (line) => {
   const message = JSON.parse(line) as JsonRpcLine;
@@ -64,7 +99,7 @@ function handleRequest(message: JsonRpcLine) {
       return;
     case "thread/read":
       respond(message.id, {
-        thread: storedThread(stringParam(message.params, "threadId") ?? "thread-stored"),
+        thread: threadSnapshot(stringParam(message.params, "threadId") ?? "thread-stored"),
       });
       return;
     case "thread/resume": {
@@ -79,7 +114,7 @@ function handleRequest(message: JsonRpcLine) {
         reasoningEffort: "medium",
         sandbox: { type: "readOnly", networkAccess: false },
         serviceTier: null,
-        thread: storedThread(threadId, { resumed: true }),
+        thread: threadSnapshot(threadId, { resumed: true }),
       });
       notify("thread/tokenUsage/updated", {
         threadId,
@@ -106,34 +141,37 @@ function handleRequest(message: JsonRpcLine) {
     }
     case "thread/start": {
       const threadId = `thread-live-${nextThreadOrdinal++}`;
+      const record: StoredThread = {
+        createdAt: 1778000100 + nextThreadOrdinal,
+        cwd: stringParam(message.params, "cwd") ?? "/tmp/agent-ui",
+        id: threadId,
+        name: "Live real smoke",
+        turns: [],
+        updatedAt: 1778000100 + nextThreadOrdinal,
+      };
+      liveThreads.set(threadId, record);
+      saveState();
       respond(message.id, {
         approvalPolicy: "on-request",
         approvalsReviewer: { type: "auto" },
-        cwd: stringParam(message.params, "cwd") ?? "/tmp/agent-ui",
+        cwd: record.cwd,
         instructionSources: [],
         model: stringParam(message.params, "model") ?? "smoke-model",
         modelProvider: "openai",
         reasoningEffort: "medium",
         sandbox: { type: "readOnly", networkAccess: false },
         serviceTier: null,
-        thread: thread({
-          id: threadId,
-          name: "Live real smoke",
-          status: { type: "idle" },
-        }),
+        thread: threadSnapshot(threadId),
       });
       notify("thread/started", {
         status: { type: "idle" },
-        thread: thread({
-          id: threadId,
-          name: "Live real smoke",
-          status: { type: "idle" },
-        }),
+        thread: threadSnapshot(threadId),
       });
       return;
     }
     case "turn/start": {
       const turnId = `turn-live-${nextTurnOrdinal++}`;
+      saveState();
       const prompt = inputText(message.params);
       const localImagePaths = inputLocalImagePaths(message.params);
       const threadId = stringParam(message.params, "threadId") ?? "thread-live";
@@ -142,6 +180,7 @@ function handleRequest(message: JsonRpcLine) {
       const streamsWhileRunning = prompt === "streaming smoke";
       const hasLongRunningTurn = delaysFirstDelta || streamsWhileRunning;
       const isMissingMedia = prompt === "missing media smoke";
+      updateLiveThreadTitle(threadId, prompt);
       respond(message.id, {
         turn: {
           completedAt: null,
@@ -167,6 +206,7 @@ function handleRequest(message: JsonRpcLine) {
         threadId,
         turnId,
         firstDeltaDelayMs: delaysFirstDelta ? 30_000 : undefined,
+        prompt,
       });
       return;
     }
@@ -227,7 +267,11 @@ function threadListResponse(params: Record<string, unknown> | undefined) {
       nextCursor: null,
     };
   }
+  const liveData = Array.from(liveThreads.values())
+    .sort((left, right) => right.updatedAt - left.updatedAt)
+    .map((record) => threadListThread(record.id, record.name));
   const data = [
+    ...liveData,
     threadListThread("thread-stored", "Stored real smoke"),
     threadListThread("thread-search", "Searchable real smoke"),
     threadListThread("thread-page-1", "First page real smoke"),
@@ -280,6 +324,43 @@ function storedThread(
   });
 }
 
+function threadSnapshot(
+  id: string,
+  options: { resumed?: boolean } = {},
+): Record<string, unknown> {
+  const liveThread = liveThreads.get(id);
+  if (!liveThread) return storedThread(id, options);
+  return thread({
+    createdAt: liveThread.createdAt,
+    cwd: liveThread.cwd,
+    id,
+    name: liveThread.name,
+    preview: liveThread.name,
+    status: { type: options.resumed ? "idle" : "notLoaded" },
+    turns: liveThread.turns.map((turn) => ({
+      completedAt: turn.completedAt,
+      durationMs: turn.completedAt - turn.startedAt,
+      error: null,
+      id: turn.id,
+      items: [
+        {
+          content: [{ text: turn.prompt, type: "text" }],
+          id: `user-${turn.id}`,
+          type: "userMessage",
+        },
+        {
+          id: `item-${turn.id}`,
+          text: turn.agentText,
+          type: "agentMessage",
+        },
+      ],
+      startedAt: turn.startedAt,
+      status: "completed",
+    })),
+    updatedAt: liveThread.updatedAt,
+  });
+}
+
 function storedThreadName(id: string): string {
   if (id === "thread-search") return "Searchable real smoke";
   if (id === "thread-page-1") return "First page real smoke";
@@ -291,6 +372,7 @@ function streamTurn({
   completeDelayMs = 40,
   firstDeltaDelayMs,
   localImagePaths = [],
+  prompt,
   requiresApproval,
   responseText,
   threadId,
@@ -299,6 +381,7 @@ function streamTurn({
   completeDelayMs?: number;
   firstDeltaDelayMs?: number;
   localImagePaths?: string[];
+  prompt: string;
   requiresApproval: boolean;
   responseText: string;
   threadId: string;
@@ -350,6 +433,13 @@ function streamTurn({
     schedule(completeDelayMs, () => {
       if (activeTurns.get(threadId) !== turnId) return;
       activeTurns.delete(threadId);
+      recordLiveTurn({
+        agentText: responseText,
+        completedAt: 1778000003,
+        prompt,
+        threadId,
+        turnId,
+      });
       notify("turn/completed", {
         items: [
           {
@@ -392,6 +482,83 @@ function streamTurn({
       },
     });
   });
+}
+
+function updateLiveThreadTitle(threadId: string, prompt: string) {
+  const record = liveThreads.get(threadId);
+  if (!record || record.turns.length > 0) return;
+  const name = titleFromPrompt(prompt);
+  if (!name || record.name === name) return;
+  record.name = name;
+  record.updatedAt += 1;
+  saveState();
+  schedule(5, () =>
+    notify("thread/name/updated", {
+      name,
+      threadId,
+    }),
+  );
+}
+
+function recordLiveTurn({
+  agentText,
+  completedAt,
+  prompt,
+  threadId,
+  turnId,
+}: {
+  agentText: string;
+  completedAt: number;
+  prompt: string;
+  threadId: string;
+  turnId: string;
+}) {
+  const record = liveThreads.get(threadId);
+  if (!record || record.turns.some((turn) => turn.id === turnId)) return;
+  record.turns.push({
+    agentText,
+    completedAt,
+    id: turnId,
+    prompt,
+    startedAt: 1778000002,
+  });
+  record.updatedAt += 1;
+  saveState();
+}
+
+function titleFromPrompt(prompt: string): string {
+  return prompt.trim().replace(/\s+/g, " ").slice(0, 48) || "Live real smoke";
+}
+
+function readState(): FakeServerState {
+  if (!existsSync(statePath)) return {};
+  try {
+    const parsed = JSON.parse(readFileSync(statePath, "utf8"));
+    return isFakeServerState(parsed) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveState() {
+  const state: FakeServerState = {
+    liveThreads: Array.from(liveThreads.values()),
+    nextThreadOrdinal,
+    nextTurnOrdinal,
+  };
+  writeFileSync(statePath, JSON.stringify(state), "utf8");
+}
+
+function isFakeServerState(value: unknown): value is FakeServerState {
+  if (typeof value !== "object" || value === null) return false;
+  const state = value as FakeServerState;
+  return (
+    (state.nextThreadOrdinal === undefined ||
+      typeof state.nextThreadOrdinal === "number") &&
+    (state.nextTurnOrdinal === undefined ||
+      typeof state.nextTurnOrdinal === "number") &&
+    (state.liveThreads === undefined || Array.isArray(state.liveThreads))
+  );
 }
 
 function inputLocalImagePaths(params: Record<string, unknown> | undefined): string[] {

@@ -182,6 +182,35 @@ test("starts a new thread from home and preserves browser back/forward state", a
   });
 });
 
+test("persists a live thread title and transcript across reload", async ({ page }) => {
+  await openRealLocalApp(page, { width: 1280, height: 900 });
+  await startThread(page, "reload smoke");
+  await expect(page).toHaveURL(/\/threads\/thread-live-\d+$/, {
+    timeout: FAST_EXPECT_TIMEOUT,
+  });
+  await expect(page.getByRole("heading", { name: "reload smoke" })).toBeVisible({
+    timeout: APP_READY_TIMEOUT,
+  });
+  await expect(page.getByRole("button", { name: /reload smoke/ })).toBeVisible({
+    timeout: APP_READY_TIMEOUT,
+  });
+  await expect(page.getByText("Echo: reload smoke")).toBeVisible({
+    timeout: APP_READY_TIMEOUT,
+  });
+
+  const liveThreadUrl = page.url();
+  await page.reload({ waitUntil: "domcontentloaded" });
+
+  await expect(page).toHaveURL(liveThreadUrl, { timeout: FAST_EXPECT_TIMEOUT });
+  await expect(page.getByRole("heading", { name: "reload smoke" })).toBeVisible({
+    timeout: APP_READY_TIMEOUT,
+  });
+  await expect(page.getByText("Echo: reload smoke")).toBeVisible({
+    timeout: APP_READY_TIMEOUT,
+  });
+  await readyMessageInput(page);
+});
+
 test("shows the first user message before assistant output in a real browser", async ({
   page,
 }) => {
