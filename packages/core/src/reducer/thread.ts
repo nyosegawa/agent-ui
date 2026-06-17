@@ -117,7 +117,7 @@ export function reduceThreadEvent(
           {
             ...threadState,
             orderedTurnIds,
-            thread: sanitizeThread({ ...threadState.thread, ...incomingThread }),
+            thread: mergeThread(threadState.thread, incomingThread),
             status,
             turns,
           },
@@ -126,6 +126,7 @@ export function reduceThreadEvent(
               event.type === "thread/started"
                 ? threadId
                 : state.threadLifecycle.activeThreadId,
+            preserveOrder: event.snapshot === true,
           },
         ),
       );
@@ -143,10 +144,14 @@ export function reduceThreadEvent(
           ? currentStatus
           : event.status;
       return threadEntityStore.pruneSnapshots(
-        commitThreadEntity(state, {
-          ...currentThread,
-          status,
-        }),
+        commitThreadEntity(
+          state,
+          {
+            ...currentThread,
+            status,
+          },
+          { preserveOrder: true },
+        ),
       );
     }
     case "thread/name/updated":
@@ -299,6 +304,28 @@ function canonicalizeOperation(
     : operation;
 }
 
+function mergeThread(
+  current: AgentThread,
+  incoming: AgentThread | undefined,
+): AgentThread {
+  const { metadata: _currentMetadata, ...currentThread } = current;
+  void _currentMetadata;
+  const metadata = {
+    ...current.metadata,
+    ...(incoming?.metadata ?? {}),
+  };
+  delete metadata.optimistic;
+  delete metadata.operationId;
+  return sanitizeThread({
+    ...currentThread,
+    ...(incoming?.ephemeral !== undefined ? { ephemeral: incoming.ephemeral } : {}),
+    ...(incoming?.name ? { name: incoming.name } : {}),
+    ...(incoming?.path !== undefined ? { path: incoming.path } : {}),
+    id: incoming?.id ?? current.id,
+    ...(Object.keys(metadata).length > 0 ? { metadata } : {}),
+  });
+}
+
 function canonicalThread(thread: AgentThread, threadId: ThreadId): AgentThread {
   return thread.id === threadId ? thread : { ...thread, id: threadId };
 }
@@ -342,8 +369,7 @@ function reconcileThread(
       operations,
       orderedTurnIds: mergeOrderedTurnIds(canonicalTurnIds, pendingTurnIds),
       thread: {
-        ...pendingThread.thread,
-        ...(canonicalThread?.thread ?? {}),
+        ...mergeThread(pendingThread.thread, canonicalThread?.thread),
         id: canonicalThreadId,
       },
       turns: {

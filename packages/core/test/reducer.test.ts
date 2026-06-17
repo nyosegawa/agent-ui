@@ -418,6 +418,96 @@ describe("agentReducer", () => {
     ]);
   });
 
+  it("keeps collection order stable when a thread is hydrated or marked active", () => {
+    let state = createInitialAgentState();
+    for (const id of ["thread-old", "thread-middle", "thread-new"]) {
+      state = agentReducer(state, {
+        status: "loaded",
+        thread: { id, name: id },
+        type: "thread/started",
+      });
+    }
+    expect(defaultThreadIds(state)).toEqual([
+      "thread-old",
+      "thread-middle",
+      "thread-new",
+    ]);
+
+    state = agentReducer(state, {
+      snapshot: true,
+      status: "loaded",
+      thread: { id: "thread-middle", name: "Hydrated middle" },
+      type: "thread/started",
+    });
+    expect(state.threadLifecycle.activeThreadId).toBe("thread-middle");
+    expect(defaultThreadIds(state)).toEqual([
+      "thread-old",
+      "thread-middle",
+      "thread-new",
+    ]);
+
+    state = agentReducer(state, {
+      status: "running",
+      threadId: "thread-middle",
+      type: "thread/status/changed",
+    });
+    expect(defaultThreadIds(state)).toEqual([
+      "thread-old",
+      "thread-middle",
+      "thread-new",
+    ]);
+  });
+
+  it("keeps a first-message title through canonical reconciliation", () => {
+    let state = createInitialAgentState();
+    state = agentReducer(state, {
+      operation: {
+        id: "operation-first",
+        kind: "firstMessage",
+        status: "pending",
+        threadId: "thread-pending",
+      },
+      status: "running",
+      thread: {
+        id: "thread-pending",
+        metadata: { operationId: "operation-first", optimistic: true },
+        name: "Investigate routing bug",
+        path: "/repo/agent-ui",
+      },
+      type: "thread/optimistic/created",
+    });
+    state = agentReducer(state, {
+      status: "ready",
+      thread: { id: "thread-canonical" },
+      type: "thread/started",
+    });
+    state = agentReducer(state, {
+      canonicalThreadId: "thread-canonical",
+      threadId: "thread-pending",
+      type: "thread/reconciled",
+    });
+
+    expect(state.threads["thread-canonical"]?.thread.name).toBe(
+      "Investigate routing bug",
+    );
+    expect(state.threads["thread-canonical"]?.metadata.title).toBe(
+      "Investigate routing bug",
+    );
+    expect(state.threads["thread-canonical"]?.metadata.cwd).toBe("/repo/agent-ui");
+    expect(state.threads["thread-canonical"]?.thread.metadata?.optimistic).toBeUndefined();
+    expect(state.threads["thread-canonical"]?.thread.metadata?.operationId).toBeUndefined();
+
+    state = agentReducer(state, {
+      name: "Server generated title",
+      threadId: "thread-canonical",
+      type: "thread/name/updated",
+    });
+    expect(state.threads["thread-canonical"]?.thread.name).toBe("Server generated title");
+    expect(state.threads["thread-canonical"]?.metadata.title).toBe(
+      "Server generated title",
+    );
+  });
+
   it("models thread lifecycle state and public thread views separately from raw entities", () => {
     let state = createInitialAgentState();
     state = agentReducer(state, {
