@@ -64,9 +64,11 @@ const reader = useAgentThreadReader();
 ```
 
 `useAgentThreads()` returns normalized thread state in `selectOrderedThreads()`
-order: the default lifecycle collection newest first, with uncollected
-in-memory thread entities appended last as a fallback. Selecting a thread does
-not promote it to the top of the collection.
+order: the default lifecycle collection order, with uncollected in-memory
+thread entities appended last as a fallback. Implicit lifecycle upserts put the
+most recently changed default-collection thread first, while explicit scoped
+collections keep the order supplied by their page events. Selecting a thread
+does not promote it to the top of the collection.
 
 `useAgentThreadHistory().listThreads()` calls `thread/list`, supports search and
 pagination cursor inputs, tracks the latest cursor, and upserts returned thread
@@ -83,9 +85,13 @@ host still owns what those dimensions mean in its product. `onHistorySynced`
 reports normalized sync metadata such as scope, thread ids, cursor, append
 mode, search term, and timestamp; it does not expose raw App Server
 `thread/list` payloads or ask Agent UI to persist history. The scoped
-controller keeps `resumeThread(threadId)` returning the canonical thread id for
-existing callers, and exposes `resumeThreadWithResult(threadId)` when hosts need
-the same `{ threadId, requestedThreadId? }` diagnostic result shape as
+collection ids are the display order for that list. The default sidebar uses
+this controller as its only history source, asks App Server for `updated_at`
+descending, and does not reorder rows when a stored thread is selected or
+preview-hydrated. The scoped controller keeps `resumeThread(threadId)` returning
+the canonical thread id for existing callers, and exposes
+`resumeThreadWithResult(threadId)` when hosts need the same
+`{ threadId, requestedThreadId? }` diagnostic result shape as
 `useAgentThreadController().resumeThread()`.
 
 `useAgentThreadReader().readThread(threadId, { includeTurns: true })` calls

@@ -84,7 +84,7 @@ export function selectItemBlock(
 export function selectOrderedThreads(state: AgentSessionState) {
   const lifecycle = state.threadLifecycle;
   const orderedIds = [
-    ...[...(lifecycle.collections[lifecycle.defaultCollectionKey]?.ids ?? [])].reverse(),
+    ...(lifecycle.collections[lifecycle.defaultCollectionKey]?.ids ?? []),
     ...Object.keys(state.threads),
   ];
   const seen = new Set<ThreadId>();

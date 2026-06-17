@@ -73,7 +73,6 @@ Usage, status, apps, skills, and diagnostics can sit outside the chat column:
 ```tsx
 function HostChrome() {
   const { activeThreadId, setActiveThread } = useAgentThreads();
-  const threadList = useAgentThreadListController({ kind: "history" });
 
   return (
     <AgentShell
@@ -81,7 +80,6 @@ function HostChrome() {
         <AgentThreadSidebar
           activeThreadId={activeThreadId}
           onSelectThread={setActiveThread}
-          threads={threadList.threads}
         />
       }
     >

@@ -136,14 +136,12 @@ export function AgentThreadSidebar({
   onCreateThread,
   onCollapsedChange,
   onSelectThread,
-  threads,
 }: {
   activeThreadId?: string;
   collapsed?: boolean;
   onCreateThread?: () => void;
   onCollapsedChange?: (collapsed: boolean) => void;
   onSelectThread?: (threadId: string) => void;
-  threads: AgentThreadView[];
 }) {
   const { t } = useAgentI18n();
   const compact = useCompactLayout();
@@ -164,11 +162,7 @@ export function AgentThreadSidebar({
   const didAutoLoad = useRef(false);
   const [searchTouched, setSearchTouched] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const fallbackThreads = threads;
-  const visibleThreads =
-    hasLoaded && (searchTouched || threads.length === 0)
-      ? listedThreads
-      : fallbackThreads;
+  const visibleThreads = listedThreads;
   const loadThreadPage = useCallback(
     async (
       params: {
@@ -211,14 +205,14 @@ export function AgentThreadSidebar({
   useEffect(() => {
     if (
       state.connection.status === "connected" &&
-      threads.length === 0 &&
+      !hasLoaded &&
       !isLoading &&
       !didAutoLoad.current
     ) {
       didAutoLoad.current = true;
       void loadThreadPage().catch(() => undefined);
     }
-  }, [isLoading, loadThreadPage, state.connection.status, threads.length]);
+  }, [hasLoaded, isLoading, loadThreadPage, state.connection.status]);
   // Debounced search: typing auto-filters history without a separate Load
   // button. The leading render and the initial auto-load are skipped so the
   // first page is fetched exactly once.

@@ -9,7 +9,7 @@ import type {
   ThreadState,
   ThreadStatus,
 } from "../state";
-import { AGENT_RETENTION_POLICY, boundedUniqueAppend } from "../retention";
+import { AGENT_RETENTION_POLICY, boundedUniquePrepend } from "../retention";
 
 export const DEFAULT_THREAD_COLLECTION_KEY = "all";
 
@@ -166,7 +166,7 @@ export function upsertThread(
     const ids =
       options.preserveOrder && existing.ids.includes(thread.id)
         ? existing.ids
-        : boundedUniqueAppend(
+        : boundedUniquePrepend(
             existing.ids.filter((id) => id !== thread.id),
             thread.id,
             AGENT_RETENTION_POLICY.threadCollectionEntriesMax,
@@ -293,7 +293,7 @@ export function collectionPageReceived(
 }
 
 function boundedUniqueThreadIds(ids: readonly ThreadId[]): ThreadId[] {
-  return unique(ids).slice(-AGENT_RETENTION_POLICY.threadCollectionEntriesMax);
+  return unique(ids).slice(0, AGENT_RETENTION_POLICY.threadCollectionEntriesMax);
 }
 
 export function collectionSynced(
