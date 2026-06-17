@@ -421,7 +421,6 @@ function createSupportConsoleInitialState(): AgentSessionState {
     availability: "available",
     id: ticket.threadId,
     metadata: {
-      cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
       title: `${ticket.id} investigation`,
     },
     operations: {},
@@ -431,7 +430,6 @@ function createSupportConsoleInitialState(): AgentSessionState {
     thread: {
       id: ticket.threadId,
       name: `${ticket.id} investigation`,
-      path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
     },
     tokenUsage: {
       inputTokens: 1450,
