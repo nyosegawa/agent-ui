@@ -31,6 +31,7 @@ Files:
 - `src/scoped-thread-list.tsx`
 - `src/host-owned-composer.tsx`
 - `src/host-gated-workflow.tsx`
+- `src/support-console.tsx`
 - `src/local-media-helper.tsx`
 - `src/bridge-policy.ts`
 - `src/diagnostics-panel.tsx`
@@ -54,6 +55,11 @@ Codex process lifecycle, persistence, billing, and deployment policy.
 approval bar, and a delayed composer. The recipe keeps plan/update state in the
 host and calls `startThreadWithInput(input, { threadOptions, turnOptions })`
 only after the host gate approves the first Codex turn.
+
+`src/support-console.tsx` shows a support SaaS composition where the host owns
+case routing, customer data, tenant mapping, PII policy, reply delivery, and
+helpdesk audit state while embedding Agent UI for transcript, composer, status,
+usage, and diagnostics.
 
 `src/themed.css` intentionally demonstrates host theming by overriding `--aui-*`
 tokens on a wrapper. It should not be read as permission to import

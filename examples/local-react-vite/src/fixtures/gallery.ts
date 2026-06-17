@@ -43,6 +43,14 @@ export const visualQaStates: FixtureState[] = [
   },
   {
     description:
+      "Inquiry desk fixture with host-owned ticket state, customer context, reply review, audit policy, and an embedded Agent UI assistant pane.",
+    group: "primitives",
+    href: "/support-console",
+    meta: "primitives · support SaaS",
+    title: "Support console",
+  },
+  {
+    description:
       "Failed first-message retry through the public composer controller without host-owned rollback logic.",
     group: "primitives",
     href: "/composer-retry",

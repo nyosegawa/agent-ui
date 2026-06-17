@@ -53,6 +53,7 @@ import { createRoot, type Root } from "react-dom/client";
 import "./styles/closeups.css";
 import "./styles/fixture-gallery.css";
 import "./styles/host-recipe.css";
+import "./styles/support-console.css";
 import "./styles/usage-only.css";
 import {
   ComponentCloseupGallery,
@@ -72,6 +73,7 @@ import {
   visualQaStates,
   type FixtureScenario,
 } from "./fixtures/gallery";
+import { SupportConsoleExample } from "./support-console/SupportConsoleExample";
 
 declare global {
   interface Window {
@@ -92,6 +94,7 @@ function DemoApp() {
     return <ScopedThreadListsExample />;
   }
   if (window.location.pathname === "/scoped-thread-pane") return <ScopedThreadPaneExample />;
+  if (window.location.pathname === "/support-console") return <SupportConsoleExample />;
   if (window.location.pathname === "/usage-only") return <UsageOnlyExample />;
   return <AgentDemo />;
 }

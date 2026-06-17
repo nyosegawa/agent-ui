@@ -51,6 +51,12 @@ Routes:
   `useAgentThreadListController`, plus a host-owned workflow gate that toggles
   host actions without taking over Agent UI transcript, composer, approval, or
   history behavior.
+- `/support-console`: support SaaS fixture with a host-owned ticket queue,
+  selected inquiry, customer context, PII policy, reply review, audit trail, and
+  CRM/helpdesk integration labels wrapped around an embedded Agent UI assistant
+  pane. The route uses deterministic fixture data and public components only;
+  authentication, tenant isolation, persistence, reply delivery, and Codex
+  process lifecycle remain host responsibilities.
 - `/composer-retry`: failed optimistic first-message retry through the public
   composer controller.
 - `/transcript-density`: compact transcript route with verbose command/file
@@ -79,6 +85,13 @@ private `.aui-*` implementation selectors. Its local attachment resolver is a
 fixture-only stand-in for host upload storage: it returns id, MIME type, size,
 preview, and redacted path metadata so the host side panel can display safe
 resource details without exposing raw local paths.
+
+The support console route is a narrower business workflow fixture. It shows a
+realistic inquiry desk shape without turning Agent UI into a helpdesk product:
+the route owns ticket selection, customer and tenant metadata, reply review,
+audit notes, PII policy, and CRM/helpdesk integration labels. Agent UI remains
+the embedded Codex App Server surface for transcript, composer, approvals,
+status, usage, diagnostics, and connector metadata.
 
 `bun run test:e2e:fixtures` starts its own preview server on port 4173 for the
 fixture browser checks. Do not rely on a manually running 5174 server for this

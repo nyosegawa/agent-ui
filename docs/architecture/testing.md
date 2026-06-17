@@ -245,6 +245,9 @@ The fixture routes are:
   local-media preview/fallback metadata, scoped thread history loading,
   host-owned workflow gate, first-message optimistic mode, mobile drawer, and
   host-owned review sheet
+- `/support-console`: support SaaS fixture with host-owned ticket queue,
+  customer context, PII policy, reply review, audit trail, and an embedded Agent
+  UI assistant pane
 - `/composer-retry`: failed first-message retry through the public composer
   controller
 - `/resource-resolution`: structured local-media resource rendering without
