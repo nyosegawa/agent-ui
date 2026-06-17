@@ -478,7 +478,7 @@ describe("agentReducer", () => {
     });
     state = agentReducer(state, {
       status: "ready",
-      thread: { id: "thread-canonical" },
+      thread: { id: "thread-canonical", name: "Live real smoke" },
       type: "thread/started",
     });
     state = agentReducer(state, {

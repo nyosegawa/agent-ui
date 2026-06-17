@@ -1487,22 +1487,6 @@ describe("Codex protocol metadata", () => {
         },
         type: "notification/received",
       },
-      {
-        banner: {
-          audience: ["user"],
-          id: "mcp-startup:thread-1:github",
-          kind: "system",
-          message: "MCP server github failed to start for this thread.",
-          raw: {
-            error: "missing API key",
-            name: "github",
-            status: "failed",
-            threadId: "thread-1",
-          },
-          severity: "warning",
-        },
-        type: "status/banner/added",
-      },
     ]);
 
     for (const status of ["starting", "ready", "cancelled"]) {
@@ -1520,10 +1504,6 @@ describe("Codex protocol metadata", () => {
             params: { error: null, name: "github", status, threadId: "thread-1" },
           },
           type: "notification/received",
-        },
-        {
-          id: "mcp-startup:thread-1:github",
-          type: "status/banner/removed",
         },
       ]);
     }

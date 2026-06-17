@@ -43,8 +43,8 @@ For browser-visible work, verify interactions, not only screenshots:
 - create a new thread, wait for the first title update and assistant response,
   reload its `/threads/<threadId>` URL, and verify the title, transcript, and
   editable composer remain available
-- verify app-scoped MCP startup failures stay in developer/audit diagnostics
-  unless the host intentionally promotes them
+- verify MCP startup failures stay in developer/audit diagnostics unless the
+  host intentionally promotes them in host-owned UI
 - verify transcript local media uses structured asset URLs and missing media
   renders the fallback
 - verify bridge admission accepts and rejects the expected connections before

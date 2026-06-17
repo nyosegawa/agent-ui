@@ -32,9 +32,9 @@ host.
 
 App-scoped MCP server startup failures are developer/audit diagnostics by
 default. They can explain why a configured Codex MCP server failed to start, but
-they are not shown as primary chat status unless the failure is thread-scoped
-and mapped to a user warning banner. When the App Server later
-reports a non-failed startup state for that thread, Agent UI removes the banner.
+they are not shown as primary chat status. Thread-scoped startup status is also
+kept in developer/audit diagnostics until Agent UI has an explicit
+thread-scoped visible banner model.
 
 ## Redaction And Host Events
 

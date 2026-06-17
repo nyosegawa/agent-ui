@@ -334,6 +334,14 @@ function canonicalTurn(turn: AgentTurn, threadId: ThreadId): AgentTurn {
   return turn.threadId === threadId ? turn : { ...turn, threadId };
 }
 
+function pendingFirstMessageTitle(thread: ThreadState): string | undefined {
+  const hasFirstMessageOperation = Object.values(thread.operations).some(
+    (operation) => operation.kind === "firstMessage",
+  );
+  if (!hasFirstMessageOperation) return undefined;
+  return thread.metadata.title ?? thread.thread.name;
+}
+
 function reconcileThread(
   state: AgentSessionState,
   pendingThreadId: string,
@@ -355,6 +363,7 @@ function reconcileThread(
           : operation,
       ]),
     );
+    const firstMessageTitle = pendingFirstMessageTitle(pendingThread);
     const pendingTurnIds = pendingThread.orderedTurnIds;
     const canonicalTurnIds = canonicalThread?.orderedTurnIds ?? [];
     threads[canonicalThreadId] = {
@@ -365,12 +374,14 @@ function reconcileThread(
       metadata: {
         ...pendingThread.metadata,
         ...(canonicalThread?.metadata ?? {}),
+        ...(firstMessageTitle ? { title: firstMessageTitle } : {}),
       },
       operations,
       orderedTurnIds: mergeOrderedTurnIds(canonicalTurnIds, pendingTurnIds),
       thread: {
         ...mergeThread(pendingThread.thread, canonicalThread?.thread),
         id: canonicalThreadId,
+        ...(firstMessageTitle ? { name: firstMessageTitle } : {}),
       },
       turns: {
         ...reconcilePendingTurnThreadIds(

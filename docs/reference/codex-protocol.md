@@ -597,10 +597,9 @@ user-facing diagnostics until a productized normalizer maps them to explicit UI
 state.
 MCP server startup status follows the same split. App-scoped startup failures
 are developer/audit diagnostics because they usually describe host or Codex
-configuration, not a user action inside the current chat. Thread-scoped MCP
-startup failures may synthesize a user warning banner for that thread, and later
-non-failed startup updates remove that banner instead of leaving stale status
-chrome behind.
+configuration, not a user action inside the current chat. Thread-scoped startup
+status is also preserved as developer/audit diagnostics until Agent UI has an
+explicit thread-scoped visible banner model.
 
 Current protocol non-goals:
 
