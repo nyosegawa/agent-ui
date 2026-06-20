@@ -21,9 +21,9 @@
 ## Investigation Method
 
 - Repo root: `/Users/sakasegawa/.codex/worktrees/8ccc/agent-ui`
-- Subagents used: four explorer subagents.
-- Research rounds: three planned rounds. Rounds 1 and 2 completed before the artifact hardening pass; Round 3 reviews this updated package.
-- Main-agent inspections: protocol docs, package export docs, core server-request state/selectors, Codex normalizers/request builders/stable type exports, React approval rendering/tests, raw JSON-RPC fixture tests, generated schema diff from PR #33.
+- Subagents used: eight explorer subagents.
+- Research rounds: three compatibility rounds completed, then four additional explorers reviewed Agent Skills, docs, examples, and cross-cutting release/package omissions.
+- Main-agent inspections: protocol docs, package export docs, core server-request state/selectors, Codex normalizers/request builders/stable type exports, React approval rendering/tests, raw JSON-RPC fixture tests, generated schema diff from PR #33, public integration skill docs, docs examples, and example request-builder/local-media consumers.
 - Web/current research: skipped intentionally; the plan depends on checked-out repo code and vendored upstream schema already refreshed in PR #33, not external live facts.
 
 ## Subagent Rounds
@@ -79,6 +79,28 @@
 - Findings: approval lane ready; path lane ready; deprecated fallback lane ready; release/package/docs/validation lane ready.
 - Follow-up needed: no blocking omissions or contradictions found. Re-run artifact validator, then commit/push updated plan.
 
+### Supplemental Round 4
+
+- Lane: public Agent Skill surface.
+- Prompt/source: explorer subagent `019ee6d3-4113-79b1-a37f-cd1f7332664f`.
+- Findings: plan omitted the public `skills/agent-ui/**` integration guidance. `skills/agent-ui/references/uploads.md` still calls `createAgentUiLocalUploadHandler()` an "upload-only compatibility entry point", and `test/agent-ui-skill.test.ts` asserts public skill text. Add skill docs/tests to P002/P004 and `bun run test:skills`.
+- Follow-up needed: do not force approval prose edits in the skill unless sweeps find stale names; treat approval as verified-no-change evidence.
+
+- Lane: docs/reference and guides.
+- Prompt/source: explorer subagent `019ee6d3-41a8-7ba2-b600-670224816033`.
+- Findings: docs must explicitly update approvals, hooks, React components, Codex protocol, package exports, server bridge, attachments, and diagnostics. Avoid calling `execCommandApproval` / `applyPatchApproval` public methods, avoid "path URI" for local filesystem paths, and keep generated stable-types exceptions.
+- Follow-up needed: add docs staleness validation and docs sweeps if docs are changed.
+
+- Lane: examples and API snapshots.
+- Prompt/source: explorer subagent `019ee6d3-4285-7550-8585-6800dc0e4444`.
+- Findings: examples blast radius is under-specified. Direct request-builder/local-media consumers include codex-local-web, next-with-bridge-sidecar, local-react-vite, and recipes. API snapshots that must change include `core__index.d.ts` and `codex__request-builders.d.ts`; `codex__stable-types.d.ts` is deliberately unchanged except for generated upstream drift.
+- Follow-up needed: real-local fake server should keep current approval methods; legacy approval intake belongs in raw fixtures, not examples.
+
+- Lane: release/package/cross-cutting omissions.
+- Prompt/source: explorer subagent `019ee6d3-433b-7f53-b97f-09e9fb7b6b70`.
+- Findings: major-bump guidance conflicts with current pre-1.0/fixed-version release policy; use minor unless an explicit 1.0/major policy decision is made. Same-branch request means keep PR #33 stacked and rewrite its title/body for schema refresh plus compatibility cleanup. Split current P004 into docs/skills/examples/snapshots and release/PR/CI.
+- Follow-up needed: add root Codex export guard decision for generated method params/results, `bun run test:repo-skills` if maintainer skills change, and public/source-structure guards for core approval kinds.
+
 ## Sources Inspected
 
 - `AGENTS.md`
@@ -87,6 +109,17 @@
 - `docs/reference/package-exports.md`
 - `docs/reference/react-protocol-coverage.md`
 - `docs/reference/codex-protocol.md`
+- `docs/guides/approvals.md`
+- `docs/guides/attachments.md`
+- `docs/guides/diagnostics.md`
+- `docs/guides/host-integration.md`
+- `docs/reference/hooks.md`
+- `docs/reference/react-components.md`
+- `docs/reference/server-bridge.md`
+- `docs/examples/codex-local-web.md`
+- `docs/examples/next-with-bridge-sidecar.md`
+- `docs/examples/local-react-vite.md`
+- `docs/examples/recipes.md`
 - `packages/core/src/state/server-requests.ts`
 - `packages/core/src/selectors.ts`
 - `packages/codex/src/normalizers/server-requests.ts`
@@ -119,7 +152,17 @@
 - `packages/react/test/source-structure.vitest.ts`
 - `packages/react/test/usage.vitest.ts`
 - `packages/react/test/status-formatting.vitest.ts`
+- `test/agent-ui-skill.test.ts`
 - `test/api-snapshots/*.d.ts`
+- `skills/agent-ui/SKILL.md`
+- `skills/agent-ui/references/uploads.md`
+- `skills/agent-ui/references/local-single-user.md`
+- `skills/agent-ui/references/debug.md`
+- `examples/codex-local-web/src/main.tsx`
+- `examples/next-with-bridge-sidecar/app/page.tsx`
+- `examples/local-react-vite/src/main.tsx`
+- `examples/local-react-vite/src/closeups/ComponentCloseupGallery.tsx`
+- `examples/recipes/src/local-media-helper.tsx`
 - Relevant skills: `.agents/skills/agent-ui-feature-planning/SKILL.md`, `.agents/skills/codex-upstream-sync/references/protocol-review.md`
 - Relevant workflows/scripts: `.agents/skills/agent-ui-feature-planning/scripts/check-freshness.mjs`, `scripts/check-api-snapshots.mjs`
 - Web/current sources: none.
@@ -134,11 +177,16 @@
 - Deprecated or compatibility protocol surfaces already exist: `item/fileChange/outputDelta`, `thread/compacted`, `mcpAppResourceUri`, `McpElicitationLegacyTitledEnumSchema`, account rate-limit single-bucket compatibility views, and managed-config legacy source names.
 - Additional generated-only or fallback-only surfaces include `additionalSpeedTiers`, `legacyManagedConfig*`, `rateLimitsByLimitId` / `rate_limits_by_limit_id`, and `LegacyAppPathString` / `AbsolutePathBuf` outside preferred facades.
 - Some compatibility surfaces are protocol evidence or host-only config and should remain raw or fallback-only, not become React lifecycle or product state.
+- Public integration skill docs are part of the host-facing surface. They must not keep compatibility wording such as "upload-only compatibility entry point" if the implementation cleans that boundary.
+- Docs currently contain explicit stale approval kind lists and must be updated with the behavior change, not deferred to generic docs cleanup.
+- Examples have direct request-builder/local-media path consumers; the implementation must inspect and typecheck those examples even if no source edit is ultimately needed.
+- Current release policy is pre-1.0 fixed-version packages; compatibility cleanup should normally use a minor changeset across the fixed package set unless the maintainer explicitly decides to cross to 1.0/major.
 
 ## Repo Guidance Findings
 
 - Agent UI must remain a reusable Codex App Server UI library; host auth, persistence, process lifecycle, deployment, billing, and workspace isolation stay host-owned.
 - Public API changes require docs, tests, API snapshots, package-resolution evidence, and release impact assessment.
+- Public integration skill changes require `bun run test:skills`; maintainer skill changes require `bun run test:repo-skills`.
 - Use Bun for package operations.
 - Do not edit `third_party/codex`.
 - Do not hand-edit generated schema or dist output.
@@ -150,15 +198,18 @@
 - Host-owned: raw filesystem selection, remote path authority, config source policy, billing/account mutation, MCP tool policy, auth and bridge admission.
 - Protected: `third_party/codex`, `packages/codex/src/generated/**`, compiled `dist/**`.
 - Release-sensitive: public core/react/codex declaration changes and API snapshots.
+- Public guidance-sensitive: `skills/agent-ui/**`, `test/agent-ui-skill.test.ts`, docs examples, and recipe source.
 
 ## Validation / CI Findings
 
 - Required focused gates: `bun run test:protocol`, `bun run typecheck`, `bun run lint`, `bun run test:api-snapshots`, `bun run test:package-resolution`.
 - Final release gate: `bun run validate:release`.
+- Skill/doc/example gates: `bun run test:skills`, `bun run test:repo-skills` if maintainer skills change, docs staleness tests if docs are edited, and example package typecheck/build commands for touched examples.
 - Public API cleanup should also run focused core/react tests for server requests and approvals, plus package validation before claiming release readiness.
 - API snapshots must be intentionally updated after reviewing declaration changes.
 - API snapshot flow should build first, inspect failure, run `bun run test:api-snapshots:update`, review snapshot diff, then rerun `bun run test:api-snapshots`.
 - Browser-visible approval changes should run relevant React component tests; Playwright fixture smoke is useful if rendered approval text or placement changes.
+- Browser-visible local-media or approval changes should also run the relevant local-react-vite and codex-local-web Playwright tests.
 
 ## Existing Skill / Command Findings
 
@@ -183,11 +234,11 @@
 
 ## Risks
 
-- Renaming public approval kinds is a breaking API change even if no users exist yet; changesets and API snapshots must capture it.
+- Renaming public approval kinds is an npm-facing API change even if no users exist yet; changesets and API snapshots must capture it.
 - A too-broad path URI migration could accidentally move host-owned path authority into core.
 - Removing deprecated protocol input handling entirely could break raw fixture coverage or App Server compatibility; keep fallback intake until upstream removes methods.
 - Hidden generated type re-exports may still expose legacy names through `stable-types`; this should be documented as generated-only, not treated as product API failure.
-- Stacking breaking cleanup onto PR #33 risks hiding a public API cleanup inside an upstream schema refresh; implementation should prefer a follow-up PR after #33 or explicitly rewrite PR #33 scope.
+- Stacking cleanup onto PR #33 risks hiding public API cleanup inside an upstream schema refresh; because the user asked to stay on this branch, the plan now requires rewriting PR #33 title/body and evidence rather than leaving it schema-only.
 
 ## Decisions
 
@@ -196,7 +247,8 @@
 - Introduce low-churn Agent UI-owned path aliases for product request surfaces, and convert generated legacy string paths at normalizer/request-builder boundaries.
 - Treat `clients` and `session` result types as generated-backed advanced protocol facades unless a later phase explicitly designs raw-free result view models.
 - Keep deprecated notifications and fields as raw/fallback protocol intake only, with tests that they do not become product lifecycle behavior.
-- Add changeset coverage because public npm declarations will change. Default to major bumps for core/react/codex if public union members or normalizer output shapes are removed/renamed; document any deliberate pre-1.0 minor policy exception.
+- Add changeset coverage because public npm declarations will change. Use the repo's pre-1.0 fixed-version policy: minor bumps unless an explicit 1.0/major policy decision is made, and include the fixed public package set.
+- Split docs/skills/examples/snapshots from final release/PR/CI so the implementation remains reviewable as phase commits on the same branch.
 
 ## Rejected Approaches
 
@@ -204,6 +256,8 @@
 - Do not keep `legacyExecApproval` / `legacyPatchApproval` as public kinds just because upstream still emits old methods.
 - Do not introduce a fake `PathUri = string` product API without parse/format rules.
 - Do not delete deprecated protocol intake before upstream stable schema removes it.
+- Do not leave the public `skills/agent-ui` integration guidance or docs examples stale while cleaning package APIs.
+- Do not add compatibility-specific policy to unrelated release, browser, or example-authoring skills; use the plan sweeps and skill tests instead.
 
 ## Remaining Unknowns
 

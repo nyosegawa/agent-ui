@@ -19,7 +19,7 @@
 ## branch and planning commit
 
 - Branch: `codex-upstream/64bdeed9f7ad`
-- Planning commit: use the committed package on this branch.
+- Planning commits: use latest committed package on this branch.
 - Same-branch rule: planning and implementation share this branch.
 
 ## freshness policy and freshness result
@@ -29,8 +29,8 @@
 
 ## execution rules
 
-- Read research.md, plan.md, and todo.md before edits.
-- Execute one TODO phase per iteration: P001 approvals, P002 paths, P003 fallbacks, P004 release.
+- Read research.md, plan.md, todo.md before edits.
+- Execute one TODO phase per iteration: P001 approvals, P002 paths/root exports, P003 fallbacks, P004 docs/skills/examples/snapshots, P005 release/PR/CI.
 - Preserve generated schema and generated stable-types as explicit exceptions; clean preferred product APIs only.
 - Update todo.md with statuses and evidence.
 
@@ -38,34 +38,35 @@
 
 - Run phase-specific focused validation before marking a phase complete.
 - Required final checks: bun run test:protocol; bun run typecheck; bun run lint; bun run build; bun run test:api-snapshots; bun run test:package-resolution; bun run validate:packages; bun run validate:release.
+- Run bun run test:skills for public skill changes; bun run test:repo-skills only for maintainer skill changes.
+- Typecheck/build touched examples; run Playwright only for approval/local-media visible behavior.
 - Update API snapshots only after reviewing declaration changes.
 - Run todo.md rg sweeps and record generated exceptions.
 
 ## review rules
 
 - Review after each phase; use subagent if available.
-- Fix findings, rerun affected validation, and record evidence in todo.md.
+- Fix findings, rerun affected validation, record evidence.
 
 ## commit rules
 
-- Prefer one commit per completed phase after validation and review.
+- Prefer one commit per completed phase.
 - Do not commit unrelated worktree changes.
-- Add changeset. Default to major for core/react/codex when public union members or normalizer outputs are removed/renamed unless a pre-1.0 minor policy is chosen.
+- Add changeset: pre-1.0 fixed-version minor unless explicit 1.0/major decision.
 
 ## push rules
 
 - Push completed phase commits to origin/codex-upstream/64bdeed9f7ad.
-- Record pushed commit hash or blocker in todo.md.
+- Record commit hash or blocker.
 
 ## PR rules
 
-- Prefer keeping PR #33 schema-only and doing cleanup in a follow-up PR. If stacked on PR #33, retitle/rewrite PR scope before review.
-- PR notes: API, protocol, docs, validation, changeset, risks.
+- Keep PR #33 per same-branch request; retitle/rewrite from schema-only to schema refresh plus compatibility cleanup before review.
+- PR notes: API, protocol, docs, skills, examples, validation, changeset, risks.
 
 ## CI follow-through rules
 
-- Inspect GitHub checks to concrete pass/fail after push.
-- Record skipped checks and residual risk.
+- Inspect GitHub checks to concrete pass/fail; record skipped checks and residual risk.
 
 ## evidence rules
 
@@ -75,13 +76,13 @@
 
 - Do not edit third_party/codex.
 - Do not hand-edit packages/codex/src/generated/** or dist/**.
-- Do not move host-owned auth, persistence, workspace isolation, lifecycle, billing, or deployment into core.
+- Do not move host auth, persistence, isolation, lifecycle, billing, deployment into core.
 
 ## repo-specific checks
 
-- Generated-only compatibility names stay in generated surfaces.
 - Core/react public APIs expose no legacy approval kinds after P001.
 - Request-builders hide generated path names; clients/session may be generated-backed only if documented.
+- Public skills/docs/examples must not advertise legacy names or path URI terminology for local paths.
 
 ## stop conditions
 
@@ -90,4 +91,4 @@
 
 ## escalation conditions
 
-- Escalate if validation cannot run, CI is blocked, or branch/PR strategy conflicts with PR #33.
+- Escalate if validation cannot run, CI is blocked, or same-branch PR strategy conflicts with PR #33.
