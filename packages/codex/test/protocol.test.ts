@@ -582,6 +582,31 @@ describe("Codex protocol metadata", () => {
     );
   });
 
+  it("maps deprecated file-change output deltas as compatibility command output", () => {
+    expect(stableNotificationCoverage["item/fileChange/outputDelta"]).toBe("mapped");
+    expect(
+      normalizeCodexServerMessage({
+        method: "item/fileChange/outputDelta",
+        params: {
+          chunk: "deprecated chunk\n",
+          data: "deprecated data\n",
+          delta: "current delta\n",
+          itemId: "patch-output",
+          threadId: "thread-items",
+          turnId: "turn-items",
+        },
+      }),
+    ).toEqual([
+      {
+        delta: "current delta\n",
+        itemId: "patch-output",
+        threadId: "thread-items",
+        turnId: "turn-items",
+        type: "item/commandOutput/delta",
+      },
+    ]);
+  });
+
   it("normalizes thread/read responses into snapshot history events", () => {
     const events = normalizeThreadReadResponse({
       thread: {

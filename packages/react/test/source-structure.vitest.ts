@@ -220,6 +220,27 @@ describe("React package source structure", () => {
     expect(reactSnapshot).not.toContain("raw: any");
   });
 
+  it("keeps deprecated protocol fallback names out of public declaration snapshots", () => {
+    const snapshots = [
+      readFileSync(join(repoRoot, "test", "api-snapshots", "core__index.d.ts"), "utf8"),
+      readFileSync(reactApiSnapshot, "utf8"),
+    ].join("\n");
+    for (const deprecatedName of [
+      "item/fileChange/outputDelta",
+      "thread/compacted",
+      "mcpAppResourceUri",
+      "rate_limits",
+      "rate_limits_by_limit_id",
+      "used_percent",
+      "window_duration_mins",
+      "reset_at",
+      "model_provider",
+      "sourceName",
+    ]) {
+      expect(snapshots).not.toContain(deprecatedName);
+    }
+  });
+
   it("keeps style chunks responsibility-sized", () => {
     for (const name of readdirSync(styleDir)) {
       if (!name.endsWith(".css")) continue;

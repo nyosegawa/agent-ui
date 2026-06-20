@@ -33,6 +33,38 @@ describe("normalizeUsageWindows", () => {
     ).toEqual(["codex 5h", "codex weekly"]);
   });
 
+  it("prefers current rate-limit fields over deprecated fallback fields", () => {
+    expect(
+      normalizeUsageWindows({
+        rateLimits: {
+          limitId: "current",
+          limitName: null,
+          primary: { resetsAt: 1778275493, usedPercent: 12, windowDurationMins: 300 },
+        },
+        rate_limits: {
+          limit_id: "deprecated",
+          primary: { reset_at: 1778275493, used_percent: 95, window_duration_mins: 300 },
+        },
+        rateLimitsByLimitId: {
+          currentById: {
+            limitId: "current-by-id",
+            limitName: null,
+            primary: { resetsAt: 1778275493, usedPercent: 34, windowDurationMins: 300 },
+          },
+        },
+        rate_limits_by_limit_id: {
+          deprecatedById: {
+            limit_id: "deprecated-by-id",
+            primary: { reset_at: 1778275493, used_percent: 99, window_duration_mins: 300 },
+          },
+        },
+      }).map(({ label, percent, valueLabel }) => ({ label, percent, valueLabel })),
+    ).toEqual([
+      { label: "current 5h", percent: 12, valueLabel: "12%" },
+      { label: "current-by-id 5h", percent: 34, valueLabel: "34%" },
+    ]);
+  });
+
   it("handles legacy used/limit fixture windows", () => {
     expect(
       normalizeUsageWindows({

@@ -41,6 +41,13 @@ describe("raw App Server JSON-RPC fixture pack", () => {
     }
   });
 
+  it("keeps deprecated compatibility fixtures named and classified together", () => {
+    const manifest = JSON.parse(readFileSync(join(fixtureRoot, "manifest.json"), "utf8"));
+    for (const entry of manifest.fixtures as Array<{ file: string; stability: string }>) {
+      expect(entry.file.startsWith("deprecated-")).toBe(entry.stability === "deprecated");
+    }
+  });
+
   it("keeps deprecated file-change output delta isolated and readable", () => {
     const manifest = JSON.parse(readFileSync(join(fixtureRoot, "manifest.json"), "utf8"));
     for (const entry of manifest.fixtures as Array<{ file: string }>) {

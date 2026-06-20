@@ -177,6 +177,8 @@ browser defaults, or server bridge policies.
 Deprecated protocol notifications are not mixed into current fixture files.
 Compatibility fixtures use a `deprecated-*.jsonl` name and should keep payloads
 readable, for example plain text deltas instead of base64-looking literals.
+Deprecated fixture files must also be classified as `deprecated` in the
+manifest; current fixture files must not carry those compatibility-only methods.
 
 - `thread-start-basic.jsonl`
 - `turn-text-stream.jsonl`
@@ -268,6 +270,14 @@ response is empty and the stable `thread/compacted` notification is deprecated
 in favor of item-level context compaction data. Agent UI preserves
 `thread/compacted` as developer/audit raw diagnostics instead of inventing core
 compact lifecycle state.
+Deprecated compatibility inputs are adapter-only. `item/fileChange/outputDelta`
+is still mapped so older App Server streams remain readable, but it is not a
+file patch lifecycle surface; current file-change behavior comes from
+`item/fileChange/patchUpdated`. When a payload carries both current and
+deprecated field spellings, Agent UI chooses the current field name first and
+uses deprecated spellings only as fallback intake. Rate-limit snake_case fields,
+legacy app fields, and generated compatibility names must remain view-adapter or
+generated-type details rather than React/Core public API names.
 `normalizeThreadResumeResponse()` also understands `initialTurnsPage`; resume
 metadata and the initial page are emitted as non-destructive snapshot events so
 `excludeTurns: true` can add page data without clearing an existing transcript.
@@ -304,9 +314,10 @@ Productized stable Agent UI behavior:
   `item/reasoning/summaryTextDelta`, `item/reasoning/summaryPartAdded`,
   `item/reasoning/textDelta`, `item/commandExecution/outputDelta`,
   `item/commandExecution/terminalInteraction`,
-  `item/fileChange/outputDelta`, `item/fileChange/patchUpdated`,
-  `item/mcpToolCall/progress`, and command exec output notifications already
-  normalized as structured or raw activity.
+  `item/fileChange/patchUpdated`, `item/mcpToolCall/progress`, and command exec
+  output notifications already normalized as structured or raw activity.
+  Deprecated `item/fileChange/outputDelta` is a mapped compatibility input only,
+  normalized as command output for old streams.
 - Approval and host-input requests:
   `item/commandExecution/requestApproval`,
   `item/fileChange/requestApproval`, `item/tool/requestUserInput`,

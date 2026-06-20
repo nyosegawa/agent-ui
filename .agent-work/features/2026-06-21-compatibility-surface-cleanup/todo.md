@@ -77,7 +77,7 @@
       - Expected files/areas: `docs/reference/package-exports.md`, `docs/reference/codex-protocol.md`, `docs/reference/react-components.md`, `docs/reference/server-bridge.md`, `docs/guides/attachments.md`, `skills/agent-ui/SKILL.md`, `skills/agent-ui/references/uploads.md`, `skills/agent-ui/references/local-single-user.md`, `skills/agent-ui/references/debug.md`, `test/agent-ui-skill.test.ts`.
       - Validation note: document generated-only exception, generated-backed clients/session result types, and remove stale "upload-only compatibility entry point" wording if that surface is de-emphasized.
 
-- [ ] P003 Contain deprecated protocol fallbacks
+- [x] P003 Contain deprecated protocol fallbacks
   - Goal: keep deprecated notifications and fields as raw/fallback intake only, with tests preventing product lifecycle promotion.
   - Scope: `item/fileChange/outputDelta`, `thread/compacted`, `mcpAppResourceUri`, MCP legacy enum schemas, account rate-limit compatibility views, status formatting fallbacks, config legacy source names, deprecated model fields.
   - Expected files/areas: notification coverage, item/server-request normalizers, raw fixture tests, protocol docs, React usage/status formatting tests, source-structure guards.
@@ -87,22 +87,22 @@
   - Push: push after validation/review.
   - PR/CI: explain residual protocol compatibility accepted at adapter boundary.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: Current rate-limit fields now win over deprecated snake_case fallback fields in React usage/status adapters; deprecated `item/fileChange/outputDelta` is documented and tested as mapped compatibility command output only; deprecated raw JSONL fixtures are required to use `deprecated-*` names and manifest stability; React/Core public declaration snapshots are guarded against deprecated fallback names.
+    - Validation: `bunx vitest run --config vitest.config.ts packages/codex/test/protocol.test.ts packages/codex/test/raw-jsonrpc-fixtures.test.ts packages/react/test/usage.vitest.ts packages/react/test/status-formatting.vitest.ts packages/react/test/source-structure.vitest.ts` passed; `bun run test:protocol` passed; `bun run typecheck` passed; `bun run lint` passed; `bun run test:api-snapshots` passed; `bun run test:package-resolution` passed.
+    - Review: Pending subagent review after commit, per sequential commit policy.
+    - Commit: Pending.
+    - Push: Pending.
   - Tasks:
-    - [ ] T009 Add explicit tests/docs for deprecated notification fallback handling.
+    - [x] T009 Add explicit tests/docs for deprecated notification fallback handling.
       - Expected files/areas: protocol tests, `docs/reference/codex-protocol.md`, `docs/guides/diagnostics.md`.
       - Validation note: raw fixture isolation remains intact; `item/fileChange/outputDelta` stays mapped compatibility fallback.
-    - [ ] T010 Normalize deprecated fields through current names where applicable.
+    - [x] T010 Normalize deprecated fields through current names where applicable.
       - Expected files/areas: MCP/dynamic tool normalizers and tests.
       - Validation note: current field wins over deprecated fallback.
-    - [ ] T011 Keep account/config/model compatibility fields generated-only or view-adapter-only.
+    - [x] T011 Keep account/config/model compatibility fields generated-only or view-adapter-only.
       - Expected files/areas: `packages/react/src/usage.ts`, `packages/react/src/components/status-formatting.ts`, docs, protocol metadata tests.
       - Validation note: rate-limit compatibility stays React view adapter; no new core raw schema promise.
-    - [ ] T012 Add deprecated-name source-structure guards.
+    - [x] T012 Add deprecated-name source-structure guards.
       - Expected files/areas: `packages/react/test/source-structure.vitest.ts`, API snapshots.
       - Validation note: guard core/react declarations against deprecated names; exempt generated stable-types.
 
