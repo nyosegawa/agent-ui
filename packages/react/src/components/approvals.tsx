@@ -57,16 +57,16 @@ export function AgentApprovalQueue({
       <ApprovalCard
         approval={expanded}
         onApprove={() =>
-          deferAction(() => void approve(expanded.id, approvalResult(expanded), expanded))
+          deferAction(() => void approve(expanded.id, approvalResult(expanded)))
         }
         onApproveForSession={() =>
           deferAction(() =>
-            void approve(expanded.id, approvalSessionResult(expanded), expanded),
+            void approve(expanded.id, approvalSessionResult(expanded)),
           )
         }
         onReject={() =>
           deferAction(() =>
-            void approve(expanded.id, declineApprovalResult(expanded), expanded),
+            void approve(expanded.id, declineApprovalResult(expanded)),
           )
         }
       />
@@ -459,16 +459,40 @@ function MetadataGrid({ rows }: { rows: Array<[string, string | undefined]> }) {
 }
 
 function approvalResult(approval: PendingServerRequest) {
-  if (isDecisionApprovalKind(approval.kind)) return { decision: "accept" };
+  if (isDecisionApprovalKind(approval.kind)) return approvalDecisionResult(approval, "accept");
   return undefined;
 }
 
 function approvalSessionResult(approval: PendingServerRequest) {
-  if (isDecisionApprovalKind(approval.kind)) return { decision: "acceptForSession" };
+  if (isDecisionApprovalKind(approval.kind)) {
+    return approvalDecisionResult(approval, "acceptForSession");
+  }
   return undefined;
 }
 
 function declineApprovalResult(approval: PendingServerRequest) {
-  if (isDecisionApprovalKind(approval.kind)) return { decision: "decline" };
+  if (isDecisionApprovalKind(approval.kind)) return approvalDecisionResult(approval, "decline");
   return undefined;
+}
+
+function approvalDecisionResult(
+  approval: PendingServerRequest,
+  decision: "accept" | "acceptForSession" | "decline",
+) {
+  if (isLegacyApprovalPayload(approval.payload)) {
+    switch (decision) {
+      case "accept":
+        return { decision: "approved" };
+      case "acceptForSession":
+        return { decision: "approved_for_session" };
+      case "decline":
+        return { decision: "denied" };
+    }
+  }
+  return { decision };
+}
+
+function isLegacyApprovalPayload(payload: unknown): boolean {
+  if (!isRecord(payload)) return false;
+  return payload.upstreamMethod === "execCommandApproval" || payload.upstreamMethod === "applyPatchApproval";
 }

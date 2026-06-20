@@ -2,7 +2,6 @@ import {
   selectPendingApprovals,
   selectServerRequestQueue,
   type AgentError,
-  type PendingServerRequest,
   type RequestId,
   type ThreadId,
 } from "@nyosegawa/agent-ui-core";
@@ -17,13 +16,8 @@ export function useAgentApprovals(threadId?: ThreadId) {
   );
 
   const approve = useCallback(
-    async (
-      requestId: RequestId,
-      result: unknown = { decision: "accept" },
-      approval?: PendingServerRequest,
-    ) => {
-      const matchedApproval =
-        approval ?? approvals.find((candidate) => candidate.id === requestId);
+    async (requestId: RequestId, result: unknown = { decision: "accept" }) => {
+      const matchedApproval = approvals.find((candidate) => candidate.id === requestId);
       await transport.respond(
         requestId,
         matchedApproval

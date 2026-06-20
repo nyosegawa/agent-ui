@@ -6193,11 +6193,29 @@ describe("AgentChat", () => {
 
     await user.click(
       screen.getByRole("button", {
+        name: "Approve command request legacy-controlled-command",
+      }),
+    );
+    expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
+      decision: "approved",
+    });
+
+    await user.click(
+      screen.getByRole("button", {
         name: "Approve command request legacy-controlled-command for session",
       }),
     );
     expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
       decision: "approved_for_session",
+    });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Decline command request legacy-controlled-command",
+      }),
+    );
+    expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
+      decision: "denied",
     });
   });
 
