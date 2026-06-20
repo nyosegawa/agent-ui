@@ -6170,6 +6170,37 @@ describe("AgentChat", () => {
     });
   });
 
+  it("responds to controlled legacy approval props with legacy decisions", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider transport={transport}>
+        <AgentApprovalQueue
+          approvals={[
+            {
+              id: "legacy-controlled-command",
+              kind: "commandApproval",
+              payload: {
+                command: ["sh", "-lc", "bun test"],
+                upstreamMethod: "execCommandApproval",
+              },
+              threadId: "thread-legacy",
+            },
+          ]}
+        />
+      </AgentProvider>,
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Approve command request legacy-controlled-command for session",
+      }),
+    );
+    expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
+      decision: "approved_for_session",
+    });
+  });
+
   it("sends composer input as stable Codex user input items", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();

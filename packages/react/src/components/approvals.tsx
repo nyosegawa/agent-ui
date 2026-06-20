@@ -57,16 +57,16 @@ export function AgentApprovalQueue({
       <ApprovalCard
         approval={expanded}
         onApprove={() =>
-          deferAction(() => void approve(expanded.id, approvalResult(expanded)))
+          deferAction(() => void approve(expanded.id, approvalResult(expanded), expanded))
         }
         onApproveForSession={() =>
           deferAction(() =>
-            void approve(expanded.id, approvalSessionResult(expanded)),
+            void approve(expanded.id, approvalSessionResult(expanded), expanded),
           )
         }
         onReject={() =>
           deferAction(() =>
-            void approve(expanded.id, declineApprovalResult(expanded)),
+            void approve(expanded.id, declineApprovalResult(expanded), expanded),
           )
         }
       />
