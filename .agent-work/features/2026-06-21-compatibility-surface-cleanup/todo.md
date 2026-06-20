@@ -6,15 +6,15 @@
 - Current phase: P005 complete
 - Blockers: none.
 - Last validation: final required local validation passed, including `bun run test:protocol`, `bun run typecheck`, `bun run lint`, `bun run test:api-snapshots`, `bun run test:package-resolution`, `bun run validate:fast`, and `bun run validate:release`.
-- Last review: every implementation/evidence commit was followed by subagent review; latest evidence-only head `ba37f16` was reviewed with no findings.
-- PR/CI: draft PR #33 is retitled/re-scoped for schema refresh plus compatibility cleanup; GitHub CI and Compatibility checks passed for head `ba37f1609ca0f2139026c74d32b91b833ab3a45f`.
+- Last review: every implementation/evidence commit was followed by subagent review; review of `60bfd02` found stale head evidence in this file, which this follow-up evidence update resolves.
+- PR/CI: draft PR #33 is retitled/re-scoped for schema refresh plus compatibility cleanup; GitHub CI and Compatibility checks passed for inspected head `60bfd0263ba9b2831e3a2665b062253883591b46`. Final PR readiness still depends on live checks for the latest pushed head.
 
 ## Branch And Planning Commit
 
 - Branch: `codex-upstream/64bdeed9f7ad`
 - Planning commit: `ef0b358`, `27f3a31`, plus supplemental Round 4 planning updates.
 - Remote: `origin`
-- Push result: branch pushed through `ba37f16`.
+- Push result: branch pushed to `origin/codex-upstream/64bdeed9f7ad`; final live head is verified through Git/GitHub before completion.
 - Blockers: none
 
 ## Phase Checklist
@@ -150,10 +150,10 @@
   - Evidence:
     - Implementation: Added a fixed-package minor changeset for the schema refresh and compatibility cleanup; removed the unused internal `boundedUniqueAppend` export flagged by release dead-code validation; confirmed `third_party/codex` points at `64bdeed9f7adbe60c725153b3fb74ed044a36221`, matching `CODEX_PROTOCOL_COMMIT`.
     - Validation: `bun run test:protocol` passed; `bun run typecheck` passed; `bun run lint` passed; `bun run build` passed with existing Vite chunk-size warnings; `bun run test:api-snapshots` passed; initial parallel `bun run test:package-resolution` collided with an already-running Next build, then standalone `bun run test:package-resolution` passed; `bun run test:skills` passed; `bun run validate:packages` passed with existing publint repository-url suggestions; `bun run validate:fast` passed; first `bun run validate:release` exposed unused internal export `boundedUniqueAppend`; after removal, `bun run check:dead-code`, `bun test packages/core/test`, `bun run typecheck`, and full `bun run validate:release` passed.
-    - Review: Subagent review of `4151f6a` found stale pending evidence only; changeset, unused-export cleanup, and committed artifact scope were otherwise clean. Subagent review of `91fb267` found no issues with the release-cleanup evidence.
+    - Review: Subagent review of `4151f6a` found stale pending evidence only; changeset, unused-export cleanup, and committed artifact scope were otherwise clean. Subagent review of `91fb267` found no issues with the release-cleanup evidence. Subagent review of `60bfd02` found stale final-head evidence in this file; this later evidence update removes the stale current-head claim.
     - Commit: `4151f6a` Add release validation cleanup; `91fb267` Record release cleanup review.
     - Push: commits pushed to `codex-upstream/64bdeed9f7ad`; PR #33 updated and final comment posted.
-    - PR/CI: PR #33 title/body now describe schema refresh plus compatibility cleanup; final comment posted at `https://github.com/nyosegawa/agent-ui/pull/33#issuecomment-4760108295`; GitHub checks for head `ba37f1609ca0f2139026c74d32b91b833ab3a45f` all succeeded: CI detect changes, repository policy, typecheck, lint, unit tests, protocol and fixtures, package validation, API snapshots, package resolution, Playwright fixtures; Compatibility detect changes, Node.js 22.x, Node.js 24.x, and pnpm workspace smoke.
+    - PR/CI: PR #33 title/body now describe schema refresh plus compatibility cleanup; final comment posted at `https://github.com/nyosegawa/agent-ui/pull/33#issuecomment-4760108295`; GitHub checks for inspected head `60bfd0263ba9b2831e3a2665b062253883591b46` all succeeded: CI detect changes, repository policy, typecheck, lint, unit tests, protocol and fixtures, package validation, API snapshots, package resolution, Playwright fixtures; Compatibility detect changes, Node.js 22.x, Node.js 24.x, and pnpm workspace smoke. Latest pushed-head status is checked live before final completion instead of hard-coding a self-referential final evidence commit hash here.
   - Tasks:
     - [x] T018 Add changeset with correct pre-1.0 fixed-package policy.
       - Expected files/areas: `.changeset/`.
@@ -213,6 +213,7 @@ Tasks are listed under each phase above. Execute by phase, not by isolated task,
 - `91fb267` Record release cleanup review
 - `5706eb2` Record PR and CI follow-through
 - `ba37f16` Record latest PR checks
+- `60bfd02` Finalize compatibility cleanup evidence
 
 ## Final Checklist
 
