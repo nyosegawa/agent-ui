@@ -47,7 +47,10 @@ export function AgentUiSurface() {
 
 Use the package root for React components, and use
 `@nyosegawa/agent-ui-codex/request-builders` for Codex-shaped inputs such as
-`localImageInput()` and `textInput()`.
+`localImageInput()` and `textInput()`. Prefer request-builder option names and
+path aliases such as `AgentWorkingDirectory`, `AgentResourcePath`,
+`AgentSkillPath`, and `AgentMentionPath` when host code prepares App
+Server-shaped request inputs.
 
 ## Local Safety Defaults
 

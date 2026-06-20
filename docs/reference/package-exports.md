@@ -383,7 +383,7 @@ string aliases such as `AgentWorkingDirectory`, `AgentResourcePath`,
 `AgentSkillPath`, and `AgentMentionPath` instead of generated schema names such
 as `LegacyAppPathString` or `AbsolutePathBuf`. They intentionally remain string
 aliases because filesystem authority belongs to the host; Agent UI does not
-invent path URI strings or opaque path objects.
+invent URI-shaped filesystem strings or opaque path objects.
 The client and session facades still return generated response types for
 productized stable methods, and experimental calls use generated params/results
 once the host opts in. Those are generated-backed advanced surfaces; use

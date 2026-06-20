@@ -89,9 +89,9 @@
   - Evidence:
     - Implementation: Current rate-limit fields now win over deprecated snake_case fallback fields in React usage/status adapters; legacy-only snake_case percent windows remain readable; deprecated `item/fileChange/outputDelta` is documented and tested as mapped compatibility command output only; deprecated raw JSONL fixtures are required to use `deprecated-*` names and manifest stability; React/Core public declaration snapshots are guarded against deprecated fallback names.
     - Validation: `bunx vitest run --config vitest.config.ts packages/codex/test/protocol.test.ts packages/codex/test/raw-jsonrpc-fixtures.test.ts packages/react/test/usage.vitest.ts packages/react/test/status-formatting.vitest.ts packages/react/test/source-structure.vitest.ts` passed; `bun run test:protocol` passed; `bun run typecheck` passed; `bun run lint` passed; `bun run test:api-snapshots` passed; `bun run test:package-resolution` passed; follow-up `bunx vitest run --config vitest.config.ts packages/react/test/usage.vitest.ts packages/react/test/status-formatting.vitest.ts`, `bun run typecheck`, and `bun run lint` passed.
-    - Review: Subagent review of `0fb9ec4` found P2 legacy-only `used_percent` rendering as 0%; follow-up fix added legacy-only usage coverage. Follow-up commit review pending.
-    - Commit: `0fb9ec4` plus follow-up pending.
-    - Push: `0fb9ec4` pushed; follow-up pending.
+    - Review: Subagent review of `0fb9ec4` found P2 legacy-only `used_percent` rendering as 0%; follow-up fix added legacy-only usage coverage. Subagent review of `34f8eb6` found no issues.
+    - Commit: `0fb9ec4` Contain deprecated protocol fallbacks; `34f8eb6` Handle legacy rate-limit percent fields
+    - Push: both commits pushed to `codex-upstream/64bdeed9f7ad`.
   - Tasks:
     - [x] T009 Add explicit tests/docs for deprecated notification fallback handling.
       - Expected files/areas: protocol tests, `docs/reference/codex-protocol.md`, `docs/guides/diagnostics.md`.
@@ -106,7 +106,7 @@
       - Expected files/areas: `packages/react/test/source-structure.vitest.ts`, API snapshots.
       - Validation note: guard core/react declarations against deprecated names; exempt generated stable-types.
 
-- [ ] P004 Docs, skills, examples, and snapshots
+- [x] P004 Docs, skills, examples, and snapshots
   - Goal: make host-facing guidance, examples, and declaration snapshots match the cleaned public surface.
   - Scope: docs/reference, docs/guides, docs/examples, public `skills/agent-ui`, direct example consumers, API snapshots, compatibility-name sweeps.
   - Expected files/areas: `docs/guides/approvals.md`, `docs/reference/hooks.md`, `docs/reference/react-components.md`, `docs/reference/codex-protocol.md`, `docs/reference/package-exports.md`, `docs/reference/server-bridge.md`, `docs/guides/attachments.md`, `docs/guides/diagnostics.md`, `docs/examples/*.md`, `skills/agent-ui/**`, `examples/codex-local-web/src/main.tsx`, `examples/next-with-bridge-sidecar/app/page.tsx`, `examples/local-react-vite/src/main.tsx`, `examples/local-react-vite/src/closeups/ComponentCloseupGallery.tsx`, `examples/recipes/src/local-media-helper.tsx`, `test/api-snapshots/*.d.ts`.
@@ -116,25 +116,25 @@
   - Push: push after validation/review.
   - PR/CI: record docs/skills/examples/API snapshot impact.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: Updated public Agent UI skill guidance to state canonical approval kinds and Agent UI-owned request-builder path aliases; added skill tests that forbid stale legacy approval kind names and path URI wording; removed path URI wording from package-export docs; refreshed the local React Vite fixture deprecation notice to avoid advertising deprecated host fields as a stable adapter concern.
+    - Validation: `bun run test:skills` passed; stale-name sweeps for `legacyExecApproval`, `legacyPatchApproval`, `path URI`, `pathUri`, `pathuri`, `deprecated host field`, and `upload-only compatibility entry point` passed across skills/docs/examples; `bunx vitest run --config vitest.config.ts packages/react/test/source-structure.vitest.ts` passed; `bun run typecheck` passed; `bun run build` passed with existing Vite chunk-size warnings; `bun run test:api-snapshots` passed; `bun run lint` passed.
+    - Review: Pending subagent review after commit, per sequential commit policy.
+    - Commit: Pending.
+    - Push: Pending.
   - Tasks:
-    - [ ] T013 Update required docs surfaces.
+    - [x] T013 Update required docs surfaces.
       - Expected files/areas: approvals, hooks, React components, Codex protocol, package exports, server bridge, attachments, diagnostics, host-integration if path wording changes.
       - Validation note: no public docs list `legacyExecApproval` / `legacyPatchApproval` as product kinds; no local path docs use "path URI" for filesystem paths.
-    - [ ] T014 Update public Agent Skill guidance and tests.
+    - [x] T014 Update public Agent Skill guidance and tests.
       - Expected files/areas: `skills/agent-ui/**`, `test/agent-ui-skill.test.ts`.
       - Validation note: run `bun run test:skills`; add negative assertions for stale compatibility names if the skill text changes.
-    - [ ] T015 Audit/update examples and docs examples.
+    - [x] T015 Audit/update examples and docs examples.
       - Expected files/areas: codex-local-web, next-with-bridge-sidecar, local-react-vite, recipes, docs examples.
       - Validation note: typecheck/build touched example packages; keep real-local fake server on current approval methods.
-    - [ ] T016 Update and review API snapshots.
+    - [x] T016 Update and review API snapshots.
       - Expected files/areas: `core__index.d.ts`, `codex__request-builders.d.ts`, `codex__index.d.ts`, `react__index.d.ts`, `server__index.d.ts`, stable-types snapshot.
       - Validation note: build first, update snapshots intentionally, rerun `bun run test:api-snapshots`; stable-types is generated-only.
-    - [ ] T017 Run final compatibility-name sweeps.
+    - [x] T017 Run final compatibility-name sweeps.
       - Expected files/areas: docs, examples, packages, skills, test snapshots.
       - Validation note: generated and documented generated-backed exceptions only.
 

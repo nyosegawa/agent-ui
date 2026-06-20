@@ -203,7 +203,7 @@ export function createRichTranscriptInitialState(): AgentSessionState {
     {
       id: "banner-deprecation",
       kind: "deprecationNotice",
-      message: "A deprecated host field was ignored by the stable adapter.",
+      message: "Compatibility-only host metadata stayed outside the stable adapter.",
     },
     {
       id: "banner-config",

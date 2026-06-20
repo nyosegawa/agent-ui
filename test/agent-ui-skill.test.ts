@@ -127,6 +127,11 @@ describe("public Agent UI skill", () => {
     expect(allSkillText).toContain("host-owned workflow gates");
     expect(allSkillText).toContain("structured asset URLs");
     expect(allSkillText).toMatch(/browser `File` to local-path upload\s+adapter/);
+    expect(allSkillText).toMatch(/canonical approval\s+kinds/);
+    expect(allSkillText).toContain("AgentWorkingDirectory");
+    expect(allSkillText).toContain("AgentResourcePath");
+    expect(allSkillText).toContain("AgentSkillPath");
+    expect(allSkillText).toContain("AgentMentionPath");
     expect(allSkillText).toContain("Match the existing lockfile");
     expect(allSkillText).toMatch(/do not\s+create a second lockfile/);
     expect(allSkillText).toContain("Use published Agent UI packages from the registry");
@@ -145,6 +150,11 @@ describe("public Agent UI skill", () => {
       "git reset --hard",
       "publish --access",
       "upload-only compatibility entry point",
+      "legacyExecApproval",
+      "legacyPatchApproval",
+      "path URI",
+      "pathUri",
+      "pathuri",
     ]) {
       expect(allSkillText, forbidden).not.toContain(forbidden);
     }
