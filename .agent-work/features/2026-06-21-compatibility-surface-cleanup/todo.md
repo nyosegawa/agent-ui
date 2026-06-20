@@ -32,8 +32,8 @@
     - Implementation: Removed `legacyExecApproval` / `legacyPatchApproval` from core public request kinds and React approval branches; mapped legacy upstream `execCommandApproval` / `applyPatchApproval` to canonical `commandApproval` / `fileChangeApproval`; normalized legacy `conversationId`, `callId`, and `command[]` at the Codex/server policy boundaries; added deprecated raw JSONL fixture coverage.
     - Validation: `bunx vitest run --config vitest.config.ts packages/codex/test/protocol.test.ts packages/codex/test/raw-jsonrpc-fixtures.test.ts` passed; `bunx vitest run --config vitest.config.ts packages/core/test/reducer.test.ts packages/core/test/public-surface.test.ts packages/core/test/source-structure.test.ts` passed; `bunx vitest run --config vitest.config.ts packages/react/test/components.vitest.tsx` passed; `bunx vitest run --config vitest.config.ts packages/server/test/websocket.test.ts` passed; `bun run typecheck` passed; `bun run build` passed; `bun run test:api-snapshots` passed after intentional snapshot update; `bun run test:protocol` passed; `bun run lint` passed.
     - Review: `rg -n "legacyExecApproval|legacyPatchApproval" packages docs examples skills test fixtures --glob '!packages/codex/src/generated/**'` returns only the core source-structure guard patterns.
-    - Commit:
-    - Push:
+    - Commit: `d36abcf` Canonicalize approval request kinds
+    - Push: pushed to `origin/codex-upstream/64bdeed9f7ad`
   - Tasks:
     - [x] T001 Change public pending request kind union to canonical approval kinds only.
       - Expected files/areas: core state, selectors, public-surface/source-structure guards, API snapshots.
@@ -197,6 +197,7 @@ Tasks are listed under each phase above. Execute by phase, not by isolated task,
 - `ef0b358` Plan compatibility surface cleanup
 - `27f3a31` Harden compatibility cleanup plan
 - Supplemental Round 4 planning update to be recorded by this planning run.
+- `d36abcf` Canonicalize approval request kinds
 
 ## Final Checklist
 
