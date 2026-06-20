@@ -2,19 +2,19 @@
 
 ## Status Summary
 
-- Overall status: In progress
-- Current phase: P002
-- Blockers: none for planning; implementation stays on this branch and must rewrite PR #33 scope if cleanup is stacked there.
-- Last validation: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-21-compatibility-surface-cleanup` passed after supplemental Round 4.
-- Last review: Round 1-3 compatibility review incorporated; supplemental Round 4 skills/docs/examples/release review incorporated.
-- PR/CI: current branch backs draft PR #33; implementation should retitle/rewrite it for schema refresh plus compatibility cleanup.
+- Overall status: Complete
+- Current phase: P005 complete
+- Blockers: none.
+- Last validation: final required local validation passed, including `bun run test:protocol`, `bun run typecheck`, `bun run lint`, `bun run test:api-snapshots`, `bun run test:package-resolution`, `bun run validate:fast`, and `bun run validate:release`.
+- Last review: every implementation/evidence commit was followed by subagent review; latest evidence-only head `ba37f16` was reviewed with no findings.
+- PR/CI: draft PR #33 is retitled/re-scoped for schema refresh plus compatibility cleanup; GitHub CI and Compatibility checks passed for head `ba37f1609ca0f2139026c74d32b91b833ab3a45f`.
 
 ## Branch And Planning Commit
 
 - Branch: `codex-upstream/64bdeed9f7ad`
-- Planning commit: `ef0b358`, `27f3a31`, plus supplemental Round 4 commit reported by the final planning run.
+- Planning commit: `ef0b358`, `27f3a31`, plus supplemental Round 4 planning updates.
 - Remote: `origin`
-- Push result: `27f3a31` pushed; supplemental Round 4 commit to be pushed by this planning run.
+- Push result: branch pushed through `ba37f16`.
 - Blockers: none
 
 ## Phase Checklist
@@ -153,7 +153,7 @@
     - Review: Subagent review of `4151f6a` found stale pending evidence only; changeset, unused-export cleanup, and committed artifact scope were otherwise clean. Subagent review of `91fb267` found no issues with the release-cleanup evidence.
     - Commit: `4151f6a` Add release validation cleanup; `91fb267` Record release cleanup review.
     - Push: commits pushed to `codex-upstream/64bdeed9f7ad`; PR #33 updated and final comment posted.
-    - PR/CI: PR #33 title/body now describe schema refresh plus compatibility cleanup; final comment posted at `https://github.com/nyosegawa/agent-ui/pull/33#issuecomment-4760108295`; GitHub checks for head `5706eb229290445e3693cbbbd0a1beb94261a37f` all succeeded: CI detect changes, repository policy, typecheck, lint, unit tests, protocol and fixtures, package validation, API snapshots, package resolution, Playwright fixtures; Compatibility detect changes, Node.js 22.x, Node.js 24.x, and pnpm workspace smoke. Later evidence-only TODO commits may trigger fresh checks, but do not change the implementation validation surface.
+    - PR/CI: PR #33 title/body now describe schema refresh plus compatibility cleanup; final comment posted at `https://github.com/nyosegawa/agent-ui/pull/33#issuecomment-4760108295`; GitHub checks for head `ba37f1609ca0f2139026c74d32b91b833ab3a45f` all succeeded: CI detect changes, repository policy, typecheck, lint, unit tests, protocol and fixtures, package validation, API snapshots, package resolution, Playwright fixtures; Compatibility detect changes, Node.js 22.x, Node.js 24.x, and pnpm workspace smoke.
   - Tasks:
     - [x] T018 Add changeset with correct pre-1.0 fixed-package policy.
       - Expected files/areas: `.changeset/`.
@@ -197,15 +197,29 @@ Tasks are listed under each phase above. Execute by phase, not by isolated task,
 
 - `ef0b358` Plan compatibility surface cleanup
 - `27f3a31` Harden compatibility cleanup plan
-- Supplemental Round 4 planning update to be recorded by this planning run.
 - `d36abcf` Canonicalize approval request kinds
+- `b831b02` Record approval cleanup evidence
+- `28947ce` Fix legacy approval response mapping
+- `9fa8b2d` Handle controlled legacy approval responses
+- `16d5699` Keep approval helper API private
+- `ae10d1d` Define Agent UI path boundary
+- `3a1607f` Cover remaining request path inputs
+- `0fb9ec4` Contain deprecated protocol fallbacks
+- `34f8eb6` Handle legacy rate-limit percent fields
+- `0a52854` Align public docs with compatibility cleanup
+- `76c13cc` Record P004 review evidence
+- `5cb37bb` Finalize P004 evidence status
+- `4151f6a` Add release validation cleanup
+- `91fb267` Record release cleanup review
+- `5706eb2` Record PR and CI follow-through
+- `ba37f16` Record latest PR checks
 
 ## Final Checklist
 
-- [ ] Every phase is complete or explicitly deferred.
-- [ ] Every task in completed phases is complete or explicitly skipped with a reason.
-- [ ] Every completion criterion in `plan.md` is satisfied.
-- [ ] Required validation passed or an explicit user-approved exception is recorded.
-- [ ] Review evidence is recorded.
-- [ ] Branch, planning commit, remote, push result, and blockers are recorded.
-- [ ] Commit hashes are recorded for completed phases.
+- [x] Every phase is complete or explicitly deferred.
+- [x] Every task in completed phases is complete or explicitly skipped with a reason.
+- [x] Every completion criterion in `plan.md` is satisfied.
+- [x] Required validation passed or an explicit user-approved exception is recorded.
+- [x] Review evidence is recorded.
+- [x] Branch, planning commit, remote, push result, and blockers are recorded.
+- [x] Commit hashes are recorded for completed phases.
