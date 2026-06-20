@@ -87,11 +87,11 @@
   - Push: push after validation/review.
   - PR/CI: explain residual protocol compatibility accepted at adapter boundary.
   - Evidence:
-    - Implementation: Current rate-limit fields now win over deprecated snake_case fallback fields in React usage/status adapters; deprecated `item/fileChange/outputDelta` is documented and tested as mapped compatibility command output only; deprecated raw JSONL fixtures are required to use `deprecated-*` names and manifest stability; React/Core public declaration snapshots are guarded against deprecated fallback names.
-    - Validation: `bunx vitest run --config vitest.config.ts packages/codex/test/protocol.test.ts packages/codex/test/raw-jsonrpc-fixtures.test.ts packages/react/test/usage.vitest.ts packages/react/test/status-formatting.vitest.ts packages/react/test/source-structure.vitest.ts` passed; `bun run test:protocol` passed; `bun run typecheck` passed; `bun run lint` passed; `bun run test:api-snapshots` passed; `bun run test:package-resolution` passed.
-    - Review: Pending subagent review after commit, per sequential commit policy.
-    - Commit: Pending.
-    - Push: Pending.
+    - Implementation: Current rate-limit fields now win over deprecated snake_case fallback fields in React usage/status adapters; legacy-only snake_case percent windows remain readable; deprecated `item/fileChange/outputDelta` is documented and tested as mapped compatibility command output only; deprecated raw JSONL fixtures are required to use `deprecated-*` names and manifest stability; React/Core public declaration snapshots are guarded against deprecated fallback names.
+    - Validation: `bunx vitest run --config vitest.config.ts packages/codex/test/protocol.test.ts packages/codex/test/raw-jsonrpc-fixtures.test.ts packages/react/test/usage.vitest.ts packages/react/test/status-formatting.vitest.ts packages/react/test/source-structure.vitest.ts` passed; `bun run test:protocol` passed; `bun run typecheck` passed; `bun run lint` passed; `bun run test:api-snapshots` passed; `bun run test:package-resolution` passed; follow-up `bunx vitest run --config vitest.config.ts packages/react/test/usage.vitest.ts packages/react/test/status-formatting.vitest.ts`, `bun run typecheck`, and `bun run lint` passed.
+    - Review: Subagent review of `0fb9ec4` found P2 legacy-only `used_percent` rendering as 0%; follow-up fix added legacy-only usage coverage. Follow-up commit review pending.
+    - Commit: `0fb9ec4` plus follow-up pending.
+    - Push: `0fb9ec4` pushed; follow-up pending.
   - Tasks:
     - [x] T009 Add explicit tests/docs for deprecated notification fallback handling.
       - Expected files/areas: protocol tests, `docs/reference/codex-protocol.md`, `docs/guides/diagnostics.md`.

@@ -75,4 +75,15 @@ describe("normalizeUsageWindows", () => {
       }).map(({ label, percent, valueLabel }) => ({ label, percent, valueLabel })),
     ).toEqual([{ label: "fixture-demo-model primary", percent: 12, valueLabel: "12/100" }]);
   });
+
+  it("handles legacy-only snake_case percent windows", () => {
+    expect(
+      normalizeUsageWindows({
+        rate_limits: {
+          limit_id: "legacy-codex",
+          primary: { reset_at: 1778275493, used_percent: 95, window_duration_mins: 300 },
+        },
+      }).map(({ label, percent, valueLabel }) => ({ label, percent, valueLabel })),
+    ).toEqual([{ label: "legacy-codex 5h", percent: 95, valueLabel: "95%" }]);
+  });
 });

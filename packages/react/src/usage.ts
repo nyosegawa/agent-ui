@@ -29,7 +29,8 @@ export function normalizeUsageWindows(
       const window = asRecord(record[key]);
       if (!window) return [];
       const label = usageWindowLabel(limitName, key, window, t);
-      const percent = numberValue(window.usedPercent) ?? percentFromUsedLimit(window);
+      const percent =
+        numberValue(window.usedPercent ?? window.used_percent) ?? percentFromUsedLimit(window);
       return [
         {
           id: `${snapshotIndex}-${key}`,
