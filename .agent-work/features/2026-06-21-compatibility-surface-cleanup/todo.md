@@ -153,7 +153,7 @@
     - Review: Subagent review of `4151f6a` found stale pending evidence only; changeset, unused-export cleanup, and committed artifact scope were otherwise clean. Subagent review of `91fb267` found no issues with the release-cleanup evidence.
     - Commit: `4151f6a` Add release validation cleanup; `91fb267` Record release cleanup review.
     - Push: commits pushed to `codex-upstream/64bdeed9f7ad`; PR #33 updated and final comment posted.
-    - PR/CI: PR #33 title/body now describe schema refresh plus compatibility cleanup; final comment posted at `https://github.com/nyosegawa/agent-ui/pull/33#issuecomment-4760108295`; GitHub checks for head `91fb2675aed2e55b78ec900f050bd3f1feb41ef4` all succeeded: CI detect changes, repository policy, typecheck, lint, unit tests, protocol and fixtures, package validation, API snapshots, package resolution, Playwright fixtures; Compatibility detect changes, Node.js 22.x, Node.js 24.x, and pnpm workspace smoke.
+    - PR/CI: PR #33 title/body now describe schema refresh plus compatibility cleanup; final comment posted at `https://github.com/nyosegawa/agent-ui/pull/33#issuecomment-4760108295`; GitHub checks for head `5706eb229290445e3693cbbbd0a1beb94261a37f` all succeeded: CI detect changes, repository policy, typecheck, lint, unit tests, protocol and fixtures, package validation, API snapshots, package resolution, Playwright fixtures; Compatibility detect changes, Node.js 22.x, Node.js 24.x, and pnpm workspace smoke. Later evidence-only TODO commits may trigger fresh checks, but do not change the implementation validation surface.
   - Tasks:
     - [x] T018 Add changeset with correct pre-1.0 fixed-package policy.
       - Expected files/areas: `.changeset/`.
