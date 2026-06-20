@@ -118,9 +118,9 @@
   - Evidence:
     - Implementation: Updated public Agent UI skill guidance to state canonical approval kinds and Agent UI-owned request-builder path aliases; added skill tests that forbid stale legacy approval kind names and path URI wording; removed path URI wording from package-export docs; refreshed the local React Vite fixture deprecation notice to avoid advertising deprecated host fields as a stable adapter concern.
     - Validation: `bun run test:skills` passed; stale-name sweeps for `legacyExecApproval`, `legacyPatchApproval`, `path URI`, `pathUri`, `pathuri`, `deprecated host field`, and `upload-only compatibility entry point` passed across skills/docs/examples; `bunx vitest run --config vitest.config.ts packages/react/test/source-structure.vitest.ts` passed; `bun run typecheck` passed; `bun run build` passed with existing Vite chunk-size warnings; `bun run test:api-snapshots` passed; `bun run lint` passed.
-    - Review: Pending subagent review after commit, per sequential commit policy.
-    - Commit: Pending.
-    - Push: Pending.
+    - Review: Subagent review of `0a52854` found stale pending evidence only; follow-up evidence fix pending review.
+    - Commit: `0a52854` Align public docs with compatibility cleanup; follow-up evidence fix pending.
+    - Push: `0a52854` pushed to `codex-upstream/64bdeed9f7ad`; follow-up pending.
   - Tasks:
     - [x] T013 Update required docs surfaces.
       - Expected files/areas: approvals, hooks, React components, Codex protocol, package exports, server bridge, attachments, diagnostics, host-integration if path wording changes.
