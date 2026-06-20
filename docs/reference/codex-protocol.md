@@ -335,7 +335,7 @@ Experimental opt-in surfaces:
   `normalizeThreadTurnsListResponse()` for host-owned pagination and preview
   hydration experiments, but it must not become default React behavior without
   an explicit opt-in design.
-- `thread/search`, `thread/settings/update`, realtime/audio methods, process
+- `thread/search`, `thread/settings/update`, realtime/audio/speech methods, process
   control, fuzzy-file-search sessions, memory, environment, remote control,
   collaboration mode, and elicitation counters stay experimental and require
   `experimentalApi: true` plus host-owned policy.
@@ -473,7 +473,9 @@ Host-only or advanced local tooling:
 - `configRequirements/read`
 - `externalAgentConfig/detect`
 - `externalAgentConfig/import`
+- `externalAgentConfig/import/readHistories`
 - `account/sendAddCreditsNudgeEmail`
+- `account/rateLimitResetCredit/consume`
 - `feedback/upload`
 - `marketplace/add`
 - `marketplace/remove`
@@ -536,6 +538,7 @@ Experimental available methods:
 - `thread/memoryMode/set`
 - `thread/realtime/start`
 - `thread/realtime/appendAudio`
+- `thread/realtime/appendSpeech`
 - `thread/realtime/appendText`
 - `thread/realtime/listVoices`
 - `thread/realtime/stop`

@@ -45,7 +45,7 @@ import { generatedExperimentalOnlyClientMethods } from "../src/generated/protoco
 describe("Codex protocol metadata", () => {
   it("records upstream commit and stable release method surface", () => {
     expect(CODEX_PROTOCOL_COMMIT).toMatch(/^[0-9a-f]{40}$/);
-    expect(CODEX_PROTOCOL_COMMIT).toBe("5e9249ec0266f6331d1cb811d472c4d20cd5131d");
+    expect(CODEX_PROTOCOL_COMMIT).toBe("64bdeed9f7adbe60c725153b3fb74ed044a36221");
     expect(CODEX_PROTOCOL_GENERATED_AT).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(stableClientMethods).toBe(stableProductizedMethods);
     expect(stableProductizedMethods).toContain("account/rateLimits/read");
@@ -1849,6 +1849,7 @@ describe("Codex protocol metadata", () => {
           "account/login/cancel",
           "account/login/start",
           "account/logout",
+          "account/rateLimitResetCredit/consume",
           "account/rateLimits/read",
           "account/read",
           "account/sendAddCreditsNudgeEmail",
@@ -1867,6 +1868,7 @@ describe("Codex protocol metadata", () => {
           "experimentalFeature/list",
           "externalAgentConfig/detect",
           "externalAgentConfig/import",
+          "externalAgentConfig/import/readHistories",
           "feedback/upload",
           "fs/copy",
           "fs/createDirectory",
@@ -1951,6 +1953,7 @@ describe("Codex protocol metadata", () => {
           "deprecationNotice",
           "error",
           "externalAgentConfig/import/completed",
+          "externalAgentConfig/import/progress",
           "fs/changed",
           "fuzzyFileSearch/sessionCompleted",
           "fuzzyFileSearch/sessionUpdated",
@@ -2073,6 +2076,7 @@ describe("Codex protocol metadata", () => {
         "thread/increment_elicitation",
         "thread/memoryMode/set",
         "thread/realtime/appendAudio",
+        "thread/realtime/appendSpeech",
         "thread/realtime/appendText",
         "thread/realtime/listVoices",
         "thread/realtime/start",

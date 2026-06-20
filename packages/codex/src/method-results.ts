@@ -52,6 +52,7 @@ import type {
   ThreadIncrementElicitationResponse,
   ThreadMemoryModeSetResponse,
   ThreadRealtimeAppendAudioResponse,
+  ThreadRealtimeAppendSpeechResponse,
   ThreadRealtimeAppendTextResponse,
   ThreadRealtimeListVoicesResponse,
   ThreadRealtimeStartResponse,
@@ -127,6 +128,7 @@ interface ExperimentalMethodResultMap {
   "thread/increment_elicitation": ThreadIncrementElicitationResponse;
   "thread/memoryMode/set": ThreadMemoryModeSetResponse;
   "thread/realtime/appendAudio": ThreadRealtimeAppendAudioResponse;
+  "thread/realtime/appendSpeech": ThreadRealtimeAppendSpeechResponse;
   "thread/realtime/appendText": ThreadRealtimeAppendTextResponse;
   "thread/realtime/listVoices": ThreadRealtimeListVoicesResponse;
   "thread/realtime/start": ThreadRealtimeStartResponse;

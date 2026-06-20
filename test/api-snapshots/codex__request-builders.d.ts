@@ -1,4 +1,4 @@
-import { T as ThreadId, R as RealtimeVoice, A as AbsolutePathBuf, J as JsonValue, d as UserInput, M as MessagePhase, e as ReasoningEffort, f as TurnItemsView, g as ThreadSource, h as ModeKind, b as CodexStableMethod, i as CancelLoginAccountResponse, L as LoginAccountResponse, j as LogoutAccountResponse, G as GetAccountRateLimitsResponse, k as GetAccountTokenUsageResponse, l as GetAccountResponse, m as AppsListResponse, H as HooksListResponse, I as InitializeResponse, n as ModelListResponse, S as SkillsConfigWriteResponse, o as SkillsListResponse, p as ThreadArchiveResponse, q as ThreadCompactStartResponse, r as ThreadForkResponse, s as ThreadInjectItemsResponse, t as ThreadListResponse, u as ThreadLoadedListResponse, v as ThreadMetadataUpdateResponse, w as ThreadSetNameResponse, x as ThreadReadResponse, y as ThreadResumeResponse, z as ThreadRollbackResponse, B as ThreadStartResponse, D as ThreadUnarchiveResponse, E as ThreadUnsubscribeResponse, F as TurnInterruptResponse, K as TurnStartResponse, N as TurnSteerResponse, a as CodexExperimentalMethod, c as CodexStableMethodParams, U as UserInput$1 } from './method-params-<chunk>.js';
+import { T as ThreadId, R as RealtimeVoice, A as AbsolutePathBuf, J as JsonValue, d as UserInput, M as MessagePhase, L as LegacyAppPathString, e as ReasoningEffort, f as TurnItemsView, g as ThreadSource, h as ModeKind, b as CodexStableMethod, i as CancelLoginAccountResponse, j as LoginAccountResponse, k as LogoutAccountResponse, G as GetAccountRateLimitsResponse, l as GetAccountTokenUsageResponse, m as GetAccountResponse, n as AppsListResponse, H as HooksListResponse, I as InitializeResponse, o as ModelListResponse, S as SkillsConfigWriteResponse, p as SkillsListResponse, q as ThreadArchiveResponse, r as ThreadCompactStartResponse, s as ThreadForkResponse, t as ThreadInjectItemsResponse, u as ThreadListResponse, v as ThreadLoadedListResponse, w as ThreadMetadataUpdateResponse, x as ThreadSetNameResponse, y as ThreadReadResponse, z as ThreadResumeResponse, B as ThreadRollbackResponse, D as ThreadStartResponse, E as ThreadUnarchiveResponse, F as ThreadUnsubscribeResponse, K as TurnInterruptResponse, N as TurnStartResponse, O as TurnSteerResponse, a as CodexExperimentalMethod, c as CodexStableMethodParams, U as UserInput$1 } from './method-params-<chunk>.js';
 export { C as CodexExperimentalMethodParams } from './method-params-<chunk>.js';
 import { i as StableProductizedMethod, E as ExperimentalAvailableMethod } from './protocol-<chunk>.js';
 import './InitializeParams-<chunk>.js';
@@ -130,6 +130,12 @@ type HookPromptFragment = {
     hookRunId: string;
 };
 
+type McpToolCallAppContext = {
+    connectorId: string;
+    linkId: string | null;
+    resourceUri: string | null;
+};
+
 type McpToolCallError = {
     message: string;
 };
@@ -207,7 +213,7 @@ type ThreadItem = {
     /**
      * The command's working directory.
      */
-    cwd: AbsolutePathBuf;
+    cwd: LegacyAppPathString;
     /**
      * Identifier for the underlying PTY process (when available).
      */
@@ -244,6 +250,10 @@ type ThreadItem = {
     tool: string;
     status: McpToolCallStatus;
     arguments: JsonValue;
+    appContext: McpToolCallAppContext | null;
+    /**
+     * Deprecated: use `appContext.resourceUri` instead.
+     */
     mcpAppResourceUri?: string;
     pluginId: string | null;
     result: McpToolCallResult | null;
@@ -321,6 +331,10 @@ type ThreadItem = {
     "type": "imageView";
     id: string;
     path: AbsolutePathBuf;
+} | {
+    "type": "sleep";
+    id: string;
+    durationMs: number;
 } | {
     "type": "imageGeneration";
     id: string;
@@ -433,6 +447,10 @@ type Thread = {
      * Unix timestamp (in seconds) when the thread was last updated.
      */
     updatedAt: number;
+    /**
+     * Unix timestamp (in seconds) used for thread recency ordering.
+     */
+    recencyAt: number | null;
     /**
      * Current runtime status for the thread.
      */
@@ -634,6 +652,11 @@ type ThreadMemoryModeSetResponse = Record<string, never>;
 type ThreadRealtimeAppendAudioResponse = Record<string, never>;
 
 /**
+ * EXPERIMENTAL - response for appending realtime speech.
+ */
+type ThreadRealtimeAppendSpeechResponse = Record<string, never>;
+
+/**
  * EXPERIMENTAL - response for appending realtime text input.
  */
 type ThreadRealtimeAppendTextResponse = Record<string, never>;
@@ -750,6 +773,7 @@ interface ExperimentalMethodResultMap {
     "thread/increment_elicitation": ThreadIncrementElicitationResponse;
     "thread/memoryMode/set": ThreadMemoryModeSetResponse;
     "thread/realtime/appendAudio": ThreadRealtimeAppendAudioResponse;
+    "thread/realtime/appendSpeech": ThreadRealtimeAppendSpeechResponse;
     "thread/realtime/appendText": ThreadRealtimeAppendTextResponse;
     "thread/realtime/listVoices": ThreadRealtimeListVoicesResponse;
     "thread/realtime/start": ThreadRealtimeStartResponse;

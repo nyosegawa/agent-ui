@@ -56,6 +56,7 @@ export const stableProductizedMethods = [
 
 export const hostOnlyMethods = [
   "account/sendAddCreditsNudgeEmail",
+  "account/rateLimitResetCredit/consume",
   "command/exec",
   "command/exec/resize",
   "command/exec/terminate",
@@ -69,6 +70,7 @@ export const hostOnlyMethods = [
   "experimentalFeature/list",
   "externalAgentConfig/detect",
   "externalAgentConfig/import",
+  "externalAgentConfig/import/readHistories",
   "feedback/upload",
   "fs/copy",
   "fs/createDirectory",
@@ -140,6 +142,7 @@ export const experimentalAvailableMethods = [
   "thread/increment_elicitation",
   "thread/memoryMode/set",
   "thread/realtime/appendAudio",
+  "thread/realtime/appendSpeech",
   "thread/realtime/appendText",
   "thread/realtime/listVoices",
   "thread/realtime/start",
