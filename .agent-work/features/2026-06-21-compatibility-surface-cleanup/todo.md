@@ -150,9 +150,9 @@
   - Evidence:
     - Implementation: Added a fixed-package minor changeset for the schema refresh and compatibility cleanup; removed the unused internal `boundedUniqueAppend` export flagged by release dead-code validation; confirmed `third_party/codex` points at `64bdeed9f7adbe60c725153b3fb74ed044a36221`, matching `CODEX_PROTOCOL_COMMIT`.
     - Validation: `bun run test:protocol` passed; `bun run typecheck` passed; `bun run lint` passed; `bun run build` passed with existing Vite chunk-size warnings; `bun run test:api-snapshots` passed; initial parallel `bun run test:package-resolution` collided with an already-running Next build, then standalone `bun run test:package-resolution` passed; `bun run test:skills` passed; `bun run validate:packages` passed with existing publint repository-url suggestions; `bun run validate:fast` passed; first `bun run validate:release` exposed unused internal export `boundedUniqueAppend`; after removal, `bun run check:dead-code`, `bun test packages/core/test`, `bun run typecheck`, and full `bun run validate:release` passed.
-    - Review: Pending subagent review after commit, per sequential commit policy.
-    - Commit: Pending.
-    - Push: Pending.
+    - Review: Subagent review of `4151f6a` found stale pending evidence only; changeset, unused-export cleanup, and committed artifact scope were otherwise clean.
+    - Commit: `4151f6a` Add release validation cleanup.
+    - Push: `4151f6a` pushed to `codex-upstream/64bdeed9f7ad`; PR update and CI follow-through remain.
   - Tasks:
     - [x] T018 Add changeset with correct pre-1.0 fixed-package policy.
       - Expected files/areas: `.changeset/`.
