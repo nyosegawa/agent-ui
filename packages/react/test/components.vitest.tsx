@@ -6125,6 +6125,51 @@ describe("AgentChat", () => {
     });
   });
 
+  it("responds to legacy approval payloads with legacy decisions", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.serverRequestQueue = {
+      byId: {
+        "string:legacy-command": {
+          id: "legacy-command",
+          kind: "commandApproval",
+          payload: {
+            command: ["sh", "-lc", "bun test"],
+            commandLine: "sh -lc 'bun test'",
+            upstreamMethod: "execCommandApproval",
+          },
+          threadId: "thread-legacy",
+        },
+      },
+      order: ["string:legacy-command"],
+    };
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentApprovalQueue threadId="thread-legacy" />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("$ sh -lc 'bun test'")).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", {
+        name: "Approve command request legacy-command for session",
+      }),
+    );
+    expect(transport.responses.get("string:legacy-command")).toEqual({
+      decision: "approved_for_session",
+    });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Decline command request legacy-command",
+      }),
+    );
+    expect(transport.responses.get("string:legacy-command")).toEqual({
+      decision: "denied",
+    });
+  });
+
   it("sends composer input as stable Codex user input items", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();

@@ -111,14 +111,19 @@ describe("raw App Server JSON-RPC fixture pack", () => {
       itemId: "legacy-cmd",
       kind: "commandApproval",
       payload: {
-        command: "sh -lc bun test",
+        command: ["sh", "-lc", "bun test"],
+        commandLine: "sh -lc 'bun test'",
         threadId: "thread-basic",
+        upstreamMethod: "execCommandApproval",
       },
       threadId: "thread-basic",
     });
     expect(state.serverRequestQueue.byId["string:legacy-patch-approval-raw"]).toMatchObject({
       itemId: "legacy-patch",
       kind: "fileChangeApproval",
+      payload: {
+        upstreamMethod: "applyPatchApproval",
+      },
       threadId: "thread-basic",
     });
     expect(state.serverRequestQueue.byId["string:approval-command-raw"]).toBeUndefined();

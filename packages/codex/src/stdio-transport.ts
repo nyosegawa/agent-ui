@@ -227,10 +227,12 @@ class CodexStdioTransport implements AgentTransport {
       const events = normalizeCodexServerMessage(message);
       for (const event of events) this.#push({ event, type: "event" });
       if (isJsonRpcRequest(message)) {
+        const serverRequest =
+          events[0]?.type === "serverRequest/created" ? events[0].request : undefined;
         this.#push({
-          request: {
+          request: serverRequest ?? {
             id: message.id,
-            kind: events[0]?.type === "serverRequest/created" ? events[0].request.kind : "unknown",
+            kind: "unknown",
             payload: message.params,
           },
           requestId: message.id,

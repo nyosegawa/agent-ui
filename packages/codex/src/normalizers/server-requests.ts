@@ -80,12 +80,22 @@ function normalizeServerRequestPayload(
   if (payload.itemId == null && payload.item_id == null && payload.callId != null) {
     payload.itemId = payload.callId;
   }
+  payload.upstreamMethod = method;
   if (method === "execCommandApproval" && Array.isArray(payload.command)) {
-    payload.command = payload.command.map((part) => String(part)).join(" ");
+    payload.commandLine = shellQuoteCommand(payload.command);
   }
   return payload;
 }
 
 function isLegacyApprovalMethod(method: string): boolean {
   return method === "execCommandApproval" || method === "applyPatchApproval";
+}
+
+function shellQuoteCommand(command: unknown[]): string {
+  return command.map((part) => shellQuote(String(part))).join(" ");
+}
+
+function shellQuote(part: string): string {
+  if (/^[A-Za-z0-9_./:=@%+-]+$/.test(part)) return part;
+  return `'${part.replace(/'/g, `'\\''`)}'`;
 }

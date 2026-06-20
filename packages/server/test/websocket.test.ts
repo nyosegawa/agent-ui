@@ -2638,15 +2638,15 @@ describe("attachAgentUiWebSocketBridge", () => {
     await waitFor(() => writes.some((line) => JSON.parse(line).id === "legacy-file-active-1"));
     expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "legacy-command-active-1")).toEqual({
       id: "legacy-command-active-1",
-      result: { decision: "acceptForSession" },
+      result: { decision: "approved_for_session" },
     });
     expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "legacy-file-active-1")).toEqual({
       id: "legacy-file-active-1",
-      result: { decision: "acceptForSession" },
+      result: { decision: "approved_for_session" },
     });
     expect(commandContexts).toEqual([
       expect.objectContaining({
-        command: "sh -lc bun test",
+        command: "sh -lc 'bun test'",
         cwd: "/tmp/project",
         itemId: "legacy-command-call",
         requestId: "legacy-command-active-1",

@@ -220,6 +220,14 @@ describe("Codex protocol metadata", () => {
 
     expect(Object.keys(expectedKinds).sort()).toEqual([...stableServerRequestMethods].sort());
     for (const method of stableServerRequestMethods) {
+      const payload = {
+        itemId: "item-1",
+        threadId: "thread-1",
+        turnId: "turn-1",
+        ...(method === "execCommandApproval" || method === "applyPatchApproval"
+          ? { upstreamMethod: method }
+          : {}),
+      };
       expect(
         normalizeCodexServerMessage({
           id: `request-${method}`,
@@ -232,7 +240,7 @@ describe("Codex protocol metadata", () => {
             id: `request-${method}`,
             itemId: "item-1",
             kind: expectedKinds[method],
-            payload: { itemId: "item-1", threadId: "thread-1", turnId: "turn-1" },
+            payload,
             threadId: "thread-1",
             turnId: "turn-1",
           },
@@ -1252,13 +1260,15 @@ describe("Codex protocol metadata", () => {
           payload: {
             approvalId: "approval-legacy",
             callId: "call-legacy",
-            command: "sh -lc bun test",
+            command: ["sh", "-lc", "bun test"],
+            commandLine: "sh -lc 'bun test'",
             conversationId: "thread-legacy",
             cwd: "/tmp/agent-ui",
             itemId: "call-legacy",
             parsedCmd: [],
             reason: "Run tests",
             threadId: "thread-legacy",
+            upstreamMethod: "execCommandApproval",
           },
           threadId: "thread-legacy",
         },
@@ -1287,6 +1297,7 @@ describe("Codex protocol metadata", () => {
           payload: {
             itemId: "patch-call",
             threadId: "thread-legacy",
+            upstreamMethod: "applyPatchApproval",
           },
           threadId: "thread-legacy",
         },

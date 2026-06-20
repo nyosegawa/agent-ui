@@ -205,7 +205,7 @@ function approvalRisk(kind: string, payload: Record<string, unknown>): ApprovalR
     if (typeof sandbox === "string" && /none|disable|no-sandbox/i.test(sandbox)) {
       return "high";
     }
-    const command = typeof payload.command === "string" ? payload.command : "";
+    const command = commandDisplay(payload) ?? "";
     if (/\brm\b\s+-rf|sudo|curl\s.*sh|chmod\s+777/i.test(command)) return "high";
     return "medium";
   }
@@ -315,8 +315,7 @@ function approvalRequestLabel(
 
 function CommandApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
   const { t } = useAgentI18n();
-  const command =
-    stringField(payload, "command") ?? stringField(payload, "cmd") ?? t("timeline.command");
+  const command = commandDisplay(payload) ?? t("timeline.command");
   const cwd = stringField(payload, "cwd") ?? stringField(payload, "workingDirectory");
   const policy = stringField(payload, "approvalPolicy");
   const sandbox =
@@ -335,6 +334,24 @@ function CommandApprovalSummary({ payload }: { payload: Record<string, unknown> 
       />
     </div>
   );
+}
+
+function commandDisplay(payload: Record<string, unknown>): string | undefined {
+  const commandLine = stringField(payload, "commandLine");
+  if (commandLine) return commandLine;
+  const command = payload.command ?? payload.cmd;
+  if (typeof command === "string") return command;
+  if (Array.isArray(command)) return shellQuoteCommand(command);
+  return undefined;
+}
+
+function shellQuoteCommand(command: unknown[]): string {
+  return command.map((part) => shellQuote(String(part))).join(" ");
+}
+
+function shellQuote(part: string): string {
+  if (/^[A-Za-z0-9_./:=@%+-]+$/.test(part)) return part;
+  return `'${part.replace(/'/g, `'\\''`)}'`;
 }
 
 function FileChangeApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
