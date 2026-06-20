@@ -192,19 +192,14 @@ function ApprovalCard({
 }
 
 function isDecisionApprovalKind(kind: string): boolean {
-  return (
-    kind === "commandApproval" ||
-    kind === "fileChangeApproval" ||
-    kind === "legacyExecApproval" ||
-    kind === "legacyPatchApproval"
-  );
+  return kind === "commandApproval" || kind === "fileChangeApproval";
 }
 
 type ApprovalRisk = "high" | "medium" | "low";
 
 function approvalRisk(kind: string, payload: Record<string, unknown>): ApprovalRisk {
-  if (kind === "fileChangeApproval" || kind === "legacyPatchApproval") return "medium";
-  if (kind === "commandApproval" || kind === "legacyExecApproval") {
+  if (kind === "fileChangeApproval") return "medium";
+  if (kind === "commandApproval") {
     const sandbox =
       typeof payload.sandbox === "string" ? payload.sandbox : payload.sandboxPolicy;
     if (typeof sandbox === "string" && /none|disable|no-sandbox/i.test(sandbox)) {
@@ -239,10 +234,8 @@ function approvalSubtitle(
   if (reason) return reason;
   switch (kind) {
     case "fileChangeApproval":
-    case "legacyPatchApproval":
       return t("approval.summary.fileChange");
     case "commandApproval":
-    case "legacyExecApproval":
       return t("approval.summary.command");
     case "dynamicTool":
       return t("approval.summary.dynamicTool");
@@ -271,7 +264,7 @@ function ApprovalSummary({
   if (approval.kind === "fileChangeApproval") {
     return <FileChangeApprovalSummary payload={payload} />;
   }
-  if (approval.kind === "commandApproval" || approval.kind === "legacyExecApproval") {
+  if (approval.kind === "commandApproval") {
     return <CommandApprovalSummary payload={payload} />;
   }
   if (approval.kind === "userInput" || approval.kind === "mcpElicitation") {
@@ -289,10 +282,8 @@ function ApprovalSummary({
 function approvalTitle(kind: string, t: (key: AgentI18nKey) => string): string {
   switch (kind) {
     case "fileChangeApproval":
-    case "legacyPatchApproval":
       return t("approval.kind.fileChange");
     case "commandApproval":
-    case "legacyExecApproval":
       return t("approval.kind.command");
     case "userInput":
       return t("approval.kind.userInput");

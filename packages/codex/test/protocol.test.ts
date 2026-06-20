@@ -207,9 +207,9 @@ describe("Codex protocol metadata", () => {
   it("normalizes server requests only through the exact generated method table", () => {
     const expectedKinds = {
       "account/chatgptAuthTokens/refresh": "authRefresh",
-      applyPatchApproval: "legacyPatchApproval",
+      applyPatchApproval: "fileChangeApproval",
       "attestation/generate": "attestation",
-      execCommandApproval: "legacyExecApproval",
+      execCommandApproval: "commandApproval",
       "item/commandExecution/requestApproval": "commandApproval",
       "item/fileChange/requestApproval": "fileChangeApproval",
       "item/permissions/requestApproval": "permissionsApproval",
@@ -1202,8 +1202,8 @@ describe("Codex protocol metadata", () => {
       ["item/tool/call", "dynamicTool"],
       ["account/chatgptAuthTokens/refresh", "authRefresh"],
       ["attestation/generate", "attestation"],
-      ["execCommandApproval", "legacyExecApproval"],
-      ["applyPatchApproval", "legacyPatchApproval"],
+      ["execCommandApproval", "commandApproval"],
+      ["applyPatchApproval", "fileChangeApproval"],
     ] as const;
 
     for (const [method, kind] of cases) {
@@ -1226,6 +1226,73 @@ describe("Codex protocol metadata", () => {
         },
       ]);
     }
+  });
+
+  it("normalizes legacy approval payload shape into canonical approval requests", () => {
+    expect(
+      normalizeCodexServerMessage({
+        id: "legacy-exec",
+        method: "execCommandApproval",
+        params: {
+          approvalId: "approval-legacy",
+          callId: "call-legacy",
+          command: ["sh", "-lc", "bun test"],
+          conversationId: "thread-legacy",
+          cwd: "/tmp/agent-ui",
+          parsedCmd: [],
+          reason: "Run tests",
+        },
+      }),
+    ).toEqual([
+      {
+        request: {
+          id: "legacy-exec",
+          itemId: "call-legacy",
+          kind: "commandApproval",
+          payload: {
+            approvalId: "approval-legacy",
+            callId: "call-legacy",
+            command: "sh -lc bun test",
+            conversationId: "thread-legacy",
+            cwd: "/tmp/agent-ui",
+            itemId: "call-legacy",
+            parsedCmd: [],
+            reason: "Run tests",
+            threadId: "thread-legacy",
+          },
+          threadId: "thread-legacy",
+        },
+        type: "serverRequest/created",
+      },
+    ]);
+
+    expect(
+      normalizeCodexServerMessage({
+        id: "legacy-patch",
+        method: "applyPatchApproval",
+        params: {
+          callId: "patch-call",
+          conversationId: "thread-legacy",
+          fileChanges: {},
+          grantRoot: "/tmp/agent-ui",
+          reason: "Allow writes",
+        },
+      }),
+    ).toMatchObject([
+      {
+        request: {
+          id: "legacy-patch",
+          itemId: "patch-call",
+          kind: "fileChangeApproval",
+          payload: {
+            itemId: "patch-call",
+            threadId: "thread-legacy",
+          },
+          threadId: "thread-legacy",
+        },
+        type: "serverRequest/created",
+      },
+    ]);
   });
 
   it("normalizes structured App Server user content into display text", () => {

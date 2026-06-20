@@ -308,8 +308,8 @@ Productized stable Agent UI behavior:
   `item/fileChange/requestApproval`, `item/tool/requestUserInput`,
   `mcpServer/elicitation/request`, `item/permissions/requestApproval`,
   `item/tool/call`, `account/chatgptAuthTokens/refresh`,
-  `attestation/generate`, `applyPatchApproval`, `execCommandApproval`, and
-  `serverRequest/resolved`.
+  `attestation/generate`, legacy upstream `applyPatchApproval` /
+  `execCommandApproval` compatibility inputs, and `serverRequest/resolved`.
 - Account, app, skill, hook, model, usage, warning, and status surfaces already
   documented in the stable productized method and notification lists above.
 
@@ -556,8 +556,10 @@ Experimental unsupported methods:
 
 Server requests:
 
-- approval decisions: command approval, file change approval, and legacy
-  `applyPatchApproval` / `execCommandApproval` compatibility requests
+- approval decisions: command approval and file change approval. Legacy
+  upstream `applyPatchApproval` / `execCommandApproval` compatibility requests
+  are accepted at the Codex adapter boundary and normalized to those canonical
+  product kinds.
 - host integration requests: user input, MCP elicitation, permissions approval,
   dynamic tool call, auth refresh, and attestation
 

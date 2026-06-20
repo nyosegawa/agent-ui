@@ -1,0 +1,2 @@
+{"id":"legacy-exec-approval-raw","method":"execCommandApproval","params":{"conversationId":"thread-basic","callId":"legacy-cmd","approvalId":"legacy-cmd-approval","command":["sh","-lc","bun test"],"cwd":"/tmp/agent-ui","reason":"Run tests before editing","parsedCmd":[]}}
+{"id":"legacy-patch-approval-raw","method":"applyPatchApproval","params":{"conversationId":"thread-basic","callId":"legacy-patch","fileChanges":{"packages/core/src/reducer.ts":{"additions":1,"deletions":0}},"reason":"Allow patch writes","grantRoot":"/tmp/agent-ui"}}

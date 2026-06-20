@@ -42,6 +42,12 @@
       "stability": "deprecated"
     },
     {
+      "file": "deprecated-legacy-approvals.jsonl",
+      "methods": ["applyPatchApproval", "execCommandApproval"],
+      "purpose": "deprecated compatibility coverage for legacy approval requests normalized to canonical approval kinds",
+      "stability": "deprecated"
+    },
+    {
       "file": "thread-resume-usage.jsonl",
       "methods": ["thread/started", "thread/status/changed", "thread/tokenUsage/updated"],
       "purpose": "resumed thread snapshot and nested token usage",

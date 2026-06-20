@@ -7,8 +7,6 @@ export type PendingServerRequestKind =
   | "commandApproval"
   | "dynamicTool"
   | "fileChangeApproval"
-  | "legacyExecApproval"
-  | "legacyPatchApproval"
   | "mcpElicitation"
   | "permissionsApproval"
   | "userInput"

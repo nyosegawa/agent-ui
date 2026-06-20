@@ -3172,7 +3172,7 @@ describe("AgentChat", () => {
     });
   });
 
-  it("exposes only command, file, and legacy approvals through useAgentApprovals", () => {
+  it("exposes only command and file approvals through useAgentApprovals", () => {
     const initialState = createInitialAgentState();
     initialState.serverRequestQueue = {
       byId: {
@@ -3185,18 +3185,6 @@ describe("AgentChat", () => {
         "string:request-file": {
           id: "request-file",
           kind: "fileChangeApproval",
-          payload: {},
-          threadId: "thread-1",
-        },
-        "string:request-legacy-exec": {
-          id: "request-legacy-exec",
-          kind: "legacyExecApproval",
-          payload: {},
-          threadId: "thread-1",
-        },
-        "string:request-legacy-patch": {
-          id: "request-legacy-patch",
-          kind: "legacyPatchApproval",
           payload: {},
           threadId: "thread-1",
         },
@@ -3243,9 +3231,7 @@ describe("AgentChat", () => {
         "string:request-mcp",
         "string:request-file",
         "string:request-input",
-        "string:request-legacy-exec",
         "string:request-dynamic",
-        "string:request-legacy-patch",
         "string:request-auth",
         "string:request-attestation",
       ],
@@ -3261,11 +3247,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(
-      screen.getByText(
-        "commandApproval,fileChangeApproval,legacyExecApproval,legacyPatchApproval",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText("commandApproval,fileChangeApproval")).toBeInTheDocument();
   });
 
   it("renders status banners as first-class shell content", () => {

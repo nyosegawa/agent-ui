@@ -107,6 +107,20 @@ describe("raw App Server JSON-RPC fixture pack", () => {
       threadId: "thread-basic",
       turnId: "turn-text",
     });
+    expect(state.serverRequestQueue.byId["string:legacy-exec-approval-raw"]).toMatchObject({
+      itemId: "legacy-cmd",
+      kind: "commandApproval",
+      payload: {
+        command: "sh -lc bun test",
+        threadId: "thread-basic",
+      },
+      threadId: "thread-basic",
+    });
+    expect(state.serverRequestQueue.byId["string:legacy-patch-approval-raw"]).toMatchObject({
+      itemId: "legacy-patch",
+      kind: "fileChangeApproval",
+      threadId: "thread-basic",
+    });
     expect(state.serverRequestQueue.byId["string:approval-command-raw"]).toBeUndefined();
     expect(state.threads["thread-resume"]?.tokenUsage?.totalTokens).toBe(168);
     expect(state.apps.apps.map((app) => app.id)).toEqual(["gmail", "drive"]);

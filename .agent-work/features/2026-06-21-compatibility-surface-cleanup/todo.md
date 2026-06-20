@@ -2,8 +2,8 @@
 
 ## Status Summary
 
-- Overall status: Planned
-- Current phase: none
+- Overall status: In progress
+- Current phase: P002
 - Blockers: none for planning; implementation stays on this branch and must rewrite PR #33 scope if cleanup is stacked there.
 - Last validation: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-21-compatibility-surface-cleanup` passed after supplemental Round 4.
 - Last review: Round 1-3 compatibility review incorporated; supplemental Round 4 skills/docs/examples/release review incorporated.
@@ -19,7 +19,7 @@
 
 ## Phase Checklist
 
-- [ ] P001 Canonicalize approval kinds
+- [x] P001 Canonicalize approval kinds
   - Goal: remove public `legacyExecApproval` and `legacyPatchApproval` kinds while preserving legacy upstream method intake.
   - Scope: core state/selectors, Codex server-request normalizer, legacy approval payload normalization/display, server policy callbacks, React approval UI/tests, raw fixtures, docs/API snapshots.
   - Expected files/areas: `packages/core/src/state/server-requests.ts`, `packages/core/src/selectors.ts`, `packages/core/test/public-surface.test.ts`, `packages/core/test/source-structure.test.ts`, `packages/codex/src/normalizers/server-requests.ts`, `fixtures/app-server/v2-jsonrpc/`, `packages/codex/test/protocol.test.ts`, `packages/codex/test/raw-jsonrpc-fixtures.test.ts`, `packages/server/test/websocket.test.ts`, `packages/react/src/components/approvals.tsx`, `packages/react/test/components.vitest.tsx`, approval docs, API snapshots.
@@ -29,22 +29,22 @@
   - Push: push to `origin/codex-upstream/64bdeed9f7ad`.
   - PR/CI: update PR notes with breaking public API cleanup.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
+    - Implementation: Removed `legacyExecApproval` / `legacyPatchApproval` from core public request kinds and React approval branches; mapped legacy upstream `execCommandApproval` / `applyPatchApproval` to canonical `commandApproval` / `fileChangeApproval`; normalized legacy `conversationId`, `callId`, and `command[]` at the Codex/server policy boundaries; added deprecated raw JSONL fixture coverage.
+    - Validation: `bunx vitest run --config vitest.config.ts packages/codex/test/protocol.test.ts packages/codex/test/raw-jsonrpc-fixtures.test.ts` passed; `bunx vitest run --config vitest.config.ts packages/core/test/reducer.test.ts packages/core/test/public-surface.test.ts packages/core/test/source-structure.test.ts` passed; `bunx vitest run --config vitest.config.ts packages/react/test/components.vitest.tsx` passed; `bunx vitest run --config vitest.config.ts packages/server/test/websocket.test.ts` passed; `bun run typecheck` passed; `bun run build` passed; `bun run test:api-snapshots` passed after intentional snapshot update; `bun run test:protocol` passed; `bun run lint` passed.
+    - Review: `rg -n "legacyExecApproval|legacyPatchApproval" packages docs examples skills test fixtures --glob '!packages/codex/src/generated/**'` returns only the core source-structure guard patterns.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T001 Change public pending request kind union to canonical approval kinds only.
+    - [x] T001 Change public pending request kind union to canonical approval kinds only.
       - Expected files/areas: core state, selectors, public-surface/source-structure guards, API snapshots.
       - Validation note: typecheck and core tests must fail before all legacy references are removed.
-    - [ ] T002 Map `execCommandApproval` and `applyPatchApproval` to canonical kinds.
+    - [x] T002 Map `execCommandApproval` and `applyPatchApproval` to canonical kinds.
       - Expected files/areas: Codex normalizer, protocol tests, raw JSONL fixtures, fixture manifest.
       - Validation note: raw fixtures and protocol tests must prove upstream legacy methods normalize to canonical public kinds.
-    - [ ] T003 Remove React legacy approval branches and update docs/tests.
+    - [x] T003 Remove React legacy approval branches and update docs/tests.
       - Expected files/areas: React approvals, `docs/guides/approvals.md`, `docs/reference/hooks.md`, `docs/reference/react-components.md`, `docs/reference/codex-protocol.md`.
       - Validation note: component tests must assert only current approval kinds; docs must describe legacy upstream methods as compatibility inputs.
-    - [ ] T004 Cover legacy approval payload and server policy behavior.
+    - [x] T004 Cover legacy approval payload and server policy behavior.
       - Expected files/areas: React approvals, `packages/server/test/websocket.test.ts`, server request policy tests.
       - Validation note: array commands render sensibly, `conversationId` can populate missing `threadId`, and legacy upstream methods still hit command/file policy callbacks.
 

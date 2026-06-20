@@ -243,14 +243,14 @@ function commandApprovalContext(
   requestId: NonNullable<AgentTransportEvent["requestId"]>,
 ): CommandApprovalContext {
   return {
-    command: stringValue(payload.command),
+    command: commandValue(payload.command),
     cwd: stringValue(payload.cwd),
-    itemId: stringValue(payload.itemId),
+    itemId: stringValue(payload.itemId ?? payload.item_id ?? payload.callId),
     payload,
     reason: stringValue(payload.reason),
     requestId,
-    threadId: stringValue(payload.threadId),
-    turnId: stringValue(payload.turnId),
+    threadId: stringValue(payload.threadId ?? payload.thread_id ?? payload.conversationId),
+    turnId: stringValue(payload.turnId ?? payload.turn_id),
   };
 }
 
@@ -260,12 +260,12 @@ function fileChangeApprovalContext(
 ): FileChangeApprovalContext {
   return {
     grantRoot: stringValue(payload.grantRoot),
-    itemId: stringValue(payload.itemId),
+    itemId: stringValue(payload.itemId ?? payload.item_id ?? payload.callId),
     payload,
     reason: stringValue(payload.reason),
     requestId,
-    threadId: stringValue(payload.threadId),
-    turnId: stringValue(payload.turnId),
+    threadId: stringValue(payload.threadId ?? payload.thread_id ?? payload.conversationId),
+    turnId: stringValue(payload.turnId ?? payload.turn_id),
   };
 }
 
@@ -326,9 +326,15 @@ function stringValue(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+function commandValue(value: unknown): string | undefined {
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return value.map((part) => String(part)).join(" ");
+  return undefined;
+}
+
 function threadIdFromPayload(payload: unknown): string | undefined {
   if (!isRecord(payload)) return undefined;
-  return stringValue(payload.threadId ?? payload.thread_id);
+  return stringValue(payload.threadId ?? payload.thread_id ?? payload.conversationId);
 }
 
 function turnIdFromPayload(payload: unknown): string | undefined {
