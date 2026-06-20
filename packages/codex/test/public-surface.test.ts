@@ -31,6 +31,9 @@ describe("Codex package public surface", () => {
     expect(snapshot).toContain("AgentResourcePath");
     expect(snapshot).toContain("AgentSkillPath");
     expect(snapshot).toContain("AgentMentionPath");
+    expect(snapshot).toContain("type AgentSandboxPolicy");
+    expect(snapshot).toContain("writableRoots: AgentLocalPath[]");
+    expect(snapshot).toContain("skillPath: AgentSkillPath");
     expect(snapshot).not.toContain("LegacyAppPathString");
     expect(snapshot).not.toContain("AbsolutePathBuf");
   });

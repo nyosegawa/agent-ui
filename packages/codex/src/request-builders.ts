@@ -5,7 +5,6 @@ import type { Personality } from "./generated/stable/Personality";
 import type { ReasoningEffort } from "./generated/stable/ReasoningEffort";
 import type { ReasoningSummary } from "./generated/stable/ReasoningSummary";
 import type { SandboxMode } from "./generated/stable/v2/SandboxMode";
-import type { SandboxPolicy } from "./generated/stable/v2/SandboxPolicy";
 import type { SortDirection } from "./generated/stable/v2/SortDirection";
 import type { ThreadSortKey } from "./generated/stable/v2/ThreadSortKey";
 import type { ThreadSource } from "./generated/stable/v2/ThreadSource";
@@ -14,6 +13,7 @@ import type { ThreadStartSource } from "./generated/stable/v2/ThreadStartSource"
 import type { UserInput } from "./generated/stable/v2/UserInput";
 import type { CodexStableMethodParams as GeneratedCodexStableMethodParams } from "./method-params";
 import type {
+  AgentLocalPath,
   AgentMentionPath,
   AgentResourcePath,
   AgentSkillPath,
@@ -136,6 +136,18 @@ export interface TurnSteerParams {
   threadId: string;
 }
 
+export type AgentSandboxPolicy =
+  | { type: "dangerFullAccess" }
+  | { networkAccess: boolean; type: "readOnly" }
+  | { networkAccess: "restricted" | "enabled"; type: "externalSandbox" }
+  | {
+      excludeSlashTmp: boolean;
+      excludeTmpdirEnvVar: boolean;
+      networkAccess: boolean;
+      type: "workspaceWrite";
+      writableRoots: AgentLocalPath[];
+    };
+
 interface ThreadConfigOverrides {
   approvalPolicy?: AskForApproval | null;
   approvalsReviewer?: ApprovalsReviewer | null;
@@ -158,7 +170,7 @@ interface TurnConfigOverrides {
   model?: string | null;
   outputSchema?: JsonValue | null;
   personality?: Personality | null;
-  sandboxPolicy?: SandboxPolicy | null;
+  sandboxPolicy?: AgentSandboxPolicy | null;
   serviceTier?: string | null;
   summary?: ReasoningSummary | null;
 }
@@ -167,7 +179,7 @@ export type CodexUserInput = UserInput;
 
 export interface AgentBrowserVerificationInputOptions {
   prompt: string;
-  skillPath: string;
+  skillPath: AgentSkillPath;
   skillName?: string;
 }
 

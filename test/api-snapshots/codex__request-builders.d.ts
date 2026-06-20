@@ -1,4 +1,4 @@
-import { A as AskForApproval, a as ApprovalsReviewer, J as JsonValue, P as Personality, S as SandboxMode, T as ThreadSource, b as SortDirection, c as ThreadSortKey, d as ThreadSourceKind, e as ThreadStartSource, R as ReasoningEffort, f as SandboxPolicy, g as ReasoningSummary, U as UserInput } from './UserInput-<chunk>.js';
+import { A as AskForApproval, a as ApprovalsReviewer, J as JsonValue, P as Personality, S as SandboxMode, T as ThreadSource, b as SortDirection, c as ThreadSortKey, d as ThreadSourceKind, e as ThreadStartSource, R as ReasoningEffort, f as ReasoningSummary, U as UserInput } from './UserInput-<chunk>.js';
 
 type AgentLocalPath = string;
 type AgentWorkingDirectory = AgentLocalPath;
@@ -130,6 +130,21 @@ interface TurnSteerParams {
     input: UserInput[];
     threadId: string;
 }
+type AgentSandboxPolicy = {
+    type: "dangerFullAccess";
+} | {
+    networkAccess: boolean;
+    type: "readOnly";
+} | {
+    networkAccess: "restricted" | "enabled";
+    type: "externalSandbox";
+} | {
+    excludeSlashTmp: boolean;
+    excludeTmpdirEnvVar: boolean;
+    networkAccess: boolean;
+    type: "workspaceWrite";
+    writableRoots: AgentLocalPath[];
+};
 interface ThreadConfigOverrides {
     approvalPolicy?: AskForApproval | null;
     approvalsReviewer?: ApprovalsReviewer | null;
@@ -151,14 +166,14 @@ interface TurnConfigOverrides {
     model?: string | null;
     outputSchema?: JsonValue | null;
     personality?: Personality | null;
-    sandboxPolicy?: SandboxPolicy | null;
+    sandboxPolicy?: AgentSandboxPolicy | null;
     serviceTier?: string | null;
     summary?: ReasoningSummary | null;
 }
 type CodexUserInput = UserInput;
 interface AgentBrowserVerificationInputOptions {
     prompt: string;
-    skillPath: string;
+    skillPath: AgentSkillPath;
     skillName?: string;
 }
 declare const disabledProductMethods: readonly ["thread/turns/items/list"];
@@ -209,4 +224,4 @@ declare function skillsConfigWriteParams(params: SkillsConfigWriteParams): Skill
 declare function hooksListParams(params?: HooksListParams): HooksListParams;
 declare function appsListParams(params?: AppsListParams): AppsListParams;
 
-export { type AgentBrowserVerificationInputOptions, type AgentLocalPath, type AgentMentionPath, type AgentResourcePath, type AgentSkillPath, type AgentWorkingDirectory, type AppsListParams, type CancelLoginAccountParams, type CodexUserInput, type GetAccountParams, type HooksListParams, type LoginAccountParams, type ModelListParams, type SkillsConfigWriteParams, type SkillsListParams, type ThreadArchiveParams, type ThreadCompactStartParams, type ThreadForkParams, type ThreadInjectItemsParams, type ThreadListParams, type ThreadLoadedListParams, type ThreadMetadataUpdateParams, type ThreadReadParams, type ThreadResumeParams, type ThreadRollbackParams, type ThreadSetNameParams, type ThreadStartParams, type ThreadUnarchiveParams, type ThreadUnsubscribeParams, type TurnInterruptParams, type TurnStartParams, type TurnSteerParams, UserInput, accountReadParams, agentBrowserSkillInput, agentBrowserVerificationInput, apiKeyLoginParams, appsListParams, authTokensLoginParams, cancelLoginParams, chatgptLoginParams, deviceCodeLoginParams, disabledProductMethods, hooksListParams, imageInput, localImageInput, mentionInput, modelListParams, skillInput, skillsConfigWriteParams, skillsListParams, textInput, threadArchiveParams, threadCompactStartParams, threadForkParams, threadInjectItemsParams, threadListParams, threadLoadedListParams, threadMetadataUpdateParams, threadReadParams, threadResumeParams, threadRollbackParams, threadSetNameParams, threadStartParams, threadUnarchiveParams, threadUnsubscribeParams, turnInterruptParams, turnStartParams, turnSteerParams };
+export { type AgentBrowserVerificationInputOptions, type AgentLocalPath, type AgentMentionPath, type AgentResourcePath, type AgentSandboxPolicy, type AgentSkillPath, type AgentWorkingDirectory, type AppsListParams, type CancelLoginAccountParams, type CodexUserInput, type GetAccountParams, type HooksListParams, type LoginAccountParams, type ModelListParams, type SkillsConfigWriteParams, type SkillsListParams, type ThreadArchiveParams, type ThreadCompactStartParams, type ThreadForkParams, type ThreadInjectItemsParams, type ThreadListParams, type ThreadLoadedListParams, type ThreadMetadataUpdateParams, type ThreadReadParams, type ThreadResumeParams, type ThreadRollbackParams, type ThreadSetNameParams, type ThreadStartParams, type ThreadUnarchiveParams, type ThreadUnsubscribeParams, type TurnInterruptParams, type TurnStartParams, type TurnSteerParams, UserInput, accountReadParams, agentBrowserSkillInput, agentBrowserVerificationInput, apiKeyLoginParams, appsListParams, authTokensLoginParams, cancelLoginParams, chatgptLoginParams, deviceCodeLoginParams, disabledProductMethods, hooksListParams, imageInput, localImageInput, mentionInput, modelListParams, skillInput, skillsConfigWriteParams, skillsListParams, textInput, threadArchiveParams, threadCompactStartParams, threadForkParams, threadInjectItemsParams, threadListParams, threadLoadedListParams, threadMetadataUpdateParams, threadReadParams, threadResumeParams, threadRollbackParams, threadSetNameParams, threadStartParams, threadUnarchiveParams, threadUnsubscribeParams, turnInterruptParams, turnStartParams, turnSteerParams };
