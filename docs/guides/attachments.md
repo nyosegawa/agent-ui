@@ -127,10 +127,11 @@ asset's `path` was sent to Codex App Server as `localImageInput(path)` or as
 explicit attachment text, keep it registered until the App Server has finished
 reading it. `cleanup()` removes the whole helper session.
 
-The older `createAgentUiLocalUploadHandler()` remains as the upload-only entry
-point and now returns the same structured JSON while preserving `path` for
-existing resolvers. Upload failures should be thrown or returned as `null` by
-the resolver so the composer can show an inline error.
+`createAgentUiLocalUploadHandler()` remains public for hosts that only need a
+browser `File` to local-path upload adapter. It is backed by the same local
+media helper and returns the same structured JSON, including `path` for explicit
+Codex App Server input. Upload failures should be thrown or returned as `null`
+by the resolver so the composer can show an inline error.
 
 See [reference/server-bridge.md](../reference/server-bridge.md) for the server
 contract.

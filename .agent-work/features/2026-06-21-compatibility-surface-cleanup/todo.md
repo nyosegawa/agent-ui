@@ -48,7 +48,7 @@
       - Expected files/areas: React approvals, `packages/server/test/websocket.test.ts`, server request policy tests.
       - Validation note: array commands render sensibly, `conversationId` can populate missing `threadId`, and legacy upstream methods still hit command/file policy callbacks.
 
-- [ ] P002 Introduce Agent UI-owned path boundary
+- [x] P002 Introduce Agent UI-owned path boundary
   - Goal: keep generated `LegacyAppPathString` / `AbsolutePathBuf` out of preferred product APIs and normalize path values through Agent UI-owned types/helpers.
   - Scope: hand-written Codex request-builder/product input types, Codex root export decision, generated-backed facade docs, core cwd/thread metadata, React cwd/resource public docs, server upload/path docs, public skill guidance.
   - Expected files/areas: `packages/codex/src/path-types.ts`, `packages/codex/src/request-builders.ts`, `packages/codex/src/index.ts`, `packages/codex/src/stable-types.ts`, `packages/codex/src/clients.ts`, `packages/codex/src/session.ts`, `packages/codex/src/auth.ts`, Codex/react/server path docs, `skills/agent-ui/**`, `test/agent-ui-skill.test.ts`, API snapshots.
@@ -58,22 +58,22 @@
   - Push: push after validation/review.
   - PR/CI: document public path API impact and host-owned path authority.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
+    - Implementation: Added Agent UI-owned path aliases (`AgentLocalPath`, `AgentWorkingDirectory`, `AgentResourcePath`, `AgentSkillPath`, `AgentMentionPath`); moved preferred request-builder public params from generated method-param aliases to hand-written product types checked with `satisfies GeneratedCodexStableMethodParams`; removed generated method params/results from the Codex root barrel; updated docs and public Agent Skill upload wording to describe host-owned local paths rather than path URI or compatibility shims.
+    - Validation: `bun run build` passed; `bunx vitest run --config vitest.config.ts packages/codex/test/public-surface.test.ts packages/codex/test/type-tests/protocol-types.ts test/agent-ui-skill.test.ts` passed after skill wording fix; `bun run test:api-snapshots` passed after intentional snapshot update; `bun run test:package-resolution` passed; `bun run typecheck` passed; `bun run lint` passed; `bun run test:skills` passed.
+    - Review: `rg -n "LegacyAppPathString|AbsolutePathBuf|upload-only compatibility entry point|path URI|pathuri" packages/codex/src packages/codex/test docs skills examples test/api-snapshots --glob '!packages/codex/src/generated/**'` now shows generated path names only in generated-backed `codex__clients.d.ts` / `codex__stable-types.d.ts`, plus docs/tests that explicitly document or guard the exception.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T005 Choose and define low-churn path aliases.
+    - [x] T005 Choose and define low-churn path aliases.
       - Expected files/areas: `packages/codex/src/path-types.ts` or equivalent hand-written module.
       - Validation note: use string aliases such as `AgentLocalPath`; avoid fake URI strings, object wrappers, or opaque brands without runtime guarantees.
-    - [ ] T006 Convert generated path strings at adapter/request-builder boundaries.
+    - [x] T006 Convert generated path strings at adapter/request-builder boundaries.
       - Expected files/areas: Codex normalizers and request builders.
       - Validation note: generated files remain unchanged.
-    - [ ] T007 Add path and root-export public-surface guards.
+    - [x] T007 Add path and root-export public-surface guards.
       - Expected files/areas: `packages/codex/test/generated-ownership.test.ts`, `packages/codex/test/public-surface.test.ts`, `packages/react/test/source-structure.vitest.ts`, `test/api-snapshots/codex__index.d.ts`, `test/api-snapshots/codex__request-builders.d.ts`.
       - Validation note: disallow generated path names in preferred product declarations; allow generated stable-types and documented generated-backed result snapshots.
-    - [ ] T008 Update path/product guidance.
+    - [x] T008 Update path/product guidance.
       - Expected files/areas: `docs/reference/package-exports.md`, `docs/reference/codex-protocol.md`, `docs/reference/react-components.md`, `docs/reference/server-bridge.md`, `docs/guides/attachments.md`, `skills/agent-ui/SKILL.md`, `skills/agent-ui/references/uploads.md`, `skills/agent-ui/references/local-single-user.md`, `skills/agent-ui/references/debug.md`, `test/agent-ui-skill.test.ts`.
       - Validation note: document generated-only exception, generated-backed clients/session result types, and remove stale "upload-only compatibility entry point" wording if that surface is de-emphasized.
 

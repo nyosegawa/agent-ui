@@ -1,12 +1,17 @@
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 import { createCodexSession } from "../../src";
 import {
-  type CodexStableMethodParams,
-  type CodexExperimentalMethodResult,
-  type CodexStableMethodResult,
   threadResumeParams,
   type ThreadResumeParams,
 } from "../../src/request-builders";
+import type {
+  CodexStableMethodParams,
+  CodexExperimentalMethodParams,
+} from "../../src/method-params";
+import type {
+  CodexExperimentalMethodResult,
+  CodexStableMethodResult,
+} from "../../src/method-results";
 import type { ClientRequest } from "../../src/generated/stable";
 import type { InitializeResponse } from "../../src/generated/stable";
 import type {
@@ -42,6 +47,12 @@ type GeneratedParamTypeAssertions = [
   Assert<Equal<CodexStableMethodParams<"app/list">, GeneratedParams<"app/list">>>,
   Assert<
     Equal<
+      CodexExperimentalMethodParams<"thread/turns/list">,
+      GeneratedExperimentalParams<"thread/turns/list">
+    >
+  >,
+  Assert<
+    Equal<
       ThreadTurnsListParams,
       GeneratedExperimentalParams<"thread/turns/list">
     >
@@ -59,6 +70,7 @@ type GeneratedParamTypeAssertions = [
   >,
 ];
 const generatedParamTypeAssertions: GeneratedParamTypeAssertions = [
+  true,
   true,
   true,
   true,

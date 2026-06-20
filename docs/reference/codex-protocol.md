@@ -83,15 +83,19 @@ Implementation status:
 - `createCodexAppServerBridge()` returns a `CodexAppServerBridge` with a
   `transport` property and redacts stderr before forwarding logs.
 - The generated stable and experimental TypeScript schemas are vendored under `packages/codex/src/generated`.
-- `request-builders.ts` is the product request boundary. Builders return
-  params whose method-specific types are derived from the generated stable
-  `ClientRequest` union. React does not own or re-export Codex-specific
-  request shapes.
+- `request-builders.ts` is the product request boundary. Builders return Agent
+  UI-owned request/input types that are checked against the generated stable
+  `ClientRequest` union at compile time. Filesystem path fields stay as
+  host-owned string aliases such as `AgentWorkingDirectory`,
+  `AgentResourcePath`, `AgentSkillPath`, and `AgentMentionPath`; generated path
+  names such as `LegacyAppPathString` and `AbsolutePathBuf` remain confined to
+  generated-backed advanced surfaces. React does not own or re-export
+  Codex-specific request shapes.
 - `createCodexClients()` groups productized App Server methods by protocol
   primitive: connection, threads, turns, approvals, apps, skills, hooks,
-  models, and account. Its method params and results use generated-schema-derived
-  aliases, so stable reads/lists return method-specific response types instead
-  of `unknown`. Client construction validates that this method surface exactly
+  models, and account. Its method results use generated-schema-derived aliases,
+  so stable reads/lists return method-specific response types instead of
+  `unknown`. Client construction validates that this method surface exactly
   matches the productized stable method classification.
   Experimental method calls must use `requestExperimental()`, require explicit
   opt-in, and are rejected if the method is stable/productized, host-only,
@@ -239,7 +243,7 @@ need experimental methods must opt in with
 Field-level experimental request fields on otherwise stable methods remain
 host-managed raw protocol usage. Stable helpers such as
 `threadResumeParams()` and `createCodexSession().thread.resume()` intentionally
-accept only the generated stable request shape; fields such as
+accept only the stable product request shape; fields such as
 `thread/resume.excludeTurns`, `thread/resume.initialTurnsPage`, and
 path/history resume must be sent through `requestRaw()` by a host that also owns
 the corresponding `experimentalApi` negotiation and pagination behavior.

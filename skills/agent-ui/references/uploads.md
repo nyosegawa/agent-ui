@@ -100,6 +100,6 @@ Use `path` only for explicit App Server input such as `localImageInput(path)`.
 Use `url` or `previewUrl` for browser rendering. The helper does not install a
 static route by itself; hosts must intentionally route asset requests to
 `serveAssetHandler`, which serves only registered asset IDs and supports
-host-owned admission checks. The older `createAgentUiLocalUploadHandler()`
-remains available as an upload-only compatibility entry point, but new examples
-should prefer the local media helper.
+host-owned admission checks. `createAgentUiLocalUploadHandler()` remains
+available for hosts that only need a browser `File` to local-path upload
+adapter, but new examples should prefer the local media helper.
