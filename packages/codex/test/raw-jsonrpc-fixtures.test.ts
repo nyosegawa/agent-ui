@@ -41,6 +41,13 @@ describe("raw App Server JSON-RPC fixture pack", () => {
     }
   });
 
+  it("keeps deprecated compatibility fixtures named and classified together", () => {
+    const manifest = JSON.parse(readFileSync(join(fixtureRoot, "manifest.json"), "utf8"));
+    for (const entry of manifest.fixtures as Array<{ file: string; stability: string }>) {
+      expect(entry.file.startsWith("deprecated-")).toBe(entry.stability === "deprecated");
+    }
+  });
+
   it("keeps deprecated file-change output delta isolated and readable", () => {
     const manifest = JSON.parse(readFileSync(join(fixtureRoot, "manifest.json"), "utf8"));
     for (const entry of manifest.fixtures as Array<{ file: string }>) {
@@ -106,6 +113,25 @@ describe("raw App Server JSON-RPC fixture pack", () => {
       kind: "fileChangeApproval",
       threadId: "thread-basic",
       turnId: "turn-text",
+    });
+    expect(state.serverRequestQueue.byId["string:legacy-exec-approval-raw"]).toMatchObject({
+      itemId: "legacy-cmd",
+      kind: "commandApproval",
+      payload: {
+        command: ["sh", "-lc", "bun test"],
+        commandLine: "sh -lc 'bun test'",
+        threadId: "thread-basic",
+        upstreamMethod: "execCommandApproval",
+      },
+      threadId: "thread-basic",
+    });
+    expect(state.serverRequestQueue.byId["string:legacy-patch-approval-raw"]).toMatchObject({
+      itemId: "legacy-patch",
+      kind: "fileChangeApproval",
+      payload: {
+        upstreamMethod: "applyPatchApproval",
+      },
+      threadId: "thread-basic",
     });
     expect(state.serverRequestQueue.byId["string:approval-command-raw"]).toBeUndefined();
     expect(state.threads["thread-resume"]?.tokenUsage?.totalTokens).toBe(168);

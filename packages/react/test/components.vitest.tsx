@@ -3172,7 +3172,7 @@ describe("AgentChat", () => {
     });
   });
 
-  it("exposes only command, file, and legacy approvals through useAgentApprovals", () => {
+  it("exposes only command and file approvals through useAgentApprovals", () => {
     const initialState = createInitialAgentState();
     initialState.serverRequestQueue = {
       byId: {
@@ -3185,18 +3185,6 @@ describe("AgentChat", () => {
         "string:request-file": {
           id: "request-file",
           kind: "fileChangeApproval",
-          payload: {},
-          threadId: "thread-1",
-        },
-        "string:request-legacy-exec": {
-          id: "request-legacy-exec",
-          kind: "legacyExecApproval",
-          payload: {},
-          threadId: "thread-1",
-        },
-        "string:request-legacy-patch": {
-          id: "request-legacy-patch",
-          kind: "legacyPatchApproval",
           payload: {},
           threadId: "thread-1",
         },
@@ -3243,9 +3231,7 @@ describe("AgentChat", () => {
         "string:request-mcp",
         "string:request-file",
         "string:request-input",
-        "string:request-legacy-exec",
         "string:request-dynamic",
-        "string:request-legacy-patch",
         "string:request-auth",
         "string:request-attestation",
       ],
@@ -3261,11 +3247,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(
-      screen.getByText(
-        "commandApproval,fileChangeApproval,legacyExecApproval,legacyPatchApproval",
-      ),
-    ).toBeInTheDocument();
+    expect(screen.getByText("commandApproval,fileChangeApproval")).toBeInTheDocument();
   });
 
   it("renders status banners as first-class shell content", () => {
@@ -6140,6 +6122,100 @@ describe("AgentChat", () => {
     });
     expect(transport.responses.get("string:approval-file")).toEqual({
       decision: "acceptForSession",
+    });
+  });
+
+  it("responds to legacy approval payloads with legacy decisions", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.serverRequestQueue = {
+      byId: {
+        "string:legacy-command": {
+          id: "legacy-command",
+          kind: "commandApproval",
+          payload: {
+            command: ["sh", "-lc", "bun test"],
+            commandLine: "sh -lc 'bun test'",
+            upstreamMethod: "execCommandApproval",
+          },
+          threadId: "thread-legacy",
+        },
+      },
+      order: ["string:legacy-command"],
+    };
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentApprovalQueue threadId="thread-legacy" />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("$ sh -lc 'bun test'")).toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", {
+        name: "Approve command request legacy-command for session",
+      }),
+    );
+    expect(transport.responses.get("string:legacy-command")).toEqual({
+      decision: "approved_for_session",
+    });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Decline command request legacy-command",
+      }),
+    );
+    expect(transport.responses.get("string:legacy-command")).toEqual({
+      decision: "denied",
+    });
+  });
+
+  it("responds to controlled legacy approval props with legacy decisions", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider transport={transport}>
+        <AgentApprovalQueue
+          approvals={[
+            {
+              id: "legacy-controlled-command",
+              kind: "commandApproval",
+              payload: {
+                command: ["sh", "-lc", "bun test"],
+                upstreamMethod: "execCommandApproval",
+              },
+              threadId: "thread-legacy",
+            },
+          ]}
+        />
+      </AgentProvider>,
+    );
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Approve command request legacy-controlled-command",
+      }),
+    );
+    expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
+      decision: "approved",
+    });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Approve command request legacy-controlled-command for session",
+      }),
+    );
+    expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
+      decision: "approved_for_session",
+    });
+
+    await user.click(
+      screen.getByRole("button", {
+        name: "Decline command request legacy-controlled-command",
+      }),
+    );
+    expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
+      decision: "denied",
     });
   });
 

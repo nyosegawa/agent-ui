@@ -45,7 +45,7 @@ import { generatedExperimentalOnlyClientMethods } from "../src/generated/protoco
 describe("Codex protocol metadata", () => {
   it("records upstream commit and stable release method surface", () => {
     expect(CODEX_PROTOCOL_COMMIT).toMatch(/^[0-9a-f]{40}$/);
-    expect(CODEX_PROTOCOL_COMMIT).toBe("5e9249ec0266f6331d1cb811d472c4d20cd5131d");
+    expect(CODEX_PROTOCOL_COMMIT).toBe("64bdeed9f7adbe60c725153b3fb74ed044a36221");
     expect(CODEX_PROTOCOL_GENERATED_AT).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(stableClientMethods).toBe(stableProductizedMethods);
     expect(stableProductizedMethods).toContain("account/rateLimits/read");
@@ -207,9 +207,9 @@ describe("Codex protocol metadata", () => {
   it("normalizes server requests only through the exact generated method table", () => {
     const expectedKinds = {
       "account/chatgptAuthTokens/refresh": "authRefresh",
-      applyPatchApproval: "legacyPatchApproval",
+      applyPatchApproval: "fileChangeApproval",
       "attestation/generate": "attestation",
-      execCommandApproval: "legacyExecApproval",
+      execCommandApproval: "commandApproval",
       "item/commandExecution/requestApproval": "commandApproval",
       "item/fileChange/requestApproval": "fileChangeApproval",
       "item/permissions/requestApproval": "permissionsApproval",
@@ -220,6 +220,14 @@ describe("Codex protocol metadata", () => {
 
     expect(Object.keys(expectedKinds).sort()).toEqual([...stableServerRequestMethods].sort());
     for (const method of stableServerRequestMethods) {
+      const payload = {
+        itemId: "item-1",
+        threadId: "thread-1",
+        turnId: "turn-1",
+        ...(method === "execCommandApproval" || method === "applyPatchApproval"
+          ? { upstreamMethod: method }
+          : {}),
+      };
       expect(
         normalizeCodexServerMessage({
           id: `request-${method}`,
@@ -232,7 +240,7 @@ describe("Codex protocol metadata", () => {
             id: `request-${method}`,
             itemId: "item-1",
             kind: expectedKinds[method],
-            payload: { itemId: "item-1", threadId: "thread-1", turnId: "turn-1" },
+            payload,
             threadId: "thread-1",
             turnId: "turn-1",
           },
@@ -572,6 +580,31 @@ describe("Codex protocol metadata", () => {
     expect(turn?.filePatchByItemId["patch-item"]).toBe(
       "diff --git a/file.ts b/file.ts",
     );
+  });
+
+  it("maps deprecated file-change output deltas as compatibility command output", () => {
+    expect(stableNotificationCoverage["item/fileChange/outputDelta"]).toBe("mapped");
+    expect(
+      normalizeCodexServerMessage({
+        method: "item/fileChange/outputDelta",
+        params: {
+          chunk: "deprecated chunk\n",
+          data: "deprecated data\n",
+          delta: "current delta\n",
+          itemId: "patch-output",
+          threadId: "thread-items",
+          turnId: "turn-items",
+        },
+      }),
+    ).toEqual([
+      {
+        delta: "current delta\n",
+        itemId: "patch-output",
+        threadId: "thread-items",
+        turnId: "turn-items",
+        type: "item/commandOutput/delta",
+      },
+    ]);
   });
 
   it("normalizes thread/read responses into snapshot history events", () => {
@@ -1202,8 +1235,8 @@ describe("Codex protocol metadata", () => {
       ["item/tool/call", "dynamicTool"],
       ["account/chatgptAuthTokens/refresh", "authRefresh"],
       ["attestation/generate", "attestation"],
-      ["execCommandApproval", "legacyExecApproval"],
-      ["applyPatchApproval", "legacyPatchApproval"],
+      ["execCommandApproval", "commandApproval"],
+      ["applyPatchApproval", "fileChangeApproval"],
     ] as const;
 
     for (const [method, kind] of cases) {
@@ -1226,6 +1259,76 @@ describe("Codex protocol metadata", () => {
         },
       ]);
     }
+  });
+
+  it("normalizes legacy approval payload shape into canonical approval requests", () => {
+    expect(
+      normalizeCodexServerMessage({
+        id: "legacy-exec",
+        method: "execCommandApproval",
+        params: {
+          approvalId: "approval-legacy",
+          callId: "call-legacy",
+          command: ["sh", "-lc", "bun test"],
+          conversationId: "thread-legacy",
+          cwd: "/tmp/agent-ui",
+          parsedCmd: [],
+          reason: "Run tests",
+        },
+      }),
+    ).toEqual([
+      {
+        request: {
+          id: "legacy-exec",
+          itemId: "call-legacy",
+          kind: "commandApproval",
+          payload: {
+            approvalId: "approval-legacy",
+            callId: "call-legacy",
+            command: ["sh", "-lc", "bun test"],
+            commandLine: "sh -lc 'bun test'",
+            conversationId: "thread-legacy",
+            cwd: "/tmp/agent-ui",
+            itemId: "call-legacy",
+            parsedCmd: [],
+            reason: "Run tests",
+            threadId: "thread-legacy",
+            upstreamMethod: "execCommandApproval",
+          },
+          threadId: "thread-legacy",
+        },
+        type: "serverRequest/created",
+      },
+    ]);
+
+    expect(
+      normalizeCodexServerMessage({
+        id: "legacy-patch",
+        method: "applyPatchApproval",
+        params: {
+          callId: "patch-call",
+          conversationId: "thread-legacy",
+          fileChanges: {},
+          grantRoot: "/tmp/agent-ui",
+          reason: "Allow writes",
+        },
+      }),
+    ).toMatchObject([
+      {
+        request: {
+          id: "legacy-patch",
+          itemId: "patch-call",
+          kind: "fileChangeApproval",
+          payload: {
+            itemId: "patch-call",
+            threadId: "thread-legacy",
+            upstreamMethod: "applyPatchApproval",
+          },
+          threadId: "thread-legacy",
+        },
+        type: "serverRequest/created",
+      },
+    ]);
   });
 
   it("normalizes structured App Server user content into display text", () => {
@@ -1849,6 +1952,7 @@ describe("Codex protocol metadata", () => {
           "account/login/cancel",
           "account/login/start",
           "account/logout",
+          "account/rateLimitResetCredit/consume",
           "account/rateLimits/read",
           "account/read",
           "account/sendAddCreditsNudgeEmail",
@@ -1867,6 +1971,7 @@ describe("Codex protocol metadata", () => {
           "experimentalFeature/list",
           "externalAgentConfig/detect",
           "externalAgentConfig/import",
+          "externalAgentConfig/import/readHistories",
           "feedback/upload",
           "fs/copy",
           "fs/createDirectory",
@@ -1951,6 +2056,7 @@ describe("Codex protocol metadata", () => {
           "deprecationNotice",
           "error",
           "externalAgentConfig/import/completed",
+          "externalAgentConfig/import/progress",
           "fs/changed",
           "fuzzyFileSearch/sessionCompleted",
           "fuzzyFileSearch/sessionUpdated",
@@ -2073,6 +2179,7 @@ describe("Codex protocol metadata", () => {
         "thread/increment_elicitation",
         "thread/memoryMode/set",
         "thread/realtime/appendAudio",
+        "thread/realtime/appendSpeech",
         "thread/realtime/appendText",
         "thread/realtime/listVoices",
         "thread/realtime/start",

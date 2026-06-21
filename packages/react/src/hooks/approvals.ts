@@ -17,9 +17,15 @@ export function useAgentApprovals(threadId?: ThreadId) {
 
   const approve = useCallback(
     async (requestId: RequestId, result: unknown = { decision: "accept" }) => {
-      await transport.respond(requestId, result);
+      const matchedApproval = approvals.find((candidate) => candidate.id === requestId);
+      await transport.respond(
+        requestId,
+        matchedApproval
+          ? approvalResponseResult(matchedApproval.payload, result)
+          : result,
+      );
     },
-    [transport],
+    [approvals, transport],
   );
 
   const reject = useCallback(
@@ -57,4 +63,27 @@ export function useAgentServerRequests(threadId?: ThreadId) {
 function normalizeServerRequestError(error: AgentError | string): AgentError {
   if (typeof error === "string") return { code: -32000, message: error };
   return error;
+}
+
+function approvalResponseResult(payload: unknown, result: unknown): unknown {
+  if (!isLegacyApprovalPayload(payload) || !isRecord(result)) return result;
+  switch (result.decision) {
+    case "accept":
+      return { ...result, decision: "approved" };
+    case "acceptForSession":
+      return { ...result, decision: "approved_for_session" };
+    case "decline":
+      return { ...result, decision: "denied" };
+    default:
+      return result;
+  }
+}
+
+function isLegacyApprovalPayload(payload: unknown): boolean {
+  if (!isRecord(payload)) return false;
+  return payload.upstreamMethod === "execCommandApproval" || payload.upstreamMethod === "applyPatchApproval";
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

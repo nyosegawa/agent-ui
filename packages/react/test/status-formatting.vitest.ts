@@ -44,6 +44,32 @@ describe("status formatting", () => {
     ).toBe("warning");
   });
 
+  it("prefers current rate-limit fields over deprecated fallback fields", () => {
+    expect(
+      normalizedStatusNotices([
+        {
+          id: "mixed",
+          kind: "rateLimit",
+          message: "structured fields win",
+          raw: {
+            rateLimits: {
+              primary: { usedPercent: 10 },
+            },
+            rate_limits: {
+              primary: { used_percent: 99 },
+            },
+            rateLimitsByLimitId: {
+              current: { primary: { usedPercent: 12 } },
+            },
+            rate_limits_by_limit_id: {
+              deprecated: { primary: { used_percent: 100 } },
+            },
+          },
+        },
+      ])[0]?.severity,
+    ).toBe("info");
+  });
+
   it("formats fallback summaries without leaking i18n keys", () => {
     expect(statusSummary(2, 0, 0)).toBe("2 background notices");
     expect(statusSummary(3, 1, 0)).toBe("1 warning · 3 total");

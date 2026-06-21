@@ -1,14 +1,17 @@
 # Approvals
 
 Codex App Server can pause a turn and ask the client to decide. Agent UI
-normalizes command, file-change, and legacy exec/apply-patch decision requests
-as approvals for `AgentApprovalQueue`.
+normalizes command and file-change decision requests as approvals for
+`AgentApprovalQueue`.
 
 Approval request families include:
 
 - command approval
 - file-change approval
-- legacy exec/apply-patch approval requests
+
+Older upstream `execCommandApproval` and `applyPatchApproval` requests are
+accepted at the Codex adapter boundary and normalize into `commandApproval` and
+`fileChangeApproval`; they are not public approval families.
 
 Other server requests, including user input, MCP elicitation, permissions, auth
 refresh, and attestation, are host integration requests. Read them through
@@ -58,10 +61,10 @@ const approvals = useAgentApprovals(threadId);
 const { requests, respond, reject } = useAgentServerRequests(threadId);
 ```
 
-`useAgentApprovals()` returns only command, file-change, and legacy
-exec/apply-patch approval requests. `useAgentServerRequests()` returns the
-broader normalized request queue and intentionally uses neutral response names
-so hosts send method-specific payloads instead of approval-shaped decisions.
+`useAgentApprovals()` returns only command and file-change approval requests.
+`useAgentServerRequests()` returns the broader normalized request queue and
+intentionally uses neutral response names so hosts send method-specific
+payloads instead of approval-shaped decisions.
 
 See [reference/hooks.md](../reference/hooks.md) for hook details and
 [architecture/security.md](../architecture/security.md) for security rules.

@@ -2583,6 +2583,88 @@ describe("attachAgentUiWebSocketBridge", () => {
     await transport.close();
   });
 
+  it("routes legacy upstream approval methods through canonical policy callbacks", async () => {
+    const commandContexts: unknown[] = [];
+    const fileContexts: unknown[] = [];
+    const { stdout, transport, writes } = await createBridgeBackedTransport({
+      serverRequestPolicy: {
+        commandExecution: (context) => {
+          commandContexts.push(context);
+          return { action: "accept", scope: "session" };
+        },
+        fileChange: (context) => {
+          fileContexts.push(context);
+          return { action: "accept", scope: "session" };
+        },
+      },
+    });
+
+    const connected = transport.connect();
+    await waitFor(() => writes.length === 1);
+    const init = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
+    stdout.write(`${JSON.stringify({ id: init.id, result: { userAgent: "test" } })}\n`);
+    await connected;
+
+    stdout.write(
+      `${JSON.stringify({
+        id: "legacy-command-active-1",
+        method: "execCommandApproval",
+        params: {
+          approvalId: "legacy-command-approval",
+          callId: "legacy-command-call",
+          command: ["sh", "-lc", "bun test"],
+          conversationId: "active-thread-1",
+          cwd: "/tmp/project",
+          parsedCmd: [],
+          reason: "Run focused validation",
+        },
+      })}\n`,
+    );
+    stdout.write(
+      `${JSON.stringify({
+        id: "legacy-file-active-1",
+        method: "applyPatchApproval",
+        params: {
+          callId: "legacy-file-call",
+          conversationId: "active-thread-1",
+          fileChanges: {},
+          grantRoot: "/tmp/project",
+          reason: "Allow fixture patch",
+        },
+      })}\n`,
+    );
+
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "legacy-command-active-1"));
+    await waitFor(() => writes.some((line) => JSON.parse(line).id === "legacy-file-active-1"));
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "legacy-command-active-1")).toEqual({
+      id: "legacy-command-active-1",
+      result: { decision: "approved_for_session" },
+    });
+    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "legacy-file-active-1")).toEqual({
+      id: "legacy-file-active-1",
+      result: { decision: "approved_for_session" },
+    });
+    expect(commandContexts).toEqual([
+      expect.objectContaining({
+        command: "sh -lc 'bun test'",
+        cwd: "/tmp/project",
+        itemId: "legacy-command-call",
+        requestId: "legacy-command-active-1",
+        threadId: "active-thread-1",
+      }),
+    ]);
+    expect(fileContexts).toEqual([
+      expect.objectContaining({
+        grantRoot: "/tmp/project",
+        itemId: "legacy-file-call",
+        reason: "Allow fixture patch",
+        requestId: "legacy-file-active-1",
+        threadId: "active-thread-1",
+      }),
+    ]);
+    await transport.close();
+  });
+
   it("does not auto-accept command and file approvals from legacy broad string policies", async () => {
     const { stdout, transport, writes } = await createBridgeBackedTransport({
       serverRequestPolicy: {

@@ -139,6 +139,20 @@ describe("Core package source structure", () => {
       }
     }
   });
+
+  it("keeps deprecated approval kind names out of core product state", () => {
+    const forbiddenPatterns = [
+      /legacyExecApproval/,
+      /legacyPatchApproval/,
+    ];
+
+    for (const file of sourceFiles(coreSrc)) {
+      const source = readFileSync(file, "utf8");
+      for (const pattern of forbiddenPatterns) {
+        expect(source, `${file} must not match ${pattern}`).not.toMatch(pattern);
+      }
+    }
+  });
 });
 
 function sourceFiles(root: string): string[] {

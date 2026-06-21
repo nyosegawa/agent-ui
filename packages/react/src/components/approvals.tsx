@@ -192,25 +192,20 @@ function ApprovalCard({
 }
 
 function isDecisionApprovalKind(kind: string): boolean {
-  return (
-    kind === "commandApproval" ||
-    kind === "fileChangeApproval" ||
-    kind === "legacyExecApproval" ||
-    kind === "legacyPatchApproval"
-  );
+  return kind === "commandApproval" || kind === "fileChangeApproval";
 }
 
 type ApprovalRisk = "high" | "medium" | "low";
 
 function approvalRisk(kind: string, payload: Record<string, unknown>): ApprovalRisk {
-  if (kind === "fileChangeApproval" || kind === "legacyPatchApproval") return "medium";
-  if (kind === "commandApproval" || kind === "legacyExecApproval") {
+  if (kind === "fileChangeApproval") return "medium";
+  if (kind === "commandApproval") {
     const sandbox =
       typeof payload.sandbox === "string" ? payload.sandbox : payload.sandboxPolicy;
     if (typeof sandbox === "string" && /none|disable|no-sandbox/i.test(sandbox)) {
       return "high";
     }
-    const command = typeof payload.command === "string" ? payload.command : "";
+    const command = commandDisplay(payload) ?? "";
     if (/\brm\b\s+-rf|sudo|curl\s.*sh|chmod\s+777/i.test(command)) return "high";
     return "medium";
   }
@@ -239,10 +234,8 @@ function approvalSubtitle(
   if (reason) return reason;
   switch (kind) {
     case "fileChangeApproval":
-    case "legacyPatchApproval":
       return t("approval.summary.fileChange");
     case "commandApproval":
-    case "legacyExecApproval":
       return t("approval.summary.command");
     case "dynamicTool":
       return t("approval.summary.dynamicTool");
@@ -271,7 +264,7 @@ function ApprovalSummary({
   if (approval.kind === "fileChangeApproval") {
     return <FileChangeApprovalSummary payload={payload} />;
   }
-  if (approval.kind === "commandApproval" || approval.kind === "legacyExecApproval") {
+  if (approval.kind === "commandApproval") {
     return <CommandApprovalSummary payload={payload} />;
   }
   if (approval.kind === "userInput" || approval.kind === "mcpElicitation") {
@@ -289,10 +282,8 @@ function ApprovalSummary({
 function approvalTitle(kind: string, t: (key: AgentI18nKey) => string): string {
   switch (kind) {
     case "fileChangeApproval":
-    case "legacyPatchApproval":
       return t("approval.kind.fileChange");
     case "commandApproval":
-    case "legacyExecApproval":
       return t("approval.kind.command");
     case "userInput":
       return t("approval.kind.userInput");
@@ -324,8 +315,7 @@ function approvalRequestLabel(
 
 function CommandApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
   const { t } = useAgentI18n();
-  const command =
-    stringField(payload, "command") ?? stringField(payload, "cmd") ?? t("timeline.command");
+  const command = commandDisplay(payload) ?? t("timeline.command");
   const cwd = stringField(payload, "cwd") ?? stringField(payload, "workingDirectory");
   const policy = stringField(payload, "approvalPolicy");
   const sandbox =
@@ -344,6 +334,24 @@ function CommandApprovalSummary({ payload }: { payload: Record<string, unknown> 
       />
     </div>
   );
+}
+
+function commandDisplay(payload: Record<string, unknown>): string | undefined {
+  const commandLine = stringField(payload, "commandLine");
+  if (commandLine) return commandLine;
+  const command = payload.command ?? payload.cmd;
+  if (typeof command === "string") return command;
+  if (Array.isArray(command)) return shellQuoteCommand(command);
+  return undefined;
+}
+
+function shellQuoteCommand(command: unknown[]): string {
+  return command.map((part) => shellQuote(String(part))).join(" ");
+}
+
+function shellQuote(part: string): string {
+  if (/^[A-Za-z0-9_./:=@%+-]+$/.test(part)) return part;
+  return `'${part.replace(/'/g, `'\\''`)}'`;
 }
 
 function FileChangeApprovalSummary({ payload }: { payload: Record<string, unknown> }) {
@@ -451,16 +459,40 @@ function MetadataGrid({ rows }: { rows: Array<[string, string | undefined]> }) {
 }
 
 function approvalResult(approval: PendingServerRequest) {
-  if (isDecisionApprovalKind(approval.kind)) return { decision: "accept" };
+  if (isDecisionApprovalKind(approval.kind)) return approvalDecisionResult(approval, "accept");
   return undefined;
 }
 
 function approvalSessionResult(approval: PendingServerRequest) {
-  if (isDecisionApprovalKind(approval.kind)) return { decision: "acceptForSession" };
+  if (isDecisionApprovalKind(approval.kind)) {
+    return approvalDecisionResult(approval, "acceptForSession");
+  }
   return undefined;
 }
 
 function declineApprovalResult(approval: PendingServerRequest) {
-  if (isDecisionApprovalKind(approval.kind)) return { decision: "decline" };
+  if (isDecisionApprovalKind(approval.kind)) return approvalDecisionResult(approval, "decline");
   return undefined;
+}
+
+function approvalDecisionResult(
+  approval: PendingServerRequest,
+  decision: "accept" | "acceptForSession" | "decline",
+) {
+  if (isLegacyApprovalPayload(approval.payload)) {
+    switch (decision) {
+      case "accept":
+        return { decision: "approved" };
+      case "acceptForSession":
+        return { decision: "approved_for_session" };
+      case "decline":
+        return { decision: "denied" };
+    }
+  }
+  return { decision };
+}
+
+function isLegacyApprovalPayload(payload: unknown): boolean {
+  if (!isRecord(payload)) return false;
+  return payload.upstreamMethod === "execCommandApproval" || payload.upstreamMethod === "applyPatchApproval";
 }

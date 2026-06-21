@@ -29,7 +29,8 @@ export function normalizeUsageWindows(
       const window = asRecord(record[key]);
       if (!window) return [];
       const label = usageWindowLabel(limitName, key, window, t);
-      const percent = numberValue(window.usedPercent) ?? percentFromUsedLimit(window);
+      const percent =
+        numberValue(window.usedPercent ?? window.used_percent) ?? percentFromUsedLimit(window);
       return [
         {
           id: `${snapshotIndex}-${key}`,
@@ -58,9 +59,11 @@ function collectRateLimitSnapshots(value: unknown): unknown[] {
   const record = asRecord(value);
   if (!record) return [];
   const snapshots: unknown[] = [];
-  if (record.rateLimits) snapshots.push(record.rateLimits);
-  if (record.rate_limits) snapshots.push(record.rate_limits);
-  const byId = asRecord(record.rateLimitsByLimitId ?? record.rate_limits_by_limit_id);
+  const rateLimits = record.rateLimits ?? record.rate_limits;
+  if (rateLimits) snapshots.push(rateLimits);
+  const byId = asRecord(
+    record.rateLimitsByLimitId ?? record.rate_limits_by_limit_id,
+  );
   if (byId) snapshots.push(...Object.values(byId));
   if (record.primary || record.secondary) snapshots.push(record);
   return snapshots;

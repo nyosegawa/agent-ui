@@ -98,6 +98,14 @@ generic chatbot kit.
   `useAgentComposerController().startThreadWithInput(input, { threadOptions,
   turnOptions })` so thread options go to `thread/start`, turn options go to
   `turn/start`, and retry preserves the same host-supplied options.
+- Treat `commandApproval` and `fileChangeApproval` as the canonical approval
+  kinds. Older upstream approval methods are adapter compatibility inputs, not
+  host-facing product kinds.
+- Use `@nyosegawa/agent-ui-codex/request-builders` for App Server-shaped
+  request inputs. Its path fields use host-owned string aliases such as
+  `AgentWorkingDirectory`, `AgentResourcePath`, `AgentSkillPath`, and
+  `AgentMentionPath`; do not expose generated path schema names in preferred
+  host integration code.
 - For host-gated workflows, compose `AgentThreadTimeline`, a host-owned gate,
   and a delayed composer. Keep plan/update state in the host and submit only
   after the host gate approves.

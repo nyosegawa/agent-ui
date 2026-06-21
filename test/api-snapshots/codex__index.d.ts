@@ -1,12 +1,13 @@
 export { CodexAccountClient, CodexApprovalsClient, CodexAppsClient, CodexClients, CodexClientsOptions, CodexConnectionClient, CodexHooksClient, CodexModelsClient, CodexSkillsClient, CodexThreadForkOptions, CodexThreadMetadataUpdateOptions, CodexThreadResumeOptions, CodexThreadsClient, CodexTurnStartOptions, CodexTurnSteerOptions, CodexTurnsClient, createCodexClients } from './clients.js';
 import { RequestId, AgentError, AgentTransport, AgentTransportEvent, AgentEvent } from '@nyosegawa/agent-ui-core';
-export { a as CodexExperimentalMethod, C as CodexExperimentalMethodParams, b as CodexStableMethod, c as CodexStableMethodParams } from './method-params-<chunk>.js';
-export { CodexExperimentalMethodResult, CodexStableMethodResult } from './request-<chunk>.js';
+export { AgentLocalPath, AgentMentionPath, AgentResourcePath, AgentSkillPath, AgentWorkingDirectory } from './request-<chunk>.js';
 import { C as CodexInitializeOptions } from './protocol-<chunk>.js';
 export { a as CODEX_PROTOCOL_COMMIT, b as CODEX_PROTOCOL_GENERATED_AT, c as CodexCapabilityMetadata, d as CodexCapabilityStatus, e as CodexClientInfo, f as CodexInitializeCapabilities, E as ExperimentalAvailableMethod, g as ExperimentalUnsupportedMethod, H as HostOnlyMethod, S as StableAvailableMethod, h as StableNotificationMethod, i as StableProductizedMethod, j as StableServerRequestMethod, k as assertCodexExperimentalMethod, l as assertCodexProductizedMethod, m as codexCapabilityMetadata, n as codexInitializeParams, o as experimentalAvailableMethods, p as experimentalUnsupportedMethods, q as getCodexCapabilityStatus, r as hostOnlyMethods, s as isExperimentalAvailableMethod, t as isExperimentalUnsupportedMethod, u as isHostOnlyMethod, v as isStableProductizedMethod, w as stableAvailableMethods, x as stableClientMethods, y as stableNotificationMethods, z as stableProductizedMethods, A as stableServerRequestMethods } from './protocol-<chunk>.js';
 export { CodexSession, CodexSessionOptions, createCodexSession } from './session.js';
 import { Writable, Readable } from 'node:stream';
 export { AGENT_UI_BEARER_SUBPROTOCOL_PREFIX, CodexWebSocketReconnectOptions, CodexWebSocketTransportOptions, createAgentUiBearerSubprotocol, createCodexWebSocketTransport } from './websocket.js';
+import './method-params-<chunk>.js';
+import './UserInput-<chunk>.js';
 import './InitializeParams-<chunk>.js';
 
 interface JsonRpcRequest {

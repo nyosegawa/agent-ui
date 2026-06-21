@@ -172,8 +172,6 @@ export function selectActiveThreadView(state: AgentSessionState) {
 const approvalRequestKinds = new Set<PendingServerRequest["kind"]>([
   "commandApproval",
   "fileChangeApproval",
-  "legacyExecApproval",
-  "legacyPatchApproval",
 ]);
 
 export function selectPendingApprovals(state: AgentSessionState, threadId?: ThreadId) {

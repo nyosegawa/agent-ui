@@ -15,6 +15,7 @@ export const stableNotificationCoverage: Record<
   deprecationNotice: "mapped",
   error: "mapped",
   "externalAgentConfig/import/completed": "raw",
+  "externalAgentConfig/import/progress": "raw",
   "fs/changed": "raw",
   "fuzzyFileSearch/sessionCompleted": "raw",
   "fuzzyFileSearch/sessionUpdated": "raw",

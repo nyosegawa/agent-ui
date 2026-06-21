@@ -5,9 +5,9 @@ import { asRecord, optionalStringValue, requestIdValue } from "./shared";
 
 const serverRequestKindByMethod = {
   "account/chatgptAuthTokens/refresh": "authRefresh",
-  applyPatchApproval: "legacyPatchApproval",
+  applyPatchApproval: "fileChangeApproval",
   "attestation/generate": "attestation",
-  execCommandApproval: "legacyExecApproval",
+  execCommandApproval: "commandApproval",
   "item/commandExecution/requestApproval": "commandApproval",
   "item/fileChange/requestApproval": "fileChangeApproval",
   "item/permissions/requestApproval": "permissionsApproval",
@@ -45,13 +45,17 @@ export function isServerRequestMethod(method: string): method is StableServerReq
 
 function normalizeServerRequest(message: MethodMessage): PendingServerRequest {
   const params = asRecord(message.params) ?? {};
+  const payload = normalizeServerRequestPayload(message.method, params);
+  const legacyApproval = isLegacyApprovalMethod(message.method);
   return {
     id: message.id ?? "",
-    itemId: optionalStringValue(params.itemId ?? params.item_id),
+    itemId: optionalStringValue(
+      payload.itemId ?? payload.item_id ?? (legacyApproval ? payload.callId : undefined),
+    ),
     kind: requestKind(message.method),
-    payload: params,
-    threadId: optionalStringValue(params.threadId ?? params.thread_id),
-    turnId: optionalStringValue(params.turnId ?? params.turn_id),
+    payload,
+    threadId: optionalStringValue(payload.threadId ?? payload.thread_id),
+    turnId: optionalStringValue(payload.turnId ?? payload.turn_id),
   };
 }
 
@@ -59,4 +63,39 @@ function requestKind(method: string): PendingServerRequest["kind"] {
   return isServerRequestMethod(method)
     ? serverRequestKindByMethod[method]
     : "unknown";
+}
+
+function normalizeServerRequestPayload(
+  method: string,
+  params: Record<string, unknown>,
+): Record<string, unknown> {
+  if (!isLegacyApprovalMethod(method)) {
+    return params;
+  }
+
+  const payload = { ...params };
+  if (payload.threadId == null && payload.thread_id == null && payload.conversationId != null) {
+    payload.threadId = payload.conversationId;
+  }
+  if (payload.itemId == null && payload.item_id == null && payload.callId != null) {
+    payload.itemId = payload.callId;
+  }
+  payload.upstreamMethod = method;
+  if (method === "execCommandApproval" && Array.isArray(payload.command)) {
+    payload.commandLine = shellQuoteCommand(payload.command);
+  }
+  return payload;
+}
+
+function isLegacyApprovalMethod(method: string): boolean {
+  return method === "execCommandApproval" || method === "applyPatchApproval";
+}
+
+function shellQuoteCommand(command: unknown[]): string {
+  return command.map((part) => shellQuote(String(part))).join(" ");
+}
+
+function shellQuote(part: string): string {
+  if (/^[A-Za-z0-9_./:=@%+-]+$/.test(part)) return part;
+  return `'${part.replace(/'/g, `'\\''`)}'`;
 }

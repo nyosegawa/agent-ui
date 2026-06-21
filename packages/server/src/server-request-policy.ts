@@ -208,12 +208,13 @@ export function responseForServerRequest(
   ) {
     const decision = policy.commandExecution(commandApprovalContext(event.request.payload, requestId));
     if (!decision || decision.action !== "accept") return undefined;
+    const decisionValue = approvalDecisionValue(decision, event.request.payload);
     return {
-      action: commandDecisionValue(decision),
+      action: decisionValue,
       kind: event.request.kind,
       requestId: event.requestId,
       response: {
-        decision: commandDecisionValue(decision),
+        decision: decisionValue,
       },
     };
   }
@@ -225,12 +226,13 @@ export function responseForServerRequest(
   ) {
     const decision = policy.fileChange(fileChangeApprovalContext(event.request.payload, requestId));
     if (!decision || decision.action !== "accept") return undefined;
+    const decisionValue = approvalDecisionValue(decision, event.request.payload);
     return {
-      action: fileChangeDecisionValue(decision),
+      action: decisionValue,
       kind: event.request.kind,
       requestId: event.requestId,
       response: {
-        decision: fileChangeDecisionValue(decision),
+        decision: decisionValue,
       },
     };
   }
@@ -243,14 +245,14 @@ function commandApprovalContext(
   requestId: NonNullable<AgentTransportEvent["requestId"]>,
 ): CommandApprovalContext {
   return {
-    command: stringValue(payload.command),
+    command: commandValue(payload),
     cwd: stringValue(payload.cwd),
-    itemId: stringValue(payload.itemId),
+    itemId: stringValue(payload.itemId ?? payload.item_id ?? payload.callId),
     payload,
     reason: stringValue(payload.reason),
     requestId,
-    threadId: stringValue(payload.threadId),
-    turnId: stringValue(payload.turnId),
+    threadId: stringValue(payload.threadId ?? payload.thread_id ?? payload.conversationId),
+    turnId: stringValue(payload.turnId ?? payload.turn_id),
   };
 }
 
@@ -260,20 +262,22 @@ function fileChangeApprovalContext(
 ): FileChangeApprovalContext {
   return {
     grantRoot: stringValue(payload.grantRoot),
-    itemId: stringValue(payload.itemId),
+    itemId: stringValue(payload.itemId ?? payload.item_id ?? payload.callId),
     payload,
     reason: stringValue(payload.reason),
     requestId,
-    threadId: stringValue(payload.threadId),
-    turnId: stringValue(payload.turnId),
+    threadId: stringValue(payload.threadId ?? payload.thread_id ?? payload.conversationId),
+    turnId: stringValue(payload.turnId ?? payload.turn_id),
   };
 }
 
-function commandDecisionValue(decision: Extract<CommandApprovalDecision, { action: "accept" }>): "accept" | "acceptForSession" {
-  return decision.scope === "session" ? "acceptForSession" : "accept";
-}
-
-function fileChangeDecisionValue(decision: Extract<FileChangeApprovalDecision, { action: "accept" }>): "accept" | "acceptForSession" {
+function approvalDecisionValue(
+  decision: Extract<CommandApprovalDecision | FileChangeApprovalDecision, { action: "accept" }>,
+  payload: unknown,
+): "accept" | "acceptForSession" | "approved" | "approved_for_session" {
+  if (isLegacyApprovalPayload(payload)) {
+    return decision.scope === "session" ? "approved_for_session" : "approved";
+  }
   return decision.scope === "session" ? "acceptForSession" : "accept";
 }
 
@@ -326,9 +330,32 @@ function stringValue(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
+function commandValue(payload: Record<string, unknown>): string | undefined {
+  const commandLine = stringValue(payload.commandLine);
+  if (commandLine) return commandLine;
+  const value = payload.command ?? payload.cmd;
+  if (typeof value === "string") return value;
+  if (Array.isArray(value)) return shellQuoteCommand(value);
+  return undefined;
+}
+
+function isLegacyApprovalPayload(payload: unknown): boolean {
+  if (!isRecord(payload)) return false;
+  return payload.upstreamMethod === "execCommandApproval" || payload.upstreamMethod === "applyPatchApproval";
+}
+
+function shellQuoteCommand(command: unknown[]): string {
+  return command.map((part) => shellQuote(String(part))).join(" ");
+}
+
+function shellQuote(part: string): string {
+  if (/^[A-Za-z0-9_./:=@%+-]+$/.test(part)) return part;
+  return `'${part.replace(/'/g, `'\\''`)}'`;
+}
+
 function threadIdFromPayload(payload: unknown): string | undefined {
   if (!isRecord(payload)) return undefined;
-  return stringValue(payload.threadId ?? payload.thread_id);
+  return stringValue(payload.threadId ?? payload.thread_id ?? payload.conversationId);
 }
 
 function turnIdFromPayload(payload: unknown): string | undefined {

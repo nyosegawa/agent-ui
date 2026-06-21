@@ -133,7 +133,7 @@ interface RunSettingsState {
 type RequestIdKey = `${"number" | "string"}:${string}`;
 declare function requestIdKey(requestId: RequestId): RequestIdKey;
 
-type PendingServerRequestKind = "attestation" | "authRefresh" | "commandApproval" | "dynamicTool" | "fileChangeApproval" | "legacyExecApproval" | "legacyPatchApproval" | "mcpElicitation" | "permissionsApproval" | "userInput" | "unknown";
+type PendingServerRequestKind = "attestation" | "authRefresh" | "commandApproval" | "dynamicTool" | "fileChangeApproval" | "mcpElicitation" | "permissionsApproval" | "userInput" | "unknown";
 interface PendingServerRequest {
     id: RequestId;
     kind: PendingServerRequestKind;

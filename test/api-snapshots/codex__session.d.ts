@@ -1,10 +1,11 @@
 import { AgentTransport } from '@nyosegawa/agent-ui-core';
 import { CodexAccountClient, CodexAppsClient, CodexHooksClient, CodexModelsClient, CodexClients, CodexSkillsClient, CodexThreadsClient, CodexTurnsClient, CodexClientsOptions } from './clients.js';
 export { CodexThreadForkOptions, CodexThreadMetadataUpdateOptions, CodexThreadResumeOptions, CodexTurnStartOptions, CodexTurnSteerOptions } from './clients.js';
-import './request-builders.js';
-import './method-params-Cp7iY5rD.js';
-import './InitializeParams-CDX1c2T9.js';
-import './protocol-iDYFX3vA.js';
+import './request-<chunk>.js';
+import './UserInput-<chunk>.js';
+import './method-params-<chunk>.js';
+import './InitializeParams-<chunk>.js';
+import './protocol-<chunk>.js';
 
 interface CodexSessionOptions extends CodexClientsOptions {
 }

@@ -83,15 +83,19 @@ Implementation status:
 - `createCodexAppServerBridge()` returns a `CodexAppServerBridge` with a
   `transport` property and redacts stderr before forwarding logs.
 - The generated stable and experimental TypeScript schemas are vendored under `packages/codex/src/generated`.
-- `request-builders.ts` is the product request boundary. Builders return
-  params whose method-specific types are derived from the generated stable
-  `ClientRequest` union. React does not own or re-export Codex-specific
-  request shapes.
+- `request-builders.ts` is the product request boundary. Builders return Agent
+  UI-owned request/input types that are checked against the generated stable
+  `ClientRequest` union at compile time. Filesystem path fields stay as
+  host-owned string aliases such as `AgentWorkingDirectory`,
+  `AgentResourcePath`, `AgentSkillPath`, and `AgentMentionPath`; generated path
+  names such as `LegacyAppPathString` and `AbsolutePathBuf` remain confined to
+  generated-backed advanced surfaces. React does not own or re-export
+  Codex-specific request shapes.
 - `createCodexClients()` groups productized App Server methods by protocol
   primitive: connection, threads, turns, approvals, apps, skills, hooks,
-  models, and account. Its method params and results use generated-schema-derived
-  aliases, so stable reads/lists return method-specific response types instead
-  of `unknown`. Client construction validates that this method surface exactly
+  models, and account. Its method results use generated-schema-derived aliases,
+  so stable reads/lists return method-specific response types instead of
+  `unknown`. Client construction validates that this method surface exactly
   matches the productized stable method classification.
   Experimental method calls must use `requestExperimental()`, require explicit
   opt-in, and are rejected if the method is stable/productized, host-only,
@@ -173,6 +177,8 @@ browser defaults, or server bridge policies.
 Deprecated protocol notifications are not mixed into current fixture files.
 Compatibility fixtures use a `deprecated-*.jsonl` name and should keep payloads
 readable, for example plain text deltas instead of base64-looking literals.
+Deprecated fixture files must also be classified as `deprecated` in the
+manifest; current fixture files must not carry those compatibility-only methods.
 
 - `thread-start-basic.jsonl`
 - `turn-text-stream.jsonl`
@@ -239,7 +245,7 @@ need experimental methods must opt in with
 Field-level experimental request fields on otherwise stable methods remain
 host-managed raw protocol usage. Stable helpers such as
 `threadResumeParams()` and `createCodexSession().thread.resume()` intentionally
-accept only the generated stable request shape; fields such as
+accept only the stable product request shape; fields such as
 `thread/resume.excludeTurns`, `thread/resume.initialTurnsPage`, and
 path/history resume must be sent through `requestRaw()` by a host that also owns
 the corresponding `experimentalApi` negotiation and pagination behavior.
@@ -264,6 +270,14 @@ response is empty and the stable `thread/compacted` notification is deprecated
 in favor of item-level context compaction data. Agent UI preserves
 `thread/compacted` as developer/audit raw diagnostics instead of inventing core
 compact lifecycle state.
+Deprecated compatibility inputs are adapter-only. `item/fileChange/outputDelta`
+is still mapped so older App Server streams remain readable, but it is not a
+file patch lifecycle surface; current file-change behavior comes from
+`item/fileChange/patchUpdated`. When a payload carries both current and
+deprecated field spellings, Agent UI chooses the current field name first and
+uses deprecated spellings only as fallback intake. Rate-limit snake_case fields,
+legacy app fields, and generated compatibility names must remain view-adapter or
+generated-type details rather than React/Core public API names.
 `normalizeThreadResumeResponse()` also understands `initialTurnsPage`; resume
 metadata and the initial page are emitted as non-destructive snapshot events so
 `excludeTurns: true` can add page data without clearing an existing transcript.
@@ -300,16 +314,17 @@ Productized stable Agent UI behavior:
   `item/reasoning/summaryTextDelta`, `item/reasoning/summaryPartAdded`,
   `item/reasoning/textDelta`, `item/commandExecution/outputDelta`,
   `item/commandExecution/terminalInteraction`,
-  `item/fileChange/outputDelta`, `item/fileChange/patchUpdated`,
-  `item/mcpToolCall/progress`, and command exec output notifications already
-  normalized as structured or raw activity.
+  `item/fileChange/patchUpdated`, `item/mcpToolCall/progress`, and command exec
+  output notifications already normalized as structured or raw activity.
+  Deprecated `item/fileChange/outputDelta` is a mapped compatibility input only,
+  normalized as command output for old streams.
 - Approval and host-input requests:
   `item/commandExecution/requestApproval`,
   `item/fileChange/requestApproval`, `item/tool/requestUserInput`,
   `mcpServer/elicitation/request`, `item/permissions/requestApproval`,
   `item/tool/call`, `account/chatgptAuthTokens/refresh`,
-  `attestation/generate`, `applyPatchApproval`, `execCommandApproval`, and
-  `serverRequest/resolved`.
+  `attestation/generate`, legacy upstream `applyPatchApproval` /
+  `execCommandApproval` compatibility inputs, and `serverRequest/resolved`.
 - Account, app, skill, hook, model, usage, warning, and status surfaces already
   documented in the stable productized method and notification lists above.
 
@@ -335,7 +350,7 @@ Experimental opt-in surfaces:
   `normalizeThreadTurnsListResponse()` for host-owned pagination and preview
   hydration experiments, but it must not become default React behavior without
   an explicit opt-in design.
-- `thread/search`, `thread/settings/update`, realtime/audio methods, process
+- `thread/search`, `thread/settings/update`, realtime/audio/speech methods, process
   control, fuzzy-file-search sessions, memory, environment, remote control,
   collaboration mode, and elicitation counters stay experimental and require
   `experimentalApi: true` plus host-owned policy.
@@ -473,7 +488,9 @@ Host-only or advanced local tooling:
 - `configRequirements/read`
 - `externalAgentConfig/detect`
 - `externalAgentConfig/import`
+- `externalAgentConfig/import/readHistories`
 - `account/sendAddCreditsNudgeEmail`
+- `account/rateLimitResetCredit/consume`
 - `feedback/upload`
 - `marketplace/add`
 - `marketplace/remove`
@@ -536,6 +553,7 @@ Experimental available methods:
 - `thread/memoryMode/set`
 - `thread/realtime/start`
 - `thread/realtime/appendAudio`
+- `thread/realtime/appendSpeech`
 - `thread/realtime/appendText`
 - `thread/realtime/listVoices`
 - `thread/realtime/stop`
@@ -553,8 +571,10 @@ Experimental unsupported methods:
 
 Server requests:
 
-- approval decisions: command approval, file change approval, and legacy
-  `applyPatchApproval` / `execCommandApproval` compatibility requests
+- approval decisions: command approval and file change approval. Legacy
+  upstream `applyPatchApproval` / `execCommandApproval` compatibility requests
+  are accepted at the Codex adapter boundary and normalized to those canonical
+  product kinds.
 - host integration requests: user input, MCP elicitation, permissions approval,
   dynamic tool call, auth refresh, and attestation
 

@@ -33,8 +33,6 @@ import {
 } from "./request-builders";
 import type {
   AppsListParams,
-  CodexExperimentalMethodParams,
-  CodexStableMethodParams,
   HooksListParams,
   ModelListParams,
   SkillsConfigWriteParams,
@@ -50,6 +48,10 @@ import type {
   TurnSteerParams,
   UserInput,
 } from "./request-builders";
+import type {
+  CodexExperimentalMethodParams,
+  CodexStableMethodParams,
+} from "./method-params";
 import type {
   CodexExperimentalMethodResult,
   CodexStableMethodResult,
