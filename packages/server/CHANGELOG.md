@@ -1,5 +1,22 @@
 # @nyosegawa/agent-ui-server
 
+## 1.0.0
+
+### Minor Changes
+
+- 6ee9789: Refresh the vendored Codex App Server schema and clean up compatibility-only
+  protocol surfaces. Legacy upstream approval requests now normalize to canonical
+  command and file-change approval kinds, preferred request builders expose
+  Agent UI-owned path aliases, and deprecated protocol fields remain adapter-only
+  fallback intake with current fields taking precedence.
+
+### Patch Changes
+
+- Updated dependencies [6ee9789]
+- Updated dependencies [b8276c6]
+  - @nyosegawa/agent-ui-core@1.0.0
+  - @nyosegawa/agent-ui-codex@1.0.0
+
 ## 0.5.0
 
 ### Minor Changes
