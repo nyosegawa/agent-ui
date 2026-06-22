@@ -61,13 +61,11 @@ agent-browser screenshot /tmp/agent-ui-usage-only-mobile.png
 agent-browser close
 ```
 
-Before relying on ad-hoc screenshots, run the deterministic matrix that backs
-the fixture gallery:
-
-```bash
-bunx playwright test examples/local-react-vite/e2e/visual-route-matrix.e2e.ts \
-  --config playwright.fixtures.config.ts
-```
+Before relying on ad-hoc screenshots for repository fixture changes, run the
+deterministic visual QA checks described in
+[Testing](../architecture/testing.md). Host applications should mirror the same
+behavioral checks with their own routes instead of depending on Agent UI's
+maintainer fixture inventory.
 
 For the real local Codex app:
 

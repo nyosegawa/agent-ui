@@ -192,6 +192,9 @@ test("narrow tablet first-run composer keeps settings compact and submit pinned"
     };
     return {
       card: box(".aui-starter-card"),
+      cwd: box(".aui-starter-cwd"),
+      cwdAction: box(".aui-starter-cwd-action"),
+      cwdTrigger: box(".aui-starter-cwd-trigger"),
       submit: box(".aui-first-run-submit"),
       tools: Array.from(
         document.querySelectorAll(".aui-first-run-toolbar .aui-composer-tool"),
@@ -207,12 +210,27 @@ test("narrow tablet first-run composer keeps settings compact and submit pinned"
   });
 
   expect(metrics.card, JSON.stringify(metrics)).not.toBeNull();
+  expect(metrics.cwd, JSON.stringify(metrics)).not.toBeNull();
+  expect(metrics.cwdTrigger, JSON.stringify(metrics)).not.toBeNull();
+  expect(metrics.cwdAction, JSON.stringify(metrics)).not.toBeNull();
   expect(metrics.submit, JSON.stringify(metrics)).not.toBeNull();
   expect(metrics.tools, JSON.stringify(metrics)).toHaveLength(2);
   for (const tool of metrics.tools) {
     expect(tool.width, JSON.stringify(metrics)).toBeLessThanOrEqual(40);
     expect(tool.labelVisible, JSON.stringify(metrics)).toBe(false);
   }
+  expect(metrics.cwd!.left, JSON.stringify(metrics)).toBeGreaterThanOrEqual(
+    metrics.card!.left,
+  );
+  expect(metrics.cwd!.right, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.card!.right + 1,
+  );
+  expect(metrics.cwdTrigger!.right, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.card!.right + 1,
+  );
+  expect(metrics.cwdAction!.right, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.card!.right + 1,
+  );
   expect(metrics.submit!.right, JSON.stringify(metrics)).toBeGreaterThanOrEqual(
     metrics.card!.right - 20,
   );
@@ -225,6 +243,15 @@ test("narrow tablet first-run composer keeps settings compact and submit pinned"
   expect(metrics.submit!.bottom, JSON.stringify(metrics)).toBeLessThanOrEqual(
     metrics.card!.bottom + 1,
   );
+  await expectWithinViewport(page, ".aui-starter-cwd");
+  await expectWithinViewport(page, ".aui-starter-cwd-trigger");
+  await expectWithinViewport(page, ".aui-starter-cwd-action");
+  await expectActuallyHitTestable(page.locator(".aui-starter-cwd-trigger"));
+  await expectActuallyHitTestable(page.locator(".aui-starter-cwd-action"));
+  await page.locator(".aui-starter-cwd-trigger").click();
+  await expect(page.locator(".aui-starter-cwd-menu")).toBeVisible();
+  await expectWithinViewport(page, ".aui-starter-cwd-menu");
+  await expectActuallyHitTestable(page.locator(".aui-starter-cwd-open"));
   await expectActuallyHitTestable(page.locator(".aui-first-run-submit"));
 });
 

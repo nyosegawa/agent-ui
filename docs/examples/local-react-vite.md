@@ -84,16 +84,8 @@ resource details without exposing raw local paths.
 fixture browser checks. Do not rely on a manually running 5174 server for this
 command.
 
-The current visual route inventory lives in
-`examples/local-react-vite/src/fixtures/visual-qa-manifest.ts`. The fixture
-gallery, docs screenshot capture, route reachability checks, and broad
-`visual-route-matrix.e2e.ts` layout guard consume that manifest instead of
-duplicating route lists. When adding or removing a fixture route, update the
-manifest, update the stable inventory expectations in `visual-qa-manifest.e2e.ts`,
-and run the matrix spec so the route is checked at the desktop, wide, tablet,
-compact, mobile, or short viewports it declares.
-
-Fixture browser checks are organized by product contract rather than by route or
-file size. Keep maintainer details about e2e file ownership in
-[Testing](../architecture/testing.md), and keep this page focused on the public
-example purpose, routes, and run command.
+The fixture gallery, docs screenshot capture, and route reachability checks use
+one maintainer-owned visual route inventory so example routes do not drift from
+browser coverage. When adding or removing a fixture route, follow the
+repository-level workflow in [Testing](../architecture/testing.md). Keep this
+page focused on the public example purpose, routes, and run command.

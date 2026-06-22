@@ -48,6 +48,7 @@ test("component close-up gallery renders direct primitives, not iframes", async 
     "Custom command block",
     "Diff / file change",
     "Sidebar search + threads",
+    "Status bar · standalone",
     "Usage / status chips",
     "Usage panel",
     "Button system",
@@ -110,6 +111,44 @@ test("component close-up gallery renders direct primitives, not iframes", async 
 
   const pastedImage = closeups.getByTestId("closeup:Composer · pasted image");
   await expect(pastedImage.locator(".aui-composer-chip")).toHaveCount(1);
+});
+
+test("standalone status bar close-up compacts inside a narrow desktop embed", async ({
+  page,
+}) => {
+  await page.setViewportSize(desktopViewport);
+  await page.goto("/fixture-gallery");
+  const closeup = page
+    .getByTestId("component-closeups")
+    .getByTestId("closeup:Status bar · standalone");
+  await expect(closeup).toBeVisible();
+  await expectWithinViewport(page, '[data-testid="closeup:Status bar · standalone"] .aui-status');
+  await expectWithinViewport(
+    page,
+    '[data-testid="closeup:Status bar · standalone"] .aui-status-actions',
+  );
+  const metrics = await closeup.evaluate((element) => {
+    const rect = (selector: string) => {
+      const target = element.querySelector(selector);
+      if (!target) return null;
+      const box = target.getBoundingClientRect();
+      return {
+        right: Math.round(box.right),
+        width: Math.round(box.width),
+      };
+    };
+    return {
+      account: rect(".aui-account-trigger"),
+      status: rect(".aui-status"),
+      stage: rect(".aui-closeup-stage"),
+    };
+  });
+  expect(metrics.account, JSON.stringify(metrics)).not.toBeNull();
+  expect(metrics.stage, JSON.stringify(metrics)).not.toBeNull();
+  expect(metrics.account!.width, JSON.stringify(metrics)).toBeLessThanOrEqual(40);
+  expect(metrics.account!.right, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.stage!.right + 1,
+  );
 });
 
 test("critical close-ups cover Phase 9 fixture states", async ({ page }) => {

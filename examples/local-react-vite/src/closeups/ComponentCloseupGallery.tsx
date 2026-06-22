@@ -16,6 +16,7 @@ import {
   AgentProvider,
   AgentRunSettingsPanel,
   AgentStartComposer,
+  AgentStatusBar,
   AgentStatusDetails,
   AgentStatusSummary,
   AgentThreadSidebar,
@@ -73,6 +74,7 @@ export function ComponentCloseupGallery() {
         <CloseupCustomCommandBlock />
         <CloseupDiffBlock />
         <CloseupSidebarSearch />
+        <CloseupStatusBarStandalone />
         <CloseupUsageChips />
         <CloseupUsagePanel />
         <CloseupButtonStates />
@@ -1059,6 +1061,24 @@ function CloseupUsageChips() {
           Failed
         </span>
       </div>
+    </CloseupFrame>
+  );
+}
+
+function CloseupStatusBarStandalone() {
+  return (
+    <CloseupFrame
+      title="Status bar · standalone"
+      caption="Root primitive outside AgentChat with responsive account controls."
+    >
+      <CloseupComposerProvider>
+        <div
+          className="aui-closeup-status-standalone"
+          style={{ maxWidth: 360, width: "100%" }}
+        >
+          <AgentStatusBar end={<AgentStatusSummary />} />
+        </div>
+      </CloseupComposerProvider>
     </CloseupFrame>
   );
 }

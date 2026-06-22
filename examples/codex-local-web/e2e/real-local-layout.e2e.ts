@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import {
   FAST_EXPECT_TIMEOUT,
   assertComposerAnchored,
@@ -36,7 +36,7 @@ for (const viewport of layoutViewports) {
   });
 }
 
-async function expectFirstRunSubmitContained(page: import("@playwright/test").Page) {
+async function expectFirstRunSubmitContained(page: Page) {
   const metrics = await page.evaluate(() => {
     const card = document.querySelector(".aui-starter-card")?.getBoundingClientRect();
     const submit = document.querySelector(".aui-first-run-submit")?.getBoundingClientRect();

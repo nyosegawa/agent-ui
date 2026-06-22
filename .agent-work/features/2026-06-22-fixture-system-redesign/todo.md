@@ -2,7 +2,8 @@
 
 ## Status Summary
 
-P001-P005 implementation complete, committed, and pushed. P006 remains pending.
+P001-P005 implementation complete, committed, and pushed. P006 local validation
+and phase review are complete; commit, push, PR, and CI follow-through remain.
 
 ## Branch And Planning Commit
 
@@ -19,7 +20,7 @@ P001-P005 implementation complete, committed, and pushed. P006 remains pending.
 - P003 done: Fixture route and closeup cleanup
 - P004 done: Validation and browser evidence hardening
 - P005 done: Docs and Agent Skills alignment
-- P006 pending: Final validation, PR, and CI follow-through
+- P006 in progress: Final validation, PR, and CI follow-through
 
 ## Task Checklist By Phase
 
@@ -163,13 +164,13 @@ P001-P005 implementation complete, committed, and pushed. P006 remains pending.
   - Push: push branch to `origin`.
   - PR/CI: open PR and follow CI to concrete success or failure.
   - Evidence:
-    - Implementation: pending
-    - Validation: pending
-    - Review: pending
+    - Implementation: Added final cleanup for real-local layout linting, strengthened narrow first-run cwd coverage for the cwd pill, trigger, action, opened menu, and hit testing, added a standalone `AgentStatusBar` closeup with narrow desktop embed compaction coverage, made `.aui-status` provide its own inline-size container while retaining viewport fallback behavior, moved public-facing example docs away from maintainer-only fixture filenames, and regenerated docs screenshots after visual contract changes.
+    - Validation: Passed `bunx playwright test examples/local-react-vite/e2e/visual-layout.e2e.ts --config playwright.fixtures.config.ts --grep "narrow tablet first-run|tablet status bar"`; `bunx playwright test examples/local-react-vite/e2e/visual-closeups.e2e.ts --config playwright.fixtures.config.ts --grep "component close-up gallery|standalone status"`; `bun run --cwd examples/local-react-vite typecheck`; `CAPTURE_DOCS_SCREENSHOTS=1 bunx playwright test examples/local-react-vite/e2e/capture-docs-screenshots.e2e.ts --config playwright.fixtures.config.ts`; `bun run test:styles`; `bunx vitest run test/docs-staleness.test.ts test/package-scripts-docs.test.ts`; `bunx playwright test examples/local-react-vite/e2e/visual-layout.e2e.ts examples/local-react-vite/e2e/visual-closeups.e2e.ts examples/local-react-vite/e2e/visual-qa-manifest.e2e.ts --config playwright.fixtures.config.ts`; `bun run validate:fast`; `bun run validate:e2e`; `bun run validate:packages`.
+    - Review: 4 parallel subagents reviewed P006. Accepted fixes: record P006 evidence before readiness, commit the dirty real-local lint cleanup, update stale aggregate commit/final checklist evidence, regenerate docs screenshots, add narrow cwd compaction/menu coverage, remove maintainer-only fixture file/spec names from public-facing docs, and protect standalone `AgentStatusBar` responsive behavior outside `AgentChat`. Re-review accepted the cwd, docs, screenshot, and hygiene fixes; one re-review P2 found standalone status still relied on viewport fallback in a desktop-width narrow embed, so `AgentStatusBar` now provides its own inline-size container and the closeup test covers a narrow desktop embed. No remaining P0-P1 findings from phase review.
     - Commit: pending
     - Push: pending
   - Tasks:
-    - [ ] T016 Run broad validation.
+    - [x] T016 Run broad validation.
       - Expected files/areas: repo scripts and CI-equivalent gates.
       - Validation note: include `validate:release`, `validate:e2e`, and `validate:packages` if needed.
     - [ ] T017 Prepare PR evidence and follow CI.
@@ -194,6 +195,11 @@ Each phase requires a 4-subagent parallel review after phase implementation and 
   - `bunx playwright test examples/local-react-vite/e2e/visual-qa-manifest.e2e.ts --config playwright.fixtures.config.ts`
   - `bunx vitest run packages/react/test/source-structure.vitest.ts`
   - `bunx vitest run test/docs-staleness.test.ts test/package-scripts-docs.test.ts`
+- P006 passed:
+  - `bun run validate:fast`
+  - `bun run validate:e2e`
+  - `bun run validate:packages`
+  - `CAPTURE_DOCS_SCREENSHOTS=1 bunx playwright test examples/local-react-vite/e2e/capture-docs-screenshots.e2e.ts --config playwright.fixtures.config.ts`
 
 ## Review Evidence
 
@@ -202,24 +208,33 @@ Each phase requires a 4-subagent parallel review after phase implementation and 
   - Test/validation review: P1 source-structure drift and P2 screenshot directory guard requested and fixed.
   - Docs/example-boundary review: no findings.
   - TypeScript/build/runtime review: no P0-P2 findings; P3 private bundle metadata note recorded for later reassessment.
+- P006 4-subagent review completed:
+  - Completion criteria review: P1 readiness finding because PR/CI follow-through was not complete yet; validation evidence should record `validate:fast`, closeup rerun, `validate:e2e`, and `validate:packages`.
+  - Validation/test-quality review: P2 narrow cwd compaction/menu coverage gap; fixed in `visual-layout.e2e.ts`.
+  - Product-boundary/public-surface review: P2 public-facing docs leaked maintainer fixture details and P2 standalone `AgentStatusBar` lost responsive fallback outside `AgentChat`; fixed in docs, styles, closeup fixture, and closeup e2e coverage.
+  - PR readiness/hygiene review: P2 dirty worktree, stale aggregate evidence, and stale docs screenshots; local fixes are prepared by keeping the lint cleanup in the final staged diff, updating this todo, and regenerating screenshot PNGs. Final commit remains pending.
+  - P006 re-review: cwd coverage and PR hygiene re-review reported no remaining P0-P2 findings. Public-surface re-review requested desktop-width narrow standalone status coverage beyond viewport fallback; fixed by making `.aui-status` an inline-size container and changing the closeup test to run on a desktop viewport with a narrow standalone embed.
 
 ## Commit Log
 
 - Planning commit: 2c02187 Plan fixture system redesign
 - P001 implementation commit: 89588f2 Add visual QA route manifest
-- P001 evidence update commit: latest P001 evidence commit on this branch; final hash from git log
+- P001 evidence update commits: 408bdf8 Record P001 visual QA evidence; 9f32a59 Clarify P001 evidence commit reference
 - P002 implementation commit: ecc7d47 Redesign composer responsive layout
-- P002 evidence update commit: latest P002 evidence commit on this branch; final hash from git log
-- Later implementation commits: pending
+- P002 evidence update commits: 9502580 Record P002 responsive layout evidence; 4e6e10e Clarify P002 evidence commit reference
+- P003 implementation/evidence commits: 44d406e Polish fixture routes and closeups; cd33f96 Record P003 fixture cleanup evidence
+- P004 implementation/evidence commits: ca99cd4 Harden visual QA layout coverage; cef9bbb Record P004 validation evidence
+- P005 implementation/evidence commits: 124e6f4 Align visual QA docs and skills; ad9cb7c Record P005 docs evidence
+- P006 final cleanup/evidence commit: pending
 
 ## Final Checklist
 
-- [ ] All reported UI issues fixed.
-- [ ] All current fixture routes either redesigned, deleted with justification, or classified by manifest.
-- [ ] No obsolete fake Agent UI closeups remain.
-- [ ] Submit lower-right invariant is tested.
-- [ ] Narrow review/model/cwd compaction is tested.
-- [ ] Tablet header/status/sidebar behavior is tested.
-- [ ] Docs, maintainer skills, public skill, and tests are updated.
-- [ ] Focused and broad validation results are recorded.
+- [x] All reported UI issues fixed.
+- [x] All current fixture routes either redesigned, deleted with justification, or classified by manifest.
+- [x] No obsolete fake Agent UI closeups remain.
+- [x] Submit lower-right invariant is tested.
+- [x] Narrow review/model/cwd compaction is tested.
+- [x] Tablet header/status/sidebar behavior is tested.
+- [x] Docs, maintainer skills, public skill, and tests are updated.
+- [x] Focused and broad validation results are recorded.
 - [ ] Branch is pushed, PR is opened, and CI is inspected.
