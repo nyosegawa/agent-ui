@@ -209,7 +209,7 @@ Each phase requires a 4-subagent parallel review after phase implementation and 
 - P001 implementation commit: 89588f2 Add visual QA route manifest
 - P001 evidence update commit: latest P001 evidence commit on this branch; final hash from git log
 - P002 implementation commit: ecc7d47 Redesign composer responsive layout
-- P002 evidence update commit: pending
+- P002 evidence update commit: latest P002 evidence commit on this branch; final hash from git log
 - Later implementation commits: pending
 
 ## Final Checklist
