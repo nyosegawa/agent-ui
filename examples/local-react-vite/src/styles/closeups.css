@@ -147,3 +147,9 @@
     height: 560px;
   }
 }
+
+@media (max-width: 960px) {
+  .aui-closeup-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

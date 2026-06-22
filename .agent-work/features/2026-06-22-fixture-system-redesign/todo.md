@@ -2,14 +2,14 @@
 
 ## Status Summary
 
-P001-P003 implementation complete, committed, and pushed. P004-P006 remain pending.
+P001-P003 implementation complete, committed, and pushed. P004 implementation, validation, and phase review complete; commit/push evidence pending. P005-P006 remain pending.
 
 ## Branch And Planning Commit
 
 - Branch: codex/fixture-system-redesign-plan
 - Planning commit: 2c02187 Plan fixture system redesign
 - Remote: origin
-- Push result: P001-P003 pushed to `origin/codex/fixture-system-redesign-plan`
+- Push result: P001-P003 pushed to `origin/codex/fixture-system-redesign-plan`; P004 pending commit/push
 - Blockers: none known
 
 ## Phase Checklist
@@ -17,7 +17,7 @@ P001-P003 implementation complete, committed, and pushed. P004-P006 remain pendi
 - P001 done: Visual QA manifest and route inventory
 - P002 done: Container-aware component layout redesign
 - P003 done: Fixture route and closeup cleanup
-- P004 pending: Validation and browser evidence hardening
+- P004 implementation reviewed: Validation and browser evidence hardening
 - P005 pending: Docs and Agent Skills alignment
 - P006 pending: Final validation, PR, and CI follow-through
 
@@ -101,7 +101,7 @@ P001-P003 implementation complete, committed, and pushed. P004-P006 remain pendi
       - Expected files/areas: `/scoped-thread-lists`, `/app-connectors`, `/usage-only`, related CSS.
       - Validation note: first render is complete, dates are current or relative, no native cramped controls remain.
 
-- [ ] P004 Validation and browser evidence hardening
+- [x] P004 Validation and browser evidence hardening
   - Goal: Catch visual QA drift automatically and record useful manual evidence.
   - Scope: Playwright specs, helper assertions, docs stale guards, real-local layout checks.
   - Expected files/areas: `examples/local-react-vite/e2e/**`, `test/**`, Playwright configs, docs tests.
@@ -111,19 +111,19 @@ P001-P003 implementation complete, committed, and pushed. P004-P006 remain pendi
   - Push: after phase commit or batch with docs phase.
   - PR/CI: include route/viewport matrix and screenshot links.
   - Evidence:
-    - Implementation: pending
-    - Validation: pending
-    - Review: pending
+    - Implementation: Added a manifest-driven `visual-route-matrix.e2e.ts` that runs every declared visual QA route across its declared desktop/wide/tablet/compact/mobile/short viewports and checks route readiness, document overflow, visible text containment, and key Agent UI surface containment. Added `real-local-layout.e2e.ts` for deterministic codex-local-web first-run and stored-thread desktop/mobile layout checks. Collapsed closeup cards to one column at tablet/short widths after the new matrix exposed a real short-viewport composer toolbar overflow.
+    - Validation: Passed `bun run --cwd examples/local-react-vite typecheck`; `bun run --cwd examples/codex-local-web typecheck`; `bunx playwright test examples/local-react-vite/e2e/visual-route-matrix.e2e.ts --config playwright.fixtures.config.ts`; `bunx playwright test examples/codex-local-web/e2e/real-local-layout.e2e.ts --config playwright.real-local.config.ts`; `bun run test:e2e:fixtures`; `bun run test:e2e:real-local`; `bun run test:styles`.
+    - Review: 4 parallel subagents reviewed P004. No P0-P2 findings. Review confirmed the matrix asserts geometry/behavior contracts rather than brittle exact styling, the real-local layout audit is stable under the fake App Server real-local scope, the new specs are picked up by existing fixture and real-local scripts, and P004 does not add public API/export or product-boundary obligations. Docs and Agent Skills remain intentionally deferred to P005.
     - Commit: pending
     - Push: pending
   - Tasks:
-    - [ ] T010 Add route inventory and viewport matrix guards.
+    - [x] T010 Add route inventory and viewport matrix guards.
       - Expected files/areas: fixture e2e support and docs stale tests.
       - Validation note: desktop, wide, tablet, compact, mobile, embedded narrow, and short cases are covered where required.
-    - [ ] T011 Add behavioral visual contract assertions.
+    - [x] T011 Add behavioral visual contract assertions.
       - Expected files/areas: visual layout, accessibility, design-system contract specs.
       - Validation note: no overflow, hit targets, focus return, submit placement, menu/sheet containment, route readiness.
-    - [ ] T012 Update real-local layout audit.
+    - [x] T012 Update real-local layout audit.
       - Expected files/areas: real-local e2e specs and docs.
       - Validation note: real Codex example confirms component behavior against App Server-backed state.
 
