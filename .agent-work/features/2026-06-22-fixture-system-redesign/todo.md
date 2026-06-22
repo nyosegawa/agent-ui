@@ -2,14 +2,14 @@
 
 ## Status Summary
 
-P001-P003 implementation complete, committed, and pushed. P004 implementation, validation, and phase review complete; commit/push evidence pending. P005-P006 remain pending.
+P001-P004 implementation complete, committed, and pushed. P005-P006 remain pending.
 
 ## Branch And Planning Commit
 
 - Branch: codex/fixture-system-redesign-plan
 - Planning commit: 2c02187 Plan fixture system redesign
 - Remote: origin
-- Push result: P001-P003 pushed to `origin/codex/fixture-system-redesign-plan`; P004 pending commit/push
+- Push result: P001-P004 pushed to `origin/codex/fixture-system-redesign-plan`
 - Blockers: none known
 
 ## Phase Checklist
@@ -17,7 +17,7 @@ P001-P003 implementation complete, committed, and pushed. P004 implementation, v
 - P001 done: Visual QA manifest and route inventory
 - P002 done: Container-aware component layout redesign
 - P003 done: Fixture route and closeup cleanup
-- P004 implementation reviewed: Validation and browser evidence hardening
+- P004 done: Validation and browser evidence hardening
 - P005 pending: Docs and Agent Skills alignment
 - P006 pending: Final validation, PR, and CI follow-through
 
@@ -114,8 +114,8 @@ P001-P003 implementation complete, committed, and pushed. P004 implementation, v
     - Implementation: Added a manifest-driven `visual-route-matrix.e2e.ts` that runs every declared visual QA route across its declared desktop/wide/tablet/compact/mobile/short viewports and checks route readiness, document overflow, visible text containment, and key Agent UI surface containment. Added `real-local-layout.e2e.ts` for deterministic codex-local-web first-run and stored-thread desktop/mobile layout checks. Collapsed closeup cards to one column at tablet/short widths after the new matrix exposed a real short-viewport composer toolbar overflow.
     - Validation: Passed `bun run --cwd examples/local-react-vite typecheck`; `bun run --cwd examples/codex-local-web typecheck`; `bunx playwright test examples/local-react-vite/e2e/visual-route-matrix.e2e.ts --config playwright.fixtures.config.ts`; `bunx playwright test examples/codex-local-web/e2e/real-local-layout.e2e.ts --config playwright.real-local.config.ts`; `bun run test:e2e:fixtures`; `bun run test:e2e:real-local`; `bun run test:styles`.
     - Review: 4 parallel subagents reviewed P004. No P0-P2 findings. Review confirmed the matrix asserts geometry/behavior contracts rather than brittle exact styling, the real-local layout audit is stable under the fake App Server real-local scope, the new specs are picked up by existing fixture and real-local scripts, and P004 does not add public API/export or product-boundary obligations. Docs and Agent Skills remain intentionally deferred to P005.
-    - Commit: pending
-    - Push: pending
+    - Commit: ca99cd4 Harden visual QA layout coverage
+    - Push: pushed to `origin/codex/fixture-system-redesign-plan`
   - Tasks:
     - [x] T010 Add route inventory and viewport matrix guards.
       - Expected files/areas: fixture e2e support and docs stale tests.
