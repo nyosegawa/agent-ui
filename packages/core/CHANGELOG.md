@@ -1,5 +1,22 @@
 # @nyosegawa/agent-ui-core
 
+## 1.0.0
+
+### Minor Changes
+
+- 6ee9789: Refresh the vendored Codex App Server schema and clean up compatibility-only
+  protocol surfaces. Legacy upstream approval requests now normalize to canonical
+  command and file-change approval kinds, preferred request builders expose
+  Agent UI-owned path aliases, and deprecated protocol fields remain adapter-only
+  fallback intake with current fields taking precedence.
+
+### Patch Changes
+
+- b8276c6: Classify app-scoped MCP startup failures as developer/audit diagnostics, keep
+  thread preview hydration and status updates from reordering history rows,
+  preserve first-message titles through canonical reconciliation, and move
+  tablet-width status/usage/diagnostics into the explicit context sheet.
+
 ## 0.5.0
 
 ### Minor Changes

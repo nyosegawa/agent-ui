@@ -1,6 +1,6 @@
 {
   "name": "@nyosegawa/agent-ui-core",
-  "version": "0.5.0",
+  "version": "1.0.0",
   "description": "Protocol-neutral state and transport primitives for Agent UI.",
   "license": "MIT",
   "repository": {
