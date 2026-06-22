@@ -15,7 +15,7 @@ P001 and P002 implementation complete, committed, and pushed. P003-P006 remain p
 ## Phase Checklist
 
 - P001 done: Visual QA manifest and route inventory
-- P002 implemented, validated, reviewed, and committed; push pending: Container-aware component layout redesign
+- P002 done: Container-aware component layout redesign
 - P003 pending: Fixture route and closeup cleanup
 - P004 pending: Validation and browser evidence hardening
 - P005 pending: Docs and Agent Skills alignment
@@ -59,8 +59,8 @@ P001 and P002 implementation complete, committed, and pushed. P003-P006 remain p
     - Implementation: Changed composer toolbar to a grid with a dedicated lower-right submit cell, added container queries for compact composer controls, added ResizeObserver-backed compact menu behavior for run settings, made first-run composer use the same grid invariant, and changed status/account tablet behavior to container queries so embedded narrow shells compact without relying on viewport width.
     - Validation: Passed `bun run test:styles`; `bun run --cwd examples/local-react-vite typecheck`; `bun run --cwd examples/local-react-vite build`; `bunx vitest run packages/react/test/components.vitest.tsx packages/react/test/composer-submit-semantics.vitest.ts packages/react/test/source-structure.vitest.ts`; `bunx playwright test examples/local-react-vite/e2e/visual-layout.e2e.ts --config playwright.fixtures.config.ts`.
     - Review: 4 parallel subagents reviewed P002. No product-boundary/public-surface findings. Accepted fixes: strengthened submit containment and hit-test assertions, moved status/account compaction from viewport media rules to container queries, and added a desktop-viewport embedded narrow shell test. Remaining risk: broader sidebar drawer behavior is still planned for later phases if visual route cleanup exposes additional embedded-host needs.
-    - Commit: 64fec95 Redesign composer responsive layout
-    - Push: pending
+    - Commit: ecc7d47 Redesign composer responsive layout
+    - Push: pushed to `origin/codex/fixture-system-redesign-plan`
   - Tasks:
     - [x] T003 Add internal layout mode or container-query structure.
       - Expected files/areas: `packages/react/src/components/shared.tsx`, component roots, styles.
@@ -208,7 +208,8 @@ Each phase requires a 4-subagent parallel review after phase implementation and 
 - Planning commit: 2c02187 Plan fixture system redesign
 - P001 implementation commit: 89588f2 Add visual QA route manifest
 - P001 evidence update commit: latest P001 evidence commit on this branch; final hash from git log
-- P002 implementation commit: 64fec95 Redesign composer responsive layout
+- P002 implementation commit: ecc7d47 Redesign composer responsive layout
+- P002 evidence update commit: pending
 - Later implementation commits: pending
 
 ## Final Checklist
