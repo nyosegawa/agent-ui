@@ -2,19 +2,19 @@
 
 ## Status Summary
 
-P001 implementation complete pending phase commit and push. P002-P006 remain pending.
+P001 implementation complete, committed, and pushed. P002-P006 remain pending.
 
 ## Branch And Planning Commit
 
 - Branch: codex/fixture-system-redesign-plan
 - Planning commit: 2c02187 Plan fixture system redesign
 - Remote: origin
-- Push result: planning branch pushed before implementation; P001 implementation push pending
+- Push result: P001 pushed to `origin/codex/fixture-system-redesign-plan`
 - Blockers: none known
 
 ## Phase Checklist
 
-- P001 implemented, validated, reviewed, and committed; push pending: Visual QA manifest and route inventory
+- P001 done: Visual QA manifest and route inventory
 - P002 pending: Container-aware component layout redesign
 - P003 pending: Fixture route and closeup cleanup
 - P004 pending: Validation and browser evidence hardening
@@ -36,8 +36,8 @@ P001 implementation complete pending phase commit and push. P002-P006 remain pen
     - Implementation: Added `visual-qa-manifest.ts`, derived gallery previews from it, made docs screenshot capture consume docs screenshot entries, added route inventory Playwright coverage, and updated source-structure guards for main router and screenshot directory drift.
     - Validation: Passed `bun run --cwd examples/local-react-vite typecheck`; `bun run --cwd examples/local-react-vite build`; `bunx playwright test examples/local-react-vite/e2e/visual-qa-manifest.e2e.ts --config playwright.fixtures.config.ts`; `bunx vitest run packages/react/test/source-structure.vitest.ts`; `bunx vitest run test/docs-staleness.test.ts test/package-scripts-docs.test.ts`.
     - Review: 4 parallel subagents reviewed P001. Accepted fixes: update stale source-structure screenshot assertion, add main router drift guard, add docs screenshot directory guard. No docs/public-boundary findings. Deferred P3 bundle hygiene note because the manifest is private fixture-only and preserving one source of truth is more important for P001; revisit during P003 closeup/preview cleanup if bundle output still retains unused docs metadata.
-    - Commit: this P001 phase commit; final hash from git log
-    - Push: pending
+    - Commit: 89588f2 Add visual QA route manifest
+    - Push: pushed to `origin/codex/fixture-system-redesign-plan`
   - Tasks:
     - [x] T001 Add typed visual QA manifest.
       - Expected files/areas: `examples/local-react-vite/src/fixtures/**`
@@ -206,7 +206,8 @@ Each phase requires a 4-subagent parallel review after phase implementation and 
 ## Commit Log
 
 - Planning commit: 2c02187 Plan fixture system redesign
-- P001 implementation commit: this P001 phase commit; final hash from git log
+- P001 implementation commit: 89588f2 Add visual QA route manifest
+- P001 evidence update commit: pending
 - Later implementation commits: pending
 
 ## Final Checklist
