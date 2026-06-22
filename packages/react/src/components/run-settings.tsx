@@ -14,7 +14,7 @@ import {
 import { useAgentContext } from "../provider";
 import { AuiMenu } from "./disclosure";
 import { isUserFacingPath } from "./sidebar";
-import { useCompactLayout } from "./shared";
+import { useCompactLayout, useElementCompactLayout } from "./shared";
 
 export { AgentStarterCwd, type AgentWorkingDirectoryResolver } from "./starter-cwd";
 
@@ -300,7 +300,11 @@ function executionModeDescription(id: string, t: (key: AgentI18nKey) => string):
  */
 export function ComposerRunSettings() {
   const { t } = useAgentI18n();
-  const compact = useCompactLayout();
+  const viewportCompact = useCompactLayout();
+  const [settingsRef, compact] = useElementCompactLayout<HTMLDivElement>(
+    520,
+    viewportCompact,
+  );
   const { state } = useAgentContext();
   const { models, refreshModels } = useAgentModels();
   const {
@@ -331,7 +335,7 @@ export function ComposerRunSettings() {
   const hasEfforts = supportedEfforts.length > 0;
 
   return (
-    <div className="aui-composer-settings">
+    <div className="aui-composer-settings" ref={settingsRef}>
       <AuiMenu
         ariaLabel={t("run.executionMode")}
         compact={compact}

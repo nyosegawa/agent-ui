@@ -18,6 +18,7 @@
   border: 1px solid var(--aui-border-strong);
   border-radius: var(--aui-radius-2xl);
   box-shadow: var(--aui-elevation-2);
+  container-type: inline-size;
   display: grid;
   gap: 0;
   min-width: 0;
@@ -333,12 +334,11 @@
 }
 
 .aui-composer-toolbar {
-  align-items: center;
+  align-items: end;
   border-top: 0;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
   gap: var(--aui-space-150);
-  justify-content: space-between;
+  grid-template-columns: minmax(0, 1fr) auto;
   margin-top: var(--aui-space-200);
   min-width: 0;
   padding-top: 0;
@@ -353,12 +353,11 @@
 }
 
 .aui-composer-toolbar-start {
-  flex: 1 1 auto;
   flex-wrap: wrap;
 }
 
 .aui-composer-toolbar-end {
-  flex: 0 0 auto;
+  justify-self: end;
   position: relative;
 }
 
@@ -460,15 +459,18 @@
 .aui-composer-toolbar-attach {
   align-items: center;
   display: flex;
+  flex: 0 0 auto;
   gap: var(--aui-space-050);
 }
 
 .aui-composer-settings {
   align-items: center;
   display: flex;
-  flex-wrap: wrap;
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
   gap: var(--aui-space-150);
   min-width: 0;
+  overflow: hidden;
 }
 
 /* --- Composer tool trigger (mode / model / effort) ---------------------- */
@@ -484,6 +486,7 @@
   font: 600 var(--aui-font-size-sm)/var(--aui-line-tight) var(--aui-font);
   gap: var(--aui-space-125);
   max-width: 232px;
+  min-width: 0;
   min-height: var(--aui-control-height-md);
   padding: 0 var(--aui-space-225);
   transition:

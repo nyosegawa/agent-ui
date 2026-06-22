@@ -2,6 +2,7 @@
 
 .aui-chat {
   background: var(--aui-bg);
+  container-type: inline-size;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   min-height: 0;
@@ -262,6 +263,7 @@
   border: 1px solid var(--aui-border-strong);
   border-radius: var(--aui-radius-2xl);
   box-shadow: var(--aui-elevation-2);
+  container-type: inline-size;
   display: grid;
   gap: var(--aui-space-250);
   min-width: 0;
@@ -300,16 +302,14 @@
 
 .aui-first-run-toolbar {
   align-items: end;
-  display: flex;
-  flex-wrap: nowrap;
+  display: grid;
   gap: var(--aui-space-200);
-  justify-content: space-between;
+  grid-template-columns: minmax(0, 1fr) auto;
   min-width: 0;
 }
 
 .aui-first-run-toolbar.aui-composer-toolbar {
   align-items: end;
-  flex-wrap: nowrap;
   gap: var(--aui-space-200);
   margin-top: 0;
 }

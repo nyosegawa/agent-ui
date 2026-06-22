@@ -20,7 +20,7 @@
   }
 
   .aui-composer-toolbar {
-    flex-wrap: nowrap;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .aui-composer-toolbar-start,
@@ -30,31 +30,11 @@
   }
 
   .aui-composer-toolbar-start {
-    flex: 1 1 auto;
     min-width: 0;
   }
 
   .aui-composer-toolbar-end {
-    flex: 0 0 auto;
     margin-left: auto;
-  }
-
-  .aui-composer-settings {
-    flex-wrap: nowrap;
-    gap: var(--aui-space-100);
-  }
-
-  .aui-composer-tool {
-    gap: 0;
-    justify-content: center;
-    min-height: var(--aui-control-height-lg);
-    padding: 0;
-    width: var(--aui-control-height-lg);
-  }
-
-  .aui-composer-tool-label,
-  .aui-composer-tool > svg:last-child {
-    display: none;
   }
 
   .aui-composer-hint {

@@ -24,6 +24,210 @@ test("matches the mobile shell layout contract", async ({ page }) => {
   await expectVisualLayoutContract(page, "mobile");
 });
 
+test("tablet status bar keeps account controls inside the viewport", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 1024, width: 768 });
+  await page.goto("/");
+  await expect(page.getByTestId("agent-chat")).toBeVisible();
+
+  const metrics = await page.evaluate(() => {
+    const rect = (selector: string) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const box = element.getBoundingClientRect();
+      return {
+        left: Math.round(box.left),
+        right: Math.round(box.right),
+        width: Math.round(box.width),
+      };
+    };
+    return {
+      account: rect(".aui-account-trigger"),
+      documentOverflow:
+        document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      status: rect(".aui-status"),
+      statusActions: rect(".aui-status-actions"),
+      viewportWidth: document.documentElement.clientWidth,
+    };
+  });
+
+  expect(metrics.documentOverflow, JSON.stringify(metrics)).toBeLessThanOrEqual(1);
+  expect(metrics.status?.left, JSON.stringify(metrics)).toBeGreaterThanOrEqual(0);
+  expect(metrics.status?.right, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.viewportWidth + 1,
+  );
+  expect(metrics.statusActions?.right, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.viewportWidth + 1,
+  );
+  expect(metrics.account?.right, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.viewportWidth + 1,
+  );
+  expect(metrics.account?.width, JSON.stringify(metrics)).toBeLessThanOrEqual(40);
+});
+
+test("embedded narrow shell keeps status actions inside the component", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 1024 });
+  await page.goto("/");
+  await expect(page.getByTestId("agent-chat")).toBeVisible();
+  await page.addStyleTag({
+    content: `
+      [data-testid="agent-chat"] {
+        margin-inline: auto;
+        max-width: 700px;
+        width: 700px;
+      }
+    `,
+  });
+
+  const metrics = await page.evaluate(() => {
+    const rect = (selector: string) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const box = element.getBoundingClientRect();
+      return {
+        left: Math.round(box.left),
+        right: Math.round(box.right),
+        width: Math.round(box.width),
+      };
+    };
+    return {
+      account: rect(".aui-account-trigger"),
+      shell: rect('[data-testid="agent-chat"]'),
+      statusActions: rect(".aui-status-actions"),
+    };
+  });
+
+  expect(metrics.shell, JSON.stringify(metrics)).not.toBeNull();
+  expect(metrics.statusActions?.right, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.shell!.right + 1,
+  );
+  expect(metrics.account?.right, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.shell!.right + 1,
+  );
+  expect(metrics.account?.width, JSON.stringify(metrics)).toBeLessThanOrEqual(40);
+});
+
+test("narrow tablet composer keeps settings compact and submit pinned", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 700 });
+  await page.goto("/");
+  await expect(page.getByTestId("agent-chat")).toBeVisible();
+
+  const metrics = await page.evaluate(() => {
+    const box = (selector: string) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      return {
+        bottom: Math.round(rect.bottom),
+        left: Math.round(rect.left),
+        right: Math.round(rect.right),
+        top: Math.round(rect.top),
+        width: Math.round(rect.width),
+      };
+    };
+    return {
+      composer: box(".aui-composer"),
+      submit: box('.aui-composer button[aria-label="Send"]'),
+      tools: Array.from(document.querySelectorAll(".aui-composer-tool")).map(
+        (tool) => {
+          const rect = tool.getBoundingClientRect();
+          return {
+            labelVisible: Array.from(tool.querySelectorAll(".aui-composer-tool-label"))
+              .some((label) => getComputedStyle(label).display !== "none"),
+            width: Math.round(rect.width),
+          };
+        },
+      ),
+    };
+  });
+
+  expect(metrics.composer, JSON.stringify(metrics)).not.toBeNull();
+  expect(metrics.submit, JSON.stringify(metrics)).not.toBeNull();
+  expect(metrics.tools, JSON.stringify(metrics)).toHaveLength(2);
+  for (const tool of metrics.tools) {
+    expect(tool.width, JSON.stringify(metrics)).toBeLessThanOrEqual(40);
+    expect(tool.labelVisible, JSON.stringify(metrics)).toBe(false);
+  }
+  expect(metrics.submit!.right, JSON.stringify(metrics)).toBeGreaterThanOrEqual(
+    metrics.composer!.right - 20,
+  );
+  expect(metrics.submit!.right, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.composer!.right + 1,
+  );
+  expect(metrics.submit!.bottom, JSON.stringify(metrics)).toBeGreaterThanOrEqual(
+    metrics.composer!.bottom - 20,
+  );
+  expect(metrics.submit!.bottom, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.composer!.bottom + 1,
+  );
+  await expectActuallyHitTestable(
+    page.locator('.aui-composer button[aria-label="Send"]').first(),
+  );
+});
+
+test("narrow tablet first-run composer keeps settings compact and submit pinned", async ({
+  page,
+}) => {
+  await page.setViewportSize({ height: 900, width: 700 });
+  await page.goto("/?state=empty");
+  await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible();
+
+  const metrics = await page.evaluate(() => {
+    const box = (selector: string) => {
+      const element = document.querySelector(selector);
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      return {
+        bottom: Math.round(rect.bottom),
+        left: Math.round(rect.left),
+        right: Math.round(rect.right),
+        top: Math.round(rect.top),
+        width: Math.round(rect.width),
+      };
+    };
+    return {
+      card: box(".aui-starter-card"),
+      submit: box(".aui-first-run-submit"),
+      tools: Array.from(
+        document.querySelectorAll(".aui-first-run-toolbar .aui-composer-tool"),
+      ).map((tool) => {
+        const rect = tool.getBoundingClientRect();
+        return {
+          labelVisible: Array.from(tool.querySelectorAll(".aui-composer-tool-label"))
+            .some((label) => getComputedStyle(label).display !== "none"),
+          width: Math.round(rect.width),
+        };
+      }),
+    };
+  });
+
+  expect(metrics.card, JSON.stringify(metrics)).not.toBeNull();
+  expect(metrics.submit, JSON.stringify(metrics)).not.toBeNull();
+  expect(metrics.tools, JSON.stringify(metrics)).toHaveLength(2);
+  for (const tool of metrics.tools) {
+    expect(tool.width, JSON.stringify(metrics)).toBeLessThanOrEqual(40);
+    expect(tool.labelVisible, JSON.stringify(metrics)).toBe(false);
+  }
+  expect(metrics.submit!.right, JSON.stringify(metrics)).toBeGreaterThanOrEqual(
+    metrics.card!.right - 20,
+  );
+  expect(metrics.submit!.right, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.card!.right + 1,
+  );
+  expect(metrics.submit!.bottom, JSON.stringify(metrics)).toBeGreaterThanOrEqual(
+    metrics.card!.bottom - 20,
+  );
+  expect(metrics.submit!.bottom, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.card!.bottom + 1,
+  );
+  await expectActuallyHitTestable(page.locator(".aui-first-run-submit"));
+});
+
 test("mobile first-run keeps primary chat wide and header controls icon-only", async ({
   page,
 }) => {

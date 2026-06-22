@@ -112,7 +112,7 @@
   padding: var(--aui-space-075) var(--aui-space-150);
 }
 
-@media (max-width: 640px) {
+@container (max-width: 980px) {
   .aui-status {
     gap: var(--aui-space-150);
     padding: var(--aui-space-175) var(--aui-space-300);

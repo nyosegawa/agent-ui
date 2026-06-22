@@ -2,20 +2,20 @@
 
 ## Status Summary
 
-P001 implementation complete, committed, and pushed. P002-P006 remain pending.
+P001 and P002 implementation complete, committed, and pushed. P003-P006 remain pending.
 
 ## Branch And Planning Commit
 
 - Branch: codex/fixture-system-redesign-plan
 - Planning commit: 2c02187 Plan fixture system redesign
 - Remote: origin
-- Push result: P001 pushed to `origin/codex/fixture-system-redesign-plan`
+- Push result: P001 and P002 pushed to `origin/codex/fixture-system-redesign-plan`
 - Blockers: none known
 
 ## Phase Checklist
 
 - P001 done: Visual QA manifest and route inventory
-- P002 pending: Container-aware component layout redesign
+- P002 implemented, validated, reviewed, and committed; push pending: Container-aware component layout redesign
 - P003 pending: Fixture route and closeup cleanup
 - P004 pending: Validation and browser evidence hardening
 - P005 pending: Docs and Agent Skills alignment
@@ -46,7 +46,7 @@ P001 implementation complete, committed, and pushed. P002-P006 remain pending.
       - Expected files/areas: `examples/local-react-vite/src/main.tsx`, `examples/local-react-vite/e2e/**`
       - Validation note: no duplicated hard-coded route inventory remains except intentional tests.
 
-- [ ] P002 Container-aware component layout redesign
+- [x] P002 Container-aware component layout redesign
   - Goal: Make Agent UI components responsive by their container and guarantee composer submit placement.
   - Scope: Agent UI-owned React components and internal styles.
   - Expected files/areas: `packages/react/src/components/**`, `packages/react/src/styles/**`, React component tests.
@@ -56,22 +56,22 @@ P001 implementation complete, committed, and pushed. P002-P006 remain pending.
   - Push: after phase commit or batch with adjacent validated phase.
   - PR/CI: include before/after evidence for 700px and tablet widths.
   - Evidence:
-    - Implementation: pending
-    - Validation: pending
-    - Review: pending
-    - Commit: pending
+    - Implementation: Changed composer toolbar to a grid with a dedicated lower-right submit cell, added container queries for compact composer controls, added ResizeObserver-backed compact menu behavior for run settings, made first-run composer use the same grid invariant, and changed status/account tablet behavior to container queries so embedded narrow shells compact without relying on viewport width.
+    - Validation: Passed `bun run test:styles`; `bun run --cwd examples/local-react-vite typecheck`; `bun run --cwd examples/local-react-vite build`; `bunx vitest run packages/react/test/components.vitest.tsx packages/react/test/composer-submit-semantics.vitest.ts packages/react/test/source-structure.vitest.ts`; `bunx playwright test examples/local-react-vite/e2e/visual-layout.e2e.ts --config playwright.fixtures.config.ts`.
+    - Review: 4 parallel subagents reviewed P002. No product-boundary/public-surface findings. Accepted fixes: strengthened submit containment and hit-test assertions, moved status/account compaction from viewport media rules to container queries, and added a desktop-viewport embedded narrow shell test. Remaining risk: broader sidebar drawer behavior is still planned for later phases if visual route cleanup exposes additional embedded-host needs.
+    - Commit: 64fec95 Redesign composer responsive layout
     - Push: pending
   - Tasks:
-    - [ ] T003 Add internal layout mode or container-query structure.
+    - [x] T003 Add internal layout mode or container-query structure.
       - Expected files/areas: `packages/react/src/components/shared.tsx`, component roots, styles.
       - Validation note: tablet and embedded narrow containers do not depend only on viewport width.
-    - [ ] T004 Redesign composer toolbar and submit placement.
+    - [x] T004 Redesign composer toolbar and submit placement.
       - Expected files/areas: `composer.tsx`, `composer.css`, `composer-mobile.css`, submit tests.
       - Validation note: submit stays in lower-right cell across required widths.
-    - [ ] T005 Redesign run settings compaction.
+    - [x] T005 Redesign run settings compaction.
       - Expected files/areas: `run-settings.tsx`, `starter-cwd.tsx`, run settings styles.
       - Validation note: review/model/cwd compact to icon-only, menu, or sheet before overflow.
-    - [ ] T006 Fix tablet header/status/sidebar behavior.
+    - [x] T006 Fix tablet header/status/sidebar behavior.
       - Expected files/areas: chat/thread/status/sidebar components and styles.
       - Validation note: 768px routes have no clipped account/status controls or document overflow.
 
@@ -208,6 +208,7 @@ Each phase requires a 4-subagent parallel review after phase implementation and 
 - Planning commit: 2c02187 Plan fixture system redesign
 - P001 implementation commit: 89588f2 Add visual QA route manifest
 - P001 evidence update commit: latest P001 evidence commit on this branch; final hash from git log
+- P002 implementation commit: 64fec95 Redesign composer responsive layout
 - Later implementation commits: pending
 
 ## Final Checklist

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function compactPath(path: string): string {
   const normalized = path.replace(/\\/g, "/");
@@ -10,6 +10,34 @@ export function compactPath(path: string): string {
 
 export function useCompactLayout(): boolean {
   return useMediaQuery("(max-width: 640px)");
+}
+
+
+export function useElementCompactLayout<T extends HTMLElement>(
+  threshold = 520,
+  fallback = false,
+) {
+  const ref = useRef<T | null>(null);
+  const [compact, setCompact] = useState(fallback);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element || typeof ResizeObserver === "undefined") {
+      setCompact(fallback);
+      return;
+    }
+    const update = (width: number) => setCompact(width <= threshold);
+    update(element.getBoundingClientRect().width);
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      update(entry.contentRect.width);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [fallback, threshold]);
+
+  return [ref, compact] as const;
 }
 
 
@@ -55,4 +83,3 @@ export function deferAction(action: () => void | Promise<unknown>) {
     void action();
   }, 0);
 }
-

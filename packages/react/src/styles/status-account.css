@@ -163,7 +163,7 @@
   }
 }
 
-@media (max-width: 640px) {
+@container (max-width: 980px) {
   .aui-account-trigger {
     justify-content: center;
     padding: 0;
