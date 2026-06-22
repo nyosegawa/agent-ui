@@ -40,8 +40,8 @@ test("component close-up gallery renders direct primitives, not iframes", async 
     "Composer · mobile",
     "Composer · pasted image",
     "Composer · multiple attachments",
-    "Mode menu · open",
-    "Model / effort menu · open",
+    "Composer run settings · compact",
+    "Run settings panel",
     "Approval · command",
     "Approval · user input",
     "Command block",
@@ -51,7 +51,7 @@ test("component close-up gallery renders direct primitives, not iframes", async 
     "Usage / status chips",
     "Usage panel",
     "Button system",
-    "Inputs · selects · segmented",
+    "Thread-start controls",
   ]) {
     await expect(closeups.getByTestId(`closeup:${title}`)).toBeVisible();
   }

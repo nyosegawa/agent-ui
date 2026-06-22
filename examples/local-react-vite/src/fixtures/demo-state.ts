@@ -466,16 +466,23 @@ export function fixtureModels() {
 }
 
 export function fixtureRateLimits() {
+  const now = new Date();
+  const nextDailyReset = new Date(now);
+  nextDailyReset.setUTCDate(now.getUTCDate() + 1);
+  nextDailyReset.setUTCHours(12, 0, 0, 0);
+  const nextWeeklyReset = new Date(now);
+  nextWeeklyReset.setUTCDate(now.getUTCDate() + 7);
+  nextWeeklyReset.setUTCHours(12, 0, 0, 0);
   return {
     rateLimits: {
       limitName: "fixture-demo-model",
       primary: {
-        resetsAt: "2026-05-09T12:00:00.000Z",
+        resetsAt: nextDailyReset.toISOString(),
         usedPercent: 12,
         windowDurationMins: 300,
       },
       secondary: {
-        resetsAt: "2026-05-12T12:00:00.000Z",
+        resetsAt: nextWeeklyReset.toISOString(),
         usedPercent: 34,
         windowDurationMins: 10080,
       },

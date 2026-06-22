@@ -9,12 +9,17 @@ test("keeps explicit scoped thread lists independent in the browser", async ({
   const left = page.getByRole("region", { name: "Left scoped list" });
   const right = page.getByRole("region", { name: "Right scoped list" });
 
+  await expect(left.getByLabel("Left cursor")).toHaveText("Not loaded");
+  await expect(right.getByLabel("Right cursor")).toHaveText("Not loaded");
+
   await left.getByLabel("Left search").fill("alpha");
   await left.getByRole("button", { name: "Refresh Left" }).click();
   await expect(left.getByLabel("Left threads")).toContainText("Left alpha thread");
   await expect(left.getByLabel("Left scope metadata")).toHaveText("alpha");
   await expect(left.getByLabel("Left cursor")).toHaveText("history:left-fixture:page-2");
-  await expect(right.getByLabel("Right threads")).toHaveText("");
+  await expect(right.getByLabel("Right threads")).toContainText(
+    "Refresh this scope to load threads.",
+  );
 
   await right.getByLabel("Right search").fill("beta");
   await right.getByRole("button", { name: "Refresh Right" }).click();
@@ -27,7 +32,7 @@ test("keeps explicit scoped thread lists independent in the browser", async ({
 
   await left.getByRole("button", { name: "Load more Left" }).click();
   await expect(left.getByLabel("Left threads")).toContainText("Left page thread");
-  await expect(left.getByLabel("Left cursor")).toHaveText("");
+  await expect(left.getByLabel("Left cursor")).toHaveText("End of list");
   await expect(right.getByLabel("Right threads")).not.toContainText("Left page thread");
 
   await left.getByRole("button", { name: "Left page thread" }).click();

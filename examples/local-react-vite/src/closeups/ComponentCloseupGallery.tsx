@@ -14,9 +14,11 @@ import {
   AgentComposer,
   AgentMessageList,
   AgentProvider,
+  AgentRunSettingsPanel,
   AgentStartComposer,
   AgentStatusDetails,
   AgentStatusSummary,
+  AgentThreadSidebar,
   AgentUsagePanel,
 } from "@nyosegawa/agent-ui-react";
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
@@ -63,8 +65,8 @@ export function ComponentCloseupGallery() {
         <CloseupComposerMobile />
         <CloseupComposerPastedImage />
         <CloseupComposerAttachments />
-        <CloseupModeMenu />
-        <CloseupModelEffortMenu />
+        <CloseupComposerRunSettings />
+        <CloseupRunSettingsPanel />
         <CloseupApprovalCommand />
         <CloseupApprovalUserInput />
         <CloseupCommandBlock />
@@ -74,7 +76,7 @@ export function ComponentCloseupGallery() {
         <CloseupUsageChips />
         <CloseupUsagePanel />
         <CloseupButtonStates />
-        <CloseupInputStates />
+        <CloseupThreadStartControls />
       </div>
     </section>
   );
@@ -373,110 +375,30 @@ function CloseupComposerAttachments() {
   );
 }
 
-function StaticMenuPanel({
-  ariaLabel,
-  children,
-}: {
-  ariaLabel: string;
-  children: ReactNode;
-}) {
-  return (
-    <div
-      aria-label={ariaLabel}
-      className="aui-menu-panel"
-      role="menu"
-      style={{ position: "static", width: "100%" }}
-    >
-      <header className="aui-menu-panel-header">
-        <strong>{ariaLabel}</strong>
-      </header>
-      <div className="aui-menu-panel-body">{children}</div>
-    </div>
-  );
-}
-
-function StaticMenuItem({
-  label,
-  description,
-  selected,
-}: {
-  label: string;
-  description?: string;
-  selected?: boolean;
-}) {
-  return (
-    <div
-      className="aui-menu-item"
-      data-selected={selected ? "true" : undefined}
-      role="menuitemradio"
-      aria-checked={selected ? "true" : "false"}
-    >
-      <span className="aui-menu-item-icon" aria-hidden="true">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l8 3v6c0 4.4-3.4 8-8 9-4.6-1-8-4.6-8-9V6l8-3z"/></svg>
-      </span>
-      <span className="aui-menu-item-body">
-        <span className="aui-menu-item-label">{label}</span>
-        {description ? <span className="aui-menu-item-desc">{description}</span> : null}
-      </span>
-      <span className="aui-menu-item-check" aria-hidden="true">
-        {selected ? (
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7"/></svg>
-        ) : null}
-      </span>
-    </div>
-  );
-}
-
-function CloseupModeMenu() {
+function CloseupComposerRunSettings() {
   return (
     <CloseupFrame
-      title="Mode menu · open"
-      caption="Execution mode picker with icon, label, and selected check."
+      title="Composer run settings · compact"
+      caption="Real composer run-setting triggers compact before the toolbar wraps."
     >
-      <StaticMenuPanel ariaLabel="Execution mode">
-        <StaticMenuItem
-          label="Review"
-          description="Ask before commands or file changes that need review."
-          selected
-        />
-        <StaticMenuItem
-          label="Auto"
-          description="Run in the workspace and ask only after a command fails."
-        />
-        <StaticMenuItem
-          label="Read-only"
-          description="Read files and plan changes without writing to the workspace."
-        />
-        <StaticMenuItem
-          label="Full access"
-          description="Allow full local access for trusted one-off work."
-        />
-      </StaticMenuPanel>
+      <CloseupComposerProvider>
+        <div className="aui-closeup-narrow-composer-settings">
+          <AgentComposer threadId="thread-closeup" />
+        </div>
+      </CloseupComposerProvider>
     </CloseupFrame>
   );
 }
 
-function CloseupModelEffortMenu() {
+function CloseupRunSettingsPanel() {
   return (
     <CloseupFrame
-      title="Model / effort menu · open"
-      caption="Model and effort share one compact menu with sections."
+      title="Run settings panel"
+      caption="Thread-start settings use the current panel primitive, including cwd."
     >
-      <StaticMenuPanel ariaLabel="Model and effort">
-        <div className="aui-menu-section" role="group" aria-label="Model">
-          <span className="aui-menu-section-label">Model</span>
-          <StaticMenuItem label="Server default" />
-          <StaticMenuItem label="GPT-5.5 (gpt-5.5-codex)" selected />
-          <StaticMenuItem label="GPT-5.4 (gpt-5.4-codex)" />
-        </div>
-        <div className="aui-menu-section" role="group" aria-label="Effort">
-          <span className="aui-menu-section-label">Effort</span>
-          <StaticMenuItem label="Low" />
-          <StaticMenuItem label="Medium" selected />
-          <StaticMenuItem label="High" />
-          <StaticMenuItem label="Very high" />
-        </div>
-      </StaticMenuPanel>
+      <CloseupComposerProvider>
+        <AgentRunSettingsPanel />
+      </CloseupComposerProvider>
     </CloseupFrame>
   );
 }
@@ -489,7 +411,12 @@ function CloseupMobileChatShell() {
       tone="mobile"
     >
       <div className="aui-closeup-mobile-shell">
-        <iframe src="/rich-transcript" title="Mobile chat shell" />
+        <AgentProvider
+          initialState={createRichTranscriptInitialState()}
+          transport={new FakeAgentTransport()}
+        >
+          <AgentChat diagnostics sidebar usage />
+        </AgentProvider>
       </div>
     </CloseupFrame>
   );
@@ -566,60 +493,7 @@ function CloseupStartComposer() {
 
 function CloseupSidebarDrawerSearch() {
   const initialState = useMemo(() => createSidebarDrawerState(), []);
-  const transport = useMemo(
-    () =>
-      new FakeAgentTransport({
-        onRequest(request) {
-          if (request.method === "thread/list") {
-            const searchTerm =
-              typeof request.params === "object" &&
-              request.params &&
-              "searchTerm" in request.params &&
-              typeof request.params.searchTerm === "string"
-                ? request.params.searchTerm.toLowerCase()
-                : "";
-            const data = sidebarDrawerThreads()
-              .filter(
-                (thread) =>
-                  !searchTerm || thread.name?.toLowerCase().includes(searchTerm),
-              )
-              .map(({ id, name, path }) => ({
-                id,
-                name,
-                path,
-                status: { type: "idle" },
-                turns: [],
-              }));
-            return { data };
-          }
-          if (request.method === "thread/read") {
-            return {
-              thread: {
-                id: "thread-side-select",
-                name: "Renderer audit",
-                path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
-                status: { type: "idle" },
-                turns: [
-                  {
-                    id: "turn-side-select",
-                    items: [
-                      {
-                        id: "item-side-select-agent",
-                        text: "Renderer audit selected from the mobile drawer.",
-                        type: "agentMessage",
-                      },
-                    ],
-                    status: "completed",
-                  },
-                ],
-              },
-            };
-          }
-          return {};
-        },
-      }),
-    [],
-  );
+  const transport = useMemo(() => createSidebarThreadsTransport(), []);
   return (
     <CloseupFrame
       title="Sidebar drawer search/select"
@@ -703,6 +577,59 @@ function sidebarDrawerThreads() {
       path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
     },
   ];
+}
+
+function createSidebarThreadsTransport() {
+  return new FakeAgentTransport({
+    onRequest(request) {
+      if (request.method === "thread/list") {
+        const searchTerm =
+          typeof request.params === "object" &&
+          request.params &&
+          "searchTerm" in request.params &&
+          typeof request.params.searchTerm === "string"
+            ? request.params.searchTerm.toLowerCase()
+            : "";
+        const data = sidebarDrawerThreads()
+          .filter(
+            (thread) =>
+              !searchTerm || thread.name?.toLowerCase().includes(searchTerm),
+          )
+          .map(({ id, name, path }) => ({
+            id,
+            name,
+            path,
+            status: { type: "idle" },
+            turns: [],
+          }));
+        return { data };
+      }
+      if (request.method === "thread/read") {
+        return {
+          thread: {
+            id: "thread-side-select",
+            name: "Renderer audit",
+            path: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+            status: { type: "idle" },
+            turns: [
+              {
+                id: "turn-side-select",
+                items: [
+                  {
+                    id: "item-side-select-agent",
+                    text: "Renderer audit selected from the mobile drawer.",
+                    type: "agentMessage",
+                  },
+                ],
+                status: "completed",
+              },
+            ],
+          },
+        };
+      }
+      return {};
+    },
+  });
 }
 
 function createSidebarDrawerState(): AgentSessionState {
@@ -1088,58 +1015,18 @@ function CloseupDiffBlock() {
 }
 
 function CloseupSidebarSearch() {
+  const initialState = useMemo(() => createSidebarDrawerState(), []);
+  const transport = useMemo(() => createSidebarThreadsTransport(), []);
   return (
     <CloseupFrame
       title="Sidebar search + threads"
-      caption="Icon-prefix search, status dot, selected row."
+      caption="Real history sidebar primitive with search and selected row."
     >
-      <div style={{ display: "grid", gap: "var(--aui-space-300)" }}>
-        <form
-          className="aui-history-controls"
-          onSubmit={(event) => event.preventDefault()}
-          role="search"
-        >
-          <div className="aui-input-shell aui-input-with-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input
-              aria-label="Search history"
-              className="aui-text-input"
-              defaultValue="render"
-              placeholder="Search threads"
-              type="search"
-            />
-            <span aria-hidden="true" className="aui-history-spinner" />
-          </div>
-        </form>
-        <nav aria-label="Threads" className="aui-thread-list">
-          <button
-            aria-current="page"
-            className="aui-thread-list-item"
-            data-status="running"
-            type="button"
-          >
-            <span className="aui-thread-list-name">Renderer audit thread</span>
-            <span className="aui-thread-list-meta">
-              <span aria-hidden="true" className="aui-thread-list-dot" data-status="running" />
-              <small>Running · packages/react</small>
-            </span>
-          </button>
-          <button className="aui-thread-list-item" data-status="waitingForInput" type="button">
-            <span className="aui-thread-list-name">Approve diff for protocol drift</span>
-            <span className="aui-thread-list-meta">
-              <span aria-hidden="true" className="aui-thread-list-dot" data-status="waitingForInput" />
-              <small>Needs approval · packages/codex</small>
-            </span>
-          </button>
-          <button className="aui-thread-list-item" data-status="complete" type="button">
-            <span className="aui-thread-list-name">Stored verification session</span>
-            <span className="aui-thread-list-meta">
-              <span aria-hidden="true" className="aui-thread-list-dot" data-status="complete" />
-              <small>Complete · 8h ago</small>
-            </span>
-          </button>
-        </nav>
-      </div>
+      <AgentProvider initialState={initialState} transport={transport}>
+        <div className="aui-closeup-sidebar-stage">
+          <AgentThreadSidebar activeThreadId="thread-side-select" />
+        </div>
+      </AgentProvider>
     </CloseupFrame>
   );
 }
@@ -1230,50 +1117,15 @@ function CloseupButtonStates() {
   );
 }
 
-function CloseupInputStates() {
+function CloseupThreadStartControls() {
   return (
     <CloseupFrame
-      title="Inputs · selects · segmented"
-      caption="Unified shells, focus ring, no browser defaults."
+      title="Thread-start controls"
+      caption="Current run settings and working-directory controls in one panel."
     >
-      <div style={{ display: "grid", gap: "var(--aui-space-250)" }}>
-        <label className="aui-field">
-          <span>Working directory</span>
-          <div className="aui-input-shell aui-input-with-icon">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
-            <input
-              aria-label="Working directory"
-              className="aui-text-input"
-              defaultValue="/Users/sakasegawa/src/github.com/nyosegawa/agent-ui"
-              type="text"
-            />
-          </div>
-        </label>
-        <label className="aui-field">
-          <span>Model</span>
-          <select aria-label="Model" className="aui-select" defaultValue="fixture-demo-model">
-            <option value="fixture-demo-model">Fixture Model (fixture-demo-model)</option>
-            <option value="other">Other model</option>
-          </select>
-        </label>
-        <fieldset className="aui-mode-group">
-          <legend>Execution mode</legend>
-          <div className="aui-segmented" role="tablist">
-            <button aria-pressed="true" className="aui-segment" type="button">
-              auto
-            </button>
-            <button aria-pressed="false" className="aui-segment" type="button">
-              workspace-write
-            </button>
-            <button aria-pressed="false" className="aui-segment" type="button">
-              read-only
-            </button>
-            <button aria-pressed="false" className="aui-segment" type="button">
-              danger
-            </button>
-          </div>
-        </fieldset>
-      </div>
+      <CloseupComposerProvider>
+        <AgentRunSettingsPanel />
+      </CloseupComposerProvider>
     </CloseupFrame>
   );
 }

@@ -2,21 +2,21 @@
 
 ## Status Summary
 
-P001 and P002 implementation complete, committed, and pushed. P003-P006 remain pending.
+P001 and P002 implementation complete, committed, and pushed. P003 implementation, validation, and phase review complete; commit/push evidence pending. P004-P006 remain pending.
 
 ## Branch And Planning Commit
 
 - Branch: codex/fixture-system-redesign-plan
 - Planning commit: 2c02187 Plan fixture system redesign
 - Remote: origin
-- Push result: P001 and P002 pushed to `origin/codex/fixture-system-redesign-plan`
+- Push result: P001 and P002 pushed to `origin/codex/fixture-system-redesign-plan`; P003 pending commit/push
 - Blockers: none known
 
 ## Phase Checklist
 
 - P001 done: Visual QA manifest and route inventory
 - P002 done: Container-aware component layout redesign
-- P003 pending: Fixture route and closeup cleanup
+- P003 implementation reviewed: Fixture route and closeup cleanup
 - P004 pending: Validation and browser evidence hardening
 - P005 pending: Docs and Agent Skills alignment
 - P006 pending: Final validation, PR, and CI follow-through
@@ -75,7 +75,7 @@ P001 and P002 implementation complete, committed, and pushed. P003-P006 remain p
       - Expected files/areas: chat/thread/status/sidebar components and styles.
       - Validation note: 768px routes have no clipped account/status controls or document overflow.
 
-- [ ] P003 Fixture route and closeup cleanup
+- [x] P003 Fixture route and closeup cleanup
   - Goal: Make every visible fixture route product-quality and aligned with current Agent UI design.
   - Scope: Example-only route pages, closeups, fixture state, local CSS.
   - Expected files/areas: `examples/local-react-vite/src/main.tsx`, `closeups/**`, `fixtures/**`, `styles/**`.
@@ -85,19 +85,19 @@ P001 and P002 implementation complete, committed, and pushed. P003-P006 remain p
   - Push: after phase commit or batch with validation phase.
   - PR/CI: show evidence for `/fixture-gallery`, `/composer-retry`, `/scoped-thread-lists`, `/app-connectors`, `/usage-only`.
   - Evidence:
-    - Implementation: pending
-    - Validation: pending
-    - Review: pending
+    - Implementation: Replaced obsolete closeups for mode/model/input states with real `AgentComposer`, `AgentRunSettingsPanel`, `AgentThreadSidebar`, and `AgentChat` primitives; kept the route-preview iframe isolated to `FixturePreview`. Rebuilt `/composer-retry` as a readable status panel with a real empty state before the first failure and retry controls only after a failed optimistic message exists. Polished `/scoped-thread-lists` with structured headers, independent empty/not-loaded/end-of-list states, and scoped metadata. Seeded `/app-connectors` so its first render is populated before refresh. Changed usage reset fixtures from stale absolute dates to relative future dates and added a source-structure guard against hard-coded ISO reset dates.
+    - Validation: Passed `bun run --cwd examples/local-react-vite typecheck`; `bun run --cwd examples/local-react-vite build`; `bun run test:styles`; `bunx playwright test examples/local-react-vite/e2e/composer-retry.e2e.ts examples/local-react-vite/e2e/scoped-thread-lists.e2e.ts examples/local-react-vite/e2e/smoke.e2e.ts examples/local-react-vite/e2e/visual-closeups.e2e.ts examples/local-react-vite/e2e/visual-qa-manifest.e2e.ts --config playwright.fixtures.config.ts`; `bun run test:e2e:fixtures`.
+    - Review: 4 parallel subagents reviewed P003 by route UI/design, closeup primitive fidelity, test coverage, and product-boundary/public-surface risk. Accepted fixes: hide raw pre-failure retry metrics and retry CTA before a start attempt, replace the remaining fake sidebar-search closeup with real `AgentThreadSidebar`, distinguish scoped-list `Not loaded` from `End of list`, assert app connectors before refresh, and guard usage reset dates against stale literals. Second 4-agent re-review reported no P0-P2 findings; remaining docs/Agent Skills work stays deferred to P005.
     - Commit: pending
     - Push: pending
   - Tasks:
-    - [ ] T007 Rebuild obsolete closeups.
+    - [x] T007 Rebuild obsolete closeups.
       - Expected files/areas: `ComponentCloseupGallery.tsx`, gallery CSS.
       - Validation note: no fake menu/select/segmented DOM represents Agent UI primitives.
-    - [ ] T008 Redesign `/composer-retry`.
+    - [x] T008 Redesign `/composer-retry`.
       - Expected files/areas: route code, fixture state, composer retry e2e.
       - Validation note: raw probe values are not visible as unfinished UI.
-    - [ ] T009 Polish unfinished fixture routes.
+    - [x] T009 Polish unfinished fixture routes.
       - Expected files/areas: `/scoped-thread-lists`, `/app-connectors`, `/usage-only`, related CSS.
       - Validation note: first render is complete, dates are current or relative, no native cramped controls remain.
 

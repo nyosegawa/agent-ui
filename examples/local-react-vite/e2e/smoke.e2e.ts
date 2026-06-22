@@ -255,6 +255,8 @@ test("renders primitive composition examples", async ({ page }) => {
 
   await page.goto("/app-connectors");
   await expect(page.getByRole("heading", { name: "App connectors" })).toBeVisible();
+  await expect(page.getByText("Browser")).toBeVisible();
+  await expect(page.getByText("Drive")).toBeVisible();
   await page.getByRole("button", { name: "Refresh" }).click();
   await expect(page.getByText("Browser")).toBeVisible();
   await expect(page.getByText("Drive")).toBeVisible();

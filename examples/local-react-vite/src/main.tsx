@@ -153,22 +153,59 @@ class ComposerRetryTransport extends FakeAgentTransport {
 function ComposerRetryProbe({ turnStartCalls }: { turnStartCalls: number }) {
   const composer = useAgentComposerController();
   const failed = composer.failedPendingMessages[0];
+  const failedCount = composer.failedPendingMessages.length;
+  const hasStarted = turnStartCalls > 0 || failedCount > 0;
   return (
-    <section aria-label="Composer retry status" className="aui-host-recipe-panel">
-      <p aria-label="failed pending count">
-        {composer.failedPendingMessages.length}
-      </p>
-      <p aria-label="failed pending error">{failed?.error ?? "none"}</p>
-      <p aria-label="turn start calls">{turnStartCalls}</p>
-      <button
-        disabled={!failed}
-        onClick={() => {
-          if (failed) void composer.retryFailedPendingMessage(failed.operationId);
-        }}
-        type="button"
-      >
-        Retry failed first message
-      </button>
+    <section
+      aria-label="Composer retry status"
+      className="aui-host-recipe-panel aui-composer-retry-status"
+    >
+      <header>
+        <span className="aui-host-recipe-meta-kicker">Retry state</span>
+        <h2>Failed first message</h2>
+        <p>
+          This fixture exercises the public composer controller after the first
+          optimistic message fails.
+        </p>
+      </header>
+      {hasStarted ? (
+        <>
+          <dl className="aui-composer-retry-metrics">
+            <div>
+              <dt>Pending failures</dt>
+              <dd aria-label="failed pending count">
+                {failedCount === 1 ? "1 failed message" : `${failedCount} failed messages`}
+              </dd>
+            </div>
+            <div>
+              <dt>Last error</dt>
+              <dd aria-label="failed pending error">{failed?.error ?? "No failed message"}</dd>
+            </div>
+            <div>
+              <dt>Turn starts</dt>
+              <dd aria-label="turn start calls">
+                {turnStartCalls === 1 ? "1 attempt" : `${turnStartCalls} attempts`}
+              </dd>
+            </div>
+          </dl>
+          {failed ? (
+            <button
+              className="aui-host-action"
+              onClick={() => {
+                void composer.retryFailedPendingMessage(failed.operationId);
+              }}
+              type="button"
+            >
+              Retry failed first message
+            </button>
+          ) : null}
+        </>
+      ) : (
+        <p className="aui-composer-retry-empty">
+          Start a thread with a message that fails once; retry controls appear
+          only after the failed optimistic message exists.
+        </p>
+      )}
     </section>
   );
 }
@@ -263,7 +300,14 @@ function ScopedThreadListPanel({
   };
   return (
     <section aria-label={`${label} scoped list`} className="aui-host-recipe-panel">
-      <h2>{label} scope</h2>
+      <header className="aui-scoped-list-header">
+        <span className="aui-host-recipe-meta-kicker">{label} scope</span>
+        <h2>{label} history collection</h2>
+        <p>
+          This panel owns an independent history scope, cursor, and active
+          selection so hosts can compose multiple thread lists.
+        </p>
+      </header>
       <label>
         <span>Search</span>
         <input
@@ -281,21 +325,37 @@ function ScopedThreadListPanel({
           Load more {label}
         </button>
       </div>
-      <p aria-label={`${label} scope metadata`}>
-        {collection?.scope.kind === "history" ? collection.scope.searchTerm : ""}
-      </p>
-      <p aria-label={`${label} cursor`}>{collection?.nextCursor ?? ""}</p>
+      <dl className="aui-scoped-list-meta">
+        <div>
+          <dt>Scope term</dt>
+          <dd aria-label={`${label} scope metadata`}>
+            {collection?.scope.kind === "history" && collection.scope.searchTerm
+              ? collection.scope.searchTerm
+              : "Not loaded"}
+          </dd>
+        </div>
+        <div>
+          <dt>Next cursor</dt>
+          <dd aria-label={`${label} cursor`}>
+            {collection ? collection.nextCursor ?? "End of list" : "Not loaded"}
+          </dd>
+        </div>
+      </dl>
       <ul aria-label={`${label} threads`}>
-        {threads.map((thread) => (
-          <li key={thread.thread.id}>
-            <button
-              type="button"
-              onClick={() => dispatch({ threadId: thread.thread.id, type: "thread/active/set" })}
-            >
-              {thread.thread.name ?? thread.thread.id}
-            </button>
-          </li>
-        ))}
+        {threads.length > 0 ? (
+          threads.map((thread) => (
+            <li key={thread.thread.id}>
+              <button
+                type="button"
+                onClick={() => dispatch({ threadId: thread.thread.id, type: "thread/active/set" })}
+              >
+                {thread.thread.name ?? thread.thread.id}
+              </button>
+            </li>
+          ))
+        ) : (
+          <li className="aui-scoped-list-empty">Refresh this scope to load threads.</li>
+        )}
       </ul>
       <p aria-label={`${label} active`}>
         {state.threadLifecycle.activeThreadId === primaryThreadId ||
@@ -605,6 +665,30 @@ function UsageDashboardCard({
 }
 
 function AppConnectorsExample() {
+  const initialState = useMemo(() => {
+    const state = createInitialAgentState();
+    state.apps.byScope["thread-connectors"] = {
+      apps: [
+        {
+          accessible: true,
+          enabled: true,
+          id: "browser",
+          installUrl: "app://browser",
+          name: "Browser",
+        },
+        {
+          accessible: false,
+          enabled: false,
+          id: "drive",
+          installUrl: "app://drive",
+          name: "Drive",
+        },
+      ],
+      nextCursor: null,
+      threadId: "thread-connectors",
+    };
+    return state;
+  }, []);
   const transport = useMemo(
     () =>
       new FakeAgentTransport({
@@ -636,7 +720,7 @@ function AppConnectorsExample() {
     [],
   );
   return (
-    <AgentProvider transport={transport}>
+    <AgentProvider initialState={initialState} transport={transport}>
       <ExampleFrame title="App connectors">
         <AgentAppsPanel threadId="thread-connectors" />
       </ExampleFrame>

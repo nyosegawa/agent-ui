@@ -360,6 +360,17 @@ describe("React package source structure", () => {
       .sort();
     expect(actualScreenshotFiles).toEqual(expectedScreenshotFiles);
   });
+
+  it("keeps usage reset fixtures relative instead of stale absolute dates", () => {
+    const demoState = readFileSync(
+      join(localReactViteSrc, "fixtures", "demo-state.ts"),
+      "utf8",
+    );
+    const fixtureRateLimitsBody =
+      demoState.match(/export function fixtureRateLimits\(\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    expect(fixtureRateLimitsBody).toContain("new Date()");
+    expect(fixtureRateLimitsBody).not.toMatch(/20\d\d-\d\d-\d\dT/);
+  });
 });
 
 function responsibilitySizeFailure(
