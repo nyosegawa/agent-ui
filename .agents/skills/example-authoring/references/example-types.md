@@ -11,6 +11,8 @@ Purpose:
   apps, and thread history states
 - visual QA routes such as `/fixture-gallery`, `/rich-transcript`,
   `/usage-only`, `/scoped-thread-pane`, and `/app-connectors`
+- a typed visual QA manifest that owns route inventory, docs screenshots,
+  preview eligibility, and viewport matrix coverage
 
 Use fixture routes for repeatable UI states. Do not make them depend on a real
 Codex process.
@@ -24,6 +26,8 @@ Purpose:
 - same-origin WebSocket bridge to `codex app-server --listen stdio://`
 - real account, model, thread, turn, approval, usage, upload, steer, interrupt,
   and URL routing behavior
+- deterministic real-local layout checks for first-run and stored-thread
+  desktop/mobile containment
 - loopback-first bridge defaults that host apps can learn from
 
 Use this when testing App Server-backed behavior. Keep remote or multi-user use

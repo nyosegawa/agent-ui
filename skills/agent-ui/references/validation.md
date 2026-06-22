@@ -52,6 +52,10 @@ For browser-visible work, verify interactions, not only screenshots:
   App Server spawn
 - check mobile and tablet widths for overflow, reachable composer controls, and
   secondary status/usage/diagnostics opening from an explicit context trigger
+- in an external host app, build a small route and viewport smoke that checks
+  document overflow, visible composer controls, hit-testable primary actions,
+  mobile history drawer reachability when used, and host overlays/focus return
+  if the host composes sheets or dialogs around Agent UI
 
 Public boundary check:
 
@@ -77,8 +81,10 @@ style, Playwright, and build validation.
 For Agent UI changes touching thread history, diagnostics, or responsive chat
 chrome, include the focused reducer/protocol/component tests plus the real-local
 thread lifecycle Playwright spec. Browser-visible layout changes should also run
-the relevant fixture or real-local layout gate for desktop, tablet, and mobile
-widths.
+the fixture matrix for declared fixture viewports or the real-local layout gate
+for its desktop/mobile coverage. These are repository-maintainer gates; external
+hosts should mirror the same behaviors with host-local routes instead of copying
+maintainer fixture routes.
 
 ## Finish Report Template
 

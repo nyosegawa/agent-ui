@@ -2,14 +2,14 @@
 
 ## Status Summary
 
-P001-P004 implementation complete, committed, and pushed. P005-P006 remain pending.
+P001-P004 implementation complete, committed, and pushed. P005 implementation, validation, and phase review complete; commit/push evidence pending. P006 remains pending.
 
 ## Branch And Planning Commit
 
 - Branch: codex/fixture-system-redesign-plan
 - Planning commit: 2c02187 Plan fixture system redesign
 - Remote: origin
-- Push result: P001-P004 pushed to `origin/codex/fixture-system-redesign-plan`
+- Push result: P001-P004 pushed to `origin/codex/fixture-system-redesign-plan`; P005 pending commit/push
 - Blockers: none known
 
 ## Phase Checklist
@@ -18,7 +18,7 @@ P001-P004 implementation complete, committed, and pushed. P005-P006 remain pendi
 - P002 done: Container-aware component layout redesign
 - P003 done: Fixture route and closeup cleanup
 - P004 done: Validation and browser evidence hardening
-- P005 pending: Docs and Agent Skills alignment
+- P005 implementation reviewed: Docs and Agent Skills alignment
 - P006 pending: Final validation, PR, and CI follow-through
 
 ## Task Checklist By Phase
@@ -127,7 +127,7 @@ P001-P004 implementation complete, committed, and pushed. P005-P006 remain pendi
       - Expected files/areas: real-local e2e specs and docs.
       - Validation note: real Codex example confirms component behavior against App Server-backed state.
 
-- [ ] P005 Docs and Agent Skills alignment
+- [x] P005 Docs and Agent Skills alignment
   - Goal: Reflect the new visual QA system in maintainer docs, repo skills, and public host guidance.
   - Scope: Docs-only, maintainer skill files, public skill references, skill tests.
   - Expected files/areas: `docs/**`, `.agents/skills/**`, `skills/agent-ui/**`, `test/repository-skills.test.ts`, `test/agent-ui-skill.test.ts`.
@@ -137,19 +137,19 @@ P001-P004 implementation complete, committed, and pushed. P005-P006 remain pendi
   - Push: after phase commit or batch with final validation.
   - PR/CI: include docs/skill diff summary.
   - Evidence:
-    - Implementation: pending
-    - Validation: pending
-    - Review: pending
+    - Implementation: Updated maintainer testing/browser/example/screenshot docs for the manifest-driven visual QA matrix, intentional stable-inventory assertions, screenshot capture ownership, and real-local layout coverage. Updated repository skills (`browser-qa`, `example-authoring`, `agent-ui-review`, `release-validation`) so maintainers route fixture layout drift to `visual-route-matrix.e2e.ts` and real-local layout drift to `real-local-layout.e2e.ts` without bloating skill entrypoints. Updated the public `skills/agent-ui` validation reference only with external host-facing guidance, telling hosts to mirror behavior with host-local routes instead of copying maintainer fixture routes. Added skill tests for repo-skill gate awareness and public-skill maintainer-route exclusion.
+    - Validation: Passed `bun run test:repo-skills`; `bun run test:skills`; `bunx vitest run test/docs-staleness.test.ts test/package-scripts-docs.test.ts`; `bun run test:styles`; `git diff --check -- docs .agents skills test`.
+    - Review: 4 parallel subagents reviewed P005. Accepted fixes: corrected public-skill real-local layout wording from desktop/tablet/mobile to fixture-matrix declared viewports versus real-local desktop/mobile coverage; clarified docs that browser/screenshot consumers should not duplicate route lists while `visual-qa-manifest.e2e.ts` intentionally owns stable route and screenshot inventory assertions; loosened a brittle public-skill positive assertion into concept checks. Final re-review reported no P0-P2 findings.
     - Commit: pending
     - Push: pending
   - Tasks:
-    - [ ] T013 Update maintainer docs.
+    - [x] T013 Update maintainer docs.
       - Expected files/areas: testing, browser verification, screenshots, local-react docs.
       - Validation note: docs describe manifest-driven visual QA and screenshot evidence accurately.
-    - [ ] T014 Update repo skills.
+    - [x] T014 Update repo skills.
       - Expected files/areas: browser-qa, example-authoring, review, release-validation, planning skills.
       - Validation note: repository skill tests assert visual QA drift prevention guidance.
-    - [ ] T015 Update public skill only where host-facing.
+    - [x] T015 Update public skill only where host-facing.
       - Expected files/areas: `skills/agent-ui/**`.
       - Validation note: public skill tests reject maintainer-only fixture commands/routes.
 

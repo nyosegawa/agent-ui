@@ -68,9 +68,15 @@ describe("repository development skills", () => {
     expect(examples).toContain("@nyosegawa/agent-ui-react/styles.css");
     expect(examples).toContain("--aui-*");
     expect(examples).toContain("fixture routes deterministic");
+    expect(examples).toContain("visual-route-matrix.e2e.ts");
+    expect(examples).toContain("visual-qa-manifest.ts");
     expect(browserQa).toContain("agent-browser skills get core");
     expect(browserQa).toContain("Screenshots alone are not enough");
+    expect(browserQa).toContain("visual-route-matrix.e2e.ts");
+    expect(browserQa).toContain("real-local-layout.e2e.ts");
     expect(browserQa).toMatch(/Playwright is the\s+deterministic CI gate/);
+    expect(review).toContain("visual-route-matrix.e2e.ts");
+    expect(release).toContain("real-local-layout.e2e.ts");
     expect(npmRelease).toContain("first public release is `0.1.0`");
     expect(npmRelease).toContain("reviewed release PR merge");
     expect(npmRelease).toContain("Release PR titles must include the target version");

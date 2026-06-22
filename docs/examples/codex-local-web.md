@@ -122,6 +122,9 @@ Server integration contract:
 - `real-local-follow-ups.e2e.ts` protects running-turn composer semantics,
   queued follow-ups, `turn/steer`, `turn/interrupt`, queue compaction,
   anchored composer layout, and scroll-follow behavior.
+- `real-local-layout.e2e.ts` protects deterministic desktop/mobile first-run
+  and stored-thread layout containment, including full-bleed shell placement,
+  first-run submit hit testing, overflow, and composer anchoring.
 - `e2e/support/real-local-page.ts` contains shared page helpers and app-open
   readiness. Do not hide user interactions behind DOM-only shortcuts in helpers;
   normal fill, click, keyboard, and hit-test operations should remain visible in

@@ -137,6 +137,9 @@ describe("public Agent UI skill", () => {
     expect(allSkillText).toContain("Use published Agent UI packages from the registry");
     expect(allSkillText).toContain("Do not target internal `.aui-*` selectors");
     expect(allSkillText).toContain("changed host CSS contains no `.aui-` selectors");
+    expect(allSkillText).toMatch(/external\s+hosts should/);
+    expect(allSkillText).toContain("host-local routes");
+    expect(allSkillText).toMatch(/instead of copying\s+maintainer/);
   });
 
   it("keeps public skill docs free of maintainer-only or stale repository assumptions", async () => {
@@ -155,6 +158,9 @@ describe("public Agent UI skill", () => {
       "path URI",
       "pathUri",
       "pathuri",
+      "/fixture-gallery",
+      "visual-route-matrix.e2e.ts",
+      "test:e2e:fixtures",
     ]) {
       expect(allSkillText, forbidden).not.toContain(forbidden);
     }

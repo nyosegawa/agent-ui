@@ -61,6 +61,14 @@ agent-browser screenshot /tmp/agent-ui-usage-only-mobile.png
 agent-browser close
 ```
 
+Before relying on ad-hoc screenshots, run the deterministic matrix that backs
+the fixture gallery:
+
+```bash
+bunx playwright test examples/local-react-vite/e2e/visual-route-matrix.e2e.ts \
+  --config playwright.fixtures.config.ts
+```
+
 For the real local Codex app:
 
 ```bash
@@ -77,6 +85,13 @@ agent-browser snapshot -i
 agent-browser eval 'document.documentElement.scrollWidth - document.documentElement.clientWidth'
 agent-browser screenshot /tmp/agent-ui-codex-local-web.png
 agent-browser close
+```
+
+For deterministic real-local layout coverage, run:
+
+```bash
+bunx playwright test examples/codex-local-web/e2e/real-local-layout.e2e.ts \
+  --config playwright.real-local.config.ts
 ```
 
 ## What To Check

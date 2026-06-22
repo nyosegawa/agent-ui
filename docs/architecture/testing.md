@@ -265,6 +265,16 @@ Those example styles should consume `--aui-*` tokens because they are visual QA
 for the library. The recipes package may intentionally override tokens to show
 host theming.
 
+The route and viewport matrix is manifest-driven. Each route declares the
+desktop, wide, tablet, compact, mobile, and short viewports that matter for its
+contract in `examples/local-react-vite/src/fixtures/visual-qa-manifest.ts`.
+`visual-route-matrix.e2e.ts` consumes that manifest and checks route readiness,
+document overflow, visible text containment, and key surface containment. Add a
+viewport to the manifest when a route owns that layout shape. Browser consumers
+should not duplicate route lists; `visual-qa-manifest.e2e.ts` is the deliberate
+stable-inventory assertion and must be updated when the canonical route or docs
+screenshot set intentionally changes.
+
 The deterministic fixture Playwright files are split by contract ownership:
 
 - `smoke.e2e.ts` covers route availability, basic interaction, and blank-page
@@ -274,6 +284,10 @@ The deterministic fixture Playwright files are split by contract ownership:
   hit-testing, and viewport-relative dimensions instead of exact pixel snapshots.
   Host integration smoke checks also cover the mobile drawer plus host-owned
   sheet stacking contract.
+- `visual-route-matrix.e2e.ts` owns manifest-wide route readiness, overflow,
+  text containment, and surface containment across the declared viewport matrix.
+  It is the broad visual drift guard; route-specific files still own deeper
+  interaction and state assertions.
 - `visual-closeups.e2e.ts` owns the component close-up gallery and verifies that
   close-ups render real primitives instead of iframe or hand-written DOM
   substitutes.
@@ -330,6 +344,10 @@ The real-local specs are split by App Server integration contract:
   and queued attachment restoration.
 - `real-local-follow-ups.e2e.ts` owns running-turn follow-up queue behavior,
   `turn/steer`, `turn/interrupt`, and queued-item compaction.
+- `real-local-layout.e2e.ts` owns deterministic real-local desktop/mobile
+  layout containment for first-run and stored-thread surfaces. It checks
+  full-bleed local shell placement, document overflow, first-run submit
+  containment and hit testing, and stored-thread composer anchoring.
 
 `bun run test:e2e:real-local-web-layout` audits an already-running
 `examples/codex-local-web` instance. Start it explicitly on port 5175:
@@ -366,6 +384,8 @@ App Server integration contract:
 - `real-local-follow-ups.e2e.ts` covers running-turn composer semantics,
   UI-local queued follow-ups, `turn/steer`, `turn/interrupt`, queue compaction,
   anchored composer layout, and scroll-follow behavior.
+- `real-local-layout.e2e.ts` covers deterministic first-run and stored-thread
+  layout containment on desktop and mobile against the fake App Server.
 - `support/real-local-page.ts` contains the shared page helper layer and is the
   only place for app-open readiness retries. Interaction assertions in tests
   should remain explicit and low-timeout.

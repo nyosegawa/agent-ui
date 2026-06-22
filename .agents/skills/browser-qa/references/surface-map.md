@@ -24,6 +24,16 @@ CI gate:
 bun run test:e2e:fixtures
 ```
 
+Broad route/viewport layout gate:
+
+```sh
+bunx playwright test examples/local-react-vite/e2e/visual-route-matrix.e2e.ts \
+  --config playwright.fixtures.config.ts
+```
+
+The matrix consumes `visual-qa-manifest.ts`; update the manifest instead of
+duplicating route and viewport lists.
+
 ## Real Local App
 
 Use for App Server-backed behavior:
@@ -38,6 +48,13 @@ CI/release gate:
 
 ```sh
 bun run test:e2e:real-local
+```
+
+Deterministic layout gate:
+
+```sh
+bunx playwright test examples/codex-local-web/e2e/real-local-layout.e2e.ts \
+  --config playwright.real-local.config.ts
 ```
 
 Manual layout audit after starting the server:
