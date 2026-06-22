@@ -1,6 +1,10 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import {
+  docsScreenshotRoutes,
+  visualQaRoutes,
+} from "../../../examples/local-react-vite/src/fixtures/visual-qa-manifest";
 
 const reactSrc = join(__dirname, "..", "src");
 const componentDir = join(reactSrc, "components");
@@ -13,6 +17,7 @@ const docsSiteSrc = join(examplesDir, "docs-site", "src");
 const localReactViteDir = join(examplesDir, "local-react-vite");
 const localReactViteE2e = join(localReactViteDir, "e2e");
 const localReactViteSrc = join(localReactViteDir, "src");
+const docsScreenshotsDir = join(repoRoot, "docs", "screenshots");
 const nextRpcRouteApp = join(examplesDir, "next-rpc-route", "app");
 const nextWithBridgeSidecarApp = join(examplesDir, "next-with-bridge-sidecar", "app");
 const recipesSrc = join(examplesDir, "recipes", "src");
@@ -313,27 +318,47 @@ describe("React package source structure", () => {
     expect(exampleSource).toContain("@nyosegawa/agent-ui-react");
   });
 
-  it("keeps docs screenshot capture aligned with retained visual routes", () => {
+  it("keeps local React Vite visual QA inventory manifest-driven", () => {
     const capture = readFileSync(
       join(localReactViteE2e, "capture-docs-screenshots.e2e.ts"),
       "utf8",
     );
-    const expectedRoutes = [
-      ["/", "agent-ui-home"],
-      ["/rich-transcript", "agent-ui-rich-transcript"],
-      ["/host-workflow-recipe", "agent-ui-host-workflow"],
-      ["/usage-only", "agent-ui-usage-only"],
-      ["/scoped-thread-pane", "agent-ui-scoped-thread"],
-      ["/app-connectors", "agent-ui-app-connectors"],
-      ["/fixture-gallery", "agent-ui-fixture-gallery"],
-    ] as const;
-    for (const [route, filenameBase] of expectedRoutes) {
-      expect(capture).toContain(`path: "${route}"`);
-      expect(capture).toContain(`${filenameBase}-desktop.png`);
-      expect(capture).toContain(`${filenameBase}-mobile.png`);
+    const main = readFileSync(join(localReactViteSrc, "main.tsx"), "utf8");
+    const routePathnames = new Set(
+      visualQaRoutes
+        .map((route) => route.path)
+        .filter((path) => path !== "/" && !path.includes("?")),
+    );
+    const mainPathnames = new Set(
+      Array.from(main.matchAll(/window\.location\.pathname === "([^"]+)"/g)).map(
+        (match) => match[1] ?? "",
+      ),
+    );
+
+    expect(mainPathnames).toEqual(routePathnames);
+    expect(capture).toContain(
+      'import { docsScreenshotRoutes } from "../src/fixtures/visual-qa-manifest";',
+    );
+    for (const route of docsScreenshotRoutes) {
+      expect(routePathnames.has(route.path) || route.path === "/").toBe(true);
+      expect(route.docsScreenshot.desktopName).toMatch(/^agent-ui-.+-desktop\.png$/);
+      expect(route.docsScreenshot.mobileName).toMatch(/^agent-ui-.+-mobile\.png$/);
     }
     expect(capture).not.toContain("/qa");
+    expect(capture).not.toMatch(/path: "\//);
     expect(capture).toContain("mkdirSync(outputDir, { recursive: true })");
+
+    const expectedScreenshotFiles = [
+      "README.md",
+      ...docsScreenshotRoutes.flatMap((route) => [
+        route.docsScreenshot.desktopName,
+        route.docsScreenshot.mobileName,
+      ]),
+    ].sort();
+    const actualScreenshotFiles = readdirSync(docsScreenshotsDir)
+      .filter((name) => typeof name === "string")
+      .sort();
+    expect(actualScreenshotFiles).toEqual(expectedScreenshotFiles);
   });
 });
 

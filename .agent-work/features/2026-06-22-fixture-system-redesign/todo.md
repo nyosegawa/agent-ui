@@ -2,19 +2,19 @@
 
 ## Status Summary
 
-Planning complete pending artifact validation, planning commit, push, implementation, PR, and CI follow-through.
+P001 implementation complete pending phase commit and push. P002-P006 remain pending.
 
 ## Branch And Planning Commit
 
 - Branch: codex/fixture-system-redesign-plan
-- Planning commit: this planning artifact commit; final hash to be confirmed from git log
+- Planning commit: 2c02187 Plan fixture system redesign
 - Remote: origin
-- Push result: pending
+- Push result: planning branch pushed before implementation; P001 implementation push pending
 - Blockers: none known
 
 ## Phase Checklist
 
-- P001 pending: Visual QA manifest and route inventory
+- P001 implemented, validated, reviewed, and committed; push pending: Visual QA manifest and route inventory
 - P002 pending: Container-aware component layout redesign
 - P003 pending: Fixture route and closeup cleanup
 - P004 pending: Validation and browser evidence hardening
@@ -23,7 +23,7 @@ Planning complete pending artifact validation, planning commit, push, implementa
 
 ## Task Checklist By Phase
 
-- [ ] P001 Visual QA manifest and route inventory
+- [x] P001 Visual QA manifest and route inventory
   - Goal: Make one typed source of truth for fixture routes, gallery, docs screenshots, and Playwright coverage.
   - Scope: Example-only plus docs/test guard updates.
   - Expected files/areas: `examples/local-react-vite/src/**`, `examples/local-react-vite/e2e/**`, `docs/screenshots/README.md`, docs stale tests.
@@ -33,16 +33,16 @@ Planning complete pending artifact validation, planning commit, push, implementa
   - Push: after phase commit or batch with next compatible phase.
   - PR/CI: include route inventory evidence in PR.
   - Evidence:
-    - Implementation: pending
-    - Validation: pending
-    - Review: pending
-    - Commit: pending
+    - Implementation: Added `visual-qa-manifest.ts`, derived gallery previews from it, made docs screenshot capture consume docs screenshot entries, added route inventory Playwright coverage, and updated source-structure guards for main router and screenshot directory drift.
+    - Validation: Passed `bun run --cwd examples/local-react-vite typecheck`; `bun run --cwd examples/local-react-vite build`; `bunx playwright test examples/local-react-vite/e2e/visual-qa-manifest.e2e.ts --config playwright.fixtures.config.ts`; `bunx vitest run packages/react/test/source-structure.vitest.ts`; `bunx vitest run test/docs-staleness.test.ts test/package-scripts-docs.test.ts`.
+    - Review: 4 parallel subagents reviewed P001. Accepted fixes: update stale source-structure screenshot assertion, add main router drift guard, add docs screenshot directory guard. No docs/public-boundary findings. Deferred P3 bundle hygiene note because the manifest is private fixture-only and preserving one source of truth is more important for P001; revisit during P003 closeup/preview cleanup if bundle output still retains unused docs metadata.
+    - Commit: this P001 phase commit; final hash from git log
     - Push: pending
   - Tasks:
-    - [ ] T001 Add typed visual QA manifest.
+    - [x] T001 Add typed visual QA manifest.
       - Expected files/areas: `examples/local-react-vite/src/fixtures/**`
       - Validation note: manifest has route id, path, category, purpose, ready selector, viewports, docs screenshot flag, owner spec.
-    - [ ] T002 Wire gallery, route list, screenshot capture, and e2e route coverage to the manifest.
+    - [x] T002 Wire gallery, route list, screenshot capture, and e2e route coverage to the manifest.
       - Expected files/areas: `examples/local-react-vite/src/main.tsx`, `examples/local-react-vite/e2e/**`
       - Validation note: no duplicated hard-coded route inventory remains except intentional tests.
 
@@ -182,20 +182,32 @@ Implement phase-first. A task-level commit is allowed only if a phase becomes to
 
 Do not edit protected generated or vendored files. Do not introduce host runtime ownership into Agent UI core. Prefer internal layout implementation unless public API is clearly required.
 
+P001 review note: if later fixture preview work changes gallery rendering again, reassess whether docs/e2e-only manifest metadata should be split away from the browser bundle without reintroducing duplicated route truth.
+
 Each phase requires a 4-subagent parallel review after phase implementation and validation pass, before the next phase starts. Record the subagent findings, accepted fixes, rejected findings, and remaining risks in the phase Evidence Review field.
 
 ## Validation Evidence
 
-Pending implementation. Planning artifact validation should be recorded before the planning commit.
+- P001 passed:
+  - `bun run --cwd examples/local-react-vite typecheck`
+  - `bun run --cwd examples/local-react-vite build`
+  - `bunx playwright test examples/local-react-vite/e2e/visual-qa-manifest.e2e.ts --config playwright.fixtures.config.ts`
+  - `bunx vitest run packages/react/test/source-structure.vitest.ts`
+  - `bunx vitest run test/docs-staleness.test.ts test/package-scripts-docs.test.ts`
 
 ## Review Evidence
 
-Pending implementation. Browser evidence should include desktop, tablet, 700px/narrow, mobile, and short viewport screenshots or metrics for the affected routes.
+- P001 4-subagent review completed:
+  - Manifest/schema/source-of-truth review: P2 router drift guard requested and fixed.
+  - Test/validation review: P1 source-structure drift and P2 screenshot directory guard requested and fixed.
+  - Docs/example-boundary review: no findings.
+  - TypeScript/build/runtime review: no P0-P2 findings; P3 private bundle metadata note recorded for later reassessment.
 
 ## Commit Log
 
-- Planning commit: pending
-- Implementation commits: pending
+- Planning commit: 2c02187 Plan fixture system redesign
+- P001 implementation commit: this P001 phase commit; final hash from git log
+- Later implementation commits: pending
 
 ## Final Checklist
 
