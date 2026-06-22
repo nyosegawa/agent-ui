@@ -2,14 +2,14 @@
 
 ## Status Summary
 
-P001-P004 implementation complete, committed, and pushed. P005 implementation, validation, and phase review complete; commit/push evidence pending. P006 remains pending.
+P001-P005 implementation complete, committed, and pushed. P006 remains pending.
 
 ## Branch And Planning Commit
 
 - Branch: codex/fixture-system-redesign-plan
 - Planning commit: 2c02187 Plan fixture system redesign
 - Remote: origin
-- Push result: P001-P004 pushed to `origin/codex/fixture-system-redesign-plan`; P005 pending commit/push
+- Push result: P001-P005 pushed to `origin/codex/fixture-system-redesign-plan`
 - Blockers: none known
 
 ## Phase Checklist
@@ -18,7 +18,7 @@ P001-P004 implementation complete, committed, and pushed. P005 implementation, v
 - P002 done: Container-aware component layout redesign
 - P003 done: Fixture route and closeup cleanup
 - P004 done: Validation and browser evidence hardening
-- P005 implementation reviewed: Docs and Agent Skills alignment
+- P005 done: Docs and Agent Skills alignment
 - P006 pending: Final validation, PR, and CI follow-through
 
 ## Task Checklist By Phase
@@ -140,8 +140,8 @@ P001-P004 implementation complete, committed, and pushed. P005 implementation, v
     - Implementation: Updated maintainer testing/browser/example/screenshot docs for the manifest-driven visual QA matrix, intentional stable-inventory assertions, screenshot capture ownership, and real-local layout coverage. Updated repository skills (`browser-qa`, `example-authoring`, `agent-ui-review`, `release-validation`) so maintainers route fixture layout drift to `visual-route-matrix.e2e.ts` and real-local layout drift to `real-local-layout.e2e.ts` without bloating skill entrypoints. Updated the public `skills/agent-ui` validation reference only with external host-facing guidance, telling hosts to mirror behavior with host-local routes instead of copying maintainer fixture routes. Added skill tests for repo-skill gate awareness and public-skill maintainer-route exclusion.
     - Validation: Passed `bun run test:repo-skills`; `bun run test:skills`; `bunx vitest run test/docs-staleness.test.ts test/package-scripts-docs.test.ts`; `bun run test:styles`; `git diff --check -- docs .agents skills test`.
     - Review: 4 parallel subagents reviewed P005. Accepted fixes: corrected public-skill real-local layout wording from desktop/tablet/mobile to fixture-matrix declared viewports versus real-local desktop/mobile coverage; clarified docs that browser/screenshot consumers should not duplicate route lists while `visual-qa-manifest.e2e.ts` intentionally owns stable route and screenshot inventory assertions; loosened a brittle public-skill positive assertion into concept checks. Final re-review reported no P0-P2 findings.
-    - Commit: pending
-    - Push: pending
+    - Commit: 124e6f4 Align visual QA docs and skills
+    - Push: pushed to `origin/codex/fixture-system-redesign-plan`
   - Tasks:
     - [x] T013 Update maintainer docs.
       - Expected files/areas: testing, browser verification, screenshots, local-react docs.
