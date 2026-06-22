@@ -2,15 +2,15 @@
 
 ## Status Summary
 
-P001-P005 implementation complete, committed, and pushed. P006 local validation
-and phase review are complete; commit, push, PR, and CI follow-through remain.
+P001-P006 implementation complete, committed, pushed, and opened as a draft PR.
+Local validation and GitHub Actions passed.
 
 ## Branch And Planning Commit
 
 - Branch: codex/fixture-system-redesign-plan
 - Planning commit: 2c02187 Plan fixture system redesign
 - Remote: origin
-- Push result: P001-P005 pushed to `origin/codex/fixture-system-redesign-plan`
+- Push result: P001-P006 pushed to `origin/codex/fixture-system-redesign-plan`
 - Blockers: none known
 
 ## Phase Checklist
@@ -20,7 +20,7 @@ and phase review are complete; commit, push, PR, and CI follow-through remain.
 - P003 done: Fixture route and closeup cleanup
 - P004 done: Validation and browser evidence hardening
 - P005 done: Docs and Agent Skills alignment
-- P006 in progress: Final validation, PR, and CI follow-through
+- P006 done: Final validation, PR, and CI follow-through
 
 ## Task Checklist By Phase
 
@@ -154,7 +154,7 @@ and phase review are complete; commit, push, PR, and CI follow-through remain.
       - Expected files/areas: `skills/agent-ui/**`.
       - Validation note: public skill tests reject maintainer-only fixture commands/routes.
 
-- [ ] P006 Final validation, PR, and CI follow-through
+- [x] P006 Final validation, PR, and CI follow-through
   - Goal: Prove the redesign is complete and ready for review.
   - Scope: Whole touched surface.
   - Expected files/areas: all modified files, PR body, CI status.
@@ -167,13 +167,14 @@ and phase review are complete; commit, push, PR, and CI follow-through remain.
     - Implementation: Added final cleanup for real-local layout linting, strengthened narrow first-run cwd coverage for the cwd pill, trigger, action, opened menu, and hit testing, added a standalone `AgentStatusBar` closeup with narrow desktop embed compaction coverage, made `.aui-status` provide its own inline-size container while retaining viewport fallback behavior, moved public-facing example docs away from maintainer-only fixture filenames, and regenerated docs screenshots after visual contract changes.
     - Validation: Passed `bunx playwright test examples/local-react-vite/e2e/visual-layout.e2e.ts --config playwright.fixtures.config.ts --grep "narrow tablet first-run|tablet status bar"`; `bunx playwright test examples/local-react-vite/e2e/visual-closeups.e2e.ts --config playwright.fixtures.config.ts --grep "component close-up gallery|standalone status"`; `bun run --cwd examples/local-react-vite typecheck`; `CAPTURE_DOCS_SCREENSHOTS=1 bunx playwright test examples/local-react-vite/e2e/capture-docs-screenshots.e2e.ts --config playwright.fixtures.config.ts`; `bun run test:styles`; `bunx vitest run test/docs-staleness.test.ts test/package-scripts-docs.test.ts`; `bunx playwright test examples/local-react-vite/e2e/visual-layout.e2e.ts examples/local-react-vite/e2e/visual-closeups.e2e.ts examples/local-react-vite/e2e/visual-qa-manifest.e2e.ts --config playwright.fixtures.config.ts`; `bun run validate:fast`; `bun run validate:e2e`; `bun run validate:packages`.
     - Review: 4 parallel subagents reviewed P006. Accepted fixes: record P006 evidence before readiness, commit the dirty real-local lint cleanup, update stale aggregate commit/final checklist evidence, regenerate docs screenshots, add narrow cwd compaction/menu coverage, remove maintainer-only fixture file/spec names from public-facing docs, and protect standalone `AgentStatusBar` responsive behavior outside `AgentChat`. Re-review accepted the cwd, docs, screenshot, and hygiene fixes; one re-review P2 found standalone status still relied on viewport fallback in a desktop-width narrow embed, so `AgentStatusBar` now provides its own inline-size container and the closeup test covers a narrow desktop embed. No remaining P0-P1 findings from phase review.
-    - Commit: pending
-    - Push: pending
+    - Commit: 874a8dd Finalize fixture redesign validation
+    - Push: pushed to `origin/codex/fixture-system-redesign-plan`
+    - PR/CI: Draft PR https://github.com/nyosegawa/agent-ui/pull/35 opened. GitHub Actions passed for CI run 27948172135 and Compatibility run 27948172115.
   - Tasks:
     - [x] T016 Run broad validation.
       - Expected files/areas: repo scripts and CI-equivalent gates.
       - Validation note: include `validate:release`, `validate:e2e`, and `validate:packages` if needed.
-    - [ ] T017 Prepare PR evidence and follow CI.
+    - [x] T017 Prepare PR evidence and follow CI.
       - Expected files/areas: PR body, screenshots, CI checks.
       - Validation note: report exact pass/fail status and blockers.
 
@@ -225,7 +226,8 @@ Each phase requires a 4-subagent parallel review after phase implementation and 
 - P003 implementation/evidence commits: 44d406e Polish fixture routes and closeups; cd33f96 Record P003 fixture cleanup evidence
 - P004 implementation/evidence commits: ca99cd4 Harden visual QA layout coverage; cef9bbb Record P004 validation evidence
 - P005 implementation/evidence commits: 124e6f4 Align visual QA docs and skills; ad9cb7c Record P005 docs evidence
-- P006 final cleanup/evidence commit: pending
+- P006 final cleanup/evidence commit: 874a8dd Finalize fixture redesign validation
+- P006 PR/CI evidence commit: current evidence-only commit after CI follow-through
 
 ## Final Checklist
 
@@ -237,4 +239,4 @@ Each phase requires a 4-subagent parallel review after phase implementation and 
 - [x] Tablet header/status/sidebar behavior is tested.
 - [x] Docs, maintainer skills, public skill, and tests are updated.
 - [x] Focused and broad validation results are recorded.
-- [ ] Branch is pushed, PR is opened, and CI is inspected.
+- [x] Branch is pushed, PR is opened, and CI is inspected.
