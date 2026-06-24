@@ -10,6 +10,7 @@ import type { ThreadSortKey } from "./generated/stable/v2/ThreadSortKey";
 import type { ThreadSource } from "./generated/stable/v2/ThreadSource";
 import type { ThreadSourceKind } from "./generated/stable/v2/ThreadSourceKind";
 import type { ThreadStartSource } from "./generated/stable/v2/ThreadStartSource";
+import type { TextElement } from "./generated/stable/v2/TextElement";
 import type { UserInput } from "./generated/stable/v2/UserInput";
 import type { CodexStableMethodParams as GeneratedCodexStableMethodParams } from "./method-params";
 import type {
@@ -394,8 +395,16 @@ export function imageInput(url: string): UserInput {
   return { type: "image", url } satisfies UserInput;
 }
 
-export function textInput(text: string): UserInput {
-  return { text, text_elements: [], type: "text" } satisfies UserInput;
+export interface TextInputOptions {
+  textElements?: TextElement[];
+}
+
+export function textInput(text: string, options: TextInputOptions = {}): UserInput {
+  return {
+    text,
+    text_elements: options.textElements ?? [],
+    type: "text",
+  } satisfies UserInput;
 }
 
 export function agentBrowserSkillInput(path: AgentSkillPath): UserInput {

@@ -5,6 +5,8 @@ import type {
   AgentTurn,
   ThreadStatus,
 } from "@nyosegawa/agent-ui-core";
+import type { ThreadActiveFlag as CodexThreadActiveFlag } from "../generated/stable/v2/ThreadActiveFlag";
+import type { ThreadStatus as CodexThreadRuntimeStatus } from "../generated/stable/v2/ThreadStatus";
 
 export interface MethodMessage {
   id?: string | number;
@@ -26,24 +28,54 @@ export function normalizeThread(raw: unknown): AgentThread {
 }
 
 export function normalizeThreadStatus(value: unknown): ThreadStatus {
+  const runtimeStatus = normalizeCodexThreadRuntimeStatus(value);
+  if (runtimeStatus) return legacyThreadStatusFromCodexRuntimeStatus(runtimeStatus);
   if (typeof value === "string") return threadStatusValue(value);
-  const record = asRecord(value);
-  const type = record?.type;
-  if (type === "active" && record) {
-    const flags = activeFlags(record);
-    return flags.includes("waitingOnUserInput") || flags.includes("waitingOnApproval")
-      ? "waitingForInput"
-      : "running";
-  }
-  if (type === "idle") return "loaded";
-  if (type === "systemError") return "systemError";
-  if (type === "notLoaded") return "notLoaded";
   return "notLoaded";
 }
 
-function activeFlags(record: Record<string, unknown>): string[] {
+export function normalizeCodexThreadRuntimeStatus(
+  value: unknown,
+): CodexThreadRuntimeStatus | undefined {
+  const record = asRecord(value);
+  const type = record?.type;
+  if (type === "active" && record) {
+    return { activeFlags: activeFlags(record), type: "active" };
+  }
+  if (type === "idle") return { type: "idle" };
+  if (type === "systemError") return { type: "systemError" };
+  if (type === "notLoaded") return { type: "notLoaded" };
+  return undefined;
+}
+
+export function legacyThreadStatusFromCodexRuntimeStatus(
+  status: CodexThreadRuntimeStatus,
+): ThreadStatus {
+  switch (status.type) {
+    case "active":
+      return status.activeFlags.includes("waitingOnUserInput") ||
+        status.activeFlags.includes("waitingOnApproval")
+        ? "waitingForInput"
+        : "running";
+    case "idle":
+      return "loaded";
+    case "systemError":
+      return "systemError";
+    case "notLoaded":
+      return "notLoaded";
+  }
+}
+
+function activeFlags(record: Record<string, unknown>): CodexThreadActiveFlag[] {
+  const allowedFlags = new Set<CodexThreadActiveFlag>([
+    "waitingOnApproval",
+    "waitingOnUserInput",
+  ]);
   return Array.isArray(record.activeFlags)
-    ? record.activeFlags.filter((flag): flag is string => typeof flag === "string")
+    ? record.activeFlags.filter(
+        (flag): flag is CodexThreadActiveFlag =>
+          typeof flag === "string" && allowedFlags.has(flag as CodexThreadActiveFlag),
+      )
     : [];
 }
 

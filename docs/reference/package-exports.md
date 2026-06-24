@@ -84,7 +84,10 @@ Keep public: protocol capability metadata and guards
 `isStableProductizedMethod`, `isHostOnlyMethod`,
 `isExperimentalAvailableMethod`, `isExperimentalUnsupportedMethod`,
 `assertCodexProductizedMethod`, `assertCodexExperimentalMethod`, stable and
-experimental method lists), `CodexSession`, `createCodexSession`,
+experimental method lists), stable server-request role metadata and guards
+(`codexServerRequestMethodMetadata`, `getCodexServerRequestMethodMetadata`,
+`isCodexApprovalDecisionServerRequestMethod`, and
+`isStableServerRequestMethod`), `CodexSession`, `createCodexSession`,
 `createCodexClients`, grouped client classes, JSON-RPC helpers,
 `createCodexStdioTransport`, `createCodexWebSocketTransport`,
 `createCodexSdkTransportAdapter`, `startDeviceCodeLogin`, and
@@ -102,6 +105,10 @@ types should stay on `stable-types`, `clients`, `request-builders`, or
 `normalizeTurnsPage`, `normalizeAppsListResponse`, and
 `normalizeCodexServerMessage` are host-owned lower-level helpers and should be
 imported from `@nyosegawa/agent-ui-codex/normalizer`.
+Request builders such as `textInput()` and `TextInputOptions` remain on the
+`request-builders` subpath; hosts may pass generated `TextElement` values
+explicitly, but Agent UI does not derive App/Plugin or marketplace semantics
+from those elements.
 
 Replace with current API: lifecycle-dependent normalizer contracts that still
 produce old registry status names should be updated after protocol

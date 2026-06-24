@@ -306,6 +306,10 @@ Productized stable Agent UI behavior:
   `thread/started`, `thread/status/changed`, `thread/name/updated`,
   `thread/archived`, `thread/unarchived`, `thread/closed`, and
   `thread/tokenUsage/updated`.
+  The Codex adapter recognizes the structured App Server runtime status shape
+  with `notLoaded`, `idle`, `systemError`, and `active.activeFlags` before
+  projecting it to the current core `ThreadStatus`. The core runtime-state
+  phase promotes those fields into first-class state.
 - Turn lifecycle: `turn/start`, `turn/steer`, `turn/interrupt`,
   `turn/started`, `turn/completed`, `turn/plan/updated`, and
   `turn/diff/updated`.
@@ -578,6 +582,12 @@ Server requests:
 - host integration requests: user input, MCP elicitation, permissions approval,
   dynamic tool call, auth refresh, and attestation
 
+`packages/codex/src/protocol.ts` is the source of truth for stable server
+request roles. `approvalDecision` methods are the only requests eligible for
+default approval-decision UI. `hostInput`, `dynamicTool`, `authRefresh`, and
+`attestation` remain broad server-request flows that require method-specific
+host handling.
+
 Default Agent UI approval controls are limited to the approval-decision subset.
 Queued host integration requests remain available through the broad
 server-request queue so hosts can render method-specific flows without
@@ -586,8 +596,10 @@ server-request events for transports and bridge handlers, but the default core
 queue does not retain them because tool execution is out-of-band host work.
 
 Stable user input variants are `text`, `image`, `localImage`, `skill`, and
-`mention`. There is no generic local-file user input; hosts should persist
-arbitrary browser files and include explicit text such as
+`mention`. Text input includes `text_elements`; Agent UI request builders
+preserve explicitly supplied text elements instead of deriving `mention` inputs
+from labels or URI-like chips. There is no generic local-file user input; hosts
+should persist arbitrary browser files and include explicit text such as
 `Attached file: /absolute/path`.
 
 Notifications:

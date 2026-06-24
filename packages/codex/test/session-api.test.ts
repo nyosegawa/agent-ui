@@ -28,6 +28,7 @@ import {
   threadStartParams,
   threadUnarchiveParams,
   threadUnsubscribeParams,
+  textInput,
   turnInterruptParams,
   turnStartParams,
   turnSteerParams,
@@ -172,6 +173,29 @@ describe("Codex request builders", () => {
       input: [{ text: "continue", text_elements: [], type: "text" }],
       threadId: "thread-1",
     } satisfies TurnSteerParams);
+    expect(
+      turnStartParams({
+        input: [
+          textInput("open selected context", {
+            textElements: [
+              { byteRange: { end: 21, start: 5 }, placeholder: "selected context" },
+            ],
+          }),
+        ],
+        threadId: "thread-1",
+      }),
+    ).toEqual({
+      input: [
+        {
+          text: "open selected context",
+          text_elements: [
+            { byteRange: { end: 21, start: 5 }, placeholder: "selected context" },
+          ],
+          type: "text",
+        },
+      ],
+      threadId: "thread-1",
+    } satisfies TurnStartParams);
     expect(turnInterruptParams("thread-1", "turn-1")).toEqual({
       threadId: "thread-1",
       turnId: "turn-1",
