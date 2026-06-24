@@ -231,7 +231,7 @@
     - Validation: `bun run typecheck` passed; `bun run test:api-snapshots:update && bun run test:api-snapshots` passed; `bun run validate:fast` passed with 61 files and 691 tests; `bun run test:package-resolution` passed and resolved `@nyosegawa/agent-ui-react`, `@nyosegawa/agent-ui-react/headless`, `@nyosegawa/agent-ui-react/primitives`, and `styles.css`; `bun run validate:packages` passed including build, packlist, Node compatibility, publint, and attw.
     - Review: 4 parallel subagent phase reviews completed. P2 findings fixed in-phase: stale `package-exports.md` root resource/composer guidance moved to `headless`/`primitives`; stale "no React root exports removed" wording corrected; root `useAgentContext`/`useAgentAction` leak removed and negative root export assertion added; P007 validation evidence recorded. No P1 findings remained.
     - Commit: current P007 phase commit (`Split React public export surfaces`).
-    - Push:
+    - Push: pushed `6d9b0f9` to `codex/fixture-system-redesign-plan` (`82c19e1..6d9b0f9`).
   - Tasks:
     - [x] T001 Split root, `./primitives`, and `./headless` React entrypoints.
       - Expected files/areas: barrels, `package.json`, `tsup.config.ts`.
