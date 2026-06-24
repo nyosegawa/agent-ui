@@ -136,7 +136,9 @@ that remain backed by stable view models. Keep `AgentChatProps`,
 `useAgentAccount`, `useAgentModels`, `useAgentUsage`, `useAgentDiagnostics`
 with user/developer/audit diagnostic views,
 `useAgentApprovals`, `useAgentServerRequests`, `useAgentApps`,
-`useAgentSkills`, `useAgentHooks`, `useAgentRunSettings`, and
+`useAgentSkills`, `useAgentHooks`, `useAgentRunSettings`,
+`AgentRunPolicy`, `DEFAULT_AGENT_RUN_POLICIES`,
+`AGENT_FULL_ACCESS_RUN_POLICY`, `agentRunPolicyTurnOptions`, and
 `useAgentTurnController`, `useAgentDirectThreadController`,
 `useAgentTranscriptController`, and `useAgentTranscriptScrollController` if
 their return shapes stay view-model based.
@@ -433,12 +435,12 @@ Responsibilities:
 - `--aui-*` design-system tokens and the bundled plain CSS theme
 
 The package root also exports lower-level surfaces for advanced hosts:
-`AgentStatusBar`, `AgentFirstRun`, `AgentRunControls`, `ComposerRunSettings`,
-`AgentThemeToggle`, `AgentDiffViewer`, transcript-window helpers, and
-sidebar/status panel primitives. The documented components below are the
-recommended host-facing primitives; these helpers remain public because they are
-re-exported by the package barrel. Raw thread-history compatibility helpers are
-intentionally not part of the React root API.
+`AgentStatusBar`, `AgentFirstRun`, `AgentRunControls`, `ComposerRunControls`,
+`AgentThemeToggle`, `AgentDiffViewer`, run-policy helpers, transcript-window
+helpers, and sidebar/status panel primitives. The documented components below
+are the recommended host-facing primitives; these helpers remain public because
+they are re-exported by the package barrel. Raw thread-history compatibility
+helpers are intentionally not part of the React root API.
 
 React does not export Codex request builders such as `threadStartParams()`,
 `turnStartParams()`, `textInput()`, `localImageInput()`, Agent UI path aliases,

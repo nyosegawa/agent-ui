@@ -118,7 +118,7 @@
   white-space: nowrap;
 }
 
-.aui-segment:hover:not([aria-pressed="true"]):not(:disabled) {
+.aui-segment:hover:not([aria-pressed="true"]):not([aria-checked="true"]):not(:disabled) {
   color: var(--aui-fg);
 }
 
@@ -127,7 +127,8 @@
   outline: none;
 }
 
-.aui-segment[aria-pressed="true"] {
+.aui-segment[aria-pressed="true"],
+.aui-segment[aria-checked="true"] {
   background: var(--aui-panel);
   box-shadow: var(--aui-elevation-1), var(--aui-control-shadow);
   color: var(--aui-fg-strong);

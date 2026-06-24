@@ -14,7 +14,8 @@ import {
   AgentComposer,
   AgentMessageList,
   AgentProvider,
-  AgentRunSettingsPanel,
+  AgentRunControls,
+  AgentStarterCwd,
   AgentStartComposer,
   AgentStatusBar,
   AgentStatusDetails,
@@ -66,8 +67,8 @@ export function ComponentCloseupGallery() {
         <CloseupComposerMobile />
         <CloseupComposerPastedImage />
         <CloseupComposerAttachments />
-        <CloseupComposerRunSettings />
-        <CloseupRunSettingsPanel />
+        <CloseupComposerRunControls />
+        <CloseupRunControls />
         <CloseupApprovalCommand />
         <CloseupApprovalUserInput />
         <CloseupCommandBlock />
@@ -354,11 +355,11 @@ function CloseupComposerAttachments() {
   );
 }
 
-function CloseupComposerRunSettings() {
+function CloseupComposerRunControls() {
   return (
     <CloseupFrame
-      title="Composer run settings · compact"
-      caption="Real composer run-setting triggers compact before the toolbar wraps."
+      title="Composer run controls · compact"
+      caption="Policy and model triggers compact before the toolbar wraps."
     >
       <CloseupComposerProvider>
         <div className="aui-closeup-narrow-composer-settings">
@@ -369,14 +370,14 @@ function CloseupComposerRunSettings() {
   );
 }
 
-function CloseupRunSettingsPanel() {
+function CloseupRunControls() {
   return (
     <CloseupFrame
-      title="Run settings panel"
-      caption="Thread-start settings use the current panel primitive, including cwd."
+      title="Run policy and model controls"
+      caption="Policy and model controls are separate from thread-start cwd."
     >
       <CloseupComposerProvider>
-        <AgentRunSettingsPanel />
+        <AgentRunControls />
       </CloseupComposerProvider>
     </CloseupFrame>
   );
@@ -421,7 +422,7 @@ function CloseupStartComposer() {
   return (
     <CloseupFrame
       title="Start composer"
-      caption="Standalone first-message primitive with run settings."
+      caption="Standalone first-message primitive with run controls."
     >
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <AgentStartComposer onStartThread={() => undefined} />
@@ -1084,10 +1085,11 @@ function CloseupThreadStartControls() {
   return (
     <CloseupFrame
       title="Thread-start controls"
-      caption="Current run settings and working-directory controls in one panel."
+      caption="Thread start keeps cwd separate from policy and model controls."
     >
       <CloseupComposerProvider>
-        <AgentRunSettingsPanel />
+        <AgentRunControls />
+        <AgentStarterCwd />
       </CloseupComposerProvider>
     </CloseupFrame>
   );

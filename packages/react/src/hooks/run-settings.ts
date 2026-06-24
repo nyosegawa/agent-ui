@@ -1,76 +1,32 @@
 import {
   selectRunSettings,
   type AgentModel,
-  type ExecutionModeId,
   type ReasoningEffort,
 } from "@nyosegawa/agent-ui-core";
 import { useCallback } from "react";
 import { useAgentContext } from "../provider";
-import type { TurnStartOptions } from "../request-options";
+import {
+  effectiveAgentRunPolicies,
+  type AgentRunPolicyId,
+} from "../run-policies";
 
 export type { TurnStartOptions } from "../request-options";
-
-export interface AgentExecutionMode {
-  id: ExecutionModeId;
-  label: string;
-  description: string;
-  turnParams: TurnStartOptions;
-}
-
-export const AGENT_EXECUTION_MODES: AgentExecutionMode[] = [
-  {
-    description: "Ask before commands or file changes that need review.",
-    id: "review",
-    label: "Review",
-    turnParams: {
-      approvalPolicy: "on-request",
-      sandboxPolicy: {
-        excludeSlashTmp: false,
-        excludeTmpdirEnvVar: false,
-        networkAccess: false,
-        type: "workspaceWrite",
-        writableRoots: [],
-      },
-    },
-  },
-  {
-    description: "Run in the workspace and ask only after a command fails.",
-    id: "auto",
-    label: "Auto",
-    turnParams: {
-      approvalPolicy: "on-failure",
-      sandboxPolicy: {
-        excludeSlashTmp: false,
-        excludeTmpdirEnvVar: false,
-        networkAccess: false,
-        type: "workspaceWrite",
-        writableRoots: [],
-      },
-    },
-  },
-  {
-    description: "Read files and plan changes without writing to the workspace.",
-    id: "read-only",
-    label: "Read-only",
-    turnParams: {
-      approvalPolicy: "untrusted",
-      sandboxPolicy: { networkAccess: false, type: "readOnly" },
-    },
-  },
-  {
-    description: "Allow full local access for trusted one-off work.",
-    id: "full-access",
-    label: "Full access",
-    turnParams: {
-      approvalPolicy: "never",
-      sandboxPolicy: { type: "dangerFullAccess" },
-    },
-  },
-];
+export {
+  AGENT_FULL_ACCESS_RUN_POLICY,
+  DEFAULT_AGENT_RUN_POLICIES,
+  agentRunPolicyTurnOptions,
+  effectiveAgentRunPolicies,
+  resolvedAgentRunPolicyId,
+  type AgentRunPolicy,
+  type AgentRunPolicyId,
+} from "../run-policies";
 
 export function useAgentRunSettings() {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, runPolicies, state } = useAgentContext();
   const runSettings = selectRunSettings(state);
+  const policies = effectiveAgentRunPolicies(runPolicies);
+  const selectedPolicy =
+    policies.find((policy) => policy.id === runSettings.policyId) ?? policies[0];
   const selectedModel =
     state.models.models.find((model) => model.id === runSettings.modelId) ??
     state.models.models.find((model) => isDefaultModel(model));
@@ -79,9 +35,9 @@ export function useAgentRunSettings() {
       ? selectedModel.supportedEfforts
       : [];
 
-  const setExecutionMode = useCallback(
-    (executionMode: ExecutionModeId) =>
-      dispatch({ executionMode, type: "runSettings/updated" }),
+  const setPolicyId = useCallback(
+    (policyId: AgentRunPolicyId) =>
+      dispatch({ policyId, type: "runSettings/updated" }),
     [dispatch],
   );
   const setModelId = useCallback(
@@ -100,21 +56,16 @@ export function useAgentRunSettings() {
       dispatch({ effort: effort || undefined, type: "runSettings/updated" }),
     [dispatch],
   );
-  const setCwd = useCallback(
-    (cwd: string) =>
-      dispatch({ cwd: cwd.trim() || undefined, type: "runSettings/updated" }),
-    [dispatch],
-  );
 
   return {
-    executionModes: AGENT_EXECUTION_MODES,
     models: state.models.models,
+    policies,
     runSettings,
     selectedModel,
-    setCwd,
+    selectedPolicy,
     setEffort,
-    setExecutionMode,
     setModelId,
+    setPolicyId,
     supportedEfforts,
   };
 }

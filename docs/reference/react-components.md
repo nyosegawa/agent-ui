@@ -17,6 +17,36 @@ components consume stable Agent UI state.
 fixtures, tests, or restored local state. Transport ownership is scoped to the
 provider lifetime, with close deferred across same-tick remounts so React
 StrictMode probing does not prematurely close non-reconnectable local bridges.
+It also owns the effective run policy list for child controls. By default the
+provider offers safe local policies only: `review`, `auto`, and `read-only`.
+Dangerous full local access is opt-in by adding `AGENT_FULL_ACCESS_RUN_POLICY`
+to `runPolicies`.
+
+```tsx
+import {
+  AGENT_FULL_ACCESS_RUN_POLICY,
+  DEFAULT_AGENT_RUN_POLICIES,
+  type AgentRunPolicy,
+} from "@nyosegawa/agent-ui-react";
+
+const runPolicies: AgentRunPolicy[] = [
+  ...DEFAULT_AGENT_RUN_POLICIES,
+  AGENT_FULL_ACCESS_RUN_POLICY,
+];
+
+<AgentProvider
+  defaultRunPolicyId="review"
+  runPolicies={runPolicies}
+  transport={transport}
+>
+  <AgentChat />
+</AgentProvider>;
+```
+
+`defaultRunPolicyId` selects the initial policy when no restored state is
+present. If restored state contains a stale or unavailable policy id, the
+provider normalizes it to the first effective policy instead of rendering or
+applying an unavailable policy.
 
 ## Preset Chat
 
@@ -265,8 +295,8 @@ quality directly instead of depending on a page-level shell:
 - **Composer**: the primary input surface, a single bordered rounded card
   containing attachment chips, an auto-resizing textarea, and an inline
   toolbar. The toolbar carries a single attach button, optional host-supplied
-  composer integration buttons, the **mode** and **model · effort** menus, and a
-  circular primary Send icon button with an `Enter to send` hint. The standalone
+  composer integration buttons, the **run policy** and **model · effort** menus,
+  and a circular primary Send icon button with an `Enter to send` hint. The standalone
   form is named "Message composer", the textarea references that visible
   shortcut hint as its accessible description, and pending attachment chips
   expose their filenames through list item labels. While a regular turn is
@@ -285,10 +315,10 @@ quality directly instead of depending on a page-level shell:
   `composerIntegrations`; the composer never derives App Server input from a
   label, URI, App, or Plugin concept and never opens a browser `prompt()`
   dialog. There is no separate
-  "Run settings" disclosure: mode, model, and effort are compact toolbar
+  stacked settings disclosure: policy, model, and effort are compact toolbar
   menus (see below). Pending-approval and preview-only states show a warm
   notice strip without hiding the field.
-- **Mode / model / effort menus**: `AgentComposer` renders execution mode and
+- **Run policy / model / effort menus**: `AgentComposer` renders run policy and
   a combined model · effort selector as compact anchored menus in the toolbar.
   Each trigger shows the current short value; clicking opens a menu of
   `icon + label + selected check` items. The menu opens anchored above the
@@ -298,7 +328,7 @@ quality directly instead of depending on a page-level shell:
   cwd is a thread-start setting (see below). Hosts that want a native folder
   picker can pass `AgentChat.onRequestWorkingDirectory`, which must return the
   absolute cwd path selected by the user. `AgentRunControls` uses
-  radiogroup semantics for execution mode selection rather than mixing pressed
+  radiogroup semantics for run policy selection rather than mixing pressed
   buttons and tablist roles.
 - **Buttons**: the internal button primitives provide primary, secondary,
   ghost, danger, subtle, size, and icon-only variants. `Approve` is the
@@ -399,15 +429,16 @@ Use these primitives when embedding Agent UI into existing product chrome:
   `AgentThreadView` / `AgentChat` anchor it after source item or turn metadata
   when available, with a transcript-tail fallback for metadata-free or
   missing-source requests. Hosts can also place it standalone.
-- `AgentComposerPanel`: turn composer with inline mode / model / effort menus,
+- `AgentComposerPanel`: turn composer with inline policy / model / effort menus,
   running-turn steering, composer-local Stop, and compact context usage.
 - `AgentComposerInput`, `AgentComposerToolbar`, `AgentAttachmentChips`,
   `AgentComposerSubmitButton`, and `AgentStartComposer`: composer styled parts
   for host composition. These preserve the default composer class names and
   accessibility contract without exposing attachment mutation internals or
   first-message operation maps.
-- `AgentRunSettingsPanel`: thread-start settings primitive with model, effort,
-  cwd, and execution mode for popovers, sheets, or host-owned settings panels.
+- `AgentRunControls`: policy and model/effort primitive for popovers, sheets, or
+  host-owned settings panels. It never edits cwd; working directory selection is
+  owned by `AgentStarterCwd` at thread start.
 - `AgentStatusSummary`, `AgentStatusDetails`, and `AgentCriticalNoticeList`:
   severity-normalized model reroute, deprecation, config, account, MCP OAuth,
   and rate-limit notices. Info/background notices stay in secondary chrome,
@@ -613,7 +644,7 @@ extensions such as `.3mf`, next to the App Server and returns an absolute path.
 The empty-state / first-run surface is a starter composer: a large prompt card
 whose prompt, lower toolbar, and submit control reuse the same public composer
 styled parts as the normal composer (`AgentComposerInput`,
-`AgentComposerToolbar`, `ComposerRunSettings`, and
+`AgentComposerToolbar`, `ComposerRunControls`, and
 `AgentComposerSubmitButton`). Hosts can render that starter composer directly
 through `AgentStartComposer`. The working directory is a thread-start setting, so it
 sits beneath the card as a compact context picker instead of inside the toolbar.

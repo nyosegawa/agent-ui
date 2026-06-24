@@ -45,9 +45,14 @@ export {
   type QueuedFollowUpAttachment,
 } from "./hooks/composer";
 export {
-  AGENT_EXECUTION_MODES,
+  AGENT_FULL_ACCESS_RUN_POLICY,
+  DEFAULT_AGENT_RUN_POLICIES,
+  agentRunPolicyTurnOptions,
+  effectiveAgentRunPolicies,
+  resolvedAgentRunPolicyId,
   useAgentRunSettings,
-  type AgentExecutionMode,
+  type AgentRunPolicy,
+  type AgentRunPolicyId,
   type TurnStartOptions,
 } from "./hooks/run-settings";
 export {

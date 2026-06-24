@@ -17,16 +17,15 @@ test("renders Agent UI chat", async ({ page }) => {
   await expect(page.getByLabel("Diff preview")).toContainText("AgentDiffViewer");
   await expect(page.getByRole("button", { name: "Approve" }).first()).toBeVisible();
 
-  // Mode / model / effort live in the composer toolbar as compact menus —
-  // there is no separate "Run settings" disclosure anymore.
+  // Policy / model / effort live in the composer toolbar as compact menus.
   await expect(page.locator(".aui-run-settings-popover")).toHaveCount(0);
-  const modeMenu = page.getByRole("button", { name: "Execution mode" });
+  const modeMenu = page.getByRole("button", { name: "Run policy" });
   await expect(modeMenu).toBeVisible();
   await modeMenu.click();
-  await expect(page.getByRole("menu", { name: "Execution mode" })).toBeVisible();
+  await expect(page.getByRole("menu", { name: "Run policy" })).toBeVisible();
   await expect(page.getByRole("menuitemradio", { name: /Read-only/ })).toBeVisible();
   await page.keyboard.press("Escape");
-  await expect(page.getByRole("menu", { name: "Execution mode" })).toHaveCount(0);
+  await expect(page.getByRole("menu", { name: "Run policy" })).toHaveCount(0);
 
   await expect(page.getByLabel("Usage limits")).toContainText(
     "fixture-demo-model weekly",
@@ -52,7 +51,7 @@ test("does not overflow on mobile", async ({ page }) => {
   // trigger, not a permanently stacked panel.
   await expect(page.getByRole("button", { name: "Open thread history" })).toBeVisible();
   await expect(page.getByLabel("Message", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Execution mode" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Run policy" })).toBeVisible();
   await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
   await expect(headerDoesNotOverlapTimeline(page)).resolves.toBe(true);
 });
@@ -83,7 +82,7 @@ test("opens the thread history drawer on mobile", async ({ page }) => {
 
 async function backgroundThreadMenuIsBlocked(page: Page) {
   return page
-    .locator('.aui-chat .aui-composer-tool[aria-label^="Execution mode"]')
+    .locator('.aui-chat .aui-composer-tool[aria-label^="Run policy"]')
     .evaluate((element) => {
       const rect = element.getBoundingClientRect();
       const hit = document.elementFromPoint(

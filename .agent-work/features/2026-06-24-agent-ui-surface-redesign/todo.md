@@ -151,7 +151,7 @@
       - Expected files/areas: composer CSS, visual e2e.
       - Validation note: send/stop is bottom-right pinned and hit-testable on desktop and mobile; policy/model compact controls are validated in P005.
 
-- [ ] P005 Run policy, model/effort, cwd, and host-boundary controls
+- [x] P005 Run policy, model/effort, cwd, and host-boundary controls
   - Goal: replace Run settings panel with protocol-backed policy/model controls and starter-only cwd.
   - Scope: run settings hooks/components, request composition, starter cwd, host policy docs, compact controls, real-local layout.
   - Expected files/areas: `packages/react/src/hooks/run-settings.ts`, `packages/react/src/components/run-settings.tsx`, `packages/react/src/components/starter-cwd.tsx`, docs, tests, visual e2e.
@@ -161,25 +161,26 @@
   - Push: push phase commit.
   - PR/CI: record validation status.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: Replaced the public execution-mode model with `AgentRunPolicy`, `DEFAULT_AGENT_RUN_POLICIES`, `AGENT_FULL_ACCESS_RUN_POLICY`, `agentRunPolicyTurnOptions`, provider-supplied `runPolicies`, and `defaultRunPolicyId`; renamed core `RunSettingsState.executionMode` to `policyId`; removed `AgentRunSettingsPanel`/`ComposerRunSettings` compatibility aliases; split composer run controls into a policy menu and combined model/effort menu; removed normal-composer cwd editing and public `setCwd`; kept cwd selection inside `AgentStarterCwd` and `thread/start`; stopped implicitly resending cwd on normal, resumed, and retry `turn/start`; made dangerous full-access host opt-in instead of a default policy; added policy-state normalization for stale/empty host policy lists; updated i18n, docs, examples, e2e labels, CSS, and API snapshots.
+    - Validation: `bun x vitest run --config vitest.config.ts packages/react/test/run-settings.vitest.ts packages/react/test/components.vitest.tsx --testNamePattern "run polic|working-directory|working directory|startThreadWithInput|selected model and working directory|Model and effort|Run policy|first-message"` passed with 8 tests; `bun x vitest run --config vitest.config.ts packages/react/test/components.vitest.tsx` passed with 198 tests; `bun x vitest run --config vitest.config.ts packages/react/test/source-structure.vitest.ts packages/react/test/i18n.vitest.ts` passed with 27 tests; `bun run validate:fast` passed with 61 files and 689 tests; `bun run build && bun run test:api-snapshots:update && bun run test:api-snapshots` passed; `bun run test:api-snapshots` passed after package-resolution rebuild; `bun run validate:packages` passed; `bun run test:package-resolution` first failed because it was run concurrently with `validate:packages` and Next reported another build process, then passed when rerun alone; `bun run test:e2e:clean-ports && bunx playwright test examples/local-react-vite/e2e/smoke.e2e.ts examples/local-react-vite/e2e/design-system-contract.e2e.ts examples/local-react-vite/e2e/accessibility-contract.e2e.ts examples/local-react-vite/e2e/visual-layout.e2e.ts examples/local-react-vite/e2e/visual-closeups.e2e.ts examples/local-react-vite/e2e/visual-route-matrix.e2e.ts --config playwright.fixtures.config.ts` passed with 111 tests; `bunx playwright test examples/codex-local-web/e2e/real-local-layout.e2e.ts examples/codex-local-web/e2e/real-local-follow-ups.e2e.ts --config playwright.real-local.config.ts` passed with 8 tests.
+    - Browser QA: Agent-browser checked latest dev server `http://127.0.0.1:5177/fixture-gallery` at 1280x633 and `http://127.0.0.1:5177/` at 390x900. Desktop fixture-gallery run policy menu had overflow `0`, no `Run settings panel` text, selected `Review` segment with selected background, no default `Full access`, and menu containment true; screenshot `/tmp/agent-ui-p005-fixture-gallery-desktop-after-review.png`. Mobile baseline had overflow `0`, policy/model buttons 36x36, send button 36x36 pinned to composer bottom-right, menu containment true, and no default `Full access`; screenshot `/tmp/agent-ui-p005-mobile-default-after-review.png`. Remaining browser risk: route split and public/maintainer gallery separation are still P006.
+    - Review: Four parallel P005 subagent reviews completed. Protocol/core lane found stale/disallowed policy ids could remain in public state and `runPolicies={[]}` rendered defaults but applied no policy; fixed by provider/effective-policy normalization, safe fallback tests, and consistent turn option resolution. Phase-boundary lane found implicit cwd still sent on normal/resumed/retry `turn/start`, dangerous full access was default, public `setCwd` remained, and evidence was missing; fixed by removing implicit turn cwd, making full access opt-in, internalizing starter cwd dispatch, adding negative cwd assertions, and recording evidence. React/API/docs lane found empty-policy inconsistency and underdocumented provider policy API; fixed with provider docs, hook docs, package export docs, and tests. Browser/UX lane found selected policy segments had `aria-checked` but CSS only styled `aria-pressed`; fixed selector styling and verified with agent-browser.
+    - Commit: `Redesign run policy controls` phase commit.
+    - Push: push phase commit to `origin/codex/fixture-system-redesign-plan`.
   - Tasks:
-    - [ ] T001 Replace `AGENT_EXECUTION_MODES` primary model with typed `AgentRunPolicy`.
+    - [x] T001 Replace `AGENT_EXECUTION_MODES` primary model with typed `AgentRunPolicy`.
       - Expected files/areas: hooks/types/tests.
       - Validation note: host-supplied allowed policies and default policy are tested.
-    - [ ] T002 Split policy menu from model/effort controls.
+    - [x] T002 Split policy menu from model/effort controls.
       - Expected files/areas: components, CSS, tests.
       - Validation note: compact triggers are icon-sized and menus stay viewport-contained.
-    - [ ] T003 Keep cwd starter/thread-start only and remove freeform normal composer cwd controls.
+    - [x] T003 Keep cwd starter/thread-start only and remove freeform normal composer cwd controls.
       - Expected files/areas: `starter-cwd`, run settings panel removal, docs.
       - Validation note: tests prove cwd does not appear in normal composer.
-    - [ ] T004 Test first-message merge order and model default effort behavior.
+    - [x] T004 Test first-message merge order and model default effort behavior.
       - Expected files/areas: run settings and start-thread tests.
       - Validation note: `startThreadWithInput()` merges thread/turn options correctly.
-    - [ ] T005 Rerun send/stop pinning evidence after policy/model layout changes.
+    - [x] T005 Rerun send/stop pinning evidence after policy/model layout changes.
       - Expected files/areas: visual e2e and browser QA evidence.
       - Validation note: desktop/mobile hit-test, focus, overflow, and menu containment are recorded.
 

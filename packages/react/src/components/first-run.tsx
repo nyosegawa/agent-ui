@@ -6,7 +6,7 @@ import { buttonClass } from "../components-internal";
 import { useAgentContext } from "../provider";
 import {
   AgentStarterCwd,
-  ComposerRunSettings,
+  ComposerRunControls,
   type AgentWorkingDirectoryResolver,
 } from "./run-settings";
 import { AgentComposerInput, AgentComposerToolbar } from "./composer";
@@ -157,7 +157,7 @@ export function AgentStartComposer({
         />
         <AgentComposerToolbar
           className="aui-first-run-toolbar"
-          start={<ComposerRunSettings />}
+          start={<ComposerRunControls />}
           end={
             <AgentComposerSubmitButton
               canSubmit={!isSubmitting && Boolean(prompt.trim())}

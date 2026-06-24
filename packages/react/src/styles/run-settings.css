@@ -1,4 +1,4 @@
-/* --- Run settings (thread-start panel primitive) ------------------------- */
+/* --- Run controls -------------------------------------------------------- */
 
 .aui-run-controls-compact {
   background: var(--aui-panel);
@@ -8,8 +8,7 @@
   display: grid;
   gap: var(--aui-space-250);
   grid-template-columns:
-    minmax(220px, 1.2fr) minmax(140px, 0.8fr) minmax(120px, 0.7fr)
-    minmax(220px, 1fr);
+    minmax(220px, 1.2fr) minmax(140px, 0.8fr) minmax(120px, 0.7fr);
   margin-top: 0;
   max-height: min(420px, calc(100vh - 160px));
   max-width: 100%;
@@ -17,7 +16,7 @@
   padding: var(--aui-space-300) var(--aui-space-350);
 }
 
-.aui-run-controls-compact .aui-mode-group legend,
+.aui-run-controls-compact .aui-policy-group legend,
 .aui-run-controls-compact .aui-field span {
   color: var(--aui-fg-muted);
   font-size: var(--aui-font-size-2xs-plus);
@@ -36,8 +35,7 @@
   .aui-run-controls-compact {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
-  .aui-run-controls-compact .aui-mode-group,
-  .aui-run-controls-compact .aui-field-wide {
+  .aui-run-controls-compact .aui-policy-group {
     grid-column: 1 / -1;
   }
 }

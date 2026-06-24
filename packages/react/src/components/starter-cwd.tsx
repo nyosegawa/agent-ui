@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { selectRunSettings } from "@nyosegawa/agent-ui-core";
 import {
   IconCheck,
   IconChevronDown,
   IconFolder,
   IconFolderAdd,
 } from "../components-internal";
-import { useAgentRunSettings } from "../hooks";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import { useAgentContext } from "../provider";
 import { isUserFacingPath } from "./sidebar";
@@ -27,8 +27,8 @@ export function AgentStarterCwd({
   onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
 }) {
   const { t } = useAgentI18n();
-  const { state } = useAgentContext();
-  const { runSettings, setCwd } = useAgentRunSettings();
+  const { dispatch, state } = useAgentContext();
+  const runSettings = selectRunSettings(state);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const cwdOptions = useMemo(
@@ -47,14 +47,19 @@ export function AgentStarterCwd({
   );
   const selectedCwd = runSettings.cwd || undefined;
   const triggerLabel = selectedCwd ? folderName(selectedCwd) : t("run.cwd.selectFolder");
+  const setStarterCwd = useCallback(
+    (cwd: string) =>
+      dispatch({ cwd: cwd.trim() || undefined, type: "runSettings/updated" }),
+    [dispatch],
+  );
   const requestWorkingDirectory = useCallback(async () => {
     setOpen(false);
     const requested = onRequestWorkingDirectory
       ? await onRequestWorkingDirectory()
       : fallbackWorkingDirectoryPrompt(t, runSettings.cwd ?? cwdOptions[0]);
     const next = typeof requested === "string" ? requested.trim() : "";
-    if (next) setCwd(next);
-  }, [cwdOptions, onRequestWorkingDirectory, runSettings.cwd, setCwd, t]);
+    if (next) setStarterCwd(next);
+  }, [cwdOptions, onRequestWorkingDirectory, runSettings.cwd, setStarterCwd, t]);
 
   useEffect(() => {
     if (!open) return;
@@ -101,7 +106,7 @@ export function AgentStarterCwd({
                       className="aui-starter-cwd-item"
                       key={cwd}
                       onClick={() => {
-                        setCwd(cwd);
+                        setStarterCwd(cwd);
                         setOpen(false);
                       }}
                       role="menuitemradio"

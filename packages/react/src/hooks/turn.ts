@@ -7,12 +7,13 @@ import { useCallback } from "react";
 import type { AgentUserInput } from "../agent-input";
 import { useAgentContext } from "../provider";
 import { codexTurnStartOptions } from "../request-options";
-import { AGENT_EXECUTION_MODES, type TurnStartOptions } from "./run-settings";
+import { agentRunPolicyTurnOptions } from "../run-policies";
+import type { TurnStartOptions } from "./run-settings";
 import { useCodexSession } from "./codex-session";
 import { codexReasoningEffort, normalizeTurnInput } from "./turn-input";
 
 export function useAgentTurn(threadId?: ThreadId) {
-  const { state } = useAgentContext();
+  const { runPolicies, state } = useAgentContext();
   const codex = useCodexSession();
   const resolvedThreadId = threadId ?? selectThreadLifecycle(state).activeThreadId;
   const runSettings = selectRunSettings(state);
@@ -20,15 +21,13 @@ export function useAgentTurn(threadId?: ThreadId) {
   const startTurn = useCallback(
     async (input: string | AgentUserInput[], params?: TurnStartOptions) => {
       if (!resolvedThreadId) throw new Error("No active thread");
-      const executionMode = AGENT_EXECUTION_MODES.find(
-        (mode) => mode.id === runSettings.executionMode,
-      );
       await codex.turn.start({
-        cwd: runSettings.cwd,
         effort: codexReasoningEffort(runSettings.effort),
         input: normalizeTurnInput(input),
         model: runSettings.modelId,
-        ...codexTurnStartOptions(executionMode?.turnParams),
+        ...codexTurnStartOptions(
+          agentRunPolicyTurnOptions(runSettings.policyId, runPolicies),
+        ),
         ...codexTurnStartOptions(params),
         threadId: resolvedThreadId,
       });
@@ -36,10 +35,10 @@ export function useAgentTurn(threadId?: ThreadId) {
     [
       codex,
       resolvedThreadId,
-      runSettings.cwd,
       runSettings.effort,
-      runSettings.executionMode,
       runSettings.modelId,
+      runSettings.policyId,
+      runPolicies,
     ],
   );
 

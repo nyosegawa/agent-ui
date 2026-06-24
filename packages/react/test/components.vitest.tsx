@@ -589,11 +589,11 @@ function PublicFirstMessageStartWithOptionsProbe() {
   const [result, setResult] = useState("none");
   const [error, setError] = useState("none");
   const composer = useAgentComposerController();
-  const { setExecutionMode } = useAgentRunSettings();
+  const { setPolicyId } = useAgentRunSettings();
   return (
     <>
-      <button type="button" onClick={() => setExecutionMode("review")}>
-        Set review mode
+      <button type="button" onClick={() => setPolicyId("review")}>
+        Set review policy
       </button>
       <button
         type="button"
@@ -6052,7 +6052,7 @@ describe("AgentChat", () => {
         Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
     expect(screen.getAllByLabelText("CodeMirror patch viewer").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: /Execution mode:/ })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Run policy:/ })).toBeInTheDocument();
     expect(screen.getByLabelText("Usage limits")).toHaveTextContent(
       "fixture-demo-model 5h",
     );
@@ -6577,8 +6577,8 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    // Execution mode is a compact menu in the composer toolbar.
-    await user.click(await screen.findByRole("button", { name: /Execution mode:/ }));
+    // Run policy is a compact menu in the composer toolbar.
+    await user.click(await screen.findByRole("button", { name: /Run policy:/ }));
     await user.click(screen.getByRole("menuitemradio", { name: /Read-only/ }));
 
     // Model and effort share a second compact menu; selecting the model first
@@ -6600,6 +6600,108 @@ describe("AgentChat", () => {
       effort: "high",
       model: "fixture-demo-coding-model",
       sandboxPolicy: { networkAccess: false, type: "readOnly" },
+      threadId: "thread-demo",
+    });
+  });
+
+  it("uses only host-supplied run policies in composer turn/start params", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    const initialState = runEventFixture(demoFixture as FixtureStep[]);
+    if (initialState.threadLifecycle.activeThreadId) {
+      const activeThread =
+        initialState.threads[initialState.threadLifecycle.activeThreadId]!;
+      activeThread.activity = "idle";
+      activeThread.runtime = { status: { type: "idle" } };
+      activeThread.status = "complete";
+      for (const turn of Object.values(activeThread.turns)) {
+        turn.turn = { ...turn.turn, status: "completed" };
+      }
+    }
+    initialState.serverRequestQueue = { byId: {}, order: [] };
+    render(
+      <AgentProvider
+        initialState={initialState}
+        runPolicies={[
+          {
+            description: "Host permits read-only turns.",
+            id: "host-safe",
+            label: "Host safe",
+            turnOptions: {
+              approvalPolicy: "untrusted",
+              sandboxPolicy: { networkAccess: false, type: "readOnly" },
+            },
+          },
+        ]}
+        transport={transport}
+      >
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /Run policy:/ }));
+    expect(screen.getByRole("menuitemradio", { name: /Host safe/ })).toBeVisible();
+    expect(
+      screen.queryByRole("menuitemradio", { name: /Full access/ }),
+    ).not.toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await user.type(screen.getByLabelText("Message"), "use host policy");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(
+      transport.requests.findLast((request) => request.method === "turn/start")?.params,
+    ).toMatchObject({
+      approvalPolicy: "untrusted",
+      sandboxPolicy: { networkAccess: false, type: "readOnly" },
+      threadId: "thread-demo",
+    });
+  });
+
+  it("normalizes empty and stale run policy state to safe defaults", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    const initialState = runEventFixture(demoFixture as FixtureStep[]);
+    initialState.runSettings.policyId = "full-access";
+    if (initialState.threadLifecycle.activeThreadId) {
+      const activeThread =
+        initialState.threads[initialState.threadLifecycle.activeThreadId]!;
+      activeThread.activity = "idle";
+      activeThread.runtime = { status: { type: "idle" } };
+      activeThread.status = "complete";
+      for (const turn of Object.values(activeThread.turns)) {
+        turn.turn = { ...turn.turn, status: "completed" };
+      }
+    }
+    initialState.serverRequestQueue = { byId: {}, order: [] };
+    render(
+      <AgentProvider initialState={initialState} runPolicies={[]} transport={transport}>
+        <AgentChat />
+      </AgentProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: /Run policy:/ }));
+    expect(screen.getByRole("menuitemradio", { name: /Review/ })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+    expect(
+      screen.queryByRole("menuitemradio", { name: /Full access/ }),
+    ).not.toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    await user.type(screen.getByLabelText("Message"), "use default policy");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(
+      transport.requests.findLast((request) => request.method === "turn/start")?.params,
+    ).toMatchObject({
+      approvalPolicy: "on-request",
+      sandboxPolicy: {
+        excludeSlashTmp: false,
+        excludeTmpdirEnvVar: false,
+        networkAccess: false,
+        type: "workspaceWrite",
+        writableRoots: [],
+      },
       threadId: "thread-demo",
     });
   });
@@ -6876,7 +6978,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    await user.click(screen.getByRole("button", { name: "Set review mode" }));
+    await user.click(screen.getByRole("button", { name: "Set review policy" }));
     await user.click(screen.getByRole("button", { name: "Public start with options" }));
 
     await waitFor(() =>
@@ -6961,7 +7063,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    await user.click(screen.getByRole("button", { name: "Set review mode" }));
+    await user.click(screen.getByRole("button", { name: "Set review policy" }));
     await user.click(screen.getByRole("button", { name: "Public start with options" }));
 
     await waitFor(() =>
@@ -7137,6 +7239,9 @@ describe("AgentChat", () => {
         threadId: "thread-new",
       }),
     );
+    expect(
+      transport.requests.find((request) => request.method === "turn/start")?.params,
+    ).not.toHaveProperty("cwd");
     await waitFor(() =>
       expect(screen.getByLabelText("active thread id")).toHaveTextContent("thread-new"),
     );
@@ -8432,7 +8537,6 @@ describe("AgentChat", () => {
       ).toMatchObject({
         method: "turn/start",
         params: {
-          cwd: "/Users/example/resumed",
           effort: "high",
           input: [{ text: "continue this session", text_elements: [], type: "text" }],
           model: "gpt-resumed",
@@ -8440,6 +8544,9 @@ describe("AgentChat", () => {
         },
       }),
     );
+    expect(
+      transport.requests.findLast((request) => request.method === "turn/start")?.params,
+    ).not.toHaveProperty("cwd");
     expect(
       transport.requests
         .filter((request) =>
@@ -8685,12 +8792,14 @@ describe("AgentChat", () => {
         transport.requests.findLast((request) => request.method === "turn/start")
           ?.params,
       ).toMatchObject({
-        cwd: "/Users/example/null-effort",
         effort: undefined,
         model: "gpt-resumed",
         threadId: "thread-null-effort",
       }),
     );
+    expect(
+      transport.requests.findLast((request) => request.method === "turn/start")?.params,
+    ).not.toHaveProperty("cwd");
   });
 
   it("does not expose a manual resume button for stored threads", async () => {

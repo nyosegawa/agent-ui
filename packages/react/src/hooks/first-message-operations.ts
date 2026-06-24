@@ -11,8 +11,8 @@ import {
   type ThreadStartOptions,
   type TurnStartOptions,
 } from "../request-options";
+import { agentRunPolicyTurnOptions } from "../run-policies";
 import { useCodexSession } from "./codex-session";
-import { AGENT_EXECUTION_MODES } from "./run-settings";
 import type { AgentThreadStartWithInputResult } from "./thread-lifecycle-types";
 import { codexReasoningEffort } from "./turn-input";
 
@@ -62,7 +62,7 @@ export function useFirstMessageOperationController(
     turnOptions?: TurnStartOptions,
   ) => Promise<AgentThreadStartWithInputResult>,
 ) {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, runPolicies, state } = useAgentContext();
   const codex = useCodexSession();
   const operationsById = selectThreadLifecycle(state).operations;
   const runSettings = selectRunSettings(state);
@@ -123,16 +123,14 @@ export function useFirstMessageOperationController(
         type: "thread/operation/updated",
       });
       try {
-        const executionMode = AGENT_EXECUTION_MODES.find(
-          (mode) => mode.id === runSettings.executionMode,
-        );
         await codex.turn.start({
           clientUserMessageId: payload.pending.userMessageId,
-          cwd: runSettings.cwd,
           effort: codexReasoningEffort(runSettings.effort),
           input: payload.normalizedInput,
           model: runSettings.modelId,
-          ...codexTurnStartOptions(executionMode?.turnParams),
+          ...codexTurnStartOptions(
+            agentRunPolicyTurnOptions(runSettings.policyId, runPolicies),
+          ),
           ...codexTurnStartOptions(payload.turnOptions),
           threadId: payload.threadId,
         });
@@ -178,10 +176,10 @@ export function useFirstMessageOperationController(
       codex,
       dispatch,
       operationsById,
-      runSettings.cwd,
       runSettings.effort,
-      runSettings.executionMode,
       runSettings.modelId,
+      runSettings.policyId,
+      runPolicies,
       startWithMessage,
     ],
   );

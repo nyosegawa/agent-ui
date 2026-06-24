@@ -18,7 +18,7 @@ test("composer stays a single bordered card with reachable run controls", async 
     "pending approval",
   );
   await expect(composer.getByRole("button", { name: "Send" })).toBeDisabled();
-  await expect(composer.getByRole("button", { name: "Execution mode" })).toBeEnabled();
+  await expect(composer.getByRole("button", { name: "Run policy" })).toBeEnabled();
   await expect(composer.getByRole("button", { name: "Model and effort" })).toBeEnabled();
 });
 

@@ -200,10 +200,9 @@
   padding: var(--aui-space-300) var(--aui-space-350);
 }
 
-/* The first-run card is narrow, so the thread-start panel stacks: execution
- * mode and working directory span the full width, model and effort pair up. */
-.aui-first-run:not(.aui-first-run-starter) .aui-run-controls .aui-mode-group,
-.aui-first-run:not(.aui-first-run-starter) .aui-run-controls .aui-field-wide {
+/* The first-run card is narrow, so the policy selector spans the full width
+ * while model and effort pair up. */
+.aui-first-run:not(.aui-first-run-starter) .aui-run-controls .aui-policy-group {
   grid-column: 1 / -1;
 }
 

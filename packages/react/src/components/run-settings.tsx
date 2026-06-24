@@ -1,30 +1,21 @@
 import type React from "react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useAgentModels, useAgentRunSettings } from "../hooks";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import {
   IconCheck,
-  IconClose,
   IconCpu,
-  IconFolder,
   IconGauge,
   IconShield,
-  buttonClass,
 } from "../components-internal";
 import { useAgentContext } from "../provider";
 import { AuiMenu } from "./disclosure";
-import { isUserFacingPath } from "./sidebar";
 import { useCompactLayout, useElementCompactLayout } from "./shared";
 
 export { AgentStarterCwd, type AgentWorkingDirectoryResolver } from "./starter-cwd";
 
 export interface AgentRunControlsProps {
   autoRefresh?: boolean;
-  /**
-   * "compact" renders an inline, dense form intended to sit inside another
-   * surface. "panel" renders the full-width labeled settings form used by the
-   * empty-state and fixture gallery close-up.
-   */
   variant?: "compact" | "panel";
 }
 
@@ -36,27 +27,16 @@ export function AgentRunControls({
   const { state } = useAgentContext();
   const { models, refreshModels } = useAgentModels();
   const {
-    executionModes,
+    policies,
     runSettings,
     selectedModel,
-    setCwd,
+    selectedPolicy,
     setEffort,
-    setExecutionMode,
     setModelId,
+    setPolicyId,
     supportedEfforts,
   } = useAgentRunSettings();
   const hasEffortOptions = supportedEfforts.length > 0;
-  const cwdOptions = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          Object.values(state.threads)
-            .map((thread) => thread.thread.path)
-            .filter((path): path is string => Boolean(path && isUserFacingPath(path))),
-        ),
-      ).slice(0, 12),
-    [state.threads],
-  );
 
   useEffect(() => {
     if (autoRefresh && state.connection.status === "connected" && models.length === 0) {
@@ -67,47 +47,47 @@ export function AgentRunControls({
   return (
     <section
       className={variant === "compact" ? "aui-run-controls-compact" : "aui-run-controls"}
-      aria-label={t("aria.runSettings")}
+      aria-label={t("aria.runControls")}
     >
-      <fieldset className="aui-mode-group">
-        <legend>{t("run.executionMode")}</legend>
+      <fieldset className="aui-policy-group">
+        <legend>{t("run.policy")}</legend>
         <div
-          aria-label={t("run.executionMode")}
+          aria-label={t("run.policy")}
           className="aui-segmented"
           onKeyDown={(event) => {
             if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
             event.preventDefault();
-            const currentIndex = executionModes.findIndex(
-              (mode) => mode.id === runSettings.executionMode,
+            const currentIndex = policies.findIndex(
+              (policy) => policy.id === selectedPolicy?.id,
             );
             const nextIndex =
               event.key === "Home"
                 ? 0
                 : event.key === "End"
-                  ? executionModes.length - 1
+                  ? policies.length - 1
                   : (currentIndex +
                       (event.key === "ArrowRight" ? 1 : -1) +
-                      executionModes.length) %
-                    executionModes.length;
-            const next = executionModes[nextIndex];
-            if (next) setExecutionMode(next.id);
+                      policies.length) %
+                    policies.length;
+            const next = policies[nextIndex];
+            if (next) setPolicyId(next.id);
           }}
           role="radiogroup"
         >
-          {executionModes.map((mode) => {
-            const selected = runSettings.executionMode === mode.id;
+          {policies.map((policy) => {
+            const selected = selectedPolicy?.id === policy.id;
             return (
               <button
                 aria-checked={selected}
                 className="aui-segment"
-                key={mode.id}
-                onClick={() => setExecutionMode(mode.id)}
+                key={policy.id}
+                onClick={() => setPolicyId(policy.id)}
                 role="radio"
                 tabIndex={selected ? 0 : -1}
-                title={executionModeDescription(mode.id, t)}
+                title={runPolicyDescription(policy, t)}
                 type="button"
               >
-                {executionModeLabel(mode.id, t)}
+                {runPolicyLabel(policy, t)}
               </button>
             );
           })}
@@ -150,51 +130,8 @@ export function AgentRunControls({
           ))}
         </select>
       </label>
-      <label className="aui-field aui-field-wide">
-        <span>{t("run.workingDirectory")}</span>
-        <div className="aui-input-shell aui-input-with-icon">
-          <IconFolder size={14} />
-          <input
-            aria-label={t("run.workingDirectory")}
-            className="aui-text-input"
-            list={cwdOptions.length > 0 ? "aui-cwd-options" : undefined}
-            onChange={(event) => setCwd(event.currentTarget.value)}
-            placeholder={cwdOptions[0] ?? t("run.cwd.serverDefault")}
-            type="text"
-            value={runSettings.cwd ?? ""}
-          />
-          {runSettings.cwd ? (
-            <button
-              aria-label={t("run.clearWorkingDirectory")}
-              className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
-              onClick={() => setCwd("")}
-              title={t("run.clearWorkingDirectory")}
-              type="button"
-            >
-              <IconClose size={14} />
-            </button>
-          ) : null}
-          {cwdOptions.length > 0 ? (
-            <datalist id="aui-cwd-options">
-              {cwdOptions.map((cwd) => (
-                <option key={cwd} value={cwd} />
-              ))}
-            </datalist>
-          ) : null}
-        </div>
-      </label>
     </section>
   );
-}
-
-export interface AgentRunSettingsPanelProps {
-  autoRefresh?: boolean;
-}
-
-export function AgentRunSettingsPanel({
-  autoRefresh = false,
-}: AgentRunSettingsPanelProps = {}) {
-  return <AgentRunControls autoRefresh={autoRefresh} variant="compact" />;
 }
 
 function formatModelOption(model: { id: string; name?: string }): string {
@@ -284,21 +221,37 @@ function composerEffortLabel(
   return hasEfforts ? t("run.defaultEffort") : t("run.defaultEffort");
 }
 
-function executionModeLabel(id: string, t: (key: AgentI18nKey) => string): string {
-  return t(`run.mode.${id}.label` as AgentI18nKey);
+function runPolicyLabel(
+  policy: { id: string; label: string },
+  t: (key: AgentI18nKey) => string,
+): string {
+  if (isDefaultPolicyId(policy.id)) {
+    return t(`run.policy.${policy.id}.label` as AgentI18nKey);
+  }
+  return policy.label;
 }
 
-function executionModeDescription(id: string, t: (key: AgentI18nKey) => string): string {
-  return t(`run.mode.${id}.description` as AgentI18nKey);
+function runPolicyDescription(
+  policy: { description: string; id: string },
+  t: (key: AgentI18nKey) => string,
+): string {
+  if (isDefaultPolicyId(policy.id)) {
+    return t(`run.policy.${policy.id}.description` as AgentI18nKey);
+  }
+  return policy.description;
+}
+
+function isDefaultPolicyId(id: string): boolean {
+  return id === "review" || id === "auto" || id === "read-only" || id === "full-access";
 }
 
 /**
- * Mode / model / effort selectors that live directly inside the composer
+ * Policy / model / effort selectors that live directly inside the composer
  * toolbar. Working directory is intentionally absent here; cwd is a
  * thread-start setting and is shown read-only in the thread header for an
  * existing thread.
  */
-export function ComposerRunSettings() {
+export function ComposerRunControls() {
   const { t } = useAgentI18n();
   const viewportCompact = useCompactLayout();
   const [settingsRef, compact] = useElementCompactLayout<HTMLDivElement>(
@@ -308,12 +261,13 @@ export function ComposerRunSettings() {
   const { state } = useAgentContext();
   const { models, refreshModels } = useAgentModels();
   const {
-    executionModes,
+    policies,
     runSettings,
     selectedModel,
+    selectedPolicy,
     setEffort,
-    setExecutionMode,
     setModelId,
+    setPolicyId,
     supportedEfforts,
   } = useAgentRunSettings();
   const didRefresh = useRef(false);
@@ -329,31 +283,28 @@ export function ComposerRunSettings() {
     }
   }, [models.length, refreshModels, state.connection.status]);
 
-  const currentMode =
-    executionModes.find((mode) => mode.id === runSettings.executionMode) ??
-    executionModes[0];
   const hasEfforts = supportedEfforts.length > 0;
 
   return (
     <div className="aui-composer-settings" ref={settingsRef}>
       <AuiMenu
-        ariaLabel={t("run.executionMode")}
+        ariaLabel={t("run.policy")}
         compact={compact}
         icon={<IconShield size={14} />}
-        label={currentMode ? executionModeLabel(currentMode.id, t) : t("run.mode")}
+        label={selectedPolicy ? runPolicyLabel(selectedPolicy, t) : t("run.policy")}
       >
         {(close) =>
-          executionModes.map((mode) => (
+          policies.map((policy) => (
             <MenuOption
-              description={executionModeDescription(mode.id, t)}
+              description={runPolicyDescription(policy, t)}
               icon={<IconShield size={14} />}
-              key={mode.id}
-              label={executionModeLabel(mode.id, t)}
+              key={policy.id}
+              label={runPolicyLabel(policy, t)}
               onSelect={() => {
-                setExecutionMode(mode.id);
+                setPolicyId(policy.id);
                 close();
               }}
-              selected={currentMode?.id === mode.id}
+              selected={selectedPolicy?.id === policy.id}
             />
           ))
         }

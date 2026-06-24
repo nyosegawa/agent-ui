@@ -1,70 +1,8 @@
 import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as _nyosegawa_agent_ui_core from '@nyosegawa/agent-ui-core';
-import { AgentEvent, AgentSessionState, AgentTransport, ReasoningEffort, AgentApp, ThreadId, ThreadState, ThreadStatus, AgentModel, RequestId, AgentError, ExecutionModeId, AgentThreadScope, AgentThreadCollection, AgentThreadView as AgentThreadView$1, PendingServerRequest, AgentTranscriptBlockView, AgentItemBlockKind, AgentItemState, ThreadTokenUsage, AgentThread, AgentThreadSummaryView, AgentThreadTranscriptView, TurnState } from '@nyosegawa/agent-ui-core';
-export { AgentThreadResumeDiagnosticReasonCode } from '@nyosegawa/agent-ui-core';
+import { ReasoningEffort, AgentRunPolicyId, AgentEvent, AgentSessionState, AgentTransport, AgentApp, ThreadId, ThreadState, ThreadStatus, AgentModel, RequestId, AgentError, AgentThreadScope, AgentThreadCollection, AgentThreadView as AgentThreadView$1, PendingServerRequest, AgentTranscriptBlockView, AgentItemBlockKind, AgentItemState, ThreadTokenUsage, AgentThread, AgentThreadSummaryView, AgentThreadTranscriptView, TurnState } from '@nyosegawa/agent-ui-core';
+export { AgentRunPolicyId, AgentThreadResumeDiagnosticReasonCode } from '@nyosegawa/agent-ui-core';
 import React$1, { PropsWithChildren, Dispatch, SetStateAction } from 'react';
-
-interface AgentContextValue {
-    dispatch: (event: AgentEvent) => void;
-    state: AgentSessionState;
-    transport: AgentTransport;
-}
-interface AgentProviderProps extends PropsWithChildren {
-    initialState?: AgentSessionState;
-    transport: AgentTransport;
-}
-declare function AgentProvider({ children, initialState, transport }: AgentProviderProps): react_jsx_runtime.JSX.Element;
-declare function useAgentContext(): AgentContextValue;
-declare function useAgentAction<TArgs extends unknown[], TResult>(action: (...args: TArgs) => Promise<TResult>): (...args: TArgs) => Promise<TResult>;
-
-type AgentUserInput = AgentTextInput | AgentImageInput | AgentLocalImageInput | AgentSkillInput | AgentMentionInput | AgentUnknownUserInput;
-interface AgentTextInput {
-    text: string;
-    text_elements?: unknown[];
-    type: "text";
-}
-interface AgentImageInput {
-    image_url: string;
-    type: "image";
-}
-interface AgentLocalImageInput {
-    path: string;
-    type: "localImage";
-}
-interface AgentSkillInput {
-    name: string;
-    path: string;
-    type: "skill";
-}
-interface AgentMentionInput {
-    name: string;
-    path: string;
-    type: "mention";
-}
-interface AgentUnknownUserInput {
-    type: string;
-    [key: string]: unknown;
-}
-
-declare function useAgentAccount(): {
-    account: _nyosegawa_agent_ui_core.AccountState;
-    cancelLogin: () => Promise<void>;
-    login: () => Promise<{
-        loginId: string | undefined;
-        userCode: string | undefined;
-        verificationUrl: string | undefined;
-    }>;
-    logout: () => Promise<void>;
-    readAccount: () => Promise<{
-        authenticated: boolean;
-    }>;
-};
-interface AgentBootstrapState {
-    errors: Error[];
-    isBootstrapping: boolean;
-    status: "idle" | "loading" | "ready" | "error";
-}
-declare function useAgentBootstrap(): AgentBootstrapState;
 
 type AgentJsonValue = null | boolean | number | string | AgentJsonValue[] | {
     [key: string]: AgentJsonValue | undefined;
@@ -172,6 +110,83 @@ interface AgentSkillConfigWriteOptions {
 interface AgentHooksRefreshOptions {
     cwds?: string[];
 }
+
+interface AgentRunPolicy {
+    id: AgentRunPolicyId;
+    label: string;
+    description: string;
+    turnOptions: TurnStartOptions;
+}
+declare const AGENT_FULL_ACCESS_RUN_POLICY: AgentRunPolicy;
+declare const DEFAULT_AGENT_RUN_POLICIES: readonly AgentRunPolicy[];
+declare function effectiveAgentRunPolicies(policies: readonly AgentRunPolicy[] | undefined): readonly AgentRunPolicy[];
+declare function resolvedAgentRunPolicyId(policyId: AgentRunPolicyId | undefined, policies: readonly AgentRunPolicy[]): AgentRunPolicyId | undefined;
+declare function agentRunPolicyTurnOptions(policyId: AgentRunPolicyId | undefined, policies?: readonly AgentRunPolicy[]): TurnStartOptions | undefined;
+
+interface AgentContextValue {
+    dispatch: (event: AgentEvent) => void;
+    runPolicies: readonly AgentRunPolicy[];
+    state: AgentSessionState;
+    transport: AgentTransport;
+}
+interface AgentProviderProps extends PropsWithChildren {
+    defaultRunPolicyId?: AgentRunPolicyId;
+    initialState?: AgentSessionState;
+    runPolicies?: readonly AgentRunPolicy[];
+    transport: AgentTransport;
+}
+declare function AgentProvider({ children, defaultRunPolicyId, initialState, runPolicies, transport, }: AgentProviderProps): react_jsx_runtime.JSX.Element;
+declare function useAgentContext(): AgentContextValue;
+declare function useAgentAction<TArgs extends unknown[], TResult>(action: (...args: TArgs) => Promise<TResult>): (...args: TArgs) => Promise<TResult>;
+
+type AgentUserInput = AgentTextInput | AgentImageInput | AgentLocalImageInput | AgentSkillInput | AgentMentionInput | AgentUnknownUserInput;
+interface AgentTextInput {
+    text: string;
+    text_elements?: unknown[];
+    type: "text";
+}
+interface AgentImageInput {
+    image_url: string;
+    type: "image";
+}
+interface AgentLocalImageInput {
+    path: string;
+    type: "localImage";
+}
+interface AgentSkillInput {
+    name: string;
+    path: string;
+    type: "skill";
+}
+interface AgentMentionInput {
+    name: string;
+    path: string;
+    type: "mention";
+}
+interface AgentUnknownUserInput {
+    type: string;
+    [key: string]: unknown;
+}
+
+declare function useAgentAccount(): {
+    account: _nyosegawa_agent_ui_core.AccountState;
+    cancelLogin: () => Promise<void>;
+    login: () => Promise<{
+        loginId: string | undefined;
+        userCode: string | undefined;
+        verificationUrl: string | undefined;
+    }>;
+    logout: () => Promise<void>;
+    readAccount: () => Promise<{
+        authenticated: boolean;
+    }>;
+};
+interface AgentBootstrapState {
+    errors: Error[];
+    isBootstrapping: boolean;
+    status: "idle" | "loading" | "ready" | "error";
+}
+declare function useAgentBootstrap(): AgentBootstrapState;
 
 declare function useAgentApps(threadId?: string): {
     apps: AgentApp[];
@@ -349,22 +364,15 @@ type AgentComposerSubmitMode = "queue" | "send" | "stop";
 declare function useAgentComposer(threadId?: ThreadId): AgentComposerController;
 declare function useAgentComposerController(threadId?: ThreadId): AgentComposerController;
 
-interface AgentExecutionMode {
-    id: ExecutionModeId;
-    label: string;
-    description: string;
-    turnParams: TurnStartOptions;
-}
-declare const AGENT_EXECUTION_MODES: AgentExecutionMode[];
 declare function useAgentRunSettings(): {
-    executionModes: AgentExecutionMode[];
     models: AgentModel[];
+    policies: readonly AgentRunPolicy[];
     runSettings: _nyosegawa_agent_ui_core.RunSettingsState;
     selectedModel: AgentModel | undefined;
-    setCwd: (cwd: string) => void;
+    selectedPolicy: AgentRunPolicy | undefined;
     setEffort: (effort: ReasoningEffort) => void;
-    setExecutionMode: (executionMode: ExecutionModeId) => void;
     setModelId: (modelId: string) => void;
+    setPolicyId: (policyId: AgentRunPolicyId) => void;
     supportedEfforts: string[];
 };
 
@@ -628,7 +636,7 @@ interface AgentI18nDictionary {
     "aria.openTask": string;
     "aria.patchContent": string;
     "aria.pendingAttachments": string;
-    "aria.runSettings": string;
+    "aria.runControls": string;
     "aria.statusDetails": string;
     "aria.statusSummary": string;
     "aria.threadStartContext": string;
@@ -756,16 +764,15 @@ interface AgentI18nDictionary {
     "run.effort.medium": string;
     "run.effort.minimal": string;
     "run.effort.veryHigh": string;
-    "run.executionMode": string;
-    "run.mode": string;
-    "run.mode.auto.description": string;
-    "run.mode.auto.label": string;
-    "run.mode.full-access.description": string;
-    "run.mode.full-access.label": string;
-    "run.mode.read-only.description": string;
-    "run.mode.read-only.label": string;
-    "run.mode.review.description": string;
-    "run.mode.review.label": string;
+    "run.policy": string;
+    "run.policy.auto.description": string;
+    "run.policy.auto.label": string;
+    "run.policy.full-access.description": string;
+    "run.policy.full-access.label": string;
+    "run.policy.read-only.description": string;
+    "run.policy.read-only.label": string;
+    "run.policy.review.description": string;
+    "run.policy.review.label": string;
     "run.model": string;
     "run.modelAndEffort": string;
     "run.modelDefault": string;
@@ -1020,25 +1027,16 @@ declare function AgentStarterCwd({ onRequestWorkingDirectory, }: {
 
 interface AgentRunControlsProps {
     autoRefresh?: boolean;
-    /**
-     * "compact" renders an inline, dense form intended to sit inside another
-     * surface. "panel" renders the full-width labeled settings form used by the
-     * empty-state and fixture gallery close-up.
-     */
     variant?: "compact" | "panel";
 }
 declare function AgentRunControls({ autoRefresh, variant, }?: AgentRunControlsProps): react_jsx_runtime.JSX.Element;
-interface AgentRunSettingsPanelProps {
-    autoRefresh?: boolean;
-}
-declare function AgentRunSettingsPanel({ autoRefresh, }?: AgentRunSettingsPanelProps): react_jsx_runtime.JSX.Element;
 /**
- * Mode / model / effort selectors that live directly inside the composer
+ * Policy / model / effort selectors that live directly inside the composer
  * toolbar. Working directory is intentionally absent here; cwd is a
  * thread-start setting and is shown read-only in the thread header for an
  * existing thread.
  */
-declare function ComposerRunSettings(): react_jsx_runtime.JSX.Element;
+declare function ComposerRunControls(): react_jsx_runtime.JSX.Element;
 
 declare function AgentFirstRun({ onRequestWorkingDirectory, onStartThread, }: {
     onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
@@ -1323,4 +1321,4 @@ interface UsageWindow {
 type UsageTranslator = (key: AgentI18nKey, vars?: Record<string, string | number>) => string;
 declare function normalizeUsageWindows(rateLimits: unknown, t?: UsageTranslator): UsageWindow[];
 
-export { AGENT_EXECUTION_MODES, type AgentApprovalComponentProps, type AgentApprovalDefaultProps, type AgentApprovalPolicy, AgentApprovalQueue, type AgentApprovalsReviewer, AgentAppsPanel, type AgentAppsRefreshOptions, type AgentAttachmentChip, type AgentAttachmentChipKind, AgentAttachmentChips, type AgentAttachmentChipsProps, type AgentBlockComponentProps, type AgentBlockDefaultProps, type AgentBootstrapState, AgentChat, type AgentChatProps, AgentCommandItem, AgentCommandOutputItem, type AgentComponents, AgentComposer, type AgentComposerController, type AgentComposerDisabledReason, type AgentComposerFailedPendingMessage, AgentComposerInput, type AgentComposerInputProps, type AgentComposerIntegration, type AgentComposerIntegrationAttachment, type AgentComposerIntegrationResolver, AgentComposerPanel, type AgentComposerPanelComponentProps, type AgentComposerPanelProps, type AgentComposerProps, AgentComposerSubmitButton, type AgentComposerSubmitButtonProps, type AgentComposerSubmitMode, AgentComposerToolbar, type AgentComposerToolbarProps, AgentContentBlockView, AgentContextUsageIndicator, type AgentContextValue, AgentCriticalNoticeList, AgentDiagnosticsPanel, AgentDiffItem, AgentDiffViewer, type AgentDirectThreadController, type AgentDirectThreadOpenResult, type AgentEmptyStateComponentProps, type AgentExecutionMode, AgentFileChangeItem, type AgentFileResourceRequest, AgentFirstRun, type AgentHooksRefreshOptions, type AgentI18nDictionary, type AgentI18nKey, type AgentI18nMessages, AgentI18nProvider, type AgentI18nProviderProps, type AgentI18nValue, type AgentImageInput, type AgentItemDefaultProps, type AgentJsonValue, type AgentLocalAttachmentKind, type AgentLocalAttachmentResolver, type AgentLocalImageInput, type AgentLocalMediaResourceRequest, type AgentLocalMediaUrlResolver, type AgentLocale, AgentLocaleSelect, type AgentLocaleSelectProps, type AgentMentionInput, AgentMessageItem, AgentMessageList, type AgentPersonality, AgentProvider, type AgentProviderProps, AgentRateLimitBar, AgentReasoningItem, type AgentReasoningSummary, type AgentResolvedLocalAttachment, type AgentResolvedResource, type AgentResolvedResourceBase, type AgentResolvedUrlResource, type AgentResourceKind, type AgentResourceRequest, type AgentResourceResolution, type AgentResourceResolver, AgentRunControls, type AgentRunControlsProps, AgentRunSettingsPanel, type AgentRunSettingsPanelProps, type AgentSandboxMode, type AgentSandboxPolicy, AgentShell, type AgentShellComponentProps, type AgentShellProps, type AgentSidebarComponentProps, type AgentSkillConfigWriteOptions, type AgentSkillInput, AgentSkillsPanel, type AgentSkillsRefreshOptions, type AgentSortDirection, AgentStartComposer, type AgentStartComposerProps, AgentStarterCwd, AgentStatusBar, AgentStatusDetails, AgentStatusSummary, type AgentTextInput, type AgentTheme, AgentThemeToggle, type AgentThemeToggleProps, type AgentThreadConfigOptions, type AgentThreadForkResult, AgentThreadHeader, type AgentThreadHistoryResult, type AgentThreadHistorySyncedEvent, type AgentThreadListController, type AgentThreadListControllerOptions, type AgentThreadListRequest, type AgentThreadReadResult, type AgentThreadResumeResult, type AgentThreadResumeRunSettings, AgentThreadSidebar, type AgentThreadSortKey, type AgentThreadSource, type AgentThreadSourceKind, type AgentThreadStartResult, type AgentThreadStartSource, type AgentThreadStartWithInputOptions, type AgentThreadStartWithInputResult, AgentThreadSurface, AgentThreadTimeline, AgentThreadView, type AgentThreadViewProps, AgentTokenUsageBar, AgentToolCallItem, AgentTranscript, type AgentTranscriptBlock, type AgentTranscriptController, type AgentTranscriptControllerOptions, type AgentTranscriptDensity, type AgentTranscriptDensityConfig, type AgentTranscriptDensityMode, type AgentTranscriptEntry, type AgentTranscriptItem, type AgentTranscriptPendingState, type AgentTranscriptScrollController, type AgentTranscriptScrollControllerOptions, AgentTurn, type AgentUnavailableResource, type AgentUnknownUserInput, AgentUsagePanel, type AgentUsageProps, AgentUsageSummary, type AgentUserInput, type AgentWorkingDirectoryResolver, AgentWorkspace, type AgentWorkspaceProps, ComposerRunSettings, DEFAULT_TRANSCRIPT_ITEM_LIMIT, type QueuedFollowUp, type QueuedFollowUpAttachment, TRANSCRIPT_ITEM_INCREMENT, type ThreadForkOptions, type ThreadHistoryParams, ThreadList, type ThreadResumeOptions, type ThreadStartOptions, type TranscriptApprovalAnchors, type TurnStartOptions, type UsageWindow, agentI18nDictionaries, agentLocales, agentResourceDisplayName, agentResourceUrl, defaultAgentComponents, formatThreadStatus, interpolate, interpolationVariables, isUserFacingPath, normalizeAgentLocale, normalizeUsageWindows, threadSubtitle, transcriptItemIds, useAgentAccount, useAgentAction, useAgentApprovals, useAgentApps, useAgentBootstrap, useAgentComposer, useAgentComposerController, useAgentContext, useAgentDiagnostics, useAgentDirectThreadController, useAgentHooks, useAgentI18n, useAgentModels, useAgentRunSettings, useAgentServerRequests, useAgentSkills, useAgentThread, useAgentThreadActions, useAgentThreadController, useAgentThreadHistory, useAgentThreadListController, useAgentThreadReader, useAgentThreads, useAgentTranscriptController, useAgentTranscriptScrollController, useAgentTurn, useAgentTurnController, useAgentUsage, visibleTranscriptWindow };
+export { AGENT_FULL_ACCESS_RUN_POLICY, type AgentApprovalComponentProps, type AgentApprovalDefaultProps, type AgentApprovalPolicy, AgentApprovalQueue, type AgentApprovalsReviewer, AgentAppsPanel, type AgentAppsRefreshOptions, type AgentAttachmentChip, type AgentAttachmentChipKind, AgentAttachmentChips, type AgentAttachmentChipsProps, type AgentBlockComponentProps, type AgentBlockDefaultProps, type AgentBootstrapState, AgentChat, type AgentChatProps, AgentCommandItem, AgentCommandOutputItem, type AgentComponents, AgentComposer, type AgentComposerController, type AgentComposerDisabledReason, type AgentComposerFailedPendingMessage, AgentComposerInput, type AgentComposerInputProps, type AgentComposerIntegration, type AgentComposerIntegrationAttachment, type AgentComposerIntegrationResolver, AgentComposerPanel, type AgentComposerPanelComponentProps, type AgentComposerPanelProps, type AgentComposerProps, AgentComposerSubmitButton, type AgentComposerSubmitButtonProps, type AgentComposerSubmitMode, AgentComposerToolbar, type AgentComposerToolbarProps, AgentContentBlockView, AgentContextUsageIndicator, type AgentContextValue, AgentCriticalNoticeList, AgentDiagnosticsPanel, AgentDiffItem, AgentDiffViewer, type AgentDirectThreadController, type AgentDirectThreadOpenResult, type AgentEmptyStateComponentProps, AgentFileChangeItem, type AgentFileResourceRequest, AgentFirstRun, type AgentHooksRefreshOptions, type AgentI18nDictionary, type AgentI18nKey, type AgentI18nMessages, AgentI18nProvider, type AgentI18nProviderProps, type AgentI18nValue, type AgentImageInput, type AgentItemDefaultProps, type AgentJsonValue, type AgentLocalAttachmentKind, type AgentLocalAttachmentResolver, type AgentLocalImageInput, type AgentLocalMediaResourceRequest, type AgentLocalMediaUrlResolver, type AgentLocale, AgentLocaleSelect, type AgentLocaleSelectProps, type AgentMentionInput, AgentMessageItem, AgentMessageList, type AgentPersonality, AgentProvider, type AgentProviderProps, AgentRateLimitBar, AgentReasoningItem, type AgentReasoningSummary, type AgentResolvedLocalAttachment, type AgentResolvedResource, type AgentResolvedResourceBase, type AgentResolvedUrlResource, type AgentResourceKind, type AgentResourceRequest, type AgentResourceResolution, type AgentResourceResolver, AgentRunControls, type AgentRunControlsProps, type AgentRunPolicy, type AgentSandboxMode, type AgentSandboxPolicy, AgentShell, type AgentShellComponentProps, type AgentShellProps, type AgentSidebarComponentProps, type AgentSkillConfigWriteOptions, type AgentSkillInput, AgentSkillsPanel, type AgentSkillsRefreshOptions, type AgentSortDirection, AgentStartComposer, type AgentStartComposerProps, AgentStarterCwd, AgentStatusBar, AgentStatusDetails, AgentStatusSummary, type AgentTextInput, type AgentTheme, AgentThemeToggle, type AgentThemeToggleProps, type AgentThreadConfigOptions, type AgentThreadForkResult, AgentThreadHeader, type AgentThreadHistoryResult, type AgentThreadHistorySyncedEvent, type AgentThreadListController, type AgentThreadListControllerOptions, type AgentThreadListRequest, type AgentThreadReadResult, type AgentThreadResumeResult, type AgentThreadResumeRunSettings, AgentThreadSidebar, type AgentThreadSortKey, type AgentThreadSource, type AgentThreadSourceKind, type AgentThreadStartResult, type AgentThreadStartSource, type AgentThreadStartWithInputOptions, type AgentThreadStartWithInputResult, AgentThreadSurface, AgentThreadTimeline, AgentThreadView, type AgentThreadViewProps, AgentTokenUsageBar, AgentToolCallItem, AgentTranscript, type AgentTranscriptBlock, type AgentTranscriptController, type AgentTranscriptControllerOptions, type AgentTranscriptDensity, type AgentTranscriptDensityConfig, type AgentTranscriptDensityMode, type AgentTranscriptEntry, type AgentTranscriptItem, type AgentTranscriptPendingState, type AgentTranscriptScrollController, type AgentTranscriptScrollControllerOptions, AgentTurn, type AgentUnavailableResource, type AgentUnknownUserInput, AgentUsagePanel, type AgentUsageProps, AgentUsageSummary, type AgentUserInput, type AgentWorkingDirectoryResolver, AgentWorkspace, type AgentWorkspaceProps, ComposerRunControls, DEFAULT_AGENT_RUN_POLICIES, DEFAULT_TRANSCRIPT_ITEM_LIMIT, type QueuedFollowUp, type QueuedFollowUpAttachment, TRANSCRIPT_ITEM_INCREMENT, type ThreadForkOptions, type ThreadHistoryParams, ThreadList, type ThreadResumeOptions, type ThreadStartOptions, type TranscriptApprovalAnchors, type TurnStartOptions, type UsageWindow, agentI18nDictionaries, agentLocales, agentResourceDisplayName, agentResourceUrl, agentRunPolicyTurnOptions, defaultAgentComponents, effectiveAgentRunPolicies, formatThreadStatus, interpolate, interpolationVariables, isUserFacingPath, normalizeAgentLocale, normalizeUsageWindows, resolvedAgentRunPolicyId, threadSubtitle, transcriptItemIds, useAgentAccount, useAgentAction, useAgentApprovals, useAgentApps, useAgentBootstrap, useAgentComposer, useAgentComposerController, useAgentContext, useAgentDiagnostics, useAgentDirectThreadController, useAgentHooks, useAgentI18n, useAgentModels, useAgentRunSettings, useAgentServerRequests, useAgentSkills, useAgentThread, useAgentThreadActions, useAgentThreadController, useAgentThreadHistory, useAgentThreadListController, useAgentThreadReader, useAgentThreads, useAgentTranscriptController, useAgentTranscriptScrollController, useAgentTurn, useAgentTurnController, useAgentUsage, visibleTranscriptWindow };

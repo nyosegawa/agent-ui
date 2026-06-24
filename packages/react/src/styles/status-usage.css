@@ -355,12 +355,11 @@
   display: grid;
   gap: var(--aui-space-300);
   grid-template-columns:
-    minmax(260px, 1.4fr) minmax(150px, 1fr) minmax(120px, 0.7fr)
-    minmax(180px, 1fr);
+    minmax(260px, 1.4fr) minmax(150px, 1fr) minmax(120px, 0.7fr);
   padding: var(--aui-space-350) var(--aui-space-500) var(--aui-space-400);
 }
 
-.aui-mode-group {
+.aui-policy-group {
   border: 0;
   display: grid;
   gap: var(--aui-space-150);
@@ -369,7 +368,7 @@
   padding: 0;
 }
 
-.aui-mode-group legend,
+.aui-policy-group legend,
 .aui-field span {
   color: var(--aui-fg-muted);
   font-size: var(--aui-font-size-xs);

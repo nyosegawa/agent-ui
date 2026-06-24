@@ -390,10 +390,10 @@ for (const route of ["/", "/host-workflow-recipe"] as const) {
 test("composer mode menu opens within the viewport on mobile", async ({ page }) => {
   await page.setViewportSize(mobileViewport);
   await page.goto("/");
-  const modeMenu = page.getByRole("button", { name: "Execution mode" });
+  const modeMenu = page.getByRole("button", { name: "Run policy" });
   await modeMenu.scrollIntoViewIfNeeded();
   await modeMenu.click();
-  await expect(page.getByRole("menu", { name: "Execution mode" })).toBeVisible();
+  await expect(page.getByRole("menu", { name: "Run policy" })).toBeVisible();
   await expectWithinViewport(page, ".aui-menu-panel");
 });
 
@@ -442,7 +442,7 @@ for (const route of ["/", "/host-workflow-recipe"] as const) {
       await expectActuallyHitTestable(
         page.locator(".aui-composer button[aria-label='Send']").first(),
       );
-      const modeMenu = page.getByRole("button", { name: "Execution mode" }).first();
+      const modeMenu = page.getByRole("button", { name: "Run policy" }).first();
       await modeMenu.scrollIntoViewIfNeeded();
       await modeMenu.click();
       await expectVisibleInViewport(page, ".aui-menu-panel");

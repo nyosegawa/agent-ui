@@ -15,7 +15,7 @@ import {
   buttonClass,
 } from "../components-internal";
 import { AgentComposerSubmitButton } from "./composer-submit-button";
-import { ComposerRunSettings } from "./run-settings";
+import { ComposerRunControls } from "./run-settings";
 import { deferAction } from "./shared";
 import { AgentContextUsageIndicator } from "./context-usage";
 import { FailedPendingMessageList } from "./composer-failed-pending";
@@ -430,7 +430,7 @@ function AgentComposerForm({
                 </button>
               ))}
             </div>
-            <ComposerRunSettings />
+            <ComposerRunControls />
           </>
         }
         end={

@@ -1,8 +1,8 @@
-import type { ExecutionModeId, ReasoningEffort } from "../state";
+import type { AgentRunPolicyId, ReasoningEffort } from "../state";
 
 export type RunSettingsEvent = {
   type: "runSettings/updated";
-  executionMode?: ExecutionModeId;
+  policyId?: AgentRunPolicyId;
   modelId?: string;
   effort?: ReasoningEffort;
   cwd?: string;
