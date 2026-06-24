@@ -3,7 +3,7 @@
 ## Status Summary
 
 - Planning status: complete on branch.
-- Implementation status: in progress; P001 implemented, validated, reviewed, and ready for phase commit.
+- Implementation status: in progress; P001 implemented, validated, reviewed, committed, and pushed.
 - Planning branch: reuse `codex/fixture-system-redesign-plan`.
 - Compatibility stance: no backwards compatibility.
 - Required review stance: every implementation phase must run four parallel subagent reviews after focused validation and before phase commit.
@@ -13,12 +13,12 @@
 - Branch: `codex/fixture-system-redesign-plan`
 - Planning commit: `0194146` (`Plan Agent UI surface redesign`).
 - Remote: `origin/codex/fixture-system-redesign-plan`
-- Push result: pending for implementation phase commits.
+- Push result: P001 pushed to `origin/codex/fixture-system-redesign-plan`.
 - Blockers: none known before artifact validation.
 
 ## Phase Checklist
 
-- P001 Protocol classification and Codex adapter boundary - implemented, validated, reviewed, pending phase commit/push.
+- P001 Protocol classification and Codex adapter boundary - implemented, validated, reviewed, committed, and pushed.
 - P002 Core runtime state, reducers, selectors, and view-state contract
 - P003 React view models, direct-link controller, and raw-free components
 - P004 Default composer, turn controls, retry, and neutral integrations
@@ -42,8 +42,9 @@
     - Implementation: Added stable server-request role metadata and guards in `packages/codex/src/protocol.ts`; changed Codex server-request normalization to classify only stable request methods; recognized generated structured thread runtime status in the Codex normalizer before legacy core projection; added `textInput(text, { textElements })`; updated Codex protocol and package export docs; updated Codex API snapshots.
     - Validation: `bun run test:protocol` passed; `bun run typecheck` passed; `bun run validate:protocol` passed; `bun run lint` passed; `bun run test:api-snapshots` passed after intentional update; `bun run validate:packages` passed; `bun run test:package-resolution` passed. Browser QA not run for P001 because no React, CSS, fixture route, or real-local bridge UI changed; browser-visible validation is scheduled for P003-P006.
     - Review: Four parallel subagent reviews completed. Protocol/core lane found no P1/P2 and one P3 drift note, addressed by typing the internal runtime-status helper from generated `ThreadStatus`/`ThreadActiveFlag`. Phase-boundary lane found P2 missing `validate:packages`, fixed by running and passing that gate. React/API/docs lane found P2 stale package export docs and over-public runtime-status API wording, fixed by updating docs, keeping runtime status internal, and refreshing snapshots. Browser/UX lane found no P1/P2 and recommended no browser QA for P001.
-    - Commit: pending phase commit after this evidence update.
-    - Push: pending phase push after commit.
+    - Commit: `0798db0` (`Classify Codex protocol requests`).
+    - Push: pushed `0798db0` to `origin/codex/fixture-system-redesign-plan`; PR #35 is open at https://github.com/nyosegawa/agent-ui/pull/35.
+    - PR/CI: PR #35 detected CI and Compatibility runs for the pushed implementation commit; final CI status must be followed after the evidence commit is pushed.
   - Tasks:
     - [x] T001 Preserve upstream thread status active flags in codex normalizers.
       - Expected files/areas: `packages/codex/src/normalizers/shared.ts`, protocol tests.
