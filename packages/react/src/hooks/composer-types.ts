@@ -43,6 +43,7 @@ export interface AgentComposerController {
 }
 
 export type AgentComposerDisabledReason =
+  | "approval"
   | "empty"
   | "interrupting"
   | "submitting";

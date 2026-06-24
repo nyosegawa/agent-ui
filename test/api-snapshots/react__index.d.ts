@@ -327,7 +327,7 @@ interface AgentComposerController {
     submitMode: AgentComposerSubmitMode;
     value: string;
 }
-type AgentComposerDisabledReason = "empty" | "interrupting" | "submitting";
+type AgentComposerDisabledReason = "approval" | "empty" | "interrupting" | "submitting";
 interface AgentComposerFailedPendingMessage {
     error?: string;
     operationId: string;

@@ -98,7 +98,6 @@ export function CriticalInteractionStates() {
       </header>
       <div className="aui-closeup-grid">
         <CloseupApprovalQueue />
-        <CloseupComposerWithMentions />
         <CloseupEmptyStateMobile />
         <CloseupStartComposer />
         <CloseupSidebarDrawerSearch />
@@ -156,6 +155,7 @@ function CloseupComposerProvider({ children }: { children: ReactNode }) {
       },
       operations: {},
       orderedTurnIds: [],
+      runtime: { status: { type: "idle" } },
       status: "loaded",
       storage: "unknown",
       thread: {
@@ -173,21 +173,6 @@ function CloseupComposerProvider({ children }: { children: ReactNode }) {
     </AgentProvider>
   );
 }
-
-const sampleAppMention = () => ({
-  label: "Browser",
-  value: "app://browser",
-});
-
-const sampleAppMentionAlt = () => ({
-  label: "Drive",
-  value: "app://drive",
-});
-
-const samplePluginMention = () => ({
-  label: "Browser tools",
-  value: "plugin://browser-tools",
-});
 
 function FocusFirstTextarea() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -224,8 +209,6 @@ function CloseupComposer() {
     >
       <CloseupComposerProvider>
         <AgentComposer
-          onRequestAppMention={sampleAppMention}
-          onRequestPluginMention={samplePluginMention}
           resolveLocalAttachment={resolvedCloseupImage}
           threadId="thread-closeup"
         />
@@ -244,8 +227,6 @@ function CloseupComposerFocused() {
         <div style={{ position: "relative" }}>
           <FocusFirstTextarea />
           <AgentComposer
-            onRequestAppMention={sampleAppMention}
-            onRequestPluginMention={samplePluginMention}
             resolveLocalAttachment={resolvedCloseupImage}
             threadId="thread-closeup"
           />
@@ -269,8 +250,6 @@ function CloseupComposerDisabled() {
         <AgentComposer
           disabled
           disabledReason="Resolve the pending approval before sending another message."
-          onRequestAppMention={sampleAppMention}
-          onRequestPluginMention={samplePluginMention}
           placeholder="Waiting on approval"
           threadId="thread-rich-transcript"
         />
@@ -288,8 +267,6 @@ function CloseupComposerMobile() {
     >
       <CloseupComposerProvider>
         <AgentComposer
-          onRequestAppMention={sampleAppMention}
-          onRequestPluginMention={samplePluginMention}
           resolveLocalAttachment={resolvedCloseupImage}
           threadId="thread-closeup"
         />
@@ -420,46 +397,6 @@ function CloseupMobileChatShell() {
           <AgentChat diagnostics sidebar usage />
         </AgentProvider>
       </div>
-    </CloseupFrame>
-  );
-}
-
-function CloseupComposerWithMentions() {
-  const initialState = useMemo(() => {
-    const state = createInitialAgentState();
-    state.threadLifecycle.activeThreadId = "thread-mentions";
-    state.threadLifecycle.collections[state.threadLifecycle.defaultCollectionKey]!.ids = ["thread-mentions"];
-    state.threads["thread-mentions"] = {
-      activity: "idle",
-      availability: "available",
-      id: "thread-mentions",
-      metadata: { title: "Mentions composer" },
-      operations: {},
-      orderedTurnIds: [],
-      status: "loaded",
-      storage: "unknown",
-      thread: { id: "thread-mentions", name: "Mentions composer" },
-      turns: {},
-    };
-    return state;
-  }, []);
-  const appCalled = useRef(0);
-  return (
-    <CloseupFrame
-      title="Composer · App + Plugin mentions"
-      caption="Host-provided resolver chips. Click App / Plugin to add more."
-    >
-      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentComposer
-          onRequestAppMention={() => {
-            appCalled.current += 1;
-            return appCalled.current % 2 === 1 ? sampleAppMention() : sampleAppMentionAlt();
-          }}
-          onRequestPluginMention={samplePluginMention}
-          resolveLocalAttachment={resolvedCloseupImage}
-          threadId="thread-mentions"
-        />
-      </AgentProvider>
     </CloseupFrame>
   );
 }
@@ -648,6 +585,7 @@ function createSidebarDrawerState(): AgentSessionState {
       metadata: { cwd: thread.path, title: thread.name },
       operations: {},
       orderedTurnIds: selected ? ["turn-side-select"] : [],
+      runtime: { status: { type: "idle" } },
       status: "loaded",
       storage: "unknown",
       thread,
@@ -702,6 +640,7 @@ function createLocalMediaFallbackState(): AgentSessionState {
     metadata: { title: "Local media fallback" },
     operations: {},
     orderedTurnIds: ["turn-local-media-closeup"],
+    runtime: { status: { type: "idle" } },
     status: "loaded",
     storage: "unknown",
     thread: { id: "thread-local-media-closeup", name: "Local media fallback" },
@@ -760,6 +699,10 @@ function createOptimisticPendingState(): AgentSessionState {
     },
     operations: {},
     orderedTurnIds: ["pending-turn-closeup"],
+    runtime: {
+      activeTurnId: "pending-turn-closeup",
+      status: { activeFlags: [], type: "active" },
+    },
     status: "running",
     storage: "unknown",
     thread: {

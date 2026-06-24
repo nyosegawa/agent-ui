@@ -277,6 +277,28 @@ interface AgentThreadMetadata {
     operationId?: string;
 }
 type ThreadStatus = "notLoaded" | "loaded" | "ready" | "running" | "waitingForInput" | "complete" | "completed" | "interrupted" | "error" | "failed" | "archived" | "closed" | "systemError";
+type AgentThreadActiveFlag = "waitingOnApproval" | "waitingOnUserInput";
+type AgentThreadRuntimeStatus = {
+    type: "notLoaded";
+} | {
+    type: "idle";
+} | {
+    type: "systemError";
+} | {
+    activeFlags: AgentThreadActiveFlag[];
+    type: "active";
+};
+type AgentTurnResult = "completed" | "error" | "failed" | "interrupted" | "unknown";
+interface AgentThreadLastTurnResult {
+    result: AgentTurnResult;
+    status?: string;
+    turnId: TurnId;
+}
+interface AgentThreadRuntimeState {
+    activeTurnId?: TurnId;
+    lastTurn?: AgentThreadLastTurnResult;
+    status: AgentThreadRuntimeStatus;
+}
 interface ThreadTokenUsage {
     cachedInputTokens?: number;
     inputTokens?: number;
@@ -321,6 +343,50 @@ interface AgentThreadView {
     pending?: AgentPendingThreadState;
     error?: AgentError;
 }
+type AgentThreadWaitingReason = "approval" | "attestation" | "authRefresh" | "mcpElicitation" | "permission" | "unknown" | "userInput";
+interface AgentThreadRuntimeView {
+    activeFlags: AgentThreadActiveFlag[];
+    activeTurnId?: TurnId;
+    isRunning: boolean;
+    lastTurn?: AgentThreadLastTurnResult;
+    needsInput: boolean;
+    status: AgentThreadRuntimeStatus["type"];
+    waitingReasons: AgentThreadWaitingReason[];
+}
+interface AgentServerRequestSummary {
+    id: RequestId;
+    itemId?: ItemId;
+    kind: PendingServerRequestKind;
+    threadId?: ThreadId;
+    turnId?: TurnId;
+    visible: boolean;
+    waitingReason: AgentThreadWaitingReason;
+}
+interface AgentThreadExecutionState {
+    runtime: AgentThreadRuntimeView;
+    serverRequests: AgentServerRequestSummary[];
+}
+interface AgentThreadSummaryView extends AgentThreadView {
+    execution: AgentThreadExecutionState;
+}
+type AgentTranscriptBlockView = Pick<AgentItemBlock, "command" | "content" | "cwd" | "durationMs" | "exitCode" | "id" | "kind" | "output" | "path" | "query" | "resource" | "server" | "status" | "subtype" | "summary" | "text" | "tool" | "toolType">;
+interface AgentTranscriptTurnView {
+    blocks: AgentTranscriptBlockView[];
+    id: TurnId;
+    itemIds: ItemId[];
+    status?: string;
+}
+interface AgentThreadTranscriptView {
+    threadId: ThreadId;
+    turns: AgentTranscriptTurnView[];
+}
+interface AgentApprovalView {
+    itemId?: ItemId;
+    kind: "commandApproval" | "fileChangeApproval";
+    requestId: RequestId;
+    threadId?: ThreadId;
+    turnId?: TurnId;
+}
 interface ThreadState {
     id: ThreadId;
     canonicalId?: ThreadId;
@@ -334,6 +400,7 @@ interface ThreadState {
     };
     operations: Record<string, AgentOperationView>;
     thread: AgentThread;
+    runtime: AgentThreadRuntimeState;
     turns: Record<TurnId, TurnState>;
     orderedTurnIds: TurnId[];
     tokenUsage?: ThreadTokenUsage;
@@ -533,18 +600,21 @@ type SkillsEvent = {
 type ThreadEvent = {
     type: "thread/upserted";
     thread: AgentThread;
+    runtimeStatus?: AgentThreadRuntimeStatus;
     status?: ThreadStatus;
     turns?: AgentTurn[];
     snapshot?: boolean;
 } | {
     type: "thread/started";
     thread: AgentThread;
+    runtimeStatus?: AgentThreadRuntimeStatus;
     status?: ThreadStatus;
     turns?: AgentTurn[];
     snapshot?: boolean;
 } | {
     type: "thread/status/changed";
     threadId: ThreadId;
+    runtimeStatus?: AgentThreadRuntimeStatus;
     status: ThreadStatus;
     snapshot?: boolean;
 } | {
@@ -561,6 +631,7 @@ type ThreadEvent = {
 } | {
     type: "thread/optimistic/created";
     operation: AgentOperationView;
+    runtimeStatus?: AgentThreadRuntimeStatus;
     thread: AgentThread;
     status?: ThreadStatus;
     turns?: AgentTurn[];
@@ -715,8 +786,15 @@ declare function selectOrderedCollectionThreads(state: AgentSessionState, scope?
 declare function selectPendingOperations(state: AgentSessionState, threadId?: ThreadId): AgentOperationView[];
 declare function selectThreadView(state: AgentSessionState, threadId: ThreadId): AgentThreadView | undefined;
 declare function selectActiveThreadView(state: AgentSessionState): AgentThreadView | undefined;
+declare function selectThreadRuntimeView(state: AgentSessionState, threadId: ThreadId): AgentThreadRuntimeView | undefined;
+declare function selectThreadExecutionState(state: AgentSessionState, threadId: ThreadId): AgentThreadExecutionState | undefined;
+declare function selectThreadSummaryView(state: AgentSessionState, threadId: ThreadId): AgentThreadSummaryView | undefined;
+declare function selectActiveThreadSummaryView(state: AgentSessionState): AgentThreadSummaryView | undefined;
+declare function selectThreadTranscriptView(state: AgentSessionState, threadId: ThreadId): AgentThreadTranscriptView | undefined;
 declare function selectPendingApprovals(state: AgentSessionState, threadId?: ThreadId): PendingServerRequest[];
+declare function selectPendingApprovalViews(state: AgentSessionState, threadId?: ThreadId): AgentApprovalView[];
 declare function selectServerRequestQueue(state: AgentSessionState, threadId?: ThreadId): PendingServerRequest[];
+declare function selectServerRequestSummaries(state: AgentSessionState, threadId?: ThreadId): AgentServerRequestSummary[];
 declare function selectApps(state: AgentSessionState, threadId?: ThreadId): ScopedAppsState;
 declare function selectDiagnostics(state: AgentSessionState): DiagnosticsState;
 declare function selectDiagnosticsForAudience(state: AgentSessionState, audience: AgentDiagnosticAudience): DiagnosticsState;
@@ -733,4 +811,4 @@ declare function selectHostMetrics(state: AgentSessionState): unknown;
 declare function selectThreadLifecycle(state: AgentSessionState): ThreadLifecycleState;
 declare function selectRunSettings(state: AgentSessionState): RunSettingsState;
 
-export { AGENT_RETENTION_POLICY, type AccountEvent, type AccountState, type AgentApp, type AgentDiagnosticAudience, type AgentDiagnosticReasonCode, type AgentError, type AgentEvent, type AgentHook, type AgentItemBlock, type AgentItemBlockKind, type AgentItemBlockResource, type AgentItemBlockResourceKind, type AgentItemMetadata, type AgentItemState, type AgentModel, type AgentOperationStatus, type AgentOperationView, type AgentPendingThreadState, type AgentRequestOptions, type AgentSessionState, type AgentSkill, type AgentThread, type AgentThreadCollection, type AgentThreadCollectionStatus, type AgentThreadMetadata, type AgentThreadResumeDiagnosticReasonCode, type AgentThreadScope, type AgentThreadView, type AgentTransport, type AgentTransportEvent, type AgentTurn, type AgentTurnItemsView, type AgentTurnMetadata, type AppsEvent, type AppsState, type ConnectionEvent, type ConnectionState, type DeviceCodeLoginState, type DiagnosticsEvent, type DiagnosticsState, type ExecutionModeId, FakeAgentTransport, type FakeAgentTransportOptions, type FakeTransportRequest, type FixtureStep, type HooksEvent, type HooksState, type ItemEvent, type ItemId, type ModelState, type ModelsEvent, type PendingServerRequest, type PendingServerRequestKind, type ProtocolNotificationState, type ReasoningEffort, type RequestId, type RequestIdKey, type RunSettingsEvent, type RunSettingsState, type ScopedAppsState, type ServerRequestEvent, type ServerRequestQueueState, type SkillsEvent, type SkillsState, type StatusBannerKind, type StatusBannerState, type ThreadEvent, type ThreadId, type ThreadLifecycleState, type ThreadState, type ThreadStatus, type ThreadTokenUsage, type TokenUsageBreakdown, type TurnDiffState, type TurnEvent, type TurnId, type TurnPlanState, type TurnState, type UsageEvent, type UsageState, type WarningState, agentReducer, createInitialAgentState, requestIdKey, runEventFixture, selectAccountRateLimits, selectActiveThread, selectActiveThreadView, selectApps, selectAuditDiagnostics, selectDeveloperDiagnostics, selectDiagnosticErrors, selectDiagnosticWarnings, selectDiagnostics, selectDiagnosticsForAudience, selectHostMetrics, selectItemBlock, selectLatestRunningTurn, selectLatestRunningTurnId, selectOrderedCollectionThreads, selectOrderedItems, selectOrderedThreads, selectOrderedTurns, selectPendingApprovals, selectPendingOperations, selectProtocolNotifications, selectRunSettings, selectServerRequestQueue, selectStatusBanners, selectThread, selectThreadCollection, selectThreadLifecycle, selectThreadView, selectTurn, selectTurnItem, selectUsage, selectUserDiagnostics };
+export { AGENT_RETENTION_POLICY, type AccountEvent, type AccountState, type AgentApp, type AgentApprovalView, type AgentDiagnosticAudience, type AgentDiagnosticReasonCode, type AgentError, type AgentEvent, type AgentHook, type AgentItemBlock, type AgentItemBlockKind, type AgentItemBlockResource, type AgentItemBlockResourceKind, type AgentItemMetadata, type AgentItemState, type AgentModel, type AgentOperationStatus, type AgentOperationView, type AgentPendingThreadState, type AgentRequestOptions, type AgentServerRequestSummary, type AgentSessionState, type AgentSkill, type AgentThread, type AgentThreadActiveFlag, type AgentThreadCollection, type AgentThreadCollectionStatus, type AgentThreadExecutionState, type AgentThreadLastTurnResult, type AgentThreadMetadata, type AgentThreadResumeDiagnosticReasonCode, type AgentThreadRuntimeState, type AgentThreadRuntimeStatus, type AgentThreadRuntimeView, type AgentThreadScope, type AgentThreadSummaryView, type AgentThreadTranscriptView, type AgentThreadView, type AgentThreadWaitingReason, type AgentTranscriptBlockView, type AgentTranscriptTurnView, type AgentTransport, type AgentTransportEvent, type AgentTurn, type AgentTurnItemsView, type AgentTurnMetadata, type AgentTurnResult, type AppsEvent, type AppsState, type ConnectionEvent, type ConnectionState, type DeviceCodeLoginState, type DiagnosticsEvent, type DiagnosticsState, type ExecutionModeId, FakeAgentTransport, type FakeAgentTransportOptions, type FakeTransportRequest, type FixtureStep, type HooksEvent, type HooksState, type ItemEvent, type ItemId, type ModelState, type ModelsEvent, type PendingServerRequest, type PendingServerRequestKind, type ProtocolNotificationState, type ReasoningEffort, type RequestId, type RequestIdKey, type RunSettingsEvent, type RunSettingsState, type ScopedAppsState, type ServerRequestEvent, type ServerRequestQueueState, type SkillsEvent, type SkillsState, type StatusBannerKind, type StatusBannerState, type ThreadEvent, type ThreadId, type ThreadLifecycleState, type ThreadState, type ThreadStatus, type ThreadTokenUsage, type TokenUsageBreakdown, type TurnDiffState, type TurnEvent, type TurnId, type TurnPlanState, type TurnState, type UsageEvent, type UsageState, type WarningState, agentReducer, createInitialAgentState, requestIdKey, runEventFixture, selectAccountRateLimits, selectActiveThread, selectActiveThreadSummaryView, selectActiveThreadView, selectApps, selectAuditDiagnostics, selectDeveloperDiagnostics, selectDiagnosticErrors, selectDiagnosticWarnings, selectDiagnostics, selectDiagnosticsForAudience, selectHostMetrics, selectItemBlock, selectLatestRunningTurn, selectLatestRunningTurnId, selectOrderedCollectionThreads, selectOrderedItems, selectOrderedThreads, selectOrderedTurns, selectPendingApprovalViews, selectPendingApprovals, selectPendingOperations, selectProtocolNotifications, selectRunSettings, selectServerRequestQueue, selectServerRequestSummaries, selectStatusBanners, selectThread, selectThreadCollection, selectThreadExecutionState, selectThreadLifecycle, selectThreadRuntimeView, selectThreadSummaryView, selectThreadTranscriptView, selectThreadView, selectTurn, selectTurnItem, selectUsage, selectUserDiagnostics };

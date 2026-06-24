@@ -14,6 +14,11 @@ import {
   threadLifecycleStore,
   threadMetadataFromThread,
 } from "../stores/thread-lifecycle";
+import {
+  mergeRuntimeStatus,
+  threadRuntimeFromStatus,
+  runtimeWithServerRequestOverlay,
+} from "../stores/thread-runtime";
 import { turnStore } from "../stores/turn";
 import { mergeAgentTurn } from "../stores/turn-merge";
 import { mergeOrderedTurnIds } from "../stores/turn-order";
@@ -42,6 +47,14 @@ export function reduceThreadEvent(
         turns[turn.id] = turnStore.createTurnState(turn, incomingThread.id);
       }
       const status = event.status ?? threadState.status;
+      const baseRuntime = event.runtimeStatus
+        ? mergeRuntimeStatus(threadState.runtime, event.runtimeStatus)
+        : threadRuntimeFromStatus(status);
+      const runtime = runtimeWithServerRequestOverlay(
+        state,
+        { ...threadState, id: incomingThread.id, runtime: baseRuntime, status },
+        baseRuntime.status,
+      );
       return threadEntityStore.pruneSnapshots(
         commitThreadEntity(
           {
@@ -64,6 +77,7 @@ export function reduceThreadEvent(
               [event.operation.id]: event.operation,
             },
             orderedTurnIds,
+            runtime,
             status,
             thread: sanitizeThread({ ...threadState.thread, ...incomingThread }),
             turns,
@@ -99,6 +113,15 @@ export function reduceThreadEvent(
       const status = stalePreviewStatus
         ? threadState.status
         : (event.status ?? threadState.status);
+      const baseRuntime =
+        event.runtimeStatus && !stalePreviewStatus
+          ? mergeRuntimeStatus(threadState.runtime, event.runtimeStatus)
+          : threadRuntimeFromStatus(status);
+      const runtime = runtimeWithServerRequestOverlay(
+        state,
+        { ...threadState, id: threadId, runtime: baseRuntime, status },
+        baseRuntime.status,
+      );
       const turns = { ...threadState.turns };
       const incomingTurnIds = incomingTurns.map((turn) => turn.id);
       const orderedTurnIds = mergeOrderedTurnIds(
@@ -117,6 +140,7 @@ export function reduceThreadEvent(
           {
             ...threadState,
             orderedTurnIds,
+            runtime,
             thread: mergeThread(threadState.thread, incomingThread),
             status,
             turns,
@@ -143,11 +167,21 @@ export function reduceThreadEvent(
         !isArchivedToLoadedStatus(currentStatus, event.status)
           ? currentStatus
           : event.status;
+      const baseRuntime =
+        event.runtimeStatus && status === event.status
+          ? mergeRuntimeStatus(currentThread.runtime, event.runtimeStatus)
+          : threadRuntimeFromStatus(status);
+      const runtime = runtimeWithServerRequestOverlay(
+        state,
+        { ...currentThread, runtime: baseRuntime, status },
+        baseRuntime.status,
+      );
       return threadEntityStore.pruneSnapshots(
         commitThreadEntity(
           state,
           {
             ...currentThread,
+            runtime,
             status,
           },
           { preserveOrder: true },

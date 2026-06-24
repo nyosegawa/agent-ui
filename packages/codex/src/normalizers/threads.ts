@@ -8,6 +8,7 @@ import {
   asRecord,
   itemsViewValue,
   normalizeItem,
+  normalizeCodexThreadRuntimeStatus,
   normalizeThread,
   normalizeThreadStatus,
   normalizeTurn,
@@ -79,10 +80,13 @@ export function normalizeThreadNotification(
     case "thread/started": {
       const thread = normalizeThread(params.thread ?? params);
       const threadRecord = asRecord(params.thread);
+      const rawStatus = params.status ?? threadRecord?.status;
+      const runtimeStatus = normalizeCodexThreadRuntimeStatus(rawStatus);
       return [
         {
           type: "thread/started",
-          status: normalizeThreadStatus(params.status ?? threadRecord?.status),
+          ...(runtimeStatus ? { runtimeStatus } : {}),
+          status: normalizeThreadStatus(rawStatus),
           thread,
           turns: Array.isArray(params.turns)
             ? params.turns.map((turn) => normalizeTurn(turn, thread.id))
@@ -90,14 +94,17 @@ export function normalizeThreadNotification(
         },
       ];
     }
-    case "thread/status/changed":
+    case "thread/status/changed": {
+      const runtimeStatus = normalizeCodexThreadRuntimeStatus(params.status);
       return [
         {
           type: "thread/status/changed",
+          ...(runtimeStatus ? { runtimeStatus } : {}),
           status: normalizeThreadStatus(params.status),
           threadId: String(params.threadId ?? params.thread_id),
         },
       ];
+    }
     case "thread/archived":
       return [
         {
@@ -157,10 +164,16 @@ export function normalizeThreadReadResponse(
   const rawTurns = Array.isArray(rawThread.turns) ? rawThread.turns : undefined;
   const turns = rawTurns?.map((turn) => normalizeTurn(turn, thread.id)) ?? [];
   const status = snapshotStatus(rawThread.status, rawTurns?.length ?? 0);
+  const rawRuntimeStatus = normalizeCodexThreadRuntimeStatus(rawThread.status);
+  const runtimeStatus =
+    rawRuntimeStatus?.type === "notLoaded" && status !== "notLoaded"
+      ? runtimeStatusFromThreadStatus(status)
+      : (rawRuntimeStatus ?? runtimeStatusFromThreadStatus(status));
   const threadEvent =
     options.activate === false
       ? ({
           status,
+          ...(runtimeStatus ? { runtimeStatus } : {}),
           thread,
           snapshot: true,
           ...(rawTurns ? { turns } : {}),
@@ -168,6 +181,7 @@ export function normalizeThreadReadResponse(
         } satisfies AgentEvent)
       : ({
           status,
+          ...(runtimeStatus ? { runtimeStatus } : {}),
           thread,
           snapshot: true,
           ...(rawTurns ? { turns } : {}),
@@ -179,6 +193,7 @@ export function normalizeThreadReadResponse(
 
   events.push({
     status,
+    ...(runtimeStatus ? { runtimeStatus } : {}),
     snapshot: true,
     threadId: thread.id,
     type: "thread/status/changed",
@@ -222,10 +237,17 @@ export function normalizeThreadListResponse(
       throw new Error("thread/list response contains a thread without an id");
     }
     const thread = normalizeThread(rawThread);
+    const status = threadListSnapshotStatus(rawThread, scope);
+    const rawRuntimeStatus = normalizeCodexThreadRuntimeStatus(rawThreadRecord.status);
+    const runtimeStatus =
+      normalizeThreadStatus(rawThreadRecord.status) === status
+        ? (rawRuntimeStatus ?? runtimeStatusFromThreadStatus(status))
+        : runtimeStatusFromThreadStatus(status);
     ids.push(thread.id);
     return {
       snapshot: true,
-      status: threadListSnapshotStatus(rawThread, scope),
+      ...(runtimeStatus ? { runtimeStatus } : {}),
+      status,
       thread,
       type: "thread/upserted",
     };
@@ -534,4 +556,21 @@ function threadListSnapshotStatus(rawThread: unknown, scope: AgentThreadScope): 
 function snapshotStatus(value: unknown, turnCount: number): ThreadStatus {
   const status = normalizeThreadStatus(value);
   return status === "notLoaded" && turnCount > 0 ? "loaded" : status;
+}
+
+function runtimeStatusFromThreadStatus(
+  status: ThreadStatus,
+): NonNullable<ReturnType<typeof normalizeCodexThreadRuntimeStatus>> {
+  if (status === "notLoaded") return { type: "notLoaded" };
+  if (status === "error" || status === "failed" || status === "systemError") {
+    return { type: "systemError" };
+  }
+  if (status === "running") return { activeFlags: [], type: "active" };
+  if (status === "waitingForInput") {
+    return {
+      activeFlags: ["waitingOnApproval", "waitingOnUserInput"],
+      type: "active",
+    };
+  }
+  return { type: "idle" };
 }

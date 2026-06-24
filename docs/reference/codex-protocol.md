@@ -308,8 +308,9 @@ Productized stable Agent UI behavior:
   `thread/tokenUsage/updated`.
   The Codex adapter recognizes the structured App Server runtime status shape
   with `notLoaded`, `idle`, `systemError`, and `active.activeFlags` before
-  projecting it to the current core `ThreadStatus`. The core runtime-state
-  phase promotes those fields into first-class state.
+  projecting it to legacy `ThreadStatus`. Core also stores that structured
+  runtime status as first-class thread runtime state for selectors and view
+  models.
 - Turn lifecycle: `turn/start`, `turn/steer`, `turn/interrupt`,
   `turn/started`, `turn/completed`, `turn/plan/updated`, and
   `turn/diff/updated`.

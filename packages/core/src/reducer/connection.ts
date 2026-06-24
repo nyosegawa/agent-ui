@@ -4,6 +4,8 @@ import { connectionStore } from "../stores/connection";
 import { diagnosticsStore } from "../stores/diagnostics";
 import { serverRequestStore } from "../stores/server-request";
 import { threadEntityStore } from "../stores/thread-entity";
+import { runtimeWithPendingRequests } from "../stores/thread-runtime";
+import { commitThreadEntity } from "./thread-commit";
 
 export function reduceConnectionEvent(
   state: AgentSessionState,
@@ -49,8 +51,11 @@ function recoverPendingRequestThreads(
 ): AgentSessionState {
   let nextState = state;
   for (const threadId of threadIds) {
-    nextState = threadEntityStore.setStatus(nextState, threadId, "running", {
-      onlyIf: "waitingForInput",
+    const thread = nextState.threads[threadId];
+    if (!thread) continue;
+    nextState = commitThreadEntity(nextState, {
+      ...thread,
+      runtime: runtimeWithPendingRequests(thread.runtime, [], thread.status),
     });
   }
   return threadEntityStore.pruneSnapshots(nextState);

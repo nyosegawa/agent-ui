@@ -468,6 +468,7 @@ function ScopedThreadPaneExample() {
       metadata: { title: "Active host thread" },
       operations: {},
       orderedTurnIds: [],
+      runtime: { status: { type: "idle" } },
       status: "loaded",
       storage: "unknown",
       thread: { id: "thread-active", name: "Active host thread" },
@@ -480,6 +481,10 @@ function ScopedThreadPaneExample() {
       metadata: { title: "Scoped thread pane" },
       operations: {},
       orderedTurnIds: ["turn-fixed"],
+      runtime: {
+        lastTurn: { result: "completed", status: "completed", turnId: "turn-fixed" },
+        status: { type: "idle" },
+      },
       status: "complete",
       storage: "unknown",
       thread: { id: "thread-fixed", name: "Scoped thread pane" },

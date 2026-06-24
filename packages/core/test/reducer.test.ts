@@ -9,6 +9,7 @@ import fixture from "../../../fixtures/app-server/text-turn.json" with { type: "
 import { agentReducer } from "../src/reducer";
 import { runEventFixture } from "../src/fixtures";
 import { createInitialAgentState } from "../src/state";
+import { requestIdKey } from "../src/request-id-key";
 import { AGENT_RETENTION_POLICY, boundedRecordEntry } from "../src/retention";
 import {
   selectAccountRateLimits,
@@ -24,11 +25,16 @@ import {
   selectOrderedItems,
   selectOrderedTurns,
   selectPendingApprovals,
+  selectPendingApprovalViews,
   selectPendingOperations,
+  selectServerRequestSummaries,
   selectServerRequestQueue,
   selectStatusBanners,
   selectThreadCollection,
+  selectThreadExecutionState,
   selectThreadLifecycle,
+  selectThreadSummaryView,
+  selectThreadTranscriptView,
   selectThreadView,
   selectUsage,
   selectUserDiagnostics,
@@ -957,7 +963,7 @@ describe("agentReducer", () => {
       type: "thread/reconciled",
     });
 
-    expect(selectServerRequestQueue(state, "pending-thread")).toEqual([]);
+    expect(selectServerRequestQueue(state, "pending-thread")).toHaveLength(1);
     expect(selectServerRequestQueue(state, "thread-canonical")).toHaveLength(1);
     expect(selectPendingApprovals(state, "thread-canonical")[0]).toMatchObject({
       id: "approval-optimistic",
@@ -994,14 +1000,15 @@ describe("agentReducer", () => {
       type: "serverRequest/created",
     });
 
-    expect(selectServerRequestQueue(state, "pending-thread")).toEqual([]);
+    expect(selectServerRequestQueue(state, "pending-thread")).toHaveLength(1);
     expect(selectPendingApprovals(state, "thread-canonical")).toEqual([
       expect.objectContaining({
         id: "approval-delayed",
         threadId: "thread-canonical",
       }),
     ]);
-    expect(state.threads["thread-canonical"]?.status).toBe("waitingForInput");
+    expect(state.threads["thread-canonical"]?.status).toBe("running");
+    expect(state.threads["thread-canonical"]?.activity).toBe("waitingForInput");
   });
 
   it("canonicalizes stale turn and item events that arrive after optimistic thread reconciliation", () => {
@@ -1636,8 +1643,8 @@ describe("agentReducer", () => {
       { event: { type: "connection/closed" } },
     ]);
     expect(state.serverRequestQueue).toEqual({ byId: {}, order: [] });
-    expect(state.threads["thread-disconnect"]?.status).toBe("running");
-    expect(state.threads["thread-disconnect"]?.activity).toBe("running");
+    expect(state.threads["thread-disconnect"]?.status).toBe("loaded");
+    expect(state.threads["thread-disconnect"]?.activity).toBe("idle");
     expect(defaultThreadIds(state)).toContain("thread-disconnect");
   });
 
@@ -1656,8 +1663,12 @@ describe("agentReducer", () => {
         },
       },
     ]);
-    expect(state.threads["thread-approval"]?.status).toBe("waitingForInput");
+    expect(state.threads["thread-approval"]?.status).toBe("loaded");
     expect(state.threads["thread-approval"]?.activity).toBe("waitingForInput");
+    expect(state.threads["thread-approval"]?.runtime.status).toEqual({
+      activeFlags: ["waitingOnApproval"],
+      type: "active",
+    });
     expect(defaultThreadIds(state)).toContain("thread-approval");
     expect(
       selectServerRequestQueue(state, "thread-approval").map((request) => request.id),
@@ -1678,8 +1689,8 @@ describe("agentReducer", () => {
       },
       { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
     ]);
-    expect(resolved.threads["thread-approval"]?.status).toBe("running");
-    expect(resolved.threads["thread-approval"]?.activity).toBe("running");
+    expect(resolved.threads["thread-approval"]?.status).toBe("loaded");
+    expect(resolved.threads["thread-approval"]?.activity).toBe("idle");
     expect(defaultThreadIds(resolved)).toContain("thread-approval");
     expect(selectServerRequestQueue(resolved, "thread-approval")).toEqual([]);
   });
@@ -1774,6 +1785,433 @@ describe("agentReducer", () => {
 
     expect(completed.threads["thread-turn-sync"]?.status).toBe("completed");
     expectThreadLifecycleMembership(completed, "thread-turn-sync", "idle");
+    expect(completed.threads["thread-turn-sync"]?.runtime).toEqual({
+      activeTurnId: undefined,
+      lastTurn: {
+        result: "completed",
+        status: "completed",
+        turnId: "turn-turn-sync",
+      },
+      status: { type: "idle" },
+    });
+  });
+
+  it("keeps failed and error runtime states visibly failed", () => {
+    let state = runEventFixture([
+      { event: { thread: { id: "thread-runtime-failed" }, type: "thread/started" } },
+      {
+        event: {
+          status: "failed",
+          threadId: "thread-runtime-failed",
+          type: "thread/status/changed",
+        },
+      },
+    ]);
+
+    expect(state.threads["thread-runtime-failed"]?.activity).toBe("failed");
+    expect(selectThreadExecutionState(state, "thread-runtime-failed")?.runtime).toMatchObject({
+      isRunning: false,
+      needsInput: false,
+      status: "systemError",
+    });
+
+    state = runEventFixture([
+      {
+        event: {
+          status: "running",
+          thread: { id: "thread-turn-failed" },
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          threadId: "thread-turn-failed",
+          turn: { id: "turn-failed", status: "running", threadId: "thread-turn-failed" },
+          type: "turn/started",
+        },
+      },
+      {
+        event: {
+          items: [],
+          threadId: "thread-turn-failed",
+          turn: { id: "turn-failed", status: "failed", threadId: "thread-turn-failed" },
+          type: "turn/completed",
+        },
+      },
+    ]);
+
+    expect(state.threads["thread-turn-failed"]?.activity).toBe("failed");
+    expect(state.threads["thread-turn-failed"]?.runtime).toMatchObject({
+      activeTurnId: undefined,
+      lastTurn: {
+        result: "failed",
+        status: "failed",
+        turnId: "turn-failed",
+      },
+      status: { type: "systemError" },
+    });
+  });
+
+  it("selects runtime execution state, request summaries, approvals, and transcript views", () => {
+    const state = runEventFixture([
+      { event: { thread: { id: "thread-runtime" }, type: "thread/started" } },
+      {
+        event: {
+          threadId: "thread-runtime",
+          turn: { id: "turn-runtime", status: "running", threadId: "thread-runtime" },
+          type: "turn/started",
+        },
+      },
+      {
+        event: {
+          item: {
+            id: "item-runtime",
+            kind: "agentMessage",
+            status: "completed",
+            text: "Runtime view",
+            threadId: "thread-runtime",
+            turnId: "turn-runtime",
+          },
+          threadId: "thread-runtime",
+          turnId: "turn-runtime",
+          type: "item/completed",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "approval-runtime",
+            itemId: "item-runtime",
+            kind: "commandApproval",
+            payload: { command: "bun test" },
+            threadId: "thread-runtime",
+            turnId: "turn-runtime",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "input-runtime",
+            kind: "userInput",
+            payload: { prompt: "Continue?" },
+            threadId: "thread-runtime",
+            turnId: "turn-runtime",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "permission-runtime",
+            kind: "permissionsApproval",
+            payload: { permission: "network" },
+            threadId: "thread-runtime",
+            turnId: "turn-runtime",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "mcp-runtime",
+            kind: "mcpElicitation",
+            payload: { prompt: "MCP input" },
+            threadId: "thread-runtime",
+            turnId: "turn-runtime",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "auth-runtime",
+            kind: "authRefresh",
+            payload: { provider: "codex" },
+            threadId: "thread-runtime",
+            turnId: "turn-runtime",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "attestation-runtime",
+            kind: "attestation",
+            payload: { challenge: "challenge" },
+            threadId: "thread-runtime",
+            turnId: "turn-runtime",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "unknown-runtime",
+            kind: "unknown",
+            payload: { method: "unknown/request" },
+            threadId: "thread-runtime",
+            turnId: "turn-runtime",
+          },
+          type: "serverRequest/created",
+        },
+      },
+    ]);
+    const runtimeBlock =
+      state.threads["thread-runtime"]?.turns["turn-runtime"]?.blocksByItemId[
+        "item-runtime"
+      ];
+    Object.assign(runtimeBlock as Record<string, unknown>, {
+      metadata: { raw: true },
+      result: { raw: true },
+    });
+
+    expect(selectThreadExecutionState(state, "thread-runtime")).toEqual({
+      runtime: {
+        activeFlags: ["waitingOnApproval", "waitingOnUserInput"],
+        activeTurnId: "turn-runtime",
+        isRunning: false,
+        lastTurn: undefined,
+        needsInput: true,
+        status: "active",
+        waitingReasons: [
+          "approval",
+          "userInput",
+          "permission",
+          "mcpElicitation",
+          "authRefresh",
+          "attestation",
+          "unknown",
+        ],
+      },
+      serverRequests: expect.any(Array),
+    });
+    expect(
+      selectServerRequestSummaries(state, "thread-runtime").map((request) => ({
+        id: request.id,
+        kind: request.kind,
+        visible: request.visible,
+        waitingReason: request.waitingReason,
+      })),
+    ).toEqual([
+      {
+        id: "approval-runtime",
+        kind: "commandApproval",
+        visible: true,
+        waitingReason: "approval",
+      },
+      {
+        id: "input-runtime",
+        kind: "userInput",
+        visible: true,
+        waitingReason: "userInput",
+      },
+      {
+        id: "permission-runtime",
+        kind: "permissionsApproval",
+        visible: true,
+        waitingReason: "permission",
+      },
+      {
+        id: "mcp-runtime",
+        kind: "mcpElicitation",
+        visible: true,
+        waitingReason: "mcpElicitation",
+      },
+      {
+        id: "auth-runtime",
+        kind: "authRefresh",
+        visible: true,
+        waitingReason: "authRefresh",
+      },
+      {
+        id: "attestation-runtime",
+        kind: "attestation",
+        visible: true,
+        waitingReason: "attestation",
+      },
+      {
+        id: "unknown-runtime",
+        kind: "unknown",
+        visible: true,
+        waitingReason: "unknown",
+      },
+    ]);
+    expect(selectPendingApprovalViews(state, "thread-runtime")).toEqual([
+      {
+        itemId: "item-runtime",
+        kind: "commandApproval",
+        requestId: "approval-runtime",
+        threadId: "thread-runtime",
+        turnId: "turn-runtime",
+      },
+    ]);
+    expect(selectThreadSummaryView(state, "thread-runtime")?.execution.runtime.needsInput).toBe(
+      true,
+    );
+    expect(selectThreadTranscriptView(state, "thread-runtime")).toEqual({
+      threadId: "thread-runtime",
+      turns: [
+        {
+          blocks: [
+            {
+              id: "item-runtime",
+              kind: "text",
+              status: "completed",
+              text: "Runtime view",
+            },
+          ],
+          id: "turn-runtime",
+          itemIds: ["item-runtime"],
+          status: "running",
+        },
+      ],
+    });
+    expect(
+      selectThreadTranscriptView(state, "thread-runtime")?.turns[0]?.blocks[0],
+    ).not.toHaveProperty("metadata");
+    expect(
+      selectThreadTranscriptView(state, "thread-runtime")?.turns[0]?.blocks[0],
+    ).not.toHaveProperty("result");
+  });
+
+  it("keeps pending requests authoritative across status events and resolution", () => {
+    let state = runEventFixture([
+      {
+        event: {
+          status: "running",
+          thread: { id: "thread-runtime-overlay" },
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "approval-runtime-overlay",
+            kind: "commandApproval",
+            payload: { command: "bun test" },
+            threadId: "thread-runtime-overlay",
+            turnId: "turn-runtime-overlay",
+          },
+          type: "serverRequest/created",
+        },
+      },
+      {
+        event: {
+          status: "running",
+          threadId: "thread-runtime-overlay",
+          type: "thread/status/changed",
+        },
+      },
+    ]);
+
+    expect(selectThreadExecutionState(state, "thread-runtime-overlay")?.runtime).toMatchObject({
+      activeFlags: ["waitingOnApproval"],
+      needsInput: true,
+      status: "active",
+      waitingReasons: ["approval"],
+    });
+    expect(state.threads["thread-runtime-overlay"]?.activity).toBe("waitingForInput");
+
+    state = agentReducer(state, {
+      requestId: "approval-runtime-overlay",
+      type: "serverRequest/resolved",
+    });
+
+    expect(selectThreadExecutionState(state, "thread-runtime-overlay")?.runtime).toMatchObject({
+      activeFlags: [],
+      needsInput: false,
+      status: "active",
+      waitingReasons: [],
+    });
+    expect(state.threads["thread-runtime-overlay"]?.activity).toBe("running");
+  });
+
+  it("clears request-derived waiting after legacy waiting status resolves", () => {
+    let state = runEventFixture([
+      {
+        event: {
+          runtimeStatus: { activeFlags: ["waitingOnApproval"], type: "active" },
+          status: "waitingForInput",
+          thread: { id: "thread-runtime-resolved" },
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "approval-runtime-resolved",
+            kind: "commandApproval",
+            payload: { command: "bun test" },
+            threadId: "thread-runtime-resolved",
+            turnId: "turn-runtime-resolved",
+          },
+          type: "serverRequest/created",
+        },
+      },
+    ]);
+
+    state = agentReducer(state, {
+      requestId: "approval-runtime-resolved",
+      type: "serverRequest/resolved",
+    });
+
+    expect(selectServerRequestSummaries(state, "thread-runtime-resolved")).toEqual([]);
+    expect(selectThreadExecutionState(state, "thread-runtime-resolved")?.runtime).toMatchObject({
+      activeFlags: [],
+      needsInput: false,
+      status: "active",
+      waitingReasons: [],
+    });
+    expect(state.threads["thread-runtime-resolved"]?.activity).toBe("running");
+  });
+
+  it("summarizes host-seeded internal dynamic tool requests as non-visual", () => {
+    const dynamicId = requestIdKey("dynamic-runtime");
+    let state = runEventFixture([
+      { event: { thread: { id: "thread-runtime" }, type: "thread/started" } },
+    ]);
+    state = {
+      ...state,
+      serverRequestQueue: {
+        byId: {
+          [dynamicId]: {
+            id: "dynamic-runtime",
+            kind: "dynamicTool",
+            payload: { name: "host-internal-tool" },
+            threadId: "thread-runtime",
+          },
+        },
+        order: [dynamicId],
+      },
+    };
+    state = agentReducer(state, {
+      status: "running",
+      threadId: "thread-runtime",
+      type: "thread/status/changed",
+    });
+
+    expect(selectServerRequestSummaries(state)).toEqual([
+      {
+        id: "dynamic-runtime",
+        kind: "dynamicTool",
+        threadId: "thread-runtime",
+        visible: false,
+        waitingReason: "unknown",
+      },
+    ]);
+    expect(selectThreadExecutionState(state, "thread-runtime")?.runtime).toMatchObject({
+      activeFlags: [],
+      isRunning: true,
+      needsInput: false,
+      waitingReasons: [],
+    });
   });
 
   it("keeps a thread waiting until all pending server requests resolve or reject", () => {
@@ -1803,7 +2241,8 @@ describe("agentReducer", () => {
       },
       { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
     ]);
-    expect(firstResolved.threads["thread-multi"]?.status).toBe("waitingForInput");
+    expect(firstResolved.threads["thread-multi"]?.status).toBe("loaded");
+    expect(firstResolved.threads["thread-multi"]?.activity).toBe("waitingForInput");
     expect(
       selectServerRequestQueue(firstResolved, "thread-multi").map(
         (request) => request.id,
@@ -1816,8 +2255,8 @@ describe("agentReducer", () => {
       requestId: "approval-2",
       type: "serverRequest/rejected",
     });
-    expect(secondRejected.threads["thread-multi"]?.status).toBe("running");
-    expect(secondRejected.threads["thread-multi"]?.activity).toBe("running");
+    expect(secondRejected.threads["thread-multi"]?.status).toBe("loaded");
+    expect(secondRejected.threads["thread-multi"]?.activity).toBe("idle");
     expect(selectServerRequestQueue(secondRejected, "thread-multi")).toEqual([]);
     expect(selectDiagnostics(secondRejected).errors[0]?.message).toBe("declined");
   });
@@ -1911,8 +2350,8 @@ describe("agentReducer", () => {
     ]);
 
     expect(state.serverRequestQueue).toEqual({ byId: {}, order: [] });
-    expect(state.threads["thread-error"]?.status).toBe("running");
-    expect(state.threads["thread-error"]?.activity).toBe("running");
+    expect(state.threads["thread-error"]?.status).toBe("loaded");
+    expect(state.threads["thread-error"]?.activity).toBe("idle");
     expect(defaultThreadIds(state)).toContain("thread-error");
     expect(selectDiagnostics(state).errors[0]?.message).toBe("transport failed");
   });
@@ -1950,7 +2389,8 @@ describe("agentReducer", () => {
       { event: { requestId: "approval-1", type: "serverRequest/resolved" } },
     ]);
     expect(twice.serverRequestQueue).toEqual(once.serverRequestQueue);
-    expect(twice.threads["thread-approval"]?.status).toBe("running");
+    expect(twice.threads["thread-approval"]?.status).toBe("loaded");
+    expect(twice.threads["thread-approval"]?.activity).toBe("idle");
   });
 
   it("distinguishes numeric and string server request ids while preserving public ids", () => {
@@ -2000,8 +2440,17 @@ describe("agentReducer", () => {
   it("dequeues host-seeded server request state with public typed request id keys", () => {
     const state = createInitialAgentState();
     state.threads["thread-seeded-request"] = {
+      activity: "waitingForInput",
+      availability: "available",
+      id: "thread-seeded-request",
+      metadata: {},
+      operations: {},
       orderedTurnIds: [],
+      runtime: {
+        status: { activeFlags: ["waitingOnApproval"], type: "active" },
+      },
       status: "waitingForInput",
+      storage: "unknown",
       thread: { id: "thread-seeded-request" },
       turns: {},
     };
@@ -2023,7 +2472,13 @@ describe("agentReducer", () => {
     });
 
     expect(resolved.serverRequestQueue).toEqual({ byId: {}, order: [] });
-    expect(resolved.threads["thread-seeded-request"]?.status).toBe("running");
+    expect(resolved.threads["thread-seeded-request"]?.status).toBe("waitingForInput");
+    expect(resolved.threads["thread-seeded-request"]?.activity).toBe("running");
+    expect(selectThreadExecutionState(resolved, "thread-seeded-request")?.runtime).toMatchObject({
+      activeFlags: [],
+      needsInput: false,
+      waitingReasons: [],
+    });
   });
 
   it("refreshes same-thread server request replays and ignores cross-thread duplicates", () => {
@@ -3355,6 +3810,7 @@ describe("agentReducer", () => {
 
     const failed = runEventFixture(failedFixture as FixtureStep[]);
     expect(failed.threads["thread-failed"]?.status).toBe("failed");
+    expect(failed.threads["thread-failed"]?.activity).toBe("failed");
     expect(
       "raw" in (failed.threads["thread-failed"]?.turns["turn-failed"]?.turn ?? {}),
     ).toBe(false);

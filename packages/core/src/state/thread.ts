@@ -1,4 +1,6 @@
-import type { AgentError, ThreadId, TurnId } from "./common";
+import type { AgentError, ItemId, RequestId, ThreadId, TurnId } from "./common";
+import type { AgentItemBlock } from "./item";
+import type { PendingServerRequestKind } from "./server-requests";
 import type { TurnState } from "./turn";
 
 export interface AgentThread {
@@ -28,6 +30,28 @@ export type ThreadStatus =
   | "archived"
   | "closed"
   | "systemError";
+
+export type AgentThreadActiveFlag = "waitingOnApproval" | "waitingOnUserInput";
+
+export type AgentThreadRuntimeStatus =
+  | { type: "notLoaded" }
+  | { type: "idle" }
+  | { type: "systemError" }
+  | { activeFlags: AgentThreadActiveFlag[]; type: "active" };
+
+export type AgentTurnResult = "completed" | "error" | "failed" | "interrupted" | "unknown";
+
+export interface AgentThreadLastTurnResult {
+  result: AgentTurnResult;
+  status?: string;
+  turnId: TurnId;
+}
+
+export interface AgentThreadRuntimeState {
+  activeTurnId?: TurnId;
+  lastTurn?: AgentThreadLastTurnResult;
+  status: AgentThreadRuntimeStatus;
+}
 
 export interface ThreadTokenUsage {
   cachedInputTokens?: number;
@@ -84,6 +108,86 @@ export interface AgentThreadView {
   error?: AgentError;
 }
 
+export type AgentThreadWaitingReason =
+  | "approval"
+  | "attestation"
+  | "authRefresh"
+  | "mcpElicitation"
+  | "permission"
+  | "unknown"
+  | "userInput";
+
+export interface AgentThreadRuntimeView {
+  activeFlags: AgentThreadActiveFlag[];
+  activeTurnId?: TurnId;
+  isRunning: boolean;
+  lastTurn?: AgentThreadLastTurnResult;
+  needsInput: boolean;
+  status: AgentThreadRuntimeStatus["type"];
+  waitingReasons: AgentThreadWaitingReason[];
+}
+
+export interface AgentServerRequestSummary {
+  id: RequestId;
+  itemId?: ItemId;
+  kind: PendingServerRequestKind;
+  threadId?: ThreadId;
+  turnId?: TurnId;
+  visible: boolean;
+  waitingReason: AgentThreadWaitingReason;
+}
+
+export interface AgentThreadExecutionState {
+  runtime: AgentThreadRuntimeView;
+  serverRequests: AgentServerRequestSummary[];
+}
+
+export interface AgentThreadSummaryView extends AgentThreadView {
+  execution: AgentThreadExecutionState;
+}
+
+export type AgentTranscriptBlockView = Pick<
+  AgentItemBlock,
+  | "command"
+  | "content"
+  | "cwd"
+  | "durationMs"
+  | "exitCode"
+  | "id"
+  | "kind"
+  | "output"
+  | "path"
+  | "query"
+  | "resource"
+  | "server"
+  | "status"
+  | "subtype"
+  | "summary"
+  | "text"
+  | "tool"
+  | "toolType"
+>;
+
+export interface AgentTranscriptTurnView {
+  blocks: AgentTranscriptBlockView[];
+  id: TurnId;
+  itemIds: ItemId[];
+  status?: string;
+}
+
+export interface AgentThreadTranscriptView {
+  threadId: ThreadId;
+  turns: AgentTranscriptTurnView[];
+}
+
+export interface AgentApprovalView {
+  itemId?: ItemId;
+  kind: "commandApproval" | "fileChangeApproval";
+  requestId: RequestId;
+  threadId?: ThreadId;
+  turnId?: TurnId;
+}
+
 export interface ThreadState {
   id: ThreadId;
   canonicalId?: ThreadId;
@@ -97,6 +201,7 @@ export interface ThreadState {
   };
   operations: Record<string, AgentOperationView>;
   thread: AgentThread;
+  runtime: AgentThreadRuntimeState;
   turns: Record<TurnId, TurnState>;
   orderedTurnIds: TurnId[];
   tokenUsage?: ThreadTokenUsage;

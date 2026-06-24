@@ -39,7 +39,7 @@ supervision, billing, and deployment policy.
 ## Export Inventory
 
 This inventory was verified from `test/api-snapshots/*__index.d.ts` with
-`bun run test:api-snapshots` on 2026-06-04. Freeze the export map only after
+`bun run test:api-snapshots` on 2026-06-24. Freeze the export map only after
 internal boundaries, examples, tests, and host integration docs agree.
 
 ### `@nyosegawa/agent-ui-core`
@@ -55,14 +55,17 @@ requests, skills, status banners, turns, usage, and warnings,
 `createInitialAgentState`,
 `runEventFixture`, and selectors for account, apps, diagnostics,
 audience-filtered diagnostics, items, running turns, ordered items/turns,
-pending approvals, protocol notifications, run settings, server requests,
-status banners, thread, turn, and usage.
+pending approvals, approval views, protocol notifications, run settings,
+server requests, server-request summaries, status banners, thread, thread
+runtime/execution state, thread summary views, transcript views, turn, and
+usage.
 
 Replaced by the current API: registry-bucket public shapes
 (`ThreadRegistryState`, `ThreadRegistryStatus`, and `selectThreadRegistry`)
 were removed in favor of explicit thread lifecycle state, scoped collections,
-active-thread selectors, pending operation selectors, and the separate public
-`AgentThreadView`.
+active-thread selectors, pending operation selectors, runtime-aware
+`AgentThreadSummaryView`, raw-free transcript selectors, and the separate
+public `AgentThreadView`.
 
 Move to subpath or make diagnostic-only: raw normalized `AgentSessionState`,
 `ThreadState`, `AgentThread`, `AgentTurn`, and store-wide selectors when they

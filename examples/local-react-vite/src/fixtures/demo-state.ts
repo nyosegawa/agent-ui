@@ -2,7 +2,13 @@ import {
   createInitialAgentState,
   FakeAgentTransport,
   runEventFixture,
+  selectServerRequestSummaries,
+  selectThreadSummaryView,
+  selectThreadTranscriptView,
   type AgentSessionState,
+  type AgentServerRequestSummary,
+  type AgentThreadSummaryView,
+  type AgentThreadTranscriptView,
   type AgentTransport,
   type AgentTransportEvent,
   type FakeTransportRequest,
@@ -32,6 +38,26 @@ export function createFixtureInitialState(scenario: FixtureScenario): AgentSessi
     return state;
   }
   return state;
+}
+
+export interface RichTranscriptFixtureViews {
+  requests: AgentServerRequestSummary[];
+  summary: AgentThreadSummaryView;
+  transcript: AgentThreadTranscriptView;
+}
+
+export function createRichTranscriptFixtureViews(): RichTranscriptFixtureViews {
+  const state = createRichTranscriptInitialState();
+  const summary = selectThreadSummaryView(state, "thread-rich-transcript");
+  const transcript = selectThreadTranscriptView(state, "thread-rich-transcript");
+  if (!summary || !transcript) {
+    throw new Error("Rich transcript fixture failed to build public core views.");
+  }
+  return {
+    requests: selectServerRequestSummaries(state, "thread-rich-transcript"),
+    summary,
+    transcript,
+  };
 }
 
 export function createFixtureTransport(scenario: FixtureScenario): AgentTransport {
@@ -273,6 +299,13 @@ export function createRichTranscriptInitialState(): AgentSessionState {
     },
     operations: {},
     orderedTurnIds: ["turn-rich-transcript"],
+    runtime: {
+      activeTurnId: "turn-rich-transcript",
+      status: {
+        activeFlags: ["waitingOnApproval", "waitingOnUserInput"],
+        type: "active",
+      },
+    },
     status: "waitingForInput",
     storage: "unknown",
     thread: {

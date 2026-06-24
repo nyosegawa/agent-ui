@@ -22,7 +22,7 @@ test("composer stays a single bordered card with reachable run controls", async 
   await expect(composer.getByRole("button", { name: "Model and effort" })).toBeEnabled();
 });
 
-test("composer close-up exposes app, plugin, and send controls from the real primitive", async ({
+test("composer close-up exposes attachment and send controls from the real primitive", async ({
   page,
 }) => {
   await page.setViewportSize(desktopViewport);
@@ -31,8 +31,9 @@ test("composer close-up exposes app, plugin, and send controls from the real pri
   const composer = closeup.locator(".aui-composer");
   await expect(composer).toBeVisible();
   await expect(composer).not.toHaveAttribute("data-disabled", "true");
-  await expect(composer.getByRole("button", { name: "App" })).toBeVisible();
-  await expect(composer.getByRole("button", { name: "Plugin" })).toBeVisible();
+  await expect(composer.getByRole("button", { name: "Attach file" })).toBeVisible();
+  await expect(composer.getByRole("button", { name: "App" })).toHaveCount(0);
+  await expect(composer.getByRole("button", { name: "Plugin" })).toHaveCount(0);
   await expect(composer.getByRole("button", { name: "Send" })).toBeVisible();
 });
 

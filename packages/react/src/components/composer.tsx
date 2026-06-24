@@ -181,9 +181,11 @@ export function AgentComposerToolbar({
 
 export function AgentComposer(props: AgentComposerProps) {
   const composer = useInternalAgentComposerController(props.threadId);
+  const { t } = useAgentI18n();
   const attachmentRestoreRef = useRef<
     ((attachments: ComposerAttachment[]) => void) | null
   >(null);
+  const isApprovalBlocked = composer.disabledReason === "approval";
   return (
     <>
       <QueuedFollowUpList
@@ -195,6 +197,11 @@ export function AgentComposer(props: AgentComposerProps) {
       <AgentComposerForm
         {...props}
         composer={composer}
+        disabled={props.disabled ?? isApprovalBlocked}
+        disabledReason={
+          props.disabledReason ??
+          (isApprovalBlocked ? t("composer.resolveApprovalReason") : undefined)
+        }
         onRegisterAttachmentRestore={(restore) => {
           attachmentRestoreRef.current = restore;
         }}
@@ -483,7 +490,7 @@ export function AgentComposerPanel({
   threadId,
 }: AgentComposerPanelProps) {
   const { t } = useAgentI18n();
-  const isBlocked = thread.status === "waitingForInput";
+  const isBlocked = thread.activity === "waitingForInput";
   const composer = useInternalAgentComposerController(threadId);
   const attachmentRestoreRef = useRef<
     ((attachments: ComposerAttachment[]) => void) | null
@@ -499,13 +506,13 @@ export function AgentComposerPanel({
       <AgentComposerForm
         composer={composer}
         disabled={isBlocked}
-        disabledReason={composerDisabledReason(thread.status, t)}
+        disabledReason={composerDisabledReason(thread.activity, t)}
         onRegisterAttachmentRestore={(restore) => {
           attachmentRestoreRef.current = restore;
         }}
         onRequestAppMention={onRequestAppMention}
         onRequestPluginMention={onRequestPluginMention}
-        placeholder={composerPlaceholder(thread.status, t)}
+        placeholder={composerPlaceholder(thread.activity, t)}
         resolveLocalAttachment={resolveLocalAttachment}
         tokenUsage={thread.tokenUsage}
         threadId={threadId}
@@ -515,20 +522,20 @@ export function AgentComposerPanel({
 }
 
 function composerDisabledReason(
-  status: ThreadState["status"],
+  activity: ThreadState["activity"],
   t: ReturnType<typeof useAgentI18n>["t"],
 ): string | undefined {
-  if (status === "waitingForInput") {
+  if (activity === "waitingForInput") {
     return t("composer.resolveApprovalReason");
   }
   return undefined;
 }
 
 function composerPlaceholder(
-  status: ThreadState["status"],
+  activity: ThreadState["activity"],
   t: ReturnType<typeof useAgentI18n>["t"],
 ): string {
-  if (status === "running") return t("composer.addFollowUp");
-  if (status === "waitingForInput") return t("thread.status.needsApproval");
+  if (activity === "running") return t("composer.addFollowUp");
+  if (activity === "waitingForInput") return t("thread.status.needsApproval");
   return t("composer.placeholder");
 }

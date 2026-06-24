@@ -215,8 +215,18 @@ function runningComposerState() {
   const initialState = createInitialAgentState();
   initialState.threadLifecycle.activeThreadId = "thread-running";
   initialState.threads["thread-running"] = {
+    activity: "running",
+    availability: "available",
+    id: "thread-running",
+    metadata: {},
+    operations: {},
     orderedTurnIds: ["turn-running"],
+    runtime: {
+      activeTurnId: "turn-running",
+      status: { activeFlags: [], type: "active" },
+    },
     status: "running",
+    storage: "unknown",
     thread: { id: "thread-running", name: "Running thread" },
     turns: {
       "turn-running": {
@@ -236,8 +246,18 @@ function twoRunningThreadsState() {
   const initialState = runningComposerState();
   initialState.threads["thread-running"].thread.name = "Thread A";
   initialState.threads["thread-b"] = {
+    activity: "running",
+    availability: "available",
+    id: "thread-b",
+    metadata: {},
+    operations: {},
     orderedTurnIds: ["turn-b"],
+    runtime: {
+      activeTurnId: "turn-b",
+      status: { activeFlags: [], type: "active" },
+    },
     status: "running",
+    storage: "unknown",
     thread: { id: "thread-b", name: "Thread B" },
     turns: {
       "turn-b": {
@@ -2246,8 +2266,18 @@ describe("AgentChat", () => {
       initialState.threadLifecycle.defaultCollectionKey
     ]!.ids = ["thread-approval-resolution"];
     initialState.threads["thread-approval-resolution"] = {
+      activity: "waitingForInput",
+      availability: "available",
+      id: "thread-approval-resolution",
+      metadata: {},
+      operations: {},
       orderedTurnIds: ["turn-approval-resolution"],
+      runtime: {
+        activeTurnId: "turn-approval-resolution",
+        status: { activeFlags: ["waitingOnApproval"], type: "active" },
+      },
       status: "waitingForInput",
+      storage: "unknown",
       thread: { id: "thread-approval-resolution", name: "Approval resolution" },
       turns: {
         "turn-approval-resolution": {
@@ -2292,7 +2322,7 @@ describe("AgentChat", () => {
       const thread = state.threads["thread-approval-resolution"];
       const pending = state.serverRequestQueue.order.join(",") || "none";
       return (
-        <output aria-label="approval state">{`${thread?.status}:${pending}`}</output>
+        <output aria-label="approval state">{`${thread?.activity}:${pending}`}</output>
       );
     }
 
@@ -6224,8 +6254,14 @@ describe("AgentChat", () => {
     const transport = new FakeAgentTransport();
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
     if (initialState.threadLifecycle.activeThreadId) {
-      initialState.threads[initialState.threadLifecycle.activeThreadId]!.status =
-        "complete";
+      const activeThread =
+        initialState.threads[initialState.threadLifecycle.activeThreadId]!;
+      activeThread.activity = "idle";
+      activeThread.runtime = { status: { type: "idle" } };
+      activeThread.status = "complete";
+      for (const turn of Object.values(activeThread.turns)) {
+        turn.turn = { ...turn.turn, status: "completed" };
+      }
     }
     initialState.serverRequestQueue = { byId: {}, order: [] };
     render(
@@ -6316,8 +6352,14 @@ describe("AgentChat", () => {
     const transport = new FakeAgentTransport();
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
     if (initialState.threadLifecycle.activeThreadId) {
-      initialState.threads[initialState.threadLifecycle.activeThreadId]!.status =
-        "complete";
+      const activeThread =
+        initialState.threads[initialState.threadLifecycle.activeThreadId]!;
+      activeThread.activity = "idle";
+      activeThread.runtime = { status: { type: "idle" } };
+      activeThread.status = "complete";
+      for (const turn of Object.values(activeThread.turns)) {
+        turn.turn = { ...turn.turn, status: "completed" };
+      }
     }
     initialState.serverRequestQueue = { byId: {}, order: [] };
     render(
@@ -6341,7 +6383,9 @@ describe("AgentChat", () => {
     await user.click(screen.getByRole("button", { name: "Send" }));
 
     expect(prompt).not.toHaveBeenCalled();
-    expect(transport.requests.at(-1)?.params).toMatchObject({
+    expect(
+      transport.requests.findLast((request) => request.method === "turn/start")?.params,
+    ).toMatchObject({
       input: [
         { text: "verify with attachments", text_elements: [], type: "text" },
         { name: "app://browser", path: "app://browser", type: "mention" },
@@ -6359,8 +6403,14 @@ describe("AgentChat", () => {
     const transport = new FakeAgentTransport();
     const initialState = runEventFixture(demoFixture as FixtureStep[]);
     if (initialState.threadLifecycle.activeThreadId) {
-      initialState.threads[initialState.threadLifecycle.activeThreadId]!.status =
-        "complete";
+      const activeThread =
+        initialState.threads[initialState.threadLifecycle.activeThreadId]!;
+      activeThread.activity = "idle";
+      activeThread.runtime = { status: { type: "idle" } };
+      activeThread.status = "complete";
+      for (const turn of Object.values(activeThread.turns)) {
+        turn.turn = { ...turn.turn, status: "completed" };
+      }
     }
     initialState.serverRequestQueue = { byId: {}, order: [] };
     render(
@@ -6385,7 +6435,9 @@ describe("AgentChat", () => {
     await user.type(screen.getByLabelText("Message"), "inspect only");
     await user.click(screen.getByRole("button", { name: "Send" }));
 
-    expect(transport.requests.at(-1)?.params).toMatchObject({
+    expect(
+      transport.requests.findLast((request) => request.method === "turn/start")?.params,
+    ).toMatchObject({
       approvalPolicy: "untrusted",
       effort: "high",
       model: "fixture-demo-coding-model",
@@ -9574,14 +9626,103 @@ describe("AgentChat", () => {
   });
 
   function existingThreadState() {
-    const initialState = runEventFixture(demoFixture as FixtureStep[]);
-    if (initialState.threadLifecycle.activeThreadId) {
-      initialState.threads[initialState.threadLifecycle.activeThreadId]!.status =
-        "complete";
-    }
+    const initialState = createInitialAgentState();
+    initialState.threadLifecycle.activeThreadId = "thread-attachments";
+    initialState.threadLifecycle.collections[
+      initialState.threadLifecycle.defaultCollectionKey
+    ]!.ids = ["thread-attachments"];
+    initialState.threads["thread-attachments"] = {
+      activity: "idle",
+      availability: "available",
+      id: "thread-attachments",
+      metadata: {},
+      operations: {},
+      orderedTurnIds: [],
+      runtime: { status: { type: "idle" } },
+      status: "loaded",
+      storage: "unknown",
+      thread: { id: "thread-attachments", name: "Attachment thread" },
+      turns: {},
+    };
     initialState.serverRequestQueue = { byId: {}, order: [] };
     return initialState;
   }
+
+  function runningApprovalState() {
+    return runEventFixture([
+      {
+        event: {
+          status: "running",
+          thread: { id: "thread-approval-running", name: "Approval running" },
+          type: "thread/started",
+        },
+      },
+      {
+        event: {
+          threadId: "thread-approval-running",
+          turn: {
+            id: "turn-approval-running",
+            status: "running",
+            threadId: "thread-approval-running",
+          },
+          type: "turn/started",
+        },
+      },
+      {
+        event: {
+          request: {
+            id: "approval-running",
+            kind: "commandApproval",
+            payload: { command: "bun test" },
+            threadId: "thread-approval-running",
+            turnId: "turn-approval-running",
+          },
+          type: "serverRequest/created",
+        },
+      },
+    ]);
+  }
+
+  it("blocks the composer from runtime activity while legacy status remains running", async () => {
+    render(
+      <AgentProvider
+        initialState={runningApprovalState()}
+        transport={new FakeAgentTransport()}
+      >
+        <AgentChat />
+        <PublicComposerControllerProbe />
+      </AgentProvider>,
+    );
+
+    const textarea = await screen.findByLabelText("Message");
+    expect(textarea).toBeDisabled();
+    expect(textarea).toHaveAttribute("placeholder", "Needs approval");
+    expect(
+      screen.getByText("Resolve the pending approval before sending another message."),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("public composer can submit")).toHaveTextContent("false");
+    expect(screen.getByLabelText("public composer disabled reason")).toHaveTextContent(
+      "approval",
+    );
+    expect(screen.getByLabelText("public composer submit mode")).toHaveTextContent("send");
+  });
+
+  it("shows approval-blocked state in the standalone composer primitive", async () => {
+    render(
+      <AgentProvider
+        initialState={runningApprovalState()}
+        transport={new FakeAgentTransport()}
+      >
+        <AgentComposer threadId="thread-approval-running" />
+      </AgentProvider>,
+    );
+
+    expect(await screen.findByLabelText("Message")).toBeDisabled();
+    expect(
+      screen.getByText("Resolve the pending approval before sending another message."),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+  });
 
   it("accepts pasted images as composer attachments", async () => {
     render(

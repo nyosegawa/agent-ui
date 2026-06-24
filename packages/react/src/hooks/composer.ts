@@ -107,7 +107,8 @@ export function useInternalAgentComposerController(
   const activeTurnId = resolvedThreadId
     ? selectLatestRunningTurnId(state, resolvedThreadId)
     : undefined;
-  const isRunning = thread?.status === "running";
+  const isRunning = thread?.activity === "running";
+  const isWaitingForInput = thread?.activity === "waitingForInput";
   const buildInput = useCallback(
     (items: AgentUserInput[] = []) => {
       const input = value.trim();
@@ -167,6 +168,10 @@ export function useInternalAgentComposerController(
     ) => {
       const built = buildInput(items);
       if (!built) return;
+      if (isWaitingForInput) {
+        setError(t("composer.resolveApprovalReason"));
+        return;
+      }
       if (isRunning) {
         return queueFollowUp(items, options.attachments);
       }
@@ -193,7 +198,7 @@ export function useInternalAgentComposerController(
         setIsSubmitting(false);
       }
     },
-    [buildInput, isRunning, queueFollowUp, startComposerTurn, t],
+    [buildInput, isRunning, isWaitingForInput, queueFollowUp, startComposerTurn, t],
   );
   const startWithMessage = useCallback(
     async (
@@ -420,9 +425,11 @@ export function useInternalAgentComposerController(
     ? "submitting"
     : isInterrupting
       ? "interrupting"
-      : !isRunning && !hasTextInput
-        ? "empty"
-        : undefined;
+      : isWaitingForInput
+        ? "approval"
+        : !isRunning && !hasTextInput
+          ? "empty"
+          : undefined;
   const canSubmit =
     !disabledReason || disabledReason === "empty" ? isRunning || hasTextInput : false;
   const sendQueuedFollowUp = useCallback(

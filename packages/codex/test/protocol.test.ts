@@ -689,6 +689,7 @@ describe("Codex protocol metadata", () => {
       "thread/status/changed",
     ]);
     expect(events[0]).toMatchObject({
+      runtimeStatus: { type: "idle" },
       snapshot: true,
       status: "loaded",
       thread: { id: "thread-history", name: "Stored history" },
@@ -713,6 +714,7 @@ describe("Codex protocol metadata", () => {
       { path: "src/app.ts", type: "update" },
     ]);
     expect(state.threads["thread-history"]?.status).toBe("loaded");
+    expect(state.threads["thread-history"]?.runtime.status).toEqual({ type: "idle" });
   });
 
   it("normalizes thread/read preview responses without activating them", () => {
@@ -755,7 +757,7 @@ describe("Codex protocol metadata", () => {
             id: "thread-list-one",
             name: "Listed thread",
             preview: "Listed preview",
-            status: { type: "idle" },
+            status: { activeFlags: ["waitingOnApproval"], type: "active" },
           },
           {
             cwd: "/workspace/one",
@@ -799,6 +801,8 @@ describe("Codex protocol metadata", () => {
       syncedAt: 1_765_000_000_000,
     });
     expect(state.threads["thread-list-one"]?.availability).toBe("archived");
+    expect(state.threads["thread-list-one"]?.activity).toBe("idle");
+    expect(state.threads["thread-list-one"]?.runtime.status).toEqual({ type: "idle" });
     expect(state.threads["thread-list-one"]?.metadata).toMatchObject({
       cwd: "/workspace/one",
       title: "Listed thread",
@@ -1174,6 +1178,9 @@ describe("Codex protocol metadata", () => {
 
       expect(events).toEqual([
         {
+          ...(status === "running"
+            ? { runtimeStatus: { activeFlags: [], type: "active" } }
+            : {}),
           status,
           threadId: "thread-lifecycle",
           type: "thread/status/changed",
@@ -1202,6 +1209,7 @@ describe("Codex protocol metadata", () => {
 
       expect(events).toEqual([
         {
+          runtimeStatus: { activeFlags: [activeFlag], type: "active" },
           status: "waitingForInput",
           threadId: "thread-waiting",
           type: "thread/status/changed",

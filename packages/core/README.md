@@ -23,5 +23,11 @@ reconciliation, optimistic operation maps, retention internals, and raw
 diagnostic payload handling are implementation details unless the package
 exports and docs explicitly promote them.
 
+Thread runtime state is explicit: active flags, active turn, last turn result,
+and pending server-request summaries are exposed through selectors such as
+`selectThreadExecutionState`, `selectThreadSummaryView`, and
+`selectThreadTranscriptView`. Hosts should use those read models instead of
+inspecting reducer entity maps.
+
 See the repository docs for current package exports and integration guidance:
 https://github.com/nyosegawa/agent-ui
