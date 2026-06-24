@@ -3,7 +3,7 @@
 ## Status Summary
 
 - Planning status: complete on branch.
-- Implementation status: in progress; P001 through P005 implemented, validated, reviewed, committed, pushed, and followed through to CI success. P006 implemented, validated, reviewed, and committed; push/CI evidence is being recorded.
+- Implementation status: in progress; P001 through P005 implemented, validated, reviewed, committed, pushed, and followed through to CI success. P006 implemented, validated, reviewed, committed, and pushed; CI evidence is being recorded.
 - Planning branch: reuse `codex/fixture-system-redesign-plan`.
 - Compatibility stance: no backwards compatibility.
 - Required review stance: every implementation phase must run four parallel subagent reviews after focused validation and before phase commit.
@@ -23,7 +23,7 @@
 - P003 React view models, direct-link controller, and raw-free components - implemented, validated, reviewed, committed, pushed, and CI-successful.
 - P004 Default composer, turn controls, retry, and neutral integrations - implemented, validated, reviewed, committed, and pushed.
 - P005 Run policy, model/effort, cwd, and host-boundary controls - implemented, validated, reviewed, committed, pushed, and CI-successful.
-- P006 Showcase and maintainer gallery foundation - implemented, validated, reviewed, and committed.
+- P006 Showcase and maintainer gallery foundation - implemented, validated, reviewed, committed, and pushed.
 - P007 React export subpaths, package contracts, examples, and public skill API guidance
 - P008 Cross-docs, screenshots, release readiness, PR, and CI
 
@@ -199,7 +199,7 @@
     - Browser QA: agent-browser checked `http://127.0.0.1:5176/` desktop with heading `Agent UI showcase`, 12 public showcase links, zero maintainer links, overflow 0, and screenshot `/tmp/agent-ui-p006-showcase-index-desktop.png`; checked `http://127.0.0.1:5176/maintainer-gallery` mobile with heading `Agent UI maintainer gallery`, 27 closeups, all waiting labels visible, overflow 0, and screenshot `/tmp/agent-ui-p006-maintainer-gallery-mobile.png`; checked `http://127.0.0.1:5176/showcase/rich-transcript` desktop with status/notice `Needs attention`, approval count 1, send hit-test true, overflow 0, and screenshot `/tmp/agent-ui-p006-rich-transcript-desktop.png`. Remaining browser risk: agent-browser mobile viewport was supplemented by Playwright mobile route matrix coverage.
     - Review: Four parallel P006 subagent reviews completed. Protocol/core lane found missing real waiting-label runtime mapping coverage and a stale maintainer selector; fixed with private formatter tests, core waiting reasons on `AgentThreadView`, sidebar metadata propagation, selector existence checks, and updated route-gallery selector. Phase-boundary lane found the same stale selector, accidental public `formatThreadWaitingStatus` export/API snapshot drift, and blank evidence; fixed by moving the helper to a private module, refreshing API snapshots, recording validation evidence, and keeping maintainer routes out of public docs. React/API/docs lane found `/maintainer-gallery` promoted in public docs and the private formatter leaking through the React barrel; fixed by removing maintainer-gallery from public quickstart/package route lists and private helper relocation. Browser/UX lane found missing `/` showcase index viewport coverage, sidebar waiting rows falling back to generic attention without waiting reasons, and masked empty-selector viewport checks; fixed with public index viewport tests, `waitingReasons` propagation, and selector existence assertions.
     - Commit: `27521a4` (`Split showcase and maintainer gallery`).
-    - Push: phase push pending.
+    - Push: pushed through `759780a` to `origin/codex/fixture-system-redesign-plan`; PR #35 updated.
   - Tasks:
     - [x] T001 Create route registry and move public examples under `/showcase/*`.
       - Expected files/areas: `examples/local-react-vite/src/routes/showcase/**`.
