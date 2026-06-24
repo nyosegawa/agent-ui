@@ -3,7 +3,7 @@
 ## Status Summary
 
 - Planning status: complete on branch.
-- Implementation status: in progress; P001 and P002 implemented, validated, reviewed, committed, pushed, and followed through to CI success. P003 implemented, validated, reviewed, committed, and pushed; CI follow-through pending.
+- Implementation status: in progress; P001, P002, and P003 implemented, validated, reviewed, committed, pushed, and followed through to CI success.
 - Planning branch: reuse `codex/fixture-system-redesign-plan`.
 - Compatibility stance: no backwards compatibility.
 - Required review stance: every implementation phase must run four parallel subagent reviews after focused validation and before phase commit.
@@ -20,7 +20,7 @@
 
 - P001 Protocol classification and Codex adapter boundary - implemented, validated, reviewed, committed, and pushed.
 - P002 Core runtime state, reducers, selectors, and view-state contract - implemented, validated, reviewed, committed, pushed, and CI-successful.
-- P003 React view models, direct-link controller, and raw-free components - implemented, validated, reviewed, committed, and pushed; CI follow-through pending.
+- P003 React view models, direct-link controller, and raw-free components - implemented, validated, reviewed, committed, pushed, and CI-successful.
 - P004 Default composer, turn controls, retry, and neutral integrations
 - P005 Run policy, model/effort, cwd, and host-boundary controls
 - P006 Showcase and maintainer gallery foundation
@@ -103,8 +103,8 @@
     - Validation: `bun run typecheck` passed; `bun x vitest run --config vitest.config.ts packages/react/test/components.vitest.tsx` passed; `bun x vitest run --config vitest.config.ts packages/core/test/reducer.test.ts packages/react/test/components.vitest.tsx packages/react/test/source-structure.vitest.ts packages/react/test/thread-url-routing.vitest.ts packages/react/test/thread-resume-diagnostics.vitest.tsx` passed with 289 tests; focused fixed-thread completed-status test passed; `bun run test:api-snapshots:update && bun run test:api-snapshots` passed; `bun run validate:packages` passed; `bun run test:package-resolution` passed; `bunx playwright test examples/local-react-vite/e2e/visual-route-matrix.e2e.ts --config playwright.fixtures.config.ts` passed with 62 tests; `bunx playwright test examples/codex-local-web/e2e/real-local-layout.e2e.ts --config playwright.real-local.config.ts` passed with 4 tests.
     - Browser QA: agent-browser checked `http://127.0.0.1:5174/fixture-gallery` desktop with document overflow 0 and visible component/preset sections; checked `http://127.0.0.1:5174/composer-retry` mobile 390x900 with document overflow 0 and retry fixture text visible. Remaining risk: `composer-retry` still presents debug explanatory copy and belongs in the P004/P006 fixture-gallery split/redesign; it is not treated as final user-facing UI.
     - Review: Four parallel P003 subagent reviews completed. Phase-boundary lane found stale API snapshots and missing P003 evidence; fixed by updating/checking API snapshots and recording this evidence. Protocol/core lane found core `selectThreadTranscriptView` dropped newly exposed block fields; fixed by copying the full `AgentTranscriptBlockView` field set and asserting preservation. Browser/UX lane found `AgentThreadTimeline` hook-order risk when `threadId` appears later and completed threads falling through to Ready; fixed by keeping hook order stable and adding raw-free `displayStatus` with a completed-status assertion. React/API/docs lane found stale theming/react docs referring to `Item` and `AgentItemBlock`; fixed by documenting `blocks`, `renderItem(entry, Default)`, and `AgentTranscriptBlock`.
-    - Commit: `a858fe0` (`Move React transcript APIs to view models`).
-    - Push: pushed `a858fe0` to `origin/codex/fixture-system-redesign-plan`; PR #35 updated. CI/Compatibility for `a858fe0` must be followed to a concrete success or failure.
+    - Commit: `a858fe0` (`Move React transcript APIs to view models`), CI fix `36eabc5` (`Update loaded history preview expectation`), and API snapshot fix `6e5cb3b` (`Update core API snapshot for thread display status`).
+    - Push: pushed through `6e5cb3b` to `origin/codex/fixture-system-redesign-plan`; PR #35 updated. CI and Compatibility for `6e5cb3b` succeeded. CI passed Detect changes, Package resolution, Playwright fixtures, Repository policy, Protocol and fixtures, Unit tests, Typecheck, API snapshots, Package validation, and Lint. Compatibility passed Detect compatibility changes.
   - Tasks:
     - [x] T001 Convert hooks and transcript components from raw `ThreadState`/`TurnState` to view models.
       - Expected files/areas: hooks, thread/timeline components, tests.
@@ -328,7 +328,7 @@ Implementation phase review rule:
 ## Commit Log
 
 - Planning commit: `0194146` (`Plan Agent UI surface redesign`).
-- Implementation commits: P001 `0798db0` (`Classify Codex protocol requests`), P001 evidence `a2d31f3` (`Record P001 redesign evidence`), P002 `3829ef5` (`Add core runtime view state`), P002 CI fix `cd456f9` (`Update thread history runtime expectations`), P003 `a858fe0` (`Move React transcript APIs to view models`).
+- Implementation commits: P001 `0798db0` (`Classify Codex protocol requests`), P001 evidence `a2d31f3` (`Record P001 redesign evidence`), P002 `3829ef5` (`Add core runtime view state`), P002 CI fix `cd456f9` (`Update thread history runtime expectations`), P003 `a858fe0` (`Move React transcript APIs to view models`), P003 CI fix `36eabc5` (`Update loaded history preview expectation`), P003 API snapshot fix `6e5cb3b` (`Update core API snapshot for thread display status`).
 
 ## Final Checklist
 
