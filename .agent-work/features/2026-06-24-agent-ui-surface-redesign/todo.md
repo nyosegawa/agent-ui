@@ -3,7 +3,7 @@
 ## Status Summary
 
 - Planning status: complete on branch.
-- Implementation status: in progress; P001 implemented, validated, reviewed, committed, and pushed. P002 implemented, validated, reviewed, and awaiting commit/push evidence.
+- Implementation status: in progress; P001 and P002 implemented, validated, reviewed, committed, pushed, and followed through to CI success.
 - Planning branch: reuse `codex/fixture-system-redesign-plan`.
 - Compatibility stance: no backwards compatibility.
 - Required review stance: every implementation phase must run four parallel subagent reviews after focused validation and before phase commit.
@@ -19,7 +19,7 @@
 ## Phase Checklist
 
 - P001 Protocol classification and Codex adapter boundary - implemented, validated, reviewed, committed, and pushed.
-- P002 Core runtime state, reducers, selectors, and view-state contract - implemented, validated, and reviewed; commit/push pending.
+- P002 Core runtime state, reducers, selectors, and view-state contract - implemented, validated, reviewed, committed, pushed, and CI-successful.
 - P003 React view models, direct-link controller, and raw-free components
 - P004 Default composer, turn controls, retry, and neutral integrations
 - P005 Run policy, model/effort, cwd, and host-boundary controls
@@ -73,8 +73,8 @@
     - Validation: `bun test packages/core/test/reducer.test.ts` passed; `bun run validate:protocol` passed; `bun x vitest run --config vitest.config.ts packages/react/test/components.vitest.tsx` passed; `bun run typecheck` passed; `bun run lint` passed; `bun run --cwd examples/local-react-vite typecheck` passed; `bun run --cwd examples/local-react-vite build` passed; `bun run test:e2e:fixtures` passed with 145 passed and 1 skipped screenshot refresh; `bun run validate:packages` passed; `bun run test:api-snapshots` passed; `bun run test:package-resolution` passed; targeted real-local e2e passed with 17 tests across `real-local-layout`, `real-local-follow-ups`, and `real-local-thread-lifecycle`.
     - Browser QA: agent-browser checked `http://127.0.0.1:5174/fixture-gallery` desktop with overflowX 0, `Composer · App + Plugin mentions` absent after the fix, normal composer App/Plugin button counts both 0, and screenshots `/tmp/agent-ui-p002-fixture-gallery-after-fixes-desktop.png` and `/tmp/agent-ui-p002-fixture-gallery-no-app-plugin-desktop.png`; checked `http://127.0.0.1:5174/rich-transcript` mobile 390x900 with overflowX 0, approval and Send button hit-tests all true, and screenshot `/tmp/agent-ui-p002-rich-transcript-after-fixes-mobile.png`; checked `http://127.0.0.1:5174/composer-retry` mobile with overflowX 0, `Failed first message` visible, and screenshot `/tmp/agent-ui-p002-composer-retry-after-fixes-mobile.png`. Remaining risk: App/Plugin public props still exist until P004 deletes/replaces that API surface; fixture-gallery no longer presents them as normal composer UI.
     - Review: Four parallel phase reviews completed. Phase-boundary lane found evidence/browser-QA recording gaps, fixed by running and recording browser and validation evidence. React/API/docs lane found standalone `AgentComposer` did not surface approval-blocked state and fixture-gallery still taught obsolete App/Plugin mention concepts; fixed with standalone composer disabled notice/test, removal of App/Plugin mention resolvers from visible composer closeups, and updated e2e. Protocol/core lane found failed/error runtime activity regression, archived active list rows remaining active, hidden dynamic-tool requests driving waiting state, and raw-free selector coverage gaps; fixed with runtime normalization changes and reducer/protocol tests. Browser/UX lane found no P1/P2 and required targeted real-local e2e, which passed. Re-review closed protocol/core and React/API/docs P1/P2 findings; one subagent-local visual-closeups rerun hit a server-exit flake, but the main-agent full `bun run test:e2e:fixtures` rerun passed afterward.
-    - Commit: pending.
-    - Push: pending.
+    - Commit: `3829ef5` (`Add core runtime view state`) plus CI fix `cd456f9` (`Update thread history runtime expectations`).
+    - Push: pushed through `cd456f9` to `origin/codex/fixture-system-redesign-plan`; PR #35 updated. CI/Compatibility for `cd456f9` succeeded: API snapshots, Detect changes, Detect compatibility changes, Lint, Node.js 22.x, Node.js 24.x, Package resolution, Package validation, Playwright fixtures, Protocol and fixtures, Repository policy, Typecheck, Unit tests, and pnpm workspace smoke all passed.
   - Tasks:
     - [x] T001 Add runtime status model with active flags, active turn, and last turn result.
       - Expected files/areas: `packages/core/src/state/thread.ts`, reducers, selectors.
@@ -291,7 +291,7 @@ Planning artifact validation:
 Implementation validation:
 
 - P001 passed protocol/typecheck/lint/API snapshot/package validation/package resolution before commit.
-- P002 passed reducer/core fixtures, protocol, React component tests, typecheck, lint, local Vite typecheck/build, fixture e2e, package validation, API snapshots, package resolution, targeted real-local e2e, and agent-browser route checks before commit.
+- P002 passed reducer/core fixtures, protocol, React component tests, full unit tests, typecheck, lint, local Vite typecheck/build, fixture e2e, package validation, API snapshots, package resolution, targeted real-local e2e, and agent-browser route checks before commit/push; PR #35 CI for `cd456f9` passed all required CI and Compatibility checks.
 
 Browser-visible evidence checklist for phases that touch browser-visible behavior:
 
@@ -319,7 +319,7 @@ Implementation phase review rule:
 ## Commit Log
 
 - Planning commit: `0194146` (`Plan Agent UI surface redesign`).
-- Implementation commits: P001 `0798db0` (`Classify Codex protocol requests`), P001 evidence `a2d31f3` (`Record P001 redesign evidence`), P002 pending.
+- Implementation commits: P001 `0798db0` (`Classify Codex protocol requests`), P001 evidence `a2d31f3` (`Record P001 redesign evidence`), P002 `3829ef5` (`Add core runtime view state`), P002 CI fix `cd456f9` (`Update thread history runtime expectations`).
 
 ## Final Checklist
 
