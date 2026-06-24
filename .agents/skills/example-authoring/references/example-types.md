@@ -9,8 +9,8 @@ Purpose:
 - deterministic component and layout review
 - fixture-backed transcript, approvals, command output, diffs, usage, status,
   apps, and thread history states
-- visual QA routes such as `/fixture-gallery`, `/rich-transcript`,
-  `/usage-only`, `/scoped-thread-pane`, and `/app-connectors`
+- visual QA routes such as `/maintainer-gallery`, `/showcase/rich-transcript`,
+  `/showcase/usage-only`, `/showcase/scoped-thread-pane`, and `/showcase/app-connectors`
 - a typed visual QA manifest that owns route inventory, docs screenshots,
   preview eligibility, and viewport matrix coverage
 

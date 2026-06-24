@@ -523,8 +523,8 @@ general observed-attribute API for every `AgentChat` option.
 - `examples/recipes`: typed host integration recipes and remote deployment notes.
 - `examples/docs-site`: small package-overview/demo landing page. It is not a markdown documentation renderer.
 
-Route-focused fixtures such as `/fixture-gallery`, `/usage-only`,
-`/scoped-thread-pane`, `/app-connectors`, and `/host-workflow-recipe` live inside
+Route-focused public fixtures such as `/showcase/usage-only`,
+`/showcase/scoped-thread-pane`, `/showcase/app-connectors`, and `/showcase/host-workflow-recipe` live inside
 `examples/local-react-vite` and are documented under `docs/examples/`.
 
 ## Browser Public API

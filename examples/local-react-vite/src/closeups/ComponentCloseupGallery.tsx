@@ -52,11 +52,11 @@ export function ComponentCloseupGallery() {
   return (
     <section
       aria-label="Component close-ups"
-      className="aui-fixture-gallery-group"
+      className="aui-route-gallery-group"
       data-testid="component-closeups"
       id="component-closeups"
     >
-      <header className="aui-fixture-gallery-group-header">
+      <header className="aui-route-gallery-group-header">
         <h2>Component close-ups</h2>
         <span>Direct primitive renders · no iframe</span>
       </header>
@@ -89,11 +89,11 @@ export function CriticalInteractionStates() {
   return (
     <section
       aria-label="Critical interaction states"
-      className="aui-fixture-gallery-group"
+      className="aui-route-gallery-group"
       data-testid="critical-states"
       id="critical-states"
     >
-      <header className="aui-fixture-gallery-group-header">
+      <header className="aui-route-gallery-group-header">
         <h2>Critical interaction states</h2>
         <span>Live primitives · no iframe</span>
       </header>
@@ -999,6 +999,30 @@ function CloseupUsageChips() {
         <span className="aui-status-pill" data-status="waitingForInput">
           <span className="aui-status-pill-dot" aria-hidden="true" />
           Needs approval
+        </span>
+        <span className="aui-status-pill" data-status="waitingForInput">
+          <span className="aui-status-pill-dot" aria-hidden="true" />
+          Needs permission
+        </span>
+        <span className="aui-status-pill" data-status="waitingForInput">
+          <span className="aui-status-pill-dot" aria-hidden="true" />
+          Needs input
+        </span>
+        <span className="aui-status-pill" data-status="waitingForInput">
+          <span className="aui-status-pill-dot" aria-hidden="true" />
+          Needs MCP input
+        </span>
+        <span className="aui-status-pill" data-status="waitingForInput">
+          <span className="aui-status-pill-dot" aria-hidden="true" />
+          Needs authentication
+        </span>
+        <span className="aui-status-pill" data-status="waitingForInput">
+          <span className="aui-status-pill-dot" aria-hidden="true" />
+          Needs attestation
+        </span>
+        <span className="aui-status-pill" data-status="waitingForInput">
+          <span className="aui-status-pill-dot" aria-hidden="true" />
+          Needs attention
         </span>
         <span className="aui-status-pill" data-status="error">
           <span className="aui-status-pill-dot" aria-hidden="true" />

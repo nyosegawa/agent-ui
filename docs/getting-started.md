@@ -72,17 +72,17 @@ bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 
 Useful routes:
 
-- `/`: default transcript-first surface
-- `/rich-transcript`: intentionally dense transcript and approval stress fixture
-- `/fixture-gallery`: visual QA gallery and component close-ups
-- `/host-workflow-recipe`: host integration reference shell with embedded
+- `/`: public showcase index
+- `/showcase/default-conversation`: default transcript-first surface
+- `/showcase/rich-transcript`: intentionally dense transcript and approval stress fixture
+- `/showcase/host-workflow-recipe`: host integration reference shell with embedded
   `AgentChat`, side panel, mobile drawer, local attachment metadata, transcript
   local-media preview/fallback metadata, scoped thread history loading,
   host-owned workflow gate, first-message optimistic mode, and host-owned review
   sheet
-- `/usage-only`: usage primitives without chat chrome
-- `/scoped-thread-pane`: fixed-thread composition
-- `/app-connectors`: Codex Apps/connectors metadata
+- `/showcase/usage-only`: usage primitives without chat chrome
+- `/showcase/scoped-thread-pane`: fixed-thread composition
+- `/showcase/app-connectors`: Codex Apps/connectors metadata
 
 The fixture app uses `FakeAgentTransport`; it is for deterministic browser
 review and component QA, not real Codex behavior.
@@ -91,7 +91,7 @@ Keep the fixture app running, then use another terminal to inspect it with
 `agent-browser`:
 
 ```sh
-agent-browser open http://127.0.0.1:5174/fixture-gallery
+agent-browser open http://127.0.0.1:5174/showcase/rich-transcript
 agent-browser snapshot -i
 agent-browser close
 ```

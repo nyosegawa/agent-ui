@@ -261,7 +261,11 @@ function AgentThreadActions({
     <div className="aui-thread-actions">
       <span className="aui-status-pill" data-status={status}>
         <span className="aui-status-pill-dot" aria-hidden="true" />
-        {formatThreadStatus(status, { hasTurns, t })}
+        {formatThreadStatus(status, {
+          hasTurns,
+          t,
+          waitingReasons: thread.execution.runtime.waitingReasons,
+        })}
       </span>
       <details className="aui-thread-action-menu">
         <summary aria-label={t("aria.actions")} title={t("aria.actions")}>

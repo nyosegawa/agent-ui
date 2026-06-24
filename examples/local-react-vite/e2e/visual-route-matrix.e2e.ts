@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
+  previewRoutes,
   visualQaRoutes,
   type VisualQaViewport,
 } from "../src/fixtures/visual-qa-manifest";
@@ -18,7 +19,7 @@ const containedSurfaceSelectors = [
   ".aui-shell",
   ".aui-example-frame",
   ".aui-host-recipe",
-  ".aui-fixture-gallery",
+  ".aui-route-gallery",
   ".aui-thread-surface",
   ".aui-message-list",
   ".aui-compose-panel",
@@ -34,6 +35,22 @@ const containedSurfaceSelectors = [
 ] as const;
 
 test.describe("visual QA route viewport matrix", () => {
+  for (const viewport of ["desktop", "tablet", "compact", "mobile"] as const) {
+    test(`public showcase index is layout-ready on ${viewport}`, async ({ page }) => {
+      await page.setViewportSize(viewportSizes[viewport]);
+      await page.goto("/");
+      await expect(page.locator(".aui-route-gallery").first()).toBeVisible();
+      await expectNoDocumentHorizontalOverflow(page, "showcase-index", viewport);
+      await expectVisibleTextFitsViewport(page, "showcase-index", viewport);
+      for (const route of previewRoutes) {
+        await expect(page.locator(`a[href="${route.path}"]`).first()).toBeVisible();
+      }
+      await expect(page.locator('a[href="/maintainer-gallery"]')).toHaveCount(0);
+      await expectWithinViewport(page, ".aui-route-gallery");
+      await expectWithinViewport(page, ".aui-route-card");
+    });
+  }
+
   for (const route of visualQaRoutes) {
     for (const viewport of route.viewports) {
       test(`${route.id} is layout-ready on ${viewport}`, async ({ page }) => {

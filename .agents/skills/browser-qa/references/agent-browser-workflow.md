@@ -25,12 +25,12 @@ agent-browser --version
 After starting the fixture app:
 
 ```sh
-agent-browser open http://127.0.0.1:5174/fixture-gallery
+agent-browser open http://127.0.0.1:5174/maintainer-gallery
 agent-browser snapshot -i
 agent-browser eval 'document.documentElement.scrollWidth - document.documentElement.clientWidth'
-agent-browser screenshot /tmp/agent-ui-fixture-gallery-desktop.png
+agent-browser screenshot /tmp/agent-ui-route-gallery-desktop.png
 agent-browser set viewport 390 900
-agent-browser open http://127.0.0.1:5174/rich-transcript
+agent-browser open http://127.0.0.1:5174/showcase/rich-transcript
 agent-browser snapshot -i
 agent-browser screenshot /tmp/agent-ui-rich-transcript-mobile.png
 agent-browser close

@@ -53,7 +53,7 @@ import {
 } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import "./styles/closeups.css";
-import "./styles/fixture-gallery.css";
+import "./styles/route-gallery.css";
 import "./styles/host-recipe.css";
 import "./styles/usage-only.css";
 import {
@@ -82,20 +82,33 @@ declare global {
 }
 
 function DemoApp() {
-  if (window.location.pathname === "/app-connectors") return <AppConnectorsExample />;
-  if (window.location.pathname === "/composer-retry") return <ComposerRetryExample />;
-  if (window.location.pathname === "/fixture-gallery") return <VisualQaIndex />;
-  if (window.location.pathname === "/host-workflow-recipe") return <HostWorkflowRecipe />;
-  if (window.location.pathname === "/resource-resolution") {
+  const { pathname } = window.location;
+  if (pathname === "/") return <ShowcaseIndex />;
+  if (pathname === "/maintainer-gallery") return <MaintainerGallery />;
+  if (pathname === "/showcase/app-connectors") return <AppConnectorsExample />;
+  if (pathname === "/showcase/composer-retry") return <ComposerRetryExample />;
+  if (pathname === "/showcase/host-workflow-recipe") return <HostWorkflowRecipe />;
+  if (pathname === "/showcase/resource-resolution") {
     return <ResourceResolutionExample />;
   }
-  if (window.location.pathname === "/transcript-density") return <TranscriptDensityExample />;
-  if (window.location.pathname === "/scoped-thread-lists") {
+  if (pathname === "/showcase/transcript-density") return <TranscriptDensityExample />;
+  if (pathname === "/showcase/scoped-thread-lists") {
     return <ScopedThreadListsExample />;
   }
-  if (window.location.pathname === "/scoped-thread-pane") return <ScopedThreadPaneExample />;
-  if (window.location.pathname === "/usage-only") return <UsageOnlyExample />;
-  return <AgentDemo />;
+  if (pathname === "/showcase/scoped-thread-pane") return <ScopedThreadPaneExample />;
+  if (pathname === "/showcase/usage-only") return <UsageOnlyExample />;
+  if (pathname === "/showcase/rich-transcript") {
+    return <AgentDemo scenario="rich-transcript" />;
+  }
+  if (pathname === "/showcase/empty-authenticated-workspace") {
+    return <AgentDemo scenario="empty" />;
+  }
+  if (pathname === "/showcase/unauthenticated-first-run") {
+    return <AgentDemo scenario="unauth" />;
+  }
+  if (pathname === "/showcase/bridge-error") return <AgentDemo scenario="bridge-error" />;
+  if (pathname === "/showcase/default-conversation") return <AgentDemo scenario="default" />;
+  return <ShowcaseIndex />;
 }
 
 function ComposerRetryExample() {
@@ -341,8 +354,7 @@ function ScopedThreadListPanel({
   );
 }
 
-function AgentDemo() {
-  const scenario = useMemo(() => fixtureScenarioFromLocation(), []);
+function AgentDemo({ scenario }: { scenario: FixtureScenario }) {
   const [locale, setLocale] = useState<AgentLocale>(() => localeFromLocation());
   const [theme, setTheme] = useState<AgentTheme>(() => themeFromLocation());
   const initialState = useMemo(() => createFixtureInitialState(scenario), [scenario]);
@@ -370,21 +382,66 @@ function AgentDemo() {
   );
 }
 
-function VisualQaIndex() {
+function ShowcaseIndex() {
   const grouped = useMemo(() => groupFixtures(visualQaStates), []);
   const theme = themeFromLocation();
   return (
-    <main className="aui-fixture-gallery" data-aui-theme={theme}>
-      <div className="aui-fixture-gallery-header">
+    <main className="aui-route-gallery" data-aui-theme={theme}>
+      <div className="aui-route-gallery-header">
         <div>
-          <h1>Agent UI visual QA</h1>
+          <h1>Agent UI showcase</h1>
           <p>
-            Primitive close-ups come first so each interactive component can be
-            inspected without scrolling past iframes. Lifecycle and preset surfaces
-            follow underneath for full-page comparison.
+            Public examples for the default chat preset, reusable primitives,
+            host composition patterns, and protocol lifecycle states.
           </p>
         </div>
-        <div className="aui-fixture-gallery-actions">
+        <div className="aui-route-gallery-actions">
+          <a href="#preset-surfaces">Preset surfaces</a>
+          <a href="#primitive-compositions">Primitive compositions</a>
+          <a href="#lifecycle-states">Lifecycle states</a>
+        </div>
+      </div>
+      {grouped.map(({ group, states }) => (
+        <section
+          className="aui-route-gallery-group"
+          id={
+            group === "core"
+              ? "preset-surfaces"
+              : group === "primitives"
+                ? "primitive-compositions"
+                : "lifecycle-states"
+          }
+          key={group}
+        >
+          <header className="aui-route-gallery-group-header">
+            <h2>{fixtureGroupLabels[group]}</h2>
+            <span>{states.length} example{states.length === 1 ? "" : "s"}</span>
+          </header>
+          <div className="aui-route-gallery-grid">
+            {states.map((state) => (
+              <FixturePreview state={state} key={state.href} />
+            ))}
+          </div>
+        </section>
+      ))}
+    </main>
+  );
+}
+
+function MaintainerGallery() {
+  const grouped = useMemo(() => groupFixtures(visualQaStates), []);
+  const theme = themeFromLocation();
+  return (
+    <main className="aui-route-gallery" data-aui-theme={theme}>
+      <div className="aui-route-gallery-header">
+        <div>
+          <h1>Agent UI maintainer gallery</h1>
+          <p>
+            Maintainer-only visual QA for primitive close-ups, critical states,
+            probes, specimens, and full-page preview comparisons.
+          </p>
+        </div>
+        <div className="aui-route-gallery-actions">
           <a href="#component-closeups">Component close-ups</a>
           <a href="#critical-states">Critical states</a>
           <a href="#preset-surfaces">Preset surfaces</a>
@@ -395,15 +452,21 @@ function VisualQaIndex() {
       <CriticalInteractionStates />
       {grouped.map(({ group, states }) => (
         <section
-          className="aui-fixture-gallery-group"
-          id={group === "core" ? "preset-surfaces" : group === "primitives" ? "primitive-compositions" : "full-page-previews"}
+          className="aui-route-gallery-group"
+          id={
+            group === "core"
+              ? "preset-surfaces"
+              : group === "primitives"
+                ? "primitive-compositions"
+                : "full-page-previews"
+          }
           key={group}
         >
-          <header className="aui-fixture-gallery-group-header">
+          <header className="aui-route-gallery-group-header">
             <h2>{fixtureGroupLabels[group]}</h2>
             <span>{states.length} preview{states.length === 1 ? "" : "s"}</span>
           </header>
-          <div className="aui-fixture-gallery-grid">
+          <div className="aui-route-gallery-grid">
             {states.map((state) => (
               <FixturePreview state={state} key={state.href} />
             ))}
@@ -1594,20 +1657,6 @@ function ExampleFrame({
     </main>
   );
 }
-
-function fixtureScenarioFromLocation(): FixtureScenario {
-  if (window.location.pathname === "/rich-transcript") return "rich-transcript";
-  const state = new URLSearchParams(window.location.search).get("state");
-  if (
-    state === "empty" ||
-    state === "unauth" ||
-    state === "bridge-error"
-  ) {
-    return state;
-  }
-  return "default";
-}
-
 
 function hostApprovalTitle(kind: string): string {
   switch (kind) {

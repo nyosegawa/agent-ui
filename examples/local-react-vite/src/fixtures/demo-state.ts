@@ -276,7 +276,7 @@ export function createRichTranscriptInitialState(): AgentSessionState {
       kind: "dynamicTool",
       payload: {
         tool: "browser_verification_snapshot",
-        arguments: { url: "http://127.0.0.1:5174/rich-transcript" },
+        arguments: { url: "http://127.0.0.1:5174/showcase/rich-transcript" },
       },
       threadId: "thread-rich-transcript",
     },

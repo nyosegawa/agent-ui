@@ -12,6 +12,7 @@ import {
   runEventFixture,
   selectDiagnosticWarnings,
   selectPendingOperations,
+  type AgentThreadView as CoreAgentThreadView,
   type AgentThreadScope,
   type FixtureStep,
   type ThreadState,
@@ -40,6 +41,8 @@ import {
   AgentLocaleSelect,
   AgentSkillsPanel,
   AgentAppsPanel,
+  ThreadList,
+  formatThreadStatus,
   useAgentAccount,
   useAgentApps,
   useAgentApprovals,
@@ -87,6 +90,61 @@ function resolvedTextAttachment(path: string, label?: string) {
     path,
   };
 }
+
+describe("thread waiting status labels", () => {
+  it("maps every waiting reason to the user-visible status label", () => {
+    expect(
+      formatThreadStatus("waitingForInput", { waitingReasons: ["approval"] }),
+    ).toBe("Needs approval");
+    expect(
+      formatThreadStatus("waitingForInput", { waitingReasons: ["permission"] }),
+    ).toBe("Needs permission");
+    expect(
+      formatThreadStatus("waitingForInput", { waitingReasons: ["userInput"] }),
+    ).toBe("Needs input");
+    expect(
+      formatThreadStatus("waitingForInput", { waitingReasons: ["mcpElicitation"] }),
+    ).toBe("Needs MCP input");
+    expect(
+      formatThreadStatus("waitingForInput", { waitingReasons: ["authRefresh"] }),
+    ).toBe("Needs authentication");
+    expect(
+      formatThreadStatus("waitingForInput", { waitingReasons: ["attestation"] }),
+    ).toBe("Needs attestation");
+    expect(
+      formatThreadStatus("waitingForInput", { waitingReasons: ["unknown"] }),
+    ).toBe("Needs attention");
+    expect(
+      formatThreadStatus("waitingForInput", {
+        waitingReasons: ["approval", "permission"],
+      }),
+    ).toBe("Needs attention");
+  });
+
+  it("uses waiting reasons in thread list metadata", () => {
+    const thread: CoreAgentThreadView = {
+      displayStatus: "waitingForInput",
+      id: "thread-approval",
+      isActive: false,
+      isArchived: false,
+      isPreview: false,
+      isRunning: false,
+      needsInput: true,
+      title: "Approval thread",
+      waitingReasons: ["approval"],
+    };
+
+    render(
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <ThreadList threads={[thread]} />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByRole("button", { name: /Approval thread/ })).toHaveTextContent(
+      "Needs approval",
+    );
+  });
+});
 
 function renderMessageListWithThread(
   thread: ThreadState,
@@ -10031,9 +10089,7 @@ describe("AgentChat", () => {
     const textarea = await screen.findByLabelText("Message");
     expect(textarea).toBeDisabled();
     expect(textarea).toHaveAttribute("placeholder", "Needs approval");
-    expect(
-      screen.getByText("Resolve the pending approval before sending another message."),
-    ).toBeInTheDocument();
+    expect(screen.getAllByText("Needs approval").length).toBeGreaterThanOrEqual(2);
     expect(screen.getByLabelText("public composer can submit")).toHaveTextContent("false");
     expect(screen.getByLabelText("public composer disabled reason")).toHaveTextContent(
       "approval",

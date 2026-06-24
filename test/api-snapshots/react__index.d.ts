@@ -1,6 +1,6 @@
 import * as react_jsx_runtime from 'react/jsx-runtime';
 import * as _nyosegawa_agent_ui_core from '@nyosegawa/agent-ui-core';
-import { ReasoningEffort, AgentRunPolicyId, AgentEvent, AgentSessionState, AgentTransport, AgentApp, ThreadId, ThreadState, ThreadStatus, AgentModel, RequestId, AgentError, AgentThreadScope, AgentThreadCollection, AgentThreadView as AgentThreadView$1, PendingServerRequest, AgentTranscriptBlockView, AgentItemBlockKind, AgentItemState, ThreadTokenUsage, AgentThread, AgentThreadSummaryView, AgentThreadTranscriptView, TurnState } from '@nyosegawa/agent-ui-core';
+import { ReasoningEffort, AgentRunPolicyId, AgentEvent, AgentSessionState, AgentTransport, AgentApp, ThreadId, ThreadState, ThreadStatus, AgentModel, RequestId, AgentError, AgentThreadScope, AgentThreadCollection, AgentThreadView as AgentThreadView$1, PendingServerRequest, AgentTranscriptBlockView, AgentItemBlockKind, AgentItemState, ThreadTokenUsage, AgentThreadWaitingReason, AgentThread, AgentThreadSummaryView, AgentThreadTranscriptView, TurnState } from '@nyosegawa/agent-ui-core';
 export { AgentRunPolicyId, AgentThreadResumeDiagnosticReasonCode } from '@nyosegawa/agent-ui-core';
 import React$1, { PropsWithChildren, Dispatch, SetStateAction } from 'react';
 
@@ -818,7 +818,13 @@ interface AgentI18nDictionary {
     "thread.searchHistory": string;
     "thread.status.complete": string;
     "thread.status.failed": string;
+    "thread.status.needsAttention": string;
     "thread.status.needsApproval": string;
+    "thread.status.needsAttestation": string;
+    "thread.status.needsAuthentication": string;
+    "thread.status.needsInput": string;
+    "thread.status.needsMcpInput": string;
+    "thread.status.needsPermission": string;
     "thread.status.preview": string;
     "thread.status.ready": string;
     "thread.status.running": string;
@@ -1057,6 +1063,7 @@ declare function ThreadList({ activeThreadId, footer, onSelectThread, threads, }
 declare function formatThreadStatus(status: string, options?: {
     hasTurns?: boolean;
     t?: (key: AgentI18nKey) => string;
+    waitingReasons?: readonly AgentThreadWaitingReason[];
 }): string;
 declare function threadSubtitle(thread: AgentThread, t?: (key: AgentI18nKey) => string): string;
 declare function isUserFacingPath(path: string): boolean;

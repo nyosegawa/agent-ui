@@ -9,7 +9,7 @@ for (const viewport of [
     page,
   }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/resource-resolution");
+    await page.goto("/showcase/resource-resolution");
 
     await expect(page.getByRole("heading", { name: "Resource resolution" })).toBeVisible();
     await expect(page.getByRole("img", { name: "fixture-image.png" })).toHaveAttribute(

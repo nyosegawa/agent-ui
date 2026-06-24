@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("retries a failed first message through the public composer controller", async ({
   page,
 }) => {
-  await page.goto("/composer-retry");
+  await page.goto("/showcase/composer-retry");
   await expect(page.getByRole("heading", { name: "Composer retry" })).toBeVisible();
   await expect(page.getByLabel("Composer retry status")).toContainText(
     "Retry diagnostics",

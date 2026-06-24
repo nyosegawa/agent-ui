@@ -64,12 +64,11 @@ bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 Useful fixture routes:
 
 - `/`
-- `/rich-transcript`
-- `/fixture-gallery`
-- `/host-workflow-recipe`
-- `/usage-only`
-- `/scoped-thread-pane`
-- `/app-connectors`
+- `/showcase/rich-transcript`
+- `/showcase/host-workflow-recipe`
+- `/showcase/usage-only`
+- `/showcase/scoped-thread-pane`
+- `/showcase/app-connectors`
 
 Run the real local Codex web app after the fixture app if you need App
 Server-backed account, model, thread, turn, upload, and approval behavior:

@@ -589,6 +589,7 @@ describe("agentReducer", () => {
       pending: undefined,
       subtitle: "/repo/agent-ui",
       title: "Lifecycle thread",
+      waitingReasons: [],
     });
     expect(activeThreadView).not.toHaveProperty("raw");
     expect(activeThreadView).not.toHaveProperty("canonicalId");

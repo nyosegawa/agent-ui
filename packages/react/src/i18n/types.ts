@@ -259,7 +259,13 @@ export interface AgentI18nDictionary {
   "thread.searchHistory": string;
   "thread.status.complete": string;
   "thread.status.failed": string;
+  "thread.status.needsAttention": string;
   "thread.status.needsApproval": string;
+  "thread.status.needsAttestation": string;
+  "thread.status.needsAuthentication": string;
+  "thread.status.needsInput": string;
+  "thread.status.needsMcpInput": string;
+  "thread.status.needsPermission": string;
   "thread.status.preview": string;
   "thread.status.ready": string;
   "thread.status.running": string;

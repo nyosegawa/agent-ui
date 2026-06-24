@@ -1,4 +1,8 @@
-import type { AgentThread, AgentThreadView } from "@nyosegawa/agent-ui-core";
+import type {
+  AgentThread,
+  AgentThreadView,
+  AgentThreadWaitingReason,
+} from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   IconAdd,
@@ -61,7 +65,12 @@ function threadListMeta(
   thread: AgentThreadView,
   t: (key: AgentI18nKey) => string,
 ): string {
-  const parts = [formatThreadStatus(threadListStatus(thread), { t })];
+  const parts = [
+    formatThreadStatus(threadListStatus(thread), {
+      t,
+      waitingReasons: thread.waitingReasons,
+    }),
+  ];
   if (thread.lastActivityAt) parts.push(formatThreadDate(thread.lastActivityAt));
   const path = thread.cwd ?? thread.subtitle;
   if (path && isUserFacingPath(path)) parts.push(compactPath(path));
@@ -81,7 +90,11 @@ function formatThreadDate(timestamp: number): string {
 
 export function formatThreadStatus(
   status: string,
-  options: { hasTurns?: boolean; t?: (key: AgentI18nKey) => string } = {},
+  options: {
+    hasTurns?: boolean;
+    t?: (key: AgentI18nKey) => string;
+    waitingReasons?: readonly AgentThreadWaitingReason[];
+  } = {},
 ): string {
   const t = options.t ?? fallbackThreadT;
   switch (status) {
@@ -96,7 +109,7 @@ export function formatThreadStatus(
     case "running":
       return t("thread.status.running");
     case "waitingForInput":
-      return t("thread.status.needsApproval");
+      return formatThreadWaitingStatus(options.waitingReasons, t);
     case "complete":
     case "completed":
       return t("thread.status.complete");
@@ -107,6 +120,31 @@ export function formatThreadStatus(
         .replace(/([a-z])([A-Z])/g, "$1 $2")
         .replace(/^\w/, (letter) => letter.toUpperCase());
   }
+}
+
+function formatThreadWaitingStatus(
+  waitingReasons: readonly AgentThreadWaitingReason[] | undefined,
+  t: (key: AgentI18nKey) => string,
+): string {
+  const reasons = waitingReasons ?? [];
+  if (reasons.length !== 1) return t("thread.status.needsAttention");
+  switch (reasons[0]) {
+    case "approval":
+      return t("thread.status.needsApproval");
+    case "permission":
+      return t("thread.status.needsPermission");
+    case "userInput":
+      return t("thread.status.needsInput");
+    case "mcpElicitation":
+      return t("thread.status.needsMcpInput");
+    case "authRefresh":
+      return t("thread.status.needsAuthentication");
+    case "attestation":
+      return t("thread.status.needsAttestation");
+    case "unknown":
+      return t("thread.status.needsAttention");
+  }
+  return t("thread.status.needsAttention");
 }
 
 export function threadSubtitle(
@@ -360,7 +398,13 @@ function fallbackThreadT(key: AgentI18nKey): string {
     "thread.ephemeralSession": "Ephemeral Codex session",
     "thread.status.complete": "Complete",
     "thread.status.failed": "Failed",
+    "thread.status.needsAttention": "Needs attention",
     "thread.status.needsApproval": "Needs approval",
+    "thread.status.needsAttestation": "Needs attestation",
+    "thread.status.needsAuthentication": "Needs authentication",
+    "thread.status.needsInput": "Needs input",
+    "thread.status.needsMcpInput": "Needs MCP input",
+    "thread.status.needsPermission": "Needs permission",
     "thread.status.preview": "Preview",
     "thread.status.ready": "Ready",
     "thread.status.running": "Running",

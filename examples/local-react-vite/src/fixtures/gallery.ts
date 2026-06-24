@@ -1,5 +1,5 @@
 import {
-  previewRoutes,
+  publicShowcaseRoutes,
   type VisualQaRouteCategory,
 } from "./visual-qa-manifest";
 
@@ -22,26 +22,27 @@ export interface FixtureState {
 }
 
 const fixtureGroupByCategory: Record<VisualQaRouteCategory, FixtureGroup | null> = {
-  "component-closeups": null,
   "host-reference": "primitives",
   "primitive-composition": "primitives",
   "protocol-lifecycle": "core",
+  "visual-maintenance": null,
 };
 
-export const visualQaStates: FixtureState[] = previewRoutes.map((route) => {
-  const group =
-    route.path.startsWith("/?state=") ? "states" : fixtureGroupByCategory[route.category];
-  if (!group) {
-    throw new Error(`Route ${route.id} cannot be rendered as a fixture preview`);
-  }
-  return {
-    description: route.description,
-    group,
-    href: route.path,
-    meta: route.meta,
-    title: route.title,
-  };
-});
+export const visualQaStates: FixtureState[] = publicShowcaseRoutes
+  .filter((route) => route.preview)
+  .map((route) => {
+    const group = route.kind === "state" ? "states" : fixtureGroupByCategory[route.category];
+    if (!group) {
+      throw new Error(`Route ${route.id} cannot be rendered as a fixture preview`);
+    }
+    return {
+      description: route.description,
+      group,
+      href: route.path,
+      meta: route.meta,
+      title: route.title,
+    };
+  });
 
 export const fixtureGroupLabels: Record<FixtureGroup, string> = {
   core: "Preset surfaces",

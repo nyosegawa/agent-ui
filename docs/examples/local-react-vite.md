@@ -11,7 +11,7 @@ Purpose:
 - deterministic UI review without a real Codex process
 - fixture-backed transcript, approval, command, diff, usage, and status states
 - visual QA routes for component close-ups and full-page layouts
-- owner of fixture-gallery, host-workflow, close-up, and usage-only route CSS
+- owner of route-gallery, host-workflow, close-up, and usage-only route CSS
   that should not ship through `@nyosegawa/agent-ui-react/styles.css`
 - consumer of the same `--aui-*` design-system tokens used by the distributed
   React stylesheet, so examples exercise the library contract instead of an
@@ -31,15 +31,17 @@ bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 
 Routes:
 
-- `/`: baseline AgentChat fixture with transcript, approvals, command output,
-  diff, usage, and stored thread preview hydration.
-- `/rich-transcript`: intentionally dense transcript and approval stress
+- `/`: public showcase index.
+- `/showcase/default-conversation`: baseline AgentChat fixture with transcript,
+  approvals, command output, diff, usage, and stored thread preview hydration.
+- `/showcase/rich-transcript`: intentionally dense transcript and approval stress
   fixture for renderer and interaction review.
-- `/?state=empty`: authenticated first-run workspace with no stored threads.
-- `/?state=unauth`: device-code login state.
-- `/?state=bridge-error`: local bridge diagnostics state.
-- `/fixture-gallery`: component close-ups plus route previews.
-- `/host-workflow-recipe`: host integration reference shell with a host header,
+- `/showcase/empty-authenticated-workspace`: authenticated first-run workspace with no stored threads.
+- `/showcase/unauthenticated-first-run`: device-code login state.
+- `/showcase/bridge-error`: local bridge diagnostics state.
+- `/maintainer-gallery`: maintainer-only component close-ups, probes,
+  specimens, critical states, and route previews.
+- `/showcase/host-workflow-recipe`: host integration reference shell with a host header,
   embedded `AgentChat`, host side panel, mobile drawer behavior, and a
   host-owned review sheet layered with public `--aui-z-*` tokens. The route
   also resolves browser file attachments through a host-owned resolver that
@@ -51,19 +53,19 @@ Routes:
   `useAgentThreadListController`, plus a host-owned workflow gate that toggles
   host actions without taking over Agent UI transcript, composer, approval, or
   history behavior.
-- `/composer-retry`: failed optimistic first-message retry through the public
+- `/showcase/composer-retry`: failed optimistic first-message retry through the public
   composer controller.
-- `/transcript-density`: compact transcript route with verbose command/file
+- `/showcase/transcript-density`: compact transcript route with verbose command/file
   blocks and chat text filtered out.
-- `/resource-resolution`: local media rendered from structured browser-safe
+- `/showcase/resource-resolution`: local media rendered from structured browser-safe
   resource metadata instead of raw local paths.
-- `/scoped-thread-lists`: independent scoped history collections for host-owned
+- `/showcase/scoped-thread-lists`: independent scoped history collections for host-owned
   list panes.
-- `/usage-only`: standalone usage primitive examples.
-- `/scoped-thread-pane`: fixed-thread composition.
-- `/app-connectors`: Codex Apps/connectors metadata.
+- `/showcase/usage-only`: standalone usage primitive examples.
+- `/showcase/scoped-thread-pane`: fixed-thread composition.
+- `/showcase/app-connectors`: Codex Apps/connectors metadata.
 
-The fixture gallery renders component close-ups directly rather than through
+The maintainer gallery renders component close-ups directly rather than through
 iframes. Its critical-state section covers the mobile empty state, start
 composer, sidebar drawer selection, local media fallback, and optimistic
 pending message examples used for visual review. Its component close-up section
@@ -84,7 +86,7 @@ resource details without exposing raw local paths.
 fixture browser checks. Do not rely on a manually running 5174 server for this
 command.
 
-The fixture gallery, docs screenshot capture, and route reachability checks use
+The maintainer gallery, docs screenshot capture, and route reachability checks use
 one maintainer-owned visual route inventory so example routes do not drift from
 browser coverage. When adding or removing a fixture route, follow the
 repository-level workflow in [Testing](../architecture/testing.md). Keep this

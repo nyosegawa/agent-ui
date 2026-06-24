@@ -341,6 +341,7 @@ interface AgentThreadView {
     isRunning: boolean;
     needsInput: boolean;
     lastActivityAt?: number;
+    waitingReasons: AgentThreadWaitingReason[];
     pending?: AgentPendingThreadState;
     error?: AgentError;
 }

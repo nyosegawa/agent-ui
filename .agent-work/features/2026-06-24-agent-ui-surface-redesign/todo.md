@@ -3,7 +3,7 @@
 ## Status Summary
 
 - Planning status: complete on branch.
-- Implementation status: in progress; P001, P002, and P003 implemented, validated, reviewed, committed, pushed, and followed through to CI success.
+- Implementation status: in progress; P001 through P005 implemented, validated, reviewed, committed, pushed, and followed through to CI success. P006 implemented, validated, and reviewed; phase commit/push evidence is being recorded.
 - Planning branch: reuse `codex/fixture-system-redesign-plan`.
 - Compatibility stance: no backwards compatibility.
 - Required review stance: every implementation phase must run four parallel subagent reviews after focused validation and before phase commit.
@@ -21,9 +21,9 @@
 - P001 Protocol classification and Codex adapter boundary - implemented, validated, reviewed, committed, and pushed.
 - P002 Core runtime state, reducers, selectors, and view-state contract - implemented, validated, reviewed, committed, pushed, and CI-successful.
 - P003 React view models, direct-link controller, and raw-free components - implemented, validated, reviewed, committed, pushed, and CI-successful.
-- P004 Default composer, turn controls, retry, and neutral integrations
-- P005 Run policy, model/effort, cwd, and host-boundary controls
-- P006 Showcase and maintainer gallery foundation
+- P004 Default composer, turn controls, retry, and neutral integrations - implemented, validated, reviewed, committed, and pushed.
+- P005 Run policy, model/effort, cwd, and host-boundary controls - implemented, validated, reviewed, committed, pushed, and CI-successful.
+- P006 Showcase and maintainer gallery foundation - implemented, validated, reviewed, and ready for phase commit.
 - P007 React export subpaths, package contracts, examples, and public skill API guidance
 - P008 Cross-docs, screenshots, release readiness, PR, and CI
 
@@ -184,7 +184,7 @@
       - Expected files/areas: visual e2e and browser QA evidence.
       - Validation note: desktop/mobile hit-test, focus, overflow, and menu containment are recorded.
 
-- [ ] P006 Showcase and maintainer gallery foundation
+- [x] P006 Showcase and maintainer gallery foundation
   - Goal: introduce the route split as the browser-visible proving ground and update route docs/skills in the same phase.
   - Scope: route registry, manifest schema, showcase routes, maintainer gallery, closeups/probes/specimens, route/e2e docs, public skill route leakage tests.
   - Expected files/areas: `examples/local-react-vite/src/**`, `examples/local-react-vite/e2e/**`, `docs/guides/browser-verification.md`, `docs/architecture/testing.md`, `docs/examples/local-react-vite.md`, `skills/agent-ui/**`, `test/agent-ui-skill.test.ts`.
@@ -194,25 +194,26 @@
   - Push: push phase commit.
   - PR/CI: record route/e2e status.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: Split the fixture surface into a public showcase index at `/`, public example routes under `/showcase/*`, and a maintainer-only gallery at `/maintainer-gallery`; removed old `/fixture-gallery` compatibility routing and renamed gallery CSS from `fixture-gallery` to `route-gallery`. Added manifest `audience`, `kind`, `ownerSpecs`, and explicit `docsScreenshot` eligibility; made docs screenshots derive from public showcase routes only; removed the obsolete fixture-gallery screenshot files. Updated maintainer gallery ordering so component close-ups and state diagnostics are separate from public iframe previews. Added user-visible waiting labels for approval, permission, input, MCP input, authentication, attestation, and mixed/unknown attention states; carried waiting reasons through core thread views and sidebar/mobile drawer metadata; kept the shared waiting formatter private to React internals. Updated docs, README, route e2e, browser QA skill references, example-authoring skill references, and public skill leakage tests so public guidance does not present maintainer routes as normal user-facing examples.
+    - Validation: `bun run --cwd examples/local-react-vite typecheck` passed; `bun run --cwd examples/local-react-vite build` passed; `bun run test:skills` passed; `bun run test:repo-skills` passed; `bunx playwright test examples/local-react-vite/e2e/visual-qa-manifest.e2e.ts --config playwright.fixtures.config.ts` passed with 18 tests; `bun run typecheck` passed; `bun run lint` passed; `bun run validate:fast` passed with 61 files and 691 tests after review fixes; `bun x vitest run --config vitest.config.ts packages/react/test/components.vitest.tsx --testNamePattern "thread waiting status labels|waiting|approval"` passed with 19 tests; `bun run test:api-snapshots:update && bun run test:api-snapshots` passed; `bun run test:package-resolution && bun run validate:packages` passed; `bun run test:e2e:clean-ports && bunx playwright test examples/local-react-vite/e2e/visual-closeups.e2e.ts examples/local-react-vite/e2e/visual-route-matrix.e2e.ts --config playwright.fixtures.config.ts --grep "maintainer gallery mobile|public showcase index"` passed with 5 tests; final single-run `bun run test:e2e:fixtures` passed with 152 passed and 1 skipped after an earlier parallel-build interference failure was rerun cleanly.
+    - Browser QA: agent-browser checked `http://127.0.0.1:5176/` desktop with heading `Agent UI showcase`, 12 public showcase links, zero maintainer links, overflow 0, and screenshot `/tmp/agent-ui-p006-showcase-index-desktop.png`; checked `http://127.0.0.1:5176/maintainer-gallery` mobile with heading `Agent UI maintainer gallery`, 27 closeups, all waiting labels visible, overflow 0, and screenshot `/tmp/agent-ui-p006-maintainer-gallery-mobile.png`; checked `http://127.0.0.1:5176/showcase/rich-transcript` desktop with status/notice `Needs attention`, approval count 1, send hit-test true, overflow 0, and screenshot `/tmp/agent-ui-p006-rich-transcript-desktop.png`. Remaining browser risk: agent-browser mobile viewport was supplemented by Playwright mobile route matrix coverage.
+    - Review: Four parallel P006 subagent reviews completed. Protocol/core lane found missing real waiting-label runtime mapping coverage and a stale maintainer selector; fixed with private formatter tests, core waiting reasons on `AgentThreadView`, sidebar metadata propagation, selector existence checks, and updated route-gallery selector. Phase-boundary lane found the same stale selector, accidental public `formatThreadWaitingStatus` export/API snapshot drift, and blank evidence; fixed by moving the helper to a private module, refreshing API snapshots, recording validation evidence, and keeping maintainer routes out of public docs. React/API/docs lane found `/maintainer-gallery` promoted in public docs and the private formatter leaking through the React barrel; fixed by removing maintainer-gallery from public quickstart/package route lists and private helper relocation. Browser/UX lane found missing `/` showcase index viewport coverage, sidebar waiting rows falling back to generic attention without waiting reasons, and masked empty-selector viewport checks; fixed with public index viewport tests, `waitingReasons` propagation, and selector existence assertions.
+    - Commit: phase commit pending.
+    - Push: phase push pending.
   - Tasks:
-    - [ ] T001 Create route registry and move public examples under `/showcase/*`.
+    - [x] T001 Create route registry and move public examples under `/showcase/*`.
       - Expected files/areas: `examples/local-react-vite/src/routes/showcase/**`.
       - Validation note: each showcase route has ready selector and viewport coverage.
-    - [ ] T002 Move closeups, probes, specimens, and previews under `/maintainer-gallery`.
+    - [x] T002 Move closeups, probes, specimens, and previews under `/maintainer-gallery`.
       - Expected files/areas: `examples/local-react-vite/src/routes/maintainer-gallery/**`.
       - Validation note: maintainer gallery is not selected for docs screenshots.
-    - [ ] T003 Update manifest schema with `audience`, `kind`, `ownerSpecs`, `viewports`, and docs screenshot eligibility.
+    - [x] T003 Update manifest schema with `audience`, `kind`, `ownerSpecs`, `viewports`, and docs screenshot eligibility.
       - Expected files/areas: `visual-qa-manifest.ts`, manifest tests.
       - Validation note: schema tests reject ambiguous route entries.
-    - [ ] T004 Add waiting-label states to visual QA.
+    - [x] T004 Add waiting-label states to visual QA.
       - Expected files/areas: fixtures, e2e, sidebar/mobile drawer states.
       - Validation note: all user-visible waiting labels are readable and aligned on desktop/mobile; non-visual/internal request kinds do not surface as approval labels.
-    - [ ] T005 Update public skill/docs route guidance and forbidden maintainer terms.
+    - [x] T005 Update public skill/docs route guidance and forbidden maintainer terms.
       - Expected files/areas: `skills/agent-ui/**`, `test/agent-ui-skill.test.ts`, route docs.
       - Validation note: public skill forbids `/maintainer-gallery`, closeup/probe/specimen maintainer language, and repo-only QA commands.
 

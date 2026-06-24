@@ -9,14 +9,12 @@ test("composer stays a single bordered card with reachable run controls", async 
   page,
 }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/rich-transcript");
+  await page.goto("/showcase/rich-transcript");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   const composer = page.locator(".aui-composer").first();
   await expect(composer).toBeVisible();
   await expect(composer).toHaveAttribute("data-disabled", "true");
-  await expect(composer.locator(".aui-composer-notice")).toContainText(
-    "pending approval",
-  );
+  await expect(composer.locator(".aui-composer-notice")).toContainText("Needs attention");
   await expect(composer.getByRole("button", { name: "Send" })).toBeDisabled();
   await expect(composer.getByRole("button", { name: "Run policy" })).toBeEnabled();
   await expect(composer.getByRole("button", { name: "Model and effort" })).toBeEnabled();
@@ -26,7 +24,7 @@ test("composer close-up exposes attachment and send controls from the real primi
   page,
 }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/fixture-gallery");
+  await page.goto("/maintainer-gallery");
   const closeup = page.getByTestId("closeup:Composer · normal");
   const composer = closeup.locator(".aui-composer");
   await expect(composer).toBeVisible();
@@ -41,7 +39,7 @@ test("mobile composer keeps tap targets above 32px and hides keyboard hint", asy
   page,
 }) => {
   await page.setViewportSize(mobileViewport);
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   const composer = page.locator(".aui-composer").first();
   await expect(composer).toBeVisible();
   await expect(composer.locator(".aui-composer-hint")).toBeHidden();
@@ -53,7 +51,7 @@ test("mobile composer keeps tap targets above 32px and hides keyboard hint", asy
 
 test("core controls keep the shared sizing and typography contract", async ({ page }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   const chatMetrics = {
     accountControl: await elementMetrics(page, ".aui-account-control"),
@@ -77,7 +75,7 @@ test("core controls keep the shared sizing and typography contract", async ({ pa
   expect(chatMetrics.composerSubmit.width, JSON.stringify(chatMetrics)).toBe(36);
   expect(chatMetrics.composerSubmit.height, JSON.stringify(chatMetrics)).toBe(36);
 
-  await page.goto("/?state=empty");
+  await page.goto("/showcase/empty-authenticated-workspace");
   await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible();
   const firstRunMetrics = {
     prompt: await elementMetrics(page, ".aui-first-run-prompt"),
@@ -91,7 +89,7 @@ test("core controls keep the shared sizing and typography contract", async ({ pa
 
 test("status and transcript cards do not use decorative left rails", async ({ page }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/rich-transcript");
+  await page.goto("/showcase/rich-transcript");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   const cardBorders = await page.evaluate(() =>
     [
@@ -122,7 +120,7 @@ test("status and transcript cards do not use decorative left rails", async ({ pa
 
 test("thread list metadata keeps dot and text on one row", async ({ page }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   const layout = await page
     .locator(".aui-thread-list-item")
     .first()

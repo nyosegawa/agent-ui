@@ -12,14 +12,14 @@ import {
 
 test("matches the desktop shell layout contract", async ({ page }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   await expectVisualLayoutContract(page, "desktop");
 });
 
 test("matches the mobile shell layout contract", async ({ page }) => {
   await page.setViewportSize(mobileViewport);
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   await expectVisualLayoutContract(page, "mobile");
 });
@@ -28,7 +28,7 @@ test("tablet status bar keeps account controls inside the viewport", async ({
   page,
 }) => {
   await page.setViewportSize({ height: 1024, width: 768 });
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
 
   const metrics = await page.evaluate(() => {
@@ -70,7 +70,7 @@ test("embedded narrow shell keeps status actions inside the component", async ({
   page,
 }) => {
   await page.setViewportSize({ height: 900, width: 1024 });
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   await page.addStyleTag({
     content: `
@@ -114,7 +114,7 @@ test("narrow tablet composer keeps settings compact and submit pinned", async ({
   page,
 }) => {
   await page.setViewportSize({ height: 900, width: 700 });
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
 
   const metrics = await page.evaluate(() => {
@@ -174,7 +174,7 @@ test("narrow tablet first-run composer keeps settings compact and submit pinned"
   page,
 }) => {
   await page.setViewportSize({ height: 900, width: 700 });
-  await page.goto("/?state=empty");
+  await page.goto("/showcase/empty-authenticated-workspace");
   await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible();
 
   const metrics = await page.evaluate(() => {
@@ -259,7 +259,7 @@ test("mobile first-run keeps primary chat wide and header controls icon-only", a
   page,
 }) => {
   await page.setViewportSize(mobileViewport);
-  await page.goto("/?state=empty");
+  await page.goto("/showcase/empty-authenticated-workspace");
   await expect(page.getByRole("form", { name: "Start a Codex thread" })).toBeVisible();
 
   const metrics = await page.evaluate(() => {
@@ -310,7 +310,7 @@ test("rich transcript mobile keeps approval and composer surfaces inside the vie
   page,
 }) => {
   await page.setViewportSize(mobileViewport);
-  await page.goto("/rich-transcript");
+  await page.goto("/showcase/rich-transcript");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   for (const selector of viewportSurfaceSelectors) {
     await expectWithinViewport(page, selector);
@@ -338,7 +338,7 @@ test("mobile opens secondary chrome from the status bar context sheet", async ({
   page,
 }) => {
   await page.setViewportSize(mobileViewport);
-  await page.goto("/rich-transcript");
+  await page.goto("/showcase/rich-transcript");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   await expect(page.locator(".aui-chat-rail")).toHaveCount(0);
 
@@ -376,7 +376,7 @@ test("mobile opens secondary chrome from the status bar context sheet", async ({
     .toBe(true);
 });
 
-for (const route of ["/", "/host-workflow-recipe"] as const) {
+for (const route of ["/showcase/default-conversation", "/showcase/host-workflow-recipe"] as const) {
   test(`${route} mobile keeps thread controls inside the viewport`, async ({ page }) => {
     await page.setViewportSize(mobileViewport);
     await page.goto(route);
@@ -389,7 +389,7 @@ for (const route of ["/", "/host-workflow-recipe"] as const) {
 
 test("composer mode menu opens within the viewport on mobile", async ({ page }) => {
   await page.setViewportSize(mobileViewport);
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   const modeMenu = page.getByRole("button", { name: "Run policy" });
   await modeMenu.scrollIntoViewIfNeeded();
   await modeMenu.click();
@@ -399,7 +399,7 @@ test("composer mode menu opens within the viewport on mobile", async ({ page }) 
 
 test("model and effort menu stays inside a short viewport", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 360 });
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   await expect(page.locator(".aui-thread-surface").first()).toBeVisible();
   const modelMenu = page.getByRole("button", { name: "Model and effort" }).first();
   await modelMenu.scrollIntoViewIfNeeded();
@@ -408,7 +408,7 @@ test("model and effort menu stays inside a short viewport", async ({ page }) => 
   await expectFullyWithinViewport(page, ".aui-menu-panel");
 });
 
-for (const route of ["/", "/host-workflow-recipe"] as const) {
+for (const route of ["/showcase/default-conversation", "/showcase/host-workflow-recipe"] as const) {
   for (const viewport of [
     { ...desktopViewport, name: "desktop" },
     { ...mobileViewport, name: "mobile" },
@@ -428,12 +428,12 @@ for (const route of ["/", "/host-workflow-recipe"] as const) {
         ".aui-approval-actions .aui-btn",
         ".aui-composer-settings .aui-composer-tool",
       ]) {
-        if (route === "/host-workflow-recipe") {
+        if (route === "/showcase/host-workflow-recipe") {
           await page.locator(selector).first().scrollIntoViewIfNeeded();
         }
         await expectVisibleInViewport(page, selector);
       }
-      if (route === "/host-workflow-recipe") {
+      if (route === "/showcase/host-workflow-recipe") {
         await page
           .locator(".aui-composer button[aria-label='Send']")
           .first()
@@ -455,7 +455,7 @@ test("usage-only page demonstrates four host shells, not a blank page", async ({
   page,
 }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/usage-only");
+  await page.goto("/showcase/usage-only");
   for (const heading of [
     "Drop the Codex usage primitive into any host surface",
     "Compact rail slot",
@@ -478,7 +478,7 @@ test("usage-only mobile keeps content stacked instead of leaving whitespace", as
   page,
 }) => {
   await page.setViewportSize(mobileViewport);
-  await page.goto("/usage-only");
+  await page.goto("/showcase/usage-only");
   await expect(
     page.getByRole("heading", { name: "Standalone quota panel" }),
   ).toBeVisible();
@@ -487,7 +487,7 @@ test("usage-only mobile keeps content stacked instead of leaving whitespace", as
 
 test("host workflow recipe never duplicates the status summary", async ({ page }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/host-workflow-recipe");
+  await page.goto("/showcase/host-workflow-recipe");
   await expect(
     page.getByRole("heading", { name: "Verify Codex local build" }),
   ).toBeVisible();

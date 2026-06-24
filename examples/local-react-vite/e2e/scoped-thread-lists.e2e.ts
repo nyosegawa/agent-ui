@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("keeps explicit scoped thread lists independent in the browser", async ({
   page,
 }) => {
-  await page.goto("/scoped-thread-lists");
+  await page.goto("/showcase/scoped-thread-lists");
   await expect(page.getByTestId("scoped-thread-lists")).toBeVisible();
 
   const left = page.getByRole("region", { name: "Left scoped list" });

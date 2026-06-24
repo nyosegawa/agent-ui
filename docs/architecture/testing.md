@@ -233,28 +233,31 @@ gate.
 
 The fixture routes are:
 
-- `/`: default transcript-first surface with approvals, command output, diff,
-  composer, usage primitives, and thread history
-- `/rich-transcript`: intentionally dense transcript and approval stress fixture
-- `/?state=empty`: authenticated account with no stored threads
-- `/?state=unauth`: first-run device-code login state
-- `/?state=bridge-error`: connection diagnostics
-- `/fixture-gallery`: component close-ups plus full-route previews
-- `/host-workflow-recipe`: host integration reference shell with host header,
+- `/`: public showcase index
+- `/showcase/default-conversation`: default transcript-first surface with
+  approvals, command output, diff, composer, usage primitives, and thread
+  history
+- `/showcase/rich-transcript`: intentionally dense transcript and approval stress fixture
+- `/showcase/empty-authenticated-workspace`: authenticated account with no stored threads
+- `/showcase/unauthenticated-first-run`: first-run device-code login state
+- `/showcase/bridge-error`: connection diagnostics
+- `/maintainer-gallery`: maintainer-only component close-ups, probes,
+  specimens, and full-route previews
+- `/showcase/host-workflow-recipe`: host integration reference shell with host header,
   embedded `AgentChat`, side panel, local attachment metadata, transcript
   local-media preview/fallback metadata, scoped thread history loading,
   host-owned workflow gate, first-message optimistic mode, mobile drawer, and
   host-owned review sheet
-- `/composer-retry`: failed first-message retry through the public composer
+- `/showcase/composer-retry`: failed first-message retry through the public composer
   controller
-- `/resource-resolution`: structured local-media resource rendering without
+- `/showcase/resource-resolution`: structured local-media resource rendering without
   raw path exposure
-- `/transcript-density`: compact transcript route with verbose command/file
+- `/showcase/transcript-density`: compact transcript route with verbose command/file
   blocks and noncritical chat text filtered out
-- `/scoped-thread-lists`: independent host-owned history list scopes
-- `/usage-only`: standalone usage composition examples
-- `/scoped-thread-pane`: fixed-thread composition example
-- `/app-connectors`: Codex Apps/connectors example
+- `/showcase/scoped-thread-lists`: independent host-owned history list scopes
+- `/showcase/usage-only`: standalone usage composition examples
+- `/showcase/scoped-thread-pane`: fixed-thread composition example
+- `/showcase/app-connectors`: Codex Apps/connectors example
 
 The browser gate checks desktop and mobile layout contracts, horizontal
 overflow, composer reachability, approval hit testing, sidebar behavior, and

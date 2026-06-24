@@ -275,8 +275,8 @@ describe("React package source structure", () => {
   it("keeps route fixtures inside the local React Vite example", () => {
     for (const name of [
       "app-connectors",
-      "fixture-gallery",
       "host-workflow-recipe",
+      "maintainer-gallery",
       "scoped-thread-pane",
       "usage-only",
     ]) {
@@ -290,11 +290,12 @@ describe("React package source structure", () => {
     expect(localReactViteSource).not.toContain("docs/testing.md");
     expect(localReactViteSource).not.toContain("agent-ui-rich-transcript-check");
     for (const route of [
-      "/app-connectors",
-      "/fixture-gallery",
-      "/host-workflow-recipe",
-      "/scoped-thread-pane",
-      "/usage-only",
+      "/maintainer-gallery",
+      "/showcase/app-connectors",
+      "/showcase/default-conversation",
+      "/showcase/host-workflow-recipe",
+      "/showcase/scoped-thread-pane",
+      "/showcase/usage-only",
     ]) {
       expect(localReactViteSource).toContain(route);
     }
@@ -329,9 +330,9 @@ describe("React package source structure", () => {
         .filter((path) => path !== "/" && !path.includes("?")),
     );
     const mainPathnames = new Set(
-      Array.from(main.matchAll(/window\.location\.pathname === "([^"]+)"/g)).map(
-        (match) => match[1] ?? "",
-      ),
+      Array.from(main.matchAll(/pathname === "([^"]+)"/g))
+        .map((match) => match[1] ?? "")
+        .filter((path) => path !== "/"),
     );
 
     expect(mainPathnames).toEqual(routePathnames);

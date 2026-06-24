@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
 test("renders Agent UI chat", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   await expect(page.getByTestId("agent-chat")).toBeVisible();
   await expect(page.getByRole("radiogroup", { name: "Theme" })).toBeVisible();
   await page.getByRole("radio", { name: "Dark" }).click();
@@ -46,7 +46,7 @@ test("renders Agent UI chat", async ({ page }) => {
 
 test("does not overflow on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   // Thread history is a drawer reached from the composer-adjacent Threads
   // trigger, not a permanently stacked panel.
   await expect(page.getByRole("button", { name: "Open thread history" })).toBeVisible();
@@ -58,7 +58,7 @@ test("does not overflow on mobile", async ({ page }) => {
 
 test("opens the thread history drawer on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await page.goto("/");
+  await page.goto("/showcase/default-conversation");
   await expect(page.locator(".aui-sidebar")).toHaveCount(0);
   await page.getByRole("button", { name: "Open thread history" }).click();
   await expect(page.locator(".aui-sidebar")).toBeVisible();
@@ -154,11 +154,11 @@ async function contextUsagePopoverIsNotClippedByComposer(page: Page) {
 }
 
 test("renders deterministic empty, login, and bridge-error states", async ({ page }) => {
-  await page.goto("/fixture-gallery");
-  await expect(page.getByRole("heading", { name: "Agent UI visual QA" })).toBeVisible();
+  await page.goto("/maintainer-gallery");
+  await expect(page.getByRole("heading", { name: "Agent UI maintainer gallery" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Bridge error/ })).toBeVisible();
 
-  await page.goto("/?state=empty");
+  await page.goto("/showcase/empty-authenticated-workspace");
   const account = page.getByRole("button", { name: "Open account" });
   await expect(account).toBeVisible();
   await expect(account).toHaveAttribute("title", /fixture@example.com/);
@@ -188,7 +188,7 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
     "fixture-demo-model weekly",
   );
 
-  await page.goto("/?state=unauth");
+  await page.goto("/showcase/unauthenticated-first-run");
   await expect(page.getByText("Connect Codex")).toBeVisible();
   await page.getByRole("button", { name: "Start device-code login" }).click();
   await expect(page.getByText("ABCD-EFGH")).toBeVisible();
@@ -197,14 +197,14 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
     "https://chatgpt.com/activate",
   );
 
-  await page.goto("/?state=bridge-error");
+  await page.goto("/showcase/bridge-error");
   await expect(page.getByLabel("Diagnostics")).toContainText(
     "Fixture bridge failed before connecting to Codex App Server.",
   );
   await expect(page.getByText("Codex bridge unavailable")).toBeVisible();
   await expect(page.getByRole("button", { name: "Start thread" })).toHaveCount(0);
 
-  await page.goto("/rich-transcript?theme=dark");
+  await page.goto("/showcase/rich-transcript?theme=dark");
   await expect(
     page.getByRole("heading", { name: "Rich transcript fixture" }),
   ).toBeVisible();
@@ -234,14 +234,14 @@ test("renders deterministic empty, login, and bridge-error states", async ({ pag
 });
 
 test("renders primitive composition examples", async ({ page }) => {
-  await page.goto("/scoped-thread-pane");
+  await page.goto("/showcase/scoped-thread-pane");
   await expect(
     page.getByRole("heading", { name: "Scoped thread pane" }).first(),
   ).toBeVisible();
   await expect(page.getByText("This pane stays locked to thread-fixed.")).toBeVisible();
   await expect(page.getByText("Active host thread")).toHaveCount(0);
 
-  await page.goto("/usage-only");
+  await page.goto("/showcase/usage-only");
   await expect(
     page.getByRole("heading", {
       name: "Drop the Codex usage primitive into any host surface",
@@ -252,7 +252,7 @@ test("renders primitive composition examples", async ({ page }) => {
   );
   await expect(page.getByLabel("Message composer")).toHaveCount(0);
 
-  await page.goto("/app-connectors");
+  await page.goto("/showcase/app-connectors");
   await expect(page.getByRole("heading", { name: "App connectors" })).toBeVisible();
   await expect(page.getByText("Browser")).toBeVisible();
   await expect(page.getByText("Drive")).toBeVisible();
@@ -260,7 +260,7 @@ test("renders primitive composition examples", async ({ page }) => {
   await expect(page.getByText("Browser")).toBeVisible();
   await expect(page.getByText("Drive")).toBeVisible();
 
-  await page.goto("/host-workflow-recipe");
+  await page.goto("/showcase/host-workflow-recipe");
   await expect(page.getByLabel("Host integration reference")).toBeVisible();
   await expect(page.getByLabel("Host workflow context")).toContainText(
     "Host workflow context",
@@ -290,7 +290,7 @@ test("renders primitive composition examples", async ({ page }) => {
 test("host workflow reference resolves local attachments as structured metadata", async ({
   page,
 }) => {
-  await page.goto("/host-workflow-recipe");
+  await page.goto("/showcase/host-workflow-recipe");
   await expect(
     page.getByRole("heading", { name: "Verify Codex local build" }),
   ).toBeVisible();
@@ -316,7 +316,7 @@ test("host workflow reference resolves local attachments as structured metadata"
 test("host workflow reference resolves transcript local media preview and fallback", async ({
   page,
 }) => {
-  await page.goto("/host-workflow-recipe");
+  await page.goto("/showcase/host-workflow-recipe");
   await expect(
     page.getByRole("heading", { name: "Verify Codex local build" }),
   ).toBeVisible();
@@ -343,7 +343,7 @@ test("host workflow reference resolves transcript local media preview and fallba
 test("host workflow reference preserves first-message optimistic rendering", async ({
   page,
 }) => {
-  await page.goto("/host-workflow-recipe?firstMessage=optimistic");
+  await page.goto("/showcase/host-workflow-recipe?firstMessage=optimistic");
   await expect(
     page.getByRole("heading", { name: "Verify Codex local build" }),
   ).toBeVisible();
@@ -380,7 +380,7 @@ test("host workflow reference preserves first-message optimistic rendering", asy
 test("host workflow reference loads scoped thread history without changing active thread", async ({
   page,
 }) => {
-  await page.goto("/host-workflow-recipe");
+  await page.goto("/showcase/host-workflow-recipe");
   await expect(
     page.getByRole("heading", { name: "Verify Codex local build" }),
   ).toBeVisible();
@@ -414,7 +414,7 @@ test("host workflow reference loads scoped thread history without changing activ
 test("host workflow reference gates host actions without taking over Agent UI", async ({
   page,
 }) => {
-  await page.goto("/host-workflow-recipe");
+  await page.goto("/showcase/host-workflow-recipe");
   await expect(
     page.getByRole("heading", { name: "Verify Codex local build" }),
   ).toBeVisible();
@@ -443,7 +443,7 @@ test("host workflow reference layers a host sheet above the mobile drawer", asyn
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await page.goto("/host-workflow-recipe?hostSheet=open");
+  await page.goto("/showcase/host-workflow-recipe?hostSheet=open");
   await expect(
     page.getByRole("heading", { name: "Verify Codex local build" }),
   ).toBeVisible();
@@ -495,7 +495,7 @@ async function closeHostReviewHasFocus(page: Page) {
 
 test("mobile keeps secondary chrome reachable", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
-  await page.goto("/rich-transcript");
+  await page.goto("/showcase/rich-transcript");
   await expect(page.locator(".aui-chat-rail")).toHaveCount(0);
   await page.getByRole("button", { name: "Agent context" }).click();
   const contextSheet = page.locator(".aui-chat-rail");
@@ -513,10 +513,10 @@ test("mobile keeps secondary chrome reachable", async ({ page }) => {
   expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth);
 });
 
-test("fixture gallery previews load meaningful content", async ({ page }) => {
+test("maintainer gallery previews load meaningful content", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
-  await page.goto("/fixture-gallery");
-  await expect(page.getByRole("heading", { name: "Agent UI visual QA" })).toBeVisible();
+  await page.goto("/maintainer-gallery");
+  await expect(page.getByRole("heading", { name: "Agent UI maintainer gallery" })).toBeVisible();
   const richTranscriptFrame = page.frameLocator(
     'iframe[title="Rich transcript fixture desktop"]',
   );
@@ -533,8 +533,8 @@ test("fixture gallery previews load meaningful content", async ({ page }) => {
 
 test("desktop and mobile screenshot buffers are not blank", async ({ page }) => {
   for (const target of [
-    { height: 900, url: "/rich-transcript", width: 1280 },
-    { height: 900, url: "/host-workflow-recipe", width: 390 },
+    { height: 900, url: "/showcase/rich-transcript", width: 1280 },
+    { height: 900, url: "/showcase/host-workflow-recipe", width: 390 },
   ]) {
     await page.setViewportSize({ width: target.width, height: target.height });
     await page.goto(target.url);

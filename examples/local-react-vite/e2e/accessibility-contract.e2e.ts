@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("rich transcript accessibility snapshot exposes core chat surfaces", async ({
   page,
 }) => {
-  await page.goto("/rich-transcript");
+  await page.goto("/showcase/rich-transcript");
   await expect(
     page.getByRole("heading", { name: "Rich transcript fixture" }),
   ).toBeVisible();

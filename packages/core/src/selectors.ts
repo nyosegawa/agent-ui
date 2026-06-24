@@ -161,6 +161,14 @@ export function selectThreadView(
     isRunning: thread.activity === "running",
     lastActivityAt: thread.metadata?.lastActivityAt,
     needsInput: thread.activity === "waitingForInput",
+    waitingReasons:
+      thread.activity === "waitingForInput"
+        ? unique(
+            selectServerRequestSummaries(state, thread.id)
+              .filter((request) => request.visible)
+              .map((request) => request.waitingReason),
+          )
+        : [],
     pending: pending
       ? {
           error: pending.error,

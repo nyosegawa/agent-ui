@@ -10,13 +10,15 @@ bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 
 Routes:
 
-- `/`: baseline chat surface
-- `/rich-transcript`: dense transcript and approval stress
-- `/fixture-gallery`: component close-ups and previews
-- `/host-workflow-recipe`: host-composed primitive layout
-- `/usage-only`: usage primitives without chat assumptions
-- `/scoped-thread-pane`: fixed-thread composition
-- `/app-connectors`: Codex Apps/connectors metadata
+- `/`: public showcase index
+- `/showcase/default-conversation`: baseline chat surface
+- `/showcase/rich-transcript`: dense transcript and approval stress
+- `/maintainer-gallery`: maintainer-only component close-ups, probes,
+  specimens, and previews
+- `/showcase/host-workflow-recipe`: host-composed primitive layout
+- `/showcase/usage-only`: usage primitives without chat assumptions
+- `/showcase/scoped-thread-pane`: fixed-thread composition
+- `/showcase/app-connectors`: Codex Apps/connectors metadata
 
 CI gate:
 

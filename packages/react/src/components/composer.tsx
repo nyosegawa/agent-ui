@@ -1,9 +1,15 @@
 import React from "react";
-import type { ThreadState, ThreadTokenUsage } from "@nyosegawa/agent-ui-core";
+import {
+  selectThreadSummaryView,
+  type AgentThreadWaitingReason,
+  type ThreadState,
+  type ThreadTokenUsage,
+} from "@nyosegawa/agent-ui-core";
 import { useEffect, useId, useRef, useState } from "react";
 import { type AgentComposerController } from "../hooks";
 import { useInternalAgentComposerController } from "../hooks/composer";
 import { useAgentI18n } from "../i18n";
+import { useAgentContext } from "../provider";
 import type { AgentResourceKind } from "../resources";
 import {
   IconAlert,
@@ -16,6 +22,7 @@ import {
 } from "../components-internal";
 import { AgentComposerSubmitButton } from "./composer-submit-button";
 import { ComposerRunControls } from "./run-settings";
+import { formatThreadStatus } from "./sidebar";
 import { deferAction } from "./shared";
 import { AgentContextUsageIndicator } from "./context-usage";
 import { FailedPendingMessageList } from "./composer-failed-pending";
@@ -475,6 +482,10 @@ export function AgentComposerPanel({
 }: AgentComposerPanelProps) {
   const { t } = useAgentI18n();
   const isBlocked = thread.activity === "waitingForInput";
+  const { state } = useAgentContext();
+  const waitingReasons = threadId
+    ? selectThreadSummaryView(state, threadId)?.execution.runtime.waitingReasons
+    : undefined;
   const composer = useInternalAgentComposerController(threadId);
   const attachmentRestoreRef = useRef<
     ((attachments: ComposerAttachment[]) => void) | null
@@ -492,11 +503,11 @@ export function AgentComposerPanel({
         composerIntegrations={composerIntegrations}
         composer={composer}
         disabled={isBlocked}
-        disabledReason={composerDisabledReason(thread.activity, t)}
+        disabledReason={composerDisabledReason(thread.activity, t, waitingReasons)}
         onRegisterAttachmentRestore={(restore) => {
           attachmentRestoreRef.current = restore;
         }}
-        placeholder={composerPlaceholder(thread.activity, t)}
+        placeholder={composerPlaceholder(thread.activity, t, waitingReasons)}
         resolveLocalAttachment={resolveLocalAttachment}
         tokenUsage={thread.tokenUsage}
         threadId={threadId}
@@ -508,9 +519,10 @@ export function AgentComposerPanel({
 function composerDisabledReason(
   activity: ThreadState["activity"],
   t: ReturnType<typeof useAgentI18n>["t"],
+  waitingReasons?: readonly AgentThreadWaitingReason[],
 ): string | undefined {
   if (activity === "waitingForInput") {
-    return t("composer.resolveApprovalReason");
+    return formatThreadStatus("waitingForInput", { t, waitingReasons });
   }
   return undefined;
 }
@@ -518,8 +530,11 @@ function composerDisabledReason(
 function composerPlaceholder(
   activity: ThreadState["activity"],
   t: ReturnType<typeof useAgentI18n>["t"],
+  waitingReasons?: readonly AgentThreadWaitingReason[],
 ): string {
   if (activity === "running") return t("composer.addFollowUp");
-  if (activity === "waitingForInput") return t("thread.status.needsApproval");
+  if (activity === "waitingForInput") {
+    return formatThreadStatus("waitingForInput", { t, waitingReasons });
+  }
   return t("composer.placeholder");
 }

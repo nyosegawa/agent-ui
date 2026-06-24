@@ -158,7 +158,11 @@ describe("public Agent UI skill", () => {
       "path URI",
       "pathUri",
       "pathuri",
-      "/fixture-gallery",
+      "/maintainer-gallery",
+      "close-up",
+      "closeup",
+      "probe route",
+      "specimen",
       "visual-route-matrix.e2e.ts",
       "test:e2e:fixtures",
     ]) {
