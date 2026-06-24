@@ -832,7 +832,7 @@ describe("Codex protocol metadata", () => {
       state,
     );
     expect(state.threads["thread-list-one"]?.status).toBe("loaded");
-    expect(state.threads["thread-list-one"]?.availability).toBe("available");
+    expect(state.threads["thread-list-one"]?.availability).toBe("preview");
     expect(() => normalizeThreadListResponse({ data: [{ name: "Broken" }] })).toThrow(
       "thread/list response contains a thread without an id",
     );
