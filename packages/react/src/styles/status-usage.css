@@ -406,8 +406,7 @@
 /* --- Skills / Apps panels ----------------------------------------- */
 
 .aui-skills-panel,
-.aui-apps-panel,
-.aui-extension-panel {
+.aui-apps-panel {
   background: var(--aui-panel);
   border: 1px solid var(--aui-border);
   border-radius: var(--aui-radius);

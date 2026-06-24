@@ -192,6 +192,8 @@ function assertCanonicalPublicSpecifiers(surfaces) {
     "@nyosegawa/agent-ui-codex/websocket",
     "@nyosegawa/agent-ui-core",
     "@nyosegawa/agent-ui-react",
+    "@nyosegawa/agent-ui-react/headless",
+    "@nyosegawa/agent-ui-react/primitives",
     "@nyosegawa/agent-ui-react/styles.css",
     "@nyosegawa/agent-ui-server",
     "@nyosegawa/agent-ui-web-components",

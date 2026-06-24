@@ -1,10 +1,10 @@
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
+import { AgentProvider } from "@nyosegawa/agent-ui-react";
+import { AgentMessageList } from "@nyosegawa/agent-ui-react/primitives";
 import {
-  AgentMessageList,
-  AgentProvider,
   useAgentComposerController,
   useAgentThreadController,
-} from "@nyosegawa/agent-ui-react";
+} from "@nyosegawa/agent-ui-react/headless";
 
 function HostOwnedComposer() {
   const thread = useAgentThreadController();

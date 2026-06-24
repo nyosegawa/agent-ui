@@ -1,15 +1,17 @@
 import { useState } from "react";
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
-import type { AgentUserInput } from "@nyosegawa/agent-ui-react";
+import { AgentProvider } from "@nyosegawa/agent-ui-react";
 import {
   AgentComposerInput,
   AgentComposerSubmitButton,
   AgentComposerToolbar,
-  AgentProvider,
   AgentThreadTimeline,
+} from "@nyosegawa/agent-ui-react/primitives";
+import {
+  type AgentUserInput,
   useAgentComposerController,
   useAgentThreadController,
-} from "@nyosegawa/agent-ui-react";
+} from "@nyosegawa/agent-ui-react/headless";
 
 type HostGateStatus = "draft" | "ready" | "approved";
 

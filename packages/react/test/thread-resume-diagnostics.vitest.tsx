@@ -23,9 +23,8 @@ describe("thread resume diagnostics", () => {
   it("emits raw-free diagnostics when resume normalization fails after a canonical id is known", async () => {
     const {
       AgentProvider,
-      useAgentDiagnostics,
-      useAgentThread,
     } = await import("../src");
+    const { useAgentDiagnostics, useAgentThread } = await import("../src/headless");
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
       onRequest(request) {

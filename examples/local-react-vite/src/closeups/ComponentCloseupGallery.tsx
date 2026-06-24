@@ -10,10 +10,12 @@ import {
 } from "@nyosegawa/agent-ui-codex/request-builders";
 import {
   AgentChat,
+  AgentProvider,
+} from "@nyosegawa/agent-ui-react";
+import {
   AgentApprovalQueue,
   AgentComposer,
   AgentMessageList,
-  AgentProvider,
   AgentRunControls,
   AgentStarterCwd,
   AgentStartComposer,
@@ -22,7 +24,7 @@ import {
   AgentStatusSummary,
   AgentThreadSidebar,
   AgentUsagePanel,
-} from "@nyosegawa/agent-ui-react";
+} from "@nyosegawa/agent-ui-react/primitives";
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
 import {
   createRichTranscriptInitialState,

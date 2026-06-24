@@ -217,7 +217,7 @@
       - Expected files/areas: `skills/agent-ui/**`, `test/agent-ui-skill.test.ts`, route docs.
       - Validation note: public skill forbids `/maintainer-gallery`, closeup/probe/specimen maintainer language, and repo-only QA commands.
 
-- [ ] P007 React export subpaths, package contracts, examples, and public skill API guidance
+- [x] P007 React export subpaths, package contracts, examples, and public skill API guidance
   - Goal: freeze root/primitives/headless exports after composer and run-policy public surfaces are in place.
   - Scope: React barrels, tsup entries, package exports, API snapshots, runtime export policy, package docs, web components, example imports, public skill API guidance.
   - Expected files/areas: `packages/react/src/**`, `packages/react/package.json`, `packages/react/tsup.config.ts`, `packages/web-components/src/**`, `examples/**`, `docs/reference/package-exports.md`, `test/api-snapshots/**`, `skills/agent-ui/**`, `test/agent-ui-skill.test.ts`.
@@ -227,22 +227,22 @@
   - Push: push phase commit.
   - PR/CI: record package validation and CI status.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
+    - Implementation: split `@nyosegawa/agent-ui-react` into root preset, `./primitives`, and `./headless`; removed `AgentWorkspace` component/CSS public surface; split `AgentShell` into a primitive module; updated examples, docs, API snapshots, runtime/package-resolution policies, and serialized root build order so package builds finish before examples consume package dist CSS.
+    - Validation: `bun run typecheck` passed; `bun run test:api-snapshots:update && bun run test:api-snapshots` passed; `bun run validate:fast` passed with 61 files and 691 tests; `bun run test:package-resolution` passed and resolved `@nyosegawa/agent-ui-react`, `@nyosegawa/agent-ui-react/headless`, `@nyosegawa/agent-ui-react/primitives`, and `styles.css`; `bun run validate:packages` passed including build, packlist, Node compatibility, publint, and attw.
+    - Review: 4 parallel subagent phase reviews completed. P2 findings fixed in-phase: stale `package-exports.md` root resource/composer guidance moved to `headless`/`primitives`; stale "no React root exports removed" wording corrected; root `useAgentContext`/`useAgentAction` leak removed and negative root export assertion added; P007 validation evidence recorded. No P1 findings remained.
+    - Commit: current P007 phase commit (`Split React public export surfaces`).
     - Push:
   - Tasks:
-    - [ ] T001 Split root, `./primitives`, and `./headless` React entrypoints.
+    - [x] T001 Split root, `./primitives`, and `./headless` React entrypoints.
       - Expected files/areas: barrels, `package.json`, `tsup.config.ts`.
-      - Validation note: API snapshots and package resolution include each public subpath.
-    - [ ] T002 Keep `AgentChat` as the root preset name and remove `AgentWorkspace` from default public API.
+      - Validation note: API snapshots and package resolution include each public subpath; runtime policy guards root, headless, and primitives representative exports.
+    - [x] T002 Keep `AgentChat` as the root preset name and remove `AgentWorkspace` from default public API.
       - Expected files/areas: React exports, docs, examples.
-      - Validation note: root docs and public skill teach `AgentChat`; product shells remain example/host code.
-    - [ ] T003 Update web component and examples to import from correct public subpaths.
+      - Validation note: root docs teach `AgentChat`; `AgentWorkspace` component and workspace CSS were removed; product shells remain host/examples code.
+    - [x] T003 Update web component and examples to import from correct public subpaths.
       - Expected files/areas: `packages/web-components`, `examples/**`.
-      - Validation note: affected examples build/typecheck.
-    - [ ] T004 Update package export docs and public skill API guidance in the same phase.
+      - Validation note: affected examples typecheck and build through `validate:packages`.
+    - [x] T004 Update package export docs and public skill API guidance in the same phase.
       - Expected files/areas: `docs/reference/package-exports.md`, `skills/agent-ui/**`, `test/agent-ui-skill.test.ts`.
       - Validation note: docs/skill match API snapshot names and subpath imports.
 

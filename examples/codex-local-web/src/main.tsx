@@ -2,14 +2,16 @@ import { localImageInput, textInput } from "@nyosegawa/agent-ui-codex/request-bu
 import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
 import {
   AgentChat,
-  AgentLocaleSelect,
   AgentProvider,
-  AgentThemeToggle,
   type AgentLocale,
+} from "@nyosegawa/agent-ui-react";
+import {
+  AgentLocaleSelect,
+  AgentThemeToggle,
   type AgentTheme,
   type AgentLocalAttachmentKind,
   type AgentResolvedLocalAttachment,
-} from "@nyosegawa/agent-ui-react";
+} from "@nyosegawa/agent-ui-react/primitives";
 import "@nyosegawa/agent-ui-react/styles.css";
 import { useMemo, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";

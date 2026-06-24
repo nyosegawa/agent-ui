@@ -41,6 +41,14 @@ API.
 Use primitives when the host owns layout:
 
 ```tsx
+import {
+  AgentComposerPanel,
+  AgentCriticalNoticeList,
+  AgentThreadHeader,
+  AgentThreadSurface,
+  AgentThreadTimeline,
+} from "@nyosegawa/agent-ui-react/primitives";
+
 <AgentThreadSurface>
   <AgentThreadHeader thread={threadView} threadId={threadId} transcript={transcriptView} />
   <AgentCriticalNoticeList />
@@ -71,6 +79,14 @@ Render a specific thread without following global active selection:
 Usage, status, apps, skills, and diagnostics can sit outside the chat column:
 
 ```tsx
+import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
+import {
+  AgentShell,
+  AgentThreadSidebar,
+  AgentUsagePanel,
+} from "@nyosegawa/agent-ui-react/primitives";
+import { useAgentThreads } from "@nyosegawa/agent-ui-react/headless";
+
 function HostChrome() {
   const { activeThreadId, setActiveThread } = useAgentThreads();
 
@@ -83,21 +99,16 @@ function HostChrome() {
         />
       }
     >
-      <AgentWorkspace
-        panel={<AgentUsagePanel />}
-        sidebar={false}
-        usage={false}
-        diagnostics={false}
-      />
+      <AgentUsagePanel />
+      <AgentChat sidebar={false} usage={false} diagnostics={false} />
     </AgentShell>
   );
 }
 ```
 
-`AgentWorkspace` is a preset around `AgentChat` with an optional host-owned
-`panel`; it is not a children-based layout wrapper. Use `AgentShell`,
-`AgentThreadSurface`, and the thread primitives when the host wants to place
-every region manually.
+There is no generic workspace preset. Compose `AgentShell`, `AgentChat`, and
+the primitives directly so host panels, routing, persistence, and product
+workflow state stay in the host application.
 
 Host chrome stays host-owned. Agent UI does not persist panel state, create app
 registries, choose navigation or routing policy, authenticate users, map

@@ -6,6 +6,7 @@ import {
   assertRepresentativeNamedExports,
   representativeNamedExportsBySpecifier,
 } from "../scripts/runtime-export-policy.mjs";
+import * as reactRoot from "@nyosegawa/agent-ui-react";
 
 describe("runtime named export policy", () => {
   it("covers representative root and subpath exports", () => {
@@ -25,6 +26,12 @@ describe("runtime named export policy", () => {
         "createCodexWebSocketTransport",
       ]),
       "@nyosegawa/agent-ui-react": expect.arrayContaining(["AgentChat"]),
+      "@nyosegawa/agent-ui-react/headless": expect.arrayContaining([
+        "useAgentComposerController",
+      ]),
+      "@nyosegawa/agent-ui-react/primitives": expect.arrayContaining([
+        "AgentMessageList",
+      ]),
     });
   });
 
@@ -34,6 +41,21 @@ describe("runtime named export policy", () => {
     ).toThrow("@nyosegawa/agent-ui-codex/clients CJS export missing createCodexClients");
   });
 
+  it("keeps React root limited to the preset API", () => {
+    expect(Object.keys(reactRoot).sort()).toEqual([
+      "AgentChat",
+      "AgentI18nProvider",
+      "AgentProvider",
+      "agentI18nDictionaries",
+      "agentLocales",
+      "defaultAgentComponents",
+      "interpolate",
+      "interpolationVariables",
+      "normalizeAgentLocale",
+      "useAgentI18n",
+    ]);
+  });
+
   it("keeps browser-safe entrypoints away from Node stdio imports", () => {
     const repoRoot = join(import.meta.dirname, "..");
     const browserEntrypoints = [
@@ -41,6 +63,8 @@ describe("runtime named export policy", () => {
       "packages/codex/src/request-builders.ts",
       "packages/codex/src/normalizer.ts",
       "packages/react/src/index.ts",
+      "packages/react/src/headless.ts",
+      "packages/react/src/primitives.ts",
       "packages/web-components/src/index.tsx",
     ];
     const visited = collectRuntimeSourceGraph(repoRoot, browserEntrypoints);

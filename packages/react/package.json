@@ -31,6 +31,26 @@
         "default": "./dist/index.cjs"
       }
     },
+    "./headless": {
+      "import": {
+        "types": "./dist/headless.d.ts",
+        "default": "./dist/headless.js"
+      },
+      "require": {
+        "types": "./dist/headless.d.cts",
+        "default": "./dist/headless.cjs"
+      }
+    },
+    "./primitives": {
+      "import": {
+        "types": "./dist/primitives.d.ts",
+        "default": "./dist/primitives.js"
+      },
+      "require": {
+        "types": "./dist/primitives.d.cts",
+        "default": "./dist/primitives.cjs"
+      }
+    },
     "./styles.css": {
       "types": "./dist/styles.css.d.ts",
       "default": "./dist/styles.css"

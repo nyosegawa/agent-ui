@@ -1,10 +1,10 @@
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
+import { AgentProvider } from "@nyosegawa/agent-ui-react";
 import {
-  AgentProvider,
   useAgentComposerController,
   useAgentThreadController,
   useAgentThreadHistory,
-} from "@nyosegawa/agent-ui-react";
+} from "@nyosegawa/agent-ui-react/headless";
 
 function HeadlessChatController() {
   const history = useAgentThreadHistory();

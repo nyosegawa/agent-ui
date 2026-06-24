@@ -13,6 +13,8 @@ export default defineConfig({
       "@nyosegawa/agent-ui-codex/stable-types": `${repoRoot}/packages/codex/src/stable-types.ts`,
       "@nyosegawa/agent-ui-core": `${repoRoot}/packages/core/src/index.ts`,
       "@nyosegawa/agent-ui-react/styles.css": `${repoRoot}/packages/react/src/styles.css`,
+      "@nyosegawa/agent-ui-react/headless": `${repoRoot}/packages/react/src/headless.ts`,
+      "@nyosegawa/agent-ui-react/primitives": `${repoRoot}/packages/react/src/primitives.ts`,
       "@nyosegawa/agent-ui-react": `${repoRoot}/packages/react/src/index.ts`,
     },
   },

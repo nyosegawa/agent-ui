@@ -227,7 +227,6 @@ Default primitives:
 - `AgentSkillsPanel`
 - `AgentAppsPanel`
 - `AgentThreadSidebar`
-- `AgentWorkspace`
 
 Customization:
 

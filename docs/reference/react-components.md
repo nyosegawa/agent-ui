@@ -24,10 +24,14 @@ to `runPolicies`.
 
 ```tsx
 import {
+  AgentChat,
+  AgentProvider,
+} from "@nyosegawa/agent-ui-react";
+import {
   AGENT_FULL_ACCESS_RUN_POLICY,
   DEFAULT_AGENT_RUN_POLICIES,
   type AgentRunPolicy,
-} from "@nyosegawa/agent-ui-react";
+} from "@nyosegawa/agent-ui-react/headless";
 
 const runPolicies: AgentRunPolicy[] = [
   ...DEFAULT_AGENT_RUN_POLICIES,
@@ -59,10 +63,11 @@ secondary chrome.
 The public preset customization API is `AgentChatProps.components:
 AgentComponents`, plus the exported default map `defaultAgentComponents`. The
 old slot-oriented shape is not part of the public contract. Replacement
-components should import from `@nyosegawa/agent-ui-react`, not from source
-modules, and receive a `Default` renderer for the surface they replace. `Shell`,
-`Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are the
-raw-free preset replacement targets. Transcript item customization uses
+components should import preset APIs from `@nyosegawa/agent-ui-react` and
+visual building blocks from `@nyosegawa/agent-ui-react/primitives`, not from
+source modules. They receive a `Default` renderer for the surface they replace.
+`Shell`, `Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are
+the raw-free preset replacement targets. Transcript item customization uses
 `renderItem(entry, Default)` or block replacements; there is no raw
 `components.Item` boundary.
 Internal component state, CSS implementation selectors, attachment mutation
@@ -246,9 +251,9 @@ card instead of a broken media element.
 
 Internally, transcript block synthesis and closed-card preview text are pure
 helpers under `packages/react/src/timeline/`, while windowing is owned by the
-transcript controller. Public imports should continue to come from
-`@nyosegawa/agent-ui-react`; the helper modules are implementation details for
-tests and maintenance, not new public API.
+transcript controller. Public visual imports should continue to come from
+`@nyosegawa/agent-ui-react/primitives`; the helper modules are implementation
+details for tests and maintenance, not new public API.
 
 Transcript item primitives are exported for host composition and close-up QA:
 
@@ -464,33 +469,28 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentAppsPanel`: Codex Apps/connectors list from `app/list`, using upstream
   enabled/accessibility vocabulary rather than treating connector availability
   as install or auth state.
-- `AgentWorkspace`: chat plus optional host-owned side panel slot.
 
 ## Composition Examples
 
 Render a fixed thread without following the globally active thread:
 
 ```tsx
+import { AgentThreadView } from "@nyosegawa/agent-ui-react/primitives";
+
 <AgentThreadView threadId="thread_123" />
 ```
 
 Render usage in host chrome while the chat stays sidebar-free:
 
 ```tsx
+import { AgentChat } from "@nyosegawa/agent-ui-react";
+import { AgentShell, AgentUsagePanel } from "@nyosegawa/agent-ui-react/primitives";
+
 <AgentShell>
   <AgentUsagePanel />
   <AgentChat sidebar={false} usage={false} />
 </AgentShell>
 ```
-
-Render a full workspace with a host-owned side panel:
-
-```tsx
-<AgentWorkspace panel={<HostPanel threadId="thread_123" />} />
-```
-
-The side panel is a generic render slot. Host applications own any app runtime,
-panel state, storage, registry, or custom tool workflow they place inside it.
 
 Render a host-owned thread layout without the preset. `AgentThreadTimeline`
 receives `threadId`, so pending approvals with source metadata are anchored
@@ -499,6 +499,14 @@ the transcript tail; there is no separate approval row between the transcript
 and the composer:
 
 ```tsx
+import {
+  AgentComposerPanel,
+  AgentCriticalNoticeList,
+  AgentThreadHeader,
+  AgentThreadSurface,
+  AgentThreadTimeline,
+} from "@nyosegawa/agent-ui-react/primitives";
+
 <AgentThreadSurface>
   <AgentThreadHeader thread={threadView} threadId={threadId} transcript={transcriptView} />
   <AgentCriticalNoticeList />

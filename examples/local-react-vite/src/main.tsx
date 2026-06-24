@@ -13,13 +13,16 @@ import {
   textInput,
 } from "@nyosegawa/agent-ui-codex/request-builders";
 import {
-  AgentAppsPanel,
   AgentChat,
-  AgentDiagnosticsPanel,
   AgentI18nProvider,
+  AgentProvider,
+  type AgentLocale,
+} from "@nyosegawa/agent-ui-react";
+import {
+  AgentAppsPanel,
+  AgentDiagnosticsPanel,
   AgentLocaleSelect,
   AgentMessageList,
-  AgentProvider,
   AgentStatusDetails,
   AgentStatusSummary,
   AgentThemeToggle,
@@ -29,11 +32,12 @@ import {
   AgentUsagePanel,
   AgentUsageSummary,
   type AgentLocalAttachmentKind,
-  type AgentLocale,
   type AgentResolvedLocalAttachment,
   type AgentResolvedResource,
   type AgentTheme,
   normalizeUsageWindows,
+} from "@nyosegawa/agent-ui-react/primitives";
+import {
   useAgentApprovals,
   useAgentBootstrap,
   useAgentComposerController,
@@ -41,7 +45,7 @@ import {
   useAgentThread,
   useAgentThreadListController,
   useAgentUsage,
-} from "@nyosegawa/agent-ui-react";
+} from "@nyosegawa/agent-ui-react/headless";
 import "@nyosegawa/agent-ui-react/styles.css";
 import {
   useCallback,

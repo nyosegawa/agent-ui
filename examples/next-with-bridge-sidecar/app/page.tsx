@@ -5,12 +5,11 @@ import {
   textInput,
 } from "@nyosegawa/agent-ui-codex/request-builders";
 import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
-import {
-  AgentChat,
-  AgentProvider,
-  type AgentLocalAttachmentKind,
-  type AgentResolvedLocalAttachment,
-} from "@nyosegawa/agent-ui-react";
+import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
+import type {
+  AgentLocalAttachmentKind,
+  AgentResolvedLocalAttachment,
+} from "@nyosegawa/agent-ui-react/primitives";
 import { useMemo } from "react";
 
 const localMediaUrlsByPath = new Map<string, string>();

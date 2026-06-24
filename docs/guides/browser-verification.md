@@ -98,7 +98,8 @@ bunx playwright test examples/codex-local-web/e2e/real-local-layout.e2e.ts \
 - Composer remains visible and enabled after completed turns.
 - Fixed-thread examples ignore unrelated active-thread selection.
 - Usage-only examples render without chat, composer, or sidebar assumptions.
-- Host-owned panels render through generic `AgentWorkspace` slots.
+- Host-owned panels render beside Agent UI through host layout, not through
+  generic workspace slots.
 - Approval cards are reachable from the accessibility snapshot when pending
   requests exist.
 - Primary buttons, menus, approvals, composer controls, and thread navigation

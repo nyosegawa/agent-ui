@@ -303,9 +303,10 @@ semantics from its own integration. The normalizer also preserves description,
 display metadata when the App Server provides them.
 
 Host-specific workflows can compose `useAgentThreadController()`,
-`useAgentTurnController()`, `useAgentServerRequests()`, and `AgentWorkspace`
-slots. The core library does not own app registries, sidecar storage, plan-only
-turn orchestration, or workflow-specific panel state.
+`useAgentTurnController()`, `useAgentServerRequests()`, and visual primitives
+from `@nyosegawa/agent-ui-react/primitives`. The core library does not own app
+registries, sidecar storage, plan-only turn orchestration, or workflow-specific
+panel state.
 
 Hosts that need lower-level Codex protocol construction should use
 `@nyosegawa/agent-ui-codex` directly. The React package keeps generated params

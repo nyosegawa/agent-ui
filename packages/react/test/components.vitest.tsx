@@ -19,16 +19,20 @@ import {
 } from "@nyosegawa/agent-ui-core";
 import {
   AgentChat,
+  AgentProvider,
+  type AgentThreadHistorySyncedEvent,
+} from "../src";
+import {
   AgentAttachmentChips,
   AgentComposer,
   AgentComposerInput,
   AgentApprovalQueue,
   AgentDiffViewer,
   AgentMessageList,
-  AgentProvider,
   AgentShell,
   AgentComposerSubmitButton,
   AgentComposerToolbar,
+  AgentCriticalNoticeList,
   AgentStatusDetails,
   AgentStatusSummary,
   AgentStartComposer,
@@ -37,12 +41,13 @@ import {
   AgentThreadView,
   AgentUsagePanel,
   AgentUsageSummary,
-  AgentWorkspace,
   AgentLocaleSelect,
   AgentSkillsPanel,
   AgentAppsPanel,
   ThreadList,
   formatThreadStatus,
+} from "../src/primitives";
+import {
   useAgentAccount,
   useAgentApps,
   useAgentApprovals,
@@ -60,10 +65,8 @@ import {
   useAgentTranscriptController,
   useAgentTranscriptScrollController,
   useAgentTurn,
-  type AgentThreadHistorySyncedEvent,
-} from "../src";
+} from "../src/headless";
 import { useInternalAgentComposerController } from "../src/hooks/composer";
-import { AgentCriticalNoticeList } from "../src/components/status";
 import { useTranscriptFollowScroll } from "../src/timeline/scroll-follow";
 
 function localImageInput(path: string) {
@@ -2931,22 +2934,6 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("Critical status")).toHaveTextContent(
       "利用上限に達しました。",
     );
-  });
-
-  it("renders a workspace with a side panel", () => {
-    render(
-      <AgentProvider
-        initialState={runEventFixture(demoFixture as FixtureStep[])}
-        transport={new FakeAgentTransport()}
-      >
-        <AgentWorkspace sidebar={false} panel={<div>Host panel content</div>} />
-      </AgentProvider>,
-    );
-
-    expect(screen.getByText("Host panel content")).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Implement approval UI" }),
-    ).toBeInTheDocument();
   });
 
   it("refreshes skills through the public hook and panel", async () => {

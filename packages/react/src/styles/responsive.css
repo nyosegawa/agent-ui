@@ -92,12 +92,6 @@
     padding: var(--aui-space-300) var(--aui-space-300) var(--aui-space-250);
   }
 
-  .aui-workspace {
-    grid-template-columns: minmax(0, 1fr);
-    overflow: visible;
-    padding: 0;
-  }
-
   .aui-thread-header {
     align-items: flex-start;
     grid-template-columns: minmax(0, 1fr);

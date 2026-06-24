@@ -43,6 +43,5 @@ External product workflows should compose Agent UI primitives rather than add
 workflow-specific APIs to the library. Use `AgentThreadView` and headless hooks
 for fixed-thread flows, `AgentUsagePanel` for usage-only chrome, `AgentAppsPanel`
 for Codex Apps/connectors metadata, `AgentThreadTimeline` plus a host-owned
-composer for delayed workflow gates, and `AgentWorkspace`'s `panel` /
-`panelClassName` props for host-owned panels. Keep plan, routing, persistence,
-and approval state in the host.
+composer for delayed workflow gates, and host layout for side panels. Keep
+plan, routing, persistence, and approval state in the host.

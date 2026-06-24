@@ -11,7 +11,7 @@
     "examples/*"
   ],
   "scripts": {
-    "build": "bun run --workspaces --if-present build",
+    "build": "for p in packages/*; do [ -d \"$p\" ] || continue; (cd \"$p\" && bun run --if-present build) || exit 1; done; for p in examples/*; do [ -d \"$p\" ] || continue; (cd \"$p\" && bun run --if-present build) || exit 1; done",
     "check:exports": "bun run publint && bun run attw",
     "check:clean-build-output": "node scripts/check-clean-build-output.mjs",
     "validate:packages": "bun run build && bun run test:packlist && bun run test:node-compat && bun run publint && bun run attw",
