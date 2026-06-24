@@ -332,6 +332,7 @@ interface AgentOperationView {
 interface AgentThreadView {
     id: ThreadId;
     title: string;
+    displayStatus: "archived" | "complete" | "failed" | "preview" | "ready" | "running" | "waitingForInput";
     subtitle?: string;
     cwd?: string;
     isActive: boolean;
