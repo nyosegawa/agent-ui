@@ -144,8 +144,7 @@
   border-color: var(--aui-accent-blue-border);
 }
 
-.aui-follow-up-attachment[data-kind="app"],
-.aui-follow-up-attachment[data-kind="plugin"] {
+.aui-follow-up-attachment[data-kind="integration"] {
   background: var(--aui-primary-soft);
   border-color: var(--aui-primary-border);
 }
@@ -262,8 +261,7 @@
   border-color: var(--aui-accent-blue-border);
 }
 
-.aui-composer-chip[data-kind="app"],
-.aui-composer-chip[data-kind="plugin"] {
+.aui-composer-chip[data-kind="integration"] {
   background: var(--aui-primary-soft);
   border-color: var(--aui-primary-border);
 }

@@ -5,11 +5,10 @@ import type {
 } from "../hooks";
 import { useAgentI18n } from "../i18n";
 import {
-  IconApp,
+  IconAdd,
   IconEdit,
   IconImage,
   IconPaperclip,
-  IconPlugin,
   IconSend,
   IconTrash,
   buttonClass,
@@ -111,8 +110,7 @@ function FollowUpAttachments({ attachments }: { attachments: QueuedFollowUpAttac
             <span className="aui-follow-up-attachment-icon" aria-hidden="true">
               {attachment.kind === "image" ? <IconImage size={13} /> : null}
               {attachment.kind === "file" ? <IconPaperclip size={13} /> : null}
-              {attachment.kind === "app" ? <IconApp size={13} /> : null}
-              {attachment.kind === "plugin" ? <IconPlugin size={13} /> : null}
+              {attachment.kind === "integration" ? <IconAdd size={13} /> : null}
             </span>
           )}
           <span className="aui-follow-up-attachment-label">{attachment.label}</span>

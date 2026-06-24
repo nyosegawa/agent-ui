@@ -261,26 +261,14 @@
 /* --- Composer retry fixture --------------------------------------------- */
 
 .aui-composer-retry-status {
-  gap: var(--aui-space-350);
+  gap: var(--aui-space-250);
 }
 
-.aui-composer-retry-status header {
-  display: grid;
-  gap: var(--aui-space-100);
-}
-
-.aui-composer-retry-status h2 {
-  color: var(--aui-fg-strong);
-  font-size: var(--aui-font-size-xl);
-  letter-spacing: var(--aui-letter-spacing);
-  margin: 0;
-}
-
-.aui-composer-retry-status p {
+.aui-composer-retry-status summary {
   color: var(--aui-fg-muted);
   font-size: var(--aui-font-size-sm-plus);
-  line-height: var(--aui-line-loose);
-  margin: 0;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .aui-composer-retry-metrics {

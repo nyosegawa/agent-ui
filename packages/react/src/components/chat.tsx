@@ -17,7 +17,7 @@ import {
 import { AgentThreadView } from "./thread";
 import { AgentComposerPanel, type AgentComposerPanelProps } from "./composer";
 import type {
-  AgentComposerMentionResolver,
+  AgentComposerIntegration,
   AgentLocalAttachmentResolver,
 } from "./composer";
 import { AgentFirstRun } from "./first-run";
@@ -109,11 +109,10 @@ export const defaultAgentComponents = {
 
 export interface AgentChatProps {
   className?: string;
+  composerIntegrations?: readonly AgentComposerIntegration[];
   components?: AgentComponents;
   diagnostics?: boolean;
-  onRequestAppMention?: AgentComposerMentionResolver;
   onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
-  onRequestPluginMention?: AgentComposerMentionResolver;
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   sidebar?: boolean;
@@ -127,11 +126,10 @@ export interface AgentChatProps {
 
 export function AgentChat({
   className,
+  composerIntegrations,
   components,
   diagnostics = false,
-  onRequestAppMention,
   onRequestWorkingDirectory,
-  onRequestPluginMention,
   resolveLocalAttachment,
   resolveLocalMediaUrl,
   sidebar = true,
@@ -146,10 +144,9 @@ export function AgentChat({
     <AgentI18nProvider locale={locale} messages={messages}>
       <AgentChatInner
         className={className}
+        composerIntegrations={composerIntegrations}
         components={components}
         diagnostics={diagnostics}
-        onRequestAppMention={onRequestAppMention}
-        onRequestPluginMention={onRequestPluginMention}
         onRequestWorkingDirectory={onRequestWorkingDirectory}
         resolveLocalAttachment={resolveLocalAttachment}
         resolveLocalMediaUrl={resolveLocalMediaUrl}
@@ -165,11 +162,10 @@ export function AgentChat({
 
 function AgentChatInner({
   className,
+  composerIntegrations,
   components,
   diagnostics = false,
-  onRequestAppMention,
   onRequestWorkingDirectory,
-  onRequestPluginMention,
   resolveLocalAttachment,
   resolveLocalMediaUrl,
   sidebar = true,
@@ -399,8 +395,7 @@ function AgentChatInner({
           >
             {thread ? (
               <AgentThreadView
-                onRequestAppMention={onRequestAppMention}
-                onRequestPluginMention={onRequestPluginMention}
+                composerIntegrations={composerIntegrations}
                 components={componentMap}
                 resolveLocalAttachment={resolveLocalAttachment}
                 resolveLocalMediaUrl={resolveLocalMediaUrl}

@@ -156,59 +156,31 @@ function ComposerRetryProbe({ turnStartCalls }: { turnStartCalls: number }) {
   const composer = useAgentComposerController();
   const failed = composer.failedPendingMessages[0];
   const failedCount = composer.failedPendingMessages.length;
-  const hasStarted = turnStartCalls > 0 || failedCount > 0;
   return (
-    <section
+    <details
       aria-label="Composer retry status"
       className="aui-host-recipe-panel aui-composer-retry-status"
     >
-      <header>
-        <span className="aui-host-recipe-meta-kicker">Retry state</span>
-        <h2>Failed first message</h2>
-        <p>
-          This fixture exercises the public composer controller after the first
-          optimistic message fails.
-        </p>
-      </header>
-      {hasStarted ? (
-        <>
-          <dl className="aui-composer-retry-metrics">
-            <div>
-              <dt>Pending failures</dt>
-              <dd aria-label="failed pending count">
-                {failedCount === 1 ? "1 failed message" : `${failedCount} failed messages`}
-              </dd>
-            </div>
-            <div>
-              <dt>Last error</dt>
-              <dd aria-label="failed pending error">{failed?.error ?? "No failed message"}</dd>
-            </div>
-            <div>
-              <dt>Turn starts</dt>
-              <dd aria-label="turn start calls">
-                {turnStartCalls === 1 ? "1 attempt" : `${turnStartCalls} attempts`}
-              </dd>
-            </div>
-          </dl>
-          {failed ? (
-            <button
-              className="aui-host-action"
-              onClick={() => {
-                void composer.retryFailedPendingMessage(failed.operationId);
-              }}
-              type="button"
-            >
-              Retry failed first message
-            </button>
-          ) : null}
-        </>
-      ) : (
-        <p className="aui-composer-retry-empty">
-          Start a thread with a message that fails once; retry controls appear
-          only after the failed optimistic message exists.
-        </p>
-      )}
-    </section>
+      <summary>Retry diagnostics</summary>
+      <dl className="aui-composer-retry-metrics">
+        <div>
+          <dt>Pending failures</dt>
+          <dd aria-label="failed pending count">
+            {failedCount === 1 ? "1 failed message" : `${failedCount} failed messages`}
+          </dd>
+        </div>
+        <div>
+          <dt>Last error</dt>
+          <dd aria-label="failed pending error">{failed?.error ?? "No failed message"}</dd>
+        </div>
+        <div>
+          <dt>Turn starts</dt>
+          <dd aria-label="turn start calls">
+            {turnStartCalls === 1 ? "1 attempt" : `${turnStartCalls} attempts`}
+          </dd>
+        </div>
+      </dl>
+    </details>
   );
 }
 

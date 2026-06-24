@@ -119,7 +119,7 @@
       - Expected files/areas: `docs/reference/hooks.md`, `docs/reference/react-components.md`.
       - Validation note: docs include view-model shapes and direct-link composition recipe.
 
-- [ ] P004 Default composer, turn controls, retry, and neutral integrations
+- [x] P004 Default composer, turn controls, retry, and neutral integrations
   - Goal: replace App/Plugin-specific composer concepts while preserving host extensibility and transcript-first turn controls.
   - Scope: composer, attachments, neutral integrations, stop/queue/steer/retry, first-message retry, i18n, CSS, component tests, visual e2e.
   - Expected files/areas: `packages/react/src/components/**`, `packages/react/src/hooks/**`, `packages/react/src/styles/**`, `examples/local-react-vite/**`, `docs/reference/react-components.md`, API snapshots if public types change.
@@ -129,25 +129,25 @@
   - Push: push phase commit.
   - PR/CI: record route/e2e status.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: Deleted the App/Plugin composer mention API and helper module, replaced it with neutral `composerIntegrations` that must resolve explicit `AgentUserInput`, converted composer/follow-up attachment kinds from App/Plugin to integration, preserved `AgentTextInput.text_elements`, added default failed first-message retry UI with live status semantics, moved retry fixture explanation into maintainer diagnostics, kept integration labels visible on narrow screens, and kept send/stop bottom-right hit-testable in checked mobile evidence. Package export docs changed in P004 because public composer types changed; P007 subpath/export freezing remains later.
+    - Validation: `bun x vitest run --config vitest.config.ts packages/react/test/components.vitest.tsx --testNamePattern "composer integration|retried first message|failed first messages|Retry message"` passed with 7 tests; `bun x vitest run --config vitest.config.ts packages/react/test/source-structure.vitest.ts` passed with 24 tests; `bun run validate:fast` passed with 61 files and 686 tests; `bun run build && bun run test:api-snapshots:update && bun run test:api-snapshots && bun run test:package-resolution` passed; `bun run validate:packages` passed; `bunx playwright test examples/codex-local-web/e2e/real-local-layout.e2e.ts --config playwright.real-local.config.ts` passed with 4 tests; fixture matrix initially had one `unauthenticated-first-run` mobile ready-selector timeout, the focused rerun passed, and the full rerun `bun run test:e2e:clean-ports && bunx playwright test examples/local-react-vite/e2e/composer-retry.e2e.ts examples/local-react-vite/e2e/visual-route-matrix.e2e.ts --config playwright.fixtures.config.ts` passed with 63 tests.
+    - Review: Four parallel P004 subagent reviews completed. Phase-boundary lane found missing evidence and requested broader coverage; fixed by recording this evidence and covering failed retry, explicit integration input, text elements, attachment chips/input order, no duplicate retry, invalid integration rejection, and retry cancel behavior. Protocol/core lane found invalid JS resolver output could add bad attachments and retry cancellation could leave retried first messages in progress; fixed with runtime input validation, warning behavior, `item/failed` restoration on cancel, and component tests. React/API/docs lane found package export docs grouped integration types under resource resolution; fixed by documenting them with composer controller types. Browser/UX lane found mobile integration buttons were indistinguishable and failed cards were not live-announced; fixed by preserving integration labels on narrow screens and adding `role="status"`/`aria-live="polite"`.
+    - Commit: `Redesign composer integrations and retry` phase commit.
+    - Push: push phase commit to `origin/codex/fixture-system-redesign-plan`.
   - Tasks:
-    - [ ] T001 Add neutral composer integrations returning explicit `AgentUserInput`.
+    - [x] T001 Add neutral composer integrations returning explicit `AgentUserInput`.
       - Expected files/areas: composer model, hooks, tests.
       - Validation note: integration chips send explicit input and preserve follow-up queue order.
-    - [ ] T002 Delete App/Plugin composer props, buttons, chip kinds, CSS variants, and tests after neutral path lands.
+    - [x] T002 Delete App/Plugin composer props, buttons, chip kinds, CSS variants, and tests after neutral path lands.
       - Expected files/areas: chat/thread/composer props, attachments, mentions, CSS, tests.
       - Validation note: no `onRequestAppMention`/`onRequestPluginMention` in React public API.
-    - [ ] T003 Preserve `AgentTextInput.text_elements` through React input conversion.
+    - [x] T003 Preserve `AgentTextInput.text_elements` through React input conversion.
       - Expected files/areas: `packages/react/src/hooks/turn-input.ts`, tests.
       - Validation note: tests prove inline text elements survive.
-    - [ ] T004 Redesign composer retry as public UX plus maintainer diagnostics.
+    - [x] T004 Redesign composer retry as public UX plus maintainer diagnostics.
       - Expected files/areas: showcase/probe routes and tests.
       - Validation note: failed first message, failed active follow-up, text elements, attachment chips, queue order, no duplicate follow-ups, keyboard reachability, focus return, and no public debug explanatory copy are covered.
-    - [ ] T005 Lock composer send/stop placement.
+    - [x] T005 Lock composer send/stop placement.
       - Expected files/areas: composer CSS, visual e2e.
       - Validation note: send/stop is bottom-right pinned and hit-testable on desktop and mobile; policy/model compact controls are validated in P005.
 
@@ -294,6 +294,7 @@ Implementation validation:
 - P001 passed protocol/typecheck/lint/API snapshot/package validation/package resolution before commit.
 - P002 passed reducer/core fixtures, protocol, React component tests, full unit tests, typecheck, lint, local Vite typecheck/build, fixture e2e, package validation, API snapshots, package resolution, targeted real-local e2e, and agent-browser route checks before commit/push; PR #35 CI for `cd456f9` passed all required CI and Compatibility checks.
 - P003 passed React/core/source/direct-link tests, typecheck, API snapshots, package validation, package resolution, fixture visual matrix, real-local layout matrix, and agent-browser route overflow checks before commit.
+- P004 passed focused React/source tests, `validate:fast`, build/API snapshots/package resolution, package validation, fixture retry and visual route matrix, real-local layout matrix, and agent-browser route checks before commit.
 
 Browser-visible evidence checklist for phases that touch browser-visible behavior:
 
@@ -311,6 +312,13 @@ Browser-visible evidence checklist for phases that touch browser-visible behavio
 - P003 hit-test/focus/overflow result: overflow 0 on checked fixture-gallery desktop and composer-retry mobile routes.
 - P003 screenshot or trace path: not captured; deterministic Playwright matrix and agent-browser snapshots/eval were used for this phase.
 - P003 remaining risk: composer-retry and debug fixture copy remain intentionally non-final until P004/P006 remove or split debug-only gallery surfaces.
+- P004 routes: `/composer-retry`, fixture visual route matrix, and real-local first-run/stored-thread layout routes.
+- P004 viewports: composer-retry mobile 390x900 by agent-browser; fixture matrix desktop/wide/tablet/compact/mobile/short as defined by the manifest; real-local desktop/mobile.
+- P004 command/spec: focused React tests, source-structure test, `bun run validate:fast`, package validation, API snapshots, package resolution, composer-retry Playwright, visual-route-matrix Playwright, real-local-layout Playwright, and agent-browser route checks.
+- P004 manual or agent-browser interaction: agent-browser opened `http://127.0.0.1:5174/composer-retry`, submitted a first message that failed once, inspected the default failed card, verified retry button focus/hit-test and send bottom-right hit-test, clicked retry, and confirmed failed card removal without horizontal overflow.
+- P004 hit-test/focus/overflow result: mobile composer-retry overflowX 0, retry hit-test true, send hit-test true, send pinned bottom/right true; after retry, failed cards 0, failed messages 0, in-progress message 1, overflowX 0.
+- P004 screenshot or trace path: `/tmp/agent-ui-p004-composer-retry-failed-mobile.png`, `/tmp/agent-ui-p004-composer-retry-after-retry-mobile.png`.
+- P004 remaining risk: policy/model/cwd compact controls are intentionally left for P005, and gallery split/debug-vs-user showcase remains for P006.
 
 ## Review Evidence
 
@@ -328,6 +336,7 @@ Implementation phase review rule:
 ## Commit Log
 
 - Planning commit: `0194146` (`Plan Agent UI surface redesign`).
+- P004 phase commit: `Redesign composer integrations and retry`.
 - Implementation commits: P001 `0798db0` (`Classify Codex protocol requests`), P001 evidence `a2d31f3` (`Record P001 redesign evidence`), P002 `3829ef5` (`Add core runtime view state`), P002 CI fix `cd456f9` (`Update thread history runtime expectations`), P003 `a858fe0` (`Move React transcript APIs to view models`), P003 CI fix `36eabc5` (`Update loaded history preview expectation`), P003 API snapshot fix `6e5cb3b` (`Update core API snapshot for thread display status`).
 
 ## Final Checklist

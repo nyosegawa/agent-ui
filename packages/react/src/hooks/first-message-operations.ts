@@ -189,8 +189,18 @@ export function useFirstMessageOperationController(
     (operationId: string) => {
       const operation = operationsById[operationId];
       if (!operation) return;
+      const payload = firstMessagePayloads[operationId];
       cancelledOperations.add(operationId);
       retryingOperations.delete(operationId);
+      if (payload?.threadId) {
+        dispatch({
+          error: operation.error ?? { message: "Retry cancelled." },
+          itemId: payload.pending.userMessageId,
+          threadId: payload.threadId,
+          turnId: payload.pending.turnId,
+          type: "item/failed",
+        });
+      }
       forgetFirstMessagePayload(operationId);
       dispatch({
         operation: {

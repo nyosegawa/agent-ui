@@ -57,14 +57,17 @@ export const ja = {
   "composer.attachmentRejectedOne":
     "この Codex スレッドに {count} 件のファイルを添付できませんでした。",
   "composer.enterToSend": "Enter で送信",
+  "composer.dismissFailedMessage": "失敗したメッセージを閉じる",
+  "composer.failedMessageBody": "最初のメッセージを開始できませんでした。再試行するか下書きを閉じてください。",
+  "composer.failedMessages": "失敗したメッセージ",
+  "composer.failedMessageTitle": "メッセージを送信できませんでした",
   "composer.followUpNoActiveTurn":
     "操作できるアクティブなターンがありません。スレッド状態を更新してから新しいメッセージを送信してください。",
   "composer.followUpTurnChanged":
     "送信前にアクティブなターンが変わりました。キュー済みフォローアップは送信されませんでした。",
   "composer.followUpTurnChangedRefresh": "送信前にアクティブなターンが変わりました。スレッド状態を更新しました。もう一度試してください。",
-  "composer.app": "アプリ",
   "composer.placeholder": "このスレッドで Codex に作業を依頼",
-  "composer.plugin": "プラグイン",
+  "composer.retryFailedMessage": "メッセージを再試行",
   "composer.send": "送信",
   "composer.sendMessage": "メッセージを送信",
   "composer.stopCurrentTurn": "現在のターンを停止",

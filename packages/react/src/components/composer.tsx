@@ -7,11 +7,10 @@ import { useAgentI18n } from "../i18n";
 import type { AgentResourceKind } from "../resources";
 import {
   IconAlert,
-  IconApp,
+  IconAdd,
   IconClose,
   IconImage,
   IconPaperclip,
-  IconPlugin,
   IconShield,
   buttonClass,
 } from "../components-internal";
@@ -19,10 +18,11 @@ import { AgentComposerSubmitButton } from "./composer-submit-button";
 import { ComposerRunSettings } from "./run-settings";
 import { deferAction } from "./shared";
 import { AgentContextUsageIndicator } from "./context-usage";
+import { FailedPendingMessageList } from "./composer-failed-pending";
 import { QueuedFollowUpList } from "./follow-up-queue";
 import { useComposerAttachmentState } from "./composer-attachment-state";
 import { useComposerDropZone } from "./composer-drag-drop";
-import { useComposerMentionActions } from "./composer-mentions";
+import { useComposerIntegrationActions } from "./composer-integrations";
 import {
   composerSubmitModeForEnter,
   shouldSubmitOnComposerEnter,
@@ -30,25 +30,25 @@ import {
 } from "./composer-submit-semantics";
 import {
   composerAttachmentInput,
-  type AgentComposerMentionResolver,
+  type AgentComposerIntegration,
   type AgentLocalAttachmentResolver,
   type ComposerAttachment,
 } from "./composer-attachments";
 
 export type {
-  AgentComposerMentionAttachment,
-  AgentComposerMentionResolver,
+  AgentComposerIntegration,
+  AgentComposerIntegrationAttachment,
+  AgentComposerIntegrationResolver,
   AgentLocalAttachmentKind,
   AgentLocalAttachmentResolver,
   AgentResolvedLocalAttachment,
-  AgentMentionAttachmentKind,
 } from "./composer-attachments";
 export type { AgentComposerSubmitButtonProps } from "./composer-submit-button";
 export { AgentComposerSubmitButton } from "./composer-submit-button";
 
 export type AgentAttachmentChipKind = Extract<
   AgentResourceKind,
-  "image" | "file" | "app" | "plugin"
+  "image" | "file" | "integration"
 >;
 
 export interface AgentAttachmentChip {
@@ -107,8 +107,7 @@ export function AgentAttachmentChips({
             <span className="aui-composer-chip-icon" aria-hidden="true">
               {attachment.kind === "image" ? <IconImage size={14} /> : null}
               {attachment.kind === "file" ? <IconPaperclip size={14} /> : null}
-              {attachment.kind === "app" ? <IconApp size={14} /> : null}
-              {attachment.kind === "plugin" ? <IconPlugin size={14} /> : null}
+              {attachment.kind === "integration" ? <IconAdd size={14} /> : null}
             </span>
           )}
           <span className="aui-composer-chip-copy">
@@ -188,6 +187,7 @@ export function AgentComposer(props: AgentComposerProps) {
   const isApprovalBlocked = composer.disabledReason === "approval";
   return (
     <>
+      <FailedPendingMessageList composer={composer} />
       <QueuedFollowUpList
         composer={composer}
         onRestoreAttachments={(attachments) =>
@@ -214,8 +214,7 @@ function AgentComposerForm({
   composer,
   disabled = false,
   disabledReason,
-  onRequestAppMention,
-  onRequestPluginMention,
+  composerIntegrations,
   placeholder,
   resolveLocalAttachment,
   tokenUsage,
@@ -249,10 +248,9 @@ function AgentComposerForm({
     disabled,
     enabled: Boolean(resolveLocalAttachment),
   });
-  const handleMention = useComposerMentionActions({
+  const handleIntegration = useComposerIntegrationActions({
     addAttachment,
-    onRequestAppMention,
-    onRequestPluginMention,
+    integrations: composerIntegrations,
   });
 
   // Auto-resize textarea up to a max height.
@@ -416,32 +414,21 @@ function AgentComposerForm({
                   />
                 </>
               ) : null}
-              {onRequestAppMention ? (
+              {composerIntegrations?.map((integration) => (
                 <button
-                  aria-label={t("composer.app")}
+                  aria-label={integration.label}
                   className={buttonClass("ghost", { size: "sm" })}
+                  key={integration.id}
+                  data-composer-integration="true"
                   disabled={disabled}
-                  onClick={() => void handleMention("app")}
-                  title={t("composer.mentionApp")}
+                  onClick={() => void handleIntegration(integration.id)}
+                  title={integration.title ?? integration.label}
                   type="button"
                 >
-                  <IconApp size={14} />
-                  <span>{t("composer.app")}</span>
+                  <IconAdd size={14} />
+                  <span>{integration.label}</span>
                 </button>
-              ) : null}
-              {onRequestPluginMention ? (
-                <button
-                  aria-label={t("composer.plugin")}
-                  className={buttonClass("ghost", { size: "sm" })}
-                  disabled={disabled}
-                  onClick={() => void handleMention("plugin")}
-                  title={t("composer.mentionPlugin")}
-                  type="button"
-                >
-                  <IconPlugin size={14} />
-                  <span>{t("composer.plugin")}</span>
-                </button>
-              ) : null}
+              ))}
             </div>
             <ComposerRunSettings />
           </>
@@ -464,10 +451,9 @@ function AgentComposerForm({
 }
 
 export interface AgentComposerProps {
+  composerIntegrations?: readonly AgentComposerIntegration[];
   disabled?: boolean;
   disabledReason?: string;
-  onRequestAppMention?: AgentComposerMentionResolver;
-  onRequestPluginMention?: AgentComposerMentionResolver;
   placeholder?: string;
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   tokenUsage?: ThreadTokenUsage;
@@ -475,16 +461,14 @@ export interface AgentComposerProps {
 }
 
 export interface AgentComposerPanelProps {
-  onRequestAppMention?: AgentComposerMentionResolver;
-  onRequestPluginMention?: AgentComposerMentionResolver;
+  composerIntegrations?: readonly AgentComposerIntegration[];
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   thread: ThreadState;
   threadId?: string;
 }
 
 export function AgentComposerPanel({
-  onRequestAppMention,
-  onRequestPluginMention,
+  composerIntegrations,
   resolveLocalAttachment,
   thread,
   threadId,
@@ -497,6 +481,7 @@ export function AgentComposerPanel({
   >(null);
   return (
     <section className="aui-compose-panel" aria-label={t("aria.messageComposer")}>
+      <FailedPendingMessageList composer={composer} />
       <QueuedFollowUpList
         composer={composer}
         onRestoreAttachments={(attachments) =>
@@ -504,14 +489,13 @@ export function AgentComposerPanel({
         }
       />
       <AgentComposerForm
+        composerIntegrations={composerIntegrations}
         composer={composer}
         disabled={isBlocked}
         disabledReason={composerDisabledReason(thread.activity, t)}
         onRegisterAttachmentRestore={(restore) => {
           attachmentRestoreRef.current = restore;
         }}
-        onRequestAppMention={onRequestAppMention}
-        onRequestPluginMention={onRequestPluginMention}
         placeholder={composerPlaceholder(thread.activity, t)}
         resolveLocalAttachment={resolveLocalAttachment}
         tokenUsage={thread.tokenUsage}

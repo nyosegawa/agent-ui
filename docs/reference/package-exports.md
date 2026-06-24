@@ -247,15 +247,18 @@ Resource resolution exports are kept at the React root as the attachment
 boundary: `AgentResolvedResource`, `AgentResourceKind`,
 `AgentFileResourceRequest`, `AgentLocalMediaResourceRequest`,
 `AgentResourceRequest`, `AgentResourceResolution`, `AgentResourceResolver`,
-`AgentLocalMediaUrlResolver`, `AgentResolvedLocalAttachment`, `agentResourceUrl`, and
-`agentResourceDisplayName`. These are browser/UI metadata primitives, not host
-upload, storage, authorization, or static-serving policy. Resource resolution
+`AgentLocalMediaUrlResolver`, `AgentResolvedLocalAttachment`,
+`agentResourceUrl`, and `agentResourceDisplayName`. These are browser/UI
+metadata primitives, not host upload, storage, authorization,
+static-serving policy, or App/Plugin picker semantics. Resource resolution
 returns structured `AgentResolvedResource` objects; URL string shorthand is not
 part of the public contract.
 
 Composer controller exports include the raw-free `AgentComposerController`
-view plus `AgentComposerSubmitMode`, `AgentComposerDisabledReason`, and
-`AgentComposerFailedPendingMessage`. Internal first-message operation maps,
+view plus `AgentComposerSubmitMode`, `AgentComposerDisabledReason`,
+`AgentComposerFailedPendingMessage`, `AgentComposerIntegration`,
+`AgentComposerIntegrationAttachment`, and `AgentComposerIntegrationResolver`.
+Internal first-message operation maps,
 rollback payloads, and generated protocol payloads remain source-level only.
 
 Thread lifecycle controller exports may add raw-free start/resume result or

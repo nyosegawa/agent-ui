@@ -127,20 +127,21 @@ export const en = {
   "composer.couldNotStart": "Could not start the turn: {message}",
   "composer.couldNotStop": "Could not stop the turn: {message}",
   "composer.enterToSend": "Enter to send",
+  "composer.dismissFailedMessage": "Dismiss failed message",
+  "composer.failedMessageBody": "The first message did not start. Retry it or dismiss the draft.",
+  "composer.failedMessages": "Failed messages",
+  "composer.failedMessageTitle": "Message was not sent",
   "composer.followUpNoActiveTurn":
     "There is no active turn to steer. Wait for the thread state to refresh, then send a new message.",
   "composer.followUpTurnChanged":
     "The active turn changed before this instruction was sent. The queued follow-up was not sent.",
   "composer.followUpTurnChangedRefresh":
     "The active turn changed before this instruction was sent. The thread state was refreshed; try again.",
-  "composer.app": "App",
-  "composer.mentionApp": "Mention an app",
-  "composer.mentionPlugin": "Mention a plugin",
-  "composer.plugin": "Plugin",
   "composer.placeholder": "Ask Codex to work in this thread",
   "composer.removeAttachment": "Remove {label}",
   "composer.resolveApprovalReason":
     "Resolve the pending approval before sending another message.",
+  "composer.retryFailedMessage": "Retry message",
   "composer.send": "Send",
   "composer.sendMessage": "Send message",
   "composer.stopCurrentTurn": "Stop current turn",

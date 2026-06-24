@@ -21,8 +21,22 @@
     width: var(--aui-control-height-lg);
   }
 
+  .aui-composer-toolbar-attach .aui-btn[data-composer-integration="true"] {
+    max-width: min(160px, 42vw);
+    padding-inline: var(--aui-space-175);
+    width: auto;
+  }
+
   .aui-composer-toolbar-attach .aui-btn span {
     display: none;
+  }
+
+  .aui-composer-toolbar-attach .aui-btn[data-composer-integration="true"] span {
+    display: inline;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .aui-composer-tool {
@@ -46,5 +60,14 @@
 
   .aui-context-usage summary span {
     display: none;
+  }
+
+  .aui-composer-failed-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .aui-composer-failed-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
   }
 }

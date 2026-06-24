@@ -303,8 +303,7 @@ function ActiveThreadHarness(props: React.ComponentProps<typeof AgentChat>) {
       <span data-testid="active-thread">{activeThreadId}</span>
       {activeThreadId ? (
         <AgentThreadView
-          onRequestAppMention={props.onRequestAppMention}
-          onRequestPluginMention={props.onRequestPluginMention}
+          composerIntegrations={props.composerIntegrations}
           resolveLocalAttachment={props.resolveLocalAttachment}
         />
       ) : (
@@ -3440,7 +3439,7 @@ describe("AgentChat", () => {
     prompt.mockRestore();
   });
 
-  it("surfaces composer app/plugin attachments through host resolvers", async () => {
+  it("surfaces neutral composer integration attachments through host resolvers", async () => {
     const user = userEvent.setup();
     const prompt = vi.spyOn(globalThis, "prompt");
     const initialState = createInitialAgentState();
@@ -3455,28 +3454,41 @@ describe("AgentChat", () => {
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <AgentChat
-          onRequestAppMention={() => ({ label: "Browser", value: "app://browser" })}
-          onRequestPluginMention={() => ({
-            label: "Browser tools",
-            value: "plugin://browser-tools",
-          })}
+          composerIntegrations={[
+            {
+              id: "browser",
+              label: "Browser",
+              resolve: () => ({
+                input: { name: "Browser", path: "agent://integration/browser", type: "mention" },
+                label: "Browser",
+              }),
+            },
+            {
+              id: "workspace-search",
+              label: "Workspace search",
+              resolve: () => ({
+                input: textInput("Use the workspace search integration."),
+                label: "Workspace search",
+              }),
+            },
+          ]}
           sidebar={false}
           usage={false}
         />
       </AgentProvider>,
     );
 
-    await user.click(screen.getByRole("button", { name: "App" }));
-    await user.click(screen.getByRole("button", { name: "Plugin" }));
+    await user.click(screen.getByRole("button", { name: "Browser" }));
+    await user.click(screen.getByRole("button", { name: "Workspace search" }));
 
     expect(screen.getByLabelText("Pending attachments")).toHaveTextContent("Browser");
     expect(screen.getByLabelText("Pending attachments")).toHaveTextContent(
-      "Browser tools",
+      "Workspace search",
     );
     expect(prompt).not.toHaveBeenCalled();
   });
 
-  it("hides composer App/Plugin buttons when no host resolver is provided", async () => {
+  it("hides composer integration buttons when no host integration is provided", async () => {
     const initialState = createInitialAgentState();
     initialState.threadLifecycle.activeThreadId = "thread-compose-noresolver";
     initialState.threads["thread-compose-noresolver"] = {
@@ -3500,8 +3512,8 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    expect(screen.queryByRole("button", { name: "App" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Plugin" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Browser" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Workspace search" })).not.toBeInTheDocument();
   });
 
   it("never opens browser prompts from the composer", async () => {
@@ -3519,22 +3531,24 @@ describe("AgentChat", () => {
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <AgentChat
-          onRequestAppMention={() => null}
-          onRequestPluginMention={() => null}
+          composerIntegrations={[
+            { id: "browser", label: "Browser", resolve: () => null },
+            { id: "workspace-search", label: "Workspace search", resolve: () => null },
+          ]}
           sidebar={false}
           usage={false}
         />
       </AgentProvider>,
     );
 
-    await user.click(screen.getByRole("button", { name: "App" }));
-    await user.click(screen.getByRole("button", { name: "Plugin" }));
+    await user.click(screen.getByRole("button", { name: "Browser" }));
+    await user.click(screen.getByRole("button", { name: "Workspace search" }));
     await user.type(screen.getByLabelText("Message"), "still works without prompt");
 
     expect(prompt).not.toHaveBeenCalled();
   });
 
-  it("handles rejected composer mention resolvers without adding attachments", async () => {
+  it("handles rejected composer integration resolvers without adding attachments", async () => {
     const user = userEvent.setup();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
     const initialState = createInitialAgentState();
@@ -3549,19 +3563,78 @@ describe("AgentChat", () => {
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <AgentChat
-          onRequestAppMention={() => Promise.reject(new Error("resolver failed"))}
+          composerIntegrations={[
+            {
+              id: "browser",
+              label: "Browser",
+              resolve: () => Promise.reject(new Error("resolver failed")),
+            },
+          ]}
           sidebar={false}
           usage={false}
         />
       </AgentProvider>,
     );
 
-    await user.click(screen.getByRole("button", { name: "App" }));
+    await user.click(screen.getByRole("button", { name: "Browser" }));
 
     expect(screen.queryByLabelText("Pending attachments")).not.toBeInTheDocument();
     expect(warn).toHaveBeenCalledWith(
-      "AgentComposer app mention resolver failed",
+      "AgentComposer integration resolver failed for browser",
       expect.any(Error),
+    );
+    warn.mockRestore();
+  });
+
+  it("rejects composer integration attachments without explicit input", async () => {
+    const user = userEvent.setup();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+    const initialState = createInitialAgentState();
+    initialState.threadLifecycle.activeThreadId = "thread-compose-invalid-integration";
+    initialState.threads["thread-compose-invalid-integration"] = {
+      orderedTurnIds: [],
+      status: "loaded",
+      thread: { id: "thread-compose-invalid-integration", name: "Composer" },
+      turns: {},
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          composerIntegrations={[
+            {
+              id: "empty-integration",
+              label: "Empty integration",
+              resolve: () =>
+                ({
+                  input: [],
+                  label: "Empty integration",
+                }) as never,
+            },
+            {
+              id: "missing-input",
+              label: "Missing input",
+              resolve: () =>
+                ({
+                  label: "Missing input",
+                }) as never,
+            },
+          ]}
+          sidebar={false}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Empty integration" }));
+    await user.click(screen.getByRole("button", { name: "Missing input" }));
+
+    expect(screen.queryByLabelText("Pending attachments")).not.toBeInTheDocument();
+    expect(warn).toHaveBeenCalledWith(
+      "AgentComposer integration resolver returned no input for empty-integration",
+    );
+    expect(warn).toHaveBeenCalledWith(
+      "AgentComposer integration resolver returned no input for missing-input",
     );
     warn.mockRestore();
   });
@@ -6387,20 +6460,30 @@ describe("AgentChat", () => {
     render(
       <AgentProvider initialState={initialState} transport={transport}>
         <AgentChat
-          onRequestAppMention={() => ({
-            label: "app://browser",
-            value: "app://browser",
-          })}
-          onRequestPluginMention={() => ({
-            label: "plugin://browser-tools",
-            value: "plugin://browser-tools",
-          })}
+          composerIntegrations={[
+            {
+              id: "browser",
+              label: "Browser",
+              resolve: () => ({
+                input: { name: "Browser", path: "agent://integration/browser", type: "mention" },
+                label: "Browser",
+              }),
+            },
+            {
+              id: "workspace-search",
+              label: "Workspace search",
+              resolve: () => ({
+                input: textInput("Use the workspace search integration."),
+                label: "Workspace search",
+              }),
+            },
+          ]}
         />
       </AgentProvider>,
     );
 
-    await user.click(screen.getByRole("button", { name: "App" }));
-    await user.click(screen.getByRole("button", { name: "Plugin" }));
+    await user.click(screen.getByRole("button", { name: "Browser" }));
+    await user.click(screen.getByRole("button", { name: "Workspace search" }));
     await user.type(screen.getByLabelText("Message"), "verify with attachments");
     await user.click(screen.getByRole("button", { name: "Send" }));
 
@@ -6410,11 +6493,64 @@ describe("AgentChat", () => {
     ).toMatchObject({
       input: [
         { text: "verify with attachments", text_elements: [], type: "text" },
-        { name: "app://browser", path: "app://browser", type: "mention" },
+        { name: "Browser", path: "agent://integration/browser", type: "mention" },
         {
-          name: "plugin://browser-tools",
-          path: "plugin://browser-tools",
-          type: "mention",
+          text: "Use the workspace search integration.",
+          text_elements: [],
+          type: "text",
+        },
+      ],
+    });
+  });
+
+  it("preserves explicit text elements in composer integration input", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    const initialState = runEventFixture(demoFixture as FixtureStep[]);
+    if (initialState.threadLifecycle.activeThreadId) {
+      const activeThread =
+        initialState.threads[initialState.threadLifecycle.activeThreadId]!;
+      activeThread.activity = "idle";
+      activeThread.runtime = { status: { type: "idle" } };
+      activeThread.status = "complete";
+      for (const turn of Object.values(activeThread.turns)) {
+        turn.turn = { ...turn.turn, status: "completed" };
+      }
+    }
+    initialState.serverRequestQueue = { byId: {}, order: [] };
+    const textElements = [{ kind: "mention", uri: "agent://integration/search" }];
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat
+          composerIntegrations={[
+            {
+              id: "search-context",
+              label: "Search context",
+              resolve: () => ({
+                input: {
+                  text: "Use selected search context.",
+                  text_elements: textElements,
+                  type: "text",
+                },
+                label: "Search context",
+              }),
+            },
+          ]}
+        />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Search context" }));
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(
+      transport.requests.findLast((request) => request.method === "turn/start")?.params,
+    ).toMatchObject({
+      input: [
+        {
+          text: "Use selected search context.",
+          text_elements: textElements,
+          type: "text",
         },
       ],
     });
@@ -7157,6 +7293,11 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("public failed pending error")).toHaveTextContent(
       "turn failed",
     );
+    expect(screen.getByRole("heading", { name: "Message was not sent" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Retry message" })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Dismiss failed message" }),
+    ).toBeEnabled();
     expect(screen.getByLabelText("public composer submit mode")).toHaveTextContent(
       "send",
     );
@@ -7171,9 +7312,7 @@ describe("AgentChat", () => {
     ).toMatchObject({
       threadId: "thread-real",
     });
-    await user.click(
-      screen.getByRole("button", { name: "Cancel failed pending message" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Cancel operation" }));
     expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
       "cancelled",
     );
@@ -7235,9 +7374,7 @@ describe("AgentChat", () => {
       .map((node) => node.closest("article"))
       .find((article) => article?.classList.contains("aui-message"));
     expect(retryMessageArticle).toHaveAttribute("data-status", "failed");
-    await user.click(
-      screen.getByRole("button", { name: "Retry failed pending message" }),
-    );
+    await user.click(screen.getByRole("button", { name: "Retry message" }));
     await waitFor(() =>
       expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
         "pending",
@@ -7268,6 +7405,77 @@ describe("AgentChat", () => {
       clientUserMessageId: firstTurnStartParams.clientUserMessageId,
       threadId: "thread-retry",
     });
+  });
+
+  it("keeps a retried first message failed when the retry is dismissed while pending", async () => {
+    const user = userEvent.setup();
+    let turnStartCalls = 0;
+    let resolveRetryTurnStart: (() => void) | undefined;
+    const retryTurnStartResult = new Promise<void>((resolve) => {
+      resolveRetryTurnStart = resolve;
+    });
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "real@example.com", planType: "pro" } };
+        }
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-retry-cancel",
+              name: "Retry cancel thread",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "turn/start") {
+          turnStartCalls += 1;
+          if (turnStartCalls === 1) throw new Error("turn failed once");
+          return retryTurnStartResult;
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+        <ActiveThreadStateProbe />
+        <ComposerOperationProbe />
+      </AgentProvider>,
+    );
+
+    await user.type(await screen.findByRole("textbox", { name: "Message" }), "cancel retry");
+    await user.click(screen.getByRole("button", { name: "Start thread" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+        "failed",
+      ),
+    );
+    const retryMessageArticle = screen
+      .getAllByText("cancel retry")
+      .map((node) => node.closest("article"))
+      .find((article) => article?.classList.contains("aui-message"));
+    expect(retryMessageArticle).toHaveAttribute("data-status", "failed");
+
+    await user.click(screen.getByRole("button", { name: "Retry message" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+        "pending",
+      ),
+    );
+    expect(retryMessageArticle).toHaveAttribute("data-status", "inProgress");
+
+    await user.click(screen.getByRole("button", { name: "Cancel operation" }));
+    expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+      "cancelled",
+    );
+    expect(retryMessageArticle).toHaveAttribute("data-status", "failed");
+    resolveRetryTurnStart?.();
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
+      "cancelled",
+    );
+    expect(retryMessageArticle).toHaveAttribute("data-status", "failed");
   });
 
   it("does not expose failed pending messages when no thread is active", () => {

@@ -19,7 +19,7 @@ import type { AgentComponents, AgentApprovalDefaultProps } from "./chat";
 import { AgentApprovalQueue } from "./approvals";
 import {
   AgentComposerPanel,
-  type AgentComposerMentionResolver,
+  type AgentComposerIntegration,
   type AgentLocalAttachmentResolver,
 } from "./composer";
 import { AgentCriticalNoticeList } from "./status";
@@ -28,9 +28,8 @@ import { formatThreadStatus } from "./sidebar";
 import { useAgentContext } from "../provider";
 
 export interface AgentThreadViewProps {
+  composerIntegrations?: readonly AgentComposerIntegration[];
   components?: AgentComponents;
-  onRequestAppMention?: AgentComposerMentionResolver;
-  onRequestPluginMention?: AgentComposerMentionResolver;
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
   renderItem?: React.ComponentProps<typeof AgentMessageList>["renderItem"];
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
@@ -39,9 +38,8 @@ export interface AgentThreadViewProps {
 }
 
 export function AgentThreadView({
+  composerIntegrations,
   components,
-  onRequestAppMention,
-  onRequestPluginMention,
   renderApproval,
   renderItem,
   resolveLocalAttachment,
@@ -78,16 +76,14 @@ export function AgentThreadView({
       {ComposerPanel ? (
         <ComposerPanel
           Default={AgentComposerPanel}
-          onRequestAppMention={onRequestAppMention}
-          onRequestPluginMention={onRequestPluginMention}
+          composerIntegrations={composerIntegrations}
           resolveLocalAttachment={resolveLocalAttachment}
           thread={thread}
           threadId={resolvedThreadId}
         />
       ) : (
         <AgentComposerPanel
-          onRequestAppMention={onRequestAppMention}
-          onRequestPluginMention={onRequestPluginMention}
+          composerIntegrations={composerIntegrations}
           resolveLocalAttachment={resolveLocalAttachment}
           thread={thread}
           threadId={resolvedThreadId}

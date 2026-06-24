@@ -50,8 +50,18 @@ const localMediaUrlsByPath = new Map<string, string>();
   theme="system"
   usage={false}
   diagnostics={false}
-  onRequestAppMention={openAppPicker}
-  onRequestPluginMention={openPluginPicker}
+  composerIntegrations={[
+    {
+      id: "workspace-context",
+      label: "Workspace context",
+      resolve: async () => {
+        const context = await openWorkspaceContextPicker();
+        return context
+          ? { label: context.label, input: textInput(context.prompt) }
+          : null;
+      },
+    },
+  ]}
   onRequestWorkingDirectory={openDirectoryPicker}
   resolveLocalAttachment={async (file, kind) => {
     const asset = await uploadAttachmentToLocalMedia(file);
@@ -254,14 +264,14 @@ quality directly instead of depending on a page-level shell:
 
 - **Composer**: the primary input surface, a single bordered rounded card
   containing attachment chips, an auto-resizing textarea, and an inline
-  toolbar. The toolbar carries a single attach button, optional App/Plugin
-  mention buttons, the **mode** and **model · effort** menus, and a circular
-  primary Send icon button with an `Enter to send` hint. The standalone form is
-  named "Message composer", the textarea references that visible shortcut hint
-  as its accessible description, and pending attachment chips expose their
-  filenames through list item labels. While a regular turn is running, the
-  textarea remains editable and the primary button becomes Stop. Enter with
-  non-empty input or attachments adds a UI-local follow-up card above the
+  toolbar. The toolbar carries a single attach button, optional host-supplied
+  composer integration buttons, the **mode** and **model · effort** menus, and a
+  circular primary Send icon button with an `Enter to send` hint. The standalone
+  form is named "Message composer", the textarea references that visible
+  shortcut hint as its accessible description, and pending attachment chips
+  expose their filenames through list item labels. While a regular turn is
+  running, the textarea remains editable and the primary button becomes Stop.
+  Enter with non-empty input or attachments adds a UI-local follow-up card above the
   composer; empty Enter is a no-op. Cmd/Ctrl+Enter sends non-empty input as
   `turn/steer` immediately with the active `expectedTurnId`, and `Send now` on
   a queued card also sends `turn/steer`; outside a running turn,
@@ -271,9 +281,10 @@ quality directly instead of depending on a page-level shell:
   `turn/interrupt`; `turn/steer` is not an interrupt. The attach control
   appears only when the host wires `resolveLocalAttachment`; image and
   non-image files differ after selection through chip previews and the
-  resolved Codex payload. App and Plugin appear only when the host supplies
-  `onRequestAppMention` / `onRequestPluginMention`; the composer mention
-  flow never opens a browser `prompt()` dialog. There is no separate
+  resolved Codex payload. Integration buttons appear only when the host supplies
+  `composerIntegrations`; the composer never derives App Server input from a
+  label, URI, App, or Plugin concept and never opens a browser `prompt()`
+  dialog. There is no separate
   "Run settings" disclosure: mode, model, and effort are compact toolbar
   menus (see below). Pending-approval and preview-only states show a warm
   notice strip without hiding the field.
@@ -518,29 +529,41 @@ active/running status remains running, idle resumed threads become ready for new
 messages, and if the response contains a canonical thread id different from the
 requested path/id, the returned id becomes the active thread.
 
-Composer attachments are represented as visible chips for `app://` and
-`plugin://` mentions. The composer does not invoke `globalThis.prompt` for any
-mention flow; hosts supply `onRequestAppMention` and
-`onRequestPluginMention` resolvers (`AgentComposerProps`,
-`AgentChatProps`, `AgentThreadViewProps`). Each resolver is called when the
-user clicks the matching toolbar button and may return (or asynchronously
-resolve to) `{ label, value, input?, id? }`. When no resolver is provided, the
-matching toolbar button is hidden so an embedder cannot end up with a button
-that does nothing. This lets a host wire the flow into a command palette,
-picker dialog, MCP tool, or workspace registry without the library shipping
-an opinion about that picker's UI.
+Composer integrations are host-owned buttons represented as visible chips after
+the user chooses something. Hosts supply `composerIntegrations`
+(`AgentComposerProps`, `AgentChatProps`, `AgentThreadViewProps`). Each
+integration has `{ id, label, title?, resolve }`; `resolve()` may return
+`{ label, input, id?, value? }`, where `input` is an explicit
+`AgentUserInput | AgentUserInput[]`. The composer does not infer protocol
+mentions from labels or URI strings, does not expose App/Plugin-specific picker
+props, and does not invoke `globalThis.prompt`. When no integrations are
+provided, no integration buttons are shown.
 
 Thread rename is a separate header action and may use a minimal browser
 prompt in the default component until a host overrides that interaction. That
-does not affect composer mentions or attachment resolution.
+does not affect composer integrations or attachment resolution.
 
 ```tsx
 <AgentChat
-  onRequestAppMention={async () => {
-    const app = await openAppPicker();
-    return app && { label: app.name, value: app.uri };
-  }}
-  onRequestPluginMention={async () => openPluginPalette()}
+  composerIntegrations={[
+    {
+      id: "browser-context",
+      label: "Browser context",
+      resolve: async () => {
+        const selection = await openBrowserContextPicker();
+        return selection
+          ? {
+              label: selection.title,
+              input: {
+                name: selection.title,
+                path: selection.resourceUri,
+                type: "mention",
+              },
+            }
+          : null;
+      },
+    },
+  ]}
 />
 ```
 

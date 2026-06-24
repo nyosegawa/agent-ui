@@ -300,14 +300,14 @@ interface QueuedFollowUpAttachment {
     displayName?: string;
     extension?: string;
     id: string;
-    input?: AgentUserInput | AgentUserInput[];
-    kind: "image" | "file" | "app" | "plugin";
+    input: AgentUserInput | AgentUserInput[];
+    kind: "image" | "file" | "integration";
     label: string;
     previewUrl?: string;
     previewUrlRevoke?: boolean;
     redactedPath?: string;
     sizeLabel?: string;
-    value: string;
+    value?: string;
 }
 
 interface AgentComposerController {
@@ -677,16 +677,17 @@ interface AgentI18nDictionary {
     "composer.couldNotStart": string;
     "composer.couldNotStop": string;
     "composer.enterToSend": string;
+    "composer.dismissFailedMessage": string;
+    "composer.failedMessageBody": string;
+    "composer.failedMessages": string;
+    "composer.failedMessageTitle": string;
     "composer.followUpNoActiveTurn": string;
     "composer.followUpTurnChanged": string;
     "composer.followUpTurnChangedRefresh": string;
-    "composer.app": string;
-    "composer.mentionApp": string;
-    "composer.mentionPlugin": string;
-    "composer.plugin": string;
     "composer.placeholder": string;
     "composer.removeAttachment": string;
     "composer.resolveApprovalReason": string;
+    "composer.retryFailedMessage": string;
     "composer.send": string;
     "composer.sendMessage": string;
     "composer.stopCurrentTurn": string;
@@ -897,7 +898,7 @@ declare const agentI18nDictionaries: Record<AgentLocale, AgentI18nDictionary>;
 
 declare function normalizeAgentLocale(locale?: AgentLocale | string): AgentLocale;
 
-type AgentResourceKind = "image" | "file" | "app" | "plugin" | "url" | "unavailable";
+type AgentResourceKind = "image" | "file" | "integration" | "url" | "unavailable";
 interface AgentResolvedResourceBase {
     displayName?: string;
     id?: string;
@@ -934,20 +935,24 @@ type AgentResourceResolver = (request: AgentResourceRequest) => AgentResourceRes
 declare function agentResourceUrl(resource: AgentResolvedResourceBase | null | undefined): string | undefined;
 declare function agentResourceDisplayName(resource: AgentResolvedResourceBase | null | undefined, fallback?: string): string | undefined;
 
-type ComposerAttachmentKind = Extract<AgentResourceKind, "image" | "file" | "app" | "plugin">;
 type AgentLocalAttachmentKind = Extract<AgentResourceKind, "image" | "file">;
 interface AgentResolvedLocalAttachment extends AgentResolvedResourceBase {
     input: AgentUserInput | AgentUserInput[];
 }
 type AgentLocalAttachmentResolver = (file: File, kind: AgentLocalAttachmentKind) => AgentResolvedLocalAttachment | null | undefined | Promise<AgentResolvedLocalAttachment | null | undefined>;
-type AgentMentionAttachmentKind = Extract<ComposerAttachmentKind, "app" | "plugin">;
-interface AgentComposerMentionAttachment {
+interface AgentComposerIntegrationAttachment {
     id?: string;
-    input?: AgentUserInput;
+    input: AgentUserInput | AgentUserInput[];
     label: string;
-    value: string;
+    value?: string;
 }
-type AgentComposerMentionResolver = () => AgentComposerMentionAttachment | null | undefined | Promise<AgentComposerMentionAttachment | null | undefined>;
+type AgentComposerIntegrationResolver = () => AgentComposerIntegrationAttachment | null | undefined | Promise<AgentComposerIntegrationAttachment | null | undefined>;
+interface AgentComposerIntegration {
+    id: string;
+    label: string;
+    resolve: AgentComposerIntegrationResolver;
+    title?: string;
+}
 
 interface AgentComposerSubmitButtonProps {
     canSubmit: boolean;
@@ -959,7 +964,7 @@ interface AgentComposerSubmitButtonProps {
 }
 declare function AgentComposerSubmitButton({ canSubmit, className, iconSize, isStopAction, label, title, }: AgentComposerSubmitButtonProps): react_jsx_runtime.JSX.Element;
 
-type AgentAttachmentChipKind = Extract<AgentResourceKind, "image" | "file" | "app" | "plugin">;
+type AgentAttachmentChipKind = Extract<AgentResourceKind, "image" | "file" | "integration">;
 interface AgentAttachmentChip {
     extension?: string;
     id: string;
@@ -987,23 +992,21 @@ interface AgentComposerToolbarProps {
 declare function AgentComposerToolbar({ className, end, start, }: AgentComposerToolbarProps): react_jsx_runtime.JSX.Element;
 declare function AgentComposer(props: AgentComposerProps): react_jsx_runtime.JSX.Element;
 interface AgentComposerProps {
+    composerIntegrations?: readonly AgentComposerIntegration[];
     disabled?: boolean;
     disabledReason?: string;
-    onRequestAppMention?: AgentComposerMentionResolver;
-    onRequestPluginMention?: AgentComposerMentionResolver;
     placeholder?: string;
     resolveLocalAttachment?: AgentLocalAttachmentResolver;
     tokenUsage?: ThreadTokenUsage;
     threadId?: string;
 }
 interface AgentComposerPanelProps {
-    onRequestAppMention?: AgentComposerMentionResolver;
-    onRequestPluginMention?: AgentComposerMentionResolver;
+    composerIntegrations?: readonly AgentComposerIntegration[];
     resolveLocalAttachment?: AgentLocalAttachmentResolver;
     thread: ThreadState;
     threadId?: string;
 }
-declare function AgentComposerPanel({ onRequestAppMention, onRequestPluginMention, resolveLocalAttachment, thread, threadId, }: AgentComposerPanelProps): react_jsx_runtime.JSX.Element;
+declare function AgentComposerPanel({ composerIntegrations, resolveLocalAttachment, thread, threadId, }: AgentComposerPanelProps): react_jsx_runtime.JSX.Element;
 
 type AgentWorkingDirectoryResolver = () => Promise<string | null | undefined> | string | null | undefined;
 /**
@@ -1182,11 +1185,10 @@ declare const defaultAgentComponents: {
 };
 interface AgentChatProps {
     className?: string;
+    composerIntegrations?: readonly AgentComposerIntegration[];
     components?: AgentComponents;
     diagnostics?: boolean;
-    onRequestAppMention?: AgentComposerMentionResolver;
     onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
-    onRequestPluginMention?: AgentComposerMentionResolver;
     resolveLocalAttachment?: AgentLocalAttachmentResolver;
     resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
     sidebar?: boolean;
@@ -1197,7 +1199,7 @@ interface AgentChatProps {
     threadUrlRouting?: boolean | AgentThreadUrlRoutingOptions;
     usage?: boolean;
 }
-declare function AgentChat({ className, components, diagnostics, onRequestAppMention, onRequestWorkingDirectory, onRequestPluginMention, resolveLocalAttachment, resolveLocalMediaUrl, sidebar, statusBarEnd, theme, locale, messages, threadUrlRouting, usage, }?: AgentChatProps): react_jsx_runtime.JSX.Element;
+declare function AgentChat({ className, composerIntegrations, components, diagnostics, onRequestWorkingDirectory, resolveLocalAttachment, resolveLocalMediaUrl, sidebar, statusBarEnd, theme, locale, messages, threadUrlRouting, usage, }?: AgentChatProps): react_jsx_runtime.JSX.Element;
 interface AgentShellProps extends React$1.HTMLAttributes<HTMLElement> {
     sidebar?: React$1.ReactNode;
     theme?: AgentTheme;
@@ -1205,16 +1207,15 @@ interface AgentShellProps extends React$1.HTMLAttributes<HTMLElement> {
 declare function AgentShell({ children, className, sidebar, theme, ...props }: AgentShellProps): react_jsx_runtime.JSX.Element;
 
 interface AgentThreadViewProps {
+    composerIntegrations?: readonly AgentComposerIntegration[];
     components?: AgentComponents;
-    onRequestAppMention?: AgentComposerMentionResolver;
-    onRequestPluginMention?: AgentComposerMentionResolver;
     renderApproval?: (approval: PendingServerRequest) => React$1.ReactNode;
     renderItem?: React$1.ComponentProps<typeof AgentMessageList>["renderItem"];
     resolveLocalAttachment?: AgentLocalAttachmentResolver;
     resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
     threadId?: string;
 }
-declare function AgentThreadView({ components, onRequestAppMention, onRequestPluginMention, renderApproval, renderItem, resolveLocalAttachment, resolveLocalMediaUrl, threadId, }: AgentThreadViewProps): react_jsx_runtime.JSX.Element | null;
+declare function AgentThreadView({ composerIntegrations, components, renderApproval, renderItem, resolveLocalAttachment, resolveLocalMediaUrl, threadId, }: AgentThreadViewProps): react_jsx_runtime.JSX.Element | null;
 declare function AgentThreadSurface({ children, className, }: {
     children: React$1.ReactNode;
     className?: string;
@@ -1322,4 +1323,4 @@ interface UsageWindow {
 type UsageTranslator = (key: AgentI18nKey, vars?: Record<string, string | number>) => string;
 declare function normalizeUsageWindows(rateLimits: unknown, t?: UsageTranslator): UsageWindow[];
 
-export { AGENT_EXECUTION_MODES, type AgentApprovalComponentProps, type AgentApprovalDefaultProps, type AgentApprovalPolicy, AgentApprovalQueue, type AgentApprovalsReviewer, AgentAppsPanel, type AgentAppsRefreshOptions, type AgentAttachmentChip, type AgentAttachmentChipKind, AgentAttachmentChips, type AgentAttachmentChipsProps, type AgentBlockComponentProps, type AgentBlockDefaultProps, type AgentBootstrapState, AgentChat, type AgentChatProps, AgentCommandItem, AgentCommandOutputItem, type AgentComponents, AgentComposer, type AgentComposerController, type AgentComposerDisabledReason, type AgentComposerFailedPendingMessage, AgentComposerInput, type AgentComposerInputProps, type AgentComposerMentionAttachment, type AgentComposerMentionResolver, AgentComposerPanel, type AgentComposerPanelComponentProps, type AgentComposerPanelProps, type AgentComposerProps, AgentComposerSubmitButton, type AgentComposerSubmitButtonProps, type AgentComposerSubmitMode, AgentComposerToolbar, type AgentComposerToolbarProps, AgentContentBlockView, AgentContextUsageIndicator, type AgentContextValue, AgentCriticalNoticeList, AgentDiagnosticsPanel, AgentDiffItem, AgentDiffViewer, type AgentDirectThreadController, type AgentDirectThreadOpenResult, type AgentEmptyStateComponentProps, type AgentExecutionMode, AgentFileChangeItem, type AgentFileResourceRequest, AgentFirstRun, type AgentHooksRefreshOptions, type AgentI18nDictionary, type AgentI18nKey, type AgentI18nMessages, AgentI18nProvider, type AgentI18nProviderProps, type AgentI18nValue, type AgentImageInput, type AgentItemDefaultProps, type AgentJsonValue, type AgentLocalAttachmentKind, type AgentLocalAttachmentResolver, type AgentLocalImageInput, type AgentLocalMediaResourceRequest, type AgentLocalMediaUrlResolver, type AgentLocale, AgentLocaleSelect, type AgentLocaleSelectProps, type AgentMentionAttachmentKind, type AgentMentionInput, AgentMessageItem, AgentMessageList, type AgentPersonality, AgentProvider, type AgentProviderProps, AgentRateLimitBar, AgentReasoningItem, type AgentReasoningSummary, type AgentResolvedLocalAttachment, type AgentResolvedResource, type AgentResolvedResourceBase, type AgentResolvedUrlResource, type AgentResourceKind, type AgentResourceRequest, type AgentResourceResolution, type AgentResourceResolver, AgentRunControls, type AgentRunControlsProps, AgentRunSettingsPanel, type AgentRunSettingsPanelProps, type AgentSandboxMode, type AgentSandboxPolicy, AgentShell, type AgentShellComponentProps, type AgentShellProps, type AgentSidebarComponentProps, type AgentSkillConfigWriteOptions, type AgentSkillInput, AgentSkillsPanel, type AgentSkillsRefreshOptions, type AgentSortDirection, AgentStartComposer, type AgentStartComposerProps, AgentStarterCwd, AgentStatusBar, AgentStatusDetails, AgentStatusSummary, type AgentTextInput, type AgentTheme, AgentThemeToggle, type AgentThemeToggleProps, type AgentThreadConfigOptions, type AgentThreadForkResult, AgentThreadHeader, type AgentThreadHistoryResult, type AgentThreadHistorySyncedEvent, type AgentThreadListController, type AgentThreadListControllerOptions, type AgentThreadListRequest, type AgentThreadReadResult, type AgentThreadResumeResult, type AgentThreadResumeRunSettings, AgentThreadSidebar, type AgentThreadSortKey, type AgentThreadSource, type AgentThreadSourceKind, type AgentThreadStartResult, type AgentThreadStartSource, type AgentThreadStartWithInputOptions, type AgentThreadStartWithInputResult, AgentThreadSurface, AgentThreadTimeline, AgentThreadView, type AgentThreadViewProps, AgentTokenUsageBar, AgentToolCallItem, AgentTranscript, type AgentTranscriptBlock, type AgentTranscriptController, type AgentTranscriptControllerOptions, type AgentTranscriptDensity, type AgentTranscriptDensityConfig, type AgentTranscriptDensityMode, type AgentTranscriptEntry, type AgentTranscriptItem, type AgentTranscriptPendingState, type AgentTranscriptScrollController, type AgentTranscriptScrollControllerOptions, AgentTurn, type AgentUnavailableResource, type AgentUnknownUserInput, AgentUsagePanel, type AgentUsageProps, AgentUsageSummary, type AgentUserInput, type AgentWorkingDirectoryResolver, AgentWorkspace, type AgentWorkspaceProps, ComposerRunSettings, DEFAULT_TRANSCRIPT_ITEM_LIMIT, type QueuedFollowUp, type QueuedFollowUpAttachment, TRANSCRIPT_ITEM_INCREMENT, type ThreadForkOptions, type ThreadHistoryParams, ThreadList, type ThreadResumeOptions, type ThreadStartOptions, type TranscriptApprovalAnchors, type TurnStartOptions, type UsageWindow, agentI18nDictionaries, agentLocales, agentResourceDisplayName, agentResourceUrl, defaultAgentComponents, formatThreadStatus, interpolate, interpolationVariables, isUserFacingPath, normalizeAgentLocale, normalizeUsageWindows, threadSubtitle, transcriptItemIds, useAgentAccount, useAgentAction, useAgentApprovals, useAgentApps, useAgentBootstrap, useAgentComposer, useAgentComposerController, useAgentContext, useAgentDiagnostics, useAgentDirectThreadController, useAgentHooks, useAgentI18n, useAgentModels, useAgentRunSettings, useAgentServerRequests, useAgentSkills, useAgentThread, useAgentThreadActions, useAgentThreadController, useAgentThreadHistory, useAgentThreadListController, useAgentThreadReader, useAgentThreads, useAgentTranscriptController, useAgentTranscriptScrollController, useAgentTurn, useAgentTurnController, useAgentUsage, visibleTranscriptWindow };
+export { AGENT_EXECUTION_MODES, type AgentApprovalComponentProps, type AgentApprovalDefaultProps, type AgentApprovalPolicy, AgentApprovalQueue, type AgentApprovalsReviewer, AgentAppsPanel, type AgentAppsRefreshOptions, type AgentAttachmentChip, type AgentAttachmentChipKind, AgentAttachmentChips, type AgentAttachmentChipsProps, type AgentBlockComponentProps, type AgentBlockDefaultProps, type AgentBootstrapState, AgentChat, type AgentChatProps, AgentCommandItem, AgentCommandOutputItem, type AgentComponents, AgentComposer, type AgentComposerController, type AgentComposerDisabledReason, type AgentComposerFailedPendingMessage, AgentComposerInput, type AgentComposerInputProps, type AgentComposerIntegration, type AgentComposerIntegrationAttachment, type AgentComposerIntegrationResolver, AgentComposerPanel, type AgentComposerPanelComponentProps, type AgentComposerPanelProps, type AgentComposerProps, AgentComposerSubmitButton, type AgentComposerSubmitButtonProps, type AgentComposerSubmitMode, AgentComposerToolbar, type AgentComposerToolbarProps, AgentContentBlockView, AgentContextUsageIndicator, type AgentContextValue, AgentCriticalNoticeList, AgentDiagnosticsPanel, AgentDiffItem, AgentDiffViewer, type AgentDirectThreadController, type AgentDirectThreadOpenResult, type AgentEmptyStateComponentProps, type AgentExecutionMode, AgentFileChangeItem, type AgentFileResourceRequest, AgentFirstRun, type AgentHooksRefreshOptions, type AgentI18nDictionary, type AgentI18nKey, type AgentI18nMessages, AgentI18nProvider, type AgentI18nProviderProps, type AgentI18nValue, type AgentImageInput, type AgentItemDefaultProps, type AgentJsonValue, type AgentLocalAttachmentKind, type AgentLocalAttachmentResolver, type AgentLocalImageInput, type AgentLocalMediaResourceRequest, type AgentLocalMediaUrlResolver, type AgentLocale, AgentLocaleSelect, type AgentLocaleSelectProps, type AgentMentionInput, AgentMessageItem, AgentMessageList, type AgentPersonality, AgentProvider, type AgentProviderProps, AgentRateLimitBar, AgentReasoningItem, type AgentReasoningSummary, type AgentResolvedLocalAttachment, type AgentResolvedResource, type AgentResolvedResourceBase, type AgentResolvedUrlResource, type AgentResourceKind, type AgentResourceRequest, type AgentResourceResolution, type AgentResourceResolver, AgentRunControls, type AgentRunControlsProps, AgentRunSettingsPanel, type AgentRunSettingsPanelProps, type AgentSandboxMode, type AgentSandboxPolicy, AgentShell, type AgentShellComponentProps, type AgentShellProps, type AgentSidebarComponentProps, type AgentSkillConfigWriteOptions, type AgentSkillInput, AgentSkillsPanel, type AgentSkillsRefreshOptions, type AgentSortDirection, AgentStartComposer, type AgentStartComposerProps, AgentStarterCwd, AgentStatusBar, AgentStatusDetails, AgentStatusSummary, type AgentTextInput, type AgentTheme, AgentThemeToggle, type AgentThemeToggleProps, type AgentThreadConfigOptions, type AgentThreadForkResult, AgentThreadHeader, type AgentThreadHistoryResult, type AgentThreadHistorySyncedEvent, type AgentThreadListController, type AgentThreadListControllerOptions, type AgentThreadListRequest, type AgentThreadReadResult, type AgentThreadResumeResult, type AgentThreadResumeRunSettings, AgentThreadSidebar, type AgentThreadSortKey, type AgentThreadSource, type AgentThreadSourceKind, type AgentThreadStartResult, type AgentThreadStartSource, type AgentThreadStartWithInputOptions, type AgentThreadStartWithInputResult, AgentThreadSurface, AgentThreadTimeline, AgentThreadView, type AgentThreadViewProps, AgentTokenUsageBar, AgentToolCallItem, AgentTranscript, type AgentTranscriptBlock, type AgentTranscriptController, type AgentTranscriptControllerOptions, type AgentTranscriptDensity, type AgentTranscriptDensityConfig, type AgentTranscriptDensityMode, type AgentTranscriptEntry, type AgentTranscriptItem, type AgentTranscriptPendingState, type AgentTranscriptScrollController, type AgentTranscriptScrollControllerOptions, AgentTurn, type AgentUnavailableResource, type AgentUnknownUserInput, AgentUsagePanel, type AgentUsageProps, AgentUsageSummary, type AgentUserInput, type AgentWorkingDirectoryResolver, AgentWorkspace, type AgentWorkspaceProps, ComposerRunSettings, DEFAULT_TRANSCRIPT_ITEM_LIMIT, type QueuedFollowUp, type QueuedFollowUpAttachment, TRANSCRIPT_ITEM_INCREMENT, type ThreadForkOptions, type ThreadHistoryParams, ThreadList, type ThreadResumeOptions, type ThreadStartOptions, type TranscriptApprovalAnchors, type TurnStartOptions, type UsageWindow, agentI18nDictionaries, agentLocales, agentResourceDisplayName, agentResourceUrl, defaultAgentComponents, formatThreadStatus, interpolate, interpolationVariables, isUserFacingPath, normalizeAgentLocale, normalizeUsageWindows, threadSubtitle, transcriptItemIds, useAgentAccount, useAgentAction, useAgentApprovals, useAgentApps, useAgentBootstrap, useAgentComposer, useAgentComposerController, useAgentContext, useAgentDiagnostics, useAgentDirectThreadController, useAgentHooks, useAgentI18n, useAgentModels, useAgentRunSettings, useAgentServerRequests, useAgentSkills, useAgentThread, useAgentThreadActions, useAgentThreadController, useAgentThreadHistory, useAgentThreadListController, useAgentThreadReader, useAgentThreads, useAgentTranscriptController, useAgentTranscriptScrollController, useAgentTurn, useAgentTurnController, useAgentUsage, visibleTranscriptWindow };

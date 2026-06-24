@@ -6,11 +6,9 @@ test("retries a failed first message through the public composer controller", as
   await page.goto("/composer-retry");
   await expect(page.getByRole("heading", { name: "Composer retry" })).toBeVisible();
   await expect(page.getByLabel("Composer retry status")).toContainText(
-    "Start a thread with a message that fails once",
+    "Retry diagnostics",
   );
-  await expect(
-    page.getByRole("button", { name: "Retry failed first message" }),
-  ).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Retry message" })).toHaveCount(0);
 
   const starter = page.getByRole("form", { name: "Start a Codex thread" });
   await starter.getByRole("textbox", { name: "Message" }).fill("browser retry");
@@ -22,11 +20,12 @@ test("retries a failed first message through the public composer controller", as
     "browser retry failed once",
   );
   await expect(page.getByLabel("turn start calls")).toHaveText("1 attempt");
+  await expect(page.getByRole("heading", { name: "Message was not sent" })).toBeVisible();
   await expect(
     page.locator(".aui-message[data-kind='userMessage'][data-status='failed']"),
   ).toContainText("browser retry");
 
-  await page.getByRole("button", { name: "Retry failed first message" }).click();
+  await page.getByRole("button", { name: "Retry message" }).click();
 
   await expect(page.getByLabel("failed pending count")).toHaveText("0 failed messages");
   await expect(page.getByLabel("failed pending error")).toHaveText("No failed message");
