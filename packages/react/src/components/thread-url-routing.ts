@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import {
-  useAgentThread,
-  useAgentThreadReader,
+  useAgentDirectThreadController,
   useAgentThreads,
 } from "../hooks";
 import { useAgentContext } from "../provider";
@@ -18,8 +17,7 @@ export function useThreadUrlRouting(
   activeThreadId?: string,
 ): void {
   const { state } = useAgentContext();
-  const { resumeThread } = useAgentThread();
-  const { readThread } = useAgentThreadReader();
+  const { openThread, previewThread } = useAgentDirectThreadController();
   const { setActiveThread, threads } = useAgentThreads();
   const lastPathRef = useRef<string | undefined>(undefined);
   const initialUrlThreadReadRef = useRef<string | undefined>(undefined);
@@ -33,16 +31,15 @@ export function useThreadUrlRouting(
     const initialThreadId = threadIdFromPath(window.location.pathname, basePath);
     if (!initialThreadId || initialUrlThreadReadRef.current === initialThreadId) return;
     initialUrlThreadReadRef.current = initialThreadId;
-    const openThread = async () => {
-      await readThread(initialThreadId, { activate: true, includeTurns: true });
-      await resumeThread(initialThreadId);
+    const openInitialThread = async () => {
+      await openThread(initialThreadId);
     };
-    void openThread().catch(() => {
+    void openInitialThread().catch(() => {
       if (initialUrlThreadReadRef.current === initialThreadId) {
         initialUrlThreadReadRef.current = undefined;
       }
     });
-  }, [basePath, enabled, readThread, resumeThread, state.connection.status]);
+  }, [basePath, enabled, openThread, state.connection.status]);
 
   useEffect(() => {
     if (!enabled || typeof window === "undefined" || !activeThreadId) return;
@@ -74,15 +71,15 @@ export function useThreadUrlRouting(
         setActiveThread(threadId);
         return;
       }
-      const openThread = readThread(threadId, { activate: true, includeTurns: true });
-      void openThread.catch(() => {
+      const preview = previewThread(threadId);
+      void preview.catch(() => {
         if (existingThread) setActiveThread(threadId);
         else setActiveThread(undefined);
       });
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
-  }, [basePath, enabled, readThread, setActiveThread, threads]);
+  }, [basePath, enabled, previewThread, setActiveThread, threads]);
 }
 
 export function threadPath(threadId: string, basePath: string): string {

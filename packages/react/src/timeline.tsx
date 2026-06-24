@@ -1,9 +1,3 @@
-import type {
-  AgentItemState,
-  PendingServerRequest,
-  ThreadState,
-  TurnState,
-} from "@nyosegawa/agent-ui-core";
 import type React from "react";
 import { useMemo } from "react";
 import type {
@@ -15,18 +9,13 @@ import type {
   AgentComponents,
   AgentItemDefaultProps,
 } from "./components/chat";
-import { useAgentTranscriptControllerForThread } from "./hooks/transcript";
+import { useAgentTranscriptController } from "./hooks/transcript";
 import { useAgentI18n, type AgentI18nKey } from "./i18n";
 import {
   anchoredApprovalNodes,
   type ApprovalAnchors,
   type TranscriptApprovalAnchors,
 } from "./timeline/approval-anchors";
-import { blockForTranscriptItem } from "./timeline/blocks";
-import {
-  displayItemStatus,
-  displayText,
-} from "./timeline/formatters";
 import {
   AgentContentBlockView,
   AgentMessageItem,
@@ -56,7 +45,7 @@ export function AgentMessageList({
   density,
   resolveLocalMediaUrl,
   scrollKey,
-  thread,
+  threadId,
 }: {
   /**
    * Trailing transcript content rendered as the final scroll-area item.
@@ -68,21 +57,20 @@ export function AgentMessageList({
   components?: AgentComponents;
   density?: AgentTranscriptDensity;
   renderItem?: (
-    item: AgentItemState,
-    turn: TurnState,
+    entry: AgentTranscriptEntry,
     Default: React.ComponentType<AgentItemDefaultProps>,
   ) => React.ReactNode;
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   /** Changing this value scrolls the transcript to its end (e.g. a new approval). */
   scrollKey?: string | number;
-  thread: ThreadState;
+  threadId: string;
 }) {
   const { t } = useAgentI18n();
   const anchoredApprovalKey = useMemo(
     () => approvalAnchors?.requests.map((request) => String(request.id)).join("|") ?? "",
     [approvalAnchors?.requests],
   );
-  const transcript = useAgentTranscriptControllerForThread(thread, {
+  const transcript = useAgentTranscriptController(threadId, {
     approvalAnchors,
     density,
   });
@@ -101,8 +89,8 @@ export function AgentMessageList({
       ? ".aui-transcript-approval-anchor"
       : "[data-aui-no-pending-approval]",
     scrollKey,
-    threadId: thread.thread.id,
-    turnCount: thread.orderedTurnIds.length,
+    threadId,
+    turnCount: transcript.turnIds.length,
   });
   return (
     <div className="aui-message-list-wrap">
@@ -129,17 +117,16 @@ export function AgentMessageList({
             </span>
           </li>
         ) : null}
-        {thread.orderedTurnIds.map((turnId) => {
+        {transcript.turnIds.map((turnId) => {
           const entries = transcript.entriesByTurnId.get(turnId);
           if (!entries || entries.length === 0) return null;
-          const turn = thread.turns[turnId];
-          return turn ? (
+          return (
             <AgentTurn
               key={turnId}
               approvals={
                 approvalAnchors
                   ? {
-                      afterTurn: afterTurnApprovals(turn, approvalAnchors),
+                      afterTurn: [],
                       byItemId: {},
                       renderApprovalAnchor: approvalAnchors.renderApprovalAnchor,
                     }
@@ -149,10 +136,8 @@ export function AgentMessageList({
               components={components}
               renderItem={renderItem}
               resolveLocalMediaUrl={resolveLocalMediaUrl}
-              threadStatus={thread.status}
-              turn={turn}
             />
-          ) : null;
+          );
         })}
         {footer ? <li className="aui-transcript-tail">{footer}</li> : null}
       </ol>
@@ -186,67 +171,39 @@ export function AgentTurn({
   entries,
   renderItem,
   resolveLocalMediaUrl,
-  threadStatus,
-  turn,
 }: {
   approvals?: ApprovalAnchors;
   components?: AgentComponents;
   entries?: AgentTranscriptEntry[];
   renderItem?: (
-    item: AgentItemState,
-    turn: TurnState,
+    entry: AgentTranscriptEntry,
     Default: React.ComponentType<AgentItemDefaultProps>,
   ) => React.ReactNode;
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
-  threadStatus: ThreadState["status"];
-  turn: TurnState;
 }) {
   const { t } = useAgentI18n();
-  const transcriptEntries =
-    entries ??
-    turn.itemOrder.map((itemId) => {
-      const item = turn.items[itemId];
-      const block = blockForTranscriptItem(turn, itemId, turn.blocksByItemId?.[itemId]);
-      const status = item?.status ?? "streaming";
-      return {
-        approvals: [],
-        block,
-        dataKind: item?.kind ?? block.kind,
-        density: "default" as const,
-        displayStatus: displayItemStatus(status, threadStatus),
-        id: `${turn.turn.id}:${itemId}`,
-        item,
-        itemId,
-        key: itemId,
-        role: "system" as const,
-        status,
-        text: displayText(item?.text ?? turn.streamingTextByItemId[itemId]),
-        turnId: turn.turn.id,
-      };
-    });
+  const transcriptEntries = entries ?? [];
   return (
     <li className="aui-turn">
       {transcriptEntries.flatMap((entry) => {
         const item = entry.item;
         const block = entry.block;
-        const messageItem = item as AgentItemState | undefined;
         const defaultItem = (
           <DefaultTranscriptItem
             block={block}
             components={components}
             entry={entry}
-            item={messageItem}
+            item={item}
             key={entry.key}
             resolveLocalMediaUrl={resolveLocalMediaUrl}
             t={t}
-            turn={turn}
           />
         );
-        if (item && renderItem) {
+        if (renderItem) {
           function Default() {
             return defaultItem;
           }
-          const rendered = renderItem(item, turn, Default);
+          const rendered = renderItem(entry, Default);
           if (rendered !== undefined) {
             return [
               <div key={entry.key}>{rendered}</div>,
@@ -268,15 +225,13 @@ function DefaultTranscriptItem({
   item,
   resolveLocalMediaUrl,
   t,
-  turn,
 }: {
   block: AgentTranscriptEntry["block"];
   components?: AgentComponents;
   entry: AgentTranscriptEntry;
-  item?: AgentItemState;
+  item?: AgentTranscriptEntry["item"];
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   t: (key: AgentI18nKey) => string;
-  turn: TurnState;
 }) {
   const kind = entry.dataKind;
   const status = entry.displayStatus;
@@ -286,8 +241,8 @@ function DefaultTranscriptItem({
       <AgentContentBlockView
         block={block}
         item={item}
-        output={turn.commandOutputByItemId[entry.itemId]}
-        patch={turn.filePatchByItemId[entry.itemId]}
+        output={block.output}
+        patch={entry.patch}
         resolveLocalMediaUrl={resolveLocalMediaUrl}
       />
     );
@@ -297,9 +252,9 @@ function DefaultTranscriptItem({
         return (
           <AgentContentBlockView
             block={defaultBlock}
-            item={defaultItem as AgentItemState | undefined}
-            output={turn.commandOutputByItemId[entry.itemId]}
-            patch={turn.filePatchByItemId[entry.itemId]}
+            item={defaultItem}
+            output={defaultBlock.output}
+            patch={entry.patch}
             resolveLocalMediaUrl={resolveLocalMediaUrl}
           />
         );
@@ -322,6 +277,26 @@ function DefaultTranscriptItem({
     );
   }
   if (!entry.text?.trim()) return null;
+  const TextBlock = components?.blocks?.text;
+  if (TextBlock) {
+    function DefaultTextBlock({ block: defaultBlock }: AgentBlockDefaultProps) {
+      return <AgentMessageItem text={defaultBlock.text ?? ""} />;
+    }
+    return (
+      <article
+        className="aui-message"
+        data-kind={kind}
+        data-status={item?.status}
+        data-density={entry.density}
+      >
+        <div className="aui-message-meta">
+          <span>{localizedItemLabel(kind, t)}</span>
+          <span>{status}</span>
+        </div>
+        <TextBlock Default={DefaultTextBlock} block={block} item={item} />
+      </article>
+    );
+  }
   return (
     <article
       className="aui-message"
@@ -335,16 +310,5 @@ function DefaultTranscriptItem({
       </div>
       <AgentMessageItem text={entry.text} />
     </article>
-  );
-}
-
-function afterTurnApprovals(
-  turn: TurnState,
-  anchors: TranscriptApprovalAnchors,
-): PendingServerRequest[] {
-  return anchors.requests.filter(
-    (request) =>
-      request.turnId === turn.turn.id &&
-      (!request.itemId || !turn.itemOrder.includes(request.itemId)),
   );
 }

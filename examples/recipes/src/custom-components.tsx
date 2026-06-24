@@ -34,12 +34,14 @@ export function CustomComponentsExample({ transport }: { transport: AgentTranspo
               <Default approval={approval} />
             </>
           ),
-          Item: ({ item }) => (
-            <article className={`custom-item custom-item-${item.kind}`}>
-              <strong>{item.kind}</strong>
-              <p>{item.text}</p>
-            </article>
-          ),
+          blocks: {
+            text: ({ block, Default }) => (
+              <article className="custom-item custom-item-text">
+                <strong>{block.kind}</strong>
+                <Default block={block} />
+              </article>
+            ),
+          },
         }}
       />
     </AgentProvider>

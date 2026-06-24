@@ -148,17 +148,18 @@ export function selectThreadView(
   const operations = Object.values(thread.operations ?? {});
   const pending = operations.find((operation) => operation.status === "pending");
   return {
-    cwd: thread.metadata.cwd,
+    cwd: thread.metadata?.cwd,
     error:
       thread.activity === "failed"
         ? operations.find((operation) => operation.error)?.error
         : undefined,
     id: thread.id,
+    displayStatus: threadDisplayStatus(thread),
     isActive: selectActiveThread(state)?.id === thread.id,
     isArchived: thread.availability === "archived",
     isPreview: thread.availability === "preview",
     isRunning: thread.activity === "running",
-    lastActivityAt: thread.metadata.lastActivityAt,
+    lastActivityAt: thread.metadata?.lastActivityAt,
     needsInput: thread.activity === "waitingForInput",
     pending: pending
       ? {
@@ -167,8 +168,8 @@ export function selectThreadView(
           status: pending.status,
         }
       : undefined,
-    subtitle: thread.metadata.cwd,
-    title: thread.metadata.title ?? thread.thread.name ?? thread.thread.id,
+    subtitle: thread.metadata?.cwd,
+    title: thread.metadata?.title ?? thread.thread.name ?? thread.thread.id,
   };
 }
 
@@ -183,17 +184,18 @@ export function selectThreadRuntimeView(
 ): AgentThreadRuntimeView | undefined {
   const thread = selectThread(state, threadId);
   if (!thread) return undefined;
+  const runtime = thread.runtime ?? { status: { type: "idle" as const } };
   const activeFlags =
-    thread.runtime.status.type === "active" ? thread.runtime.status.activeFlags : [];
+    runtime.status.type === "active" ? runtime.status.activeFlags : [];
   const requestSummaries = selectServerRequestSummaries(state, thread.id);
   const visibleRequestSummaries = requestSummaries.filter((request) => request.visible);
   return {
     activeFlags,
-    activeTurnId: thread.runtime.activeTurnId,
+    activeTurnId: runtime.activeTurnId,
     isRunning: thread.activity === "running",
-    lastTurn: thread.runtime.lastTurn,
+    lastTurn: runtime.lastTurn,
     needsInput: thread.activity === "waitingForInput",
-    status: thread.runtime.status.type,
+    status: runtime.status.type,
     waitingReasons: unique(
       visibleRequestSummaries.map((request) => request.waitingReason),
     ),
@@ -240,7 +242,7 @@ export function selectThreadTranscriptView(
       return [
         {
           blocks: turn.itemOrder.flatMap((itemId) => {
-            const block = turn.blocksByItemId[itemId];
+            const block = turn.blocksByItemId?.[itemId];
             return block ? [transcriptBlockView(block)] : [];
           }),
           id: turn.turn.id,
@@ -404,17 +406,22 @@ function unique<T>(values: readonly T[]): T[] {
 
 function transcriptBlockView(block: AgentTranscriptBlockView): AgentTranscriptBlockView {
   return {
+    ...(block.arguments !== undefined ? { arguments: block.arguments } : {}),
+    ...(block.changes !== undefined ? { changes: block.changes } : {}),
     ...(block.command !== undefined ? { command: block.command } : {}),
     ...(block.content !== undefined ? { content: block.content } : {}),
     ...(block.cwd !== undefined ? { cwd: block.cwd } : {}),
     ...(block.durationMs != null ? { durationMs: block.durationMs } : {}),
+    ...(block.error !== undefined ? { error: block.error } : {}),
     ...(block.exitCode != null ? { exitCode: block.exitCode } : {}),
     id: block.id,
     kind: block.kind,
+    ...(block.metadata !== undefined ? { metadata: block.metadata } : {}),
     ...(block.output !== undefined ? { output: block.output } : {}),
     ...(block.path !== undefined ? { path: block.path } : {}),
     ...(block.query !== undefined ? { query: block.query } : {}),
     ...(block.resource !== undefined ? { resource: block.resource } : {}),
+    ...(block.result !== undefined ? { result: block.result } : {}),
     ...(block.server !== undefined ? { server: block.server } : {}),
     ...(block.status !== undefined ? { status: block.status } : {}),
     ...(block.subtype !== undefined ? { subtype: block.subtype } : {}),
@@ -423,4 +430,14 @@ function transcriptBlockView(block: AgentTranscriptBlockView): AgentTranscriptBl
     ...(block.tool !== undefined ? { tool: block.tool } : {}),
     ...(block.toolType !== undefined ? { toolType: block.toolType } : {}),
   };
+}
+
+function threadDisplayStatus(thread: AgentSessionState["threads"][ThreadId]): AgentThreadView["displayStatus"] {
+  if (thread.availability === "archived") return "archived";
+  if (thread.activity === "failed") return "failed";
+  if (thread.activity === "waitingForInput") return "waitingForInput";
+  if (thread.activity === "running") return "running";
+  if (thread.availability === "preview") return "preview";
+  if (thread.status === "complete" || thread.status === "completed") return "complete";
+  return "ready";
 }

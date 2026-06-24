@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
-import { useRef, useState } from "react";
+import { useRef, useState, type ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import demoFixture from "../../../fixtures/app-server/demo-session.json" with { type: "json" };
 import {
@@ -14,6 +14,7 @@ import {
   selectPendingOperations,
   type AgentThreadScope,
   type FixtureStep,
+  type ThreadState,
 } from "@nyosegawa/agent-ui-core";
 import {
   AgentChat,
@@ -85,6 +86,19 @@ function resolvedTextAttachment(path: string, label?: string) {
     input: textInput(`Attached file: ${path}`),
     path,
   };
+}
+
+function renderMessageListWithThread(
+  thread: ThreadState,
+  props: Omit<ComponentProps<typeof AgentMessageList>, "threadId"> = {},
+) {
+  const initialState = createInitialAgentState();
+  initialState.threads[thread.thread.id] = thread;
+  return render(
+    <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+      <AgentMessageList {...props} threadId={thread.thread.id} />
+    </AgentProvider>,
+  );
 }
 
 function ThreadListControllerProbe({
@@ -769,18 +783,20 @@ describe("AgentChat", () => {
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <AgentChat
           components={{
-            Item: ({ item, turn }) => (
+            blocks: {
+              text: ({ block }) => (
               <article>
-                Custom item {item.id} in {turn.turn.id}
+                  Custom block {block.id}: {block.text}
               </article>
-            ),
+              ),
+            },
           }}
         />
       </AgentProvider>,
     );
 
     expect(
-      screen.getByText("Custom item item-components in turn-components"),
+      screen.getByText("Custom block item-components: Default transcript text"),
     ).toBeInTheDocument();
     expect(screen.queryByText("Default transcript text")).not.toBeInTheDocument();
   });
@@ -1056,6 +1072,7 @@ describe("AgentChat", () => {
     expect(
       screen.getByRole("heading", { name: "Fixed worker thread" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Complete")).toBeInTheDocument();
     expect(screen.getByText("Only this thread should render.")).toBeInTheDocument();
     expect(screen.queryByText("Active global thread")).not.toBeInTheDocument();
   });
@@ -1097,7 +1114,7 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList thread={initialState.threads["thread-large"]!} />
+        <AgentMessageList threadId="thread-large" />
       </AgentProvider>,
     );
 
@@ -1395,7 +1412,7 @@ describe("AgentChat", () => {
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <AgentMessageList
           density="compact"
-          thread={initialState.threads["thread-density-dom"]!}
+          threadId="thread-density-dom"
         />
       </AgentProvider>,
     );
@@ -1463,7 +1480,7 @@ describe("AgentChat", () => {
             ],
           }}
           density="critical-only"
-          thread={initialState.threads["thread-critical-approval"]!}
+          threadId="thread-critical-approval"
         />
       </AgentProvider>,
     );
@@ -1518,7 +1535,7 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList thread={initialState.threads["thread-command-block"]!} />
+        <AgentMessageList threadId="thread-command-block" />
       </AgentProvider>,
     );
 
@@ -1577,7 +1594,7 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList thread={initialState.threads["thread-file-block"]!} />
+        <AgentMessageList threadId="thread-file-block" />
       </AgentProvider>,
     );
 
@@ -1659,7 +1676,7 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList thread={initialState.threads["thread-context"]!} />
+        <AgentMessageList threadId="thread-context" />
       </AgentProvider>,
     );
 
@@ -1710,7 +1727,7 @@ describe("AgentChat", () => {
 
     const { container } = render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList thread={initialState.threads["thread-chat"]!} />
+        <AgentMessageList threadId="thread-chat" />
       </AgentProvider>,
     );
 
@@ -1724,6 +1741,7 @@ describe("AgentChat", () => {
   it("anchors approvals after source item metadata and falls back to transcript tail without metadata", () => {
     const initialState = createInitialAgentState();
     initialState.threads["thread-anchor"] = {
+      id: "thread-anchor",
       orderedTurnIds: ["turn-anchor"],
       status: "waitingForInput",
       thread: { id: "thread-anchor", name: "Anchored approvals" },
@@ -1813,6 +1831,7 @@ describe("AgentChat", () => {
   it("anchors item-only approvals and falls back when the item is missing", () => {
     const initialState = createInitialAgentState();
     initialState.threads["thread-item-only"] = {
+      id: "thread-item-only",
       orderedTurnIds: ["turn-item-only"],
       status: "waitingForInput",
       thread: { id: "thread-item-only", name: "Item-only approvals" },
@@ -1880,6 +1899,7 @@ describe("AgentChat", () => {
   it("anchors turn-only approvals after the turn source context", () => {
     const initialState = createInitialAgentState();
     initialState.threads["thread-turn-only"] = {
+      id: "thread-turn-only",
       orderedTurnIds: ["turn-turn-only"],
       status: "waitingForInput",
       thread: { id: "thread-turn-only", name: "Turn-only approvals" },
@@ -1936,6 +1956,7 @@ describe("AgentChat", () => {
     const initialState = createInitialAgentState();
     const itemOrder = Array.from({ length: 52 }, (_, index) => `item-${index}`);
     initialState.threads["thread-windowed-approval"] = {
+      id: "thread-windowed-approval",
       orderedTurnIds: ["turn-windowed-approval"],
       status: "waitingForInput",
       thread: { id: "thread-windowed-approval", name: "Windowed approval" },
@@ -2036,6 +2057,7 @@ describe("AgentChat", () => {
     const initialState = createInitialAgentState();
     const itemOrder = Array.from({ length: 54 }, (_, index) => `item-${index}`);
     initialState.threads["thread-hidden-approval-jump"] = {
+      id: "thread-hidden-approval-jump",
       orderedTurnIds: ["turn-hidden-approval-jump"],
       status: "waitingForInput",
       thread: { id: "thread-hidden-approval-jump", name: "Hidden approval jump" },
@@ -2416,7 +2438,7 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList thread={initialState.threads["thread-tool"]!} />
+        <AgentMessageList threadId="thread-tool" />
       </AgentProvider>,
     );
 
@@ -2479,7 +2501,7 @@ describe("AgentChat", () => {
 
     render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList thread={initialState.threads["thread-collab-tool"]!} />
+        <AgentMessageList threadId="thread-collab-tool" />
       </AgentProvider>,
     );
 
@@ -4736,7 +4758,7 @@ describe("AgentChat", () => {
 
     const { container } = render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList thread={initialState.threads["thread-reasoning-compaction"]!} />
+        <AgentMessageList threadId="thread-reasoning-compaction" />
       </AgentProvider>,
     );
 
@@ -6465,9 +6487,7 @@ describe("AgentChat", () => {
   });
 
   it("renders conversation messages as safe markdown", () => {
-    render(
-      <AgentMessageList
-        thread={{
+    renderMessageListWithThread({
           orderedTurnIds: ["turn-markdown"],
           status: "complete",
           thread: { id: "thread-markdown", name: "Markdown" },
@@ -6494,9 +6514,7 @@ describe("AgentChat", () => {
               },
             },
           },
-        }}
-      />,
-    );
+    });
 
     expect(screen.getByRole("heading", { name: "Result" })).toBeInTheDocument();
     expect(screen.getAllByText("bun test")).toHaveLength(2);
@@ -6510,49 +6528,49 @@ describe("AgentChat", () => {
   });
 
   it("lets renderItem hide selected messages and fall back for the rest", () => {
-    render(
-      <AgentMessageList
-        renderItem={(item) => {
-          if (item.id === "item-hidden") return null;
-          return undefined;
-        }}
-        thread={{
-          orderedTurnIds: ["turn-filter"],
-          status: "complete",
-          thread: { id: "thread-filter", name: "Filter" },
-          turns: {
-            "turn-filter": {
-              commandOutputByItemId: {},
-              filePatchByItemId: {},
-              itemOrder: ["item-hidden", "item-visible"],
-              items: {
-                "item-hidden": {
-                  id: "item-hidden",
-                  kind: "userMessage",
-                  status: "completed",
-                  text: "Internal prompt",
-                  threadId: "thread-filter",
-                  turnId: "turn-filter",
-                },
-                "item-visible": {
-                  id: "item-visible",
-                  kind: "agentMessage",
-                  status: "completed",
-                  text: "Visible answer",
-                  threadId: "thread-filter",
-                  turnId: "turn-filter",
-                },
-              },
-              streamingTextByItemId: {},
-              turn: {
-                id: "turn-filter",
+    renderMessageListWithThread(
+      {
+        orderedTurnIds: ["turn-filter"],
+        status: "complete",
+        thread: { id: "thread-filter", name: "Filter" },
+        turns: {
+          "turn-filter": {
+            commandOutputByItemId: {},
+            filePatchByItemId: {},
+            itemOrder: ["item-hidden", "item-visible"],
+            items: {
+              "item-hidden": {
+                id: "item-hidden",
+                kind: "userMessage",
                 status: "completed",
+                text: "Internal prompt",
                 threadId: "thread-filter",
+                turnId: "turn-filter",
+              },
+              "item-visible": {
+                id: "item-visible",
+                kind: "agentMessage",
+                status: "completed",
+                text: "Visible answer",
+                threadId: "thread-filter",
+                turnId: "turn-filter",
               },
             },
+            streamingTextByItemId: {},
+            turn: {
+              id: "turn-filter",
+              status: "completed",
+              threadId: "thread-filter",
+            },
           },
-        }}
-      />,
+        },
+      },
+      {
+        renderItem: (entry) => {
+          if (entry.itemId === "item-hidden") return null;
+          return undefined;
+        },
+      },
     );
 
     expect(screen.queryByText("Internal prompt")).not.toBeInTheDocument();
@@ -6560,9 +6578,44 @@ describe("AgentChat", () => {
   });
 
   it("lets components map replace transcript blocks with Default fallback", () => {
-    render(
-      <AgentMessageList
-        components={{
+    renderMessageListWithThread(
+      {
+        orderedTurnIds: ["turn-block-components"],
+        status: "complete",
+        thread: { id: "thread-block-components", name: "Blocks" },
+        turns: {
+          "turn-block-components": {
+            blocksByItemId: {
+              "cmd-block": {
+                command: "bun test",
+                id: "cmd-block",
+                kind: "commandExecution",
+              },
+            },
+            commandOutputByItemId: {},
+            filePatchByItemId: {},
+            itemOrder: ["cmd-block"],
+            items: {
+              "cmd-block": {
+                id: "cmd-block",
+                kind: "commandExecution",
+                status: "completed",
+                text: "bun test",
+                threadId: "thread-block-components",
+                turnId: "turn-block-components",
+              },
+            },
+            streamingTextByItemId: {},
+            turn: {
+              id: "turn-block-components",
+              status: "completed",
+              threadId: "thread-block-components",
+            },
+          },
+        },
+      },
+      {
+        components: {
           blocks: {
             commandExecution: ({ block, Default }) => (
               <section>
@@ -6571,43 +6624,8 @@ describe("AgentChat", () => {
               </section>
             ),
           },
-        }}
-        thread={{
-          orderedTurnIds: ["turn-block-components"],
-          status: "complete",
-          thread: { id: "thread-block-components", name: "Blocks" },
-          turns: {
-            "turn-block-components": {
-              blocksByItemId: {
-                "cmd-block": {
-                  command: "bun test",
-                  id: "cmd-block",
-                  kind: "commandExecution",
-                },
-              },
-              commandOutputByItemId: {},
-              filePatchByItemId: {},
-              itemOrder: ["cmd-block"],
-              items: {
-                "cmd-block": {
-                  id: "cmd-block",
-                  kind: "commandExecution",
-                  status: "completed",
-                  text: "bun test",
-                  threadId: "thread-block-components",
-                  turnId: "turn-block-components",
-                },
-              },
-              streamingTextByItemId: {},
-              turn: {
-                id: "turn-block-components",
-                status: "completed",
-                threadId: "thread-block-components",
-              },
-            },
-          },
-        }}
-      />,
+        },
+      },
     );
 
     expect(screen.getByText("Custom block commandExecution")).toBeInTheDocument();
@@ -8063,7 +8081,6 @@ describe("AgentChat", () => {
     expect(
       await screen.findByText("Stored transcript stays readable."),
     ).toBeInTheDocument();
-    expect(screen.getByText("Codex session")).toBeInTheDocument();
     expect(screen.queryByText(/rollout-demo\.jsonl/)).not.toBeInTheDocument();
     expect((await screen.findAllByText("Preview")).length).toBeGreaterThan(0);
     expect(screen.getByLabelText("Message")).toBeEnabled();

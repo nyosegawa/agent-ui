@@ -137,17 +137,19 @@ that remain backed by stable view models. Keep `AgentChatProps`,
 with user/developer/audit diagnostic views,
 `useAgentApprovals`, `useAgentServerRequests`, `useAgentApps`,
 `useAgentSkills`, `useAgentHooks`, `useAgentRunSettings`, and
-`useAgentTurnController`, `useAgentTranscriptController`, and
-`useAgentTranscriptScrollController` if their return shapes stay view-model
-based.
+`useAgentTurnController`, `useAgentDirectThreadController`,
+`useAgentTranscriptController`, and `useAgentTranscriptScrollController` if
+their return shapes stay view-model based.
 
 Replace with current API: `AgentChatSlots` has been removed in favor of the
 single `AgentComponents` map and `defaultAgentComponents`. The accepted
 replacement points are `Shell`, `Sidebar`, `EmptyState`, `ComposerPanel`,
-`Approval`, preset transcript `Item`, and transcript `blocks`. Lower-level
-scroll containers, approval anchor placement, composer toolbar internals,
-attachment mutation controls, sidebar pagination internals, and generated block
-normalization remain internal/source-level boundaries;
+`Approval`, and transcript `blocks`. Transcript item customization uses
+`renderItem(entry, Default)` with `AgentTranscriptEntry`; raw
+`components.Item` replacement is removed. Lower-level scroll containers,
+approval anchor placement, composer toolbar internals, attachment mutation
+controls, sidebar pagination internals, and generated block normalization
+remain internal/source-level boundaries;
 `useAgentThread`, `useAgentThreadController`, `useAgentThreads`,
 `useAgentThreadHistory`, `useAgentThreadReader`,
 `useAgentThreadListController`, `useAgentComposer`,

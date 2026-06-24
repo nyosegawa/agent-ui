@@ -13,7 +13,7 @@ function HostOwnedComposer() {
   return (
     <main>
       <section aria-label="Transcript">
-        {thread.thread ? <AgentMessageList thread={thread.thread} /> : null}
+        {thread.threadId ? <AgentMessageList threadId={thread.threadId} /> : null}
       </section>
       <footer>
         <textarea

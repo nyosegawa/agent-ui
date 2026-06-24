@@ -456,7 +456,7 @@ function CloseupLocalMediaFallback() {
       caption="Missing host media URL renders a card, never a filesystem src."
     >
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList thread={thread} />
+        <AgentMessageList threadId={thread.thread.id} />
       </AgentProvider>
     </CloseupFrame>
   );
@@ -472,7 +472,7 @@ function CloseupOptimisticPendingMessage() {
       caption="Public pending transcript state before server reconciliation."
     >
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList thread={thread} />
+        <AgentMessageList threadId={thread.thread.id} />
       </AgentProvider>
     </CloseupFrame>
   );
@@ -873,7 +873,7 @@ function CloseupCustomCommandBlock() {
               ),
             },
           }}
-          thread={thread}
+          threadId={thread.thread.id}
         />
       </AgentProvider>
     </CloseupFrame>

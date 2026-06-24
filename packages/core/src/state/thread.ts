@@ -96,6 +96,14 @@ export interface AgentOperationView {
 export interface AgentThreadView {
   id: ThreadId;
   title: string;
+  displayStatus:
+    | "archived"
+    | "complete"
+    | "failed"
+    | "preview"
+    | "ready"
+    | "running"
+    | "waitingForInput";
   subtitle?: string;
   cwd?: string;
   isActive: boolean;
@@ -148,17 +156,22 @@ export interface AgentThreadSummaryView extends AgentThreadView {
 
 export type AgentTranscriptBlockView = Pick<
   AgentItemBlock,
+  | "arguments"
+  | "changes"
   | "command"
   | "content"
   | "cwd"
   | "durationMs"
+  | "error"
   | "exitCode"
   | "id"
   | "kind"
+  | "metadata"
   | "output"
   | "path"
   | "query"
   | "resource"
+  | "result"
   | "server"
   | "status"
   | "subtype"

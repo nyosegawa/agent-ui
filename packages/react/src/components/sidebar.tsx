@@ -69,12 +69,7 @@ function threadListMeta(
 }
 
 function threadListStatus(thread: AgentThreadView): string {
-  if (thread.error) return "error";
-  if (thread.needsInput) return "waitingForInput";
-  if (thread.isRunning) return "running";
-  if (thread.isPreview) return "preview";
-  if (thread.isArchived) return "archived";
-  return "ready";
+  return thread.displayStatus === "failed" ? "error" : thread.displayStatus;
 }
 
 function formatThreadDate(timestamp: number): string {

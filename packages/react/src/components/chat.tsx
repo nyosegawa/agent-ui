@@ -1,9 +1,5 @@
 import type React from "react";
-import type {
-  AgentItemState,
-  PendingServerRequest,
-  TurnState,
-} from "@nyosegawa/agent-ui-core";
+import type { PendingServerRequest } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useAgentBootstrap,
@@ -29,7 +25,11 @@ import type { AgentWorkingDirectoryResolver } from "./run-settings";
 import { AgentThreadSidebar } from "./sidebar";
 import { useCompactLayout, useContextSheetLayout } from "./shared";
 import type { AgentTheme } from "./theme";
-import type { AgentTranscriptBlock, AgentTranscriptItem } from "../hooks/transcript";
+import type {
+  AgentTranscriptBlock,
+  AgentTranscriptEntry,
+  AgentTranscriptItem,
+} from "../hooks/transcript";
 import {
   threadPath,
   threadUrlRoutingBasePath,
@@ -56,15 +56,8 @@ export interface AgentApprovalDefaultProps {
   approval: PendingServerRequest;
 }
 
-export interface AgentItemComponentProps {
-  Default: React.ComponentType<AgentItemDefaultProps>;
-  item: AgentItemState;
-  turn: TurnState;
-}
-
 export interface AgentItemDefaultProps {
-  item: AgentItemState;
-  turn: TurnState;
+  entry: AgentTranscriptEntry;
 }
 
 export interface AgentShellComponentProps extends AgentShellProps {
@@ -100,7 +93,6 @@ export interface AgentComponents {
   Approval?: React.ComponentType<AgentApprovalComponentProps>;
   ComposerPanel?: React.ComponentType<AgentComposerPanelComponentProps>;
   EmptyState?: React.ComponentType<AgentEmptyStateComponentProps>;
-  Item?: React.ComponentType<AgentItemComponentProps>;
   Shell?: React.ComponentType<AgentShellComponentProps>;
   Sidebar?: React.ComponentType<AgentSidebarComponentProps>;
   blocks?: Partial<

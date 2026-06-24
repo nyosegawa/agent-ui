@@ -3,7 +3,7 @@
 ## Status Summary
 
 - Planning status: complete on branch.
-- Implementation status: in progress; P001 and P002 implemented, validated, reviewed, committed, pushed, and followed through to CI success.
+- Implementation status: in progress; P001 and P002 implemented, validated, reviewed, committed, pushed, and followed through to CI success. P003 implemented, validated, and reviewed; commit/push evidence pending.
 - Planning branch: reuse `codex/fixture-system-redesign-plan`.
 - Compatibility stance: no backwards compatibility.
 - Required review stance: every implementation phase must run four parallel subagent reviews after focused validation and before phase commit.
@@ -20,7 +20,7 @@
 
 - P001 Protocol classification and Codex adapter boundary - implemented, validated, reviewed, committed, and pushed.
 - P002 Core runtime state, reducers, selectors, and view-state contract - implemented, validated, reviewed, committed, pushed, and CI-successful.
-- P003 React view models, direct-link controller, and raw-free components
+- P003 React view models, direct-link controller, and raw-free components - implemented, validated, and reviewed; commit/push pending.
 - P004 Default composer, turn controls, retry, and neutral integrations
 - P005 Run policy, model/effort, cwd, and host-boundary controls
 - P006 Showcase and maintainer gallery foundation
@@ -89,7 +89,7 @@
       - Expected files/areas: core selectors/types/tests.
       - Validation note: selectors do not require React to inspect raw reducer entities.
 
-- [ ] P003 React view models, direct-link controller, and raw-free components
+- [x] P003 React view models, direct-link controller, and raw-free components
   - Goal: move React hooks/components to core view models and preserve direct-link live-session open/resume outside default routing.
   - Scope: headless controllers, transcript components, replacement maps, direct-link controller/recipe, React tests, real-local routing/lifecycle validation, docs owned by hooks/components.
   - Expected files/areas: `packages/react/src/hooks/**`, `packages/react/src/components/**`, `packages/react/src/timeline.tsx`, `examples/codex-local-web/**`, `docs/reference/hooks.md`, `docs/reference/react-components.md`.
@@ -99,22 +99,23 @@
   - Push: push phase commit.
   - PR/CI: record validation and CI status.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
+    - Implementation: Converted `AgentMessageList`, `AgentThreadHeader`, `AgentThreadTimeline`, transcript rendering, item renderers, and preset component replacement contracts to consume transcript/thread view models instead of raw `ThreadState`/`TurnState` component props. Removed the legacy `components.Item` replacement from `AgentComponents`; customization now uses `renderItem(entry, Default)` and `components.blocks`. Added `useAgentDirectThreadController()` for `thread/read` preview and direct-link `thread/read` + `thread/resume` open semantics, and rewired `threadUrlRouting` to use it. Added raw-free `AgentTranscriptEntry`/`AgentTranscriptItem` contracts, expanded core transcript block view fields needed by command/tool/file rendering, added raw-free thread `displayStatus`, preserved preview availability for loaded stored sessions, and kept internal `.codex/sessions/*.jsonl` paths out of user-facing cwd display. Updated local Vite and recipe examples, React docs, hooks docs, theming docs, package export docs, and API snapshots.
+    - Validation: `bun run typecheck` passed; `bun x vitest run --config vitest.config.ts packages/react/test/components.vitest.tsx` passed; `bun x vitest run --config vitest.config.ts packages/core/test/reducer.test.ts packages/react/test/components.vitest.tsx packages/react/test/source-structure.vitest.ts packages/react/test/thread-url-routing.vitest.ts packages/react/test/thread-resume-diagnostics.vitest.tsx` passed with 289 tests; focused fixed-thread completed-status test passed; `bun run test:api-snapshots:update && bun run test:api-snapshots` passed; `bun run validate:packages` passed; `bun run test:package-resolution` passed; `bunx playwright test examples/local-react-vite/e2e/visual-route-matrix.e2e.ts --config playwright.fixtures.config.ts` passed with 62 tests; `bunx playwright test examples/codex-local-web/e2e/real-local-layout.e2e.ts --config playwright.real-local.config.ts` passed with 4 tests.
+    - Browser QA: agent-browser checked `http://127.0.0.1:5174/fixture-gallery` desktop with document overflow 0 and visible component/preset sections; checked `http://127.0.0.1:5174/composer-retry` mobile 390x900 with document overflow 0 and retry fixture text visible. Remaining risk: `composer-retry` still presents debug explanatory copy and belongs in the P004/P006 fixture-gallery split/redesign; it is not treated as final user-facing UI.
+    - Review: Four parallel P003 subagent reviews completed. Phase-boundary lane found stale API snapshots and missing P003 evidence; fixed by updating/checking API snapshots and recording this evidence. Protocol/core lane found core `selectThreadTranscriptView` dropped newly exposed block fields; fixed by copying the full `AgentTranscriptBlockView` field set and asserting preservation. Browser/UX lane found `AgentThreadTimeline` hook-order risk when `threadId` appears later and completed threads falling through to Ready; fixed by keeping hook order stable and adding raw-free `displayStatus` with a completed-status assertion. React/API/docs lane found stale theming/react docs referring to `Item` and `AgentItemBlock`; fixed by documenting `blocks`, `renderItem(entry, Default)`, and `AgentTranscriptBlock`.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T001 Convert hooks and transcript components from raw `ThreadState`/`TurnState` to view models.
+    - [x] T001 Convert hooks and transcript components from raw `ThreadState`/`TurnState` to view models.
       - Expected files/areas: hooks, thread/timeline components, tests.
       - Validation note: public React snapshot no longer exposes raw reducer state through component props.
-    - [ ] T002 Remove or convert legacy `components.Item` raw-state override.
+    - [x] T002 Remove or convert legacy `components.Item` raw-state override.
       - Expected files/areas: `chat.tsx`, component docs, tests.
       - Validation note: replacement map cannot receive `AgentItemState`/`TurnState`.
-    - [ ] T003 Extract direct-link open/resume semantics from `threadUrlRouting`.
+    - [x] T003 Extract direct-link open/resume semantics from `threadUrlRouting`.
       - Expected files/areas: headless controller/hook, route recipe docs, real-local tests.
       - Validation note: tests prove `thread/read` + `thread/resume` and canonical returned ID activation still work without default-owned routing.
-    - [ ] T004 Update hook/component docs for raw-free contracts.
+    - [x] T004 Update hook/component docs for raw-free contracts.
       - Expected files/areas: `docs/reference/hooks.md`, `docs/reference/react-components.md`.
       - Validation note: docs include view-model shapes and direct-link composition recipe.
 
@@ -292,6 +293,7 @@ Implementation validation:
 
 - P001 passed protocol/typecheck/lint/API snapshot/package validation/package resolution before commit.
 - P002 passed reducer/core fixtures, protocol, React component tests, full unit tests, typecheck, lint, local Vite typecheck/build, fixture e2e, package validation, API snapshots, package resolution, targeted real-local e2e, and agent-browser route checks before commit/push; PR #35 CI for `cd456f9` passed all required CI and Compatibility checks.
+- P003 passed React/core/source/direct-link tests, typecheck, API snapshots, package validation, package resolution, fixture visual matrix, real-local layout matrix, and agent-browser route overflow checks before commit.
 
 Browser-visible evidence checklist for phases that touch browser-visible behavior:
 
@@ -302,6 +304,13 @@ Browser-visible evidence checklist for phases that touch browser-visible behavio
 - P002 hit-test/focus/overflow result: overflowX 0 on checked routes; rich-transcript mobile approval and Send hit-tests true; normal fixture-gallery composer has 0 App buttons and 0 Plugin buttons.
 - P002 screenshot or trace path: `/tmp/agent-ui-p002-fixture-gallery-after-fixes-desktop.png`, `/tmp/agent-ui-p002-fixture-gallery-no-app-plugin-desktop.png`, `/tmp/agent-ui-p002-rich-transcript-after-fixes-mobile.png`, `/tmp/agent-ui-p002-composer-retry-after-fixes-mobile.png`.
 - P002 remaining risk: App/Plugin public props remain until P004 removes/replaces that API surface; fixture-gallery no longer presents them as normal composer UI.
+- P003 routes: `/fixture-gallery`, `/composer-retry`, plus real-local layout stored-thread route coverage from Playwright.
+- P003 viewports: fixture-gallery desktop; composer-retry mobile 390x900; Playwright fixture matrix desktop/wide/tablet/compact/mobile/short as defined by the manifest; real-local desktop/mobile.
+- P003 command/spec: visual-route-matrix Playwright, real-local-layout Playwright, agent-browser open/snapshot/eval checks.
+- P003 manual or agent-browser interaction: agent-browser open/snapshot/eval for overflow and visible retry/gallery content.
+- P003 hit-test/focus/overflow result: overflow 0 on checked fixture-gallery desktop and composer-retry mobile routes.
+- P003 screenshot or trace path: not captured; deterministic Playwright matrix and agent-browser snapshots/eval were used for this phase.
+- P003 remaining risk: composer-retry and debug fixture copy remain intentionally non-final until P004/P006 remove or split debug-only gallery surfaces.
 
 ## Review Evidence
 

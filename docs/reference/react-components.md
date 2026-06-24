@@ -32,11 +32,9 @@ old slot-oriented shape is not part of the public contract. Replacement
 components should import from `@nyosegawa/agent-ui-react`, not from source
 modules, and receive a `Default` renderer for the surface they replace. `Shell`,
 `Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are the
-raw-free preset replacement targets for this gate. `Item` remains a legacy
-replacement point, but public item and turn state are raw-free. Prefer `blocks`
-replacements and transcript view-model props for new custom renderers so host
-code depends on normalized Agent UI fields instead of generated App Server
-payloads.
+raw-free preset replacement targets. Transcript item customization uses
+`renderItem(entry, Default)` or block replacements; there is no raw
+`components.Item` boundary.
 Internal component state, CSS implementation selectors, attachment mutation
 objects, transcript window bookkeeping, and generated protocol payloads stay
 inside Agent UI.
@@ -78,7 +76,11 @@ const localMediaUrlsByPath = new Map<string, string>();
   }}
   components={{
     Approval: ({ approval }) => <CustomApproval approval={approval} />,
-    Item: ({ item, turn }) => <CustomItem item={item} turn={turn} />,
+    blocks: {
+      text: ({ block, Default }) => (
+        <CustomTextBlock block={block} Default={Default} />
+      ),
+    },
   }}
 />;
 ```
@@ -113,10 +115,6 @@ keep personal identity in profile or settings chrome.
 `components.Approval` replaces the default approval card and its default
 actions for each rendered approval request. Custom approval components must
 call `useAgentApprovals()` or a host-owned response path to send decisions.
-`components.Item` replaces transcript item rendering at the preset boundary.
-It is still typed with core `AgentItemState` / `TurnState` for this draft, so
-hosts should prefer `components.blocks` or headless transcript controllers when
-they need raw-free rendering inputs.
 `components.blocks` replaces individual transcript block renderers by block
 kind. Block replacement components receive a narrow `Default` renderer so hosts
 can wrap or annotate the default UI without depending on private reducer state.
@@ -139,9 +137,10 @@ scroll, and approval-anchor contracts can be preserved:
 - `Approval` replaces only the approval card body rendered at an existing
   transcript anchor. It does not move approvals out of the transcript scroll
   area or own approval placement.
-- `Item` and `blocks` are wrapped by the default transcript list/turn/message
-  containers. Replacing one block does not replace the list, turn ordering,
-  approval anchor nodes, density attributes, or scroll-follow behavior.
+- `blocks` and `renderItem` are wrapped by the default transcript
+  list/turn/message containers. Replacing one block or item does not replace
+  the list, turn ordering, approval anchor nodes, density attributes, or
+  scroll-follow behavior.
 
 Rejected replacement points for this gate include the transcript scroll
 container, approval anchor placement, composer toolbar internals, individual
@@ -377,7 +376,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
   composer stays bottom anchored.
 - `AgentThreadView`: one thread with header, transcript (with embedded
   approvals), and composer.
-- `AgentThreadHeader`: title, cwd/session context, resume, and thread action menu.
+- `AgentThreadHeader`: title, preview/running status, and thread action menu
+  from `AgentThreadSummaryView`.
 - `AgentThreadTimeline`: normalized turn and item renderer. Pass `threadId` to
   anchor that thread's pending approvals by source metadata, with transcript
   tail fallback for metadata-free or missing-source requests.
@@ -458,9 +458,9 @@ and the composer:
 
 ```tsx
 <AgentThreadSurface>
-  <AgentThreadHeader thread={thread} threadId={threadId} />
+  <AgentThreadHeader thread={threadView} threadId={threadId} transcript={transcriptView} />
   <AgentCriticalNoticeList />
-  <AgentThreadTimeline thread={thread} threadId={threadId} />
+  <AgentThreadTimeline threadId={threadId} />
   <AgentComposerPanel thread={thread} threadId={threadId} />
 </AgentThreadSurface>
 ```
@@ -469,16 +469,17 @@ and the composer:
 
 `AgentThreadTimeline` renders user messages, assistant messages, reasoning,
 commands, file changes, diffs, and structured App Server items from normalized
-state. Host renderers receive normalized `AgentItemState` and `TurnState`
-values through `renderItem`; they do not need generated protocol payloads.
+state. Host renderers receive `AgentTranscriptEntry` view models through
+`renderItem`; they do not receive generated protocol payloads or raw reducer
+item/turn entities.
 
 The default timeline uses `AgentContentBlockView` for the normalized block taxonomy:
 thinking summaries, plans, command execution with cwd/output/exit status,
 file-change summaries, MCP/dynamic/collab tool calls, web search queries,
-images, and system info. This renderer consumes `AgentItemBlock` values from
-core state, so hosts can keep visual components free of generated App Server
-types while still preserving protocol-derived detail in adapters and reducers.
-For media blocks, `AgentItemBlock.resource` separates browser-safe
+images, and system info. This renderer consumes `AgentTranscriptBlock` values
+from the transcript view model, so hosts can keep visual components free of
+generated App Server types while still preserving protocol-derived detail in
+adapters and reducers. For media blocks, `block.resource` separates browser-safe
 `previewUrl`/`url` metadata from local `path` values. Local paths are passed to
 `resolveLocalMediaUrl(path, item)` before rendering; they are not used as image
 or video `src` values.
@@ -608,6 +609,10 @@ and immediately sends the first turn. An existing thread shows its cwd read-only
 in `AgentThreadHeader`; the normal composer toolbar never offers a cwd editor,
 because changing the working directory mid-thread is not a meaningful Codex
 operation.
+Stored session JSONL paths are internal storage locations, not working
+directories; when App Server supplies a real cwd, Agent UI may display that as
+thread context, but internal `.codex/sessions/*.jsonl` paths stay out of
+user-facing chrome.
 
 ### Mobile shell policy
 

@@ -1,8 +1,14 @@
 import type React from "react";
 import { useMemo } from "react";
 import type {
+  AgentThreadSummaryView,
+  AgentThreadTranscriptView,
   PendingServerRequest,
-  ThreadState,
+} from "@nyosegawa/agent-ui-core";
+import {
+  selectActiveThreadSummaryView,
+  selectThreadSummaryView,
+  selectThreadTranscriptView,
 } from "@nyosegawa/agent-ui-core";
 import { useAgentApprovals, useAgentThread, useAgentThreadActions } from "../hooks";
 import { useAgentI18n } from "../i18n";
@@ -12,16 +18,14 @@ import type { AgentLocalMediaUrlResolver } from "../timeline";
 import type { AgentComponents, AgentApprovalDefaultProps } from "./chat";
 import { AgentApprovalQueue } from "./approvals";
 import {
-  transcriptItemIds,
-} from "../transcript-window";
-import {
   AgentComposerPanel,
   type AgentComposerMentionResolver,
   type AgentLocalAttachmentResolver,
 } from "./composer";
 import { AgentCriticalNoticeList } from "./status";
 import { deferAction } from "./shared";
-import { formatThreadStatus, threadSubtitle } from "./sidebar";
+import { formatThreadStatus } from "./sidebar";
+import { useAgentContext } from "../provider";
 
 export interface AgentThreadViewProps {
   components?: AgentComponents;
@@ -45,18 +49,30 @@ export function AgentThreadView({
   threadId,
 }: AgentThreadViewProps) {
   const { thread, threadId: resolvedThreadId } = useAgentThread(threadId);
+  const { state } = useAgentContext();
+  const threadView = resolvedThreadId
+    ? selectThreadSummaryView(state, resolvedThreadId)
+    : selectActiveThreadSummaryView(state);
+  const transcriptView = resolvedThreadId
+    ? selectThreadTranscriptView(state, resolvedThreadId)
+    : undefined;
   if (!thread) return null;
   const ComposerPanel = components?.ComposerPanel;
   return (
     <AgentThreadSurface>
-      <AgentThreadHeader thread={thread} threadId={resolvedThreadId} />
+      {threadView ? (
+        <AgentThreadHeader
+          thread={threadView}
+          threadId={resolvedThreadId}
+          transcript={transcriptView}
+        />
+      ) : null}
       <AgentCriticalNoticeList />
       <AgentThreadTimeline
         components={components}
         renderApproval={renderApproval}
         renderItem={renderItem}
         resolveLocalMediaUrl={resolveLocalMediaUrl}
-        thread={thread}
         threadId={resolvedThreadId}
       />
       {ComposerPanel ? (
@@ -98,18 +114,20 @@ export function AgentThreadSurface({
 export function AgentThreadHeader({
   thread,
   threadId,
+  transcript,
 }: {
-  thread: ThreadState;
+  thread: AgentThreadSummaryView;
   threadId?: string;
+  transcript?: AgentThreadTranscriptView;
 }) {
   const { t } = useAgentI18n();
   return (
     <div className="aui-thread-header">
       <div className="aui-thread-title">
-        <h1>{thread.thread.name ?? t("thread.untitled")}</h1>
-        <p>{threadSubtitle(thread.thread, t)}</p>
+        <h1>{thread.title || t("thread.untitled")}</h1>
+        <p>{thread.subtitle ?? thread.cwd ?? thread.id}</p>
       </div>
-      <AgentThreadActions thread={thread} threadId={threadId} />
+      <AgentThreadActions thread={thread} threadId={threadId} transcript={transcript} />
     </div>
   );
 }
@@ -125,20 +143,18 @@ export function AgentThreadTimeline({
   renderApproval,
   renderItem,
   resolveLocalMediaUrl,
-  thread,
   threadId,
 }: {
   components?: AgentComponents;
   renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
   renderItem?: React.ComponentProps<typeof AgentMessageList>["renderItem"];
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
-  thread: ThreadState;
   threadId?: string;
 }) {
-  const approvalThreadId = threadId ?? thread.thread.id;
-  const { approvals } = useAgentApprovals(approvalThreadId);
+  const { state } = useAgentContext();
+  const { approvals } = useAgentApprovals(threadId);
+  const transcript = threadId ? selectThreadTranscriptView(state, threadId) : undefined;
   const Approval = components?.Approval;
-  const Item = components?.Item;
   const renderApprovalComponent =
     Approval || renderApproval
       ? (approval: PendingServerRequest) => {
@@ -147,7 +163,7 @@ export function AgentThreadTimeline({
             return (
               <AgentApprovalQueue
                 approvals={[defaultApproval]}
-                threadId={approvalThreadId}
+                threadId={threadId}
               />
             );
           }
@@ -155,9 +171,10 @@ export function AgentThreadTimeline({
         }
       : undefined;
   const approvalPlacement = useMemo(
-    () => placeTranscriptApprovals(thread, approvals),
-    [approvals, thread],
+    () => placeTranscriptApprovals(approvals, transcript),
+    [approvals, transcript],
   );
+  if (!threadId) return null;
   return (
     <AgentMessageList
       approvalAnchors={
@@ -168,7 +185,7 @@ export function AgentThreadTimeline({
                 <AgentApprovalQueue
                   approvals={[approval]}
                   renderApproval={renderApprovalComponent}
-                  threadId={approvalThreadId}
+                  threadId={threadId}
                 />
               ),
             }
@@ -179,28 +196,22 @@ export function AgentThreadTimeline({
           <AgentApprovalQueue
             approvals={approvalPlacement.tail}
             renderApproval={renderApprovalComponent}
-            threadId={approvalThreadId}
+            threadId={threadId}
           />
         ) : undefined
       }
       components={components}
-      renderItem={
-        Item
-          ? (item, turn, Default) => (
-              <Item Default={Default} item={item} turn={turn} />
-            )
-          : renderItem
-      }
+      renderItem={renderItem}
       resolveLocalMediaUrl={resolveLocalMediaUrl}
       scrollKey={approvals.length}
-      thread={thread}
+      threadId={threadId}
     />
   );
 }
 
 function placeTranscriptApprovals(
-  thread: ThreadState,
   approvals: PendingServerRequest[],
+  transcript: AgentThreadTranscriptView | undefined,
 ): {
   anchored: PendingServerRequest[];
   tail: PendingServerRequest[];
@@ -208,44 +219,36 @@ function placeTranscriptApprovals(
   const anchored: PendingServerRequest[] = [];
   const tail: PendingServerRequest[] = [];
   for (const approval of approvals) {
-    const source = transcriptApprovalSource(thread, approval);
-    if (!source) {
+    if (transcriptApprovalExists(approval, transcript)) {
+      anchored.push(approval);
+    } else {
       tail.push(approval);
-      continue;
     }
-    anchored.push(approval);
   }
   return { anchored, tail };
 }
 
-function transcriptApprovalSource(
-  thread: ThreadState,
+function transcriptApprovalExists(
   approval: PendingServerRequest,
-): { itemId?: string; turnId: string } | undefined {
-  if (!approval.itemId && !approval.turnId) return undefined;
-  const turns = approval.turnId
-    ? [thread.turns[approval.turnId]].filter((turn) => turn != null)
-    : thread.orderedTurnIds.map((turnId) => thread.turns[turnId]).filter((turn) => turn != null);
-  if (turns.length === 0) return undefined;
+  transcript: AgentThreadTranscriptView | undefined,
+): boolean {
+  if (!transcript || (!approval.itemId && !approval.turnId)) return false;
   if (approval.itemId) {
-    const turn = turns.find((candidate) =>
-      transcriptItemIds(candidate).includes(approval.itemId!),
+    return transcript.turns.some((turn) =>
+      turn.itemIds.includes(approval.itemId!),
     );
-    return turn ? { itemId: approval.itemId, turnId: turn.turn.id } : undefined;
   }
-  const turn = turns[0];
-  if (!turn) return undefined;
-  const itemIds = transcriptItemIds(turn);
-  if (itemIds.length === 0) return undefined;
-  return { itemId: itemIds.at(-1), turnId: turn.turn.id };
+  return transcript.turns.some((turn) => turn.id === approval.turnId);
 }
 
 function AgentThreadActions({
   thread,
   threadId,
+  transcript,
 }: {
-  thread: ThreadState;
+  thread: AgentThreadSummaryView;
   threadId?: string;
+  transcript?: AgentThreadTranscriptView;
 }) {
   const { t } = useAgentI18n();
   const {
@@ -256,8 +259,8 @@ function AgentThreadActions({
     rollbackThread,
     unarchiveThread,
   } = useAgentThreadActions(threadId);
-  const status = thread.status;
-  const hasTurns = thread.orderedTurnIds.length > 0;
+  const status = statusForThreadView(thread);
+  const hasTurns = (transcript?.turns.length ?? 0) > 0;
   return (
     <div className="aui-thread-actions">
       <span className="aui-status-pill" data-status={status}>
@@ -274,7 +277,7 @@ function AgentThreadActions({
             onClick={() => {
               const name = globalThis.prompt?.(
                 t("thread.namePrompt"),
-                thread.thread.name ?? "",
+                thread.title,
               );
               if (name?.trim()) deferAction(() => void renameThread(name.trim()));
             }}
@@ -321,4 +324,10 @@ function AgentThreadActions({
       </details>
     </div>
   );
+}
+
+function statusForThreadView(thread: AgentThreadSummaryView) {
+  if (thread.displayStatus === "preview") return "loaded";
+  if (thread.displayStatus === "failed") return "failed";
+  return thread.displayStatus;
 }

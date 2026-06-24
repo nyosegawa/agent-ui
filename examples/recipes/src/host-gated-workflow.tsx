@@ -36,9 +36,7 @@ function HostGatedWorkflow() {
         plan={plan}
       />
       <section aria-label="Workflow transcript">
-        {thread.thread ? (
-          <AgentThreadTimeline thread={thread.thread} threadId={thread.threadId} />
-        ) : null}
+        {thread.threadId ? <AgentThreadTimeline threadId={thread.threadId} /> : null}
       </section>
       <form
         aria-label="Delayed host composer"

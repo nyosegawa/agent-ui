@@ -105,6 +105,13 @@ requested thread's normalized snapshot state; the hook uses the Codex
 `normalizeThreadReadResponse()` boundary for item aliases, command output, file
 patches, and text extraction, then returns stable `{ threadId }` metadata.
 
+`useAgentDirectThreadController()` owns the direct-link open semantics used by
+`threadUrlRouting`. `previewThread(threadId)` hydrates the stored transcript
+with `thread/read includeTurns: true` and activates the preview. `openThread`
+hydrates first, then calls `thread/resume`; its result returns both the
+hydrated id and the canonical resumed id. This keeps browser back/forward
+preview navigation separate from opening a live conversation.
+
 The default `AgentChat` history sidebar uses `thread/read` so browsing a stored
 transcript from the list does not imply `thread/resume`. A direct
 `threadUrlRouting` URL such as `/threads/<id>` first hydrates with

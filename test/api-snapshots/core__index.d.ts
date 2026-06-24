@@ -369,7 +369,7 @@ interface AgentThreadExecutionState {
 interface AgentThreadSummaryView extends AgentThreadView {
     execution: AgentThreadExecutionState;
 }
-type AgentTranscriptBlockView = Pick<AgentItemBlock, "command" | "content" | "cwd" | "durationMs" | "exitCode" | "id" | "kind" | "output" | "path" | "query" | "resource" | "server" | "status" | "subtype" | "summary" | "text" | "tool" | "toolType">;
+type AgentTranscriptBlockView = Pick<AgentItemBlock, "arguments" | "changes" | "command" | "content" | "cwd" | "durationMs" | "error" | "exitCode" | "id" | "kind" | "metadata" | "output" | "path" | "query" | "resource" | "result" | "server" | "status" | "subtype" | "summary" | "text" | "tool" | "toolType">;
 interface AgentTranscriptTurnView {
     blocks: AgentTranscriptBlockView[];
     id: TurnId;

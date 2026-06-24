@@ -32,9 +32,9 @@ approvals, and optional thread sidebar. Usage and diagnostics are opt-in
 secondary chrome because many host apps already have their own shell.
 Customize the preset with `components`, not source imports or private slots.
 `Shell`, `Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are
-the preferred replacement points. `Item` remains a legacy core-state replacement
-point for this draft; use transcript controllers or `blocks` when a custom
-renderer needs raw-free inputs.
+the replacement points. Use `renderItem` or `blocks` for transcript
+customization; raw item/turn replacement components are not part of the public
+API.
 
 ## Compose From Primitives
 
@@ -42,9 +42,9 @@ Use primitives when the host owns layout:
 
 ```tsx
 <AgentThreadSurface>
-  <AgentThreadHeader thread={thread} threadId={threadId} />
+  <AgentThreadHeader thread={threadView} threadId={threadId} transcript={transcriptView} />
   <AgentCriticalNoticeList />
-  <AgentThreadTimeline thread={thread} threadId={threadId} />
+  <AgentThreadTimeline threadId={threadId} />
   <AgentComposerPanel thread={thread} threadId={threadId} />
 </AgentThreadSurface>
 ```

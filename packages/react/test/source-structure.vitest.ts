@@ -88,7 +88,6 @@ describe("React package source structure", () => {
       "Approval",
       "ComposerPanel",
       "EmptyState",
-      "Item",
       "Shell",
       "Sidebar",
       "blocks",

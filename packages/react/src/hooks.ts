@@ -12,6 +12,11 @@ export {
   type AgentSkillsRefreshOptions,
 } from "./hooks/connectors";
 export { useAgentDiagnostics } from "./hooks/diagnostics";
+export {
+  useAgentDirectThreadController,
+  type AgentDirectThreadController,
+  type AgentDirectThreadOpenResult,
+} from "./hooks/direct-thread";
 export { useAgentModels } from "./hooks/models";
 export type {
   AgentApprovalPolicy,

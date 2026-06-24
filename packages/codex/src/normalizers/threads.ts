@@ -163,7 +163,7 @@ export function normalizeThreadReadResponse(
   const thread = normalizeThread(rawThread);
   const rawTurns = Array.isArray(rawThread.turns) ? rawThread.turns : undefined;
   const turns = rawTurns?.map((turn) => normalizeTurn(turn, thread.id)) ?? [];
-  const status = snapshotStatus(rawThread.status, rawTurns?.length ?? 0);
+  const status = threadReadSnapshotStatus(rawThread.status, rawTurns?.length ?? 0);
   const rawRuntimeStatus = normalizeCodexThreadRuntimeStatus(rawThread.status);
   const runtimeStatus =
     rawRuntimeStatus?.type === "notLoaded" && status !== "notLoaded"
@@ -556,6 +556,17 @@ function threadListSnapshotStatus(rawThread: unknown, scope: AgentThreadScope): 
 function snapshotStatus(value: unknown, turnCount: number): ThreadStatus {
   const status = normalizeThreadStatus(value);
   return status === "notLoaded" && turnCount > 0 ? "loaded" : status;
+}
+
+function threadReadSnapshotStatus(value: unknown, turnCount: number): ThreadStatus {
+  const status = snapshotStatus(value, turnCount);
+  if (
+    turnCount > 0 &&
+    (status === "ready" || status === "complete" || status === "completed")
+  ) {
+    return "loaded";
+  }
+  return status;
 }
 
 function runtimeStatusFromThreadStatus(

@@ -341,7 +341,7 @@ export function threadAvailabilityFromStatus(
 ): ThreadState["availability"] {
   if (status === "archived") return "archived";
   if (status === "closed") return "closed";
-  if (status === "notLoaded") return "preview";
+  if (status === "notLoaded" || status === "loaded") return "preview";
   return "available";
 }
 

@@ -579,6 +579,7 @@ describe("agentReducer", () => {
       cwd: "/repo/agent-ui",
       error: undefined,
       id: "thread-lifecycle",
+      displayStatus: "running",
       isActive: true,
       isArchived: false,
       isPreview: false,
@@ -611,7 +612,7 @@ describe("agentReducer", () => {
       isArchived: false,
       isRunning: false,
     });
-    expect(state.threads["thread-lifecycle"]?.availability).toBe("available");
+    expect(state.threads["thread-lifecycle"]?.availability).toBe("preview");
 
     state = agentReducer(state, {
       status: "archived",
@@ -625,7 +626,7 @@ describe("agentReducer", () => {
       type: "thread/upserted",
     });
     expect(state.threads["thread-lifecycle"]?.status).toBe("loaded");
-    expect(state.threads["thread-lifecycle"]?.availability).toBe("available");
+    expect(state.threads["thread-lifecycle"]?.availability).toBe("preview");
 
     state = agentReducer(state, {
       status: "closed",
@@ -1968,8 +1969,11 @@ describe("agentReducer", () => {
         "item-runtime"
       ];
     Object.assign(runtimeBlock as Record<string, unknown>, {
-      metadata: { raw: true },
-      result: { raw: true },
+      arguments: { command: "bun test" },
+      changes: [{ kind: "update", path: "src/runtime.ts" }],
+      error: { message: "recoverable" },
+      metadata: { source: "normalized" },
+      result: { exitCode: 0 },
     });
 
     expect(selectThreadExecutionState(state, "thread-runtime")).toEqual({
@@ -2062,7 +2066,12 @@ describe("agentReducer", () => {
           blocks: [
             {
               id: "item-runtime",
+              arguments: { command: "bun test" },
+              changes: [{ kind: "update", path: "src/runtime.ts" }],
+              error: { message: "recoverable" },
               kind: "text",
+              metadata: { source: "normalized" },
+              result: { exitCode: 0 },
               status: "completed",
               text: "Runtime view",
             },
@@ -2073,12 +2082,6 @@ describe("agentReducer", () => {
         },
       ],
     });
-    expect(
-      selectThreadTranscriptView(state, "thread-runtime")?.turns[0]?.blocks[0],
-    ).not.toHaveProperty("metadata");
-    expect(
-      selectThreadTranscriptView(state, "thread-runtime")?.turns[0]?.blocks[0],
-    ).not.toHaveProperty("result");
   });
 
   it("keeps pending requests authoritative across status events and resolution", () => {

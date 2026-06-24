@@ -2,6 +2,7 @@ import type {
   AgentItemBlock,
   AgentItemBlockKind,
   AgentItemState,
+  AgentTranscriptBlockView,
   PendingServerRequest,
   ThreadState,
   TurnState,
@@ -33,8 +34,24 @@ export interface AgentTranscriptPendingState {
   status: "failed" | "inProgress";
 }
 
-export type AgentTranscriptBlock = AgentItemBlock;
-export type AgentTranscriptItem = AgentItemState;
+export type AgentTranscriptBlock = AgentTranscriptBlockView;
+
+export type AgentTranscriptItemStatus =
+  | "cancelled"
+  | "completed"
+  | "failed"
+  | "inProgress"
+  | "pending"
+  | "streaming";
+
+export interface AgentTranscriptItem {
+  id: string;
+  kind: string;
+  status?: AgentTranscriptItemStatus;
+  text?: string;
+  threadId?: string;
+  turnId?: string;
+}
 
 export interface AgentTranscriptEntry {
   approvals: PendingServerRequest[];
@@ -47,8 +64,9 @@ export interface AgentTranscriptEntry {
   itemId: string;
   key: string;
   pending?: AgentTranscriptPendingState;
+  patch?: unknown;
   role: "assistant" | "command" | "system" | "tool" | "user";
-  status: AgentItemState["status"] | "streaming";
+  status: AgentTranscriptItemStatus;
   text?: string;
   turnId: string;
 }
@@ -64,6 +82,8 @@ export interface AgentTranscriptController {
   entriesByTurnId: Map<string, AgentTranscriptEntry[]>;
   hiddenItemCount: number;
   showEarlierItems(): void;
+  threadId?: string;
+  turnIds: string[];
   visibleItemCount: number;
 }
 
@@ -128,6 +148,8 @@ export function useAgentTranscriptControllerForThread(
     entriesByTurnId,
     hiddenItemCount: windowing.hiddenItemCount,
     showEarlierItems: windowing.showEarlierItems,
+    threadId: thread?.thread.id,
+    turnIds: thread?.orderedTurnIds ?? [],
     visibleItemCount: windowing.visibleTurnItems.visibleItemCount,
   };
 }
@@ -147,7 +169,9 @@ function transcriptEntryForItem({
 }): AgentTranscriptEntry {
   const item = turn.items[itemId];
   const storedBlock = turn.blocksByItemId?.[itemId];
-  const block = stripBlockRaw(blockForTranscriptItem(turn, itemId, storedBlock));
+  const block = stripBlockRaw(blockForTranscriptItem(turn, itemId, storedBlock), {
+    output: turn.commandOutputByItemId[itemId],
+  });
   const text = displayText(item?.text ?? turn.streamingTextByItemId[itemId]);
   const status = item?.status ?? "streaming";
   const dataKind =
@@ -167,6 +191,7 @@ function transcriptEntryForItem({
     item: stripItemRaw(item),
     itemId,
     key: itemId,
+    patch: turn.filePatchByItemId[itemId],
     pending:
       status === "failed" || status === "inProgress"
         ? { status }
@@ -201,15 +226,47 @@ function densityForTranscriptBlock(
 
 function stripItemRaw(item: AgentItemState | undefined): AgentTranscriptItem | undefined {
   if (!item) return undefined;
-  const { raw: _raw, ...publicItem } = item as AgentItemState & { raw?: unknown };
-  void _raw;
-  return publicItem;
+  return {
+    id: item.id,
+    kind: item.kind,
+    status: item.status,
+    text: item.text,
+    threadId: item.threadId,
+    turnId: item.turnId,
+  };
 }
 
-function stripBlockRaw(block: AgentItemBlock): AgentTranscriptBlock {
-  const { raw: _raw, ...publicBlock } = block as AgentItemBlock & { raw?: unknown };
-  void _raw;
-  return publicBlock;
+function stripBlockRaw(
+  block: AgentItemBlock,
+  overlays: { output?: string } = {},
+): AgentTranscriptBlock {
+  return {
+    ...(block.arguments !== undefined ? { arguments: block.arguments } : {}),
+    ...(block.changes !== undefined ? { changes: block.changes } : {}),
+    ...(block.command !== undefined ? { command: block.command } : {}),
+    ...(block.content !== undefined ? { content: block.content } : {}),
+    ...(block.cwd !== undefined ? { cwd: block.cwd } : {}),
+    ...(block.durationMs !== undefined ? { durationMs: block.durationMs } : {}),
+    ...(block.error !== undefined ? { error: block.error } : {}),
+    ...(block.exitCode !== undefined ? { exitCode: block.exitCode } : {}),
+    id: block.id,
+    kind: block.kind,
+    ...(block.metadata !== undefined ? { metadata: block.metadata } : {}),
+    ...(overlays.output !== undefined || block.output !== undefined
+      ? { output: overlays.output ?? block.output }
+      : {}),
+    ...(block.path !== undefined ? { path: block.path } : {}),
+    ...(block.query !== undefined ? { query: block.query } : {}),
+    ...(block.resource !== undefined ? { resource: block.resource } : {}),
+    ...(block.result !== undefined ? { result: block.result } : {}),
+    ...(block.server !== undefined ? { server: block.server } : {}),
+    ...(block.status !== undefined ? { status: block.status } : {}),
+    ...(block.subtype !== undefined ? { subtype: block.subtype } : {}),
+    ...(block.summary !== undefined ? { summary: block.summary } : {}),
+    ...(block.text !== undefined ? { text: block.text } : {}),
+    ...(block.tool !== undefined ? { tool: block.tool } : {}),
+    ...(block.toolType !== undefined ? { toolType: block.toolType } : {}),
+  };
 }
 
 function approvalAnchorsForEntry(
@@ -218,9 +275,11 @@ function approvalAnchorsForEntry(
   anchors?: TranscriptApprovalAnchors,
 ): PendingServerRequest[] {
   if (!anchors) return [];
+  const isLastTurnItem = turn.itemOrder.at(-1) === itemId;
   return anchors.requests.filter((request) => {
+    if (request.itemId) return request.itemId === itemId;
     if (request.turnId && request.turnId !== turn.turn.id) return false;
-    return request.itemId === itemId;
+    return isLastTurnItem;
   });
 }
 

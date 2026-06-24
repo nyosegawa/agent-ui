@@ -3,6 +3,8 @@ import {
   FakeAgentTransport,
   selectOrderedCollectionThreads,
   selectThreadCollection,
+  selectThreadSummaryView,
+  selectThreadTranscriptView,
   type AgentThreadScope,
   type ThreadId,
 } from "@nyosegawa/agent-ui-core";
@@ -890,6 +892,20 @@ function createHostWorkflowInitialState() {
   return state;
 }
 
+function DemoThreadHeader({ threadId }: { threadId: ThreadId }) {
+  const { state } = useAgentContext();
+  const thread = selectThreadSummaryView(state, threadId);
+  const transcript = selectThreadTranscriptView(state, threadId);
+  if (!thread) return null;
+  return (
+    <AgentThreadHeader
+      thread={thread}
+      threadId={threadId}
+      transcript={transcript}
+    />
+  );
+}
+
 function TranscriptDensityExample() {
   const initialState = useMemo(() => createRichTranscriptInitialState(), []);
   const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
@@ -900,7 +916,7 @@ function TranscriptDensityExample() {
       <main className="aui-demo-main" data-aui-theme="light">
         <ExampleFrame title="Transcript density">
           <AgentThreadSurface>
-            <AgentThreadHeader thread={thread} threadId={thread.thread.id} />
+            <DemoThreadHeader threadId={thread.thread.id} />
             <AgentMessageList
               density={{
                 default: "compact",
@@ -910,7 +926,7 @@ function TranscriptDensityExample() {
                   text: "critical-only",
                 },
               }}
-              thread={thread}
+              threadId={thread.thread.id}
             />
           </AgentThreadSurface>
         </ExampleFrame>
@@ -1291,8 +1307,8 @@ function HostScopedPreview({ threadId }: { threadId: string }) {
   return (
     <div aria-label="Host scoped preview transcript">
       <AgentThreadSurface className="aui-host-scoped-preview">
-        <AgentThreadHeader thread={thread} threadId={threadId} />
-        <AgentMessageList thread={thread} />
+        <DemoThreadHeader threadId={threadId} />
+        <AgentMessageList threadId={threadId} />
       </AgentThreadSurface>
     </div>
   );
@@ -1575,7 +1591,7 @@ function ResourceResolutionExample() {
       <main className="aui-demo-main" data-aui-theme="light">
         <ExampleFrame title="Resource resolution">
           <AgentThreadSurface>
-            <AgentThreadHeader thread={thread} threadId={thread.thread.id} />
+            <DemoThreadHeader threadId={thread.thread.id} />
             <AgentMessageList
               resolveLocalMediaUrl={(path) => ({
                 displayName: "fixture-image.png",
@@ -1583,7 +1599,7 @@ function ResourceResolutionExample() {
                 previewUrl,
                 redactedPath: `[agent-ui-local-media]/${path.split(/[\\/]+/).at(-1) ?? "media"}`,
               })}
-              thread={thread}
+              threadId={thread.thread.id}
             />
           </AgentThreadSurface>
         </ExampleFrame>
