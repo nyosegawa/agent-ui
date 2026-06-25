@@ -260,7 +260,7 @@
     - Validation: `node .agents/skills/agent-ui-feature-planning/scripts/check-freshness.mjs` passed with `status: fresh`; `bun run test:repo-skills` passed; `bun run test:skills` passed; `bun run validate:fast` passed; `bun run validate:release` passed; `bun run check:dead-code` passed inside release validation after deleting obsolete exports; `bun run test:e2e:fixtures` passed as part of `validate:e2e` with 152 passed / 1 skipped. `bun run validate:e2e` full rerun hit real-local timing flakes after fixture success, then the failed real-local files passed 17/17 and `bun run test:e2e:real-local` passed 20/20.
     - Review: Four parallel P008 subagent reviews completed. React export/docs, package/release, and browser/e2e/docs screenshot lanes found no findings. Skill freshness lane found P2 stale public upload skill import and package export docs for `AgentResolvedLocalAttachment`; fixed by importing it from `@nyosegawa/agent-ui-react/primitives`, documenting resource-vs-composer attachment subpaths correctly, and adding a public skill test guard against the old root import.
     - Commit: `1f4e445` (`Finish surface redesign docs and cleanup`).
-    - Push: pushed `1f4e445`, evidence commit `ce54101`, and final CI evidence commit `0e6341c` to `origin/codex/fixture-system-redesign-plan`; PR #35 updated.
+    - Push: pushed `1f4e445`, evidence commit `ce54101`, CI evidence commit `0e6341c`, and final audit evidence commits to `origin/codex/fixture-system-redesign-plan`; PR #35 updated.
   - Tasks:
     - [x] T001 Rewrite cross-cutting architecture/guides/examples docs.
       - Expected files/areas: `docs/architecture/overview.md`, `docs/guides/**`, `docs/examples/**`.
@@ -273,7 +273,7 @@
       - Validation note: screenshot capture command and diffs are recorded.
     - [x] T004 Run full validation and follow PR CI.
       - Expected files/areas: validation and CI evidence in this todo.
-      - Validation note: local validation passed. PR #35 CI run `28142213683` for final HEAD `0e6341c` succeeded: Detect changes, Repository policy, Typecheck, Lint, Unit tests, Protocol and fixtures, Package validation, API snapshots, Package resolution, and Playwright fixtures all passed. Compatibility run `28142213684` for final HEAD `0e6341c` succeeded: Detect compatibility changes, Node.js 22.x, Node.js 24.x, and pnpm workspace smoke all passed.
+      - Validation note: local validation passed. PR #35 CI run `28142213683` for implementation evidence commit `0e6341c` succeeded: Detect changes, Repository policy, Typecheck, Lint, Unit tests, Protocol and fixtures, Package validation, API snapshots, Package resolution, and Playwright fixtures all passed. Compatibility run `28142213684` for implementation evidence commit `0e6341c` succeeded: Detect compatibility changes, Node.js 22.x, Node.js 24.x, and pnpm workspace smoke all passed. Later audit-evidence-only commits are followed in the final handoff instead of recursively updating this file with their own hash.
 
 ## Implementation Notes
 
@@ -300,7 +300,7 @@ Implementation validation:
 - P005 passed focused run-policy/component/source/i18n tests, `validate:fast`, API snapshots, package validation, package resolution, fixture visual/accessibility route matrix, real-local layout/follow-up tests, and agent-browser desktop/mobile route checks before commit.
 - P006 passed local Vite typecheck/build, public skill tests, repo skill tests, manifest e2e, typecheck, lint, `validate:fast`, focused waiting-label tests, API snapshots, package resolution, package validation, fixture e2e, and agent-browser showcase/maintainer/gallery route checks before commit.
 - P007 passed typecheck, API snapshots, `validate:fast`, package resolution, package validation, affected example builds, and public skill/API guidance tests before commit; PR #35 CI and Compatibility succeeded after push evidence.
-- P008 passed repo skill/public skill tests, freshness check, `validate:fast`, `validate:release`, fixture e2e, targeted real-local rerun, and full real-local e2e before commit. One full `validate:e2e` rerun hit real-local timing flakes after fixture success; the failed real-local files and then the full real-local suite passed on rerun. PR #35 CI run `28142213683` and Compatibility run `28142213684` succeeded for final HEAD `0e6341c`.
+- P008 passed repo skill/public skill tests, freshness check, `validate:fast`, `validate:release`, fixture e2e, targeted real-local rerun, and full real-local e2e before commit. One full `validate:e2e` rerun hit real-local timing flakes after fixture success; the failed real-local files and then the full real-local suite passed on rerun. PR #35 CI run `28142213683` and Compatibility run `28142213684` succeeded for implementation evidence commit `0e6341c`; subsequent audit-evidence-only commits are CI-followed in the final handoff.
 
 Browser-visible evidence checklist for phases that touch browser-visible behavior:
 
@@ -353,4 +353,4 @@ Implementation phase review rule:
 - [x] Implementation started after explicit approval.
 - [x] P001-P008 implemented without backwards compatibility shims for removed public concepts.
 - [x] Every implementation phase completed focused validation and four parallel subagent reviews before phase closeout.
-- [x] PR #35 is open, mergeable, and green at final HEAD `0e6341c`.
+- [x] PR #35 is open, mergeable, and green through the implementation evidence chain; audit-evidence-only commit CI is followed in the final handoff.
