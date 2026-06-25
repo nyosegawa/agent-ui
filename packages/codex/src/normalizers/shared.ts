@@ -48,7 +48,7 @@ export function normalizeCodexThreadRuntimeStatus(
   return undefined;
 }
 
-export function legacyThreadStatusFromCodexRuntimeStatus(
+function legacyThreadStatusFromCodexRuntimeStatus(
   status: CodexThreadRuntimeStatus,
 ): ThreadStatus {
   switch (status.type) {

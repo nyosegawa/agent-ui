@@ -27,8 +27,9 @@ boundaries, examples, tests, and host integration docs agree.
 
 ## Guides
 
-- [React](./guides/react.md): compose `AgentProvider`, `AgentChat`, and
-  public controllers/primitives in a host app.
+- [React](./guides/react.md): use root `AgentProvider` / `AgentChat`, compose
+  visual primitives from `/primitives`, and drive host-owned layouts with
+  controllers from `/headless`.
 - [Web Components](./guides/web-components.md): wrap the React preset in a
   custom element when a host cannot mount React directly.
 - [Approvals](./guides/approvals.md): default command and file-change

@@ -300,10 +300,9 @@ test("reacts to popstate and sidebar selection without leaking stale thread cont
 });
 
 async function sidebarThreadOrder(sidebar: Locator) {
-  return sidebar.getByRole("button").evaluateAll((buttons) =>
-    buttons
-      .map((button) => button.textContent?.replace(/\s+/g, " ").trim() ?? "")
+  return sidebar.locator(".aui-thread-list-name").evaluateAll((names) =>
+    names
+      .map((name) => name.textContent?.replace(/\s+/g, " ").trim() ?? "")
       .filter((text) => text.includes("smoke"))
-      .map((text) => text.replace(/(?:Preview|Ready)\s*·.*$/, "").trim()),
   );
 }

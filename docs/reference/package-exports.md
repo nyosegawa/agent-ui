@@ -247,16 +247,19 @@ Docs that describe the current API: `docs/reference/hooks.md`,
 `docs/guides/approvals.md`, `docs/guides/web-components.md`,
 `docs/guides/host-integration.md`, and `docs/examples/*`.
 
-Resource resolution exports live on `@nyosegawa/agent-ui-react/headless` as the
-attachment boundary: `AgentResolvedResource`, `AgentResourceKind`,
-`AgentFileResourceRequest`, `AgentLocalMediaResourceRequest`,
-`AgentResourceRequest`, `AgentResourceResolution`, `AgentResourceResolver`,
-`AgentLocalMediaUrlResolver`, `AgentResolvedLocalAttachment`,
-`agentResourceUrl`, and `agentResourceDisplayName`. These are browser/UI
-metadata primitives, not host upload, storage, authorization,
-static-serving policy, or App/Plugin picker semantics. Resource resolution
-returns structured `AgentResolvedResource` objects; URL string shorthand is not
-part of the public contract.
+Resource resolution exports live on `@nyosegawa/agent-ui-react/headless` and
+`@nyosegawa/agent-ui-react/primitives` as browser/UI metadata boundaries:
+`AgentResolvedResource`, `AgentResourceKind`, `AgentFileResourceRequest`,
+`AgentLocalMediaResourceRequest`, `AgentResourceRequest`,
+`AgentResourceResolution`, `AgentResourceResolver`,
+`AgentLocalMediaUrlResolver`, `agentResourceUrl`, and
+`agentResourceDisplayName`. Composer-local upload metadata such as
+`AgentResolvedLocalAttachment` lives on
+`@nyosegawa/agent-ui-react/primitives` because it is tied to the visual
+composer attachment surface. These are not host upload, storage,
+authorization, static-serving policy, or App/Plugin picker semantics. Resource
+resolution returns structured `AgentResolvedResource` objects; URL string
+shorthand is not part of the public contract.
 
 Composer controller exports on `@nyosegawa/agent-ui-react/headless` include
 the raw-free `AgentComposerController` view plus `AgentComposerSubmitMode`,
@@ -467,7 +470,7 @@ the `components` map, render props, and `className` attachment points.
 
 The default UI keeps the high-traffic surfaces split internally:
 
-- `components.ts`: public barrel; `components/chat.tsx`, `components/thread.tsx`, `components/composer.tsx`, `components/run-settings.tsx`, `components/status.tsx`, `components/sidebar.tsx`, `components/approvals.tsx`, and `components/locale.tsx`: responsibility-scoped React surfaces
+- `primitives.ts`: public visual composition entry; `components/chat.tsx`, `components/thread.tsx`, `components/composer.tsx`, `components/run-settings.tsx`, `components/status.tsx`, `components/sidebar.tsx`, `components/approvals.tsx`, and `components/locale.tsx`: responsibility-scoped React surfaces
 - `index.ts`: root preset entry
 - `primitives.ts`: visual composition entry
 - `headless.ts`: controller/type entry

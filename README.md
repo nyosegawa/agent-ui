@@ -7,18 +7,19 @@
 
 Embeddable UI components for applications built on OpenAI Codex App Server.
 
-Agent UI is a reusable Codex App Server UI component library. It provides React
-components, headless hooks, normalized state, transports, and local bridge
-helpers for building Codex-powered coding-agent interfaces inside a host web
-application.
+Agent UI is a reusable Codex App Server UI component library. It provides a
+small React preset, composable React primitives, headless controllers,
+normalized state, transports, and local bridge helpers for building
+Codex-powered coding-agent interfaces inside a host web application.
 
 ```text
 browser UI -> same-origin host bridge -> codex app-server --listen stdio://
 ```
 
-`AgentChat` is a convenience preset. The main API is the primitive set that lets
-host apps place thread, status, usage, approvals, composer, apps, skills, and
-diagnostics surfaces inside their own product shell.
+`AgentChat` is the drop-in preset at `@nyosegawa/agent-ui-react`. Hosts that
+own layout import visual building blocks from
+`@nyosegawa/agent-ui-react/primitives` and controllers from
+`@nyosegawa/agent-ui-react/headless`.
 
 ## Packages
 
@@ -114,6 +115,15 @@ Import `@nyosegawa/agent-ui-react/styles.css` once for the bundled design
 system. Hosts customize the default UI by overriding `--aui-*` tokens on their
 own theme scope; see [Theming](./docs/guides/theming.md) for the full contract.
 
+React has three public entrypoints:
+
+- `@nyosegawa/agent-ui-react`: `AgentProvider`, `AgentChat`, the preset
+  component map, and i18n helpers.
+- `@nyosegawa/agent-ui-react/primitives`: shell, transcript, composer,
+  approval, status, usage, apps, skills, theme, locale, and resource UI pieces.
+- `@nyosegawa/agent-ui-react/headless`: hooks, controllers, run-policy helpers,
+  input/resource types, transcript windowing, usage helpers, and i18n helpers.
+
 ## Design
 
 - User and assistant messages stay in transcript order.
@@ -126,8 +136,8 @@ own theme scope; see [Theming](./docs/guides/theming.md) for the full contract.
   item/turn metadata when present and at the transcript tail only when source
   metadata is absent. They stay pending until App Server sends
   `serverRequest/resolved`.
-- Usage, diagnostics, skills, apps, and status are composable primitives, not
-  mandatory side rails.
+- Usage, diagnostics, skills, apps, and status are composable primitives from
+  `@nyosegawa/agent-ui-react/primitives`, not mandatory side rails.
 - Attachments are host-resolved. Images use `localImage` paths; arbitrary
   files are uploaded by the host and sent as explicit `Attached file:
 /absolute/path` text because App Server has no generic local-file input type.

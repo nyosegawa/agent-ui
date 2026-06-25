@@ -96,6 +96,7 @@ describe("public Agent UI skill", () => {
       "@nyosegawa/agent-ui-codex/websocket",
       "@nyosegawa/agent-ui-codex/request-builders",
       "@nyosegawa/agent-ui-server",
+      "@nyosegawa/agent-ui-react/primitives",
       "@nyosegawa/agent-ui-react/styles.css",
       "createCodexWebSocketTransport",
       "attachAgentUiWebSocketBridge",
@@ -112,6 +113,9 @@ describe("public Agent UI skill", () => {
 
     expect(allSkillText).toContain("Only the full chat bridge can power `AgentChat`.");
     expect(allSkillText).toContain("A plain Route Handler is only for one-shot RPC.");
+    expect(allSkillText).not.toContain(
+      'AgentResolvedLocalAttachment } from "@nyosegawa/agent-ui-react"',
+    );
     expect(allSkillText).toContain(
       "Same-origin routing and upstream `Origin` checks are not authentication.",
     );

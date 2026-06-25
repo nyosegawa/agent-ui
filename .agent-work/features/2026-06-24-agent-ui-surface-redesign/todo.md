@@ -246,7 +246,7 @@
       - Expected files/areas: `docs/reference/package-exports.md`, `skills/agent-ui/**`, `test/agent-ui-skill.test.ts`.
       - Validation note: docs/skill match API snapshot names and subpath imports.
 
-- [ ] P008 Cross-docs, screenshots, release readiness, PR, and CI
+- [x] P008 Cross-docs, screenshots, release readiness, PR, and CI
   - Goal: finish cross-cutting docs/skills/screenshots and prove release readiness after phase-local contracts are already updated.
   - Scope: architecture/guides/examples docs, repo-local skills, docs screenshots, final validation, PR/CI.
   - Expected files/areas: `docs/**`, `.agents/skills/**`, `docs/screenshots/**`, final validation evidence.
@@ -256,19 +256,19 @@
   - Push: push final branch.
   - PR/CI: create/update PR and follow Actions to success or concrete failure.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
+    - Implementation: updated top-level README, docs index, architecture overview, host integration guide, package export reference, repo planning/review skill references, and public upload skill guidance to the root preset + `/primitives` + `/headless` public surface. Removed stale React source barrel `packages/react/src/components.ts`, removed unused App/Plugin icons, made internal transcript and Codex status helpers non-exported, and tightened real-local sidebar title extraction to the actual title element. Refreshed planning-skill freshness manifest after targeted docs/skills refresh. No docs screenshots were refreshed because P008 intentionally changed docs/skills/API hygiene, not public screenshot route visuals.
+    - Validation: `node .agents/skills/agent-ui-feature-planning/scripts/check-freshness.mjs` passed with `status: fresh`; `bun run test:repo-skills` passed; `bun run test:skills` passed; `bun run validate:fast` passed; `bun run validate:release` passed; `bun run check:dead-code` passed inside release validation after deleting obsolete exports; `bun run test:e2e:fixtures` passed as part of `validate:e2e` with 152 passed / 1 skipped. `bun run validate:e2e` full rerun hit real-local timing flakes after fixture success, then the failed real-local files passed 17/17 and `bun run test:e2e:real-local` passed 20/20.
+    - Review: Four parallel P008 subagent reviews completed. React export/docs, package/release, and browser/e2e/docs screenshot lanes found no findings. Skill freshness lane found P2 stale public upload skill import and package export docs for `AgentResolvedLocalAttachment`; fixed by importing it from `@nyosegawa/agent-ui-react/primitives`, documenting resource-vs-composer attachment subpaths correctly, and adding a public skill test guard against the old root import.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T001 Rewrite cross-cutting architecture/guides/examples docs.
+    - [x] T001 Rewrite cross-cutting architecture/guides/examples docs.
       - Expected files/areas: `docs/architecture/overview.md`, `docs/guides/**`, `docs/examples/**`.
       - Validation note: docs route names and import examples match implementation.
-    - [ ] T002 Update repo-local planning/review/browser QA skills.
+    - [x] T002 Update repo-local planning/review/browser QA skills.
       - Expected files/areas: `.agents/skills/**`.
       - Validation note: `bun run test:repo-skills` passes.
-    - [ ] T003 Refresh docs screenshots only from showcase routes if intentionally changed.
+    - [x] T003 Refresh docs screenshots only from showcase routes if intentionally changed.
       - Expected files/areas: `docs/screenshots/**`.
       - Validation note: screenshot capture command and diffs are recorded.
     - [ ] T004 Run full validation and follow PR CI.
@@ -297,6 +297,7 @@ Implementation validation:
 - P002 passed reducer/core fixtures, protocol, React component tests, full unit tests, typecheck, lint, local Vite typecheck/build, fixture e2e, package validation, API snapshots, package resolution, targeted real-local e2e, and agent-browser route checks before commit/push; PR #35 CI for `cd456f9` passed all required CI and Compatibility checks.
 - P003 passed React/core/source/direct-link tests, typecheck, API snapshots, package validation, package resolution, fixture visual matrix, real-local layout matrix, and agent-browser route overflow checks before commit.
 - P004 passed focused React/source tests, `validate:fast`, build/API snapshots/package resolution, package validation, fixture retry and visual route matrix, real-local layout matrix, and agent-browser route checks before commit.
+- P008 passed repo skill/public skill tests, freshness check, `validate:fast`, `validate:release`, fixture e2e, targeted real-local rerun, and full real-local e2e before commit. One full `validate:e2e` rerun hit real-local timing flakes after fixture success; the failed real-local files and then the full real-local suite passed on rerun.
 
 Browser-visible evidence checklist for phases that touch browser-visible behavior:
 

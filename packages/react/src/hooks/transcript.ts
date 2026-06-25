@@ -96,7 +96,7 @@ export function useAgentTranscriptController(
   return useAgentTranscriptControllerForThread(thread, options);
 }
 
-export function useAgentTranscriptControllerForThread(
+function useAgentTranscriptControllerForThread(
   thread: ThreadState | undefined,
   {
     approvalAnchors,

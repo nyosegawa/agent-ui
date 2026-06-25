@@ -23,7 +23,7 @@ Return structured attachment metadata with explicit Codex input items from
 
 ```tsx
 import { localImageInput, textInput } from "@nyosegawa/agent-ui-codex/request-builders";
-import type { AgentResolvedLocalAttachment } from "@nyosegawa/agent-ui-react";
+import type { AgentResolvedLocalAttachment } from "@nyosegawa/agent-ui-react/primitives";
 
 <AgentChat
   resolveLocalAttachment={async (file, kind) => {

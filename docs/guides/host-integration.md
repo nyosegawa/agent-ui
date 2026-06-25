@@ -25,9 +25,11 @@ following:
 - `@nyosegawa/agent-ui-codex`: use productized stable methods by default. Put
   generated params, request builders, stable types, normalizers, clients, and
   WebSocket transport on their documented subpaths.
-- `@nyosegawa/agent-ui-react`: use public controllers, primitives, and the
-  `components` replacement map. Prefer `components.blocks` or transcript
-  controllers for raw-free rendering.
+- `@nyosegawa/agent-ui-react`: use the root package for `AgentProvider`,
+  `AgentChat`, the preset component map, and i18n helpers. Import visual
+  building blocks from `@nyosegawa/agent-ui-react/primitives` and controllers,
+  hooks, run-policy helpers, and input/resource types from
+  `@nyosegawa/agent-ui-react/headless`.
 - `@nyosegawa/agent-ui-server`: keep bridge admission, browser method policy,
   one-shot RPC method policy, dynamic-tool policy, local media serving,
   redaction, and host event sinks explicit. Hosts still own auth, persistence,
@@ -42,6 +44,8 @@ following:
 ```ts
 import { threadStartParams } from "@nyosegawa/agent-ui-codex/request-builders";
 import { AgentChat } from "@nyosegawa/agent-ui-react";
+import { AgentThreadView } from "@nyosegawa/agent-ui-react/primitives";
+import { useAgentComposerController } from "@nyosegawa/agent-ui-react/headless";
 import "@nyosegawa/agent-ui-react/styles.css";
 ```
 
@@ -63,7 +67,9 @@ import "@nyosegawa/agent-ui-react/styles.css";
 Use `useAgentComposerController()`,
 `useAgentTranscriptController()`, and
 `useAgentTranscriptScrollController()` when the host owns the layout instead
-of widening the preset replacement map.
+of widening the preset replacement map. Import those controllers from
+`@nyosegawa/agent-ui-react/headless`, and import the visual surfaces they drive
+from `@nyosegawa/agent-ui-react/primitives`.
 
 Thread lifecycle results are Agent UI view models. The `threadId` returned from
 start, first-message start, or resume is the canonical id the host should

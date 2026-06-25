@@ -58,8 +58,9 @@ storage, dynamic tool policy, audit logging, and resource limits.
   generated Codex request builders.
 - `@nyosegawa/agent-ui-codex`: Codex App Server adapters, schema metadata,
   request builders, clients, transports, and protocol classification.
-- `@nyosegawa/agent-ui-react`: transcript-first components, controllers, hooks,
-  public component replacement map, i18n, and single public stylesheet import.
+- `@nyosegawa/agent-ui-react`: root drop-in preset (`AgentProvider`,
+  `AgentChat`, component map, i18n), `/primitives` visual composition surface,
+  `/headless` controllers/hooks/types, and single public stylesheet import.
 - `@nyosegawa/agent-ui-server`: Node bridge helpers, one-shot RPC, upload/local
   media helpers, dynamic-tool policy hooks, diagnostics, and redaction.
 - `@nyosegawa/agent-ui-web-components`: custom-element wrapper over the React

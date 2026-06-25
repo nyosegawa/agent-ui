@@ -46,14 +46,15 @@ function sourceTextUnder(...dirs: string[]): string {
 }
 
 describe("React package source structure", () => {
-  it("keeps components.ts as a public barrel without a catch-all implementation file", () => {
-    const barrel = readFileSync(join(reactSrc, "components.ts"), "utf8");
+  it("keeps React component surfaces on explicit public entrypoints", () => {
+    const primitives = readFileSync(join(reactSrc, "primitives.ts"), "utf8");
     expect(existsSync(join(reactSrc, "components-main.tsx"))).toBe(false);
+    expect(existsSync(join(reactSrc, "components.ts"))).toBe(false);
     expect(existsSync(join(reactSrc, "components.tsx"))).toBe(false);
-    expect(barrel).not.toContain("components-main");
-    expect(barrel).toContain('export * from "./components/chat";');
-    expect(barrel).toContain('export * from "./components/composer";');
-    expect(barrel).toContain('export * from "./components/run-settings";');
+    expect(primitives).not.toContain("components-main");
+    expect(primitives).toContain('from "./components/shell";');
+    expect(primitives).toContain('from "./components/composer";');
+    expect(primitives).toContain('from "./components/run-settings";');
   });
 
   it("keeps hooks.ts as a public barrel over domain hook modules", () => {
