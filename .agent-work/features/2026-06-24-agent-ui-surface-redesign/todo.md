@@ -3,7 +3,7 @@
 ## Status Summary
 
 - Planning status: complete on branch.
-- Implementation status: in progress; P001 through P005 implemented, validated, reviewed, committed, pushed, and followed through to CI success. P006 implemented, validated, reviewed, committed, and pushed; CI evidence is being recorded.
+- Implementation status: complete; P001 through P008 implemented, validated, reviewed with four parallel phase subagents, committed, pushed, and followed through to PR CI/Compatibility success.
 - Planning branch: reuse `codex/fixture-system-redesign-plan`.
 - Compatibility stance: no backwards compatibility.
 - Required review stance: every implementation phase must run four parallel subagent reviews after focused validation and before phase commit.
@@ -13,7 +13,7 @@
 - Branch: `codex/fixture-system-redesign-plan`
 - Planning commit: `0194146` (`Plan Agent UI surface redesign`).
 - Remote: `origin/codex/fixture-system-redesign-plan`
-- Push result: P001 pushed to `origin/codex/fixture-system-redesign-plan`.
+- Push result: branch pushed through final evidence commit `0e6341c` to `origin/codex/fixture-system-redesign-plan`.
 - Blockers: none known before artifact validation.
 
 ## Phase Checklist
@@ -23,9 +23,9 @@
 - P003 React view models, direct-link controller, and raw-free components - implemented, validated, reviewed, committed, pushed, and CI-successful.
 - P004 Default composer, turn controls, retry, and neutral integrations - implemented, validated, reviewed, committed, and pushed.
 - P005 Run policy, model/effort, cwd, and host-boundary controls - implemented, validated, reviewed, committed, pushed, and CI-successful.
-- P006 Showcase and maintainer gallery foundation - implemented, validated, reviewed, committed, and pushed.
-- P007 React export subpaths, package contracts, examples, and public skill API guidance
-- P008 Cross-docs, screenshots, release readiness, PR, and CI
+- P006 Showcase and maintainer gallery foundation - implemented, validated, reviewed, committed, pushed, and CI-successful.
+- P007 React export subpaths, package contracts, examples, and public skill API guidance - implemented, validated, reviewed, committed, pushed, and CI-successful.
+- P008 Cross-docs, screenshots, release readiness, PR, and CI - implemented, validated, reviewed, committed, pushed, and CI-successful.
 
 ## Task Checklist By Phase
 
@@ -260,7 +260,7 @@
     - Validation: `node .agents/skills/agent-ui-feature-planning/scripts/check-freshness.mjs` passed with `status: fresh`; `bun run test:repo-skills` passed; `bun run test:skills` passed; `bun run validate:fast` passed; `bun run validate:release` passed; `bun run check:dead-code` passed inside release validation after deleting obsolete exports; `bun run test:e2e:fixtures` passed as part of `validate:e2e` with 152 passed / 1 skipped. `bun run validate:e2e` full rerun hit real-local timing flakes after fixture success, then the failed real-local files passed 17/17 and `bun run test:e2e:real-local` passed 20/20.
     - Review: Four parallel P008 subagent reviews completed. React export/docs, package/release, and browser/e2e/docs screenshot lanes found no findings. Skill freshness lane found P2 stale public upload skill import and package export docs for `AgentResolvedLocalAttachment`; fixed by importing it from `@nyosegawa/agent-ui-react/primitives`, documenting resource-vs-composer attachment subpaths correctly, and adding a public skill test guard against the old root import.
     - Commit: `1f4e445` (`Finish surface redesign docs and cleanup`).
-    - Push: pushed `1f4e445` and evidence commit `ce54101` to `origin/codex/fixture-system-redesign-plan`; PR #35 updated.
+    - Push: pushed `1f4e445`, evidence commit `ce54101`, and final CI evidence commit `0e6341c` to `origin/codex/fixture-system-redesign-plan`; PR #35 updated.
   - Tasks:
     - [x] T001 Rewrite cross-cutting architecture/guides/examples docs.
       - Expected files/areas: `docs/architecture/overview.md`, `docs/guides/**`, `docs/examples/**`.
@@ -273,7 +273,7 @@
       - Validation note: screenshot capture command and diffs are recorded.
     - [x] T004 Run full validation and follow PR CI.
       - Expected files/areas: validation and CI evidence in this todo.
-      - Validation note: local validation passed. PR #35 CI run `28142109479` for `ce54101` succeeded: Detect changes, Protocol and fixtures, Typecheck, Package validation, Lint, Playwright fixtures, Unit tests, Package resolution, Repository policy, and API snapshots all passed. Compatibility run `28142109480` for `ce54101` succeeded.
+      - Validation note: local validation passed. PR #35 CI run `28142213683` for final HEAD `0e6341c` succeeded: Detect changes, Repository policy, Typecheck, Lint, Unit tests, Protocol and fixtures, Package validation, API snapshots, Package resolution, and Playwright fixtures all passed. Compatibility run `28142213684` for final HEAD `0e6341c` succeeded: Detect compatibility changes, Node.js 22.x, Node.js 24.x, and pnpm workspace smoke all passed.
 
 ## Implementation Notes
 
@@ -297,7 +297,10 @@ Implementation validation:
 - P002 passed reducer/core fixtures, protocol, React component tests, full unit tests, typecheck, lint, local Vite typecheck/build, fixture e2e, package validation, API snapshots, package resolution, targeted real-local e2e, and agent-browser route checks before commit/push; PR #35 CI for `cd456f9` passed all required CI and Compatibility checks.
 - P003 passed React/core/source/direct-link tests, typecheck, API snapshots, package validation, package resolution, fixture visual matrix, real-local layout matrix, and agent-browser route overflow checks before commit.
 - P004 passed focused React/source tests, `validate:fast`, build/API snapshots/package resolution, package validation, fixture retry and visual route matrix, real-local layout matrix, and agent-browser route checks before commit.
-- P008 passed repo skill/public skill tests, freshness check, `validate:fast`, `validate:release`, fixture e2e, targeted real-local rerun, and full real-local e2e before commit. One full `validate:e2e` rerun hit real-local timing flakes after fixture success; the failed real-local files and then the full real-local suite passed on rerun.
+- P005 passed focused run-policy/component/source/i18n tests, `validate:fast`, API snapshots, package validation, package resolution, fixture visual/accessibility route matrix, real-local layout/follow-up tests, and agent-browser desktop/mobile route checks before commit.
+- P006 passed local Vite typecheck/build, public skill tests, repo skill tests, manifest e2e, typecheck, lint, `validate:fast`, focused waiting-label tests, API snapshots, package resolution, package validation, fixture e2e, and agent-browser showcase/maintainer/gallery route checks before commit.
+- P007 passed typecheck, API snapshots, `validate:fast`, package resolution, package validation, affected example builds, and public skill/API guidance tests before commit; PR #35 CI and Compatibility succeeded after push evidence.
+- P008 passed repo skill/public skill tests, freshness check, `validate:fast`, `validate:release`, fixture e2e, targeted real-local rerun, and full real-local e2e before commit. One full `validate:e2e` rerun hit real-local timing flakes after fixture success; the failed real-local files and then the full real-local suite passed on rerun. PR #35 CI run `28142213683` and Compatibility run `28142213684` succeeded for final HEAD `0e6341c`.
 
 Browser-visible evidence checklist for phases that touch browser-visible behavior:
 
@@ -339,8 +342,7 @@ Implementation phase review rule:
 ## Commit Log
 
 - Planning commit: `0194146` (`Plan Agent UI surface redesign`).
-- P004 phase commit: `Redesign composer integrations and retry`.
-- Implementation commits: P001 `0798db0` (`Classify Codex protocol requests`), P001 evidence `a2d31f3` (`Record P001 redesign evidence`), P002 `3829ef5` (`Add core runtime view state`), P002 CI fix `cd456f9` (`Update thread history runtime expectations`), P003 `a858fe0` (`Move React transcript APIs to view models`), P003 CI fix `36eabc5` (`Update loaded history preview expectation`), P003 API snapshot fix `6e5cb3b` (`Update core API snapshot for thread display status`).
+- Implementation commits: P001 `0798db0` (`Classify Codex protocol requests`), P001 evidence `a2d31f3` (`Record P001 redesign evidence`), P002 `3829ef5` (`Add core runtime view state`), P002 CI fix `cd456f9` (`Update thread history runtime expectations`), P002 evidence `4b8b0ca` (`Record P002 redesign evidence`), P003 `a858fe0` (`Move React transcript APIs to view models`), P003 evidence `4b9e2b6` (`Record P003 redesign evidence`), P003 CI fixes `36eabc5` (`Update loaded history preview expectation`) and `6e5cb3b` (`Update core API snapshot for thread display status`), P003 CI evidence `669ce57` (`Record P003 CI evidence`), P004 `572736d` (`Redesign composer integrations and retry`), P005 `1f8b2e8` (`Redesign run policy controls`), P006 `27521a4` (`Split showcase and maintainer gallery`), P006 evidence `759780a` (`Record P006 commit evidence`) and `82c19e1` (`Record P006 push evidence`), P007 `6d9b0f9` (`Split React public export surfaces`), P007 evidence `38c0aae` (`Record P007 push evidence`), P008 `1f4e445` (`Finish surface redesign docs and cleanup`), P008 evidence `ce54101` (`Record P008 push evidence`) and `0e6341c` (`Record P008 CI evidence`).
 
 ## Final Checklist
 
@@ -349,3 +351,6 @@ Implementation phase review rule:
 - [x] Planning commit created.
 - [x] Planning branch pushed.
 - [x] Implementation started after explicit approval.
+- [x] P001-P008 implemented without backwards compatibility shims for removed public concepts.
+- [x] Every implementation phase completed focused validation and four parallel subagent reviews before phase closeout.
+- [x] PR #35 is open, mergeable, and green at final HEAD `0e6341c`.
