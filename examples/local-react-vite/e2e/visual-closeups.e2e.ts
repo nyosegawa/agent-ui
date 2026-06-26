@@ -4,6 +4,10 @@ import {
   expectWithinViewport,
   mobileViewport,
 } from "./support/visual-contracts";
+import {
+  componentCloseupCatalog,
+  requiredVisualPrimitiveExports,
+} from "../src/closeups/component-closeup-catalog";
 
 test("maintainer gallery mobile close-up stage stays inside the viewport", async ({
   page,
@@ -34,29 +38,20 @@ test("component close-up gallery renders direct primitives, not iframes", async 
   await page.goto("/maintainer-gallery");
   const closeups = page.getByTestId("component-closeups");
   await expect(closeups).toBeVisible();
-  for (const title of [
-    "Composer · normal",
-    "Composer · focused",
-    "Composer · approval pending",
-    "Composer · mobile",
-    "Composer · pasted image",
-    "Composer · multiple attachments",
-    "Composer run controls · compact",
-    "Run policy and model controls",
-    "Approval · command",
-    "Approval · user input",
-    "Command block",
-    "Custom command block",
-    "Diff / file change",
-    "Sidebar search + threads",
-    "Status bar · standalone",
-    "Usage / status chips",
-    "Usage panel",
-    "Button system",
-    "Thread-start controls",
-  ]) {
-    await expect(closeups.getByTestId(`closeup:${title}`)).toBeVisible();
+  const covered = new Set<string>();
+  for (const entry of componentCloseupCatalog) {
+    const closeup = page.getByTestId(`closeup:${entry.title}`);
+    await expect(closeup).toBeVisible();
+    const covers = (await closeup.getAttribute("data-covers")) ?? "";
+    for (const name of entry.covers) {
+      expect(covers.split(/\s+/), entry.title).toContain(name);
+      covered.add(name);
+    }
+    for (const selector of entry.probes ?? []) {
+      await expect(closeup.locator(selector).first(), `${entry.title} ${selector}`).toBeVisible();
+    }
   }
+  for (const name of requiredVisualPrimitiveExports) expect(covered).toContain(name);
   await expect(closeups.locator("iframe")).toHaveCount(0);
 
   const commandCloseup = closeups.getByTestId("closeup:Approval · command");
@@ -172,7 +167,7 @@ test("standalone status bar close-up compacts inside a narrow desktop embed", as
   );
 });
 
-test("critical close-ups cover Phase 9 fixture states", async ({ page }) => {
+test("critical close-ups cover fixture interaction states", async ({ page }) => {
   await page.setViewportSize(desktopViewport);
   await page.goto("/maintainer-gallery");
   const critical = page.getByTestId("critical-states");
@@ -188,7 +183,7 @@ test("critical close-ups cover Phase 9 fixture states", async ({ page }) => {
   }
 
   const emptyState = critical.getByTestId("closeup:Empty state · mobile");
-  await expect(emptyState.locator(".aui-empty .aui-first-run-starter")).toBeVisible();
+  await expect(emptyState.locator(".aui-first-run-starter")).toBeVisible();
 
   const startComposer = critical.getByTestId("closeup:Start composer");
   await expect(startComposer.getByRole("form", { name: "Start a Codex thread" })).toBeVisible();

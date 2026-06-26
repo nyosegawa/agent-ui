@@ -72,16 +72,25 @@ bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 
 Useful routes:
 
-- `/`: public showcase index
+- `/showcase`: public component catalog with live examples and copyable React snippets
+- `/showcase/components`: snippet-facing public API catalog
+- `/showcase/patterns`: workflow-oriented host pattern catalog
 - `/showcase/default-conversation`: default transcript-first surface
 - `/showcase/rich-transcript`: intentionally dense transcript and approval stress fixture
-- `/showcase/host-workflow-recipe`: host integration reference shell with embedded
+- `/showcase/composed-shell`: neutral composed shell for sidebar history, status,
+  and thread view inside host-owned layout
+- `/showcase/host-workflow-recipe`: advanced host integration reference shell with embedded
   `AgentChat`, side panel, mobile drawer, local attachment metadata, transcript
   local-media preview/fallback metadata, scoped thread history loading,
   host-owned workflow gate, first-message optimistic mode, and host-owned review
   sheet
+- `/showcase/composer-primitives`: normal composer primitive placement without retry-only state
+- `/showcase/transcript-content`: transcript and content primitive rendering without density overrides
+- `/showcase/approvals-status`: review rail for status summaries, detailed
+  notices, and pending approvals
+- `/showcase/thread-navigation`: host-owned thread selection composed from `ThreadList`
+  and `AgentThreadView`
 - `/showcase/usage-only`: usage primitives without chat chrome
-- `/showcase/scoped-thread-pane`: fixed-thread composition
 - `/showcase/app-connectors`: Codex Apps/connectors metadata
 
 The fixture app uses `FakeAgentTransport`; it is for deterministic browser

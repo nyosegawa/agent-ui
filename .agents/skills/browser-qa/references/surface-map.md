@@ -10,15 +10,26 @@ bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 
 Routes:
 
-- `/`: public showcase index
-- `/showcase/default-conversation`: baseline chat surface
-- `/showcase/rich-transcript`: dense transcript and approval stress
+- `/showcase`: public starting-point catalog with live previews and copyable
+  snippets. `/` is an alias.
+- `/showcase/components`: snippet-facing public API catalog.
+- `/showcase/patterns`: workflow and advanced pattern catalog.
+- `/showcase/component-preview?api=AgentChat`: generated component preview
+  surface used by the component catalog.
+- `/showcase/default-conversation`: baseline chat surface.
+- `/showcase/rich-transcript`: dense transcript and approval stress.
 - `/maintainer-gallery`: maintainer-only component close-ups, probes,
-  specimens, and previews
-- `/showcase/host-workflow-recipe`: host-composed primitive layout
-- `/showcase/usage-only`: usage primitives without chat assumptions
-- `/showcase/scoped-thread-pane`: fixed-thread composition
-- `/showcase/app-connectors`: Codex Apps/connectors metadata
+  specimens, and previews.
+- `/showcase/composed-shell`: neutral composed shell route for sidebar history,
+  status, and thread view.
+- `/showcase/host-workflow-recipe`: advanced host-composed primitive layout.
+- `/showcase/composer-primitives`: normal composer slot.
+- `/showcase/transcript-content`: transcript pane primitive route.
+- `/showcase/approvals-status`: review rail for status and pending approvals.
+- `/showcase/thread-navigation`: host-owned thread selection composition.
+- `/showcase/usage-only`: usage primitives without chat assumptions.
+- `/showcase/scoped-thread-pane`: fixed-thread composition.
+- `/showcase/app-connectors`: Codex Apps/connectors metadata.
 
 CI gate:
 

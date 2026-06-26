@@ -319,15 +319,17 @@ export function AgentThreadSidebar({
               <IconAdd size={14} />
             </button>
           ) : null}
-          <button
-            aria-label={compact ? t("thread.closeHistory") : t("thread.collapseHistory")}
-            className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
-            onClick={() => onCollapsedChange?.(true)}
-            title={compact ? t("thread.closeHistory") : t("thread.collapseHistory")}
-            type="button"
-          >
-            <IconClose size={14} />
-          </button>
+          {onCollapsedChange ? (
+            <button
+              aria-label={compact ? t("thread.closeHistory") : t("thread.collapseHistory")}
+              className={buttonClass("ghost", { iconOnly: true, size: "sm" })}
+              onClick={() => onCollapsedChange(true)}
+              title={compact ? t("thread.closeHistory") : t("thread.collapseHistory")}
+              type="button"
+            >
+              <IconClose size={14} />
+            </button>
+          ) : null}
         </div>
       </div>
       <form

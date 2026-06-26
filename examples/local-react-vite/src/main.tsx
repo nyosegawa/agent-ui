@@ -20,17 +20,25 @@ import {
 } from "@nyosegawa/agent-ui-react";
 import {
   AgentAppsPanel,
+  AgentApprovalQueue,
+  AgentComposer,
   AgentDiagnosticsPanel,
+  AgentFirstRun,
   AgentLocaleSelect,
   AgentMessageList,
+  AgentShell,
+  AgentSkillsPanel,
+  AgentStatusBar,
   AgentStatusDetails,
   AgentStatusSummary,
   AgentThemeToggle,
+  AgentThreadSidebar,
   AgentThreadHeader,
   AgentThreadSurface,
   AgentThreadView,
   AgentUsagePanel,
   AgentUsageSummary,
+  ThreadList,
   type AgentLocalAttachmentKind,
   type AgentResolvedLocalAttachment,
   type AgentResolvedResource,
@@ -78,6 +86,12 @@ import {
   visualQaStates,
   type FixtureScenario,
 } from "./fixtures/gallery";
+import {
+  publicApiCatalog,
+  publicPatternCatalog,
+  publicStartCatalog,
+  type PublicApiCatalogGroup,
+} from "./fixtures/public-component-catalog";
 
 declare global {
   interface Window {
@@ -87,16 +101,24 @@ declare global {
 
 function DemoApp() {
   const { pathname } = window.location;
-  if (pathname === "/") return <ShowcaseIndex />;
+  if (pathname === "/" || pathname === "/showcase") return <ShowcaseIndex />;
+  if (pathname === "/showcase/components") return <ShowcaseComponentsPage />;
+  if (pathname === "/showcase/component-preview") return <ComponentPreviewPage />;
+  if (pathname === "/showcase/patterns") return <ShowcasePatternsPage />;
   if (pathname === "/maintainer-gallery") return <MaintainerGallery />;
+  if (pathname === "/showcase/approvals-status") return <ApprovalsStatusExample />;
   if (pathname === "/showcase/app-connectors") return <AppConnectorsExample />;
+  if (pathname === "/showcase/composed-shell") return <ComposedShellExample />;
+  if (pathname === "/showcase/composer-primitives") return <ComposerPrimitivesExample />;
   if (pathname === "/showcase/composer-retry") return <ComposerRetryExample />;
   if (pathname === "/showcase/host-workflow-recipe") return <HostWorkflowRecipe />;
   if (pathname === "/showcase/resource-resolution") {
     return <ResourceResolutionExample />;
   }
+  if (pathname === "/showcase/thread-navigation") return <ThreadNavigationExample />;
+  if (pathname === "/showcase/transcript-content") return <TranscriptContentExample />;
   if (pathname === "/showcase/transcript-density") return <TranscriptDensityExample />;
-  if (pathname === "/showcase/scoped-thread-lists") {
+  if (pathname === "/maintainer/scoped-thread-lists") {
     return <ScopedThreadListsExample />;
   }
   if (pathname === "/showcase/scoped-thread-pane") return <ScopedThreadPaneExample />;
@@ -116,6 +138,7 @@ function DemoApp() {
 }
 
 function ComposerRetryExample() {
+  const theme = themeFromLocation();
   const [turnStartCalls, setTurnStartCalls] = useState(0);
   const transport = useMemo(
     () => new ComposerRetryTransport(setTurnStartCalls),
@@ -123,7 +146,7 @@ function ComposerRetryExample() {
   );
   return (
     <AgentProvider initialState={createInitialAgentState()} transport={transport}>
-      <main className="aui-demo-main" data-aui-theme="light">
+      <main className="aui-demo-main" data-aui-theme={theme}>
         <ExampleFrame title="Composer retry">
           <AgentChat sidebar={false} usage={false} />
           <ComposerRetryProbe turnStartCalls={turnStartCalls} />
@@ -219,41 +242,51 @@ function requestInputText(params: unknown): string {
 function ScopedThreadListsExample() {
   return (
     <AgentProvider initialState={createInitialAgentState()} transport={new FakeAgentTransport()}>
-      <main className="aui-demo-main" data-aui-theme="light">
-        <ExampleFrame title="Scoped thread lists">
-          <div className="aui-host-workflow-grid" data-testid="scoped-thread-lists">
-            <ScopedThreadListPanel
-              label="Left"
-              pageThreadId="thread-left-page"
-              primaryThreadId="thread-left-alpha"
-              scopeKey="history:left-fixture"
-            />
-            <ScopedThreadListPanel
-              label="Right"
-              pageThreadId="thread-right-page"
-              primaryThreadId="thread-right-beta"
-              scopeKey="history:right-fixture"
-            />
-          </div>
-        </ExampleFrame>
+      <main className="aui-example-frame aui-scoped-thread-route" data-aui-theme="light">
+        <header className="aui-scoped-route-header">
+          <h1>Scoped thread lists</h1>
+          <p>
+            Two host-owned history scopes share Agent UI state without sharing
+            search terms, cursors, loaded rows, or active selection.
+          </p>
+        </header>
+        <div className="aui-scoped-route-grid" data-testid="scoped-thread-lists">
+          <ScopedThreadListPanel
+            defaultSearch="alpha"
+            label="Left"
+            pageThreadId="thread-left-page"
+            primaryThreadId="thread-left-alpha"
+            scopeKey="history:left-fixture"
+          />
+          <ScopedThreadListPanel
+            defaultSearch="beta"
+            label="Right"
+            pageThreadId="thread-right-page"
+            primaryThreadId="thread-right-beta"
+            scopeKey="history:right-fixture"
+          />
+        </div>
       </main>
     </AgentProvider>
   );
 }
 
 function ScopedThreadListPanel({
+  defaultSearch,
   label,
   pageThreadId,
   primaryThreadId,
   scopeKey,
 }: {
+  defaultSearch: string;
   label: string;
   pageThreadId: ThreadId;
   primaryThreadId: ThreadId;
   scopeKey: string;
 }) {
   const { dispatch, state } = useAgentContext();
-  const [searchTerm, setSearchTerm] = useState(label.toLowerCase());
+  const didSeed = useRef(false);
+  const [searchTerm, setSearchTerm] = useState(defaultSearch);
   const scope: AgentThreadScope = {
     key: scopeKey,
     kind: "history",
@@ -289,8 +322,13 @@ function ScopedThreadListPanel({
       type: "thread/collection/synced",
     });
   };
+  useEffect(() => {
+    if (didSeed.current) return;
+    didSeed.current = true;
+    loadPage(false);
+  });
   return (
-    <section aria-label={`${label} scoped list`} className="aui-host-recipe-panel">
+    <section aria-label={`${label} scoped list`} className="aui-scoped-list-panel">
       <header className="aui-scoped-list-header">
         <span className="aui-host-recipe-meta-kicker">{label} scope</span>
         <h2>{label} history collection</h2>
@@ -308,7 +346,7 @@ function ScopedThreadListPanel({
           onChange={(event) => setSearchTerm(event.currentTarget.value)}
         />
       </label>
-      <div className="aui-host-recipe-actions">
+      <div className="aui-scoped-list-actions">
         <button type="button" onClick={() => loadPage(false)}>
           Refresh {label}
         </button>
@@ -387,49 +425,817 @@ function AgentDemo({ scenario }: { scenario: FixtureScenario }) {
 }
 
 function ShowcaseIndex() {
-  const grouped = useMemo(() => groupFixtures(visualQaStates), []);
-  const theme = themeFromLocation();
+  const preferences = useShowcasePreferences();
   return (
-    <main className="aui-route-gallery" data-aui-theme={theme}>
-      <div className="aui-route-gallery-header">
+    <AgentI18nProvider locale={preferences.locale}>
+      <main className="aui-showcase-docs" data-aui-theme={preferences.theme}>
+      <div className="aui-showcase-hero">
         <div>
-          <h1>Agent UI showcase</h1>
+          <h1>Build Codex interfaces with Agent UI</h1>
           <p>
-            Public examples for the default chat preset, reusable primitives,
-            host composition patterns, and protocol lifecycle states.
+            Choose a starting point, inspect a live example, and copy the code
+            shape that matches your host application.
           </p>
         </div>
-        <div className="aui-route-gallery-actions">
-          <a href="#preset-surfaces">Preset surfaces</a>
-          <a href="#primitive-compositions">Primitive compositions</a>
-          <a href="#lifecycle-states">Lifecycle states</a>
+      </div>
+      <ShowcasePreferenceBar preferences={preferences} />
+      <ShowcaseGuideNav preferences={preferences} />
+      <PublicComponentCatalog preferences={preferences} />
+    </main>
+    </AgentI18nProvider>
+  );
+}
+
+function ComponentPreviewPage() {
+  const apiName = new URL(window.location.href).searchParams.get("api") ?? "AgentChat";
+  const locale = localeFromLocation();
+  const theme = themeFromLocation();
+  const initialState = useMemo(
+    () =>
+      apiName === "AgentFirstRun"
+        ? createFixtureInitialState("empty")
+        : createRichTranscriptInitialState(),
+    [apiName],
+  );
+  const transport = useMemo(
+    () =>
+      createFixtureTransport(
+        apiName === "AgentShell" || apiName === "AgentThreadSidebar"
+          ? "host-workflow"
+          : "rich-transcript",
+      ),
+    [apiName],
+  );
+  return (
+    <AgentProvider initialState={initialState} transport={transport}>
+      <AgentI18nProvider locale={locale}>
+        <main className="aui-component-preview" data-aui-theme={theme}>
+          <ComponentPreviewBody apiName={apiName} initialLocale={locale} initialTheme={theme} />
+        </main>
+      </AgentI18nProvider>
+    </AgentProvider>
+  );
+}
+
+function ComponentPreviewBody({
+  apiName,
+  initialLocale,
+  initialTheme,
+}: {
+  apiName: string;
+  initialLocale: AgentLocale;
+  initialTheme: AgentTheme;
+}) {
+  const { state } = useAgentContext();
+  const embedded = isEmbeddedPreview();
+  const threadId = state.threadLifecycle.activeThreadId ?? "thread-rich-transcript";
+  const threads = selectOrderedCollectionThreads(state)
+    .map((thread) => selectThreadSummaryView(state, thread.id))
+    .filter((thread): thread is NonNullable<typeof thread> => Boolean(thread));
+  const [locale, setLocale] = useState<AgentLocale>(initialLocale);
+  const [theme, setTheme] = useState<AgentTheme>(initialTheme);
+  const startThread = useCallback(() => undefined, []);
+
+  let preview: ReactNode;
+  switch (apiName) {
+    case "AgentChat":
+      preview = <AgentChat locale={locale} sidebar={false} theme={theme} usage={false} />;
+      break;
+    case "AgentShell":
+      preview = (
+        <AgentShell sidebar={<AgentThreadSidebar activeThreadId={threadId} />}>
+          <div className="aui-component-preview-chat">
+            <AgentStatusBar />
+            <AgentThreadView threadId={threadId} />
+          </div>
+        </AgentShell>
+      );
+      break;
+    case "AgentThreadSidebar":
+      preview = <AgentThreadSidebar activeThreadId={threadId} />;
+      break;
+    case "AgentThreadView":
+      preview = <AgentThreadView threadId={threadId} />;
+      break;
+    case "AgentStatusBar":
+      preview = <AgentStatusBar />;
+      break;
+    case "AgentComposer":
+      preview = <AgentComposer threadId={threadId} />;
+      break;
+    case "AgentMessageList":
+      preview = <AgentMessageList density="default" threadId={threadId} />;
+      break;
+    case "AgentApprovalQueue":
+      preview = <AgentApprovalQueue threadId={threadId} />;
+      break;
+    case "AgentStatusDetails":
+      preview = <AgentStatusDetails />;
+      break;
+    case "AgentStatusSummary":
+      preview = <AgentStatusSummary />;
+      break;
+    case "ThreadList":
+      preview = <ThreadList activeThreadId={threadId} threads={threads} />;
+      break;
+    case "AgentUsagePanel":
+      preview = <AgentUsagePanel autoRefresh={false} />;
+      break;
+    case "AgentUsageSummary":
+      preview = <AgentUsageSummary />;
+      break;
+    case "AgentAppsPanel":
+      preview = <AgentAppsPanel />;
+      break;
+    case "AgentSkillsPanel":
+      preview = <AgentSkillsPanel cwd="/Users/example/project" />;
+      break;
+    case "AgentFirstRun":
+      preview = <AgentFirstRun onStartThread={startThread} />;
+      break;
+    case "AgentLocaleSelect":
+      preview = <AgentLocaleSelect value={locale} onChange={setLocale} />;
+      break;
+    case "AgentThemeToggle":
+      preview = <AgentThemeToggle value={theme} onChange={setTheme} />;
+      break;
+    default:
+      preview = <AgentChat locale={locale} sidebar={false} theme={theme} usage={false} />;
+      break;
+  }
+
+  const compactPreviewApis = new Set([
+    "AgentLocaleSelect",
+    "AgentStatusSummary",
+    "AgentThemeToggle",
+    "AgentUsageSummary",
+  ]);
+  const fullPreviewApis = new Set([
+    "AgentChat",
+    "AgentShell",
+    "AgentThreadSidebar",
+    "AgentThreadView",
+  ]);
+
+  return (
+    <section
+      className="aui-component-preview-stage"
+      data-api={apiName}
+      data-embed={embedded ? "true" : undefined}
+      data-size={compactPreviewApis.has(apiName) ? "compact" : "standard"}
+      data-surface={fullPreviewApis.has(apiName) ? "full" : "inline"}
+    >
+      {embedded ? null : (
+        <header>
+          <span>Component preview</span>
+          <h1>{apiName}</h1>
+        </header>
+      )}
+      <div className="aui-component-preview-frame">{preview}</div>
+    </section>
+  );
+}
+
+function ShowcaseGuideNav({
+  preferences,
+}: {
+  preferences: ShowcasePreferences;
+}) {
+  const guideLinks = [
+    {
+      description: "Start from a complete chat surface, composed shell, or primitive slot.",
+      href: "/showcase",
+      label: "Start",
+    },
+    {
+      description: "Look up the public APIs that appear directly in snippets.",
+      href: "/showcase/components",
+      label: "Components",
+    },
+    {
+      description: "Choose by product workflow instead of component name.",
+      href: "/showcase/patterns",
+      label: "Patterns",
+    },
+  ];
+  return (
+    <nav aria-label="Showcase sections" className="aui-showcase-guide-nav">
+      {guideLinks.map((link) => (
+        <a href={withShowcasePreferences(link.href, preferences)} key={link.href}>
+          <strong>{link.label}</strong>
+          <span>{link.description}</span>
+        </a>
+      ))}
+    </nav>
+  );
+}
+
+interface ShowcasePreferences {
+  locale: AgentLocale;
+  setLocale: (locale: AgentLocale) => void;
+  setTheme: (theme: AgentTheme) => void;
+  theme: AgentTheme;
+}
+
+function useShowcasePreferences(): ShowcasePreferences {
+  const [locale, setLocaleState] = useState<AgentLocale>(() => localeFromLocation());
+  const [theme, setThemeState] = useState<AgentTheme>(() => themeFromLocation());
+  const updateSearchParam = useCallback((key: "locale" | "theme", value: string) => {
+    const url = new URL(window.location.href);
+    const defaultValue = key === "locale" ? "en" : "light";
+    if (value === defaultValue) {
+      url.searchParams.delete(key);
+    } else {
+      url.searchParams.set(key, value);
+    }
+    window.history.replaceState(null, "", `${url.pathname}${url.search}${url.hash}`);
+  }, []);
+  const setLocale = useCallback(
+    (nextLocale: AgentLocale) => {
+      setLocaleState(nextLocale);
+      updateSearchParam("locale", nextLocale);
+    },
+    [updateSearchParam],
+  );
+  const setTheme = useCallback(
+    (nextTheme: AgentTheme) => {
+      setThemeState(nextTheme);
+      updateSearchParam("theme", nextTheme);
+    },
+    [updateSearchParam],
+  );
+  return { locale, setLocale, setTheme, theme };
+}
+
+function ShowcasePreferenceBar({
+  preferences,
+}: {
+  preferences: ShowcasePreferences;
+}) {
+  return (
+    <div className="aui-showcase-preferences" aria-label="Showcase display settings">
+      <span>Theme</span>
+      <AgentThemeToggle value={preferences.theme} onChange={preferences.setTheme} />
+    </div>
+  );
+}
+
+function withShowcasePreferences(
+  href: string,
+  preferences: ShowcasePreferences,
+  options: { embed?: boolean } = {},
+): string {
+  const url = new URL(href, window.location.origin);
+  if (options.embed) url.searchParams.set("embed", "1");
+  if (preferences.locale !== "en") url.searchParams.set("locale", preferences.locale);
+  if (preferences.theme !== "light") url.searchParams.set("theme", preferences.theme);
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+function isEmbeddedPreview(): boolean {
+  return new URLSearchParams(window.location.search).get("embed") === "1";
+}
+
+function ShowcaseComponentsPage() {
+  const preferences = useShowcasePreferences();
+  const [query, setQuery] = useState("");
+  const [activePanels, setActivePanels] = useState<Record<string, "code" | "preview">>(
+    {},
+  );
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredApis = publicApiCatalog.filter((api) => {
+    if (!normalizedQuery) return true;
+    return [
+      api.name,
+      api.packageName,
+      ...api.layers,
+      api.group,
+      ...api.usedBy.map((entry) => entry.title),
+    ].some((value) => value.toLowerCase().includes(normalizedQuery));
+  });
+  const groupedApis = publicApiGroupOrder
+    .map((group) => ({
+      apis: filteredApis.filter((api) => api.group === group),
+      group,
+    }))
+    .filter((group) => group.apis.length > 0);
+  return (
+    <AgentI18nProvider locale={preferences.locale}>
+      <main className="aui-showcase-docs" data-aui-theme={preferences.theme}>
+      <div className="aui-showcase-hero">
+        <div>
+          <h1>Component API Catalog</h1>
+          <p>
+            Direct public APIs used by the showcase snippets. Internal primitives
+            covered by QA stay in maintainer metadata, not this list.
+          </p>
         </div>
       </div>
-      {grouped.map(({ group, states }) => (
-        <section
-          className="aui-route-gallery-group"
-          id={
-            group === "core"
-              ? "preset-surfaces"
-              : group === "primitives"
-                ? "primitive-compositions"
-                : "lifecycle-states"
-          }
-          key={group}
-        >
-          <header className="aui-route-gallery-group-header">
-            <h2>{fixtureGroupLabels[group]}</h2>
-            <span>{states.length} example{states.length === 1 ? "" : "s"}</span>
-          </header>
-          <div className="aui-route-gallery-grid">
-            {states.map((state) => (
-              <FixturePreview state={state} key={state.href} />
-            ))}
+      <ShowcasePreferenceBar preferences={preferences} />
+      <ShowcaseGuideNav preferences={preferences} />
+      <section
+        aria-label="Component API catalog"
+        className="aui-showcase-section"
+        data-testid="public-api-catalog"
+      >
+        <header className="aui-showcase-section-header">
+          <div>
+            <h2>Use This API</h2>
+            <p>
+              Search by API name, package, layer, or the starting point where it
+              appears.
+            </p>
           </div>
-        </section>
-      ))}
+          <span>{filteredApis.length} APIs</span>
+        </header>
+        <label className="aui-showcase-search">
+          <span>Search APIs</span>
+          <input
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="AgentComposer, primitives, host shell..."
+            type="search"
+            value={query}
+          />
+        </label>
+        <div className="aui-showcase-api-groups">
+          {groupedApis.map(({ apis, group }) => (
+            <section className="aui-showcase-api-group" key={group}>
+              <header>
+                <h3>{group}</h3>
+                <p>{publicApiGroupDescriptions[group]}</p>
+              </header>
+              <div className="aui-showcase-api-grid">
+                {apis.map((api) => (
+                  <article
+                    className="aui-showcase-api-card"
+                    data-api-name={api.name}
+                    key={api.name}
+                  >
+              <header>
+                <span>{api.layers.join(" · ")}</span>
+                <h4>
+                  {api.name}
+                  {!api.isVisual ? <small>Non-visual</small> : null}
+                </h4>
+                <code>{api.packageName}</code>
+              </header>
+              <div className="aui-public-component-list">
+                <span>Used in</span>
+                <ul>
+                  {api.usedBy.map((entry) => (
+                    <li key={entry.title}>
+                      <a
+                        href={withShowcasePreferences(
+                          showcaseSnippetHref(entry),
+                          preferences,
+                        )}
+                      >
+                        {entry.title}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {api.isVisual ? (
+                <>
+                  <ShowcaseTabs
+                    activePanel={activePanels[api.name] ?? "preview"}
+                    id={`api-${slugifyShowcaseTitle(api.name)}`}
+                    label={api.name}
+                    onChange={(panel) =>
+                      setActivePanels((current) => ({ ...current, [api.name]: panel }))
+                    }
+                  />
+                  {(activePanels[api.name] ?? "preview") === "preview" ? (
+                    <ShowcasePreviewFrame
+                      href={api.previewHref}
+                      id={`api-${slugifyShowcaseTitle(api.name)}`}
+                      preferences={preferences}
+                      title={`${api.name} preview`}
+                    />
+                  ) : (
+                    <CopyableCode
+                      code={api.sampleCode}
+                      id={`api-${slugifyShowcaseTitle(api.name)}`}
+                      label={`${api.name} code`}
+                    />
+                  )}
+                </>
+              ) : (
+                <div className="aui-showcase-api-note">
+                  <strong>Non-visual provider</strong>
+                  <p>
+                    This API supplies Agent UI state and transport context. It is
+                    shown in snippets, but it does not render UI by itself.
+                  </p>
+                  <CopyableCode
+                    code={api.sampleCode}
+                    id={`api-${slugifyShowcaseTitle(api.name)}`}
+                    label={`${api.name} code`}
+                  />
+                </div>
+              )}
+                  </article>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
+      </section>
     </main>
+    </AgentI18nProvider>
   );
+}
+
+const publicApiGroupOrder: readonly PublicApiCatalogGroup[] = [
+  "Setup",
+  "Presets",
+  "Layout primitives",
+  "Status and review",
+  "Usage",
+  "Onboarding and controls",
+  "Advanced capability metadata",
+];
+
+const publicApiGroupDescriptions: Record<PublicApiCatalogGroup, string> = {
+  "Advanced capability metadata":
+    "Optional metadata panels for hosts that expose Codex capabilities outside the main chat flow.",
+  "Layout primitives":
+    "Composable visual regions for hosts that build their own shell around Agent UI.",
+  "Onboarding and controls":
+    "Controls used around workspace setup or display settings, not primary chat layout.",
+  Presets: "Complete surfaces that own the default Agent UI chat experience.",
+  "Setup": "Provider boundary and transport wiring required before visual components render.",
+  "Status and review":
+    "Review and runtime status primitives that can sit outside the transcript.",
+  Usage: "Usage, quota, and diagnostics primitives for settings, rails, or dashboards.",
+};
+
+function ShowcasePatternsPage() {
+  const preferences = useShowcasePreferences();
+  const [activePanels, setActivePanels] = useState<Record<string, "code" | "preview">>(
+    {},
+  );
+  const patternGroups = [
+    {
+      description:
+        "Primary host workflows that decide where Agent UI owns behavior and where the host remains in control.",
+      entries: publicPatternCatalog.filter((entry) => entry.patternSection === "workflow"),
+      title: "Workflow recipes",
+    },
+    {
+      description:
+        "Optional capability, setup, and edge-case recipes that usually belong after the main integration path is chosen.",
+      entries: publicPatternCatalog.filter((entry) => entry.patternSection === "advanced"),
+      title: "Advanced recipes",
+    },
+  ].filter((group) => group.entries.length > 0);
+  return (
+    <AgentI18nProvider locale={preferences.locale}>
+      <main className="aui-showcase-docs" data-aui-theme={preferences.theme}>
+      <div className="aui-showcase-hero">
+        <div>
+          <h1>Host Patterns</h1>
+          <p>
+            Pick the workflow shape first, then open the live route or copy the
+            matching snippet from the starting-point page.
+          </p>
+        </div>
+      </div>
+      <ShowcasePreferenceBar preferences={preferences} />
+      <ShowcaseGuideNav preferences={preferences} />
+      <section
+        aria-label="Host pattern catalog"
+        className="aui-showcase-section"
+        data-testid="public-pattern-catalog"
+      >
+        <header className="aui-showcase-section-header">
+          <div>
+            <h2>Choose By Workflow</h2>
+            <p>
+              Patterns keep host responsibilities explicit while linking back to
+              the exact API snippet and deterministic fixture route.
+            </p>
+          </div>
+          <span>{publicPatternCatalog.length} patterns</span>
+        </header>
+        <div className="aui-showcase-pattern-groups">
+          {patternGroups.map((group) => (
+            <section className="aui-showcase-pattern-group" key={group.title}>
+              <header>
+                <h3>{group.title}</h3>
+                <p>{group.description}</p>
+              </header>
+              <div className="aui-showcase-pattern-grid">
+                {group.entries.map((entry) => {
+                  const id = `pattern-${slugifyShowcaseTitle(entry.title)}`;
+                  const activePanel = activePanels[id] ?? "preview";
+                  return (
+                    <article
+                      className="aui-showcase-pattern-card"
+                      id={id}
+                      key={entry.title}
+                    >
+                      <header className="aui-showcase-path-header">
+                        <div>
+                          <span>{entry.layer}</span>
+                          <h4>{entry.title}</h4>
+                          <p>{entry.whenToUse}</p>
+                        </div>
+                        <div className="aui-showcase-pattern-actions">
+                          <a
+                            href={withShowcasePreferences(
+                              showcaseSnippetHref(entry),
+                              preferences,
+                            )}
+                          >
+                            View snippet
+                          </a>
+                          <a href={withShowcasePreferences(entry.href, preferences)}>
+                            Open route
+                          </a>
+                        </div>
+                      </header>
+                      <dl>
+                        <div>
+                          <dt>Agent UI owns</dt>
+                          <dd>{summarizeOwnership(entry.ownership, 0)}</dd>
+                        </div>
+                        <div>
+                          <dt>Host owns</dt>
+                          <dd>{summarizeOwnership(entry.ownership, 1)}</dd>
+                        </div>
+                      </dl>
+                      <ShowcaseTabs
+                        activePanel={activePanel}
+                        id={id}
+                        label={entry.title}
+                        onChange={(panel) =>
+                          setActivePanels((current) => ({ ...current, [id]: panel }))
+                        }
+                      />
+                      {activePanel === "preview" ? (
+                        <ShowcasePreviewFrame
+                          href={entry.href}
+                          id={id}
+                          preferences={preferences}
+                          title={`${entry.title} preview`}
+                        />
+                      ) : (
+                        <CopyableCode
+                          code={entry.copyCode}
+                          id={id}
+                          label={`${entry.title} code`}
+                        />
+                      )}
+                    </article>
+                  );
+                })}
+              </div>
+            </section>
+          ))}
+        </div>
+      </section>
+    </main>
+    </AgentI18nProvider>
+  );
+}
+
+function summarizeOwnership(ownership: string, index: number): string {
+  const sentences = ownership
+    .split(/(?<=\.)\s+/)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+  return sentences[index] ?? ownership;
+}
+
+function showcaseSnippetHref(entry: { start: boolean; title: string }): string {
+  const slug = slugifyShowcaseTitle(entry.title);
+  return entry.start ? `/showcase#${slug}` : `/showcase/patterns#pattern-${slug}`;
+}
+
+function PublicComponentCatalog({
+  preferences,
+}: {
+  preferences: ShowcasePreferences;
+}) {
+  const [activePanels, setActivePanels] = useState<Record<string, "code" | "preview">>(
+    {},
+  );
+  return (
+    <section
+      aria-label="Public component catalog"
+      className="aui-showcase-section"
+      data-testid="public-component-catalog"
+      id="component-catalog"
+    >
+      <header className="aui-showcase-section-header">
+        <div>
+          <h2>Choose Your Starting Point</h2>
+          <p>
+            Start with the primary integration shape. Advanced capabilities,
+            setup controls, and edge states live in Patterns or Components.
+          </p>
+        </div>
+        <span>{publicStartCatalog.length} paths</span>
+      </header>
+      <div className="aui-showcase-paths">
+        {publicStartCatalog.map((entry) => {
+          const id = slugifyShowcaseTitle(entry.title);
+          const activePanel = activePanels[id] ?? "preview";
+          return (
+            <article
+              className="aui-showcase-path"
+              data-layer={entry.layer}
+              id={id}
+              key={entry.title}
+            >
+              <header className="aui-showcase-path-header">
+                <div className="aui-showcase-path-copy">
+                  <span>{entry.layer}</span>
+                  <h3>{entry.title}</h3>
+                  <p>{entry.description}</p>
+                </div>
+                <div className="aui-showcase-live-link">
+                  <a href={withShowcasePreferences(entry.href, preferences)}>
+                    Open route
+                  </a>
+                  <CopyTextButton
+                    label="Copy URL"
+                    text={withShowcasePreferences(entry.href, preferences)}
+                  />
+                </div>
+              </header>
+              <div className="aui-public-component-list">
+                <span>Use this API</span>
+                <ul>
+                  {entry.codeApi.map((apiName) => (
+                    <li key={apiName}>{apiName}</li>
+                  ))}
+                </ul>
+              </div>
+              <ShowcaseTabs
+                activePanel={activePanel}
+                id={id}
+                label={entry.title}
+                onChange={(panel) =>
+                  setActivePanels((current) => ({ ...current, [id]: panel }))
+                }
+              />
+              {activePanel === "preview" ? (
+                <ShowcasePreviewFrame
+                  href={entry.href}
+                  id={id}
+                  preferences={preferences}
+                  title={`${entry.title} preview`}
+                />
+              ) : (
+                <CopyableCode code={entry.copyCode} id={id} label={`${entry.title} code`} />
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function ShowcaseTabs({
+  activePanel,
+  id,
+  label,
+  onChange,
+}: {
+  activePanel: "code" | "preview";
+  id: string;
+  label: string;
+  onChange: (panel: "code" | "preview") => void;
+}) {
+  return (
+    <div className="aui-showcase-tabs" role="tablist" aria-label={label}>
+      <button
+        aria-controls={`${id}-preview`}
+        aria-selected={activePanel === "preview"}
+        id={`${id}-preview-tab`}
+        onClick={() => onChange("preview")}
+        role="tab"
+        type="button"
+      >
+        Preview
+      </button>
+      <button
+        aria-controls={`${id}-code`}
+        aria-selected={activePanel === "code"}
+        id={`${id}-code-tab`}
+        onClick={() => onChange("code")}
+        role="tab"
+        type="button"
+      >
+        Code
+      </button>
+    </div>
+  );
+}
+
+function ShowcasePreviewFrame({
+  href,
+  id,
+  preferences,
+  title,
+}: {
+  href: string;
+  id: string;
+  preferences: ShowcasePreferences;
+  title: string;
+}) {
+  const previewHref = withShowcasePreferences(href, preferences, { embed: true });
+  const previewSurface = href.includes("/showcase/component-preview")
+    ? new URL(href, window.location.origin).searchParams.get("api") ?? ""
+    : "";
+  return (
+    <div
+      aria-labelledby={`${id}-preview-tab`}
+      className="aui-showcase-preview"
+      data-preview-surface={previewSurface}
+      id={`${id}-preview`}
+      role="tabpanel"
+    >
+      <div className="aui-showcase-preview-url">
+        <code>{previewHref}</code>
+      </div>
+      <iframe loading="lazy" src={previewHref} title={title} />
+    </div>
+  );
+}
+
+function CopyableCode({
+  code,
+  id,
+  label,
+}: {
+  code: string;
+  id: string;
+  label: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <div
+      aria-labelledby={`${id}-code-tab`}
+      className="aui-showcase-code"
+      id={`${id}-code`}
+      role="tabpanel"
+    >
+      <header>
+        <span>{label}</span>
+        <CopyTextButton
+          copiedLabel="Copied"
+          label={copied ? "Copied" : "Copy code"}
+          onCopiedChange={setCopied}
+          text={code}
+        />
+      </header>
+      <pre tabIndex={0}>
+        <code>{code}</code>
+      </pre>
+    </div>
+  );
+}
+
+function CopyTextButton({
+  copiedLabel = "Copied",
+  label,
+  onCopiedChange,
+  text,
+}: {
+  copiedLabel?: string;
+  label: string;
+  onCopiedChange?: (copied: boolean) => void;
+  text: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  const visibleLabel = copied ? copiedLabel : label;
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        const copyPromise = navigator.clipboard?.writeText(text) ?? Promise.resolve();
+        void copyPromise.then(() => {
+          setCopied(true);
+          onCopiedChange?.(true);
+          window.setTimeout(() => {
+            setCopied(false);
+            onCopiedChange?.(false);
+          }, 1200);
+        });
+      }}
+    >
+      {visibleLabel}
+    </button>
+  );
+}
+
+function slugifyShowcaseTitle(title: string): string {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 }
 
 function MaintainerGallery() {
@@ -562,6 +1368,8 @@ function ScopedThreadPaneExample() {
 }
 
 function UsageOnlyExample() {
+  const theme = themeFromLocation();
+  const embedded = isEmbeddedPreview();
   const initialState = useMemo(() => {
     const state = createInitialAgentState();
     state.account = {
@@ -571,45 +1379,55 @@ function UsageOnlyExample() {
     state.usage.accountRateLimits = fixtureRateLimits();
     return state;
   }, []);
+  const compactRail = (
+    <section
+      aria-label="Compact rail slot"
+      className="aui-usage-only-section"
+      data-variant="rail"
+    >
+      <header>
+        <h2>Compact rail slot</h2>
+        <p>
+          The same primitive used inside the secondary rail of{" "}
+          <code>AgentChat</code>. Mobile auto-collapses into a{" "}
+          <code>&lt;details&gt;</code> summary; desktop stays expanded. This is
+          the surface a host shell embeds beside its own conversation column.
+        </p>
+      </header>
+      <div className="aui-usage-only-rail">
+        <AgentUsagePanel autoRefresh={false} />
+      </div>
+    </section>
+  );
   return (
     <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-      <main className="aui-usage-only" aria-label="Usage primitive demo">
-        <header className="aui-usage-only-header">
-          <div>
-            <span className="aui-usage-only-kicker">Primitive · usage</span>
-            <h1>Drop the Codex usage primitive into any host surface</h1>
-            <p>
-              <code>AgentUsagePanel</code> and <code>AgentUsageSummary</code> are
-              pure render-only Codex App Server primitives. They consume the same
-              account / rateLimits state as the full chat preset, so a host can
-              place them anywhere — a sidebar rail slot, a settings page, a
-              dashboard widget, or inline next to a thread title — without
-              adopting the rest of <code>AgentChat</code>.
-            </p>
-          </div>
-          <AgentUsageSummary />
-        </header>
-
-        <section
-          aria-label="Compact rail slot"
-          className="aui-usage-only-section"
-          data-variant="rail"
-        >
-          <header>
-            <h2>Compact rail slot</h2>
-            <p>
-              The same primitive used inside the secondary rail of{" "}
-              <code>AgentChat</code>. Mobile auto-collapses into a{" "}
-              <code>&lt;details&gt;</code> summary; desktop stays expanded. This is
-              the surface a host shell embeds beside its own conversation column.
-            </p>
+      <main
+        className="aui-usage-only"
+        data-aui-embed={embedded ? "true" : undefined}
+        data-aui-theme={theme}
+        aria-label="Usage primitive demo"
+      >
+        {embedded ? null : (
+          <header className="aui-usage-only-header">
+            <div>
+              <span className="aui-usage-only-kicker">Primitive · usage</span>
+              <h1>Drop the Codex usage primitive into any host surface</h1>
+              <p>
+                <code>AgentUsagePanel</code> and <code>AgentUsageSummary</code> are
+                pure render-only Codex App Server primitives. They consume the same
+                account / rateLimits state as the full chat preset, so a host can
+                place them anywhere — a sidebar rail slot, a settings page, a
+                dashboard widget, or inline next to a thread title — without
+                adopting the rest of <code>AgentChat</code>.
+              </p>
+            </div>
+            <AgentUsageSummary />
           </header>
-          <div className="aui-usage-only-rail">
-            <AgentUsagePanel autoRefresh={false} />
-          </div>
-        </section>
+        )}
 
-        <section
+        {compactRail}
+
+        {embedded ? null : <section
           aria-label="Standalone quota panel"
           className="aui-usage-only-section"
           data-variant="card"
@@ -626,9 +1444,9 @@ function UsageOnlyExample() {
             <AgentUsagePanel autoRefresh={false} />
             <AgentUsageSummary />
           </div>
-        </section>
+        </section>}
 
-        <section
+        {embedded ? null : <section
           aria-label="Dashboard widget grid"
           className="aui-usage-only-section"
           data-variant="dashboard"
@@ -657,9 +1475,9 @@ function UsageOnlyExample() {
               <AgentUsagePanel autoRefresh={false} />
             </div>
           </div>
-        </section>
+        </section>}
 
-        <section
+        {embedded ? null : <section
           aria-label="Inline thread chrome"
           className="aui-usage-only-section"
           data-variant="inline"
@@ -684,7 +1502,7 @@ function UsageOnlyExample() {
             </header>
             <AgentUsagePanel autoRefresh={false} />
           </div>
-        </section>
+        </section>}
       </main>
     </AgentProvider>
   );
@@ -945,14 +1763,185 @@ function DemoThreadHeader({ threadId }: { threadId: ThreadId }) {
   );
 }
 
+function ComposedShellExample() {
+  const locale = localeFromLocation();
+  const theme = themeFromLocation();
+  const embedded = isEmbeddedPreview();
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  const transport = useMemo(() => createFixtureTransport("host-workflow"), []);
+  return (
+    <AgentProvider initialState={initialState} transport={transport}>
+      <AgentI18nProvider locale={locale}>
+        <main className="aui-demo-main" data-aui-theme={theme}>
+          <ExampleFrame title="Composed shell">
+            <section className="aui-composed-shell-example" aria-label="Composed shell">
+              {embedded ? null : (
+                <header>
+                  <span>Composition · shell</span>
+                  <h2>Embed Agent UI regions inside host-owned chrome</h2>
+                  <p>
+                    The host owns page layout and workflow context. Agent UI owns
+                    sidebar history, status, transcript, approvals, and composer
+                    behavior inside the shell.
+                  </p>
+                </header>
+              )}
+              <AgentShell
+                sidebar={<AgentThreadSidebar activeThreadId="thread-rich-transcript" />}
+              >
+                <div className="aui-composed-shell-main">
+                  <AgentStatusBar />
+                  <AgentThreadView threadId="thread-rich-transcript" />
+                </div>
+              </AgentShell>
+            </section>
+          </ExampleFrame>
+        </main>
+      </AgentI18nProvider>
+    </AgentProvider>
+  );
+}
+
+function ApprovalsStatusExample() {
+  const locale = localeFromLocation();
+  const theme = themeFromLocation();
+  const embedded = isEmbeddedPreview();
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
+  return (
+    <AgentProvider initialState={initialState} transport={transport}>
+      <AgentI18nProvider locale={locale}>
+        <main className="aui-demo-main" data-aui-theme={theme}>
+          <ExampleFrame title="Review rail">
+            <section className="aui-review-rail-example" aria-label="Review rail">
+              {embedded ? null : (
+                <header>
+                  <span>Primitive · review</span>
+                  <h2>Keep runtime status and approval actions visible</h2>
+                  <p>
+                    Place review primitives beside your host workflow without
+                    taking ownership of approval semantics or pending request state.
+                  </p>
+                </header>
+              )}
+              <div className="aui-review-rail-grid">
+                <aside aria-label="Review primitives">
+                  <AgentStatusSummary />
+                  <AgentStatusDetails />
+                  <AgentApprovalQueue threadId="thread-rich-transcript" />
+                </aside>
+                <AgentThreadView threadId="thread-rich-transcript" />
+              </div>
+            </section>
+          </ExampleFrame>
+        </main>
+      </AgentI18nProvider>
+    </AgentProvider>
+  );
+}
+
+function ComposerPrimitivesExample() {
+  const locale = localeFromLocation();
+  const theme = themeFromLocation();
+  const embedded = isEmbeddedPreview();
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
+  return (
+    <AgentProvider initialState={initialState} transport={transport}>
+      <AgentI18nProvider locale={locale}>
+        <main className="aui-demo-main" data-aui-theme={theme}>
+          <ExampleFrame title="Composer slot">
+            <section className="aui-primitive-example-card" aria-label="Composer primitive">
+              {embedded ? null : (
+                <header>
+                  <span>Primitive · composer</span>
+                  <h2>Place the Codex composer in a host-owned input slot</h2>
+                  <p>
+                    The host owns the surrounding layout. Agent UI owns queued
+                    follow-ups, submit state, interrupt handling, and attachment
+                    normalization for the active thread.
+                  </p>
+                </header>
+              )}
+              <AgentComposer threadId="thread-rich-transcript" />
+            </section>
+          </ExampleFrame>
+        </main>
+      </AgentI18nProvider>
+    </AgentProvider>
+  );
+}
+
+function TranscriptContentExample() {
+  const locale = localeFromLocation();
+  const theme = themeFromLocation();
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
+  return (
+    <AgentProvider initialState={initialState} transport={transport}>
+      <AgentI18nProvider locale={locale}>
+        <main className="aui-demo-main" data-aui-theme={theme}>
+          <ExampleFrame title="Transcript pane">
+            <AgentThreadSurface>
+              <DemoThreadHeader threadId="thread-rich-transcript" />
+              <AgentMessageList threadId="thread-rich-transcript" />
+            </AgentThreadSurface>
+          </ExampleFrame>
+        </main>
+      </AgentI18nProvider>
+    </AgentProvider>
+  );
+}
+
+function ThreadNavigationExample() {
+  const locale = localeFromLocation();
+  const theme = themeFromLocation();
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
+  return (
+    <AgentProvider initialState={initialState} transport={transport}>
+      <AgentI18nProvider locale={locale}>
+        <main className="aui-demo-main" data-aui-theme={theme}>
+          <ExampleFrame title="Thread navigation">
+            <ThreadNavigationPreview />
+          </ExampleFrame>
+        </main>
+      </AgentI18nProvider>
+    </AgentProvider>
+  );
+}
+
+function ThreadNavigationPreview() {
+  const { dispatch, state } = useAgentContext();
+  const activeThreadId = state.threadLifecycle.activeThreadId ?? "thread-rich-transcript";
+  const threads = selectOrderedCollectionThreads(state)
+    .map((thread) => selectThreadSummaryView(state, thread.id))
+    .filter((thread): thread is NonNullable<typeof thread> => Boolean(thread));
+  const selectThread = useCallback(
+    (threadId: string) => dispatch({ threadId, type: "thread/active/set" }),
+    [dispatch],
+  );
+  return (
+    <section className="aui-thread-navigation-example" aria-label="Thread navigation primitive">
+      <ThreadList
+        activeThreadId={activeThreadId}
+        onSelectThread={selectThread}
+        threads={threads}
+      />
+      <AgentThreadView threadId={activeThreadId} />
+    </section>
+  );
+}
+
 function TranscriptDensityExample() {
+  const theme = themeFromLocation();
   const initialState = useMemo(() => createRichTranscriptInitialState(), []);
   const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
   const thread = initialState.threads["thread-rich-transcript"];
   if (!thread) return null;
   return (
     <AgentProvider initialState={initialState} transport={transport}>
-      <main className="aui-demo-main" data-aui-theme="light">
+      <main className="aui-demo-main" data-aui-theme={theme}>
         <ExampleFrame title="Transcript density">
           <AgentThreadSurface>
             <DemoThreadHeader threadId={thread.thread.id} />
@@ -981,6 +1970,8 @@ function HostWorkflowComposition({
   firstMessageControls: HostFirstMessageControls | null;
   firstMessageStats: HostFirstMessageStats;
 }) {
+  const theme = themeFromLocation();
+  const embedded = isEmbeddedPreview();
   const bootstrap = useAgentBootstrap();
   const { thread } = useAgentThread();
   const [hostSheetOpen, setHostSheetOpen] = useState(() =>
@@ -1037,9 +2028,13 @@ function HostWorkflowComposition({
   const turnCount = thread?.orderedTurnIds.length ?? 0;
   const threadName = thread?.thread.name ?? thread?.thread.id ?? "No thread selected";
   return (
-    <main className="aui-host-recipe">
+    <main
+      className="aui-host-recipe"
+      data-aui-embed={embedded ? "true" : undefined}
+      data-aui-theme={theme}
+    >
       <div className="aui-host-recipe-shell">
-        <header className="aui-host-recipe-header">
+        {embedded ? null : <header className="aui-host-recipe-header">
           <div>
             <h1>Verify Codex local build</h1>
             <p>
@@ -1065,7 +2060,7 @@ function HostWorkflowComposition({
               Open host review
             </button>
           </div>
-        </header>
+        </header>}
         <section
           className="aui-host-composition"
           aria-label="Host integration reference"
@@ -1619,6 +2614,7 @@ function HostWorkflowPanel({
 }
 
 function ResourceResolutionExample() {
+  const theme = themeFromLocation();
   const initialState = useMemo(() => createRichTranscriptInitialState(), []);
   const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
   const thread = initialState.threads["thread-rich-transcript"];
@@ -1627,7 +2623,7 @@ function ResourceResolutionExample() {
   if (!thread) return null;
   return (
     <AgentProvider initialState={initialState} transport={transport}>
-      <main className="aui-demo-main" data-aui-theme="light">
+      <main className="aui-demo-main" data-aui-theme={theme}>
         <ExampleFrame title="Resource resolution">
           <AgentThreadSurface>
             <DemoThreadHeader threadId={thread.thread.id} />
@@ -1654,9 +2650,15 @@ function ExampleFrame({
   children: ReactNode;
   title: string;
 }) {
+  const theme = themeFromLocation();
+  const embedded = isEmbeddedPreview();
   return (
-    <main className="aui-example-frame">
-      <h1>{title}</h1>
+    <main
+      className="aui-example-frame"
+      data-aui-embed={embedded ? "true" : undefined}
+      data-aui-theme={theme}
+    >
+      {embedded ? null : <h1>{title}</h1>}
       {children}
     </main>
   );

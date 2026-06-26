@@ -1,7 +1,9 @@
 import {
+  selectThreadSummaryView,
   createInitialAgentState,
   FakeAgentTransport,
   type AgentSessionState,
+  type AgentThreadView as AgentThreadListView,
   type PendingServerRequest,
 } from "@nyosegawa/agent-ui-core";
 import {
@@ -14,23 +16,60 @@ import {
 } from "@nyosegawa/agent-ui-react";
 import {
   AgentApprovalQueue,
+  AgentAppsPanel,
+  AgentAttachmentChips,
+  AgentCommandItem,
   AgentComposer,
+  AgentComposerPanel,
+  AgentComposerSubmitButton,
+  AgentContentBlockView,
+  AgentContextUsageIndicator,
+  AgentCriticalNoticeList,
+  AgentDiagnosticsPanel,
+  AgentDiffViewer,
+  AgentFileChangeItem,
+  AgentFirstRun,
+  AgentLocaleSelect,
+  AgentMessageItem,
   AgentMessageList,
+  AgentRateLimitBar,
+  AgentReasoningItem,
   AgentRunControls,
+  AgentSkillsPanel,
+  AgentShell,
   AgentStarterCwd,
   AgentStartComposer,
   AgentStatusBar,
   AgentStatusDetails,
   AgentStatusSummary,
+  AgentThemeToggle,
   AgentThreadSidebar,
+  AgentThreadHeader,
+  AgentThreadSurface,
+  AgentThreadTimeline,
+  AgentThreadView,
+  AgentTokenUsageBar,
+  AgentToolCallItem,
+  AgentTranscript,
+  AgentTurn,
   AgentUsagePanel,
+  AgentUsageSummary,
+  ComposerRunControls,
+  ThreadList,
+  type AgentLocale,
 } from "@nyosegawa/agent-ui-react/primitives";
-import { useEffect, useMemo, useRef, type ReactNode } from "react";
+import {
+  useAgentBootstrap,
+  useAgentContext,
+  type AgentTranscriptEntry,
+} from "@nyosegawa/agent-ui-react/headless";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   createRichTranscriptInitialState,
   fixtureModels,
   fixtureRateLimits,
 } from "../fixtures/demo-state";
+import { closeupCoverageForTitle } from "./component-closeup-catalog";
 
 function resolvedCloseupImage(file: File) {
   const path = `/tmp/agent-ui-closeup/${file.name}`;
@@ -67,21 +106,33 @@ export function ComponentCloseupGallery() {
         <CloseupComposerFocused />
         <CloseupComposerDisabled />
         <CloseupComposerMobile />
+        <CloseupComposerPanelInternals />
         <CloseupComposerPastedImage />
         <CloseupComposerAttachments />
+        <CloseupComposerSubmitButton />
+        <CloseupAttachmentChips />
         <CloseupComposerRunControls />
         <CloseupRunControls />
+        <CloseupThreadStartControls />
+        <CloseupThreadSurfaceHeader />
+        <CloseupThreadView />
+        <CloseupThreadTimeline />
+        <CloseupSidebarSearch />
+        <CloseupThreadList />
         <CloseupApprovalCommand />
         <CloseupApprovalUserInput />
         <CloseupCommandBlock />
         <CloseupCustomCommandBlock />
+        <CloseupTranscriptContentBlocks />
         <CloseupDiffBlock />
-        <CloseupSidebarSearch />
         <CloseupStatusBarStandalone />
+        <CloseupDiagnosticsPanel />
         <CloseupUsageChips />
+        <CloseupContextUsageIndicator />
         <CloseupUsagePanel />
+        <CloseupAppsAndSkillsPanels />
+        <CloseupLocaleThemeControls />
         <CloseupButtonStates />
-        <CloseupThreadStartControls />
       </div>
     </section>
   );
@@ -125,7 +176,11 @@ function CloseupFrame({
   tone?: "panel" | "dark" | "mobile";
 }) {
   return (
-    <article className="aui-closeup" data-testid={`closeup:${title}`}>
+    <article
+      className="aui-closeup"
+      data-covers={closeupCoverageForTitle(title).join(" ")}
+      data-testid={`closeup:${title}`}
+    >
       <header className="aui-closeup-header">
         <strong>{title}</strong>
         <span>{caption}</span>
@@ -278,6 +333,23 @@ function CloseupComposerMobile() {
   );
 }
 
+function CloseupComposerPanelInternals() {
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  const threadId = "thread-rich-transcript";
+  const thread = initialState.threads[threadId];
+  if (!thread) return null;
+  return (
+    <CloseupFrame
+      title="Composer panel internals"
+      caption="Panel, input, toolbar, and submit render as public composer parts."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentComposerPanel thread={thread} threadId={threadId} />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
 /**
  * Seeds composer attachment chips by dispatching a real paste event with a
  * DataTransfer payload — the same path a user takes — so the close-up shows
@@ -357,6 +429,71 @@ function CloseupComposerAttachments() {
   );
 }
 
+function CloseupComposerSubmitButton() {
+  return (
+    <CloseupFrame
+      title="Composer submit button"
+      caption="Send and stop actions keep stable size and label semantics."
+    >
+      <div className="aui-closeup-row">
+        <AgentComposerSubmitButton
+          canSubmit
+          isStopAction={false}
+          label="Send"
+          title="Send message"
+        />
+        <AgentComposerSubmitButton
+          canSubmit
+          isStopAction
+          label="Stop"
+          title="Stop turn"
+        />
+        <AgentComposerSubmitButton
+          canSubmit={false}
+          isStopAction={false}
+          label="Send"
+          title="Send disabled"
+        />
+      </div>
+    </CloseupFrame>
+  );
+}
+
+function CloseupAttachmentChips() {
+  return (
+    <CloseupFrame
+      title="Attachment chips"
+      caption="Image, file, and integration chips use the public chip primitive."
+    >
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <AgentAttachmentChips
+          attachments={[
+            {
+              id: "chip-image",
+              kind: "image",
+              label: "viewport.png",
+              previewUrl: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==",
+            },
+            {
+              extension: "log",
+              id: "chip-file",
+              kind: "file",
+              label: "trace.log",
+              sizeLabel: "14 KB",
+            },
+            {
+              id: "chip-integration",
+              kind: "integration",
+              label: "Design note",
+            },
+          ]}
+          onRemove={() => undefined}
+        />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
 function CloseupComposerRunControls() {
   return (
     <CloseupFrame
@@ -372,6 +509,128 @@ function CloseupComposerRunControls() {
   );
 }
 
+function CloseupThreadSurfaceHeader() {
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  return (
+    <CloseupFrame
+      title="Thread surface + header"
+      caption="Thread shell and header primitives without composer chrome."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <ThreadSurfaceHeaderContent />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function ThreadSurfaceHeaderContent() {
+  const { state } = useAgentContext();
+  const thread = selectThreadSummaryView(state, "thread-rich-transcript");
+  if (!thread) return null;
+  return (
+    <AgentThreadSurface>
+      <AgentThreadHeader thread={thread} threadId="thread-rich-transcript" />
+    </AgentThreadSurface>
+  );
+}
+
+function CloseupThreadView() {
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  return (
+    <CloseupFrame
+      title="Thread view"
+      caption="ThreadView composes header, timeline, approvals, and composer."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentThreadView threadId="thread-rich-transcript" />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupThreadTimeline() {
+  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  return (
+    <CloseupFrame
+      title="Thread timeline"
+      caption="Timeline, transcript alias, and standalone turn renderers."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <ThreadTimelineContent />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function ThreadTimelineContent() {
+  return (
+    <div style={{ display: "grid", gap: "var(--aui-space-250)" }}>
+      <AgentThreadTimeline threadId="thread-rich-transcript" />
+      <AgentTranscript threadId="thread-rich-transcript" />
+      <AgentTurn entries={sampleTurnEntries()} />
+    </div>
+  );
+}
+
+function sampleTurnEntries(): AgentTranscriptEntry[] {
+  return [
+    {
+      approvals: [],
+      block: {
+        id: "block-turn-user",
+        kind: "text",
+        status: "completed",
+        text: "Review the maintainer catalog coverage.",
+      },
+      dataKind: "text",
+      density: "default",
+      displayStatus: "completed",
+      id: "entry-turn-user",
+      item: {
+        id: "item-turn-user",
+        kind: "userMessage",
+        status: "completed",
+        text: "Review the maintainer catalog coverage.",
+        threadId: "thread-rich-transcript",
+        turnId: "turn-closeup",
+      },
+      itemId: "item-turn-user",
+      key: "turn-closeup:item-turn-user",
+      role: "user",
+      status: "completed",
+      text: "Review the maintainer catalog coverage.",
+      turnId: "turn-closeup",
+    },
+    {
+      approvals: [],
+      block: {
+        id: "block-turn-agent",
+        kind: "text",
+        status: "completed",
+        text: "The catalog now maps visual primitives to live close-ups.",
+      },
+      dataKind: "text",
+      density: "default",
+      displayStatus: "completed",
+      id: "entry-turn-agent",
+      item: {
+        id: "item-turn-agent",
+        kind: "agentMessage",
+        status: "completed",
+        text: "The catalog now maps visual primitives to live close-ups.",
+        threadId: "thread-rich-transcript",
+        turnId: "turn-closeup",
+      },
+      itemId: "item-turn-agent",
+      key: "turn-closeup:item-turn-agent",
+      role: "assistant",
+      status: "completed",
+      text: "The catalog now maps visual primitives to live close-ups.",
+      turnId: "turn-closeup",
+    },
+  ];
+}
+
 function CloseupRunControls() {
   return (
     <CloseupFrame
@@ -379,7 +638,10 @@ function CloseupRunControls() {
       caption="Policy and model controls are separate from thread-start cwd."
     >
       <CloseupComposerProvider>
-        <AgentRunControls />
+        <div style={{ display: "grid", gap: "var(--aui-space-250)" }}>
+          <AgentRunControls />
+          <ComposerRunControls />
+        </div>
       </CloseupComposerProvider>
     </CloseupFrame>
   );
@@ -393,11 +655,38 @@ function CloseupMobileChatShell() {
       tone="mobile"
     >
       <div className="aui-closeup-mobile-shell">
-        <AgentProvider
-          initialState={createRichTranscriptInitialState()}
-          transport={new FakeAgentTransport()}
-        >
-          <AgentChat diagnostics sidebar usage />
+        <AgentProvider transport={new FakeAgentTransport()}>
+          <AgentShell>
+            <AgentThreadSurface>
+              <AgentThreadHeader
+                thread={{
+                  cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+                  displayStatus: "ready",
+                  execution: {
+                    runtime: {
+                      activeFlags: [],
+                      isRunning: false,
+                      needsInput: false,
+                      status: "idle",
+                      waitingReasons: [],
+                    },
+                    serverRequests: [],
+                  },
+                  id: "thread-mobile-shell",
+                  isActive: true,
+                  isArchived: false,
+                  isPreview: false,
+                  isRunning: false,
+                  needsInput: false,
+                  title: "Mobile shell",
+                  waitingReasons: [],
+                }}
+                threadId="thread-mobile-shell"
+              />
+              <p className="aui-transcript-empty">Transcript and composer stay first.</p>
+              <AgentComposer threadId="thread-mobile-shell" />
+            </AgentThreadSurface>
+          </AgentShell>
         </AgentProvider>
       </div>
     </CloseupFrame>
@@ -413,7 +702,7 @@ function CloseupEmptyStateMobile() {
       tone="mobile"
     >
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentChat sidebar={false} usage={false} />
+        <AgentFirstRun onStartThread={() => undefined} />
       </AgentProvider>
     </CloseupFrame>
   );
@@ -753,6 +1042,63 @@ function createOptimisticPendingState(): AgentSessionState {
   return state;
 }
 
+function createPanelsState(): AgentSessionState {
+  const state = createEmptyAuthenticatedState();
+  state.apps.apps = [
+    {
+      accessible: true,
+      enabled: true,
+      id: "app://browser",
+      name: "Browser",
+    },
+    {
+      accessible: false,
+      enabled: false,
+      id: "app://figma",
+      name: "Figma",
+    },
+  ];
+  state.apps.nextCursor = "next";
+  state.skills.byCwd["/Users/sakasegawa/src/github.com/nyosegawa/agent-ui"] = [
+    {
+      cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+      enabled: true,
+      name: "browser-qa",
+      path: ".agents/skills/browser-qa",
+    },
+    {
+      cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+      enabled: false,
+      name: "example-authoring",
+      path: ".agents/skills/example-authoring",
+    },
+  ];
+  state.diagnostics.banners = [
+    {
+      audience: ["user"],
+      id: "banner-critical",
+      kind: "configWarning",
+      message: "Bridge token expires soon.",
+      severity: "critical",
+    },
+    {
+      audience: ["user"],
+      id: "banner-warning",
+      kind: "rateLimit",
+      message: "Usage is above the review threshold.",
+      severity: "warning",
+    },
+  ];
+  state.diagnostics.warnings = [
+    {
+      audience: ["user"],
+      id: "warning-closeup",
+      message: "Fixture bridge reported a recoverable warning.",
+    },
+  ];
+  return state;
+}
+
 function CloseupBannerStack() {
   const initialState = useMemo(() => createRichTranscriptInitialState(), []);
   return (
@@ -762,12 +1108,32 @@ function CloseupBannerStack() {
     >
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <div style={{ display: "grid", gap: "var(--aui-space-250)" }}>
+          <AgentCriticalNoticeList />
           <AgentStatusSummary />
           <AgentStatusDetails />
         </div>
       </AgentProvider>
     </CloseupFrame>
   );
+}
+
+function CloseupDiagnosticsPanel() {
+  const initialState = useMemo(() => createPanelsState(), []);
+  return (
+    <CloseupFrame
+      title="Diagnostics panel"
+      caption="Bootstrap and user diagnostics remain secondary chrome."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <DiagnosticsPanelContent />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function DiagnosticsPanelContent() {
+  const bootstrap = useAgentBootstrap();
+  return <AgentDiagnosticsPanel bootstrap={bootstrap} />;
 }
 
 function CloseupUsagePanel() {
@@ -787,6 +1153,41 @@ function CloseupUsagePanel() {
     >
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <AgentUsagePanel autoRefresh={false} />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupAppsAndSkillsPanels() {
+  const initialState = useMemo(() => createPanelsState(), []);
+  return (
+    <CloseupFrame
+      title="Apps and skills panels"
+      caption="Codex app metadata and skill controls render as UI primitives; hosts own registry and execution policy."
+    >
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <div style={{ display: "grid", gap: "var(--aui-space-250)" }}>
+          <AgentAppsPanel />
+          <AgentSkillsPanel cwd="/Users/sakasegawa/src/github.com/nyosegawa/agent-ui" />
+        </div>
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupLocaleThemeControls() {
+  const [locale, setLocale] = useState<AgentLocale>("en");
+  const [theme, setTheme] = useState<"light" | "dark" | "system">("light");
+  return (
+    <CloseupFrame
+      title="Locale and theme controls"
+      caption="Settings primitives remain compact in tool chrome."
+    >
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <div className="aui-closeup-row">
+          <AgentLocaleSelect value={locale} onChange={setLocale} />
+          <AgentThemeToggle value={theme} onChange={setTheme} />
+        </div>
       </AgentProvider>
     </CloseupFrame>
   );
@@ -830,15 +1231,66 @@ function CloseupApprovalUserInput() {
 }
 
 function CloseupCommandBlock() {
-  const initialState = useMemo(() => createRichTranscriptInitialState(), []);
+  const block: React.ComponentProps<typeof AgentCommandItem>["block"] = {
+    command: "bun run test:e2e:fixtures",
+    durationMs: 8400,
+    exitCode: 0,
+    id: "block-command-closeup",
+    kind: "commandExecution",
+    output: "9 passed\n",
+    status: "completed",
+  };
   return (
     <CloseupFrame
       title="Command block"
       caption="Expandable terminal output with exit code and duration."
       tone="dark"
     >
-      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <CloseupCommandStage />
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <AgentCommandItem block={block} />
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupTranscriptContentBlocks() {
+  const thinkingBlock: React.ComponentProps<typeof AgentReasoningItem>["block"] = {
+    content: "Evaluate renderer contracts before changing exports.",
+    id: "block-thinking-closeup",
+    kind: "thinking",
+    status: "completed",
+    summary: "Renderer contract audit",
+  };
+  const toolBlock: React.ComponentProps<typeof AgentToolCallItem>["block"] = {
+    arguments: { route: "/maintainer-gallery" },
+    durationMs: 820,
+    id: "block-tool-closeup",
+    kind: "toolCall",
+    result: { status: "ok" },
+    status: "completed",
+    tool: "browser.snapshot",
+    toolType: "generic",
+  };
+  const textBlock: React.ComponentProps<typeof AgentContentBlockView>["block"] = {
+    id: "block-text-closeup",
+    kind: "text",
+    status: "completed",
+    text: "Component catalog now covers the public visual primitives.",
+  };
+  return (
+    <CloseupFrame
+      title="Transcript content blocks"
+      caption="Reasoning, tool call, and message primitives via content block view."
+    >
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <div style={{ display: "grid", gap: "var(--aui-space-250)" }}>
+          <AgentContentBlockView block={thinkingBlock} />
+          <AgentContentBlockView block={toolBlock} />
+          <AgentContentBlockView block={textBlock} />
+          <AgentReasoningItem block={thinkingBlock} />
+          <AgentToolCallItem block={toolBlock} />
+          <AgentMessageItem text="Standalone message item renderer." />
+        </div>
       </AgentProvider>
     </CloseupFrame>
   );
@@ -883,22 +1335,6 @@ function CloseupCustomCommandBlock() {
   );
 }
 
-function CloseupCommandStage() {
-  return (
-    <details className="aui-transcript-card aui-command-card" data-status="completed" open>
-      <summary>
-        <span className="aui-terminal-label">Command</span>
-        <span className="aui-command-title">bun run test:e2e:playwright</span>
-        <span className="aui-command-meta">exit 0 · 8.4s</span>
-        <span className="aui-command-preview">
-          /Users/sakasegawa/src/github.com/nyosegawa/agent-ui
-        </span>
-      </summary>
-      <pre className="aui-command-output">9 passed{"\n"}</pre>
-    </details>
-  );
-}
-
 function createCustomCommandRendererState(): AgentSessionState {
   const state = createRichTranscriptInitialState();
   const requestKey = "string:approval-command-custom-renderer" as const;
@@ -934,30 +1370,35 @@ function createSingleApprovalState(id: string): AgentSessionState {
 }
 
 function CloseupDiffBlock() {
+  const patch = `diff --git a/react-components/composer.tsx b/react-components/composer.tsx
+@@ composer rebuild
+- <textarea className="aui-composer-input" />
++ <textarea className="aui-composer-input" />
++ <Toolbar />
+`;
+  const block: React.ComponentProps<typeof AgentFileChangeItem>["block"] = {
+    changes: [
+      {
+        kind: "update",
+        path: "react-components/composer.tsx",
+      },
+    ],
+    id: "block-file-change-closeup",
+    kind: "fileChange",
+    status: "completed",
+  };
   return (
     <CloseupFrame
       title="Diff / file change"
-      caption="Add/delete chips, mono path, dark surface."
+      caption="Diff viewer and file-change item render real public primitives."
       tone="dark"
     >
-      <div className="aui-diff">
-        <div className="aui-diff-header">
-          <strong>2 files changed</strong>
-          <span className="aui-diff-stat aui-diff-stat-add">+42</span>
-          <span className="aui-diff-stat aui-diff-stat-remove">−7</span>
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <div style={{ display: "grid", gap: "var(--aui-space-250)" }}>
+          <AgentDiffViewer patch={patch} />
+          <AgentFileChangeItem block={block} patch={patch} />
         </div>
-        <ul className="aui-diff-files">
-          <li>
-            <span>packages/react/src/components/composer.tsx</span>
-            <em>+34 / −5</em>
-          </li>
-          <li>
-            <span>packages/react/src/styles/transcript-blocks.css</span>
-            <em>+8 / −2</em>
-          </li>
-        </ul>
-        <pre className="aui-diff-source">{`@@ composer rebuild\n- <textarea className="aui-composer-input" />\n+ <textarea className="aui-composer-input" />\n+ <Toolbar />\n`}</pre>
-      </div>
+      </AgentProvider>
     </CloseupFrame>
   );
 }
@@ -967,7 +1408,7 @@ function CloseupSidebarSearch() {
   const transport = useMemo(() => createSidebarThreadsTransport(), []);
   return (
     <CloseupFrame
-      title="Sidebar search + threads"
+      title="Sidebar search"
       caption="Real history sidebar primitive with search and selected row."
     >
       <AgentProvider initialState={initialState} transport={transport}>
@@ -979,58 +1420,106 @@ function CloseupSidebarSearch() {
   );
 }
 
+function CloseupThreadList() {
+  const threadListItems: AgentThreadListView[] = sidebarDrawerThreads().map(
+    (thread, index) => ({
+      cwd: thread.path,
+      displayStatus: index === 0 ? "waitingForInput" : "ready",
+      id: thread.id,
+      isActive: index === 0,
+      isArchived: false,
+      isPreview: false,
+      isRunning: false,
+      needsInput: index === 0,
+      subtitle: thread.path,
+      title: thread.name,
+      waitingReasons: index === 0 ? ["approval"] : [],
+    }),
+  );
+  return (
+    <CloseupFrame
+      title="Thread list"
+      caption="Standalone thread rows stay visible without sidebar clipping."
+    >
+      <AgentProvider transport={new FakeAgentTransport()}>
+        <div className="aui-closeup-thread-list-stage">
+          <ThreadList
+            activeThreadId="thread-side-select"
+            threads={threadListItems}
+          />
+        </div>
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
 function CloseupUsageChips() {
+  const initialState = useMemo(() => createPanelsState(), []);
   return (
     <CloseupFrame
       title="Usage / status chips"
       caption="Pill-shape summaries used in secondary chrome."
     >
-      <div style={{ display: "grid", gap: "var(--aui-space-200)" }}>
-        <div className="aui-status-summary" aria-label="Status summary">
-          <strong>Status</strong>
-          <span data-severity="info">2 background notices</span>
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <div style={{ display: "grid", gap: "var(--aui-space-200)" }}>
+          <AgentUsageSummary />
+          <AgentRateLimitBar label="5h" percent={12} />
+          <AgentTokenUsageBar inputTokens={1200} outputTokens={420} />
+          <span className="aui-status-pill" data-status="running">
+            <span className="aui-status-pill-dot" aria-hidden="true" />
+            Running
+          </span>
+          <span className="aui-status-pill" data-status="waitingForInput">
+            <span className="aui-status-pill-dot" aria-hidden="true" />
+            Needs approval
+          </span>
+          <span className="aui-status-pill" data-status="waitingForInput">
+            <span className="aui-status-pill-dot" aria-hidden="true" />
+            Needs permission
+          </span>
+          <span className="aui-status-pill" data-status="waitingForInput">
+            <span className="aui-status-pill-dot" aria-hidden="true" />
+            Needs input
+          </span>
+          <span className="aui-status-pill" data-status="waitingForInput">
+            <span className="aui-status-pill-dot" aria-hidden="true" />
+            Needs MCP input
+          </span>
+          <span className="aui-status-pill" data-status="waitingForInput">
+            <span className="aui-status-pill-dot" aria-hidden="true" />
+            Needs authentication
+          </span>
+          <span className="aui-status-pill" data-status="waitingForInput">
+            <span className="aui-status-pill-dot" aria-hidden="true" />
+            Needs attestation
+          </span>
+          <span className="aui-status-pill" data-status="waitingForInput">
+            <span className="aui-status-pill-dot" aria-hidden="true" />
+            Needs attention
+          </span>
+          <span className="aui-status-pill" data-status="error">
+            <span className="aui-status-pill-dot" aria-hidden="true" />
+            Failed
+          </span>
         </div>
-        <div className="aui-usage-summary" aria-label="Usage summary">
-          <strong>Usage</strong>
-          <span>5h 12%</span>
-        </div>
-        <span className="aui-status-pill" data-status="running">
-          <span className="aui-status-pill-dot" aria-hidden="true" />
-          Running
-        </span>
-        <span className="aui-status-pill" data-status="waitingForInput">
-          <span className="aui-status-pill-dot" aria-hidden="true" />
-          Needs approval
-        </span>
-        <span className="aui-status-pill" data-status="waitingForInput">
-          <span className="aui-status-pill-dot" aria-hidden="true" />
-          Needs permission
-        </span>
-        <span className="aui-status-pill" data-status="waitingForInput">
-          <span className="aui-status-pill-dot" aria-hidden="true" />
-          Needs input
-        </span>
-        <span className="aui-status-pill" data-status="waitingForInput">
-          <span className="aui-status-pill-dot" aria-hidden="true" />
-          Needs MCP input
-        </span>
-        <span className="aui-status-pill" data-status="waitingForInput">
-          <span className="aui-status-pill-dot" aria-hidden="true" />
-          Needs authentication
-        </span>
-        <span className="aui-status-pill" data-status="waitingForInput">
-          <span className="aui-status-pill-dot" aria-hidden="true" />
-          Needs attestation
-        </span>
-        <span className="aui-status-pill" data-status="waitingForInput">
-          <span className="aui-status-pill-dot" aria-hidden="true" />
-          Needs attention
-        </span>
-        <span className="aui-status-pill" data-status="error">
-          <span className="aui-status-pill-dot" aria-hidden="true" />
-          Failed
-        </span>
-      </div>
+      </AgentProvider>
+    </CloseupFrame>
+  );
+}
+
+function CloseupContextUsageIndicator() {
+  return (
+    <CloseupFrame
+      title="Context usage indicator"
+      caption="Token pressure bar remains compact beside transcript chrome."
+    >
+      <AgentContextUsageIndicator
+        tokenUsage={{
+          inputTokens: 48000,
+          outputTokens: 12000,
+          totalTokens: 60000,
+        }}
+      />
     </CloseupFrame>
   );
 }

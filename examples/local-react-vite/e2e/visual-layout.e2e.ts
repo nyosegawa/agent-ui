@@ -24,6 +24,47 @@ test("matches the mobile shell layout contract", async ({ page }) => {
   await expectVisualLayoutContract(page, "mobile");
 });
 
+test("default conversation primary surfaces do not expose horizontal panning", async ({
+  page,
+}) => {
+  await page.setViewportSize(desktopViewport);
+  await page.goto("/showcase/default-conversation");
+  await expect(page.getByTestId("agent-chat")).toBeVisible();
+  const selectors = [
+    ".aui-shell",
+    ".aui-chat",
+    ".aui-chat-body",
+    ".aui-thread-column",
+    ".aui-thread-surface",
+    ".aui-message-list",
+    ".aui-sidebar",
+    ".aui-thread-list",
+    ".aui-chat-rail",
+  ] as const;
+  for (const selector of selectors) {
+    const element = page.locator(selector).first();
+    await expect(element, selector).toBeVisible();
+    const metrics = await element.evaluate((node) => {
+      node.scrollLeft = 80;
+      const styles = getComputedStyle(node);
+      return {
+        clientWidth: node.clientWidth,
+        overflowX: styles.overflowX,
+        overscrollX: styles.overscrollBehaviorX,
+        scrollLeft: node.scrollLeft,
+        scrollWidth: node.scrollWidth,
+      };
+    });
+    expect(metrics.scrollLeft, selector).toBe(0);
+    expect(metrics.overscrollX, selector).toBe("none");
+    expect(["hidden", "clip"].includes(metrics.overflowX), selector).toBe(true);
+    expect(
+      metrics.scrollWidth - metrics.clientWidth,
+      JSON.stringify({ selector, metrics }),
+    ).toBeLessThanOrEqual(1);
+  }
+});
+
 test("tablet status bar keeps account controls inside the viewport", async ({
   page,
 }) => {
@@ -492,4 +533,43 @@ test("host workflow recipe never duplicates the status summary", async ({ page }
     page.getByRole("heading", { name: "Verify Codex local build" }),
   ).toBeVisible();
   await expect(page.locator('[aria-label="Status summary"]')).toHaveCount(1);
+});
+
+test("host workflow side rail does not create horizontal scrolling", async ({ page }) => {
+  await page.setViewportSize(desktopViewport);
+  await page.goto("/showcase/host-workflow-recipe");
+  const rail = page.getByRole("complementary", { name: "Host workflow context" });
+  await expect(rail).toBeVisible();
+  await expect(page.locator('[aria-label="Status summary"]')).toBeVisible();
+  await expect(page.locator('[aria-label="Usage summary"]')).toBeVisible();
+  const metrics = await rail.evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  expect(metrics.scrollWidth - metrics.clientWidth, JSON.stringify(metrics)).toBeLessThanOrEqual(1);
+});
+
+test("host workflow columns do not accept horizontal panning", async ({ page }) => {
+  await page.setViewportSize(desktopViewport);
+  await page.goto("/showcase/host-workflow-recipe");
+  const selectors = [
+    ".aui-host-thread",
+    ".aui-host-thread .aui-sidebar",
+    ".aui-host-thread .aui-thread-column",
+    ".aui-host-thread .aui-message-list",
+    ".aui-host-context",
+  ] as const;
+  for (const selector of selectors) {
+    const element = page.locator(selector).first();
+    await expect(element, selector).toBeVisible();
+    const metrics = await element.evaluate((node) => {
+      node.scrollLeft = 80;
+      return {
+        scrollLeft: node.scrollLeft,
+        touchAction: getComputedStyle(node).touchAction,
+      };
+    });
+    expect(metrics.scrollLeft, selector).toBe(0);
+    expect(metrics.touchAction, selector).toContain("pan-y");
+  }
 });

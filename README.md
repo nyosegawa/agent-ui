@@ -65,8 +65,16 @@ bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 Useful fixture routes:
 
 - `/`
+- `/showcase`
+- `/showcase/components`
+- `/showcase/patterns`
+- `/showcase/composed-shell`
 - `/showcase/rich-transcript`
 - `/showcase/host-workflow-recipe`
+- `/showcase/composer-primitives`
+- `/showcase/transcript-content`
+- `/showcase/approvals-status`
+- `/showcase/thread-navigation`
 - `/showcase/usage-only`
 - `/showcase/scoped-thread-pane`
 - `/showcase/app-connectors`
@@ -190,7 +198,7 @@ Key pages:
 ## Examples
 
 - [Real Codex Local Web](./docs/examples/codex-local-web.md)
-- [Fixture Gallery and Local Vite](./docs/examples/local-react-vite.md)
+- [Public Showcase and Local Vite Fixtures](./docs/examples/local-react-vite.md)
 - [Next RPC Route](./docs/examples/next-rpc-route.md)
 - [Next WebSocket Sidecar](./docs/examples/next-with-bridge-sidecar.md)
 - [Docs Site Example](./docs/examples/docs-site.md)

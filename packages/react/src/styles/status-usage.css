@@ -3,17 +3,18 @@
 .aui-status-summary,
 .aui-usage-summary {
   align-items: center;
-  background: var(--aui-panel);
-  border: 1px solid var(--aui-border);
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border-strong);
   border-radius: var(--aui-radius-pill);
   box-shadow: var(--aui-elevation-1);
   display: inline-grid;
-  gap: var(--aui-space-200);
+  gap: var(--aui-space-175);
   grid-template-columns: auto minmax(0, 1fr);
-  justify-self: stretch;
+  justify-self: start;
+  max-width: 100%;
   min-height: var(--aui-control-height-md);
-  padding: var(--aui-space-125) var(--aui-space-300);
-  width: 100%;
+  padding: var(--aui-space-100) var(--aui-space-250);
+  width: fit-content;
 }
 
 .aui-status-summary strong,
@@ -27,12 +28,40 @@
 
 .aui-status-summary span,
 .aui-usage-summary span {
-  color: var(--aui-fg);
+  color: var(--aui-fg-strong);
   font-size: var(--aui-font-size-sm-plus);
+  font-weight: 650;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.aui-summary-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--aui-space-100);
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+}
+
+.aui-summary-value {
+  align-items: baseline;
+  background: var(--aui-panel);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-pill);
+  display: inline-flex;
+  gap: var(--aui-space-100);
+  min-height: var(--aui-control-height-xs);
+  padding: 0 var(--aui-space-150);
+}
+
+.aui-summary-value em {
+  color: var(--aui-fg-muted);
+  font-size: var(--aui-font-size-xs);
+  font-style: normal;
+  font-weight: 600;
 }
 
 .aui-status-banners {

@@ -95,7 +95,18 @@ export function AgentUsageSummary() {
   return (
     <section className="aui-usage-summary" aria-label={t("aria.usageSummary")}>
       <strong>{t("usage.label")}</strong>
-      <span>{usageSummary(windows, t)}</span>
+      {windows.length > 0 ? (
+        <span className="aui-summary-values">
+          {windows.slice(0, 2).map((window) => (
+            <span className="aui-summary-value" key={window.id}>
+              <em>{window.label}</em>
+              <span>{window.valueLabel}</span>
+            </span>
+          ))}
+        </span>
+      ) : (
+        <span>{t("common.syncPending")}</span>
+      )}
     </section>
   );
 }

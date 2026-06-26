@@ -233,7 +233,10 @@ gate.
 
 The fixture routes are:
 
-- `/`: public showcase index
+- `/showcase`: public component catalog with live example links and copyable
+  React snippets (`/` is an alias)
+- `/showcase/components`: snippet-facing direct public API catalog
+- `/showcase/patterns`: workflow-oriented host pattern catalog
 - `/showcase/default-conversation`: default transcript-first surface with
   approvals, command output, diff, composer, usage primitives, and thread
   history
@@ -243,21 +246,32 @@ The fixture routes are:
 - `/showcase/bridge-error`: connection diagnostics
 - `/maintainer-gallery`: maintainer-only component close-ups, probes,
   specimens, and full-route previews
-- `/showcase/host-workflow-recipe`: host integration reference shell with host header,
+- `/showcase/composed-shell`: neutral composed shell route for sidebar history,
+  status, and thread view inside host-owned layout
+- `/showcase/host-workflow-recipe`: advanced host integration reference shell with host header,
   embedded `AgentChat`, side panel, local attachment metadata, transcript
   local-media preview/fallback metadata, scoped thread history loading,
   host-owned workflow gate, first-message optimistic mode, mobile drawer, and
   host-owned review sheet
+- `/showcase/composer-primitives`: normal composer primitive placement for
+  user-facing docs and snippets
 - `/showcase/composer-retry`: failed first-message retry through the public composer
   controller
+- `/showcase/transcript-content`: default transcript and content primitive
+  rendering for user-facing docs and snippets
+- `/showcase/approvals-status`: review rail composition for status summaries,
+  detailed notices, and pending approval actions
 - `/showcase/resource-resolution`: structured local-media resource rendering without
   raw path exposure
 - `/showcase/transcript-density`: compact transcript route with verbose command/file
   blocks and noncritical chat text filtered out
-- `/showcase/scoped-thread-lists`: independent host-owned history list scopes
 - `/showcase/usage-only`: standalone usage composition examples
+- `/showcase/thread-navigation`: host-owned thread selection composed from
+  `ThreadList` and `AgentThreadView`
 - `/showcase/scoped-thread-pane`: fixed-thread composition example
 - `/showcase/app-connectors`: Codex Apps/connectors example
+- `/maintainer/scoped-thread-lists`: maintainer-only scoped history collection
+  contract
 
 The browser gate checks desktop and mobile layout contracts, horizontal
 overflow, composer reachability, approval hit testing, sidebar behavior, and
@@ -277,6 +291,15 @@ viewport to the manifest when a route owns that layout shape. Browser consumers
 should not duplicate route lists; `visual-qa-manifest.e2e.ts` is the deliberate
 stable-inventory assertion and must be updated when the canonical route or docs
 screenshot set intentionally changes.
+
+The public component catalog is owned by
+`examples/local-react-vite/src/fixtures/public-component-catalog.ts`.
+`test/public-showcase-catalog.test.ts` checks that every required public visual
+component is classified for the user-facing catalog, that catalog links point
+only at public showcase routes, that each entry separates directly displayed
+snippet API from non-UI coverage metadata, that each entry has copyable
+public-API code and an ownership note, and that obsolete or maintainer-only
+concepts do not return to the public surface.
 
 The deterministic fixture Playwright files are split by contract ownership:
 

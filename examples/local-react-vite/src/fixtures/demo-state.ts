@@ -126,6 +126,29 @@ function handleFixtureRequest(request: FakeTransportRequest, scenario: FixtureSc
           nextCursor: "host-scope-page-2",
         };
       }
+      return {
+        data: [
+          {
+            id: "thread-host-scope-review",
+            name: "Host scoped review",
+            preview: "Stored session scoped to host panel",
+            status: { type: "notLoaded" },
+          },
+          {
+            id: "thread-stored-preview",
+            name: "Stored session",
+            preview: "Review a stored session",
+            status: { type: "notLoaded" },
+          },
+          {
+            id: "thread-host-scope-page",
+            name: "Host scoped follow-up",
+            preview: "Second page stored session",
+            status: { type: "notLoaded" },
+          },
+        ],
+        nextCursor: null,
+      };
     }
     return {
       data: [

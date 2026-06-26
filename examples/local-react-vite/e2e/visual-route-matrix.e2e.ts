@@ -1,9 +1,12 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
-  previewRoutes,
   visualQaRoutes,
   type VisualQaViewport,
 } from "../src/fixtures/visual-qa-manifest";
+import {
+  publicApiCatalog,
+  publicStartCatalog,
+} from "../src/fixtures/public-component-catalog";
 import { expectWithinViewport } from "./support/visual-contracts";
 
 const viewportSizes: Record<VisualQaViewport, { height: number; width: number }> = {
@@ -39,15 +42,19 @@ test.describe("visual QA route viewport matrix", () => {
     test(`public showcase index is layout-ready on ${viewport}`, async ({ page }) => {
       await page.setViewportSize(viewportSizes[viewport]);
       await page.goto("/");
-      await expect(page.locator(".aui-route-gallery").first()).toBeVisible();
+      await expect(page.locator(".aui-showcase-docs").first()).toBeVisible();
+      await expect(page.getByTestId("public-component-catalog")).toBeVisible();
       await expectNoDocumentHorizontalOverflow(page, "showcase-index", viewport);
       await expectVisibleTextFitsViewport(page, "showcase-index", viewport);
-      for (const route of previewRoutes) {
-        await expect(page.locator(`a[href="${route.path}"]`).first()).toBeVisible();
+      for (const entry of publicStartCatalog) {
+        await expect(page.locator(`a[href="${entry.href}"]`).first()).toBeVisible();
       }
+      await expect(page.getByRole("tab", { name: "Preview" }).first()).toBeVisible();
+      await expect(page.getByRole("tab", { name: "Code" }).first()).toBeVisible();
+      await expect(page.locator(".aui-showcase-preview iframe").first()).toBeVisible();
       await expect(page.locator('a[href="/maintainer-gallery"]')).toHaveCount(0);
-      await expectWithinViewport(page, ".aui-route-gallery");
-      await expectWithinViewport(page, ".aui-route-card");
+      await expectWithinViewport(page, ".aui-showcase-docs");
+      await expectWithinViewport(page, ".aui-showcase-path");
     });
   }
 
@@ -64,6 +71,17 @@ test.describe("visual QA route viewport matrix", () => {
         }
       });
     }
+  }
+
+  for (const api of publicApiCatalog.filter((entry) => entry.isVisual)) {
+    test(`component preview for ${api.name} is layout-ready`, async ({ page }) => {
+      await page.setViewportSize(viewportSizes.desktop);
+      await page.goto(`${api.previewHref}&embed=1`);
+      await expect(page.locator(".aui-component-preview-frame")).toBeVisible();
+      await expectNoDocumentHorizontalOverflow(page, `component-preview-${api.name}`, "desktop");
+      await expectVisibleTextFitsViewport(page, `component-preview-${api.name}`, "desktop");
+      await expectWithinViewport(page, ".aui-component-preview-frame");
+    });
   }
 });
 

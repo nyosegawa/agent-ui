@@ -98,6 +98,17 @@
   z-index: auto;
 }
 
+.aui-closeup-thread-list-stage {
+  border: 1px solid var(--aui-rule);
+  border-radius: var(--aui-radius-md);
+  max-height: 360px;
+  overflow: auto;
+}
+
+.aui-closeup-thread-list-stage .aui-thread-list {
+  border: 0;
+}
+
 .aui-closeup-narrow-composer-settings {
   margin: 0 auto;
   max-width: 420px;

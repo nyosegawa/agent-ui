@@ -257,9 +257,9 @@ Resource resolution exports live on `@nyosegawa/agent-ui-react/headless` and
 `AgentResolvedLocalAttachment` lives on
 `@nyosegawa/agent-ui-react/primitives` because it is tied to the visual
 composer attachment surface. These are not host upload, storage,
-authorization, static-serving policy, or App/Plugin picker semantics. Resource
-resolution returns structured `AgentResolvedResource` objects; URL string
-shorthand is not part of the public contract.
+authorization, static-serving policy, or host capability-registry semantics.
+Resource resolution returns structured `AgentResolvedResource` objects; URL
+string shorthand is not part of the public contract.
 
 Composer controller exports on `@nyosegawa/agent-ui-react/headless` include
 the raw-free `AgentComposerController` view plus `AgentComposerSubmitMode`,
@@ -528,8 +528,10 @@ general observed-attribute API for every `AgentChat` option.
 - `examples/recipes`: typed host integration recipes and remote deployment notes.
 - `examples/docs-site`: small package-overview/demo landing page. It is not a markdown documentation renderer.
 
-Route-focused public fixtures such as `/showcase/usage-only`,
-`/showcase/scoped-thread-pane`, `/showcase/app-connectors`, and `/showcase/host-workflow-recipe` live inside
+Route-focused public fixtures such as `/showcase/composed-shell`,
+`/showcase/composer-primitives`, `/showcase/transcript-content`,
+`/showcase/approvals-status`, `/showcase/thread-navigation`,
+`/showcase/usage-only`, `/showcase/app-connectors`, and `/showcase/host-workflow-recipe` live inside
 `examples/local-react-vite` and are documented under `docs/examples/`.
 
 ## Browser Public API

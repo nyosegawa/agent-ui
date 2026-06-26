@@ -107,7 +107,7 @@ boundaries, examples, tests, and host integration docs agree.
 ## Examples
 
 - [Real Codex Local Web](./examples/codex-local-web.md)
-- [Fixture Gallery and Local Vite](./examples/local-react-vite.md)
+- [Public Showcase and Local Vite Fixtures](./examples/local-react-vite.md)
 - [Next RPC Route](./examples/next-rpc-route.md)
 - [Next WebSocket Sidecar](./examples/next-with-bridge-sidecar.md)
 - [Docs Site Example](./examples/docs-site.md)

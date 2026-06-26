@@ -8,6 +8,7 @@
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+  overscroll-behavior-x: none;
 }
 
 .aui-chat > * {
@@ -21,6 +22,7 @@
   grid-template-columns: minmax(0, 1fr) minmax(240px, 308px);
   min-height: 0;
   overflow: hidden;
+  overscroll-behavior-x: none;
 }
 
 .aui-chat-body[data-rail="hidden"] {
@@ -35,6 +37,7 @@
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+  overscroll-behavior-x: none;
 }
 
 .aui-chat-rail {
@@ -43,7 +46,10 @@
   display: grid;
   gap: var(--aui-space-250);
   min-height: 0;
-  overflow: auto;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-x: none;
   padding: var(--aui-space-350);
 }
 
@@ -63,6 +69,7 @@
   min-height: 0;
   min-width: 0;
   overflow: hidden;
+  overscroll-behavior-x: none;
 }
 
 .aui-thread-surface,
@@ -347,8 +354,10 @@
   margin: 0;
   min-height: 0;
   min-width: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: contain;
   padding: var(--aui-space-450) var(--aui-space-550) var(--aui-space-700);
   scroll-behavior: auto;
   position: relative;
