@@ -9,7 +9,8 @@ Omit the prop when Agent UI should inherit the host application's theme scope.
 
 ```ts
 import { useState } from "react";
-import { AgentChat, AgentThemeToggle, type AgentTheme } from "@nyosegawa/agent-ui-react";
+import { AgentChat } from "@nyosegawa/agent-ui-react";
+import { AgentThemeToggle, type AgentTheme } from "@nyosegawa/agent-ui-react/primitives";
 import "@nyosegawa/agent-ui-react/styles.css";
 ```
 
@@ -120,9 +121,9 @@ constrain height with normal CSS:
 
 Use the `AgentChat.components` map when token changes are not enough.
 `Approval`, `ComposerPanel`, `EmptyState`, `Shell`, `Sidebar`, and `blocks`
-are the preferred replacement points for current customization. `Item` remains a
-legacy replacement point whose props still expose core item/turn state in this
-draft, so prefer `blocks` or transcript controllers for raw-free custom
-rendering. Keep approval decisions explicit and keep command, tool, and
-file-change context in the transcript order so restored sessions remain
+are the replacement points for current customization. Use `blocks` for
+per-block rendering or `renderItem(entry, Default)` when a host needs to wrap a
+whole transcript entry. Those inputs are transcript view models, not core
+item/turn entities. Keep approval decisions explicit and keep command, tool,
+and file-change context in the transcript order so restored sessions remain
 auditable.

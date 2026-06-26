@@ -17,6 +17,40 @@ components consume stable Agent UI state.
 fixtures, tests, or restored local state. Transport ownership is scoped to the
 provider lifetime, with close deferred across same-tick remounts so React
 StrictMode probing does not prematurely close non-reconnectable local bridges.
+It also owns the effective run policy list for child controls. By default the
+provider offers safe local policies only: `review`, `auto`, and `read-only`.
+Dangerous full local access is opt-in by adding `AGENT_FULL_ACCESS_RUN_POLICY`
+to `runPolicies`.
+
+```tsx
+import {
+  AgentChat,
+  AgentProvider,
+} from "@nyosegawa/agent-ui-react";
+import {
+  AGENT_FULL_ACCESS_RUN_POLICY,
+  DEFAULT_AGENT_RUN_POLICIES,
+  type AgentRunPolicy,
+} from "@nyosegawa/agent-ui-react/headless";
+
+const runPolicies: AgentRunPolicy[] = [
+  ...DEFAULT_AGENT_RUN_POLICIES,
+  AGENT_FULL_ACCESS_RUN_POLICY,
+];
+
+<AgentProvider
+  defaultRunPolicyId="review"
+  runPolicies={runPolicies}
+  transport={transport}
+>
+  <AgentChat />
+</AgentProvider>;
+```
+
+`defaultRunPolicyId` selects the initial policy when no restored state is
+present. If restored state contains a stale or unavailable policy id, the
+provider normalizes it to the first effective policy instead of rendering or
+applying an unavailable policy.
 
 ## Preset Chat
 
@@ -29,14 +63,13 @@ secondary chrome.
 The public preset customization API is `AgentChatProps.components:
 AgentComponents`, plus the exported default map `defaultAgentComponents`. The
 old slot-oriented shape is not part of the public contract. Replacement
-components should import from `@nyosegawa/agent-ui-react`, not from source
-modules, and receive a `Default` renderer for the surface they replace. `Shell`,
-`Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are the
-raw-free preset replacement targets for this gate. `Item` remains a legacy
-replacement point, but public item and turn state are raw-free. Prefer `blocks`
-replacements and transcript view-model props for new custom renderers so host
-code depends on normalized Agent UI fields instead of generated App Server
-payloads.
+components should import preset APIs from `@nyosegawa/agent-ui-react` and
+visual building blocks from `@nyosegawa/agent-ui-react/primitives`, not from
+source modules. They receive a `Default` renderer for the surface they replace.
+`Shell`, `Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are
+the raw-free preset replacement targets. Transcript item customization uses
+`renderItem(entry, Default)` or block replacements; there is no raw
+`components.Item` boundary.
 Internal component state, CSS implementation selectors, attachment mutation
 objects, transcript window bookkeeping, and generated protocol payloads stay
 inside Agent UI.
@@ -52,8 +85,18 @@ const localMediaUrlsByPath = new Map<string, string>();
   theme="system"
   usage={false}
   diagnostics={false}
-  onRequestAppMention={openAppPicker}
-  onRequestPluginMention={openPluginPicker}
+  composerIntegrations={[
+    {
+      id: "workspace-context",
+      label: "Workspace context",
+      resolve: async () => {
+        const context = await openWorkspaceContextPicker();
+        return context
+          ? { label: context.label, input: textInput(context.prompt) }
+          : null;
+      },
+    },
+  ]}
   onRequestWorkingDirectory={openDirectoryPicker}
   resolveLocalAttachment={async (file, kind) => {
     const asset = await uploadAttachmentToLocalMedia(file);
@@ -78,7 +121,11 @@ const localMediaUrlsByPath = new Map<string, string>();
   }}
   components={{
     Approval: ({ approval }) => <CustomApproval approval={approval} />,
-    Item: ({ item, turn }) => <CustomItem item={item} turn={turn} />,
+    blocks: {
+      text: ({ block, Default }) => (
+        <CustomTextBlock block={block} Default={Default} />
+      ),
+    },
   }}
 />;
 ```
@@ -113,10 +160,6 @@ keep personal identity in profile or settings chrome.
 `components.Approval` replaces the default approval card and its default
 actions for each rendered approval request. Custom approval components must
 call `useAgentApprovals()` or a host-owned response path to send decisions.
-`components.Item` replaces transcript item rendering at the preset boundary.
-It is still typed with core `AgentItemState` / `TurnState` for this draft, so
-hosts should prefer `components.blocks` or headless transcript controllers when
-they need raw-free rendering inputs.
 `components.blocks` replaces individual transcript block renderers by block
 kind. Block replacement components receive a narrow `Default` renderer so hosts
 can wrap or annotate the default UI without depending on private reducer state.
@@ -139,9 +182,10 @@ scroll, and approval-anchor contracts can be preserved:
 - `Approval` replaces only the approval card body rendered at an existing
   transcript anchor. It does not move approvals out of the transcript scroll
   area or own approval placement.
-- `Item` and `blocks` are wrapped by the default transcript list/turn/message
-  containers. Replacing one block does not replace the list, turn ordering,
-  approval anchor nodes, density attributes, or scroll-follow behavior.
+- `blocks` and `renderItem` are wrapped by the default transcript
+  list/turn/message containers. Replacing one block or item does not replace
+  the list, turn ordering, approval anchor nodes, density attributes, or
+  scroll-follow behavior.
 
 Rejected replacement points for this gate include the transcript scroll
 container, approval anchor placement, composer toolbar internals, individual
@@ -207,9 +251,9 @@ card instead of a broken media element.
 
 Internally, transcript block synthesis and closed-card preview text are pure
 helpers under `packages/react/src/timeline/`, while windowing is owned by the
-transcript controller. Public imports should continue to come from
-`@nyosegawa/agent-ui-react`; the helper modules are implementation details for
-tests and maintenance, not new public API.
+transcript controller. Public visual imports should continue to come from
+`@nyosegawa/agent-ui-react/primitives`; the helper modules are implementation
+details for tests and maintenance, not new public API.
 
 Transcript item primitives are exported for host composition and close-up QA:
 
@@ -255,14 +299,14 @@ quality directly instead of depending on a page-level shell:
 
 - **Composer**: the primary input surface, a single bordered rounded card
   containing attachment chips, an auto-resizing textarea, and an inline
-  toolbar. The toolbar carries a single attach button, optional App/Plugin
-  mention buttons, the **mode** and **model · effort** menus, and a circular
-  primary Send icon button with an `Enter to send` hint. The standalone form is
-  named "Message composer", the textarea references that visible shortcut hint
-  as its accessible description, and pending attachment chips expose their
-  filenames through list item labels. While a regular turn is running, the
-  textarea remains editable and the primary button becomes Stop. Enter with
-  non-empty input or attachments adds a UI-local follow-up card above the
+  toolbar. The toolbar carries a single attach button, optional host-supplied
+  composer integration buttons, the **run policy** and **model · effort** menus,
+  and a circular primary Send icon button with an `Enter to send` hint. The standalone
+  form is named "Message composer", the textarea references that visible
+  shortcut hint as its accessible description, and pending attachment chips
+  expose their filenames through list item labels. While a regular turn is
+  running, the textarea remains editable and the primary button becomes Stop.
+  Enter with non-empty input or attachments adds a UI-local follow-up card above the
   composer; empty Enter is a no-op. Cmd/Ctrl+Enter sends non-empty input as
   `turn/steer` immediately with the active `expectedTurnId`, and `Send now` on
   a queued card also sends `turn/steer`; outside a running turn,
@@ -272,13 +316,14 @@ quality directly instead of depending on a page-level shell:
   `turn/interrupt`; `turn/steer` is not an interrupt. The attach control
   appears only when the host wires `resolveLocalAttachment`; image and
   non-image files differ after selection through chip previews and the
-  resolved Codex payload. App and Plugin appear only when the host supplies
-  `onRequestAppMention` / `onRequestPluginMention`; the composer mention
-  flow never opens a browser `prompt()` dialog. There is no separate
-  "Run settings" disclosure: mode, model, and effort are compact toolbar
+  resolved Codex payload. Integration buttons appear only when the host supplies
+  `composerIntegrations`; the composer never derives App Server input from a
+  label, URI, App, or Plugin concept and never opens a browser `prompt()`
+  dialog. There is no separate
+  stacked settings disclosure: policy, model, and effort are compact toolbar
   menus (see below). Pending-approval and preview-only states show a warm
   notice strip without hiding the field.
-- **Mode / model / effort menus**: `AgentComposer` renders execution mode and
+- **Run policy / model / effort menus**: `AgentComposer` renders run policy and
   a combined model · effort selector as compact anchored menus in the toolbar.
   Each trigger shows the current short value; clicking opens a menu of
   `icon + label + selected check` items. The menu opens anchored above the
@@ -288,7 +333,7 @@ quality directly instead of depending on a page-level shell:
   cwd is a thread-start setting (see below). Hosts that want a native folder
   picker can pass `AgentChat.onRequestWorkingDirectory`, which must return the
   absolute cwd path selected by the user. `AgentRunControls` uses
-  radiogroup semantics for execution mode selection rather than mixing pressed
+  radiogroup semantics for run policy selection rather than mixing pressed
   buttons and tablist roles.
 - **Buttons**: the internal button primitives provide primary, secondary,
   ghost, danger, subtle, size, and icon-only variants. `Approve` is the
@@ -344,7 +389,7 @@ quality directly instead of depending on a page-level shell:
   primitive. Pill-shape summary chips in the rail
   with a pulsing dot for `running`; the details disclosure is a separately
   styled card so the two never read as a duplicate.
-- **Component close-ups**: `/fixture-gallery` starts with a
+- **Component close-ups**: `/maintainer-gallery` starts with a
   `Component close-ups` section that renders the composer, approval cards,
   command/diff surfaces, sidebar, chips, buttons, and inputs as live
   primitives (no iframes) so reviewers can inspect part quality, not just
@@ -377,7 +422,8 @@ Use these primitives when embedding Agent UI into existing product chrome:
   composer stays bottom anchored.
 - `AgentThreadView`: one thread with header, transcript (with embedded
   approvals), and composer.
-- `AgentThreadHeader`: title, cwd/session context, resume, and thread action menu.
+- `AgentThreadHeader`: title, preview/running status, and thread action menu
+  from `AgentThreadSummaryView`.
 - `AgentThreadTimeline`: normalized turn and item renderer. Pass `threadId` to
   anchor that thread's pending approvals by source metadata, with transcript
   tail fallback for metadata-free or missing-source requests.
@@ -388,15 +434,16 @@ Use these primitives when embedding Agent UI into existing product chrome:
   `AgentThreadView` / `AgentChat` anchor it after source item or turn metadata
   when available, with a transcript-tail fallback for metadata-free or
   missing-source requests. Hosts can also place it standalone.
-- `AgentComposerPanel`: turn composer with inline mode / model / effort menus,
+- `AgentComposerPanel`: turn composer with inline policy / model / effort menus,
   running-turn steering, composer-local Stop, and compact context usage.
 - `AgentComposerInput`, `AgentComposerToolbar`, `AgentAttachmentChips`,
   `AgentComposerSubmitButton`, and `AgentStartComposer`: composer styled parts
   for host composition. These preserve the default composer class names and
   accessibility contract without exposing attachment mutation internals or
   first-message operation maps.
-- `AgentRunSettingsPanel`: thread-start settings primitive with model, effort,
-  cwd, and execution mode for popovers, sheets, or host-owned settings panels.
+- `AgentRunControls`: policy and model/effort primitive for popovers, sheets, or
+  host-owned settings panels. It never edits cwd; working directory selection is
+  owned by `AgentStarterCwd` at thread start.
 - `AgentStatusSummary`, `AgentStatusDetails`, and `AgentCriticalNoticeList`:
   severity-normalized model reroute, deprecation, config, account, MCP OAuth,
   and rate-limit notices. Info/background notices stay in secondary chrome,
@@ -422,33 +469,28 @@ Use these primitives when embedding Agent UI into existing product chrome:
 - `AgentAppsPanel`: Codex Apps/connectors list from `app/list`, using upstream
   enabled/accessibility vocabulary rather than treating connector availability
   as install or auth state.
-- `AgentWorkspace`: chat plus optional host-owned side panel slot.
 
 ## Composition Examples
 
 Render a fixed thread without following the globally active thread:
 
 ```tsx
+import { AgentThreadView } from "@nyosegawa/agent-ui-react/primitives";
+
 <AgentThreadView threadId="thread_123" />
 ```
 
 Render usage in host chrome while the chat stays sidebar-free:
 
 ```tsx
+import { AgentChat } from "@nyosegawa/agent-ui-react";
+import { AgentShell, AgentUsagePanel } from "@nyosegawa/agent-ui-react/primitives";
+
 <AgentShell>
   <AgentUsagePanel />
   <AgentChat sidebar={false} usage={false} />
 </AgentShell>
 ```
-
-Render a full workspace with a host-owned side panel:
-
-```tsx
-<AgentWorkspace panel={<HostPanel threadId="thread_123" />} />
-```
-
-The side panel is a generic render slot. Host applications own any app runtime,
-panel state, storage, registry, or custom tool workflow they place inside it.
 
 Render a host-owned thread layout without the preset. `AgentThreadTimeline`
 receives `threadId`, so pending approvals with source metadata are anchored
@@ -457,10 +499,18 @@ the transcript tail; there is no separate approval row between the transcript
 and the composer:
 
 ```tsx
+import {
+  AgentComposerPanel,
+  AgentCriticalNoticeList,
+  AgentThreadHeader,
+  AgentThreadSurface,
+  AgentThreadTimeline,
+} from "@nyosegawa/agent-ui-react/primitives";
+
 <AgentThreadSurface>
-  <AgentThreadHeader thread={thread} threadId={threadId} />
+  <AgentThreadHeader thread={threadView} threadId={threadId} transcript={transcriptView} />
   <AgentCriticalNoticeList />
-  <AgentThreadTimeline thread={thread} threadId={threadId} />
+  <AgentThreadTimeline threadId={threadId} />
   <AgentComposerPanel thread={thread} threadId={threadId} />
 </AgentThreadSurface>
 ```
@@ -469,16 +519,17 @@ and the composer:
 
 `AgentThreadTimeline` renders user messages, assistant messages, reasoning,
 commands, file changes, diffs, and structured App Server items from normalized
-state. Host renderers receive normalized `AgentItemState` and `TurnState`
-values through `renderItem`; they do not need generated protocol payloads.
+state. Host renderers receive `AgentTranscriptEntry` view models through
+`renderItem`; they do not receive generated protocol payloads or raw reducer
+item/turn entities.
 
 The default timeline uses `AgentContentBlockView` for the normalized block taxonomy:
 thinking summaries, plans, command execution with cwd/output/exit status,
 file-change summaries, MCP/dynamic/collab tool calls, web search queries,
-images, and system info. This renderer consumes `AgentItemBlock` values from
-core state, so hosts can keep visual components free of generated App Server
-types while still preserving protocol-derived detail in adapters and reducers.
-For media blocks, `AgentItemBlock.resource` separates browser-safe
+images, and system info. This renderer consumes `AgentTranscriptBlock` values
+from the transcript view model, so hosts can keep visual components free of
+generated App Server types while still preserving protocol-derived detail in
+adapters and reducers. For media blocks, `block.resource` separates browser-safe
 `previewUrl`/`url` metadata from local `path` values. Local paths are passed to
 `resolveLocalMediaUrl(path, item)` before rendering; they are not used as image
 or video `src` values.
@@ -517,29 +568,41 @@ active/running status remains running, idle resumed threads become ready for new
 messages, and if the response contains a canonical thread id different from the
 requested path/id, the returned id becomes the active thread.
 
-Composer attachments are represented as visible chips for `app://` and
-`plugin://` mentions. The composer does not invoke `globalThis.prompt` for any
-mention flow; hosts supply `onRequestAppMention` and
-`onRequestPluginMention` resolvers (`AgentComposerProps`,
-`AgentChatProps`, `AgentThreadViewProps`). Each resolver is called when the
-user clicks the matching toolbar button and may return (or asynchronously
-resolve to) `{ label, value, input?, id? }`. When no resolver is provided, the
-matching toolbar button is hidden so an embedder cannot end up with a button
-that does nothing. This lets a host wire the flow into a command palette,
-picker dialog, MCP tool, or workspace registry without the library shipping
-an opinion about that picker's UI.
+Composer integrations are host-owned buttons represented as visible chips after
+the user chooses something. Hosts supply `composerIntegrations`
+(`AgentComposerProps`, `AgentChatProps`, `AgentThreadViewProps`). Each
+integration has `{ id, label, title?, resolve }`; `resolve()` may return
+`{ label, input, id?, value? }`, where `input` is an explicit
+`AgentUserInput | AgentUserInput[]`. The composer does not infer protocol
+mentions from labels or URI strings, does not expose App/Plugin-specific picker
+props, and does not invoke `globalThis.prompt`. When no integrations are
+provided, no integration buttons are shown.
 
 Thread rename is a separate header action and may use a minimal browser
 prompt in the default component until a host overrides that interaction. That
-does not affect composer mentions or attachment resolution.
+does not affect composer integrations or attachment resolution.
 
 ```tsx
 <AgentChat
-  onRequestAppMention={async () => {
-    const app = await openAppPicker();
-    return app && { label: app.name, value: app.uri };
-  }}
-  onRequestPluginMention={async () => openPluginPalette()}
+  composerIntegrations={[
+    {
+      id: "browser-context",
+      label: "Browser context",
+      resolve: async () => {
+        const selection = await openBrowserContextPicker();
+        return selection
+          ? {
+              label: selection.title,
+              input: {
+                name: selection.title,
+                path: selection.resourceUri,
+                type: "mention",
+              },
+            }
+          : null;
+      },
+    },
+  ]}
 />
 ```
 
@@ -589,7 +652,7 @@ extensions such as `.3mf`, next to the App Server and returns an absolute path.
 The empty-state / first-run surface is a starter composer: a large prompt card
 whose prompt, lower toolbar, and submit control reuse the same public composer
 styled parts as the normal composer (`AgentComposerInput`,
-`AgentComposerToolbar`, `ComposerRunSettings`, and
+`AgentComposerToolbar`, `ComposerRunControls`, and
 `AgentComposerSubmitButton`). Hosts can render that starter composer directly
 through `AgentStartComposer`. The working directory is a thread-start setting, so it
 sits beneath the card as a compact context picker instead of inside the toolbar.
@@ -608,6 +671,10 @@ and immediately sends the first turn. An existing thread shows its cwd read-only
 in `AgentThreadHeader`; the normal composer toolbar never offers a cwd editor,
 because changing the working directory mid-thread is not a meaningful Codex
 operation.
+Stored session JSONL paths are internal storage locations, not working
+directories; when App Server supplies a real cwd, Agent UI may display that as
+thread context, but internal `.codex/sessions/*.jsonl` paths stay out of
+user-facing chrome.
 
 ### Mobile shell policy
 

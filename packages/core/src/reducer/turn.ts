@@ -8,6 +8,10 @@ import type {
 } from "../state";
 import { itemStore } from "../stores/item";
 import { turnStore } from "../stores/turn";
+import {
+  runtimeWithCompletedTurn,
+  runtimeWithStartedTurn,
+} from "../stores/thread-runtime";
 import { mergeAgentTurn, shouldApplyTurnItems } from "../stores/turn-merge";
 import { canonicalThreadId } from "../thread-alias";
 import {
@@ -25,9 +29,13 @@ export function reduceTurnEvent(
       const threadId = canonicalThreadId(state, event.threadId);
       const thread = state.threads[threadId];
       if (!thread) return state;
+      const incomingTurn = canonicalTurn(event.turn, threadId);
       return commitThreadEntity(
         state,
-        turnStore.upsert(thread, canonicalTurn(event.turn, threadId), "running"),
+        {
+          ...turnStore.upsert(thread, incomingTurn, "running"),
+          runtime: runtimeWithStartedTurn(thread.runtime, incomingTurn),
+        },
       );
     }
     case "turn/completed": {
@@ -61,6 +69,7 @@ export function reduceTurnEvent(
         }
         return {
           ...next,
+          runtime: runtimeWithCompletedTurn(thread.runtime, incomingTurn),
           turns: {
             ...next.turns,
             [incomingTurn.id]: completedTurn,

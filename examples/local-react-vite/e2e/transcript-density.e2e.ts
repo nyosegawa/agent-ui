@@ -7,7 +7,7 @@ for (const viewport of [
 ] as const) {
   test(`transcript density route stays readable on ${viewport.name}`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/transcript-density");
+    await page.goto("/showcase/transcript-density");
 
     await expect(page.getByRole("heading", { name: "Transcript density" })).toBeVisible();
     await expect(page.locator(".aui-message-list")).toHaveAttribute("data-density", "compact");

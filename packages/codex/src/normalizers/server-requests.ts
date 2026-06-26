@@ -1,5 +1,9 @@
 import type { AgentEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
-import { stableServerRequestMethods, type StableServerRequestMethod } from "../protocol";
+import {
+  isStableServerRequestMethod,
+  stableServerRequestMethods,
+  type StableServerRequestMethod,
+} from "../protocol";
 import type { MethodMessage } from "./shared";
 import { asRecord, optionalStringValue, requestIdValue } from "./shared";
 
@@ -60,7 +64,7 @@ function normalizeServerRequest(message: MethodMessage): PendingServerRequest {
 }
 
 function requestKind(method: string): PendingServerRequest["kind"] {
-  return isServerRequestMethod(method)
+  return isStableServerRequestMethod(method)
     ? serverRequestKindByMethod[method]
     : "unknown";
 }

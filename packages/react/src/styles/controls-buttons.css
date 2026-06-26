@@ -134,16 +134,19 @@
 .aui-theme-toggle {
   align-items: center;
   background: var(--aui-panel-alt);
-  border: 1px solid var(--aui-border);
+  border: 1px solid var(--aui-border-strong);
   border-radius: var(--aui-radius-pill);
+  box-shadow: var(--aui-elevation-1);
   display: inline-flex;
   gap: var(--aui-space-050);
+  max-width: 100%;
   padding: var(--aui-space-075);
 }
 
 .aui-theme-toggle-option {
   border-radius: var(--aui-radius-pill);
   height: var(--aui-control-height-sm);
+  min-width: 64px;
 }
 
 .aui-locale-menu {

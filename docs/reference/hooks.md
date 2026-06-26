@@ -105,6 +105,13 @@ requested thread's normalized snapshot state; the hook uses the Codex
 `normalizeThreadReadResponse()` boundary for item aliases, command output, file
 patches, and text extraction, then returns stable `{ threadId }` metadata.
 
+`useAgentDirectThreadController()` owns the direct-link open semantics used by
+`threadUrlRouting`. `previewThread(threadId)` hydrates the stored transcript
+with `thread/read includeTurns: true` and activates the preview. `openThread`
+hydrates first, then calls `thread/resume`; its result returns both the
+hydrated id and the canonical resumed id. This keeps browser back/forward
+preview navigation separate from opening a live conversation.
+
 The default `AgentChat` history sidebar uses `thread/read` so browsing a stored
 transcript from the list does not imply `thread/resume`. A direct
 `threadUrlRouting` URL such as `/threads/<id>` first hydrates with
@@ -131,7 +138,7 @@ that need the same safe first-message behavior as `AgentChat`: the first user
 message appears immediately, `thread/start` uses the current run settings plus
 the supplied `threadOptions`, `turn/start` waits for the canonical thread id
 returned by `thread/start`, and `turnOptions` are merged after the selected
-execution mode defaults. The returned
+run policy defaults. The returned
 `{ threadId, operationId, turnId, optimisticTurnId, userMessageId }` is raw-free
 Agent UI metadata; `threadId` is the canonical id hosts should persist,
 `turnId` is the App Server turn id returned by `turn/start`, `optimisticTurnId`
@@ -163,10 +170,19 @@ the first message through `useAgentComposerController().startThreadWithInput()`.
 Do not sequence a raw `thread/start` result into `turn/start` through stale
 render state.
 
-`useAgentRunSettings()` exposes execution modes, available models, supported
-efforts, cwd, current selections, and setters. Execution modes map to React-owned
-`TurnStartOptions`; the hook layer converts those options to Codex params before
-calling App Server.
+`useAgentRunSettings()` exposes host-allowed run policies, available models,
+supported efforts, current selections, and setters for policy, model, and
+effort. Working directory selection is starter-only through
+`AgentStarterCwd`; normal composer turns do not implicitly resend cwd to
+`turn/start`.
+
+Run policies map to React-owned `TurnStartOptions`; the hook layer converts
+those options to Codex params before calling App Server. `AgentProvider`
+normalizes stale or empty policy state to the first effective policy. The
+default policies are safe local policies (`review`, `auto`, and `read-only`).
+`full-access` is available as `AGENT_FULL_ACCESS_RUN_POLICY`, but hosts must
+explicitly include it in `runPolicies` when they want to offer dangerous full
+local access.
 
 ## Server Requests And Approvals
 
@@ -287,9 +303,10 @@ semantics from its own integration. The normalizer also preserves description,
 display metadata when the App Server provides them.
 
 Host-specific workflows can compose `useAgentThreadController()`,
-`useAgentTurnController()`, `useAgentServerRequests()`, and `AgentWorkspace`
-slots. The core library does not own app registries, sidecar storage, plan-only
-turn orchestration, or workflow-specific panel state.
+`useAgentTurnController()`, `useAgentServerRequests()`, and visual primitives
+from `@nyosegawa/agent-ui-react/primitives`. The core library does not own app
+registries, sidecar storage, plan-only turn orchestration, or workflow-specific
+panel state.
 
 Hosts that need lower-level Codex protocol construction should use
 `@nyosegawa/agent-ui-codex` directly. The React package keeps generated params

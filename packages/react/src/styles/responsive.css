@@ -14,8 +14,7 @@
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  .aui-mode-group,
-  .aui-field-wide {
+  .aui-policy-group {
     grid-column: 1 / -1;
   }
 }
@@ -91,12 +90,6 @@
 
   .aui-starter-card {
     padding: var(--aui-space-300) var(--aui-space-300) var(--aui-space-250);
-  }
-
-  .aui-workspace {
-    grid-template-columns: minmax(0, 1fr);
-    overflow: visible;
-    padding: 0;
   }
 
   .aui-thread-header {
@@ -185,8 +178,7 @@
     padding: var(--aui-space-300) var(--aui-space-350) var(--aui-space-350);
   }
 
-  .aui-mode-group,
-  .aui-field-wide {
+  .aui-policy-group {
     grid-column: 1 / -1;
   }
 

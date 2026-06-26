@@ -185,6 +185,7 @@ describe("thread history normalization", () => {
         true,
       )[0],
     ).toEqual({
+      runtimeStatus: { type: "notLoaded" },
       snapshot: true,
       status: "notLoaded",
       thread: {

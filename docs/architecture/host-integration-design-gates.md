@@ -132,7 +132,7 @@ to documented public API.
 - Host responsibility intentionally not handled: page-level product chrome,
   marketing layout, routing, and custom design-system governance.
 - Example that proves the design: `examples/recipes/src/custom-components.tsx`
-  and `/fixture-gallery` close-ups.
+  and `/maintainer-gallery` close-ups.
 - Tests that protect the contract: React component replacement tests,
   close-up e2e, visual layout e2e, accessibility e2e, and style ownership
   guards.

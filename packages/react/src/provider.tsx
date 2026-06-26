@@ -7,9 +7,17 @@ import {
 } from "@nyosegawa/agent-ui-core";
 import { AgentComposerQueueProvider } from "./composer-queue";
 import {
+  DEFAULT_AGENT_RUN_POLICIES,
+  effectiveAgentRunPolicies,
+  resolvedAgentRunPolicyId,
+  type AgentRunPolicy,
+  type AgentRunPolicyId,
+} from "./run-policies";
+import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useReducer,
   type PropsWithChildren,
@@ -18,6 +26,7 @@ import { useAgentTransportEvents } from "./transport-events";
 
 export interface AgentContextValue {
   dispatch: (event: AgentEvent) => void;
+  runPolicies: readonly AgentRunPolicy[];
   state: AgentSessionState;
   transport: AgentTransport;
 }
@@ -25,18 +34,57 @@ export interface AgentContextValue {
 const AgentContext = createContext<AgentContextValue | null>(null);
 
 export interface AgentProviderProps extends PropsWithChildren {
+  defaultRunPolicyId?: AgentRunPolicyId;
   initialState?: AgentSessionState;
+  runPolicies?: readonly AgentRunPolicy[];
   transport: AgentTransport;
 }
 
-export function AgentProvider({ children, initialState, transport }: AgentProviderProps) {
-  const [state, dispatch] = useReducer(
-    agentReducer,
-    initialState ?? createInitialAgentState(),
+export function AgentProvider({
+  children,
+  defaultRunPolicyId,
+  initialState,
+  runPolicies = DEFAULT_AGENT_RUN_POLICIES,
+  transport,
+}: AgentProviderProps) {
+  const effectiveRunPolicies = useMemo(
+    () => effectiveAgentRunPolicies(runPolicies),
+    [runPolicies],
   );
+  const initialSessionState = useMemo(() => {
+    const requestedPolicyId = defaultRunPolicyId ?? initialState?.runSettings.policyId;
+    const policyId = resolvedAgentRunPolicyId(requestedPolicyId, effectiveRunPolicies);
+    if (initialState) {
+      return {
+        ...initialState,
+        runSettings: {
+          ...initialState.runSettings,
+          ...(policyId ? { policyId } : {}),
+        },
+      };
+    }
+    const state = createInitialAgentState();
+    if (policyId) {
+      state.runSettings = { ...state.runSettings, policyId };
+    }
+    return state;
+  }, [defaultRunPolicyId, effectiveRunPolicies, initialState]);
+  const [state, dispatch] = useReducer(agentReducer, initialSessionState);
   useAgentTransportEvents(transport, dispatch);
+  useEffect(() => {
+    const policyId = resolvedAgentRunPolicyId(
+      state.runSettings.policyId,
+      effectiveRunPolicies,
+    );
+    if (policyId && policyId !== state.runSettings.policyId) {
+      dispatch({ policyId, type: "runSettings/updated" });
+    }
+  }, [effectiveRunPolicies, state.runSettings.policyId]);
 
-  const value = useMemo(() => ({ dispatch, state, transport }), [state, transport]);
+  const value = useMemo(
+    () => ({ dispatch, runPolicies: effectiveRunPolicies, state, transport }),
+    [effectiveRunPolicies, state, transport],
+  );
   return (
     <AgentContext.Provider value={value}>
       <AgentComposerQueueProvider sessionState={state}>

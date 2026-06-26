@@ -19,6 +19,7 @@ import {
   type ThreadStartOptions,
   type TurnStartOptions,
 } from "../request-options";
+import { agentRunPolicyTurnOptions } from "../run-policies";
 import { rawThreadId, threadProjectPath } from "../thread-history";
 import { useCodexSession } from "./codex-session";
 import {
@@ -35,7 +36,6 @@ import type {
 } from "./composer-types";
 import type { AgentThreadStartWithInputResult } from "./thread-lifecycle-types";
 import { turnStartResultId } from "./thread-lifecycle-results";
-import { AGENT_EXECUTION_MODES } from "./run-settings";
 import { useAgentTurn } from "./turn";
 import { useComposerTurnStart } from "./composer-turn-start";
 import { syncRunSettingsFromRawThread } from "./thread-run-settings";
@@ -96,7 +96,7 @@ export function useInternalAgentComposerController(
   const [error, setError] = useState<string | undefined>();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInterrupting, setIsInterrupting] = useState(false);
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, runPolicies, state } = useAgentContext();
   const codex = useCodexSession();
   const composerQueue = useAgentComposerQueueStore();
   const resolvedThreadId = threadId ?? state.threadLifecycle.activeThreadId;
@@ -107,7 +107,8 @@ export function useInternalAgentComposerController(
   const activeTurnId = resolvedThreadId
     ? selectLatestRunningTurnId(state, resolvedThreadId)
     : undefined;
-  const isRunning = thread?.status === "running";
+  const isRunning = thread?.activity === "running";
+  const isWaitingForInput = thread?.activity === "waitingForInput";
   const buildInput = useCallback(
     (items: AgentUserInput[] = []) => {
       const input = value.trim();
@@ -167,6 +168,10 @@ export function useInternalAgentComposerController(
     ) => {
       const built = buildInput(items);
       if (!built) return;
+      if (isWaitingForInput) {
+        setError(t("composer.resolveApprovalReason"));
+        return;
+      }
       if (isRunning) {
         return queueFollowUp(items, options.attachments);
       }
@@ -193,7 +198,7 @@ export function useInternalAgentComposerController(
         setIsSubmitting(false);
       }
     },
-    [buildInput, isRunning, queueFollowUp, startComposerTurn, t],
+    [buildInput, isRunning, isWaitingForInput, queueFollowUp, startComposerTurn, t],
   );
   const startWithMessage = useCallback(
     async (
@@ -302,16 +307,14 @@ export function useInternalAgentComposerController(
           threadId: pending.threadId,
           type: "thread/reconciled",
         });
-        const executionMode = AGENT_EXECUTION_MODES.find(
-          (mode) => mode.id === runSettings.executionMode,
-        );
         const turnStartResult = await codex.turn.start({
           clientUserMessageId: pending.userMessageId,
-          cwd: runSettings.cwd,
           effort: codexReasoningEffort(runSettings.effort),
           input: normalizedInput,
           model: runSettings.modelId,
-          ...codexTurnStartOptions(executionMode?.turnParams),
+          ...codexTurnStartOptions(
+            agentRunPolicyTurnOptions(runSettings.policyId, runPolicies),
+          ),
           ...codexTurnStartOptions(turnOptions),
           threadId: nextThreadId,
         });
@@ -373,8 +376,9 @@ export function useInternalAgentComposerController(
       dispatch,
       runSettings.cwd,
       runSettings.effort,
-      runSettings.executionMode,
       runSettings.modelId,
+      runSettings.policyId,
+      runPolicies,
       t,
     ],
   );
@@ -420,9 +424,11 @@ export function useInternalAgentComposerController(
     ? "submitting"
     : isInterrupting
       ? "interrupting"
-      : !isRunning && !hasTextInput
-        ? "empty"
-        : undefined;
+      : isWaitingForInput
+        ? "approval"
+        : !isRunning && !hasTextInput
+          ? "empty"
+          : undefined;
   const canSubmit =
     !disabledReason || disabledReason === "empty" ? isRunning || hasTextInput : false;
   const sendQueuedFollowUp = useCallback(

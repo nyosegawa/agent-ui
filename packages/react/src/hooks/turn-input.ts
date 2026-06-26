@@ -57,7 +57,10 @@ function toCodexUserInput(input: AgentUserInput): CodexUserInput {
     case "text": {
       const text = stringValue(record.text);
       if (!text) throw new Error("Codex text input requires text");
-      return { text, text_elements: [], type: "text" };
+      const textElements = Array.isArray(record.text_elements)
+        ? record.text_elements
+        : [];
+      return { text, text_elements: textElements, type: "text" };
     }
     case "image": {
       const url = stringValue(record.image_url);

@@ -107,7 +107,13 @@ function styleFilesUnder(...dirs: string[]): string[] {
   const files: string[] = [];
   const visit = (dir: string) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.name === "dist" || entry.name === "node_modules") continue;
+      if (
+        entry.name === ".next" ||
+        entry.name === "dist" ||
+        entry.name === "node_modules"
+      ) {
+        continue;
+      }
       const path = join(dir, entry.name);
       if (entry.isDirectory()) {
         visit(path);

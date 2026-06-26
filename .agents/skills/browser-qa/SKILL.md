@@ -17,7 +17,10 @@ checks and evidence.
    using `agent-browser`.
 3. If a Playwright run was interrupted or ports may be stale, run
    `bun run test:e2e:clean-ports` before targeted browser tests.
-4. Verify interactions, not only screenshots.
+4. For broad fixture layout drift, prefer the manifest-driven
+   `visual-route-matrix.e2e.ts` before ad-hoc route-by-route screenshots.
+5. For deterministic real-local layout drift, use `real-local-layout.e2e.ts`.
+6. Verify interactions, not only screenshots.
 
 ## What To Check
 
@@ -29,6 +32,9 @@ checks and evidence.
 - markdown, code, command output, and diffs do not create nested scroll traps
 - usage/status/diagnostics remain secondary to transcript content
 - thread titles and metadata stay readable
+
+Use matrix tests for broad containment coverage, then use agent-browser for the
+specific route, viewport, or interaction that still needs human inspection.
 
 ## Completion
 

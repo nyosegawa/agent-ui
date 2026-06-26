@@ -1,11 +1,11 @@
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
+import { AgentProvider } from "@nyosegawa/agent-ui-react";
 import {
-  AgentProvider,
   useAgentApprovals,
   useAgentComposer,
   useAgentThread,
   useAgentThreads,
-} from "@nyosegawa/agent-ui-react";
+} from "@nyosegawa/agent-ui-react/headless";
 
 function HeadlessThreadView() {
   const { activeThreadId, setActiveThread, threads } = useAgentThreads();

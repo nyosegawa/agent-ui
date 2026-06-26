@@ -1,0 +1,58 @@
+/* --- Failed first-message recovery -------------------------------------- */
+
+.aui-composer-failed-list {
+  display: grid;
+  gap: var(--aui-space-200);
+  min-width: 0;
+}
+
+.aui-composer-failed-card {
+  align-items: start;
+  background: var(--aui-danger-soft);
+  border: 1px solid var(--aui-danger-border);
+  border-radius: var(--aui-radius-md);
+  display: grid;
+  gap: var(--aui-space-200);
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-width: 0;
+  padding: var(--aui-space-225);
+}
+
+.aui-composer-failed-icon {
+  color: var(--aui-danger);
+  display: inline-flex;
+  padding-top: 2px;
+}
+
+.aui-composer-failed-copy {
+  display: grid;
+  gap: var(--aui-space-075);
+  min-width: 0;
+}
+
+.aui-composer-failed-copy h2,
+.aui-composer-failed-copy p {
+  margin: 0;
+}
+
+.aui-composer-failed-copy h2 {
+  color: var(--aui-danger);
+  font-size: var(--aui-font-size-sm);
+  font-weight: 800;
+  line-height: var(--aui-line-tight);
+}
+
+.aui-composer-failed-copy p {
+  color: var(--aui-fg-muted);
+  font-size: var(--aui-font-size-sm);
+  line-height: var(--aui-line-relaxed);
+  overflow-wrap: anywhere;
+}
+
+.aui-composer-failed-actions {
+  align-items: center;
+  display: flex;
+  gap: var(--aui-space-100);
+  justify-content: flex-end;
+  min-width: 0;
+}

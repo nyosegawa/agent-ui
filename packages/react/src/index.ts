@@ -1,10 +1,8 @@
-export * from "./provider";
-export * from "./agent-input";
-export * from "./hooks";
-export * from "./components";
-export * from "./diff-viewer";
-export * from "./timeline";
-export * from "./resources";
-export * from "./transcript-window";
-export * from "./usage";
+export { AgentProvider, type AgentProviderProps } from "./provider-root";
+export {
+  AgentChat,
+  defaultAgentComponents,
+  type AgentChatProps,
+  type AgentComponents,
+} from "./components/chat";
 export * from "./i18n";

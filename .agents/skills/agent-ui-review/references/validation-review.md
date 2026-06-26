@@ -15,6 +15,9 @@ Use this to judge whether a change ran enough validation.
   browser-visible checks.
 - Browser-visible UI changes: relevant React tests plus Playwright or
   agent-browser evidence for layout, hit testing, focus, scrolling, and mobile.
+- Broad fixture layout changes should include the manifest-driven
+  `visual-route-matrix.e2e.ts`; real-local layout changes should include
+  `real-local-layout.e2e.ts` or the full real-local suite.
 - Example or recipe changes: build/typecheck for the example, docs updates, and
   route-specific browser checks when visible.
 - Hook or skill changes: focused hook or skill tests and a smoke that proves the

@@ -1,28 +1,35 @@
 import React from "react";
-import type { ThreadState, ThreadTokenUsage } from "@nyosegawa/agent-ui-core";
+import {
+  selectThreadSummaryView,
+  type AgentThreadWaitingReason,
+  type ThreadState,
+  type ThreadTokenUsage,
+} from "@nyosegawa/agent-ui-core";
 import { useEffect, useId, useRef, useState } from "react";
 import { type AgentComposerController } from "../hooks";
 import { useInternalAgentComposerController } from "../hooks/composer";
 import { useAgentI18n } from "../i18n";
+import { useAgentContext } from "../provider";
 import type { AgentResourceKind } from "../resources";
 import {
   IconAlert,
-  IconApp,
+  IconAdd,
   IconClose,
   IconImage,
   IconPaperclip,
-  IconPlugin,
   IconShield,
   buttonClass,
 } from "../components-internal";
 import { AgentComposerSubmitButton } from "./composer-submit-button";
-import { ComposerRunSettings } from "./run-settings";
+import { ComposerRunControls } from "./run-settings";
+import { formatThreadStatus } from "./sidebar";
 import { deferAction } from "./shared";
 import { AgentContextUsageIndicator } from "./context-usage";
+import { FailedPendingMessageList } from "./composer-failed-pending";
 import { QueuedFollowUpList } from "./follow-up-queue";
 import { useComposerAttachmentState } from "./composer-attachment-state";
 import { useComposerDropZone } from "./composer-drag-drop";
-import { useComposerMentionActions } from "./composer-mentions";
+import { useComposerIntegrationActions } from "./composer-integrations";
 import {
   composerSubmitModeForEnter,
   shouldSubmitOnComposerEnter,
@@ -30,25 +37,25 @@ import {
 } from "./composer-submit-semantics";
 import {
   composerAttachmentInput,
-  type AgentComposerMentionResolver,
+  type AgentComposerIntegration,
   type AgentLocalAttachmentResolver,
   type ComposerAttachment,
 } from "./composer-attachments";
 
 export type {
-  AgentComposerMentionAttachment,
-  AgentComposerMentionResolver,
+  AgentComposerIntegration,
+  AgentComposerIntegrationAttachment,
+  AgentComposerIntegrationResolver,
   AgentLocalAttachmentKind,
   AgentLocalAttachmentResolver,
   AgentResolvedLocalAttachment,
-  AgentMentionAttachmentKind,
 } from "./composer-attachments";
 export type { AgentComposerSubmitButtonProps } from "./composer-submit-button";
 export { AgentComposerSubmitButton } from "./composer-submit-button";
 
 export type AgentAttachmentChipKind = Extract<
   AgentResourceKind,
-  "image" | "file" | "app" | "plugin"
+  "image" | "file" | "integration"
 >;
 
 export interface AgentAttachmentChip {
@@ -107,8 +114,7 @@ export function AgentAttachmentChips({
             <span className="aui-composer-chip-icon" aria-hidden="true">
               {attachment.kind === "image" ? <IconImage size={14} /> : null}
               {attachment.kind === "file" ? <IconPaperclip size={14} /> : null}
-              {attachment.kind === "app" ? <IconApp size={14} /> : null}
-              {attachment.kind === "plugin" ? <IconPlugin size={14} /> : null}
+              {attachment.kind === "integration" ? <IconAdd size={14} /> : null}
             </span>
           )}
           <span className="aui-composer-chip-copy">
@@ -181,11 +187,14 @@ export function AgentComposerToolbar({
 
 export function AgentComposer(props: AgentComposerProps) {
   const composer = useInternalAgentComposerController(props.threadId);
+  const { t } = useAgentI18n();
   const attachmentRestoreRef = useRef<
     ((attachments: ComposerAttachment[]) => void) | null
   >(null);
+  const isApprovalBlocked = composer.disabledReason === "approval";
   return (
     <>
+      <FailedPendingMessageList composer={composer} />
       <QueuedFollowUpList
         composer={composer}
         onRestoreAttachments={(attachments) =>
@@ -195,6 +204,11 @@ export function AgentComposer(props: AgentComposerProps) {
       <AgentComposerForm
         {...props}
         composer={composer}
+        disabled={props.disabled ?? isApprovalBlocked}
+        disabledReason={
+          props.disabledReason ??
+          (isApprovalBlocked ? t("composer.resolveApprovalReason") : undefined)
+        }
         onRegisterAttachmentRestore={(restore) => {
           attachmentRestoreRef.current = restore;
         }}
@@ -207,8 +221,7 @@ function AgentComposerForm({
   composer,
   disabled = false,
   disabledReason,
-  onRequestAppMention,
-  onRequestPluginMention,
+  composerIntegrations,
   placeholder,
   resolveLocalAttachment,
   tokenUsage,
@@ -242,10 +255,9 @@ function AgentComposerForm({
     disabled,
     enabled: Boolean(resolveLocalAttachment),
   });
-  const handleMention = useComposerMentionActions({
+  const handleIntegration = useComposerIntegrationActions({
     addAttachment,
-    onRequestAppMention,
-    onRequestPluginMention,
+    integrations: composerIntegrations,
   });
 
   // Auto-resize textarea up to a max height.
@@ -409,34 +421,23 @@ function AgentComposerForm({
                   />
                 </>
               ) : null}
-              {onRequestAppMention ? (
+              {composerIntegrations?.map((integration) => (
                 <button
-                  aria-label={t("composer.app")}
+                  aria-label={integration.label}
                   className={buttonClass("ghost", { size: "sm" })}
+                  key={integration.id}
+                  data-composer-integration="true"
                   disabled={disabled}
-                  onClick={() => void handleMention("app")}
-                  title={t("composer.mentionApp")}
+                  onClick={() => void handleIntegration(integration.id)}
+                  title={integration.title ?? integration.label}
                   type="button"
                 >
-                  <IconApp size={14} />
-                  <span>{t("composer.app")}</span>
+                  <IconAdd size={14} />
+                  <span>{integration.label}</span>
                 </button>
-              ) : null}
-              {onRequestPluginMention ? (
-                <button
-                  aria-label={t("composer.plugin")}
-                  className={buttonClass("ghost", { size: "sm" })}
-                  disabled={disabled}
-                  onClick={() => void handleMention("plugin")}
-                  title={t("composer.mentionPlugin")}
-                  type="button"
-                >
-                  <IconPlugin size={14} />
-                  <span>{t("composer.plugin")}</span>
-                </button>
-              ) : null}
+              ))}
             </div>
-            <ComposerRunSettings />
+            <ComposerRunControls />
           </>
         }
         end={
@@ -457,10 +458,9 @@ function AgentComposerForm({
 }
 
 export interface AgentComposerProps {
+  composerIntegrations?: readonly AgentComposerIntegration[];
   disabled?: boolean;
   disabledReason?: string;
-  onRequestAppMention?: AgentComposerMentionResolver;
-  onRequestPluginMention?: AgentComposerMentionResolver;
   placeholder?: string;
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   tokenUsage?: ThreadTokenUsage;
@@ -468,28 +468,31 @@ export interface AgentComposerProps {
 }
 
 export interface AgentComposerPanelProps {
-  onRequestAppMention?: AgentComposerMentionResolver;
-  onRequestPluginMention?: AgentComposerMentionResolver;
+  composerIntegrations?: readonly AgentComposerIntegration[];
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   thread: ThreadState;
   threadId?: string;
 }
 
 export function AgentComposerPanel({
-  onRequestAppMention,
-  onRequestPluginMention,
+  composerIntegrations,
   resolveLocalAttachment,
   thread,
   threadId,
 }: AgentComposerPanelProps) {
   const { t } = useAgentI18n();
-  const isBlocked = thread.status === "waitingForInput";
+  const isBlocked = thread.activity === "waitingForInput";
+  const { state } = useAgentContext();
+  const waitingReasons = threadId
+    ? selectThreadSummaryView(state, threadId)?.execution.runtime.waitingReasons
+    : undefined;
   const composer = useInternalAgentComposerController(threadId);
   const attachmentRestoreRef = useRef<
     ((attachments: ComposerAttachment[]) => void) | null
   >(null);
   return (
     <section className="aui-compose-panel" aria-label={t("aria.messageComposer")}>
+      <FailedPendingMessageList composer={composer} />
       <QueuedFollowUpList
         composer={composer}
         onRestoreAttachments={(attachments) =>
@@ -497,15 +500,14 @@ export function AgentComposerPanel({
         }
       />
       <AgentComposerForm
+        composerIntegrations={composerIntegrations}
         composer={composer}
         disabled={isBlocked}
-        disabledReason={composerDisabledReason(thread.status, t)}
+        disabledReason={composerDisabledReason(thread.activity, t, waitingReasons)}
         onRegisterAttachmentRestore={(restore) => {
           attachmentRestoreRef.current = restore;
         }}
-        onRequestAppMention={onRequestAppMention}
-        onRequestPluginMention={onRequestPluginMention}
-        placeholder={composerPlaceholder(thread.status, t)}
+        placeholder={composerPlaceholder(thread.activity, t, waitingReasons)}
         resolveLocalAttachment={resolveLocalAttachment}
         tokenUsage={thread.tokenUsage}
         threadId={threadId}
@@ -515,20 +517,24 @@ export function AgentComposerPanel({
 }
 
 function composerDisabledReason(
-  status: ThreadState["status"],
+  activity: ThreadState["activity"],
   t: ReturnType<typeof useAgentI18n>["t"],
+  waitingReasons?: readonly AgentThreadWaitingReason[],
 ): string | undefined {
-  if (status === "waitingForInput") {
-    return t("composer.resolveApprovalReason");
+  if (activity === "waitingForInput") {
+    return formatThreadStatus("waitingForInput", { t, waitingReasons });
   }
   return undefined;
 }
 
 function composerPlaceholder(
-  status: ThreadState["status"],
+  activity: ThreadState["activity"],
   t: ReturnType<typeof useAgentI18n>["t"],
+  waitingReasons?: readonly AgentThreadWaitingReason[],
 ): string {
-  if (status === "running") return t("composer.addFollowUp");
-  if (status === "waitingForInput") return t("thread.status.needsApproval");
+  if (activity === "running") return t("composer.addFollowUp");
+  if (activity === "waitingForInput") {
+    return formatThreadStatus("waitingForInput", { t, waitingReasons });
+  }
   return t("composer.placeholder");
 }

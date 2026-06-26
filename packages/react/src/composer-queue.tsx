@@ -28,14 +28,14 @@ export interface QueuedFollowUpAttachment {
   displayName?: string;
   extension?: string;
   id: string;
-  input?: AgentUserInput | AgentUserInput[];
-  kind: "image" | "file" | "app" | "plugin";
+  input: AgentUserInput | AgentUserInput[];
+  kind: "image" | "file" | "integration";
   label: string;
   previewUrl?: string;
   previewUrlRevoke?: boolean;
   redactedPath?: string;
   sizeLabel?: string;
-  value: string;
+  value?: string;
 }
 
 export interface AgentComposerQueueStore {

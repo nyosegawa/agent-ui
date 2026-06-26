@@ -59,7 +59,7 @@ export function createInitialAgentState(): AgentSessionState {
     diagnostics: createInitialDiagnosticsState(),
     hooks: { byCwd: {} },
     models: { models: [] },
-    runSettings: { executionMode: "review" },
+    runSettings: { policyId: "review" },
     serverRequestQueue: createInitialServerRequestQueueState(),
     skills: { byCwd: {} },
     threadLifecycle: createInitialThreadLifecycleState(),

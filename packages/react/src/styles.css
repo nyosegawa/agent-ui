@@ -9,12 +9,13 @@
 @import "./styles/approvals.css";
 @import "./styles/status-usage.css";
 @import "./styles/diff-utilities.css";
-@import "./styles/workspace.css";
 @import "./styles/responsive.css";
 @import "./styles/controls-buttons.css";
 @import "./styles/controls-forms.css";
 @import "./styles/controls-status.css";
 @import "./styles/composer.css";
+@import "./styles/composer-failed.css";
+@import "./styles/composer-responsive.css";
 @import "./styles/composer-mobile.css";
 @import "./styles/menu.css";
 @import "./styles/run-settings.css";

@@ -233,28 +233,45 @@ gate.
 
 The fixture routes are:
 
-- `/`: default transcript-first surface with approvals, command output, diff,
-  composer, usage primitives, and thread history
-- `/rich-transcript`: intentionally dense transcript and approval stress fixture
-- `/?state=empty`: authenticated account with no stored threads
-- `/?state=unauth`: first-run device-code login state
-- `/?state=bridge-error`: connection diagnostics
-- `/fixture-gallery`: component close-ups plus full-route previews
-- `/host-workflow-recipe`: host integration reference shell with host header,
+- `/showcase`: public component catalog with live example links and copyable
+  React snippets (`/` is an alias)
+- `/showcase/components`: snippet-facing direct public API catalog
+- `/showcase/patterns`: workflow-oriented host pattern catalog
+- `/showcase/default-conversation`: default transcript-first surface with
+  approvals, command output, diff, composer, usage primitives, and thread
+  history
+- `/showcase/rich-transcript`: intentionally dense transcript and approval stress fixture
+- `/showcase/empty-authenticated-workspace`: authenticated account with no stored threads
+- `/showcase/unauthenticated-first-run`: first-run device-code login state
+- `/showcase/bridge-error`: connection diagnostics
+- `/maintainer-gallery`: maintainer-only component close-ups, probes,
+  specimens, and full-route previews
+- `/showcase/composed-shell`: neutral composed shell route for sidebar history,
+  status, and thread view inside host-owned layout
+- `/showcase/host-workflow-recipe`: advanced host integration reference shell with host header,
   embedded `AgentChat`, side panel, local attachment metadata, transcript
   local-media preview/fallback metadata, scoped thread history loading,
   host-owned workflow gate, first-message optimistic mode, mobile drawer, and
   host-owned review sheet
-- `/composer-retry`: failed first-message retry through the public composer
+- `/showcase/composer-primitives`: normal composer primitive placement for
+  user-facing docs and snippets
+- `/showcase/composer-retry`: failed first-message retry through the public composer
   controller
-- `/resource-resolution`: structured local-media resource rendering without
+- `/showcase/transcript-content`: default transcript and content primitive
+  rendering for user-facing docs and snippets
+- `/showcase/approvals-status`: review rail composition for status summaries,
+  detailed notices, and pending approval actions
+- `/showcase/resource-resolution`: structured local-media resource rendering without
   raw path exposure
-- `/transcript-density`: compact transcript route with verbose command/file
+- `/showcase/transcript-density`: compact transcript route with verbose command/file
   blocks and noncritical chat text filtered out
-- `/scoped-thread-lists`: independent host-owned history list scopes
-- `/usage-only`: standalone usage composition examples
-- `/scoped-thread-pane`: fixed-thread composition example
-- `/app-connectors`: Codex Apps/connectors example
+- `/showcase/usage-only`: standalone usage composition examples
+- `/showcase/thread-navigation`: host-owned thread selection composed from
+  `ThreadList` and `AgentThreadView`
+- `/showcase/scoped-thread-pane`: fixed-thread composition example
+- `/showcase/app-connectors`: Codex Apps/connectors example
+- `/maintainer/scoped-thread-lists`: maintainer-only scoped history collection
+  contract
 
 The browser gate checks desktop and mobile layout contracts, horizontal
 overflow, composer reachability, approval hit testing, sidebar behavior, and
@@ -265,6 +282,25 @@ Those example styles should consume `--aui-*` tokens because they are visual QA
 for the library. The recipes package may intentionally override tokens to show
 host theming.
 
+The route and viewport matrix is manifest-driven. Each route declares the
+desktop, wide, tablet, compact, mobile, and short viewports that matter for its
+contract in `examples/local-react-vite/src/fixtures/visual-qa-manifest.ts`.
+`visual-route-matrix.e2e.ts` consumes that manifest and checks route readiness,
+document overflow, visible text containment, and key surface containment. Add a
+viewport to the manifest when a route owns that layout shape. Browser consumers
+should not duplicate route lists; `visual-qa-manifest.e2e.ts` is the deliberate
+stable-inventory assertion and must be updated when the canonical route or docs
+screenshot set intentionally changes.
+
+The public component catalog is owned by
+`examples/local-react-vite/src/fixtures/public-component-catalog.ts`.
+`test/public-showcase-catalog.test.ts` checks that every required public visual
+component is classified for the user-facing catalog, that catalog links point
+only at public showcase routes, that each entry separates directly displayed
+snippet API from non-UI coverage metadata, that each entry has copyable
+public-API code and an ownership note, and that obsolete or maintainer-only
+concepts do not return to the public surface.
+
 The deterministic fixture Playwright files are split by contract ownership:
 
 - `smoke.e2e.ts` covers route availability, basic interaction, and blank-page
@@ -274,6 +310,10 @@ The deterministic fixture Playwright files are split by contract ownership:
   hit-testing, and viewport-relative dimensions instead of exact pixel snapshots.
   Host integration smoke checks also cover the mobile drawer plus host-owned
   sheet stacking contract.
+- `visual-route-matrix.e2e.ts` owns manifest-wide route readiness, overflow,
+  text containment, and surface containment across the declared viewport matrix.
+  It is the broad visual drift guard; route-specific files still own deeper
+  interaction and state assertions.
 - `visual-closeups.e2e.ts` owns the component close-up gallery and verifies that
   close-ups render real primitives instead of iframe or hand-written DOM
   substitutes.
@@ -330,6 +370,10 @@ The real-local specs are split by App Server integration contract:
   and queued attachment restoration.
 - `real-local-follow-ups.e2e.ts` owns running-turn follow-up queue behavior,
   `turn/steer`, `turn/interrupt`, and queued-item compaction.
+- `real-local-layout.e2e.ts` owns deterministic real-local desktop/mobile
+  layout containment for first-run and stored-thread surfaces. It checks
+  full-bleed local shell placement, document overflow, first-run submit
+  containment and hit testing, and stored-thread composer anchoring.
 
 `bun run test:e2e:real-local-web-layout` audits an already-running
 `examples/codex-local-web` instance. Start it explicitly on port 5175:
@@ -366,6 +410,8 @@ App Server integration contract:
 - `real-local-follow-ups.e2e.ts` covers running-turn composer semantics,
   UI-local queued follow-ups, `turn/steer`, `turn/interrupt`, queue compaction,
   anchored composer layout, and scroll-follow behavior.
+- `real-local-layout.e2e.ts` covers deterministic first-run and stored-thread
+  layout containment on desktop and mobile against the fake App Server.
 - `support/real-local-page.ts` contains the shared page helper layer and is the
   only place for app-open readiness retries. Interaction assertions in tests
   should remain explicit and low-timeout.

@@ -8,6 +8,7 @@
   grid-template-rows: auto auto auto minmax(0, 1fr);
   min-height: 0;
   overflow: hidden;
+  overscroll-behavior-x: none;
   padding: var(--aui-space-350) var(--aui-space-300);
 }
 
@@ -64,8 +65,10 @@
   gap: var(--aui-space-050);
   min-height: 0;
   min-width: 0;
-  overflow: auto;
-  overscroll-behavior: contain;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-x: none;
+  overscroll-behavior-y: contain;
   padding-bottom: var(--aui-space-100);
 }
 

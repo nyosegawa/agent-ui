@@ -157,8 +157,9 @@ The default `AgentChat` preset uses these same behavior boundaries internally.
 Recipes and fixture routes prove headless composition for host-owned layouts,
 scoped lists, custom composer chrome, diagnostics panels, resource resolution,
 and custom transcript renderers. Source-level controllers may exist before
-they become root exports, but package export maps are not frozen until
-examples, tests, docs, API snapshots, and package-resolution checks agree.
+they become public `@nyosegawa/agent-ui-react/headless` exports, but package
+export maps are not frozen until examples, tests, docs, API snapshots, and
+package-resolution checks agree.
 
 ## Reducer Rules
 
@@ -210,13 +211,17 @@ cleanup policy, static route admission, and remote persistence.
 
 ## UI Model
 
-The drop-in UI is a convenience layer over the headless API.
+The drop-in UI is a convenience layer over the headless API. React exports are
+split by use:
 
-Default primitives:
+- `@nyosegawa/agent-ui-react`: preset entry with `AgentProvider`, `AgentChat`,
+  the preset component map, and i18n helpers.
+- `@nyosegawa/agent-ui-react/primitives`: visual composition entry.
+- `@nyosegawa/agent-ui-react/headless`: controller/type entry.
 
-- `AgentProvider`
+Common primitives:
+
 - `AgentShell`
-- `AgentChat`
 - `AgentThreadView`
 - `AgentThreadHeader`
 - `AgentThreadTimeline`
@@ -227,7 +232,6 @@ Default primitives:
 - `AgentSkillsPanel`
 - `AgentAppsPanel`
 - `AgentThreadSidebar`
-- `AgentWorkspace`
 
 Customization:
 
@@ -235,7 +239,7 @@ Customization:
 - `className`
 - `AgentChat.components`
 - render props
-- headless hooks
+- headless hooks/controllers
 
 `AgentChat` is a transcript-first convenience preset over the same primitives.
 Hosts can render a single fixed thread, move usage/status/diagnostics into host
@@ -279,22 +283,24 @@ items from that same turn remain visible with it even when they fall outside
 the raw item-count window.
 
 The transcript renderer keeps public primitives exported from
-`packages/react/src/timeline.tsx`, while focused internal logic lives under
-`packages/react/src/timeline/`: `blocks.ts` synthesizes normalized transcript
-blocks from stored App Server items, `approval-anchors.tsx` places pending
-server requests inline, `item-renderers.tsx` owns command/file/tool/message
-renderers, `scroll-follow.ts` owns transcript follow mode and Jump to latest
-state, `windowing.ts` owns visible-window state for Show earlier batches,
-`formatters.ts` owns labels/status/text formatting, and `previews.ts` owns
-closed-card previews. This keeps App Server item-kind handling centralized
+`@nyosegawa/agent-ui-react/primitives`; lower-level helpers under
+`packages/react/src/timeline/` are implementation details. `timeline.tsx`
+exports the public transcript primitives, while focused internal logic lives
+under `packages/react/src/timeline/`: `blocks.ts` synthesizes normalized
+transcript blocks from stored App Server items, `approval-anchors.tsx` places
+pending server requests inline, `item-renderers.tsx` owns command/file/tool/
+message renderers, `scroll-follow.ts` owns transcript follow mode and Jump to
+latest state, `windowing.ts` owns visible-window state for Show earlier
+batches, `formatters.ts` owns labels/status/text formatting, and `previews.ts`
+owns closed-card previews. This keeps App Server item-kind handling centralized
 instead of scattering it through the chat shell.
 
-The React package keeps zero-dependency visual primitives internal. Shared
+The React package keeps implementation-only visual helpers internal. Shared
 icons and the button class helper live in
-`packages/react/src/components-internal.tsx`; `components.ts` remains the
-public component barrel and should not grow another local icon/button system.
-Those internal class helpers support the bundled stylesheet but do not make the
-generated `.aui-*` class names host-facing API.
+`packages/react/src/components-internal.tsx`; public component exports are
+promoted through the explicit `primitives` entrypoint rather than a broad
+source-level component barrel. Those internal class helpers support the bundled
+stylesheet but do not make the generated `.aui-*` class names host-facing API.
 
 The Vite fixture app is split by intent. Route composition stays in
 `examples/local-react-vite/src/main.tsx`, visual close-ups live under

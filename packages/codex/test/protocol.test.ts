@@ -14,10 +14,13 @@ import {
   assertCodexProductizedMethod,
   codexCapabilityMetadata,
   codexInitializeParams,
+  codexServerRequestMethodMetadata,
   experimentalAvailableMethods,
   experimentalUnsupportedMethods,
+  getCodexServerRequestMethodMetadata,
   getCodexCapabilityStatus,
   hostOnlyMethods,
+  isCodexApprovalDecisionServerRequestMethod,
   isExperimentalAvailableMethod,
   isExperimentalUnsupportedMethod,
   isHostOnlyMethod,
@@ -29,6 +32,7 @@ import {
   stableServerRequestMethods,
 } from "../src/protocol";
 import { encodeJsonRpcLine, parseJsonRpcLine } from "../src/json-rpc";
+import { normalizeCodexThreadRuntimeStatus } from "../src/normalizers/shared";
 import {
   normalizeAppsListResponse,
   normalizeCodexServerMessage,
@@ -265,6 +269,36 @@ describe("Codex protocol metadata", () => {
         },
       },
     ]);
+  });
+
+  it("classifies server request methods by protocol role", () => {
+    expect(codexServerRequestMethodMetadata.map((metadata) => metadata.method).sort()).toEqual(
+      [...stableServerRequestMethods].sort(),
+    );
+    expect(getCodexServerRequestMethodMetadata("item/commandExecution/requestApproval")).toEqual({
+      method: "item/commandExecution/requestApproval",
+      role: "approvalDecision",
+    });
+    expect(getCodexServerRequestMethodMetadata("item/permissions/requestApproval")).toEqual({
+      method: "item/permissions/requestApproval",
+      role: "hostInput",
+    });
+    expect(getCodexServerRequestMethodMetadata("item/tool/call")).toEqual({
+      method: "item/tool/call",
+      role: "dynamicTool",
+    });
+    expect(getCodexServerRequestMethodMetadata("plugin/list")).toBeUndefined();
+
+    expect(isCodexApprovalDecisionServerRequestMethod("execCommandApproval")).toBe(true);
+    expect(
+      isCodexApprovalDecisionServerRequestMethod("item/fileChange/requestApproval"),
+    ).toBe(true);
+    expect(
+      isCodexApprovalDecisionServerRequestMethod("item/permissions/requestApproval"),
+    ).toBe(false);
+    expect(isCodexApprovalDecisionServerRequestMethod("item/tool/requestUserInput")).toBe(
+      false,
+    );
   });
 
   it("preserves JSON-RPC-lite request id types for stable server request kinds", () => {
@@ -655,6 +689,7 @@ describe("Codex protocol metadata", () => {
       "thread/status/changed",
     ]);
     expect(events[0]).toMatchObject({
+      runtimeStatus: { type: "idle" },
       snapshot: true,
       status: "loaded",
       thread: { id: "thread-history", name: "Stored history" },
@@ -679,6 +714,7 @@ describe("Codex protocol metadata", () => {
       { path: "src/app.ts", type: "update" },
     ]);
     expect(state.threads["thread-history"]?.status).toBe("loaded");
+    expect(state.threads["thread-history"]?.runtime.status).toEqual({ type: "idle" });
   });
 
   it("normalizes thread/read preview responses without activating them", () => {
@@ -721,7 +757,7 @@ describe("Codex protocol metadata", () => {
             id: "thread-list-one",
             name: "Listed thread",
             preview: "Listed preview",
-            status: { type: "idle" },
+            status: { activeFlags: ["waitingOnApproval"], type: "active" },
           },
           {
             cwd: "/workspace/one",
@@ -765,6 +801,8 @@ describe("Codex protocol metadata", () => {
       syncedAt: 1_765_000_000_000,
     });
     expect(state.threads["thread-list-one"]?.availability).toBe("archived");
+    expect(state.threads["thread-list-one"]?.activity).toBe("idle");
+    expect(state.threads["thread-list-one"]?.runtime.status).toEqual({ type: "idle" });
     expect(state.threads["thread-list-one"]?.metadata).toMatchObject({
       cwd: "/workspace/one",
       title: "Listed thread",
@@ -794,7 +832,7 @@ describe("Codex protocol metadata", () => {
       state,
     );
     expect(state.threads["thread-list-one"]?.status).toBe("loaded");
-    expect(state.threads["thread-list-one"]?.availability).toBe("available");
+    expect(state.threads["thread-list-one"]?.availability).toBe("preview");
     expect(() => normalizeThreadListResponse({ data: [{ name: "Broken" }] })).toThrow(
       "thread/list response contains a thread without an id",
     );
@@ -1140,6 +1178,9 @@ describe("Codex protocol metadata", () => {
 
       expect(events).toEqual([
         {
+          ...(status === "running"
+            ? { runtimeStatus: { activeFlags: [], type: "active" } }
+            : {}),
           status,
           threadId: "thread-lifecycle",
           type: "thread/status/changed",
@@ -1149,8 +1190,15 @@ describe("Codex protocol metadata", () => {
     }
   });
 
-  it("normalizes active thread waiting flags as waiting for input", () => {
+  it("preserves structured active thread waiting flags at the Codex boundary", () => {
     for (const activeFlag of ["waitingOnUserInput", "waitingOnApproval"]) {
+      expect(
+        normalizeCodexThreadRuntimeStatus({
+          activeFlags: [activeFlag, "futureFlag"],
+          type: "active",
+        }),
+      ).toEqual({ activeFlags: [activeFlag], type: "active" });
+
       const events = normalizeCodexServerMessage({
         method: "thread/status/changed",
         params: {
@@ -1161,12 +1209,21 @@ describe("Codex protocol metadata", () => {
 
       expect(events).toEqual([
         {
+          runtimeStatus: { activeFlags: [activeFlag], type: "active" },
           status: "waitingForInput",
           threadId: "thread-waiting",
           type: "thread/status/changed",
         },
       ]);
     }
+
+    expect(normalizeCodexThreadRuntimeStatus({ type: "active" })).toEqual({
+      activeFlags: [],
+      type: "active",
+    });
+    expect(normalizeCodexThreadRuntimeStatus({ type: "idle" })).toEqual({
+      type: "idle",
+    });
   });
 
   it("normalizes dynamic tool call requests", () => {

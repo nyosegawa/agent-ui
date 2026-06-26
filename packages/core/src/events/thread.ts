@@ -1,6 +1,7 @@
 import type {
   AgentError,
   AgentOperationView,
+  AgentThreadRuntimeStatus,
   AgentThread,
   AgentThreadScope,
   AgentTurn,
@@ -13,6 +14,7 @@ export type ThreadEvent =
   | {
       type: "thread/upserted";
       thread: AgentThread;
+      runtimeStatus?: AgentThreadRuntimeStatus;
       status?: ThreadStatus;
       turns?: AgentTurn[];
       snapshot?: boolean;
@@ -20,6 +22,7 @@ export type ThreadEvent =
   | {
       type: "thread/started";
       thread: AgentThread;
+      runtimeStatus?: AgentThreadRuntimeStatus;
       status?: ThreadStatus;
       turns?: AgentTurn[];
       snapshot?: boolean;
@@ -27,6 +30,7 @@ export type ThreadEvent =
   | {
       type: "thread/status/changed";
       threadId: ThreadId;
+      runtimeStatus?: AgentThreadRuntimeStatus;
       status: ThreadStatus;
       snapshot?: boolean;
     }
@@ -36,6 +40,7 @@ export type ThreadEvent =
   | {
       type: "thread/optimistic/created";
       operation: AgentOperationView;
+      runtimeStatus?: AgentThreadRuntimeStatus;
       thread: AgentThread;
       status?: ThreadStatus;
       turns?: AgentTurn[];

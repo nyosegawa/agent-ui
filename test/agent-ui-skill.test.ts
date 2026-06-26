@@ -96,6 +96,7 @@ describe("public Agent UI skill", () => {
       "@nyosegawa/agent-ui-codex/websocket",
       "@nyosegawa/agent-ui-codex/request-builders",
       "@nyosegawa/agent-ui-server",
+      "@nyosegawa/agent-ui-react/primitives",
       "@nyosegawa/agent-ui-react/styles.css",
       "createCodexWebSocketTransport",
       "attachAgentUiWebSocketBridge",
@@ -112,6 +113,9 @@ describe("public Agent UI skill", () => {
 
     expect(allSkillText).toContain("Only the full chat bridge can power `AgentChat`.");
     expect(allSkillText).toContain("A plain Route Handler is only for one-shot RPC.");
+    expect(allSkillText).not.toContain(
+      'AgentResolvedLocalAttachment } from "@nyosegawa/agent-ui-react"',
+    );
     expect(allSkillText).toContain(
       "Same-origin routing and upstream `Origin` checks are not authentication.",
     );
@@ -137,6 +141,9 @@ describe("public Agent UI skill", () => {
     expect(allSkillText).toContain("Use published Agent UI packages from the registry");
     expect(allSkillText).toContain("Do not target internal `.aui-*` selectors");
     expect(allSkillText).toContain("changed host CSS contains no `.aui-` selectors");
+    expect(allSkillText).toMatch(/external\s+hosts should/);
+    expect(allSkillText).toContain("host-local routes");
+    expect(allSkillText).toMatch(/instead of copying\s+maintainer/);
   });
 
   it("keeps public skill docs free of maintainer-only or stale repository assumptions", async () => {
@@ -155,6 +162,13 @@ describe("public Agent UI skill", () => {
       "path URI",
       "pathUri",
       "pathuri",
+      "/maintainer-gallery",
+      "close-up",
+      "closeup",
+      "probe route",
+      "specimen",
+      "visual-route-matrix.e2e.ts",
+      "test:e2e:fixtures",
     ]) {
       expect(allSkillText, forbidden).not.toContain(forbidden);
     }

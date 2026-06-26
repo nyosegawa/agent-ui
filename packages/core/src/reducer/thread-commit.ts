@@ -1,11 +1,14 @@
 import type { AgentSessionState, ThreadId, ThreadState } from "../state";
 import {
-  threadActivityFromStatus,
   threadAvailabilityFromStatus,
   threadLifecycleStore,
   threadMetadataFromThread,
   threadStorageFromThread,
 } from "../stores/thread-lifecycle";
+import {
+  threadActivityFromRuntime,
+  threadRuntimeFromStatus,
+} from "../stores/thread-runtime";
 
 export function commitThreadEntity(
   state: AgentSessionState,
@@ -16,7 +19,8 @@ export function commitThreadEntity(
     preserveOrder?: boolean;
   } = {},
 ): AgentSessionState {
-  const activity = threadActivityFromStatus(thread.status);
+  const runtime = thread.runtime ?? threadRuntimeFromStatus(thread.status);
+  const activity = threadActivityFromRuntime(runtime);
   const availability = threadAvailabilityFromStatus(thread.status);
   const metadata = {
     ...thread.metadata,
@@ -32,6 +36,7 @@ export function commitThreadEntity(
         activity,
         availability,
         metadata,
+        runtime,
         storage,
       },
       options,
@@ -43,6 +48,7 @@ export function commitThreadEntity(
         activity,
         availability,
         metadata,
+        runtime,
         storage,
       },
     },

@@ -8,7 +8,7 @@ new public APIs.
 - Core normalized state and protocol-neutral transport primitives.
 - Codex App Server adapters, request builders, normalizers, and generated schema
   metadata needed by package APIs.
-- React components, hooks, and transcript-first UI primitives.
+- React root preset, headless controllers, and transcript-first UI primitives.
 - Web Components wrapper around the React preset.
 - Node server helpers for local same-origin WebSocket bridges, local uploads,
   redaction, one-shot RPC, method policy, and dynamic-tool delegation.
@@ -33,7 +33,7 @@ new public APIs.
   does it hard-code one host application's workflow?
 - Does it keep local-first defaults and make remote or multi-user assumptions
   explicit?
-- Does it preserve `AgentChat` as a convenience preset while keeping primitives
-  independently composable?
+- Does it preserve `AgentChat` as the root convenience preset while keeping
+  `/primitives` and `/headless` independently composable?
 - Does it document host-owned responsibilities instead of silently absorbing
   them into public packages?

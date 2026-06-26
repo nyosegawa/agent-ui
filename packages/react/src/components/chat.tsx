@@ -1,9 +1,5 @@
 import type React from "react";
-import type {
-  AgentItemState,
-  PendingServerRequest,
-  TurnState,
-} from "@nyosegawa/agent-ui-core";
+import type { PendingServerRequest } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useAgentBootstrap,
@@ -21,15 +17,20 @@ import {
 import { AgentThreadView } from "./thread";
 import { AgentComposerPanel, type AgentComposerPanelProps } from "./composer";
 import type {
-  AgentComposerMentionResolver,
+  AgentComposerIntegration,
   AgentLocalAttachmentResolver,
 } from "./composer";
 import { AgentFirstRun } from "./first-run";
 import type { AgentWorkingDirectoryResolver } from "./run-settings";
 import { AgentThreadSidebar } from "./sidebar";
+import { AgentShell, type AgentShellProps } from "./shell";
 import { useCompactLayout, useContextSheetLayout } from "./shared";
 import type { AgentTheme } from "./theme";
-import type { AgentTranscriptBlock, AgentTranscriptItem } from "../hooks/transcript";
+import type {
+  AgentTranscriptBlock,
+  AgentTranscriptEntry,
+  AgentTranscriptItem,
+} from "../hooks/transcript";
 import {
   threadPath,
   threadUrlRoutingBasePath,
@@ -56,15 +57,8 @@ export interface AgentApprovalDefaultProps {
   approval: PendingServerRequest;
 }
 
-export interface AgentItemComponentProps {
-  Default: React.ComponentType<AgentItemDefaultProps>;
-  item: AgentItemState;
-  turn: TurnState;
-}
-
 export interface AgentItemDefaultProps {
-  item: AgentItemState;
-  turn: TurnState;
+  entry: AgentTranscriptEntry;
 }
 
 export interface AgentShellComponentProps extends AgentShellProps {
@@ -100,7 +94,6 @@ export interface AgentComponents {
   Approval?: React.ComponentType<AgentApprovalComponentProps>;
   ComposerPanel?: React.ComponentType<AgentComposerPanelComponentProps>;
   EmptyState?: React.ComponentType<AgentEmptyStateComponentProps>;
-  Item?: React.ComponentType<AgentItemComponentProps>;
   Shell?: React.ComponentType<AgentShellComponentProps>;
   Sidebar?: React.ComponentType<AgentSidebarComponentProps>;
   blocks?: Partial<
@@ -117,11 +110,10 @@ export const defaultAgentComponents = {
 
 export interface AgentChatProps {
   className?: string;
+  composerIntegrations?: readonly AgentComposerIntegration[];
   components?: AgentComponents;
   diagnostics?: boolean;
-  onRequestAppMention?: AgentComposerMentionResolver;
   onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
-  onRequestPluginMention?: AgentComposerMentionResolver;
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   sidebar?: boolean;
@@ -135,11 +127,10 @@ export interface AgentChatProps {
 
 export function AgentChat({
   className,
+  composerIntegrations,
   components,
   diagnostics = false,
-  onRequestAppMention,
   onRequestWorkingDirectory,
-  onRequestPluginMention,
   resolveLocalAttachment,
   resolveLocalMediaUrl,
   sidebar = true,
@@ -154,10 +145,9 @@ export function AgentChat({
     <AgentI18nProvider locale={locale} messages={messages}>
       <AgentChatInner
         className={className}
+        composerIntegrations={composerIntegrations}
         components={components}
         diagnostics={diagnostics}
-        onRequestAppMention={onRequestAppMention}
-        onRequestPluginMention={onRequestPluginMention}
         onRequestWorkingDirectory={onRequestWorkingDirectory}
         resolveLocalAttachment={resolveLocalAttachment}
         resolveLocalMediaUrl={resolveLocalMediaUrl}
@@ -173,11 +163,10 @@ export function AgentChat({
 
 function AgentChatInner({
   className,
+  composerIntegrations,
   components,
   diagnostics = false,
-  onRequestAppMention,
   onRequestWorkingDirectory,
-  onRequestPluginMention,
   resolveLocalAttachment,
   resolveLocalMediaUrl,
   sidebar = true,
@@ -407,8 +396,7 @@ function AgentChatInner({
           >
             {thread ? (
               <AgentThreadView
-                onRequestAppMention={onRequestAppMention}
-                onRequestPluginMention={onRequestPluginMention}
+                composerIntegrations={composerIntegrations}
                 components={componentMap}
                 resolveLocalAttachment={resolveLocalAttachment}
                 resolveLocalMediaUrl={resolveLocalMediaUrl}
@@ -454,36 +442,5 @@ function AgentChatInner({
         </div>
       </div>
     </Shell>
-  );
-}
-
-export interface AgentShellProps extends React.HTMLAttributes<HTMLElement> {
-  sidebar?: React.ReactNode;
-  theme?: AgentTheme;
-}
-
-export function AgentShell({
-  children,
-  className,
-  sidebar,
-  theme,
-  ...props
-}: AgentShellProps) {
-  const { Default: _Default, ...htmlProps } = props as typeof props & {
-    Default?: unknown;
-  };
-  void _Default;
-  const inheritedTheme = (props as { "data-aui-theme"?: AgentTheme })["data-aui-theme"];
-  return (
-    <section
-      className={["aui-shell", className].filter(Boolean).join(" ")}
-      data-sidebar-present={sidebar ? "true" : "false"}
-      data-testid="agent-chat"
-      {...htmlProps}
-      data-aui-theme={theme ?? inheritedTheme}
-    >
-      {sidebar}
-      {children}
-    </section>
   );
 }

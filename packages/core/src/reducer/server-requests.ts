@@ -4,7 +4,9 @@ import { requestIdKey } from "../request-id-key";
 import { diagnosticsStore } from "../stores/diagnostics";
 import { serverRequestStore } from "../stores/server-request";
 import { threadEntityStore } from "../stores/thread-entity";
+import { runtimeWithServerRequestOverlay } from "../stores/thread-runtime";
 import { canonicalThreadId } from "../thread-alias";
+import { commitThreadEntity } from "./thread-commit";
 
 export function reduceServerRequestEvent(
   state: AgentSessionState,
@@ -25,19 +27,13 @@ export function reduceServerRequestEvent(
           }),
         };
       }
-      return threadEntityStore.pruneSnapshots(
-        threadEntityStore.setStatus(
-          {
-            ...state,
-            serverRequestQueue: serverRequestStore.enqueue(
-              state.serverRequestQueue,
-              request,
-            ),
-          },
-          request.threadId ?? "",
-          "waitingForInput",
+      return updateThreadRequestRuntime({
+        ...state,
+        serverRequestQueue: serverRequestStore.enqueue(
+          state.serverRequestQueue,
+          request,
         ),
-      );
+      }, request.threadId);
     }
     case "serverRequest/resolved": {
       const request = state.serverRequestQueue.byId[requestIdKey(event.requestId)];
@@ -49,23 +45,7 @@ export function reduceServerRequestEvent(
         ...state,
         serverRequestQueue,
       };
-      if (
-        !request?.threadId ||
-        serverRequestStore.hasPendingThreadRequest(
-          serverRequestQueue.byId,
-          request.threadId,
-        )
-      ) {
-        return threadEntityStore.pruneSnapshots(nextState);
-      }
-      return threadEntityStore.pruneSnapshots(
-        threadEntityStore.setStatus(
-          nextState,
-          request.threadId,
-          "running",
-          { onlyIf: "waitingForInput" },
-        ),
-      );
+      return updateThreadRequestRuntime(nextState, request?.threadId);
     }
     case "serverRequest/rejected": {
       const request = state.serverRequestQueue.byId[requestIdKey(event.requestId)];
@@ -80,27 +60,26 @@ export function reduceServerRequestEvent(
           : state.diagnostics,
         serverRequestQueue,
       };
-      if (
-        !request?.threadId ||
-        serverRequestStore.hasPendingThreadRequest(
-          serverRequestQueue.byId,
-          request.threadId,
-        )
-      ) {
-        return threadEntityStore.pruneSnapshots(nextState);
-      }
-      return threadEntityStore.pruneSnapshots(
-        threadEntityStore.setStatus(
-          nextState,
-          request.threadId,
-          "running",
-          { onlyIf: "waitingForInput" },
-        ),
-      );
+      return updateThreadRequestRuntime(nextState, request?.threadId);
     }
     default:
       return assertNever(event);
   }
+}
+
+function updateThreadRequestRuntime(
+  state: AgentSessionState,
+  threadId: string | undefined,
+): AgentSessionState {
+  if (!threadId) return threadEntityStore.pruneSnapshots(state);
+  const thread = state.threads[threadId];
+  if (!thread) return threadEntityStore.pruneSnapshots(state);
+  return threadEntityStore.pruneSnapshots(
+    commitThreadEntity(state, {
+      ...thread,
+      runtime: runtimeWithServerRequestOverlay(state, thread, thread.status),
+    }),
+  );
 }
 
 function hasConflictingServerRequest(

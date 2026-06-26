@@ -2,7 +2,13 @@ import {
   createInitialAgentState,
   FakeAgentTransport,
   runEventFixture,
+  selectServerRequestSummaries,
+  selectThreadSummaryView,
+  selectThreadTranscriptView,
   type AgentSessionState,
+  type AgentServerRequestSummary,
+  type AgentThreadSummaryView,
+  type AgentThreadTranscriptView,
   type AgentTransport,
   type AgentTransportEvent,
   type FakeTransportRequest,
@@ -32,6 +38,26 @@ export function createFixtureInitialState(scenario: FixtureScenario): AgentSessi
     return state;
   }
   return state;
+}
+
+export interface RichTranscriptFixtureViews {
+  requests: AgentServerRequestSummary[];
+  summary: AgentThreadSummaryView;
+  transcript: AgentThreadTranscriptView;
+}
+
+export function createRichTranscriptFixtureViews(): RichTranscriptFixtureViews {
+  const state = createRichTranscriptInitialState();
+  const summary = selectThreadSummaryView(state, "thread-rich-transcript");
+  const transcript = selectThreadTranscriptView(state, "thread-rich-transcript");
+  if (!summary || !transcript) {
+    throw new Error("Rich transcript fixture failed to build public core views.");
+  }
+  return {
+    requests: selectServerRequestSummaries(state, "thread-rich-transcript"),
+    summary,
+    transcript,
+  };
 }
 
 export function createFixtureTransport(scenario: FixtureScenario): AgentTransport {
@@ -100,6 +126,29 @@ function handleFixtureRequest(request: FakeTransportRequest, scenario: FixtureSc
           nextCursor: "host-scope-page-2",
         };
       }
+      return {
+        data: [
+          {
+            id: "thread-host-scope-review",
+            name: "Host scoped review",
+            preview: "Stored session scoped to host panel",
+            status: { type: "notLoaded" },
+          },
+          {
+            id: "thread-stored-preview",
+            name: "Stored session",
+            preview: "Review a stored session",
+            status: { type: "notLoaded" },
+          },
+          {
+            id: "thread-host-scope-page",
+            name: "Host scoped follow-up",
+            preview: "Second page stored session",
+            status: { type: "notLoaded" },
+          },
+        ],
+        nextCursor: null,
+      };
     }
     return {
       data: [
@@ -250,7 +299,7 @@ export function createRichTranscriptInitialState(): AgentSessionState {
       kind: "dynamicTool",
       payload: {
         tool: "browser_verification_snapshot",
-        arguments: { url: "http://127.0.0.1:5174/rich-transcript" },
+        arguments: { url: "http://127.0.0.1:5174/showcase/rich-transcript" },
       },
       threadId: "thread-rich-transcript",
     },
@@ -273,6 +322,13 @@ export function createRichTranscriptInitialState(): AgentSessionState {
     },
     operations: {},
     orderedTurnIds: ["turn-rich-transcript"],
+    runtime: {
+      activeTurnId: "turn-rich-transcript",
+      status: {
+        activeFlags: ["waitingOnApproval", "waitingOnUserInput"],
+        type: "active",
+      },
+    },
     status: "waitingForInput",
     storage: "unknown",
     thread: {
@@ -466,16 +522,23 @@ export function fixtureModels() {
 }
 
 export function fixtureRateLimits() {
+  const now = new Date();
+  const nextDailyReset = new Date(now);
+  nextDailyReset.setUTCDate(now.getUTCDate() + 1);
+  nextDailyReset.setUTCHours(12, 0, 0, 0);
+  const nextWeeklyReset = new Date(now);
+  nextWeeklyReset.setUTCDate(now.getUTCDate() + 7);
+  nextWeeklyReset.setUTCHours(12, 0, 0, 0);
   return {
     rateLimits: {
       limitName: "fixture-demo-model",
       primary: {
-        resetsAt: "2026-05-09T12:00:00.000Z",
+        resetsAt: nextDailyReset.toISOString(),
         usedPercent: 12,
         windowDurationMins: 300,
       },
       secondary: {
-        resetsAt: "2026-05-12T12:00:00.000Z",
+        resetsAt: nextWeeklyReset.toISOString(),
         usedPercent: 34,
         windowDurationMins: 10080,
       },

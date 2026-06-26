@@ -35,6 +35,12 @@
       "@nyosegawa/agent-ui-react": [
         "../../packages/react/src/index.ts"
       ],
+      "@nyosegawa/agent-ui-react/headless": [
+        "../../packages/react/src/headless.ts"
+      ],
+      "@nyosegawa/agent-ui-react/primitives": [
+        "../../packages/react/src/primitives.ts"
+      ],
       "@nyosegawa/agent-ui-server": [
         "../../packages/server/src/index.ts"
       ]

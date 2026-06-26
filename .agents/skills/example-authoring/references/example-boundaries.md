@@ -34,6 +34,9 @@ include planning logs or historical migration notes in public docs.
 Add or update tests according to ownership:
 
 - fixture UI behavior: fixture Playwright or React component tests
+- fixture route inventory and viewport coverage: update
+  `visual-qa-manifest.ts` and run `visual-route-matrix.e2e.ts`
 - real App Server bridge behavior: real-local Playwright or bridge tests
+- real-local desktop/mobile layout: `real-local-layout.e2e.ts`
 - package import behavior: package-resolution smoke
 - CSS token/selector behavior: style tests

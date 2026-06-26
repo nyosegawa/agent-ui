@@ -12,6 +12,11 @@ export {
   type AgentSkillsRefreshOptions,
 } from "./hooks/connectors";
 export { useAgentDiagnostics } from "./hooks/diagnostics";
+export {
+  useAgentDirectThreadController,
+  type AgentDirectThreadController,
+  type AgentDirectThreadOpenResult,
+} from "./hooks/direct-thread";
 export { useAgentModels } from "./hooks/models";
 export type {
   AgentApprovalPolicy,
@@ -40,9 +45,14 @@ export {
   type QueuedFollowUpAttachment,
 } from "./hooks/composer";
 export {
-  AGENT_EXECUTION_MODES,
+  AGENT_FULL_ACCESS_RUN_POLICY,
+  DEFAULT_AGENT_RUN_POLICIES,
+  agentRunPolicyTurnOptions,
+  effectiveAgentRunPolicies,
+  resolvedAgentRunPolicyId,
   useAgentRunSettings,
-  type AgentExecutionMode,
+  type AgentRunPolicy,
+  type AgentRunPolicyId,
   type TurnStartOptions,
 } from "./hooks/run-settings";
 export {

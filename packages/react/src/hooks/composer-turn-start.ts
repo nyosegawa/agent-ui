@@ -8,8 +8,8 @@ import { useCallback } from "react";
 import type { AgentUserInput } from "../agent-input";
 import { useAgentContext } from "../provider";
 import { codexTurnStartOptions } from "../request-options";
+import { agentRunPolicyTurnOptions } from "../run-policies";
 import { useCodexSession } from "./codex-session";
-import { AGENT_EXECUTION_MODES } from "./run-settings";
 import { useAgentThread } from "./thread";
 import type { AgentThreadResumeResult } from "./thread-lifecycle-types";
 import { codexReasoningEffort, normalizeTurnInput } from "./turn-input";
@@ -20,7 +20,7 @@ export type ComposerTurnStartResult =
   | { threadId: ThreadId; type: "resumedWaitingForInput" };
 
 export function useComposerTurnStart(threadId?: ThreadId) {
-  const { state } = useAgentContext();
+  const { runPolicies, state } = useAgentContext();
   const codex = useCodexSession();
   const resolvedThreadId = threadId ?? state.threadLifecycle.activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;
@@ -44,23 +44,20 @@ export function useComposerTurnStart(threadId?: ThreadId) {
       if (resumeResult?.activity === "waitingForInput") {
         return { threadId: targetThreadId, type: "resumedWaitingForInput" };
       }
-      const executionMode = AGENT_EXECUTION_MODES.find(
-        (mode) => mode.id === runSettings.executionMode,
-      );
       const turnRunSettings = composerTurnRunSettings(
         {
-          cwd: runSettings.cwd,
           effort: runSettings.effort,
           modelId: runSettings.modelId,
         },
         resumeResult,
       );
       await codex.turn.start({
-        cwd: turnRunSettings.cwd,
         effort: codexReasoningEffort(turnRunSettings.effort),
         input: normalizeTurnInput(input),
         model: turnRunSettings.modelId,
-        ...codexTurnStartOptions(executionMode?.turnParams),
+        ...codexTurnStartOptions(
+          agentRunPolicyTurnOptions(runSettings.policyId, runPolicies),
+        ),
         threadId: targetThreadId,
       });
       return { threadId: targetThreadId, type: "started" };
@@ -69,10 +66,10 @@ export function useComposerTurnStart(threadId?: ThreadId) {
       codex,
       resolvedThreadId,
       resumeThread,
-      runSettings.cwd,
       runSettings.effort,
-      runSettings.executionMode,
       runSettings.modelId,
+      runSettings.policyId,
+      runPolicies,
       thread,
     ],
   );
@@ -88,12 +85,11 @@ function shouldResumeBeforeTurnStart(thread: ThreadState | undefined): boolean {
 }
 
 function composerTurnRunSettings(
-  runSettings: { cwd?: string; effort?: string; modelId?: string },
+  runSettings: { effort?: string; modelId?: string },
   resumeResult: AgentThreadResumeResult | undefined,
 ) {
   if (resumeResult?.runSettings) return resumeResult.runSettings;
   return {
-    cwd: runSettings.cwd,
     effort: runSettings.effort,
     modelId: runSettings.modelId,
   };

@@ -15,7 +15,7 @@ export function reduceRunSettingsEvent(
         },
         runSettings: {
           ...state.runSettings,
-          ...(event.executionMode ? { executionMode: event.executionMode } : {}),
+          ...(event.policyId ? { policyId: event.policyId } : {}),
           ...(event.modelId !== undefined ? { modelId: event.modelId || undefined } : {}),
           ...(event.effort !== undefined ? { effort: event.effort || undefined } : {}),
           ...(event.cwd !== undefined ? { cwd: event.cwd || undefined } : {}),

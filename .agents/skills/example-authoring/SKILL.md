@@ -23,6 +23,8 @@ are validation surfaces for the library, not independent product experiments.
 - Import `@nyosegawa/agent-ui-react/styles.css` once.
 - Keep route/example CSS token-based.
 - Keep fixture routes deterministic and separate from real App Server coverage.
+- Register fixture routes, docs screenshots, preview eligibility, and viewport
+  coverage in the visual QA manifest instead of duplicating route lists.
 - Keep real-local examples focused on bridge, auth/account/model/thread/turn,
   approvals, uploads, streaming, steer, interrupt, and token usage behavior.
 - Keep host-owned runtime decisions in examples or docs, not public package
@@ -30,9 +32,11 @@ are validation surfaces for the library, not independent product experiments.
 
 ## Validation
 
-Run the example's typecheck/build when available. For visible changes, run the
-relevant Playwright suite or browser QA. For package export or stylesheet
-changes, use release-validation guidance.
+Run the example's typecheck/build when available. For visible fixture changes,
+run the route-specific spec plus the visual route matrix when route layout or
+viewport coverage can drift. For real-local layout changes, run
+`real-local-layout.e2e.ts` or the full real-local suite. For package export or
+stylesheet changes, use release-validation guidance.
 
 Report the example type, changed routes, public guidance updated, commands run,
 and any remaining manual browser checks.

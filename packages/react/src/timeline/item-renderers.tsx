@@ -1,8 +1,8 @@
-import type { AgentItemBlock, AgentItemState } from "@nyosegawa/agent-ui-core";
 import { useState } from "react";
 import { AgentDiffViewer } from "../diff-viewer";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import { MarkdownMessage } from "../markdown";
+import type { AgentTranscriptBlock, AgentTranscriptItem } from "../hooks/transcript";
 import {
   agentResourceDisplayName,
   agentResourceUrl,
@@ -25,7 +25,7 @@ import { commandPreview, toolPreview } from "./previews";
 
 export type AgentLocalMediaUrlResolver = (
   path: string,
-  item: AgentItemState | undefined,
+  item: AgentTranscriptItem | undefined,
 ) => AgentResourceResolution;
 
 export function AgentContentBlockView({
@@ -35,8 +35,8 @@ export function AgentContentBlockView({
   patch,
   resolveLocalMediaUrl,
 }: {
-  block: AgentItemBlock;
-  item?: AgentItemState;
+  block: AgentTranscriptBlock;
+  item?: AgentTranscriptItem;
   output?: string;
   patch?: unknown;
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
@@ -81,8 +81,8 @@ export function AgentCommandItem({
   itemId,
   output,
 }: {
-  block?: AgentItemBlock;
-  item?: AgentItemState;
+  block?: AgentTranscriptBlock;
+  item?: AgentTranscriptItem;
   itemId?: string;
   output?: string;
 }) {
@@ -128,8 +128,8 @@ export function AgentFileChangeItem({
   item,
   patch,
 }: {
-  block?: AgentItemBlock;
-  item?: AgentItemState;
+  block?: AgentTranscriptBlock;
+  item?: AgentTranscriptItem;
   patch?: unknown;
 }) {
   const { t } = useAgentI18n();
@@ -164,7 +164,7 @@ export function AgentFileChangeItem({
   );
 }
 
-export function AgentReasoningItem({ block }: { block: AgentItemBlock }) {
+export function AgentReasoningItem({ block }: { block: AgentTranscriptBlock }) {
   const { t } = useAgentI18n();
   const summary = block.summary ?? block.text ?? t("timeline.thinking");
   const content = block.content ?? block.text;
@@ -179,7 +179,7 @@ export function AgentReasoningItem({ block }: { block: AgentItemBlock }) {
   );
 }
 
-function PlanBlock({ block }: { block: AgentItemBlock }) {
+function PlanBlock({ block }: { block: AgentTranscriptBlock }) {
   const { t } = useAgentI18n();
   return (
     <section className="aui-content-block aui-plan-block" aria-label={t("timeline.plan")}>
@@ -189,7 +189,7 @@ function PlanBlock({ block }: { block: AgentItemBlock }) {
   );
 }
 
-export function AgentToolCallItem({ block }: { block: AgentItemBlock }) {
+export function AgentToolCallItem({ block }: { block: AgentTranscriptBlock }) {
   const { t } = useAgentI18n();
   const [isOpen, setOpen] = useState(false);
   const label = block.toolType === "mcp" ? t("timeline.mcpTool") : t("timeline.toolCall");
@@ -219,7 +219,7 @@ export function AgentToolCallItem({ block }: { block: AgentItemBlock }) {
   );
 }
 
-function CollabToolCallBlock({ block }: { block: AgentItemBlock }) {
+function CollabToolCallBlock({ block }: { block: AgentTranscriptBlock }) {
   const { t } = useAgentI18n();
   const metadata = isRecord(block.metadata) ? block.metadata : {};
   const senderThreadId = stringValue(metadata.senderThreadId ?? metadata.sender_thread_id);
@@ -257,7 +257,7 @@ function CollabToolCallBlock({ block }: { block: AgentItemBlock }) {
   );
 }
 
-function WebSearchBlock({ block }: { block: AgentItemBlock }) {
+function WebSearchBlock({ block }: { block: AgentTranscriptBlock }) {
   const { t } = useAgentI18n();
   return (
     <section className="aui-content-block aui-web-search-block" aria-label={t("timeline.webSearch")}>
@@ -272,8 +272,8 @@ function ImageBlock({
   item,
   resolveLocalMediaUrl,
 }: {
-  block: AgentItemBlock;
-  item?: AgentItemState;
+  block: AgentTranscriptBlock;
+  item?: AgentTranscriptItem;
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
 }) {
   const { t } = useAgentI18n();
@@ -343,7 +343,7 @@ function localMediaDisplayName(path: string): string {
   return segments.at(-1) ?? path;
 }
 
-function SystemInfoBlock({ block }: { block: AgentItemBlock }) {
+function SystemInfoBlock({ block }: { block: AgentTranscriptBlock }) {
   return (
     <section
       className="aui-content-block aui-system-info-block"

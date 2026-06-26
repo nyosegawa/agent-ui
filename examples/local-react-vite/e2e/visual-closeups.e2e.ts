@@ -4,15 +4,19 @@ import {
   expectWithinViewport,
   mobileViewport,
 } from "./support/visual-contracts";
+import {
+  componentCloseupCatalog,
+  requiredVisualPrimitiveExports,
+} from "../src/closeups/component-closeup-catalog";
 
-test("fixture gallery mobile close-up stage stays inside the viewport", async ({
+test("maintainer gallery mobile close-up stage stays inside the viewport", async ({
   page,
 }) => {
   await page.setViewportSize(mobileViewport);
-  await page.goto("/fixture-gallery");
+  await page.goto("/maintainer-gallery");
   await expect(page.getByTestId("component-closeups")).toBeVisible();
   for (const selector of [
-    ".aui-fixture-gallery",
+    ".aui-route-gallery",
     '[data-testid="component-closeups"]',
     ".aui-closeup",
     ".aui-closeup-stage",
@@ -22,6 +26,7 @@ test("fixture gallery mobile close-up stage stays inside the viewport", async ({
     ".aui-closeup-stage .aui-approval-actions",
     ".aui-closeup-stage .aui-approval-actions .aui-btn",
   ]) {
+    await expect(page.locator(selector).first()).toBeVisible();
     await expectWithinViewport(page, selector);
   }
 });
@@ -30,31 +35,23 @@ test("component close-up gallery renders direct primitives, not iframes", async 
   page,
 }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/fixture-gallery");
+  await page.goto("/maintainer-gallery");
   const closeups = page.getByTestId("component-closeups");
   await expect(closeups).toBeVisible();
-  for (const title of [
-    "Composer · normal",
-    "Composer · focused",
-    "Composer · approval pending",
-    "Composer · mobile",
-    "Composer · pasted image",
-    "Composer · multiple attachments",
-    "Mode menu · open",
-    "Model / effort menu · open",
-    "Approval · command",
-    "Approval · user input",
-    "Command block",
-    "Custom command block",
-    "Diff / file change",
-    "Sidebar search + threads",
-    "Usage / status chips",
-    "Usage panel",
-    "Button system",
-    "Inputs · selects · segmented",
-  ]) {
-    await expect(closeups.getByTestId(`closeup:${title}`)).toBeVisible();
+  const covered = new Set<string>();
+  for (const entry of componentCloseupCatalog) {
+    const closeup = page.getByTestId(`closeup:${entry.title}`);
+    await expect(closeup).toBeVisible();
+    const covers = (await closeup.getAttribute("data-covers")) ?? "";
+    for (const name of entry.covers) {
+      expect(covers.split(/\s+/), entry.title).toContain(name);
+      covered.add(name);
+    }
+    for (const selector of entry.probes ?? []) {
+      await expect(closeup.locator(selector).first(), `${entry.title} ${selector}`).toBeVisible();
+    }
   }
+  for (const name of requiredVisualPrimitiveExports) expect(covered).toContain(name);
   await expect(closeups.locator("iframe")).toHaveCount(0);
 
   const commandCloseup = closeups.getByTestId("closeup:Approval · command");
@@ -112,9 +109,67 @@ test("component close-up gallery renders direct primitives, not iframes", async 
   await expect(pastedImage.locator(".aui-composer-chip")).toHaveCount(1);
 });
 
-test("critical close-ups cover Phase 9 fixture states", async ({ page }) => {
+test("waiting status close-up covers user-visible waiting labels", async ({
+  page,
+}) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/fixture-gallery");
+  await page.goto("/maintainer-gallery");
+  const chips = page.getByTestId("closeup:Usage / status chips");
+  await expect(chips).toBeVisible();
+  for (const label of [
+    "Needs approval",
+    "Needs permission",
+    "Needs input",
+    "Needs MCP input",
+    "Needs authentication",
+    "Needs attestation",
+    "Needs attention",
+  ]) {
+    await expect(chips.getByText(label)).toBeVisible();
+  }
+});
+
+test("standalone status bar close-up compacts inside a narrow desktop embed", async ({
+  page,
+}) => {
+  await page.setViewportSize(desktopViewport);
+  await page.goto("/maintainer-gallery");
+  const closeup = page
+    .getByTestId("component-closeups")
+    .getByTestId("closeup:Status bar · standalone");
+  await expect(closeup).toBeVisible();
+  await expectWithinViewport(page, '[data-testid="closeup:Status bar · standalone"] .aui-status');
+  await expectWithinViewport(
+    page,
+    '[data-testid="closeup:Status bar · standalone"] .aui-status-actions',
+  );
+  const metrics = await closeup.evaluate((element) => {
+    const rect = (selector: string) => {
+      const target = element.querySelector(selector);
+      if (!target) return null;
+      const box = target.getBoundingClientRect();
+      return {
+        right: Math.round(box.right),
+        width: Math.round(box.width),
+      };
+    };
+    return {
+      account: rect(".aui-account-trigger"),
+      status: rect(".aui-status"),
+      stage: rect(".aui-closeup-stage"),
+    };
+  });
+  expect(metrics.account, JSON.stringify(metrics)).not.toBeNull();
+  expect(metrics.stage, JSON.stringify(metrics)).not.toBeNull();
+  expect(metrics.account!.width, JSON.stringify(metrics)).toBeLessThanOrEqual(40);
+  expect(metrics.account!.right, JSON.stringify(metrics)).toBeLessThanOrEqual(
+    metrics.stage!.right + 1,
+  );
+});
+
+test("critical close-ups cover fixture interaction states", async ({ page }) => {
+  await page.setViewportSize(desktopViewport);
+  await page.goto("/maintainer-gallery");
   const critical = page.getByTestId("critical-states");
   await expect(critical).toBeVisible();
   for (const title of [
@@ -128,7 +183,7 @@ test("critical close-ups cover Phase 9 fixture states", async ({ page }) => {
   }
 
   const emptyState = critical.getByTestId("closeup:Empty state · mobile");
-  await expect(emptyState.locator(".aui-empty .aui-first-run-starter")).toBeVisible();
+  await expect(emptyState.locator(".aui-first-run-starter")).toBeVisible();
 
   const startComposer = critical.getByTestId("closeup:Start composer");
   await expect(startComposer.getByRole("form", { name: "Start a Codex thread" })).toBeVisible();
@@ -151,7 +206,7 @@ test("critical close-ups cover Phase 9 fixture states", async ({ page }) => {
 
 test("sidebar drawer close-up searches and selects on mobile", async ({ page }) => {
   await page.setViewportSize(mobileViewport);
-  await page.goto("/fixture-gallery");
+  await page.goto("/maintainer-gallery");
   const closeup = page
     .getByTestId("critical-states")
     .getByTestId("closeup:Sidebar drawer search/select");
@@ -172,7 +227,7 @@ test("sidebar drawer close-up searches and selects on mobile", async ({ page }) 
 
 test("focused composer close-up renders the real AgentComposer", async ({ page }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/fixture-gallery");
+  await page.goto("/maintainer-gallery");
   const focused = page.getByTestId("closeup:Composer · focused");
   await expect(focused).toBeVisible();
   await expect(focused.locator('[data-focus-first="true"]')).toBeAttached();
@@ -184,11 +239,11 @@ test("focused composer close-up renders the real AgentComposer", async ({ page }
   await expect(composer).toHaveAttribute("data-focused", "true");
 });
 
-test("fixture-gallery places component close-ups before route iframe previews", async ({
+test("maintainer-gallery places component close-ups before route iframe previews", async ({
   page,
 }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/fixture-gallery");
+  await page.goto("/maintainer-gallery");
   await expect(page.getByTestId("component-closeups")).toBeVisible();
   const closeupTop = await page
     .getByTestId("component-closeups")
@@ -201,11 +256,11 @@ test("fixture-gallery places component close-ups before route iframe previews", 
   expect(closeupTop).toBeLessThan(900 * 2);
 });
 
-test("fixture-gallery keeps component close-ups near the top on mobile", async ({
+test("maintainer-gallery keeps component close-ups near the top on mobile", async ({
   page,
 }) => {
   await page.setViewportSize(mobileViewport);
-  await page.goto("/fixture-gallery");
+  await page.goto("/maintainer-gallery");
   await expect(page.getByTestId("component-closeups")).toBeVisible();
   const closeupTop = await page
     .getByTestId("component-closeups")

@@ -10,19 +10,42 @@ bun --filter @nyosegawa/agent-ui-example-local-react-vite dev -- --port 5174
 
 Routes:
 
-- `/`: baseline chat surface
-- `/rich-transcript`: dense transcript and approval stress
-- `/fixture-gallery`: component close-ups and previews
-- `/host-workflow-recipe`: host-composed primitive layout
-- `/usage-only`: usage primitives without chat assumptions
-- `/scoped-thread-pane`: fixed-thread composition
-- `/app-connectors`: Codex Apps/connectors metadata
+- `/showcase`: public starting-point catalog with live previews and copyable
+  snippets. `/` is an alias.
+- `/showcase/components`: snippet-facing public API catalog.
+- `/showcase/patterns`: workflow and advanced pattern catalog.
+- `/showcase/component-preview?api=AgentChat`: generated component preview
+  surface used by the component catalog.
+- `/showcase/default-conversation`: baseline chat surface.
+- `/showcase/rich-transcript`: dense transcript and approval stress.
+- `/maintainer-gallery`: maintainer-only component close-ups, probes,
+  specimens, and previews.
+- `/showcase/composed-shell`: neutral composed shell route for sidebar history,
+  status, and thread view.
+- `/showcase/host-workflow-recipe`: advanced host-composed primitive layout.
+- `/showcase/composer-primitives`: normal composer slot.
+- `/showcase/transcript-content`: transcript pane primitive route.
+- `/showcase/approvals-status`: review rail for status and pending approvals.
+- `/showcase/thread-navigation`: host-owned thread selection composition.
+- `/showcase/usage-only`: usage primitives without chat assumptions.
+- `/showcase/scoped-thread-pane`: fixed-thread composition.
+- `/showcase/app-connectors`: Codex Apps/connectors metadata.
 
 CI gate:
 
 ```sh
 bun run test:e2e:fixtures
 ```
+
+Broad route/viewport layout gate:
+
+```sh
+bunx playwright test examples/local-react-vite/e2e/visual-route-matrix.e2e.ts \
+  --config playwright.fixtures.config.ts
+```
+
+The matrix consumes `visual-qa-manifest.ts`; update the manifest instead of
+duplicating route and viewport lists.
 
 ## Real Local App
 
@@ -38,6 +61,13 @@ CI/release gate:
 
 ```sh
 bun run test:e2e:real-local
+```
+
+Deterministic layout gate:
+
+```sh
+bunx playwright test examples/codex-local-web/e2e/real-local-layout.e2e.ts \
+  --config playwright.real-local.config.ts
 ```
 
 Manual layout audit after starting the server:

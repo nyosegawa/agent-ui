@@ -1,0 +1,73 @@
+/* --- Composer container-responsive layout -------------------------------- */
+
+@container (max-width: 760px) {
+  .aui-composer-toolbar {
+    gap: var(--aui-space-100);
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .aui-composer-toolbar-start,
+  .aui-composer-toolbar-end {
+    flex-wrap: nowrap;
+  }
+
+  .aui-composer-settings {
+    gap: var(--aui-space-100);
+  }
+
+  .aui-composer-toolbar-attach .aui-btn {
+    min-width: var(--aui-control-height-lg);
+    padding-inline: 0;
+    width: var(--aui-control-height-lg);
+  }
+
+  .aui-composer-toolbar-attach .aui-btn[data-composer-integration="true"] {
+    max-width: min(160px, 42vw);
+    padding-inline: var(--aui-space-175);
+    width: auto;
+  }
+
+  .aui-composer-toolbar-attach .aui-btn span {
+    display: none;
+  }
+
+  .aui-composer-toolbar-attach .aui-btn[data-composer-integration="true"] span {
+    display: inline;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .aui-composer-tool {
+    gap: 0;
+    justify-content: center;
+    min-height: var(--aui-control-height-lg);
+    padding: 0;
+    width: var(--aui-control-height-lg);
+  }
+
+  .aui-composer-tool-label,
+  .aui-composer-tool > svg:last-child {
+    display: none;
+  }
+
+  .aui-context-usage summary {
+    min-width: var(--aui-control-height-lg);
+    padding-inline: 0;
+    width: var(--aui-control-height-lg);
+  }
+
+  .aui-context-usage summary span {
+    display: none;
+  }
+
+  .aui-composer-failed-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .aui-composer-failed-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+}

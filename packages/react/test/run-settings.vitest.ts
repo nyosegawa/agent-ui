@@ -1,20 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { AGENT_EXECUTION_MODES } from "../src/hooks";
+import {
+  AGENT_FULL_ACCESS_RUN_POLICY,
+  DEFAULT_AGENT_RUN_POLICIES,
+  agentRunPolicyTurnOptions,
+} from "../src/hooks";
 
-describe("AGENT_EXECUTION_MODES", () => {
-  it("maps built-in execution modes only to stable turn/start params", () => {
+describe("DEFAULT_AGENT_RUN_POLICIES", () => {
+  it("maps built-in run policies only to stable turn/start params", () => {
     expect(
-      AGENT_EXECUTION_MODES.map((mode) => ({
-        id: mode.id,
-        keys: Object.keys(mode.turnParams).sort(),
+      DEFAULT_AGENT_RUN_POLICIES.map((policy) => ({
+        id: policy.id,
+        keys: Object.keys(policy.turnOptions).sort(),
       })),
     ).toEqual([
       { id: "review", keys: ["approvalPolicy", "sandboxPolicy"] },
       { id: "auto", keys: ["approvalPolicy", "sandboxPolicy"] },
       { id: "read-only", keys: ["approvalPolicy", "sandboxPolicy"] },
-      { id: "full-access", keys: ["approvalPolicy", "sandboxPolicy"] },
     ]);
-    expect(AGENT_EXECUTION_MODES.map((mode) => mode.turnParams)).toEqual([
+    expect(DEFAULT_AGENT_RUN_POLICIES.map((policy) => policy.turnOptions)).toEqual([
       {
         approvalPolicy: "on-request",
         sandboxPolicy: {
@@ -39,10 +42,55 @@ describe("AGENT_EXECUTION_MODES", () => {
         approvalPolicy: "untrusted",
         sandboxPolicy: { networkAccess: false, type: "readOnly" },
       },
-      {
-        approvalPolicy: "never",
-        sandboxPolicy: { type: "dangerFullAccess" },
-      },
     ]);
+    expect(AGENT_FULL_ACCESS_RUN_POLICY.turnOptions).toEqual({
+      approvalPolicy: "never",
+      sandboxPolicy: { type: "dangerFullAccess" },
+    });
+  });
+
+  it("resolves only host-allowed run policies", () => {
+    expect(
+      agentRunPolicyTurnOptions("safe", [
+        {
+          description: "Host safe policy",
+          id: "safe",
+          label: "Safe",
+          turnOptions: {
+            approvalPolicy: "untrusted",
+            sandboxPolicy: { networkAccess: false, type: "readOnly" },
+          },
+        },
+      ]),
+    ).toEqual({
+      approvalPolicy: "untrusted",
+      sandboxPolicy: { networkAccess: false, type: "readOnly" },
+    });
+    expect(
+      agentRunPolicyTurnOptions("full-access", [
+        {
+          description: "Host safe policy",
+          id: "safe",
+          label: "Safe",
+          turnOptions: {
+            approvalPolicy: "untrusted",
+            sandboxPolicy: { networkAccess: false, type: "readOnly" },
+          },
+        },
+      ]),
+    ).toEqual({
+      approvalPolicy: "untrusted",
+      sandboxPolicy: { networkAccess: false, type: "readOnly" },
+    });
+    expect(agentRunPolicyTurnOptions("full-access", [])).toEqual({
+      approvalPolicy: "on-request",
+      sandboxPolicy: {
+        excludeSlashTmp: false,
+        excludeTmpdirEnvVar: false,
+        networkAccess: false,
+        type: "workspaceWrite",
+        writableRoots: [],
+      },
+    });
   });
 });

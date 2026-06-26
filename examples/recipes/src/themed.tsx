@@ -2,9 +2,11 @@ import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 import {
   AgentChat,
   AgentProvider,
+} from "@nyosegawa/agent-ui-react";
+import {
   AgentThemeToggle,
   type AgentTheme,
-} from "@nyosegawa/agent-ui-react";
+} from "@nyosegawa/agent-ui-react/primitives";
 import "@nyosegawa/agent-ui-react/styles.css";
 import { useState } from "react";
 import "./themed.css";

@@ -1,10 +1,10 @@
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
+import { AgentProvider } from "@nyosegawa/agent-ui-react";
+import { AgentThreadView } from "@nyosegawa/agent-ui-react/primitives";
 import {
-  AgentProvider,
-  AgentThreadView,
   useAgentThreadController,
   useAgentThreadListController,
-} from "@nyosegawa/agent-ui-react";
+} from "@nyosegawa/agent-ui-react/headless";
 
 const projectCwd = "/Users/example/project";
 

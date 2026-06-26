@@ -27,11 +27,20 @@ export const representativeNamedExportsBySpecifier = {
   ],
   "@nyosegawa/agent-ui-react": [
     "AgentChat",
-    "AgentComposer",
     "AgentProvider",
-    "AgentThreadTimeline",
+    "defaultAgentComponents",
+  ],
+  "@nyosegawa/agent-ui-react/headless": [
     "useAgentApprovals",
     "useAgentContext",
+    "useAgentComposerController",
+    "useAgentThread",
+  ],
+  "@nyosegawa/agent-ui-react/primitives": [
+    "AgentComposer",
+    "AgentMessageList",
+    "AgentShell",
+    "AgentThreadTimeline",
   ],
   "@nyosegawa/agent-ui-server": [
     "attachAgentUiWebSocketBridge",

@@ -1,9 +1,9 @@
 import type { ReasoningEffort } from "./models";
 
-export type ExecutionModeId = "review" | "auto" | "read-only" | "full-access" | string;
+export type AgentRunPolicyId = "review" | "auto" | "read-only" | "full-access" | string;
 
 export interface RunSettingsState {
-  executionMode: ExecutionModeId;
+  policyId: AgentRunPolicyId;
   modelId?: string;
   effort?: ReasoningEffort;
   cwd?: string;

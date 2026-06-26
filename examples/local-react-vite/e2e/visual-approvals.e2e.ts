@@ -11,7 +11,7 @@ test("approval card renders risk, approve, session approve, and decline actions"
   page,
 }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/rich-transcript");
+  await page.goto("/showcase/rich-transcript");
   const approval = page.locator(".aui-approval").first();
   await expect(approval).toBeVisible();
   await expect(approval.locator(".aui-approval-risk")).toBeVisible();
@@ -26,7 +26,7 @@ test("approval queue excludes host requests from compact picker rows", async ({
   page,
 }) => {
   await page.setViewportSize(desktopViewport);
-  await page.goto("/rich-transcript");
+  await page.goto("/showcase/rich-transcript");
   await expect(page.locator(".aui-approvals")).not.toContainText(
     "3 decisions need your review",
   );
@@ -35,11 +35,23 @@ test("approval queue excludes host requests from compact picker rows", async ({
   await expect(compactRows).toHaveCount(0);
 });
 
+test("mixed waiting state uses neutral attention labels instead of approval-only copy", async ({
+  page,
+}) => {
+  await page.setViewportSize(desktopViewport);
+  await page.goto("/showcase/rich-transcript");
+  await expect(page.locator(".aui-status-pill").first()).toContainText(
+    "Needs attention",
+  );
+  await expect(page.locator(".aui-composer-notice")).toContainText("Needs attention");
+  await expect(page.locator(".aui-composer-notice")).not.toContainText("approval");
+});
+
 test("mobile keeps composer and approval actions hit-testable in the transcript", async ({
   page,
 }) => {
   await page.setViewportSize(mobileViewport);
-  await page.goto("/rich-transcript");
+  await page.goto("/showcase/rich-transcript");
   await expect(page.locator(".aui-thread-surface").first()).toBeVisible();
 
   const approval = page.locator(".aui-approval").first();
@@ -63,7 +75,7 @@ for (const viewport of [
     page,
   }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/rich-transcript");
+    await page.goto("/showcase/rich-transcript");
     const approval = page.locator(".aui-approval").first();
     await expect(approval).toBeVisible();
     for (const button of firstApprovalActionButtons(approval)) {
@@ -76,7 +88,7 @@ for (const viewport of [
     page,
   }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/");
+    await page.goto("/showcase/default-conversation");
     const approval = page.locator(".aui-approval").first();
     await expect(approval).toBeVisible();
     const approve = approval.getByRole("button", { name: /^Approve / }).first();
@@ -88,7 +100,7 @@ for (const viewport of [
     page,
   }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/host-workflow-recipe");
+    await page.goto("/showcase/host-workflow-recipe");
     const approval = page.locator(".aui-host-thread .aui-approval").first();
     await approval.scrollIntoViewIfNeeded();
     await expect(approval).toBeVisible();
@@ -102,7 +114,7 @@ for (const viewport of [
     page,
   }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/rich-transcript");
+    await page.goto("/showcase/rich-transcript");
     await expect(page.locator(".aui-thread-surface").first()).toBeVisible();
     const layout = await page.evaluate(() => {
       const round = (value: number) => Math.round(value);

@@ -4,7 +4,7 @@ import type { AgentResolvedResourceBase, AgentResourceKind } from "../resources"
 
 export type ComposerAttachmentKind = Extract<
   AgentResourceKind,
-  "image" | "file" | "app" | "plugin"
+  "image" | "file" | "integration"
 >;
 
 export type AgentLocalAttachmentKind = Extract<AgentResourceKind, "image" | "file">;
@@ -22,26 +22,31 @@ export type AgentLocalAttachmentResolver = (
   | undefined
   | Promise<AgentResolvedLocalAttachment | null | undefined>;
 
-export type AgentMentionAttachmentKind = Extract<ComposerAttachmentKind, "app" | "plugin">;
-
-export interface AgentComposerMentionAttachment {
+export interface AgentComposerIntegrationAttachment {
   id?: string;
-  input?: AgentUserInput;
+  input: AgentUserInput | AgentUserInput[];
   label: string;
-  value: string;
+  value?: string;
 }
 
-export type AgentComposerMentionResolver = () =>
-  | AgentComposerMentionAttachment
+export type AgentComposerIntegrationResolver = () =>
+  | AgentComposerIntegrationAttachment
   | null
   | undefined
-  | Promise<AgentComposerMentionAttachment | null | undefined>;
+  | Promise<AgentComposerIntegrationAttachment | null | undefined>;
+
+export interface AgentComposerIntegration {
+  id: string;
+  label: string;
+  resolve: AgentComposerIntegrationResolver;
+  title?: string;
+}
 
 export interface ComposerAttachment extends QueuedFollowUpAttachment {
   displayName?: string;
   extension?: string;
   id: string;
-  input?: AgentUserInput | AgentUserInput[];
+  input: AgentUserInput | AgentUserInput[];
   kind: ComposerAttachmentKind;
   label: string;
   previewFailed?: boolean;
@@ -49,13 +54,12 @@ export interface ComposerAttachment extends QueuedFollowUpAttachment {
   previewUrlRevoke?: boolean;
   redactedPath?: string;
   sizeLabel?: string;
-  value: string;
+  value?: string;
 }
 
 export function composerAttachmentInput(attachment: ComposerAttachment): AgentUserInput[] {
   if (Array.isArray(attachment.input)) return attachment.input;
-  if (attachment.input) return [attachment.input];
-  return [{ name: attachment.label, path: attachment.value, type: "mention" }];
+  return [attachment.input];
 }
 
 export function formatFileSize(size: number): string {

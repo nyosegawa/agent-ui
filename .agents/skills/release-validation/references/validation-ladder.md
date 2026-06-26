@@ -49,7 +49,22 @@ bun run validate:e2e
 ```
 
 This cleans Playwright ports and runs deterministic fixture and real-local
-browser suites. For targeted manual real-local layout checks, start the
+browser suites. For targeted fixture layout checks, run the manifest-driven
+route matrix:
+
+```sh
+bunx playwright test examples/local-react-vite/e2e/visual-route-matrix.e2e.ts \
+  --config playwright.fixtures.config.ts
+```
+
+For targeted deterministic real-local layout checks, run:
+
+```sh
+bunx playwright test examples/codex-local-web/e2e/real-local-layout.e2e.ts \
+  --config playwright.real-local.config.ts
+```
+
+For targeted manual real-local layout checks, start the
 `examples/codex-local-web` server first and run:
 
 ```sh

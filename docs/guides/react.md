@@ -32,19 +32,27 @@ approvals, and optional thread sidebar. Usage and diagnostics are opt-in
 secondary chrome because many host apps already have their own shell.
 Customize the preset with `components`, not source imports or private slots.
 `Shell`, `Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are
-the preferred replacement points. `Item` remains a legacy core-state replacement
-point for this draft; use transcript controllers or `blocks` when a custom
-renderer needs raw-free inputs.
+the replacement points. Use `renderItem` or `blocks` for transcript
+customization; raw item/turn replacement components are not part of the public
+API.
 
 ## Compose From Primitives
 
 Use primitives when the host owns layout:
 
 ```tsx
+import {
+  AgentComposerPanel,
+  AgentCriticalNoticeList,
+  AgentThreadHeader,
+  AgentThreadSurface,
+  AgentThreadTimeline,
+} from "@nyosegawa/agent-ui-react/primitives";
+
 <AgentThreadSurface>
-  <AgentThreadHeader thread={thread} threadId={threadId} />
+  <AgentThreadHeader thread={threadView} threadId={threadId} transcript={transcriptView} />
   <AgentCriticalNoticeList />
-  <AgentThreadTimeline thread={thread} threadId={threadId} />
+  <AgentThreadTimeline threadId={threadId} />
   <AgentComposerPanel thread={thread} threadId={threadId} />
 </AgentThreadSurface>
 ```
@@ -71,6 +79,14 @@ Render a specific thread without following global active selection:
 Usage, status, apps, skills, and diagnostics can sit outside the chat column:
 
 ```tsx
+import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
+import {
+  AgentShell,
+  AgentThreadSidebar,
+  AgentUsagePanel,
+} from "@nyosegawa/agent-ui-react/primitives";
+import { useAgentThreads } from "@nyosegawa/agent-ui-react/headless";
+
 function HostChrome() {
   const { activeThreadId, setActiveThread } = useAgentThreads();
 
@@ -83,21 +99,16 @@ function HostChrome() {
         />
       }
     >
-      <AgentWorkspace
-        panel={<AgentUsagePanel />}
-        sidebar={false}
-        usage={false}
-        diagnostics={false}
-      />
+      <AgentUsagePanel />
+      <AgentChat sidebar={false} usage={false} diagnostics={false} />
     </AgentShell>
   );
 }
 ```
 
-`AgentWorkspace` is a preset around `AgentChat` with an optional host-owned
-`panel`; it is not a children-based layout wrapper. Use `AgentShell`,
-`AgentThreadSurface`, and the thread primitives when the host wants to place
-every region manually.
+There is no generic workspace preset. Compose `AgentShell`, `AgentChat`, and
+the primitives directly so host panels, routing, persistence, and product
+workflow state stay in the host application.
 
 Host chrome stays host-owned. Agent UI does not persist panel state, create app
 registries, choose navigation or routing policy, authenticate users, map

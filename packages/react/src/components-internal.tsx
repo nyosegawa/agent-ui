@@ -49,21 +49,6 @@ export const IconImage = (props: { size?: number }) => (
   </Icon>
 );
 
-export const IconApp = (props: { size?: number }) => (
-  <Icon size={props.size}>
-    <rect x="3" y="3" width="7" height="7" rx="1.5" />
-    <rect x="14" y="3" width="7" height="7" rx="1.5" />
-    <rect x="3" y="14" width="7" height="7" rx="1.5" />
-    <rect x="14" y="14" width="7" height="7" rx="1.5" />
-  </Icon>
-);
-
-export const IconPlugin = (props: { size?: number }) => (
-  <Icon size={props.size}>
-    <path d="M9 2v4M15 2v4M7 6h10v6a5 5 0 01-10 0V6zM12 17v5" />
-  </Icon>
-);
-
 export const IconSend = (props: { size?: number }) => (
   <Icon size={props.size} strokeWidth={2}>
     <path d="M5 12l14-8-4 18-3-7-7-3z" />

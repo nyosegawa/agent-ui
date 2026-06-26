@@ -177,6 +177,50 @@ export type StableNotificationMethod = (typeof stableNotificationMethods)[number
 type GeneratedExperimentalOnlyClientMethod =
   (typeof generatedExperimentalOnlyClientMethods)[number];
 
+export type CodexServerRequestRole =
+  | "approvalDecision"
+  | "attestation"
+  | "authRefresh"
+  | "dynamicTool"
+  | "hostInput";
+
+export interface CodexServerRequestMethodMetadata {
+  method: StableServerRequestMethod;
+  role: CodexServerRequestRole;
+}
+
+export const codexServerRequestMethodMetadata = [
+  { method: "account/chatgptAuthTokens/refresh", role: "authRefresh" },
+  { method: "applyPatchApproval", role: "approvalDecision" },
+  { method: "attestation/generate", role: "attestation" },
+  { method: "execCommandApproval", role: "approvalDecision" },
+  { method: "item/commandExecution/requestApproval", role: "approvalDecision" },
+  { method: "item/fileChange/requestApproval", role: "approvalDecision" },
+  { method: "item/permissions/requestApproval", role: "hostInput" },
+  { method: "item/tool/call", role: "dynamicTool" },
+  { method: "item/tool/requestUserInput", role: "hostInput" },
+  { method: "mcpServer/elicitation/request", role: "hostInput" },
+] as const satisfies readonly CodexServerRequestMethodMetadata[];
+
+const codexServerRequestMetadataByMethod = new Map<
+  StableServerRequestMethod,
+  CodexServerRequestMethodMetadata
+>(codexServerRequestMethodMetadata.map((metadata) => [metadata.method, metadata]));
+
+export function getCodexServerRequestMethodMetadata(
+  method: string,
+): CodexServerRequestMethodMetadata | undefined {
+  return isStableServerRequestMethod(method)
+    ? codexServerRequestMetadataByMethod.get(method)
+    : undefined;
+}
+
+export function isCodexApprovalDecisionServerRequestMethod(
+  method: string,
+): method is StableServerRequestMethod {
+  return getCodexServerRequestMethodMetadata(method)?.role === "approvalDecision";
+}
+
 export interface CodexCapabilityMetadata {
   method: string;
   status: CodexCapabilityStatus;
@@ -207,6 +251,7 @@ export const codexCapabilityMetadata: readonly CodexCapabilityMetadata[] = [
 
 const stableAvailableMethodSet = new Set<string>(stableAvailableMethods);
 const stableProductizedMethodSet = new Set<string>(stableProductizedMethods);
+const stableServerRequestMethodSet = new Set<string>(stableServerRequestMethods);
 const experimentalAvailableMethodSet = new Set<string>(experimentalAvailableMethods);
 const experimentalUnsupportedMethodSet = new Set<string>(
   experimentalUnsupportedMethods,
@@ -234,6 +279,12 @@ export function isStableProductizedMethod(
   method: string,
 ): method is StableProductizedMethod {
   return stableProductizedMethodSet.has(method);
+}
+
+export function isStableServerRequestMethod(
+  method: string,
+): method is StableServerRequestMethod {
+  return stableServerRequestMethodSet.has(method);
 }
 
 export function isExperimentalAvailableMethod(

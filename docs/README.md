@@ -27,8 +27,9 @@ boundaries, examples, tests, and host integration docs agree.
 
 ## Guides
 
-- [React](./guides/react.md): compose `AgentProvider`, `AgentChat`, and
-  public controllers/primitives in a host app.
+- [React](./guides/react.md): use root `AgentProvider` / `AgentChat`, compose
+  visual primitives from `/primitives`, and drive host-owned layouts with
+  controllers from `/headless`.
 - [Web Components](./guides/web-components.md): wrap the React preset in a
   custom element when a host cannot mount React directly.
 - [Approvals](./guides/approvals.md): default command and file-change
@@ -106,7 +107,7 @@ boundaries, examples, tests, and host integration docs agree.
 ## Examples
 
 - [Real Codex Local Web](./examples/codex-local-web.md)
-- [Fixture Gallery and Local Vite](./examples/local-react-vite.md)
+- [Public Showcase and Local Vite Fixtures](./examples/local-react-vite.md)
 - [Next RPC Route](./examples/next-rpc-route.md)
 - [Next WebSocket Sidecar](./examples/next-with-bridge-sidecar.md)
 - [Docs Site Example](./examples/docs-site.md)

@@ -6,12 +6,15 @@ import type {
   ThreadState,
 } from "../state";
 import {
-  threadActivityFromStatus,
   threadAvailabilityFromStatus,
   threadLifecycleStore,
   threadMetadataFromThread,
   threadStorageFromThread,
 } from "./thread-lifecycle";
+import {
+  threadActivityFromRuntime,
+  threadRuntimeFromStatus,
+} from "./thread-runtime";
 import { canonicalThreadId } from "../thread-alias";
 
 export type ThreadEntityState = Record<ThreadId, ThreadState>;
@@ -56,6 +59,7 @@ export function createThreadState(thread: AgentThread): ThreadState {
     metadata: threadMetadataFromThread(publicThread),
     operations: {},
     orderedTurnIds: [],
+    runtime: threadRuntimeFromStatus("loaded"),
     status: "loaded",
     storage: threadStorageFromThread(publicThread),
     thread: publicThread,
@@ -128,7 +132,8 @@ export function setThreadStatus(
   if (!thread || (options.onlyIf !== undefined && thread.status !== options.onlyIf)) {
     return state;
   }
-  const activity = threadActivityFromStatus(status);
+  const runtime = threadRuntimeFromStatus(status);
+  const activity = threadActivityFromRuntime(runtime);
   const availability = threadAvailabilityFromStatus(status);
   return {
     ...state,
@@ -136,6 +141,7 @@ export function setThreadStatus(
       ...thread,
       activity,
       availability,
+      runtime,
       status,
     }),
     threads: {
@@ -144,6 +150,7 @@ export function setThreadStatus(
         ...thread,
         activity,
         availability,
+        runtime,
         status,
       },
     },

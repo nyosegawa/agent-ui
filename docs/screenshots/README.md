@@ -14,7 +14,11 @@ CAPTURE_DOCS_SCREENSHOTS=1 bunx playwright test \
   --config playwright.fixtures.config.ts
 ```
 
-The capture script owns the current route and filename set. It should cover the
-retained local React Vite visual QA route subset: `/`, `/rich-transcript`,
-`/host-workflow-recipe`, `/usage-only`, `/scoped-thread-pane`,
-`/app-connectors`, and `/fixture-gallery`.
+The local React Vite visual QA manifest owns the current route and filename set.
+The capture script reads entries marked for docs screenshots from
+`examples/local-react-vite/src/fixtures/visual-qa-manifest.ts`; update that
+manifest instead of duplicating route lists in screenshot tooling. If the
+intentional docs screenshot set changes, update the stable screenshot assertion
+in `visual-qa-manifest.e2e.ts` as part of the same change.
+Run `visual-route-matrix.e2e.ts` before refreshing screenshots when the changed
+route layout could affect viewport containment.

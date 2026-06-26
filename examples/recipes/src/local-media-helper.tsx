@@ -7,9 +7,11 @@ import {
 import {
   AgentChat,
   AgentProvider,
-  type AgentLocalAttachmentKind,
-  type AgentResolvedLocalAttachment,
 } from "@nyosegawa/agent-ui-react";
+import type {
+  AgentLocalAttachmentKind,
+  AgentResolvedLocalAttachment,
+} from "@nyosegawa/agent-ui-react/primitives";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 export const localMediaHelper: AgentUiLocalMediaHelper =

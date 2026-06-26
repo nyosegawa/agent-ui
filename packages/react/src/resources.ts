@@ -4,8 +4,7 @@ import type { AgentUserInput } from "./agent-input";
 export type AgentResourceKind =
   | "image"
   | "file"
-  | "app"
-  | "plugin"
+  | "integration"
   | "url"
   | "unavailable";
 

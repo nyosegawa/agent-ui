@@ -39,7 +39,7 @@ supervision, billing, and deployment policy.
 ## Export Inventory
 
 This inventory was verified from `test/api-snapshots/*__index.d.ts` with
-`bun run test:api-snapshots` on 2026-06-04. Freeze the export map only after
+`bun run test:api-snapshots` on 2026-06-24. Freeze the export map only after
 internal boundaries, examples, tests, and host integration docs agree.
 
 ### `@nyosegawa/agent-ui-core`
@@ -55,14 +55,17 @@ requests, skills, status banners, turns, usage, and warnings,
 `createInitialAgentState`,
 `runEventFixture`, and selectors for account, apps, diagnostics,
 audience-filtered diagnostics, items, running turns, ordered items/turns,
-pending approvals, protocol notifications, run settings, server requests,
-status banners, thread, turn, and usage.
+pending approvals, approval views, protocol notifications, run settings,
+server requests, server-request summaries, status banners, thread, thread
+runtime/execution state, thread summary views, transcript views, turn, and
+usage.
 
 Replaced by the current API: registry-bucket public shapes
 (`ThreadRegistryState`, `ThreadRegistryStatus`, and `selectThreadRegistry`)
 were removed in favor of explicit thread lifecycle state, scoped collections,
-active-thread selectors, pending operation selectors, and the separate public
-`AgentThreadView`.
+active-thread selectors, pending operation selectors, runtime-aware
+`AgentThreadSummaryView`, raw-free transcript selectors, and the separate
+public `AgentThreadView`.
 
 Move to subpath or make diagnostic-only: raw normalized `AgentSessionState`,
 `ThreadState`, `AgentThread`, `AgentTurn`, and store-wide selectors when they
@@ -73,8 +76,8 @@ Make private: reducer-internal registry/retention helper behavior and any
 canonical-ID reconciliation detail that is not part of an explicit diagnostic
 surface.
 
-Remove: no root exports are removed at this gate beyond replacing the registry
-bucket model with the current collection model.
+Remove: no additional core root exports are removed at this gate beyond
+replacing the registry bucket model with the current collection model.
 
 ### `@nyosegawa/agent-ui-codex`
 
@@ -84,7 +87,10 @@ Keep public: protocol capability metadata and guards
 `isStableProductizedMethod`, `isHostOnlyMethod`,
 `isExperimentalAvailableMethod`, `isExperimentalUnsupportedMethod`,
 `assertCodexProductizedMethod`, `assertCodexExperimentalMethod`, stable and
-experimental method lists), `CodexSession`, `createCodexSession`,
+experimental method lists), stable server-request role metadata and guards
+(`codexServerRequestMethodMetadata`, `getCodexServerRequestMethodMetadata`,
+`isCodexApprovalDecisionServerRequestMethod`, and
+`isStableServerRequestMethod`), `CodexSession`, `createCodexSession`,
 `createCodexClients`, grouped client classes, JSON-RPC helpers,
 `createCodexStdioTransport`, `createCodexWebSocketTransport`,
 `createCodexSdkTransportAdapter`, `startDeviceCodeLogin`, and
@@ -102,6 +108,10 @@ types should stay on `stable-types`, `clients`, `request-builders`, or
 `normalizeTurnsPage`, `normalizeAppsListResponse`, and
 `normalizeCodexServerMessage` are host-owned lower-level helpers and should be
 imported from `@nyosegawa/agent-ui-codex/normalizer`.
+Request builders such as `textInput()` and `TextInputOptions` remain on the
+`request-builders` subpath; hosts may pass generated `TextElement` values
+explicitly, but Agent UI does not derive App/Plugin or marketplace semantics
+from those elements.
 
 Replace with current API: lifecycle-dependent normalizer contracts that still
 produce old registry status names should be updated after protocol
@@ -116,48 +126,54 @@ of `thread/turns/items/list`, must not be promoted.
 
 ### `@nyosegawa/agent-ui-react`
 
-Keep public: `AgentProvider`, `AgentChat`, `AgentShell`,
-`AgentThreadSurface`, `AgentThreadView`, `AgentThreadHeader`,
-`AgentThreadTimeline`, `AgentMessageList`, `AgentTranscript`,
-`AgentComposerPanel`, `AgentComposer`, approval, status, usage, apps, skills,
-i18n, theme, run-settings, diff, content block, and transcript item primitives
-that remain backed by stable view models. Keep `AgentChatProps`,
-`AgentThreadViewProps`, styling token guidance, `useAgentBootstrap`,
-`useAgentAccount`, `useAgentModels`, `useAgentUsage`, `useAgentDiagnostics`
-with user/developer/audit diagnostic views,
-`useAgentApprovals`, `useAgentServerRequests`, `useAgentApps`,
-`useAgentSkills`, `useAgentHooks`, `useAgentRunSettings`, and
-`useAgentTurnController`, `useAgentTranscriptController`, and
-`useAgentTranscriptScrollController` if their return shapes stay view-model
-based.
+The React package has three public JavaScript entrypoints:
+
+- `@nyosegawa/agent-ui-react`: default preset entry. Exports
+  `AgentProvider`, `AgentChat`, `defaultAgentComponents`, `AgentComponents`,
+  `AgentChatProps`, and i18n provider/dictionary helpers.
+- `@nyosegawa/agent-ui-react/primitives`: visual composition entry. Exports
+  shell, thread, transcript, composer, approval, status, usage, apps, skills,
+  i18n, theme, run-settings, diff, local resource, and transcript item
+  primitives backed by stable view models.
+- `@nyosegawa/agent-ui-react/headless`: controller entry. Exports
+  `AgentProvider`, public hooks/controllers, input/resource types, run-policy
+  helpers, transcript-window helpers, usage helpers, and i18n helpers for hosts
+  that own layout.
+
+Keep root small. New host-composition surfaces should go to `primitives` or
+`headless`; root should stay the drop-in preset API.
 
 Replace with current API: `AgentChatSlots` has been removed in favor of the
 single `AgentComponents` map and `defaultAgentComponents`. The accepted
 replacement points are `Shell`, `Sidebar`, `EmptyState`, `ComposerPanel`,
-`Approval`, preset transcript `Item`, and transcript `blocks`. Lower-level
-scroll containers, approval anchor placement, composer toolbar internals,
-attachment mutation controls, sidebar pagination internals, and generated block
-normalization remain internal/source-level boundaries;
+`Approval`, and transcript `blocks`. Transcript item customization uses
+`renderItem(entry, Default)` with `AgentTranscriptEntry`; raw
+`components.Item` replacement is removed. Lower-level scroll containers,
+approval anchor placement, composer toolbar internals, attachment mutation
+controls, sidebar pagination internals, and generated block normalization
+remain internal/source-level boundaries;
 `useAgentThread`, `useAgentThreadController`, `useAgentThreads`,
 `useAgentThreadHistory`, `useAgentThreadReader`,
 `useAgentThreadListController`, `useAgentComposer`,
-`useAgentComposerController`, `AgentComposerController`, `ThreadList`,
-`AgentThreadSidebar`, and `AgentWorkspace` are rebuilt on explicit session,
-active-thread, thread-list, composer, transcript, scroll, server-request, and
-diagnostics controllers. `startThreadWithInput()` is not a thread hook method;
+`useAgentComposerController`, `AgentComposerController`, `ThreadList`, and
+`AgentThreadSidebar` are rebuilt on explicit session, active-thread,
+thread-list, composer, transcript, scroll, server-request, and diagnostics
+controllers. The generic `AgentWorkspace` side-panel preset is removed; hosts
+compose their own layout around `AgentChat` and primitives.
+`startThreadWithInput()` is not a thread hook method;
 the raw-free first-message start behavior is public on
 `AgentComposerController` as
 `startThreadWithInput(input, { threadOptions, turnOptions })`, while the
 source-level internal composer controller keeps its implementation helper named
 `startWithMessage()`.
 
-Move to subpath or keep internal: transcript-window utilities
+Keep off root: transcript-window utilities
 (`DEFAULT_TRANSCRIPT_ITEM_LIMIT`, `TRANSCRIPT_ITEM_INCREMENT`,
-`visibleTranscriptWindow`) and low-level input/path helpers should not remain
-root convenience exports unless examples prove host-facing value. Thread raw
-snapshot helpers such as `threadSnapshotEvents`, `threadUpsertEvent`,
-`threadProjectPath`, and `rawThreadId` are internal compatibility plumbing for
-React's Codex-backed hooks, not React root API.
+`visibleTranscriptWindow`), lower-level input/resource helpers, visual
+primitives, and headless controllers. Thread raw snapshot helpers such as
+`threadSnapshotEvents`, `threadUpsertEvent`, `threadProjectPath`, and
+`rawThreadId` are internal compatibility plumbing for React's Codex-backed
+hooks, not React public API.
 
 Make private: raw old state-name helpers, internal `.aui-*` styling details,
 queue implementation objects, and any hook return that exposes optimistic
@@ -231,19 +247,26 @@ Docs that describe the current API: `docs/reference/hooks.md`,
 `docs/guides/approvals.md`, `docs/guides/web-components.md`,
 `docs/guides/host-integration.md`, and `docs/examples/*`.
 
-Resource resolution exports are kept at the React root as the attachment
-boundary: `AgentResolvedResource`, `AgentResourceKind`,
-`AgentFileResourceRequest`, `AgentLocalMediaResourceRequest`,
-`AgentResourceRequest`, `AgentResourceResolution`, `AgentResourceResolver`,
-`AgentLocalMediaUrlResolver`, `AgentResolvedLocalAttachment`, `agentResourceUrl`, and
-`agentResourceDisplayName`. These are browser/UI metadata primitives, not host
-upload, storage, authorization, or static-serving policy. Resource resolution
-returns structured `AgentResolvedResource` objects; URL string shorthand is not
-part of the public contract.
+Resource resolution exports live on `@nyosegawa/agent-ui-react/headless` and
+`@nyosegawa/agent-ui-react/primitives` as browser/UI metadata boundaries:
+`AgentResolvedResource`, `AgentResourceKind`, `AgentFileResourceRequest`,
+`AgentLocalMediaResourceRequest`, `AgentResourceRequest`,
+`AgentResourceResolution`, `AgentResourceResolver`,
+`AgentLocalMediaUrlResolver`, `agentResourceUrl`, and
+`agentResourceDisplayName`. Composer-local upload metadata such as
+`AgentResolvedLocalAttachment` lives on
+`@nyosegawa/agent-ui-react/primitives` because it is tied to the visual
+composer attachment surface. These are not host upload, storage,
+authorization, static-serving policy, or host capability-registry semantics.
+Resource resolution returns structured `AgentResolvedResource` objects; URL
+string shorthand is not part of the public contract.
 
-Composer controller exports include the raw-free `AgentComposerController`
-view plus `AgentComposerSubmitMode`, `AgentComposerDisabledReason`, and
-`AgentComposerFailedPendingMessage`. Internal first-message operation maps,
+Composer controller exports on `@nyosegawa/agent-ui-react/headless` include
+the raw-free `AgentComposerController` view plus `AgentComposerSubmitMode`,
+`AgentComposerDisabledReason`,
+`AgentComposerFailedPendingMessage`, `AgentComposerIntegration`,
+`AgentComposerIntegrationAttachment`, and `AgentComposerIntegrationResolver`.
+Internal first-message operation maps,
 rollback payloads, and generated protocol payloads remain source-level only.
 
 Thread lifecycle controller exports may add raw-free start/resume result or
@@ -276,11 +299,12 @@ inbound limits, idle timeout, and backpressure settings without introducing auth
 providers, token stores, workspace registries, tenant/session models, or process
 supervisors.
 
-Composer styled parts exported at the React root are `AgentComposerPanel`,
-`AgentComposerInput`, `AgentComposerToolbar`, `AgentAttachmentChips`,
-`AgentComposerSubmitButton`, and `AgentStartComposer`. They expose browser UI
-composition surfaces while keeping attachment mutation, preview revocation,
-queued attachment restore, and first-message rollback internals private.
+Composer styled parts exported from `@nyosegawa/agent-ui-react/primitives` are
+`AgentComposerPanel`, `AgentComposerInput`, `AgentComposerToolbar`,
+`AgentAttachmentChips`, `AgentComposerSubmitButton`, and
+`AgentStartComposer`. They expose browser UI composition surfaces while keeping
+attachment mutation, preview revocation, queued attachment restore, and
+first-message rollback internals private.
 
 Tests encoding old state names or old hook behavior:
 `packages/core/test/reducer.test.ts`, `packages/core/test/public-surface.test.ts`,
@@ -408,22 +432,17 @@ React UI and hooks.
 
 Responsibilities:
 
-- `AgentProvider`
-- thread hooks
-- turn hooks
-- approval hooks
-- composer hooks
-- drop-in components
-- headless customization API
+- root drop-in preset: `AgentProvider`, `AgentChat`, `AgentComponents`,
+  `defaultAgentComponents`, and i18n helpers
+- `/primitives` visual composition API for hosts that own layout
+- `/headless` hooks, controllers, input/resource types, run-policy helpers,
+  transcript-window helpers, usage helpers, and i18n helpers
 - `--aui-*` design-system tokens and the bundled plain CSS theme
 
-The package root also exports lower-level surfaces for advanced hosts:
-`AgentStatusBar`, `AgentFirstRun`, `AgentRunControls`, `ComposerRunSettings`,
-`AgentThemeToggle`, `AgentDiffViewer`, transcript-window helpers, and
-sidebar/status panel primitives. The documented components below are the
-recommended host-facing primitives; these helpers remain public because they are
-re-exported by the package barrel. Raw thread-history compatibility helpers are
-intentionally not part of the React root API.
+The package root intentionally does not re-export the full primitive or
+headless surface. Advanced hosts should import visual building blocks from
+`@nyosegawa/agent-ui-react/primitives` and controllers from
+`@nyosegawa/agent-ui-react/headless`.
 
 React does not export Codex request builders such as `threadStartParams()`,
 `turnStartParams()`, `textInput()`, `localImageInput()`, Agent UI path aliases,
@@ -451,7 +470,10 @@ the `components` map, render props, and `className` attachment points.
 
 The default UI keeps the high-traffic surfaces split internally:
 
-- `components.ts`: public barrel; `components/chat.tsx`, `components/thread.tsx`, `components/composer.tsx`, `components/run-settings.tsx`, `components/status.tsx`, `components/sidebar.tsx`, `components/approvals.tsx`, and `components/locale.tsx`: responsibility-scoped React surfaces
+- `primitives.ts`: public visual composition entry; `components/chat.tsx`, `components/thread.tsx`, `components/composer.tsx`, `components/run-settings.tsx`, `components/status.tsx`, `components/sidebar.tsx`, `components/approvals.tsx`, and `components/locale.tsx`: responsibility-scoped React surfaces
+- `index.ts`: root preset entry
+- `primitives.ts`: visual composition entry
+- `headless.ts`: controller/type entry
 - `i18n.tsx`: compatibility barrel for the i18n public API
 - `i18n/`: locale normalization, interpolation, provider runtime, i18n types, and built-in locale dictionaries
 - `timeline.tsx`: public transcript primitives and turn ordering; focused modules under `timeline/` own block synthesis, approval anchors, item renderers, scroll-follow behavior, visible-window state, formatting, and closed-card previews
@@ -506,8 +528,10 @@ general observed-attribute API for every `AgentChat` option.
 - `examples/recipes`: typed host integration recipes and remote deployment notes.
 - `examples/docs-site`: small package-overview/demo landing page. It is not a markdown documentation renderer.
 
-Route-focused fixtures such as `/fixture-gallery`, `/usage-only`,
-`/scoped-thread-pane`, `/app-connectors`, and `/host-workflow-recipe` live inside
+Route-focused public fixtures such as `/showcase/composed-shell`,
+`/showcase/composer-primitives`, `/showcase/transcript-content`,
+`/showcase/approvals-status`, `/showcase/thread-navigation`,
+`/showcase/usage-only`, `/showcase/app-connectors`, and `/showcase/host-workflow-recipe` live inside
 `examples/local-react-vite` and are documented under `docs/examples/`.
 
 ## Browser Public API
@@ -566,6 +590,12 @@ await bridge.transport.connect();
 Headless usage:
 
 ```tsx
+import {
+  useAgentApprovals,
+  useAgentComposerController,
+  useAgentThread,
+} from "@nyosegawa/agent-ui-react/headless";
+
 const thread = useAgentThread(threadId);
 const approvals = useAgentApprovals(threadId);
 const composer = useAgentComposerController(threadId);
@@ -612,6 +642,8 @@ Only these subpaths are public today:
 - `@nyosegawa/agent-ui-codex/stable-types`
 - `@nyosegawa/agent-ui-codex/websocket`
 - `@nyosegawa/agent-ui-react`
+- `@nyosegawa/agent-ui-react/headless`
+- `@nyosegawa/agent-ui-react/primitives`
 - `@nyosegawa/agent-ui-react/styles.css`
 - `@nyosegawa/agent-ui-server`
 - `@nyosegawa/agent-ui-web-components`
