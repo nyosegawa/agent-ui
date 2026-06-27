@@ -6,7 +6,7 @@ primitives redesign. Implementation has not started.
 ## Branch And Planning Commit
 
 - Branch: `codex/plan-composable-agent-chat-api`
-- Planning commit: pending until this planning package is committed
+- Planning commit: `19700bb` (`Plan composable AgentChat API`)
 - Remote: `origin`
 - Push result: pending
 - Blockers: none known
