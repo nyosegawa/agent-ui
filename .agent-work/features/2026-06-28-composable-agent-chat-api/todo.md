@@ -2,8 +2,8 @@
 
 Planning package for a breaking composable `AgentChat` / headless /
 primitives redesign. P001-P004 are implemented, validated, reviewed, committed,
-and pushed; P005 validation and review findings are addressed, with final
-commit, push, PR, and CI follow-through remaining.
+and pushed; P005 validation, review, push, PR, and CI follow-through are
+complete.
 
 ## Branch And Planning Commit
 
@@ -19,7 +19,7 @@ commit, push, PR, and CI follow-through remaining.
 - [x] Chat-flow controller and scoped composer ownership
 - [x] AgentChat composition surface
 - [x] Examples, docs, and migration story
-- [ ] Package validation, changeset, PR, and CI follow-through
+- [x] Package validation, changeset, PR, and CI follow-through
 
 ## Task Checklist By Phase
 
@@ -329,7 +329,15 @@ commit, push, PR, and CI follow-through remaining.
       update stale P005 evidence, and re-run package resolution through
       `validate:release`.
     - Commit: `82251d0` (`Prepare composable AgentChat release`).
-    - Push: pending final P005 push.
+    - Push: pushed through `1712ff9` to
+      `origin/codex/plan-composable-agent-chat-api`; final CI evidence update
+      pushed after PR checks passed.
+    - PR/CI: opened PR #38
+      (`https://github.com/nyosegawa/agent-ui/pull/38`); GitHub Actions passed:
+      API snapshots, Detect changes, Detect compatibility changes, Lint,
+      Node.js 22.x, Node.js 24.x, Package resolution, Package validation,
+      Playwright fixtures, Protocol and fixtures, Repository policy,
+      Typecheck, Unit tests, and pnpm workspace smoke.
   - Tasks:
     - [x] T015 Update API snapshots intentionally after reviewing the public
       declaration delta.
@@ -342,7 +350,7 @@ commit, push, PR, and CI follow-through remaining.
     - [x] T017 Add changeset with correct bump level.
       - Expected files/areas: `.changeset/*`.
       - Validation note: default to major if public removals/renames remain.
-    - [ ] T018 Push, open PR, and watch CI.
+    - [x] T018 Push, open PR, and watch CI.
       - Expected files/areas: GitHub PR/checks.
       - Validation note: report concrete success or failure.
 
