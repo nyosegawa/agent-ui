@@ -34,6 +34,7 @@ export interface AgentThreadViewProps {
   renderItem?: React.ComponentProps<typeof AgentMessageList>["renderItem"];
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
+  threadHeaderEnd?: AgentThreadHeaderEnd;
   threadId?: string;
 }
 
@@ -44,6 +45,7 @@ export function AgentThreadView({
   renderItem,
   resolveLocalAttachment,
   resolveLocalMediaUrl,
+  threadHeaderEnd,
   threadId,
 }: AgentThreadViewProps) {
   const { thread, threadId: resolvedThreadId } = useAgentThread(threadId);
@@ -56,14 +58,26 @@ export function AgentThreadView({
     : undefined;
   if (!thread) return null;
   const ComposerPanel = components?.ComposerPanel;
+  const ThreadHeader = components?.ThreadHeader;
   return (
     <AgentThreadSurface>
       {threadView ? (
-        <AgentThreadHeader
-          thread={threadView}
-          threadId={resolvedThreadId}
-          transcript={transcriptView}
-        />
+        ThreadHeader ? (
+          <ThreadHeader
+            Default={AgentThreadHeader}
+            end={threadHeaderEnd}
+            thread={threadView}
+            threadId={resolvedThreadId}
+            transcript={transcriptView}
+          />
+        ) : (
+          <AgentThreadHeader
+            end={threadHeaderEnd}
+            thread={threadView}
+            threadId={resolvedThreadId}
+            transcript={transcriptView}
+          />
+        )
       ) : null}
       <AgentCriticalNoticeList />
       <AgentThreadTimeline
@@ -107,22 +121,39 @@ export function AgentThreadSurface({
   );
 }
 
-export function AgentThreadHeader({
-  thread,
-  threadId,
-  transcript,
-}: {
+export type AgentThreadHeaderEnd =
+  | React.ReactNode
+  | ((context: AgentThreadHeaderEndContext) => React.ReactNode);
+
+export interface AgentThreadHeaderEndContext {
   thread: AgentThreadSummaryView;
   threadId?: string;
   transcript?: AgentThreadTranscriptView;
-}) {
+}
+
+export interface AgentThreadHeaderProps {
+  end?: AgentThreadHeaderEnd;
+  thread: AgentThreadSummaryView;
+  threadId?: string;
+  transcript?: AgentThreadTranscriptView;
+}
+
+export function AgentThreadHeader({
+  end,
+  thread,
+  threadId,
+  transcript,
+}: AgentThreadHeaderProps) {
   const { t } = useAgentI18n();
+  const extra =
+    typeof end === "function" ? end({ thread, threadId, transcript }) : end;
   return (
     <div className="aui-thread-header">
       <div className="aui-thread-title">
         <h1>{thread.title || t("thread.untitled")}</h1>
         <p>{thread.subtitle ?? thread.cwd ?? thread.id}</p>
       </div>
+      {extra ? <div className="aui-thread-header-extra">{extra}</div> : null}
       <AgentThreadActions thread={thread} threadId={threadId} transcript={transcript} />
     </div>
   );

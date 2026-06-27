@@ -92,6 +92,11 @@
   border-color: var(--aui-border-strong);
 }
 
+.aui-starter-cwd-trigger[role="status"]:hover {
+  background: var(--aui-panel-alt);
+  border-color: var(--aui-border);
+}
+
 .aui-starter-cwd-trigger:focus-visible,
 .aui-starter-cwd-action:focus-visible {
   border-color: var(--aui-primary);

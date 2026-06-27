@@ -3,7 +3,7 @@ import "@testing-library/jest-dom/vitest";
 import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
-import { useRef, useState, type ComponentProps } from "react";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import demoFixture from "../../../fixtures/app-server/demo-session.json" with { type: "json" };
 import {
@@ -61,6 +61,7 @@ import {
   useAgentThreadReader,
   useAgentThreads,
   useAgentThreadListController,
+  useAgentChatController,
   useAgentComposerController,
   useAgentTranscriptController,
   useAgentTranscriptScrollController,
@@ -313,6 +314,24 @@ function runningComposerState() {
         turn: { id: "turn-running", status: "running", threadId: "thread-running" },
       },
     },
+  };
+  return initialState;
+}
+
+function idleComposerState() {
+  const initialState = runningComposerState();
+  const thread = initialState.threads["thread-running"];
+  initialState.threadLifecycle.activeThreadId = "thread-idle";
+  delete initialState.threads["thread-running"];
+  initialState.threads["thread-idle"] = {
+    ...thread,
+    activity: "idle",
+    id: "thread-idle",
+    orderedTurnIds: [],
+    runtime: { status: { type: "idle" } },
+    status: "ready",
+    thread: { id: "thread-idle", name: "Idle thread" },
+    turns: {},
   };
   return initialState;
 }
@@ -642,6 +661,79 @@ function PublicFirstMessageStartProbe() {
       </button>
       <output aria-label="public start result">{result}</output>
       <output aria-label="public start error">{error}</output>
+    </>
+  );
+}
+
+function PublicChatControllerProbe() {
+  const [result, setResult] = useState("none");
+  const [error, setError] = useState("none");
+  const controller = useAgentChatController();
+  const formatResult = (nextResult: Awaited<ReturnType<typeof controller.sendMessage>>) =>
+    `${nextResult.type}:${nextResult.threadId ?? "none"}`;
+  return (
+    <>
+      <output aria-label="public chat value">{controller.value}</output>
+      <output aria-label="public chat thread id">{controller.threadId ?? "none"}</output>
+      <output aria-label="public chat result">{result}</output>
+      <output aria-label="public chat error">{error}</output>
+      <button
+        type="button"
+        onClick={() => controller.setValue("external draft")}
+      >
+        Set external draft
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void controller
+            .sendMessage("external first")
+            .then((nextResult) => {
+              setResult(formatResult(nextResult));
+            })
+            .catch((caught: unknown) => {
+              setError(caught instanceof Error ? caught.message : String(caught));
+            });
+        }}
+      >
+        Send external first
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void controller
+            .sendMessage("external follow up")
+            .then((nextResult) => {
+              setResult(formatResult(nextResult));
+            })
+            .catch((caught: unknown) => {
+              setError(caught instanceof Error ? caught.message : String(caught));
+            });
+        }}
+      >
+        Send external follow up
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void controller
+            .sendMessage("external follow up with options", {
+              turnOptions: {
+                effort: "high",
+                model: "external-model",
+                serviceTier: "flex",
+              },
+            })
+            .then((nextResult) => {
+              setResult(formatResult(nextResult));
+            })
+            .catch((caught: unknown) => {
+              setError(caught instanceof Error ? caught.message : String(caught));
+            });
+        }}
+      >
+        Send external follow up with options
+      </button>
     </>
   );
 }
@@ -1012,6 +1104,240 @@ describe("AgentChat", () => {
         },
       }),
     );
+  });
+
+  it("lets AgentChat replace status and thread header surfaces with Default fallbacks", () => {
+    const initialState = idleComposerState();
+    initialState.threadLifecycle.activeThreadId = "thread-idle";
+    initialState.threads["thread-idle"].thread.name = "Composable header";
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat
+          components={{
+            StatusBar: ({ Default, ...props }) => (
+              <div aria-label="Host status wrapper">
+                <Default {...props} />
+                <button type="button">Host status action</button>
+              </div>
+            ),
+            ThreadHeader: ({ Default, ...props }) => (
+              <section aria-label="Host thread header">
+                <Default {...props} />
+              </section>
+            ),
+          }}
+          sidebar={false}
+          threadHeaderEnd={({ thread }) => (
+            <button type="button">Host thread action {thread.id}</button>
+          )}
+          usage={false}
+        />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("Host status wrapper")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Host status action" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Host thread header")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Host thread action thread-idle" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Composable header" })).toBeInTheDocument();
+  });
+
+  it("applies fixed AgentChat start options through the first-message lifecycle", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "account/read") {
+          return { account: { email: "user@example.com", planType: "pro" } };
+        }
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-fixed-start",
+              name: "Fixed start",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "turn/start") return {};
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat
+          startOptions={{
+            threadOptions: {
+              cwd: "/workspace/fixed-project",
+              sandbox: "workspace-write",
+              threadSource: "user",
+            },
+            turnOptions: {
+              effort: "high",
+              model: "fixed-turn-model",
+              serviceTier: "flex",
+            },
+          }}
+        />
+      </AgentProvider>,
+    );
+
+    expect(
+      await screen.findByRole("status", {
+        name: "Working directory: /workspace/fixed-project",
+      }),
+    ).toHaveTextContent("fixed-project");
+    expect(screen.queryByRole("button", { name: "Working directory" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Open folder" })).not.toBeInTheDocument();
+    await user.type(screen.getByRole("textbox", { name: "Message" }), "fixed start");
+    await user.click(screen.getByRole("button", { name: "Start thread" }));
+
+    await waitFor(() =>
+      expect(
+        transport.requests.find((request) => request.method === "turn/start")
+          ?.params,
+      ).toMatchObject({
+        effort: "high",
+        input: [{ text: "fixed start", text_elements: [], type: "text" }],
+        model: "fixed-turn-model",
+        serviceTier: "flex",
+        threadId: "thread-fixed-start",
+      }),
+    );
+    expect(
+      transport.requests.find((request) => request.method === "thread/start")?.params,
+    ).toMatchObject({
+      cwd: "/workspace/fixed-project",
+      sandbox: "workspace-write",
+      threadSource: "user",
+    });
+  });
+
+  it("supports controlled mobile drawer and context sheet state", async () => {
+    const user = userEvent.setup();
+    mockCompactLayout(true);
+
+    function ControlledOverlayHarness() {
+      const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+      const [contextSheetOpen, setContextSheetOpen] = useState(false);
+      return (
+        <>
+          <AgentChat
+            controls={{
+              contextSheetOpen,
+              onContextSheetOpenChange: setContextSheetOpen,
+              onSidebarCollapsedChange: setSidebarCollapsed,
+              sidebarCollapsed,
+            }}
+            usage
+          />
+          <output aria-label="controlled sidebar collapsed">
+            {String(sidebarCollapsed)}
+          </output>
+          <output aria-label="controlled context sheet open">
+            {String(contextSheetOpen)}
+          </output>
+        </>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={idleComposerState()} transport={new FakeAgentTransport()}>
+        <ControlledOverlayHarness />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Open thread history" }));
+    expect(screen.getByLabelText("controlled sidebar collapsed")).toHaveTextContent(
+      "false",
+    );
+    expect(screen.getByRole("button", { name: "Dismiss thread history" })).toBeInTheDocument();
+    await user.keyboard("{Escape}");
+    expect(screen.getByLabelText("controlled sidebar collapsed")).toHaveTextContent(
+      "true",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Agent context" }));
+    expect(screen.getByLabelText("controlled context sheet open")).toHaveTextContent(
+      "true",
+    );
+    expect(screen.getAllByRole("button", { name: "Agent context" })).not.toHaveLength(0);
+    await user.keyboard("{Escape}");
+    expect(screen.getByLabelText("controlled context sheet open")).toHaveTextContent(
+      "false",
+    );
+  });
+
+  it("keeps controlled mobile overlays mutually exclusive", async () => {
+    mockCompactLayout(true);
+
+    function BothOpenOverlayHarness() {
+      return (
+        <AgentChat
+          controls={{
+            contextSheetOpen: true,
+            sidebarCollapsed: false,
+          }}
+          usage
+        />
+      );
+    }
+
+    render(
+      <AgentProvider initialState={idleComposerState()} transport={new FakeAgentTransport()}>
+        <BothOpenOverlayHarness />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByRole("button", { name: "Dismiss thread history" })).toBeInTheDocument();
+    expect(screen.queryByRole("complementary", { name: "Agent context" })).not.toBeInTheDocument();
+  });
+
+  it("does not refocus controlled overlays on unrelated host rerenders", async () => {
+    const user = userEvent.setup();
+    mockCompactLayout(true);
+    let forceHostRerender = () => {};
+
+    function ControlledOverlayRerenderHarness() {
+      const [rerenders, setRerenders] = useState(0);
+      const [contextSheetOpen, setContextSheetOpen] = useState(false);
+      useEffect(() => {
+        forceHostRerender = () => setRerenders((current) => current + 1);
+        return () => {
+          forceHostRerender = () => {};
+        };
+      }, []);
+      return (
+        <>
+          <AgentChat
+            controls={{
+              contextSheetOpen,
+              onContextSheetOpenChange: setContextSheetOpen,
+            }}
+            statusBarEnd={<span data-testid="rerender-count">{rerenders}</span>}
+            usage
+          />
+          <button type="button">External focus target</button>
+        </>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={idleComposerState()} transport={new FakeAgentTransport()}>
+        <ControlledOverlayRerenderHarness />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Agent context" }));
+    await waitFor(() =>
+      expect(screen.getByRole("complementary", { name: "Agent context" })).toHaveFocus(),
+    );
+    screen.getByRole("button", { name: "External focus target" }).focus();
+    expect(screen.getByRole("button", { name: "External focus target" })).toHaveFocus();
+    act(() => forceHostRerender());
+    expect(screen.getByRole("button", { name: "External focus target" })).toHaveFocus();
+    expect(screen.getByTestId("rerender-count")).toHaveTextContent("1");
   });
 
   it("offers an external theme toggle primitive", async () => {
@@ -7178,6 +7504,160 @@ describe("AgentChat", () => {
     );
     expect(transport.requests.map((request) => request.method)).not.toContain(
       "turn/start",
+    );
+  });
+
+  it("shares draft state between AgentChat composer and external chat controller", async () => {
+    const user = userEvent.setup();
+    render(
+      <AgentProvider initialState={idleComposerState()} transport={new FakeAgentTransport()}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+      </AgentProvider>,
+    );
+
+    const textarea = await screen.findByRole("textbox", { name: "Message" });
+    await user.type(textarea, "shared draft");
+    expect(screen.getByLabelText("public chat value")).toHaveTextContent(
+      "shared draft",
+    );
+    await user.click(screen.getByRole("button", { name: "Set external draft" }));
+    expect(textarea).toHaveValue("external draft");
+  });
+
+  it("sends an external first message through the public chat controller lifecycle", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-external-first",
+              name: "External first thread",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "turn/start") {
+          return {
+            turn: {
+              id: "turn-external-first",
+              status: "inProgress",
+              threadId: "thread-external-first",
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+        <ActiveThreadStateProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send external first" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("active thread id")).toHaveTextContent(
+        "thread-external-first",
+      ),
+    );
+    expect(screen.getByLabelText("active item text")).toHaveTextContent(
+      "external first",
+    );
+    expect(screen.getByLabelText("public chat result")).toHaveTextContent(
+      "started:thread-external-first",
+    );
+    expect(
+      transport.requests.find((request) => request.method === "turn/start")?.params,
+    ).toMatchObject({
+      input: [{ text: "external first", text_elements: [], type: "text" }],
+      threadId: "thread-external-first",
+    });
+  });
+
+  it("sends an external follow-up on the active idle thread without raw transport calls", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/start") return {};
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={idleComposerState()} transport={transport}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send external follow up" }));
+
+    await waitFor(() =>
+      expect(
+        transport.requests.find((request) => request.method === "turn/start")?.params,
+      ).toMatchObject({
+        input: [{ text: "external follow up", text_elements: [], type: "text" }],
+        threadId: "thread-idle",
+      }),
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "thread/start",
+    );
+    expect(screen.getByLabelText("public chat result")).toHaveTextContent("sent");
+
+    await user.click(
+      screen.getByRole("button", { name: "Send external follow up with options" }),
+    );
+    await waitFor(() =>
+      expect(
+        transport.requests.filter((request) => request.method === "turn/start")[1]
+          ?.params,
+      ).toMatchObject({
+        effort: "high",
+        input: [
+          {
+            text: "external follow up with options",
+            text_elements: [],
+            type: "text",
+          },
+        ],
+        model: "external-model",
+        serviceTier: "flex",
+        threadId: "thread-idle",
+      }),
+    );
+    expect(screen.getByLabelText("public chat result")).toHaveTextContent(
+      "sent:thread-idle",
+    );
+  });
+
+  it("queues an external follow-up when the active thread is running", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={transport}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send external follow up" }));
+
+    expect(await screen.findByLabelText("Queued follow-ups")).toHaveTextContent(
+      "external follow up",
+    );
+    expect(screen.getByLabelText("public chat result")).toHaveTextContent(
+      "queued:thread-running",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/steer",
     );
   });
 

@@ -4,7 +4,6 @@ import type {
   ThreadStatus,
 } from "@nyosegawa/agent-ui-core";
 import {
-  createContext,
   useCallback,
   useContext,
   useEffect,
@@ -14,6 +13,7 @@ import {
   type PropsWithChildren,
 } from "react";
 import type { AgentUserInput } from "./agent-input";
+import { sharedReactContext } from "./context-registry";
 
 export interface QueuedFollowUp {
   attachments: QueuedFollowUpAttachment[];
@@ -55,7 +55,10 @@ export interface AgentComposerQueueStore {
   takeFollowUpForEdit: (id: string, threadId: ThreadId) => QueuedFollowUp | undefined;
 }
 
-const AgentComposerQueueContext = createContext<AgentComposerQueueStore | null>(null);
+const AgentComposerQueueContext = sharedReactContext<AgentComposerQueueStore | null>(
+  "@nyosegawa/agent-ui-react/v1/AgentComposerQueueContext",
+  null,
+);
 
 export function AgentComposerQueueProvider({
   children,

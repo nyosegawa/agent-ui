@@ -24,6 +24,10 @@ export interface AgentComposerController {
   queuedFollowUps: QueuedFollowUp[];
   removeQueuedFollowUp: (id: string) => void;
   retryFailedPendingMessage: (operationId: string) => Promise<void>;
+  sendMessage: (
+    input: string | AgentUserInput[],
+    options?: AgentComposerSendMessageOptions,
+  ) => Promise<AgentComposerSendMessageResult>;
   sendQueuedFollowUp: (id: string) => Promise<void>;
   sendingFollowUpIds: string[];
   setError: Dispatch<SetStateAction<string | undefined>>;
@@ -39,8 +43,11 @@ export interface AgentComposerController {
     options?: { attachments?: QueuedFollowUpAttachment[] },
   ) => Promise<string | undefined>;
   submitMode: AgentComposerSubmitMode;
+  threadId?: string;
   value: string;
 }
+
+export interface AgentChatController extends AgentComposerController {}
 
 export type AgentComposerDisabledReason =
   | "approval"
@@ -55,5 +62,19 @@ export interface AgentComposerFailedPendingMessage {
 }
 
 export type AgentComposerSubmitMode = "queue" | "send" | "stop";
+
+export interface AgentComposerSendMessageOptions extends AgentThreadStartWithInputOptions {
+  queuedAttachments?: QueuedFollowUpAttachment[];
+}
+
+export type AgentComposerSendMessageResult =
+  | ({ type: "started" } & AgentThreadStartWithInputResult)
+  | { threadId: string; type: "sent" }
+  | { queuedFollowUpId: string; threadId: string; type: "queued" }
+  | {
+      reason: Extract<AgentComposerDisabledReason, "approval">;
+      threadId?: string;
+      type: "blocked";
+    };
 
 export type { AgentThreadStartWithInputOptions };

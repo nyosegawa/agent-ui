@@ -107,7 +107,7 @@
   border-bottom: 1px solid var(--aui-border);
   display: grid;
   gap: var(--aui-space-200) var(--aui-space-400);
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   padding: var(--aui-space-400) var(--aui-space-500) var(--aui-space-350);
 }
 
@@ -143,6 +143,14 @@
 .aui-thread-title .aui-token-usage {
   margin-top: var(--aui-space-250);
   max-width: 380px;
+}
+
+.aui-thread-header-extra {
+  align-items: center;
+  display: flex;
+  gap: var(--aui-space-150);
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .aui-thread-actions {

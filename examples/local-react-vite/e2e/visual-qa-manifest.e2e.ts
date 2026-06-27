@@ -66,6 +66,7 @@ test("visual QA manifest classifies every route with stable metadata", async () 
     "/showcase/component-preview",
     "/showcase/default-conversation",
     "/showcase/rich-transcript",
+    "/showcase/agent-chat-composition",
     "/showcase/composed-shell",
     "/showcase/host-workflow-recipe",
     "/showcase/composer-primitives",

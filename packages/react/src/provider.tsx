@@ -6,6 +6,7 @@ import {
   type AgentTransport,
 } from "@nyosegawa/agent-ui-core";
 import { AgentComposerQueueProvider } from "./composer-queue";
+import { AgentComposerStateProvider } from "./composer-state";
 import {
   DEFAULT_AGENT_RUN_POLICIES,
   effectiveAgentRunPolicies,
@@ -14,7 +15,6 @@ import {
   type AgentRunPolicyId,
 } from "./run-policies";
 import {
-  createContext,
   useCallback,
   useContext,
   useEffect,
@@ -22,6 +22,7 @@ import {
   useReducer,
   type PropsWithChildren,
 } from "react";
+import { sharedReactContext } from "./context-registry";
 import { useAgentTransportEvents } from "./transport-events";
 
 export interface AgentContextValue {
@@ -31,7 +32,10 @@ export interface AgentContextValue {
   transport: AgentTransport;
 }
 
-const AgentContext = createContext<AgentContextValue | null>(null);
+const AgentContext = sharedReactContext<AgentContextValue | null>(
+  "@nyosegawa/agent-ui-react/v1/AgentContext",
+  null,
+);
 
 export interface AgentProviderProps extends PropsWithChildren {
   defaultRunPolicyId?: AgentRunPolicyId;
@@ -87,9 +91,11 @@ export function AgentProvider({
   );
   return (
     <AgentContext.Provider value={value}>
-      <AgentComposerQueueProvider sessionState={state}>
-        {children}
-      </AgentComposerQueueProvider>
+      <AgentComposerStateProvider>
+        <AgentComposerQueueProvider sessionState={state}>
+          {children}
+        </AgentComposerQueueProvider>
+      </AgentComposerStateProvider>
     </AgentContext.Provider>
   );
 }

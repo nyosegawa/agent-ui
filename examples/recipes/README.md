@@ -5,6 +5,7 @@ Typed implementation recipes for host applications.
 Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
 
 - `src/custom-components.tsx`: `AgentChat` components map for custom approval and item rendering.
+- `src/agent-chat-composition.tsx`: `AgentChat` preset composition with external send controls, fixed start options, overlay coordination, and local media resolution.
 - `src/custom-transcript-blocks.tsx`: custom transcript block renderers while
   preserving default block rendering.
 - `src/headless-chat-controller.tsx`: chat UI composed from public controllers.

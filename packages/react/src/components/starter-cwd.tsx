@@ -22,8 +22,10 @@ export type AgentWorkingDirectoryResolver = () =>
  * pill rather than inside the composer toolbar.
  */
 export function AgentStarterCwd({
+  fixedWorkingDirectory,
   onRequestWorkingDirectory,
 }: {
+  fixedWorkingDirectory?: string | null;
   onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
 }) {
   const { t } = useAgentI18n();
@@ -46,6 +48,10 @@ export function AgentStarterCwd({
     [runSettings.cwd, state.threads],
   );
   const selectedCwd = runSettings.cwd || undefined;
+  const fixedCwd =
+    typeof fixedWorkingDirectory === "string" && fixedWorkingDirectory.trim()
+      ? fixedWorkingDirectory.trim()
+      : undefined;
   const triggerLabel = selectedCwd ? folderName(selectedCwd) : t("run.cwd.selectFolder");
   const setStarterCwd = useCallback(
     (cwd: string) =>
@@ -76,6 +82,25 @@ export function AgentStarterCwd({
       document.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
+
+  if (fixedCwd) {
+    return (
+      <div className="aui-starter-context" aria-label={t("aria.threadStartContext")}>
+        <div className="aui-starter-cwd">
+          <div
+            aria-label={`${t("run.workingDirectory")}: ${fixedCwd}`}
+            className="aui-starter-cwd-trigger"
+            role="status"
+          >
+            <IconFolder size={15} />
+            <span className="aui-starter-cwd-trigger-label">
+              {folderName(fixedCwd)}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="aui-starter-context" aria-label={t("aria.threadStartContext")}>

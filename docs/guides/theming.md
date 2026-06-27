@@ -120,10 +120,11 @@ constrain height with normal CSS:
 ## Custom Rendering
 
 Use the `AgentChat.components` map when token changes are not enough.
-`Approval`, `ComposerPanel`, `EmptyState`, `Shell`, `Sidebar`, and `blocks`
-are the replacement points for current customization. Use `blocks` for
-per-block rendering or `renderItem(entry, Default)` when a host needs to wrap a
-whole transcript entry. Those inputs are transcript view models, not core
-item/turn entities. Keep approval decisions explicit and keep command, tool,
-and file-change context in the transcript order so restored sessions remain
+`Approval`, `ComposerPanel`, `EmptyState`, `Shell`, `Sidebar`, `StatusBar`,
+`ThreadHeader`, and `blocks` are the replacement points for current
+customization. Use `threadHeaderEnd` for simple active-thread actions, `blocks`
+for per-block rendering, or `renderItem(entry, Default)` when a host needs to
+wrap a whole transcript entry. Those inputs are transcript view models, not core
+item/turn entities. Keep approval decisions explicit and keep command, tool, and
+file-change context in the transcript order so restored sessions remain
 auditable.

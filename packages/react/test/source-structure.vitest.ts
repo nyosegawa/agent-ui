@@ -30,6 +30,15 @@ const reactApiSnapshot = join(
   "api-snapshots",
   "react__index.d.ts",
 );
+const reactHeadlessApiSnapshot = join(
+  __dirname,
+  "..",
+  "..",
+  "..",
+  "test",
+  "api-snapshots",
+  "react__headless.d.ts",
+);
 const styleDir = join(reactSrc, "styles");
 const maxResponsibilitySizedLines = 560;
 
@@ -91,6 +100,8 @@ describe("React package source structure", () => {
       "EmptyState",
       "Shell",
       "Sidebar",
+      "StatusBar",
+      "ThreadHeader",
       "blocks",
     ]);
   });
@@ -193,12 +204,20 @@ describe("React package source structure", () => {
 
   it("keeps first-message operation internals out of the React public API", () => {
     const snapshot = readFileSync(reactApiSnapshot, "utf8");
+    const headlessSnapshot = readFileSync(reactHeadlessApiSnapshot, "utf8");
     expect(snapshot).not.toContain("useInternalAgentComposerController");
     expect(snapshot).not.toContain("InternalAgentComposerController");
     expect(snapshot).not.toContain("startWithMessage");
     expect(snapshot).not.toContain("operationsById");
     expect(snapshot).not.toContain("retryOperation");
     expect(snapshot).not.toContain("cancelOperation");
+    expect(headlessSnapshot).toContain("useAgentChatController");
+    expect(headlessSnapshot).toContain("AgentChatController");
+    expect(headlessSnapshot).toContain("AgentComposerSendMessageResult");
+    expect(headlessSnapshot).toContain('type: "started"');
+    expect(headlessSnapshot).toContain('type: "sent"');
+    expect(headlessSnapshot).toContain('type: "queued"');
+    expect(headlessSnapshot).toContain('type: "blocked"');
   });
 
   it("keeps raw protocol payload fields out of public declaration snapshots", () => {

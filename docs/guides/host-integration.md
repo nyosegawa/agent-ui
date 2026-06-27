@@ -64,6 +64,24 @@ import "@nyosegawa/agent-ui-react/styles.css";
 />
 ```
 
+Use `AgentChat` when the default chat flow should stay intact. Prefer public
+preset composition before dropping to primitives:
+
+- add status/header UI with `statusBarEnd`, `threadHeaderEnd`, or the
+  `StatusBar` / `ThreadHeader` component replacements
+- fix first-thread policy with `startOptions.threadOptions` and first-turn
+  policy with `startOptions.turnOptions`
+- coordinate host drawers or sheets with `controls.sidebarCollapsed` and
+  `controls.contextSheetOpen`
+- send from external host UI with `useAgentChatController().sendMessage()`
+- resolve local attachments and transcript media with
+  `resolveLocalAttachment` and `resolveLocalMediaUrl`
+
+Do not sequence `thread/start` and `turn/start` from host chrome just because
+the send button lives outside the composer. The public chat controller routes
+that action through the same optimistic state, canonical thread reconciliation,
+queueing, blocked-approval handling, and error handling as `AgentChat`.
+
 Use `useAgentComposerController()`,
 `useAgentTranscriptController()`, and
 `useAgentTranscriptScrollController()` when the host owns the layout instead
@@ -199,11 +217,29 @@ notifications reconcile the first user message.
 Escape, and thread selection close the drawer; focus returns to the `Threads`
 trigger; background chat controls are inert or equivalently non-interactive
 while the drawer is open; drawer search and selection stay reachable. Hosts
-should place their own sheets and modals relative to the public layer tokens
+can mirror preset drawer and context-sheet state through `AgentChat.controls`
+when their own overlay manager needs a single open surface. Agent UI suppresses
+simultaneous preset drawer/sheet rendering so the context sheet is never focused
+inside an inert drawer-hidden subtree. Hosts should place their own sheets and
+modals relative to the public layer tokens
 `--aui-z-backdrop`, `--aui-z-drawer`, `--aui-z-popover`, `--aui-z-sheet`,
 `--aui-z-dialog`, and `--aui-z-toast` instead of styling private `.aui-*`
 selectors. The preset keeps scroll containment inside the drawer and does not
 impose host document/body scroll-lock policy.
+
+## Migration Notes
+
+- Replace removed `AgentChatSlots` usage with `AgentChat.components`.
+- Replace raw `components.Item` transcript customization with `renderItem` or
+  `components.blocks`.
+- Replace host-side `transport.request("thread/start")` followed by
+  `transport.request("turn/start")` with `useAgentChatController().sendMessage()`
+  for preset-hosted chat, or
+  `useAgentComposerController().startThreadWithInput()` for headless layouts.
+- Replace private `.aui-*` selector dependencies for status/header additions
+  with `statusBarEnd`, `threadHeaderEnd`, `StatusBar`, and `ThreadHeader`.
+- Replace direct local file paths in media `src` with structured
+  `resolveLocalAttachment` and `resolveLocalMediaUrl` resolvers.
 
 ## Host-Gated Workflows
 

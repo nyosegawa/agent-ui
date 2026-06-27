@@ -48,6 +48,7 @@ import {
 import {
   useAgentApprovals,
   useAgentBootstrap,
+  useAgentChatController,
   useAgentComposerController,
   useAgentContext,
   useAgentThread,
@@ -107,6 +108,9 @@ function DemoApp() {
   if (pathname === "/showcase/patterns") return <ShowcasePatternsPage />;
   if (pathname === "/maintainer-gallery") return <MaintainerGallery />;
   if (pathname === "/showcase/approvals-status") return <ApprovalsStatusExample />;
+  if (pathname === "/showcase/agent-chat-composition") {
+    return <AgentChatCompositionExample />;
+  }
   if (pathname === "/showcase/app-connectors") return <AppConnectorsExample />;
   if (pathname === "/showcase/composed-shell") return <ComposedShellExample />;
   if (pathname === "/showcase/composer-primitives") return <ComposerPrimitivesExample />;
@@ -1627,6 +1631,19 @@ function HostWorkflowRecipe() {
   );
 }
 
+function AgentChatCompositionExample() {
+  const initialState = useMemo(() => createHostWorkflowInitialState(), []);
+  const transport = useMemo(() => createFixtureTransport("host-workflow"), []);
+  return (
+    <AgentProvider initialState={initialState} transport={transport}>
+      <HostWorkflowComposition
+        firstMessageControls={null}
+        firstMessageStats={{ threadStartCalls: 0, turnStartCalls: 0 }}
+      />
+    </AgentProvider>
+  );
+}
+
 interface HostFirstMessageStats {
   threadStartCalls: number;
   turnStartCalls: number;
@@ -1974,6 +1991,8 @@ function HostWorkflowComposition({
   const embedded = isEmbeddedPreview();
   const bootstrap = useAgentBootstrap();
   const { thread } = useAgentThread();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
+  const [contextSheetOpen, setContextSheetOpen] = useState(false);
   const [hostSheetOpen, setHostSheetOpen] = useState(() =>
     new URLSearchParams(window.location.search).get("hostSheet") === "open",
   );
@@ -2067,10 +2086,54 @@ function HostWorkflowComposition({
         >
           <div className="aui-host-thread">
             <AgentChat
+              components={{
+                StatusBar: ({ Default, end, ...props }) => (
+                  <Default
+                    {...props}
+                    end={
+                      <>
+                        <span className="aui-host-inline-status">Host verified</span>
+                        {end}
+                      </>
+                    }
+                  />
+                ),
+                ThreadHeader: ({ Default, ...props }) => (
+                  <div className="aui-host-thread-header">
+                    <Default {...props} />
+                  </div>
+                ),
+              }}
+              controls={{
+                contextSheetOpen,
+                onContextSheetOpenChange: setContextSheetOpen,
+                onSidebarCollapsedChange: setSidebarCollapsed,
+                sidebarCollapsed,
+              }}
               diagnostics={false}
               resolveLocalAttachment={resolveHostAttachment}
               resolveLocalMediaUrl={resolveHostLocalMediaUrl}
               sidebar
+              startOptions={{
+                threadOptions: {
+                  cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+                  sandbox: "workspace-write",
+                  threadSource: "user",
+                },
+                turnOptions: {
+                  effort: "medium",
+                  model: "gpt-5-codex",
+                },
+              }}
+              threadHeaderEnd={({ thread }) => (
+                <button
+                  className="aui-host-action"
+                  onClick={() => setHostSheetOpen(true)}
+                  type="button"
+                >
+                  Review {thread.id}
+                </button>
+              )}
               usage={false}
             />
           </div>
@@ -2411,8 +2474,10 @@ function HostWorkflowPanel({
   latestAttachment: HostAttachmentMetadata | null;
 }) {
   const { thread } = useAgentThread();
+  const chat = useAgentChatController();
   const { approvals } = useAgentApprovals(thread?.thread.id);
   const { rateLimits } = useAgentUsage();
+  const [externalSendStatus, setExternalSendStatus] = useState("Ready");
   const windows = normalizeUsageWindows(rateLimits);
   const latestTurn = thread?.orderedTurnIds.at(-1)
     ? thread.turns[thread.orderedTurnIds.at(-1)!]
@@ -2601,6 +2666,26 @@ function HostWorkflowPanel({
             ? `Verification target: ${String(verificationCommand.command)}`
             : "Host actions are deferred until the verification command is captured."}
         </span>
+        <button
+          className="aui-host-action"
+          onClick={() => {
+            setExternalSendStatus("Sending");
+            void chat
+              .sendMessage("Summarize the host workflow context.", {
+                turnOptions: { effort: "medium", model: "gpt-5-codex" },
+              })
+              .then((result) => setExternalSendStatus(result.type))
+              .catch((error: unknown) =>
+                setExternalSendStatus(
+                  error instanceof Error ? error.message : "External send failed",
+                ),
+              );
+          }}
+          type="button"
+        >
+          Send host prompt
+        </button>
+        <span aria-label="External send status">{externalSendStatus}</span>
         <button
           className="aui-host-action"
           disabled={!verificationCommand || approvals.length > 0}
