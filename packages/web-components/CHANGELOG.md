@@ -1,5 +1,13 @@
 # @nyosegawa/agent-ui-web-components
 
+## 2.0.0
+
+### Patch Changes
+
+- Updated dependencies [042aaf4]
+  - @nyosegawa/agent-ui-react@2.0.0
+  - @nyosegawa/agent-ui-core@2.0.0
+
 ## 1.1.0
 
 ### Minor Changes
