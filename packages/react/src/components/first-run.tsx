@@ -15,9 +15,11 @@ import { shouldSubmitOnComposerEnter } from "./composer-submit-semantics";
 import { deferAction } from "./shared";
 
 export function AgentFirstRun({
+  fixedWorkingDirectory,
   onRequestWorkingDirectory,
   onStartThread,
 }: {
+  fixedWorkingDirectory?: string | null;
   onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
   onStartThread: (prompt?: string) => Promise<void> | void;
 }) {
@@ -76,6 +78,7 @@ export function AgentFirstRun({
   }
   return (
     <AgentStartComposer
+      fixedWorkingDirectory={fixedWorkingDirectory}
       onRequestWorkingDirectory={onRequestWorkingDirectory}
       onStartThread={onStartThread}
     />
@@ -83,11 +86,13 @@ export function AgentFirstRun({
 }
 
 export interface AgentStartComposerProps {
+  fixedWorkingDirectory?: string | null;
   onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
   onStartThread: (prompt?: string) => Promise<void> | void;
 }
 
 export function AgentStartComposer({
+  fixedWorkingDirectory,
   onRequestWorkingDirectory,
   onStartThread,
 }: AgentStartComposerProps) {
@@ -169,7 +174,10 @@ export function AgentStartComposer({
           }
         />
       </div>
-      <AgentStarterCwd onRequestWorkingDirectory={onRequestWorkingDirectory} />
+      <AgentStarterCwd
+        fixedWorkingDirectory={fixedWorkingDirectory}
+        onRequestWorkingDirectory={onRequestWorkingDirectory}
+      />
     </form>
   );
 }

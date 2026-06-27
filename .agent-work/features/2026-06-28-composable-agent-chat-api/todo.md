@@ -144,7 +144,7 @@ primitives redesign. P001 is implemented and validated; P002 is next.
       - Expected files/areas: React component/controller tests.
       - Validation note: host must not call raw transport methods.
 
-- [ ] P003 AgentChat composition surface
+- [x] P003 AgentChat composition surface
   - Goal: Make `AgentChat` partially composable through public props,
     controller, render areas, replacement map, and tokens.
   - Scope: thread history replacement, header/status additions, starter
@@ -169,26 +169,48 @@ primitives redesign. P001 is implemented and validated; P002 is next.
   - Push: push after phase commit if remote is available.
   - PR/CI: browser fixture evidence required before ready.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: added public `AgentChat` composition props for
+      `startOptions`, controlled overlay `controls`, `threadHeaderEnd`, and
+      `StatusBar` / `ThreadHeader` replacements; exported preset replacement
+      prop types from root and primitive header types from `/primitives`;
+      routed fixed first-message options through the shared chat controller;
+      rendered fixed cwd as read-only accessible starter state; kept local
+      media resolution on the existing structured resolver path; documented the
+      new public replacement/render areas and overlay/token contracts.
+    - Validation: `bun run --cwd packages/react typecheck`;
+      `bunx vitest run packages/react/test/components.vitest.tsx`;
+      `bunx vitest run packages/react/test/components.vitest.tsx
+      --testNamePattern "fixed AgentChat start options|controlled mobile
+      drawer|mutually exclusive|unrelated host rerenders"`;
+      `bunx vitest run packages/react/test/source-structure.vitest.ts`;
+      `bun run lint --quiet`; `bun run --cwd packages/react build`;
+      `bun run test:api-snapshots`; `bun run test:package-resolution`;
+      `git diff --check`.
+    - Review: 4 parallel subagent reviews completed for accessibility/focus
+      behavior, composition-boundary scope, mobile overlay/layer contracts, and
+      CSS/token public-surface compliance. Findings addressed: avoid controlled
+      overlay focus re-runs from inline `controls`, suppress simultaneous
+      drawer/sheet rendering, use sheet layer tokens for the compact context
+      sheet, preserve `props.end` in docs, expose fixed cwd with an accessible
+      full-path label, avoid clipping mobile header focus rings, and update the
+      theming guide replacement list.
+    - Commit: this phase commit (`Add composable AgentChat surfaces`).
+    - Push: pending.
   - Tasks:
-    - [ ] T007 Define the replacement/render-area contract and remove or
+    - [x] T007 Define the replacement/render-area contract and remove or
       update old `AgentComponents` assumptions as needed.
       - Expected files/areas: `components/chat.tsx`,
         `source-structure.vitest.ts`, docs later in P004.
       - Validation note: no private DOM or generated payloads.
-    - [ ] T008 Add public props for fixed start options and host starter
+    - [x] T008 Add public props for fixed start options and host starter
       policies without taking over host workflow state.
       - Expected files/areas: `components/chat.tsx`, request option types.
       - Validation note: first-message path must still use controller lifecycle.
-    - [ ] T009 Add overlay/drawer public controls or callbacks where the
+    - [x] T009 Add overlay/drawer public controls or callbacks where the
       preset owns drawer/sheet state.
       - Expected files/areas: chat/shell/sidebar/status CSS and tests.
       - Validation note: must keep focus, inert background, Escape, and tokens.
-    - [ ] T010 Keep local media resolution structured and documented.
+    - [x] T010 Keep local media resolution structured and documented.
       - Expected files/areas: chat/thread/timeline components and tests.
       - Validation note: no raw local path media `src`.
 

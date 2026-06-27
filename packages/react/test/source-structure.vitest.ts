@@ -100,6 +100,8 @@ describe("React package source structure", () => {
       "EmptyState",
       "Shell",
       "Sidebar",
+      "StatusBar",
+      "ThreadHeader",
       "blocks",
     ]);
   });

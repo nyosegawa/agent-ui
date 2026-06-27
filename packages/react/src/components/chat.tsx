@@ -6,6 +6,8 @@ import {
   useAgentDiagnostics,
   useAgentThread,
   useAgentThreads,
+  type ThreadStartOptions,
+  type TurnStartOptions,
 } from "../hooks";
 import { useAgentChatController } from "../hooks/composer";
 import {
@@ -14,7 +16,12 @@ import {
   type AgentI18nMessages,
   type AgentLocale,
 } from "../i18n";
-import { AgentThreadView } from "./thread";
+import {
+  AgentThreadHeader,
+  AgentThreadView,
+  type AgentThreadHeaderEnd,
+  type AgentThreadHeaderProps,
+} from "./thread";
 import { AgentComposerPanel, type AgentComposerPanelProps } from "./composer";
 import type {
   AgentComposerIntegration,
@@ -44,6 +51,7 @@ import {
   AgentStatusDetails,
   AgentStatusSummary,
   AgentUsagePanel,
+  type AgentStatusBarProps,
 } from "./status";
 import type { AgentLocalMediaUrlResolver } from "../timeline";
 import { IconGauge } from "../components-internal";
@@ -81,6 +89,26 @@ export interface AgentComposerPanelComponentProps extends AgentComposerPanelProp
   Default: React.ComponentType<AgentComposerPanelProps>;
 }
 
+export interface AgentStatusBarComponentProps extends AgentStatusBarProps {
+  Default: React.ComponentType<AgentStatusBarProps>;
+}
+
+export interface AgentThreadHeaderComponentProps extends AgentThreadHeaderProps {
+  Default: React.ComponentType<AgentThreadHeaderProps>;
+}
+
+export interface AgentChatStartOptions {
+  threadOptions?: ThreadStartOptions;
+  turnOptions?: TurnStartOptions;
+}
+
+export interface AgentChatOverlayControls {
+  contextSheetOpen?: boolean;
+  onContextSheetOpenChange?: (open: boolean) => void;
+  onSidebarCollapsedChange?: (collapsed: boolean) => void;
+  sidebarCollapsed?: boolean;
+}
+
 export interface AgentBlockDefaultProps {
   block: AgentTranscriptBlock;
   item?: AgentTranscriptItem;
@@ -96,6 +124,8 @@ export interface AgentComponents {
   EmptyState?: React.ComponentType<AgentEmptyStateComponentProps>;
   Shell?: React.ComponentType<AgentShellComponentProps>;
   Sidebar?: React.ComponentType<AgentSidebarComponentProps>;
+  StatusBar?: React.ComponentType<AgentStatusBarComponentProps>;
+  ThreadHeader?: React.ComponentType<AgentThreadHeaderComponentProps>;
   blocks?: Partial<
     Record<AgentTranscriptBlock["kind"], React.ComponentType<AgentBlockComponentProps>>
   >;
@@ -106,19 +136,24 @@ export const defaultAgentComponents = {
   EmptyState: AgentFirstRun,
   Shell: AgentShell,
   Sidebar: AgentThreadSidebar,
+  StatusBar: AgentStatusBar,
+  ThreadHeader: AgentThreadHeader,
 } satisfies AgentComponents;
 
 export interface AgentChatProps {
   className?: string;
   composerIntegrations?: readonly AgentComposerIntegration[];
   components?: AgentComponents;
+  controls?: AgentChatOverlayControls;
   diagnostics?: boolean;
   onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   sidebar?: boolean;
+  startOptions?: AgentChatStartOptions;
   statusBarEnd?: React.ReactNode;
   theme?: AgentTheme;
+  threadHeaderEnd?: AgentThreadHeaderEnd;
   locale?: AgentLocale | string;
   messages?: AgentI18nMessages;
   threadUrlRouting?: boolean | AgentThreadUrlRoutingOptions;
@@ -129,13 +164,16 @@ export function AgentChat({
   className,
   composerIntegrations,
   components,
+  controls,
   diagnostics = false,
   onRequestWorkingDirectory,
   resolveLocalAttachment,
   resolveLocalMediaUrl,
   sidebar = true,
+  startOptions,
   statusBarEnd,
   theme,
+  threadHeaderEnd,
   locale,
   messages,
   threadUrlRouting = false,
@@ -147,13 +185,16 @@ export function AgentChat({
         className={className}
         composerIntegrations={composerIntegrations}
         components={components}
+        controls={controls}
         diagnostics={diagnostics}
         onRequestWorkingDirectory={onRequestWorkingDirectory}
         resolveLocalAttachment={resolveLocalAttachment}
         resolveLocalMediaUrl={resolveLocalMediaUrl}
         sidebar={sidebar}
+        startOptions={startOptions}
         statusBarEnd={statusBarEnd}
         theme={theme}
+        threadHeaderEnd={threadHeaderEnd}
         threadUrlRouting={threadUrlRouting}
         usage={usage}
       />
@@ -165,13 +206,16 @@ function AgentChatInner({
   className,
   composerIntegrations,
   components,
+  controls,
   diagnostics = false,
   onRequestWorkingDirectory,
   resolveLocalAttachment,
   resolveLocalMediaUrl,
   sidebar = true,
+  startOptions,
   statusBarEnd,
   theme,
+  threadHeaderEnd,
   threadUrlRouting = false,
   usage = false,
 }: AgentChatProps) {
@@ -196,13 +240,31 @@ function AgentChatInner({
   const chatRootRef = useRef<HTMLDivElement>(null);
   const contextRailRef = useRef<HTMLElement>(null);
   const sidebarSlotRef = useRef<HTMLDivElement>(null);
-  const isSidebarCollapsed = compact ? !sidebarOpenMobile : !sidebarOpenDesktop;
+  const {
+    contextSheetOpen: controlledContextSheetOpen,
+    onContextSheetOpenChange,
+    onSidebarCollapsedChange,
+    sidebarCollapsed: controlledSidebarCollapsed,
+  } = controls ?? {};
+  const isSidebarCollapsed =
+    controlledSidebarCollapsed ?? (compact ? !sidebarOpenMobile : !sidebarOpenDesktop);
+  const setContextOpen = useCallback(
+    (open: boolean) => {
+      onContextSheetOpenChange?.(open);
+      if (controlledContextSheetOpen === undefined) setContextOpenMobile(open);
+    },
+    [controlledContextSheetOpen, onContextSheetOpenChange],
+  );
   const setSidebarCollapsed = useCallback(
     (next: boolean) => {
-      if (compact) setSidebarOpenMobile(!next);
-      else setSidebarOpenDesktop(!next);
+      onSidebarCollapsedChange?.(next);
+      if (controlledSidebarCollapsed === undefined) {
+        if (compact) setSidebarOpenMobile(!next);
+        else setSidebarOpenDesktop(!next);
+      }
+      if (!next) setContextOpen(false);
     },
-    [compact],
+    [compact, controlledSidebarCollapsed, onSidebarCollapsedChange, setContextOpen],
   );
   const hasDiagnosticsContent =
     diagnostics &&
@@ -212,16 +274,20 @@ function AgentChatInner({
       userDiagnostics.errors.length > 0 ||
       userDiagnostics.warnings.length > 0);
   const hasRail = usage || hasDiagnosticsContent;
-  const showRail = hasRail && (!contextSheetLayout || contextOpenMobile);
+  const contextOpen = controlledContextSheetOpen ?? contextOpenMobile;
+  const showRail = hasRail && (!contextSheetLayout || contextOpen);
   const drawerOpen = compact && sidebar && !isSidebarCollapsed;
-  const contextSheetOpen = contextSheetLayout && hasRail && contextOpenMobile;
+  const contextSheetOpen = contextSheetLayout && hasRail && contextOpen && !drawerOpen;
   const statusEnd =
     contextSheetLayout && hasRail ? (
       <>
         <button
           aria-label={t("aria.agentContext")}
           className="aui-agent-context-trigger"
-          onClick={() => setContextOpenMobile(true)}
+          onClick={() => {
+            setSidebarCollapsed(true);
+            setContextOpen(true);
+          }}
           title={t("aria.agentContext")}
           type="button"
         >
@@ -233,7 +299,7 @@ function AgentChatInner({
       statusBarEnd
     );
   const closeContextSheet = useCallback(() => {
-    setContextOpenMobile(false);
+    setContextOpen(false);
     const deferFocus =
       typeof window.requestAnimationFrame === "function"
         ? window.requestAnimationFrame
@@ -243,7 +309,7 @@ function AgentChatInner({
         ?.querySelector<HTMLButtonElement>(".aui-agent-context-trigger")
         ?.focus();
     });
-  }, []);
+  }, [setContextOpen]);
   const closeDrawer = useCallback(() => {
     setSidebarCollapsed(true);
     const deferFocus =
@@ -322,6 +388,11 @@ function AgentChatInner({
   const EmptyState = componentMap.EmptyState;
   const Shell = componentMap.Shell;
   const Sidebar = componentMap.Sidebar;
+  const StatusBar = componentMap.StatusBar;
+  const fixedWorkingDirectory =
+    typeof startOptions?.threadOptions?.cwd === "string"
+      ? startOptions.threadOptions.cwd
+      : undefined;
   const navigateHome = useCallback(() => {
     setActiveThread(undefined);
     if (compact) setSidebarOpenMobile(false);
@@ -382,11 +453,14 @@ function AgentChatInner({
           className="aui-status-shell"
           inert={contextSheetOpen ? true : undefined}
         >
-          <AgentStatusBar
-            end={statusEnd}
-            onNavigateHome={navigateHome}
-            onOpenThreads={sidebar ? () => setSidebarCollapsed(false) : undefined}
-          />
+          {StatusBar ? (
+            <StatusBar
+              Default={AgentStatusBar}
+              end={statusEnd}
+              onNavigateHome={navigateHome}
+              onOpenThreads={sidebar ? () => setSidebarCollapsed(false) : undefined}
+            />
+          ) : null}
         </div>
         <div className="aui-chat-body" data-rail={showRail ? "visible" : "hidden"}>
           <div
@@ -400,6 +474,7 @@ function AgentChatInner({
                 components={componentMap}
                 resolveLocalAttachment={resolveLocalAttachment}
                 resolveLocalMediaUrl={resolveLocalMediaUrl}
+                threadHeaderEnd={threadHeaderEnd}
                 threadId={threadId}
               />
             ) : (
@@ -407,10 +482,11 @@ function AgentChatInner({
                 {EmptyState ? (
                   <EmptyState
                     Default={AgentFirstRun}
+                    fixedWorkingDirectory={fixedWorkingDirectory}
                     onRequestWorkingDirectory={onRequestWorkingDirectory}
                     onStartThread={async (prompt) => {
-                      if (prompt) await chatController.sendMessage(prompt);
-                      else await startThread();
+                      if (prompt) await chatController.sendMessage(prompt, startOptions);
+                      else await startThread(startOptions?.threadOptions);
                     }}
                   />
                 ) : null}

@@ -66,10 +66,10 @@ old slot-oriented shape is not part of the public contract. Replacement
 components should import preset APIs from `@nyosegawa/agent-ui-react` and
 visual building blocks from `@nyosegawa/agent-ui-react/primitives`, not from
 source modules. They receive a `Default` renderer for the surface they replace.
-`Shell`, `Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are
-the raw-free preset replacement targets. Transcript item customization uses
-`renderItem(entry, Default)` or block replacements; there is no raw
-`components.Item` boundary.
+`Shell`, `Sidebar`, `EmptyState`, `StatusBar`, `ThreadHeader`,
+`ComposerPanel`, `Approval`, and `blocks` are the raw-free preset replacement
+targets. Transcript item customization uses `renderItem(entry, Default)` or
+block replacements; there is no raw `components.Item` boundary.
 Internal component state, CSS implementation selectors, attachment mutation
 objects, transcript window bookkeeping, and generated protocol payloads stay
 inside Agent UI.
@@ -85,6 +85,17 @@ const localMediaUrlsByPath = new Map<string, string>();
   theme="system"
   usage={false}
   diagnostics={false}
+  startOptions={{
+    threadOptions: {
+      cwd: "/workspace/fixed-project",
+      sandbox: "workspace-write",
+      threadSource: "user",
+    },
+    turnOptions: {
+      model: "gpt-5-codex",
+      effort: "high",
+    },
+  }}
   composerIntegrations={[
     {
       id: "workspace-context",
@@ -120,6 +131,10 @@ const localMediaUrlsByPath = new Map<string, string>();
     "composer.placeholder": "フォローアップの変更を求める",
   }}
   components={{
+    StatusBar: ({ Default, end, ...props }) => (
+      <Default {...props} end={<><WorkspaceSwitcher />{end}</>} />
+    ),
+    ThreadHeader: ({ Default, ...props }) => <Default {...props} />,
     Approval: ({ approval }) => <CustomApproval approval={approval} />,
     blocks: {
       text: ({ block, Default }) => (
@@ -127,6 +142,7 @@ const localMediaUrlsByPath = new Map<string, string>();
       ),
     },
   }}
+  threadHeaderEnd={({ thread }) => <ThreadActions threadId={thread.id} />}
 />;
 ```
 
@@ -141,6 +157,22 @@ inherit a theme from host chrome. Agent UI does not render an internal theme
 switcher; hosts that want one can place the controlled `AgentThemeToggle`
 primitive beside their own navigation or settings UI, or pass it through
 `statusBarEnd` when using the `AgentChat` preset.
+
+`startOptions` lets a preset host fix first-thread policy without bypassing the
+chat lifecycle. `threadOptions` are passed to `thread/start`; `turnOptions` are
+passed through the shared `useAgentChatController().sendMessage()` first-message
+path, so optimistic state, active-thread reconciliation, and error handling stay
+the same as the default composer. A string `threadOptions.cwd` also renders the
+starter working-directory control as fixed read-only state instead of exposing
+the directory picker.
+
+`controls` exposes the preset-owned mobile drawer and context sheet as
+controlled state. Use `sidebarCollapsed` /
+`onSidebarCollapsedChange` and `contextSheetOpen` /
+`onContextSheetOpenChange` when host chrome needs to coordinate its own drawer,
+sheet, or overlay with Agent UI. Agent UI still owns focus return, Escape
+handling, inert background state, and relative overlay order through the
+documented layer tokens.
 
 The optional `locale` prop accepts `en`, `ja`, `ko`, `zh-CN`, `es`, or `fr`.
 When omitted, Agent UI normalizes `navigator.language` and falls back to
@@ -163,9 +195,9 @@ call `useAgentApprovals()` or a host-owned response path to send decisions.
 `components.blocks` replaces individual transcript block renderers by block
 kind. Block replacement components receive a narrow `Default` renderer so hosts
 can wrap or annotate the default UI without depending on private reducer state.
-The initial components map also supports `Shell`, `Sidebar`, `EmptyState`, and
-`ComposerPanel`; each receives the documented public props for that surface
-plus `Default`.
+The initial components map also supports `Shell`, `Sidebar`, `EmptyState`,
+`StatusBar`, `ThreadHeader`, and `ComposerPanel`; each receives the documented
+public props for that surface plus `Default`.
 
 Replacement points are intentionally limited to surfaces whose accessibility,
 scroll, and approval-anchor contracts can be preserved:
@@ -175,6 +207,14 @@ scroll, and approval-anchor contracts can be preserved:
 - `Sidebar` receives the default sidebar props and `Default`; it should delegate
   to `Default` unless the host accepts responsibility for thread navigation and
   history search accessibility.
+- `StatusBar` receives `end`, navigation callbacks, and `Default`. Prefer this
+  replacement when the host needs to add product chrome beside the preset status
+  row while preserving the default history, home, account, and connection
+  behavior.
+- `ThreadHeader` receives the active thread view, optional transcript view, an
+  `end` render area, and `Default`. Use `threadHeaderEnd` for simple per-thread
+  actions; replace `ThreadHeader` only when the whole header surface needs a
+  host wrapper.
 - `EmptyState` and `ComposerPanel` receive public starter/composer props and
   `Default`; low-level toolbar, submit, attachment, and textarea behavior stays
   inside the styled parts so Enter/Shift+Enter, stop, queue, and attachment

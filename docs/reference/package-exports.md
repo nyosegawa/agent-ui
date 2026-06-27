@@ -146,12 +146,15 @@ Keep root small. New host-composition surfaces should go to `primitives` or
 Replace with current API: `AgentChatSlots` has been removed in favor of the
 single `AgentComponents` map and `defaultAgentComponents`. The accepted
 replacement points are `Shell`, `Sidebar`, `EmptyState`, `ComposerPanel`,
-`Approval`, and transcript `blocks`. Transcript item customization uses
-`renderItem(entry, Default)` with `AgentTranscriptEntry`; raw
-`components.Item` replacement is removed. Lower-level scroll containers,
-approval anchor placement, composer toolbar internals, attachment mutation
-controls, sidebar pagination internals, and generated block normalization
-remain internal/source-level boundaries;
+`StatusBar`, `ThreadHeader`, `Approval`, and transcript `blocks`. `AgentChat`
+also exposes `startOptions` for fixed first-thread and first-turn policy,
+`threadHeaderEnd` for per-thread header actions, and `controls` for coordinating
+the preset-owned mobile history drawer and context sheet with host overlays.
+Transcript item customization uses `renderItem(entry, Default)` with
+`AgentTranscriptEntry`; raw `components.Item` replacement is removed. Lower-level
+scroll containers, approval anchor placement, composer toolbar internals,
+attachment mutation controls, sidebar pagination internals, and generated block
+normalization remain internal/source-level boundaries;
 `useAgentThread`, `useAgentThreadController`, `useAgentThreads`,
 `useAgentThreadHistory`, `useAgentThreadReader`,
 `useAgentThreadListController`, `useAgentComposer`,
@@ -439,7 +442,7 @@ React UI and hooks.
 Responsibilities:
 
 - root drop-in preset: `AgentProvider`, `AgentChat`, `AgentComponents`,
-  `defaultAgentComponents`, and i18n helpers
+  `AgentChatProps`, `defaultAgentComponents`, and supporting preset prop types
 - `/primitives` visual composition API for hosts that own layout
 - `/headless` hooks, controllers, input/resource types, run-policy helpers,
   transcript-window helpers, usage helpers, and i18n helpers

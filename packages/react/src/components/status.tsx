@@ -22,15 +22,17 @@ export {
   type AgentUsageProps,
 } from "./usage-panels";
 
+export interface AgentStatusBarProps {
+  end?: React.ReactNode;
+  onNavigateHome?: () => void;
+  onOpenThreads?: () => void;
+}
+
 export function AgentStatusBar({
   end,
   onNavigateHome,
   onOpenThreads,
-}: {
-  end?: React.ReactNode;
-  onNavigateHome?: () => void;
-  onOpenThreads?: () => void;
-} = {}) {
+}: AgentStatusBarProps = {}) {
   const { t } = useAgentI18n();
   const { state } = useAgentContext();
   const { account, cancelLogin, login } = useAgentAccount();

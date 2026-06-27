@@ -34,7 +34,7 @@
       max(var(--aui-space-350), env(safe-area-inset-bottom));
     position: fixed;
     right: 0;
-    z-index: var(--aui-z-popover);
+    z-index: var(--aui-z-sheet);
   }
 
   .aui-chat-rail > * {
@@ -52,7 +52,7 @@
     position: fixed;
     right: 0;
     top: 0;
-    z-index: calc(var(--aui-z-popover) - 1);
+    z-index: calc(var(--aui-z-sheet) - 1);
   }
 }
 
@@ -108,6 +108,13 @@
     justify-content: flex-start;
     min-width: 0;
     flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: visible;
+    width: 100%;
+  }
+
+  .aui-thread-header-extra {
+    justify-content: flex-start;
     overflow-x: auto;
     overflow-y: visible;
     width: 100%;
