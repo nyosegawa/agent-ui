@@ -1,8 +1,8 @@
 ## Status Summary
 
 Planning package for a breaking composable `AgentChat` / headless /
-primitives redesign. P001-P003 are implemented, validated, reviewed, committed,
-and pushed; P004 is next.
+primitives redesign. P001-P004 are implemented, validated, reviewed, committed,
+and pushed; P005 is next.
 
 ## Branch And Planning Commit
 
@@ -266,8 +266,8 @@ and pushed; P004 is next.
       correctness, and migration guidance. Changesets release notes are deferred
       to P005 because this phase documents and showcases the public surfaces
       introduced earlier.
-    - Commit: this phase commit (`Document composable AgentChat integration`).
-    - Push: pending.
+    - Commit: `deb391b` (`Document composable AgentChat integration`).
+    - Push: pushed to `origin/codex/plan-composable-agent-chat-api`.
   - Tasks:
     - [x] T011 Update reference docs to describe root/headless/primitives,
       controller sharing, and `AgentChat` composition.
