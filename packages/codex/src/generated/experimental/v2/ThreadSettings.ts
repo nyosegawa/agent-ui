@@ -14,6 +14,6 @@ import type { SandboxPolicy } from "./SandboxPolicy";
 
 export type ThreadSettings = { cwd: AbsolutePathBuf, approvalPolicy: AskForApproval, approvalsReviewer: ApprovalsReviewer, sandboxPolicy: SandboxPolicy, activePermissionProfile: ActivePermissionProfile | null, model: string, modelProvider: string, serviceTier: string | null, effort: ReasoningEffort | null, summary: ReasoningSummary | null, collaborationMode: CollaborationMode,
 /**
- * Current selected multi-agent mode for this thread, if one was selected.
+ * @deprecated Always `explicitRequestOnly`. Use `effort` for Ultra behavior.
  */
-multiAgentMode: MultiAgentMode | null, personality: Personality | null, };
+multiAgentMode: MultiAgentMode, personality: Personality | null, };

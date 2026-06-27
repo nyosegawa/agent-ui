@@ -37,9 +37,9 @@ sandbox: SandboxPolicy,
  */
 activePermissionProfile: ActivePermissionProfile | null, reasoningEffort: ReasoningEffort | null,
 /**
- * Current selected multi-agent mode for this thread, if one was selected.
+ * @deprecated Always `explicitRequestOnly`. Use `reasoningEffort` for Ultra behavior.
  */
-multiAgentMode: MultiAgentMode | null,
+multiAgentMode: MultiAgentMode,
 /**
  * `thread/turns/list` page returned when requested by `initialTurnsPage`.
  */

@@ -99,7 +99,6 @@ outputSchema?: JsonValue | null,
  */
 collaborationMode?: CollaborationMode | null,
 /**
- * Controls whether multi-agent v2 delegation requires an explicit user request.
- * Omitted keeps the loaded session's current mode.
+ * @deprecated Ignored. Use `effort: "ultra"` for proactive multi-agent behavior.
  */
 multiAgentMode?: MultiAgentMode | null, };

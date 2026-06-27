@@ -99,8 +99,8 @@
     "access": "public"
   },
   "agentUi": {
-    "codexProtocolCommit": "64bdeed9f7adbe60c725153b3fb74ed044a36221",
-    "generatedAt": "2026-06-20T01:10:34.448Z"
+    "codexProtocolCommit": "a107b84967eb9a3444fd2d4de03f200337acd52b",
+    "generatedAt": "2026-06-27T00:04:59.122Z"
   },
   "scripts": {
     "build": "tsup",
