@@ -1,14 +1,15 @@
 ## Status Summary
 
 Planning package for a breaking composable `AgentChat` / headless /
-primitives redesign. P001 is implemented and validated; P002 is next.
+primitives redesign. P001-P003 are implemented, validated, reviewed, committed,
+and pushed; P004 is next.
 
 ## Branch And Planning Commit
 
 - Branch: `codex/plan-composable-agent-chat-api`
 - Planning commit: `19700bb` (`Plan composable AgentChat API`)
 - Remote: `origin`
-- Push result: pending
+- Push result: pushed to `origin/codex/plan-composable-agent-chat-api`
 - Blockers: none known
 
 ## Phase Checklist
@@ -194,8 +195,8 @@ primitives redesign. P001 is implemented and validated; P002 is next.
       sheet, preserve `props.end` in docs, expose fixed cwd with an accessible
       full-path label, avoid clipping mobile header focus rings, and update the
       theming guide replacement list.
-    - Commit: this phase commit (`Add composable AgentChat surfaces`).
-    - Push: pending.
+    - Commit: `12baa1d` (`Add composable AgentChat surfaces`).
+    - Push: pushed to `origin/codex/plan-composable-agent-chat-api`.
   - Tasks:
     - [x] T007 Define the replacement/render-area contract and remove or
       update old `AgentComponents` assumptions as needed.
