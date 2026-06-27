@@ -154,6 +154,22 @@ export const visualQaRoutes: readonly VisualQaRoute[] = [
     audience: "public",
     category: "host-reference",
     description:
+      "AgentChat preset composed with host status/header additions, external send controls, fixed start options, overlay coordination, and local media resolution.",
+    docsScreenshot: false,
+    id: "agent-chat-composition",
+    kind: "showcase",
+    meta: "preset · composition",
+    ownerSpecs: ["examples/local-react-vite/e2e/visual-qa-manifest.e2e.ts"],
+    path: "/showcase/agent-chat-composition",
+    preview: true,
+    readySelector: ".aui-host-recipe .aui-host-composition",
+    title: "Composable chat preset",
+    viewports: ["desktop", "tablet", "compact", "mobile"],
+  },
+  {
+    audience: "public",
+    category: "host-reference",
+    description:
       "Neutral composed Agent UI shell showing sidebar history, status, and thread view inside host-owned layout.",
     docsScreenshot: false,
     id: "composed-shell",

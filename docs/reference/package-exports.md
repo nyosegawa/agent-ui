@@ -168,7 +168,14 @@ compose their own layout around `AgentChat` and primitives.
 the raw-free first-message start behavior is public on
 `AgentComposerController` as
 `startThreadWithInput(input, { threadOptions, turnOptions })`, while the
-source-level internal composer controller keeps its implementation helper named
+root preset external-send path is public on `AgentChatController` as
+`sendMessage(input, { threadOptions, turnOptions })`. Host UI that uses
+`AgentChat` should call that controller instead of directly sequencing
+transport requests. `AgentChatSlots`, raw `components.Item`, private status or
+header DOM selectors, and direct local media paths are not migration targets;
+use `AgentChat.components`, `renderItem` / `components.blocks`,
+`statusBarEnd` / `threadHeaderEnd`, and structured media resolvers.
+The source-level internal composer controller keeps its implementation helper named
 `startWithMessage()`.
 External UI that needs to send into the active `AgentChat` flow should use
 `useAgentChatController().sendMessage(input, options)`. It returns

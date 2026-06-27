@@ -166,6 +166,23 @@
   border-radius: 0;
 }
 
+.aui-host-inline-status {
+  align-items: center;
+  background: var(--aui-panel-alt);
+  border: 1px solid var(--aui-border);
+  border-radius: var(--aui-radius-pill);
+  color: var(--aui-fg-muted);
+  display: inline-flex;
+  font-size: var(--aui-font-size-xs-plus);
+  font-weight: 700;
+  min-height: var(--aui-control-height-sm);
+  padding: 0 var(--aui-space-200);
+}
+
+.aui-host-thread-header {
+  min-width: 0;
+}
+
 .aui-host-context {
   align-content: start;
   background: var(--aui-bg-soft);

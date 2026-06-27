@@ -30,7 +30,10 @@ export interface PublicApiCatalogEntry {
   isVisual: boolean;
   layers: readonly PublicComponentCatalogLayer[];
   name: string;
-  packageName: "@nyosegawa/agent-ui-react" | "@nyosegawa/agent-ui-react/primitives";
+  packageName:
+    | "@nyosegawa/agent-ui-react"
+    | "@nyosegawa/agent-ui-react/headless"
+    | "@nyosegawa/agent-ui-react/primitives";
   previewHref: string;
   sampleCode: string;
   usedBy: readonly {
@@ -74,6 +77,67 @@ export function App({ transport }) {
     start: true,
     title: "Default chat preset",
     whenToUse: "Start here when you want a complete Codex chat surface with minimal composition.",
+  },
+  {
+    codeApi: [
+      "AgentProvider",
+      "AgentChat",
+      "useAgentChatController",
+    ],
+    coveredComponents: [
+      "AgentChat",
+      "AgentStatusBar",
+      "AgentThreadHeader",
+      "AgentThreadSidebar",
+      "AgentComposerPanel",
+    ],
+    copyCode: `import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
+import { useAgentChatController } from "@nyosegawa/agent-ui-react/headless";
+import "@nyosegawa/agent-ui-react/styles.css";
+
+function HostCommandBar() {
+  const chat = useAgentChatController();
+  return (
+    <button
+      onClick={() => void chat.sendMessage("Summarize this thread")}
+      type="button"
+    >
+      Send from host UI
+    </button>
+  );
+}
+
+export function App({ transport }) {
+  return (
+    <AgentProvider transport={transport}>
+      <HostCommandBar />
+      <AgentChat
+        components={{
+          StatusBar: ({ Default, end, ...props }) => (
+            <Default {...props} end={<><span>Host status</span>{end}</>} />
+          ),
+        }}
+        startOptions={{ threadOptions: { cwd: "/workspace/fixed-project" } }}
+        threadHeaderEnd={({ thread }) => (
+          <button type="button">Host actions for {thread.id}</button>
+        )}
+        usage
+      />
+    </AgentProvider>
+  );
+}`,
+    description:
+      "Keep the complete AgentChat preset while replacing documented surfaces and sending from host-owned UI.",
+    href: "/showcase/agent-chat-composition",
+    layer: "composition",
+    ownership:
+      "Agent UI owns the chat lifecycle, optimistic state, history drawer, composer, and local media rendering. The host owns product chrome, fixed starter policy, overlay coordination, and external controls.",
+    patternSection: "workflow",
+    routeIds: ["agent-chat-composition", "host-workflow-recipe"],
+    start: true,
+    title: "Composable chat preset",
+    whenToUse:
+      "Use this when AgentChat is mostly right but host chrome needs targeted replacement points and external send actions.",
   },
   {
     codeApi: [
@@ -457,10 +521,12 @@ function buildPublicApiCatalog(): readonly PublicApiCatalogEntry[] {
         {
           layers: new Set<PublicComponentCatalogLayer>(),
           group: publicApiGroup(apiName),
-          isVisual: apiName !== "AgentProvider",
+          isVisual: apiName !== "AgentProvider" && !apiName.startsWith("use"),
           name: apiName,
           packageName:
-            apiName === "AgentChat" || apiName === "AgentProvider"
+            apiName === "useAgentChatController"
+              ? "@nyosegawa/agent-ui-react/headless"
+              : apiName === "AgentChat" || apiName === "AgentProvider"
               ? "@nyosegawa/agent-ui-react"
               : "@nyosegawa/agent-ui-react/primitives",
           previewHref: `/showcase/component-preview?api=${encodeURIComponent(apiName)}`,
@@ -502,6 +568,7 @@ function publicApiGroup(name: string): PublicApiCatalogGroup {
   ) {
     return "Layout primitives";
   }
+  if (name === "useAgentChatController") return "Presets";
   if (
     name === "AgentApprovalQueue" ||
     name === "AgentStatusSummary" ||
@@ -520,6 +587,7 @@ function publicApiSortRank(name: string): number {
   const order = [
     "AgentProvider",
     "AgentChat",
+    "useAgentChatController",
     "AgentShell",
     "AgentThreadSidebar",
     "AgentThreadView",

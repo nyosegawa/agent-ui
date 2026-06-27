@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import * as reactExports from "../packages/react/src";
+import * as headlessExports from "../packages/react/src/headless";
 import * as primitiveExports from "../packages/react/src/primitives";
 import {
   deprecatedPublicShowcaseTerms,
@@ -64,6 +65,7 @@ describe("public showcase component catalog", () => {
   it("points user-facing starting points at normal showcase routes, not edge probes", () => {
     expect(publicStartCatalog.map((entry) => entry.title)).toEqual([
       "Default chat preset",
+      "Composable chat preset",
       "Composed shell",
       "Composer slot",
       "Transcript pane",
@@ -93,6 +95,8 @@ describe("public showcase component catalog", () => {
       const packageExports =
         api.packageName === "@nyosegawa/agent-ui-react"
           ? reactExports
+          : api.packageName === "@nyosegawa/agent-ui-react/headless"
+            ? headlessExports
           : primitiveExports;
       expect(
         Object.prototype.hasOwnProperty.call(packageExports, api.name),

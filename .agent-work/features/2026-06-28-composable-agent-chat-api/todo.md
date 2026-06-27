@@ -215,7 +215,7 @@ and pushed; P004 is next.
       - Expected files/areas: chat/thread/timeline components and tests.
       - Validation note: no raw local path media `src`.
 
-- [ ] P004 Examples, docs, and migration story
+- [x] P004 Examples, docs, and migration story
   - Goal: Teach the new public contract with package-name imports and
     browser-visible examples.
   - Scope: reference docs, guides, recipes, local React Vite showcase/catalog,
@@ -239,25 +239,49 @@ and pushed; P004 is next.
   - Push: push after phase commit if remote is available.
   - PR/CI: docs and examples included in PR summary.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: added a typed `AgentChat` composition recipe using
+      public root/headless/primitives imports; added a deterministic
+      `/showcase/agent-chat-composition` route that demonstrates `AgentChat`
+      component replacements, `threadHeaderEnd`, fixed `startOptions`,
+      controlled overlay state, structured local media resolution, and
+      external host sends through `useAgentChatController().sendMessage()`;
+      registered the route in the public catalog and visual QA manifest; updated
+      host integration, package export, recipe docs, and migration guidance.
+    - Validation: `bun run --cwd examples/recipes typecheck`;
+      `bun run --cwd examples/local-react-vite typecheck`;
+      `bun run --cwd examples/local-react-vite build`;
+      `bunx vitest run test/docs-staleness.test.ts
+      test/public-showcase-catalog.test.ts`;
+      `bun run lint --quiet`; `git diff --check`;
+      `bun run test:e2e:clean-ports && env -u NO_COLOR -u FORCE_COLOR bunx
+      playwright test --config playwright.fixtures.config.ts
+      examples/local-react-vite/e2e/visual-qa-manifest.e2e.ts`;
+      `bun run test:e2e:clean-ports && env -u NO_COLOR -u FORCE_COLOR bunx
+      playwright test --config playwright.fixtures.config.ts
+      examples/local-react-vite/e2e/visual-route-matrix.e2e.ts`.
+    - Review: 4 parallel subagent reviews completed for docs/API consistency,
+      recipe correctness, showcase/browser coverage, and migration/release-note
+      clarity. No findings. Reviewers independently validated public package
+      import boundaries, route/catalog/manifest alignment, typed recipe
+      correctness, and migration guidance. Changesets release notes are deferred
+      to P005 because this phase documents and showcases the public surfaces
+      introduced earlier.
+    - Commit: this phase commit (`Document composable AgentChat integration`).
+    - Push: pending.
   - Tasks:
-    - [ ] T011 Update reference docs to describe root/headless/primitives,
+    - [x] T011 Update reference docs to describe root/headless/primitives,
       controller sharing, and `AgentChat` composition.
       - Expected files/areas: docs reference pages.
       - Validation note: docs must not mention private selectors as API.
-    - [ ] T012 Add recipes for `AgentChat` plus external send controller,
+    - [x] T012 Add recipes for `AgentChat` plus external send controller,
       replaced thread history, fixed start options, overlay coordination, and
       local media resolution.
       - Expected files/areas: `examples/recipes/src`.
       - Validation note: imports must use package names.
-    - [ ] T013 Add/update local React Vite showcase routes and manifest.
+    - [x] T013 Add/update local React Vite showcase routes and manifest.
       - Expected files/areas: public catalog and visual QA manifest.
       - Validation note: manifest and route matrix must agree.
-    - [ ] T014 Add migration guidance for removed/renamed public APIs.
+    - [x] T014 Add migration guidance for removed/renamed public APIs.
       - Expected files/areas: docs and changeset.
       - Validation note: backward compatibility is not required, but migration
         must be explicit.
