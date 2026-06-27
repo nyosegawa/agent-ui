@@ -126,8 +126,8 @@ primitives redesign. P001 is implemented and validated; P002 is next.
       external-send results with a discriminated union, renamed queue-only
       attachment ownership to `queuedAttachments`, and forwarded `turnOptions`
       on active idle sends.
-    - Commit: pending.
-    - Push: pending.
+    - Commit: this phase commit (`Add shared chat controller send lifecycle`).
+    - Push: pushed to `origin/codex/plan-composable-agent-chat-api`.
   - Tasks:
     - [x] T004 Design `AgentChatController` / `useAgentChatController()`
       with explicit scope semantics.
