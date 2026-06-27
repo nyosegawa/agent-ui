@@ -1,5 +1,19 @@
 # @nyosegawa/agent-ui-web-components
 
+## 1.1.0
+
+### Minor Changes
+
+- Expose the redesigned React package surfaces, refresh the vendored Codex App Server schema, and align the fixed public package set for the next npm release.
+
+  React now publishes explicit `@nyosegawa/agent-ui-react/headless` and `@nyosegawa/agent-ui-react/primitives` entrypoints, updates run policy and composer behavior, and keeps the default package focused on the bundled chat experience. Core state now tracks thread runtime and workspace-message lifecycle details more explicitly, while the Codex package includes the latest generated App Server protocol types and request helpers.
+
+### Patch Changes
+
+- Updated dependencies
+  - @nyosegawa/agent-ui-core@1.1.0
+  - @nyosegawa/agent-ui-react@1.1.0
+
 ## 1.0.0
 
 ### Minor Changes
