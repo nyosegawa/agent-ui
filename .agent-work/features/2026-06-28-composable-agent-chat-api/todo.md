@@ -1,7 +1,7 @@
 ## Status Summary
 
 Planning package for a breaking composable `AgentChat` / headless /
-primitives redesign. Implementation has not started.
+primitives redesign. P001 is implemented and validated; P002 is next.
 
 ## Branch And Planning Commit
 
@@ -13,7 +13,7 @@ primitives redesign. Implementation has not started.
 
 ## Phase Checklist
 
-- [ ] Public contract and context invariant
+- [x] Public contract and context invariant
 - [ ] Chat-flow controller and scoped composer ownership
 - [ ] AgentChat composition surface
 - [ ] Examples, docs, and migration story
@@ -21,11 +21,11 @@ primitives redesign. Implementation has not started.
 
 ## Task Checklist By Phase
 
-- [ ] P001 Public contract and context invariant
+- [x] P001 Public contract and context invariant
   - Goal: Prove and lock one provider runtime across root, `/headless`, and
     `/primitives`.
-  - Scope: React exports, provider identity, source guards, built package
-    runtime tests.
+  - Scope: React exports, shared provider context runtime, source guards,
+    built package runtime tests.
   - Expected files/areas:
     `packages/react/src/index.ts`, `packages/react/src/headless.ts`,
     `packages/react/src/primitives.ts`, `packages/react/src/provider-root.ts`,
@@ -44,23 +44,39 @@ primitives redesign. Implementation has not started.
   - Push: push after phase commit if remote is available.
   - PR/CI: not required before all implementation phases, but record evidence.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: added a versioned shared React context registry for
+      provider, composer queue, and i18n contexts; added a source-level test
+      that renders root `AgentProvider`, `/headless` hook, and `/primitives`
+      component together; expanded package-resolution smoke to install copied
+      package directories into a temp consumer and verify root/headless/
+      primitives context sharing across ESM, CJS, and mixed ESM/CJS entrypoints.
+    - Validation: `bunx vitest run packages/react/test/provider.vitest.tsx
+      test/runtime-export-policy.test.ts packages/react/test/source-structure.vitest.ts`;
+      `bun run --cwd packages/react typecheck`; `bun run test:api-snapshots`;
+      `bun run lint --quiet`; `bun run test:package-resolution`; `git diff
+      --check`.
+    - Review: 4 parallel subagent reviews completed for export/runtime
+      identity, React provider/context behavior, package-resolution coverage,
+      and product-boundary compliance. Findings addressed: include the new
+      registry file, cover composer queue and i18n contexts, avoid symlink
+      realpath false positives in package smoke, add mixed ESM/CJS coverage,
+      and use versioned global context keys. The locked runtime contract is
+      shared provider context compatibility, not strict exported function
+      object identity.
+    - Commit: pending.
+    - Push: pending.
   - Tasks:
-    - [ ] T001 Add source-level test rendering root `AgentProvider`,
+    - [x] T001 Add source-level test rendering root `AgentProvider`,
       `/headless` hook, and `/primitives` component together.
       - Expected files/areas: `packages/react/test/provider.vitest.tsx` or a
         new focused React test.
       - Validation note: must fail if provider context identity splits.
-    - [ ] T002 Add built ESM/CJS package-resolution runtime checks for
+    - [x] T002 Add built ESM/CJS package-resolution runtime checks for
       root/subpath context sharing.
       - Expected files/areas: `scripts/package-resolution-smoke.mjs`,
         `test/runtime-export-policy.test.ts`.
       - Validation note: run after `bun run build`.
-    - [ ] T003 Keep root preset-only and move new advanced surfaces to
+    - [x] T003 Keep root preset-only and move new advanced surfaces to
       `/headless` or `/primitives`.
       - Expected files/areas: `packages/react/src/index.ts`,
         `packages/react/src/headless.ts`, `packages/react/src/primitives.ts`.
@@ -252,12 +268,31 @@ primitives redesign. Implementation has not started.
 
 ## Validation Evidence
 
-Planning artifact validation pending.
+- P001 passed:
+  - `bunx vitest run packages/react/test/provider.vitest.tsx test/runtime-export-policy.test.ts packages/react/test/source-structure.vitest.ts`
+  - `bun run --cwd packages/react typecheck`
+  - `bun run test:api-snapshots`
+  - `bun run lint --quiet`
+  - `bun run test:package-resolution`
+  - `git diff --check`
 
 ## Review Evidence
 
 Four parallel subagent lanes were used during planning:
 repo guidance, implementation surface, validation, and skill/design review.
+
+P001 four parallel subagent reviews completed:
+
+- Export-map/runtime identity: clarified that P001 guarantees shared provider
+  context runtime compatibility across entrypoints, not strict exported function
+  object identity; versioned global context keys added.
+- React provider/context behavior: new `context-registry.ts` included; built
+  package smoke now covers provider, composer queue, and i18n contexts.
+- Package-resolution coverage: temp consumer now uses copied package
+  directories instead of workspace package symlinks; mixed ESM/CJS context smoke
+  added.
+- Product-boundary compliance: no host runtime, auth, persistence, process, or
+  transport policy moved into React core; root remains preset-only.
 
 ## Commit Log
 

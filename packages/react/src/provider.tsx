@@ -14,7 +14,6 @@ import {
   type AgentRunPolicyId,
 } from "./run-policies";
 import {
-  createContext,
   useCallback,
   useContext,
   useEffect,
@@ -22,6 +21,7 @@ import {
   useReducer,
   type PropsWithChildren,
 } from "react";
+import { sharedReactContext } from "./context-registry";
 import { useAgentTransportEvents } from "./transport-events";
 
 export interface AgentContextValue {
@@ -31,7 +31,10 @@ export interface AgentContextValue {
   transport: AgentTransport;
 }
 
-const AgentContext = createContext<AgentContextValue | null>(null);
+const AgentContext = sharedReactContext<AgentContextValue | null>(
+  "@nyosegawa/agent-ui-react/v1/AgentContext",
+  null,
+);
 
 export interface AgentProviderProps extends PropsWithChildren {
   defaultRunPolicyId?: AgentRunPolicyId;

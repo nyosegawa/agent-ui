@@ -1,10 +1,14 @@
-import { createContext, useContext, useMemo } from "react";
+import { useContext, useMemo } from "react";
+import { sharedReactContext } from "../context-registry";
 import { interpolate } from "./interpolate";
 import { agentI18nDictionaries } from "./locales";
 import { normalizeAgentLocale } from "./normalize";
 import type { AgentI18nProviderProps, AgentI18nValue } from "./types";
 
-const AgentI18nContext = createContext<AgentI18nValue | null>(null);
+const AgentI18nContext = sharedReactContext<AgentI18nValue | null>(
+  "@nyosegawa/agent-ui-react/v1/AgentI18nContext",
+  null,
+);
 
 export function AgentI18nProvider({
   children,
