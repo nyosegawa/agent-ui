@@ -14,7 +14,7 @@ primitives redesign. P001 is implemented and validated; P002 is next.
 ## Phase Checklist
 
 - [x] Public contract and context invariant
-- [ ] Chat-flow controller and scoped composer ownership
+- [x] Chat-flow controller and scoped composer ownership
 - [ ] AgentChat composition surface
 - [ ] Examples, docs, and migration story
 - [ ] Package validation, changeset, PR, and CI follow-through
@@ -63,8 +63,8 @@ primitives redesign. P001 is implemented and validated; P002 is next.
       and use versioned global context keys. The locked runtime contract is
       shared provider context compatibility, not strict exported function
       object identity.
-    - Commit: pending.
-    - Push: pending.
+    - Commit: `255daaf` (`Lock React subpath context runtime`).
+    - Push: pushed to `origin/codex/plan-composable-agent-chat-api`.
   - Tasks:
     - [x] T001 Add source-level test rendering root `AgentProvider`,
       `/headless` hook, and `/primitives` component together.
@@ -82,7 +82,7 @@ primitives redesign. P001 is implemented and validated; P002 is next.
         `packages/react/src/headless.ts`, `packages/react/src/primitives.ts`.
       - Validation note: root export policy must stay intentional.
 
-- [ ] P002 Chat-flow controller and scoped composer ownership
+- [x] P002 Chat-flow controller and scoped composer ownership
   - Goal: Introduce the public controller used by both `AgentChat` and external
     host UI for the same send lifecycle.
   - Scope: headless controller, composer state ownership, first-message start,
@@ -103,23 +103,43 @@ primitives redesign. P001 is implemented and validated; P002 is next.
   - Push: push after phase commit if remote is available.
   - PR/CI: record validation in PR notes.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: added provider-scoped shared composer draft state;
+      introduced `useAgentChatController()` on `/headless`; added
+      `sendMessage()` as the raw-free external-send controller with
+      discriminated `started` / `sent` / `queued` / `blocked` results; routed
+      `AgentChat` first-run prompt through the public controller; extracted
+      first-message lifecycle into `composer-first-message`; forwarded
+      per-call `turnOptions` for active-thread sends; updated docs and API
+      snapshot.
+    - Validation: `bun run --cwd packages/react typecheck`;
+      `bunx vitest run packages/react/test/components.vitest.tsx
+      --testNamePattern "external|public chat controller|public composer
+      controller|first input|failed first|retry|queued follow-up|running
+      composer"`; `bunx vitest run packages/react/test/source-structure.vitest.ts
+      packages/react/test/composer-submit-semantics.vitest.ts`;
+      `bun run test:api-snapshots`; `bun run lint --quiet`;
+      `bun run test:package-resolution`; `git diff --check`.
+    - Review: 4 parallel subagent reviews completed for controller semantics,
+      composer lifecycle parity, raw-free public API shape, and product-boundary
+      compliance. Findings addressed: refreshed API snapshot, documented
+      `useAgentChatController().sendMessage()`, replaced sentinel/string
+      external-send results with a discriminated union, renamed queue-only
+      attachment ownership to `queuedAttachments`, and forwarded `turnOptions`
+      on active idle sends.
+    - Commit: pending.
+    - Push: pending.
   - Tasks:
-    - [ ] T004 Design `AgentChatController` / `useAgentChatController()`
+    - [x] T004 Design `AgentChatController` / `useAgentChatController()`
       with explicit scope semantics.
       - Expected files/areas: new or existing files under
         `packages/react/src/hooks/`.
       - Validation note: avoid exposing operation maps or raw protocol payloads.
-    - [ ] T005 Refactor internal composer ownership so `AgentChat` can consume
+    - [x] T005 Refactor internal composer ownership so `AgentChat` can consume
       the public controller.
       - Expected files/areas: `components/chat.tsx`,
         `components/composer.tsx`, hook files.
       - Validation note: default composer behavior must stay unchanged.
-    - [ ] T006 Add external-send tests for no active thread, idle thread,
+    - [x] T006 Add external-send tests for no active thread, idle thread,
       running thread, failed first message, retry, stop, and canonical id.
       - Expected files/areas: React component/controller tests.
       - Validation note: host must not call raw transport methods.
@@ -275,6 +295,14 @@ primitives redesign. P001 is implemented and validated; P002 is next.
   - `bun run lint --quiet`
   - `bun run test:package-resolution`
   - `git diff --check`
+- P002 passed:
+  - `bun run --cwd packages/react typecheck`
+  - `bunx vitest run packages/react/test/components.vitest.tsx --testNamePattern "external|public chat controller|public composer controller|first input|failed first|retry|queued follow-up|running composer"`
+  - `bunx vitest run packages/react/test/source-structure.vitest.ts packages/react/test/composer-submit-semantics.vitest.ts`
+  - `bun run test:api-snapshots`
+  - `bun run lint --quiet`
+  - `bun run test:package-resolution`
+  - `git diff --check`
 
 ## Review Evidence
 
@@ -293,6 +321,21 @@ P001 four parallel subagent reviews completed:
   added.
 - Product-boundary compliance: no host runtime, auth, persistence, process, or
   transport policy moved into React core; root remains preset-only.
+
+P002 four parallel subagent reviews completed:
+
+- Controller semantics: active-thread `turnOptions` forwarding gap fixed;
+  first-message, idle send, running queue, waiting-for-input, retry/cancel, and
+  canonical reconciliation paths reviewed.
+- Composer lifecycle parity: shared draft/error/submitting state reviewed across
+  `AgentChat`, standalone composer primitives, composer panels, and external
+  controllers.
+- Raw-free API shape: snapshot refreshed; external-send result changed to a
+  discriminated union; queue-only attachment ownership renamed
+  `queuedAttachments`; root remains preset-only.
+- Product-boundary compliance: provider-scoped state and lifecycle controller
+  keep host workflow/auth/persistence/process/billing/deployment policy outside
+  React core; docs now direct hosts away from raw transport sequencing.
 
 ## Commit Log
 

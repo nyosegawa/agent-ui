@@ -6,6 +6,7 @@ import {
   type AgentTransport,
 } from "@nyosegawa/agent-ui-core";
 import { AgentComposerQueueProvider } from "./composer-queue";
+import { AgentComposerStateProvider } from "./composer-state";
 import {
   DEFAULT_AGENT_RUN_POLICIES,
   effectiveAgentRunPolicies,
@@ -90,9 +91,11 @@ export function AgentProvider({
   );
   return (
     <AgentContext.Provider value={value}>
-      <AgentComposerQueueProvider sessionState={state}>
-        {children}
-      </AgentComposerQueueProvider>
+      <AgentComposerStateProvider>
+        <AgentComposerQueueProvider sessionState={state}>
+          {children}
+        </AgentComposerQueueProvider>
+      </AgentComposerStateProvider>
     </AgentContext.Provider>
   );
 }

@@ -161,6 +161,7 @@ interface AgentComposerController {
     queuedFollowUps: QueuedFollowUp[];
     removeQueuedFollowUp: (id: string) => void;
     retryFailedPendingMessage: (operationId: string) => Promise<void>;
+    sendMessage: (input: string | AgentUserInput[], options?: AgentComposerSendMessageOptions) => Promise<AgentComposerSendMessageResult>;
     sendQueuedFollowUp: (id: string) => Promise<void>;
     sendingFollowUpIds: string[];
     setError: Dispatch<SetStateAction<string | undefined>>;
@@ -172,7 +173,10 @@ interface AgentComposerController {
         attachments?: QueuedFollowUpAttachment[];
     }) => Promise<string | undefined>;
     submitMode: AgentComposerSubmitMode;
+    threadId?: string;
     value: string;
+}
+interface AgentChatController extends AgentComposerController {
 }
 type AgentComposerDisabledReason = "approval" | "empty" | "interrupting" | "submitting";
 interface AgentComposerFailedPendingMessage {
@@ -181,9 +185,27 @@ interface AgentComposerFailedPendingMessage {
     threadId: string;
 }
 type AgentComposerSubmitMode = "queue" | "send" | "stop";
+interface AgentComposerSendMessageOptions extends AgentThreadStartWithInputOptions {
+    queuedAttachments?: QueuedFollowUpAttachment[];
+}
+type AgentComposerSendMessageResult = ({
+    type: "started";
+} & AgentThreadStartWithInputResult) | {
+    threadId: string;
+    type: "sent";
+} | {
+    queuedFollowUpId: string;
+    threadId: string;
+    type: "queued";
+} | {
+    reason: Extract<AgentComposerDisabledReason, "approval">;
+    threadId?: string;
+    type: "blocked";
+};
 
 declare function useAgentComposer(threadId?: ThreadId): AgentComposerController;
 declare function useAgentComposerController(threadId?: ThreadId): AgentComposerController;
+declare function useAgentChatController(threadId?: ThreadId): AgentChatController;
 
 declare function useAgentRunSettings(): {
     models: AgentModel[];
@@ -331,4 +353,4 @@ declare function visibleTranscriptWindow(thread: ThreadState, visibleItemLimit: 
     visibleItemCount: number;
 };
 
-export { AgentAppsRefreshOptions, type AgentComposerController, type AgentComposerDisabledReason, type AgentComposerFailedPendingMessage, type AgentComposerSubmitMode, type AgentDirectThreadController, type AgentDirectThreadOpenResult, AgentHooksRefreshOptions, AgentRunPolicy, AgentSkillConfigWriteOptions, AgentSkillsRefreshOptions, type AgentThreadForkResult, type AgentThreadHistoryResult, type AgentThreadHistorySyncedEvent, type AgentThreadListController, type AgentThreadListControllerOptions, type AgentThreadListRequest, type AgentThreadReadResult, type AgentThreadResumeResult, type AgentThreadResumeRunSettings, type AgentThreadStartResult, type AgentThreadStartWithInputOptions, type AgentThreadStartWithInputResult, type AgentTranscriptScrollController, type AgentTranscriptScrollControllerOptions, AgentUserInput, DEFAULT_TRANSCRIPT_ITEM_LIMIT, type QueuedFollowUp, type QueuedFollowUpAttachment, TRANSCRIPT_ITEM_INCREMENT, ThreadForkOptions, ThreadHistoryParams, ThreadResumeOptions, ThreadStartOptions, TurnStartOptions, transcriptItemIds, useAgentApprovals, useAgentApps, useAgentComposer, useAgentComposerController, useAgentDiagnostics, useAgentDirectThreadController, useAgentHooks, useAgentModels, useAgentRunSettings, useAgentServerRequests, useAgentSkills, useAgentThread, useAgentThreadActions, useAgentThreadController, useAgentThreadHistory, useAgentThreadListController, useAgentThreadReader, useAgentThreads, useAgentTranscriptScrollController, useAgentTurn, useAgentTurnController, useAgentUsage, visibleTranscriptWindow };
+export { AgentAppsRefreshOptions, type AgentChatController, type AgentComposerController, type AgentComposerDisabledReason, type AgentComposerFailedPendingMessage, type AgentComposerSendMessageOptions, type AgentComposerSendMessageResult, type AgentComposerSubmitMode, type AgentDirectThreadController, type AgentDirectThreadOpenResult, AgentHooksRefreshOptions, AgentRunPolicy, AgentSkillConfigWriteOptions, AgentSkillsRefreshOptions, type AgentThreadForkResult, type AgentThreadHistoryResult, type AgentThreadHistorySyncedEvent, type AgentThreadListController, type AgentThreadListControllerOptions, type AgentThreadListRequest, type AgentThreadReadResult, type AgentThreadResumeResult, type AgentThreadResumeRunSettings, type AgentThreadStartResult, type AgentThreadStartWithInputOptions, type AgentThreadStartWithInputResult, type AgentTranscriptScrollController, type AgentTranscriptScrollControllerOptions, AgentUserInput, DEFAULT_TRANSCRIPT_ITEM_LIMIT, type QueuedFollowUp, type QueuedFollowUpAttachment, TRANSCRIPT_ITEM_INCREMENT, ThreadForkOptions, ThreadHistoryParams, ThreadResumeOptions, ThreadStartOptions, TurnStartOptions, transcriptItemIds, useAgentApprovals, useAgentApps, useAgentChatController, useAgentComposer, useAgentComposerController, useAgentDiagnostics, useAgentDirectThreadController, useAgentHooks, useAgentModels, useAgentRunSettings, useAgentServerRequests, useAgentSkills, useAgentThread, useAgentThreadActions, useAgentThreadController, useAgentThreadHistory, useAgentThreadListController, useAgentThreadReader, useAgentThreads, useAgentTranscriptScrollController, useAgentTurn, useAgentTurnController, useAgentUsage, visibleTranscriptWindow };

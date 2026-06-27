@@ -7,7 +7,7 @@ import {
 import { useCallback } from "react";
 import type { AgentUserInput } from "../agent-input";
 import { useAgentContext } from "../provider";
-import { codexTurnStartOptions } from "../request-options";
+import { codexTurnStartOptions, type TurnStartOptions } from "../request-options";
 import { agentRunPolicyTurnOptions } from "../run-policies";
 import { useCodexSession } from "./codex-session";
 import { useAgentThread } from "./thread";
@@ -28,7 +28,10 @@ export function useComposerTurnStart(threadId?: ThreadId) {
   const { resumeThread } = useAgentThread(threadId);
 
   return useCallback(
-    async (input: AgentUserInput[]): Promise<ComposerTurnStartResult> => {
+    async (
+      input: AgentUserInput[],
+      turnOptions?: TurnStartOptions,
+    ): Promise<ComposerTurnStartResult> => {
       if (!resolvedThreadId) throw new Error("No active thread");
       const resumeResult = shouldResumeBeforeTurnStart(thread)
         ? await resumeThread(resolvedThreadId)
@@ -58,6 +61,7 @@ export function useComposerTurnStart(threadId?: ThreadId) {
         ...codexTurnStartOptions(
           agentRunPolicyTurnOptions(runSettings.policyId, runPolicies),
         ),
+        ...codexTurnStartOptions(turnOptions),
         threadId: targetThreadId,
       });
       return { threadId: targetThreadId, type: "started" };

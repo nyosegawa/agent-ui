@@ -124,6 +124,7 @@ root route stays a no-thread start state.
 
 ```tsx
 const composer = useAgentComposerController(threadId);
+const chat = useAgentChatController(threadId);
 const run = useAgentRunSettings();
 ```
 
@@ -164,6 +165,21 @@ draft state and host-disabled states are composed by the visual composer layer;
 `canSubmit` reflects the controller's text/running state before those external
 constraints are applied. The default `AgentComposerPanel` still blocks
 submission for approval-waiting threads and stored read-only previews.
+`useAgentChatController()` exposes the same provider-scoped controller for
+host UI that needs to drive the current `AgentChat` flow from outside the
+composer. Its `sendMessage(input, { threadOptions, turnOptions })` method
+routes through the same lifecycle as the default composer: without an active
+thread it performs optimistic first-message thread start and canonical
+reconciliation, on an idle active thread it starts a turn and forwards
+`turnOptions`, on a running thread it queues the follow-up, and on an
+approval-blocked thread it returns `{ type: "blocked", reason: "approval" }`.
+Successful results are discriminated as `{ type: "started", ... }`,
+`{ type: "sent", threadId }`, or
+`{ type: "queued", threadId, queuedFollowUpId }`. `queuedAttachments` is only
+used for running-thread queue ownership; first-message files should be passed
+as structured `AgentUserInput[]` items. Hosts should call this controller
+instead of sequencing raw `thread/start`, `turn/start`, or `turn/steer`
+transport calls.
 The source-level first-message start helper is not public package API; hosts
 start empty threads with `useAgentThreadController().startThread()` or submit
 the first message through `useAgentComposerController().startThreadWithInput()`.

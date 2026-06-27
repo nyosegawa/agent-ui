@@ -61,6 +61,7 @@ import {
   useAgentThreadReader,
   useAgentThreads,
   useAgentThreadListController,
+  useAgentChatController,
   useAgentComposerController,
   useAgentTranscriptController,
   useAgentTranscriptScrollController,
@@ -313,6 +314,24 @@ function runningComposerState() {
         turn: { id: "turn-running", status: "running", threadId: "thread-running" },
       },
     },
+  };
+  return initialState;
+}
+
+function idleComposerState() {
+  const initialState = runningComposerState();
+  const thread = initialState.threads["thread-running"];
+  initialState.threadLifecycle.activeThreadId = "thread-idle";
+  delete initialState.threads["thread-running"];
+  initialState.threads["thread-idle"] = {
+    ...thread,
+    activity: "idle",
+    id: "thread-idle",
+    orderedTurnIds: [],
+    runtime: { status: { type: "idle" } },
+    status: "ready",
+    thread: { id: "thread-idle", name: "Idle thread" },
+    turns: {},
   };
   return initialState;
 }
@@ -642,6 +661,79 @@ function PublicFirstMessageStartProbe() {
       </button>
       <output aria-label="public start result">{result}</output>
       <output aria-label="public start error">{error}</output>
+    </>
+  );
+}
+
+function PublicChatControllerProbe() {
+  const [result, setResult] = useState("none");
+  const [error, setError] = useState("none");
+  const controller = useAgentChatController();
+  const formatResult = (nextResult: Awaited<ReturnType<typeof controller.sendMessage>>) =>
+    `${nextResult.type}:${nextResult.threadId ?? "none"}`;
+  return (
+    <>
+      <output aria-label="public chat value">{controller.value}</output>
+      <output aria-label="public chat thread id">{controller.threadId ?? "none"}</output>
+      <output aria-label="public chat result">{result}</output>
+      <output aria-label="public chat error">{error}</output>
+      <button
+        type="button"
+        onClick={() => controller.setValue("external draft")}
+      >
+        Set external draft
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void controller
+            .sendMessage("external first")
+            .then((nextResult) => {
+              setResult(formatResult(nextResult));
+            })
+            .catch((caught: unknown) => {
+              setError(caught instanceof Error ? caught.message : String(caught));
+            });
+        }}
+      >
+        Send external first
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void controller
+            .sendMessage("external follow up")
+            .then((nextResult) => {
+              setResult(formatResult(nextResult));
+            })
+            .catch((caught: unknown) => {
+              setError(caught instanceof Error ? caught.message : String(caught));
+            });
+        }}
+      >
+        Send external follow up
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          void controller
+            .sendMessage("external follow up with options", {
+              turnOptions: {
+                effort: "high",
+                model: "external-model",
+                serviceTier: "flex",
+              },
+            })
+            .then((nextResult) => {
+              setResult(formatResult(nextResult));
+            })
+            .catch((caught: unknown) => {
+              setError(caught instanceof Error ? caught.message : String(caught));
+            });
+        }}
+      >
+        Send external follow up with options
+      </button>
     </>
   );
 }
@@ -7178,6 +7270,160 @@ describe("AgentChat", () => {
     );
     expect(transport.requests.map((request) => request.method)).not.toContain(
       "turn/start",
+    );
+  });
+
+  it("shares draft state between AgentChat composer and external chat controller", async () => {
+    const user = userEvent.setup();
+    render(
+      <AgentProvider initialState={idleComposerState()} transport={new FakeAgentTransport()}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+      </AgentProvider>,
+    );
+
+    const textarea = await screen.findByRole("textbox", { name: "Message" });
+    await user.type(textarea, "shared draft");
+    expect(screen.getByLabelText("public chat value")).toHaveTextContent(
+      "shared draft",
+    );
+    await user.click(screen.getByRole("button", { name: "Set external draft" }));
+    expect(textarea).toHaveValue("external draft");
+  });
+
+  it("sends an external first message through the public chat controller lifecycle", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-external-first",
+              name: "External first thread",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "turn/start") {
+          return {
+            turn: {
+              id: "turn-external-first",
+              status: "inProgress",
+              threadId: "thread-external-first",
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider transport={transport}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+        <ActiveThreadStateProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send external first" }));
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("active thread id")).toHaveTextContent(
+        "thread-external-first",
+      ),
+    );
+    expect(screen.getByLabelText("active item text")).toHaveTextContent(
+      "external first",
+    );
+    expect(screen.getByLabelText("public chat result")).toHaveTextContent(
+      "started:thread-external-first",
+    );
+    expect(
+      transport.requests.find((request) => request.method === "turn/start")?.params,
+    ).toMatchObject({
+      input: [{ text: "external first", text_elements: [], type: "text" }],
+      threadId: "thread-external-first",
+    });
+  });
+
+  it("sends an external follow-up on the active idle thread without raw transport calls", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/start") return {};
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={idleComposerState()} transport={transport}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send external follow up" }));
+
+    await waitFor(() =>
+      expect(
+        transport.requests.find((request) => request.method === "turn/start")?.params,
+      ).toMatchObject({
+        input: [{ text: "external follow up", text_elements: [], type: "text" }],
+        threadId: "thread-idle",
+      }),
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "thread/start",
+    );
+    expect(screen.getByLabelText("public chat result")).toHaveTextContent("sent");
+
+    await user.click(
+      screen.getByRole("button", { name: "Send external follow up with options" }),
+    );
+    await waitFor(() =>
+      expect(
+        transport.requests.filter((request) => request.method === "turn/start")[1]
+          ?.params,
+      ).toMatchObject({
+        effort: "high",
+        input: [
+          {
+            text: "external follow up with options",
+            text_elements: [],
+            type: "text",
+          },
+        ],
+        model: "external-model",
+        serviceTier: "flex",
+        threadId: "thread-idle",
+      }),
+    );
+    expect(screen.getByLabelText("public chat result")).toHaveTextContent(
+      "sent:thread-idle",
+    );
+  });
+
+  it("queues an external follow-up when the active thread is running", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={runningComposerState()} transport={transport}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send external follow up" }));
+
+    expect(await screen.findByLabelText("Queued follow-ups")).toHaveTextContent(
+      "external follow up",
+    );
+    expect(screen.getByLabelText("public chat result")).toHaveTextContent(
+      "queued:thread-running",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/steer",
     );
   });
 

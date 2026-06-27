@@ -36,10 +36,14 @@ export type {
 export { useAgentApprovals, useAgentServerRequests } from "./hooks/approvals";
 export {
   useAgentComposer,
+  useAgentChatController,
   useAgentComposerController,
+  type AgentChatController,
   type AgentComposerController,
   type AgentComposerDisabledReason,
   type AgentComposerFailedPendingMessage,
+  type AgentComposerSendMessageOptions,
+  type AgentComposerSendMessageResult,
   type AgentComposerSubmitMode,
   type QueuedFollowUp,
   type QueuedFollowUpAttachment,

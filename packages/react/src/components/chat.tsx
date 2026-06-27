@@ -7,7 +7,7 @@ import {
   useAgentThread,
   useAgentThreads,
 } from "../hooks";
-import { useInternalAgentComposerController } from "../hooks/composer";
+import { useAgentChatController } from "../hooks/composer";
 import {
   AgentI18nProvider,
   useAgentI18n,
@@ -181,7 +181,7 @@ function AgentChatInner({
   const contextSheetLayout = useContextSheetLayout();
   const { t } = useAgentI18n();
   const { thread, threadId, startThread } = useAgentThread();
-  const composer = useInternalAgentComposerController();
+  const chatController = useAgentChatController();
   const { activeThreadId, setActiveThread } = useAgentThreads();
   useThreadUrlRouting(threadUrlRouting, activeThreadId);
   const urlRoutingEnabled = Boolean(threadUrlRouting);
@@ -409,7 +409,7 @@ function AgentChatInner({
                     Default={AgentFirstRun}
                     onRequestWorkingDirectory={onRequestWorkingDirectory}
                     onStartThread={async (prompt) => {
-                      if (prompt) await composer.startWithMessage(prompt);
+                      if (prompt) await chatController.sendMessage(prompt);
                       else await startThread();
                     }}
                   />
