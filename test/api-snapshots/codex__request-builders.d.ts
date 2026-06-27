@@ -176,7 +176,7 @@ interface AgentBrowserVerificationInputOptions {
     skillPath: AgentSkillPath;
     skillName?: string;
 }
-declare const disabledProductMethods: readonly ["thread/turns/items/list"];
+declare const disabledProductMethods: readonly [];
 declare function accountReadParams(refreshToken?: boolean): GetAccountParams;
 declare function deviceCodeLoginParams(): LoginAccountParams;
 declare function chatgptLoginParams(codexStreamlinedLogin?: boolean): LoginAccountParams;

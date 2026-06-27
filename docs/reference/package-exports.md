@@ -122,7 +122,7 @@ declaration bundling uses chunk names. Root imports should not expose generated
 schema internals as the normal integration path.
 
 Remove: unsupported or test-only protocol helpers, including default React use
-of `thread/turns/items/list`, must not be promoted.
+of `thread/items/list`, must not be promoted.
 
 ### `@nyosegawa/agent-ui-react`
 

@@ -22,6 +22,8 @@ import type {
 } from "../../src/generated/stable/v2";
 import type { ClientRequest as ExperimentalClientRequest } from "../../src/generated/experimental";
 import type {
+  ThreadItemsListParams,
+  ThreadItemsListResponse,
   ThreadTurnsListParams,
   ThreadTurnsListResponse,
 } from "../../src/generated/experimental/v2";
@@ -57,6 +59,18 @@ type GeneratedParamTypeAssertions = [
       GeneratedExperimentalParams<"thread/turns/list">
     >
   >,
+  Assert<
+    Equal<
+      CodexExperimentalMethodParams<"thread/items/list">,
+      GeneratedExperimentalParams<"thread/items/list">
+    >
+  >,
+  Assert<
+    Equal<
+      ThreadItemsListParams,
+      GeneratedExperimentalParams<"thread/items/list">
+    >
+  >,
   Assert<Equal<CodexStableMethodResult<"app/list">, AppsListResponse>>,
   Assert<Equal<CodexStableMethodResult<"thread/resume">, ThreadResumeResponse>>,
   Assert<Equal<CodexStableMethodResult<"thread/read">, ThreadReadResponse>>,
@@ -68,8 +82,17 @@ type GeneratedParamTypeAssertions = [
       ThreadTurnsListResponse
     >
   >,
+  Assert<
+    Equal<
+      CodexExperimentalMethodResult<"thread/items/list">,
+      ThreadItemsListResponse
+    >
+  >,
 ];
 const generatedParamTypeAssertions: GeneratedParamTypeAssertions = [
+  true,
+  true,
+  true,
   true,
   true,
   true,

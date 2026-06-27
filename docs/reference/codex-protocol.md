@@ -109,8 +109,8 @@ Implementation status:
   model-list normalization. Browser-facing packages that need normalized events
   without Node stdio transport types can import the public
   `@nyosegawa/agent-ui-codex/normalizer` subpath.
-- `thread/turns/items/list` is intentionally disabled in the product facade
-  until upstream implements it.
+- `thread/items/list` is experimental available for host-owned item pagination
+  and stays outside the product facade until a default UI contract is designed.
 - Protocol metadata and schema refresh workflow are owned by
   [Protocol Drift](../architecture/protocol-drift.md) and the generated schema
   README.
@@ -281,9 +281,9 @@ generated-type details rather than React/Core public API names.
 `normalizeThreadResumeResponse()` also understands `initialTurnsPage`; resume
 metadata and the initial page are emitted as non-destructive snapshot events so
 `excludeTurns: true` can add page data without clearing an existing transcript.
-`thread/turns/items/list` is tracked as experimental unsupported and remains
-disabled because it is not implemented upstream. `mock/experimentalMethod` is
-generated test-only schema coverage, so it is excluded from experimental
+`thread/items/list` is generated as an experimental item-pagination method and
+is available only through explicit experimental opt-in. `mock/experimentalMethod`
+is generated test-only schema coverage, so it is excluded from experimental
 availability, capability metadata, and `assertCodexExperimentalMethod()`.
 
 Stable `thread/start` and React `ThreadStartOptions` do not expose
@@ -355,10 +355,11 @@ Experimental opt-in surfaces:
   `normalizeThreadTurnsListResponse()` for host-owned pagination and preview
   hydration experiments, but it must not become default React behavior without
   an explicit opt-in design.
-- `thread/search`, `thread/settings/update`, realtime/audio/speech methods, process
-  control, fuzzy-file-search sessions, memory, environment, remote control,
-  collaboration mode, and elicitation counters stay experimental and require
-  `experimentalApi: true` plus host-owned policy.
+- `thread/items/list`, `thread/search`, `thread/settings/update`,
+  realtime/audio/speech methods, process control, fuzzy-file-search sessions,
+  memory, environment, remote control, collaboration mode, and elicitation
+  counters stay experimental and require `experimentalApi: true` plus host-owned
+  policy.
 - Stable methods with experimental fields, such as `thread/resume` pagination
   fields and generated dynamic-tool fields on `thread/start`, remain raw
   host-managed protocol usage until a productized contract is designed.
@@ -370,8 +371,9 @@ Experimental opt-in surfaces:
 
 Unsupported or test-only surfaces:
 
-- `thread/turns/items/list` is generated but unsupported upstream and must stay
-  out of default React behavior.
+- `thread/items/list` is available only through explicit experimental opt-in and
+  must stay out of default React behavior until pagination semantics are
+  productized.
 - `mock/experimentalMethod` is schema test coverage only and is intentionally
   absent from capability metadata.
 
@@ -496,6 +498,7 @@ Host-only or advanced local tooling:
 - `externalAgentConfig/import/readHistories`
 - `account/sendAddCreditsNudgeEmail`
 - `account/rateLimitResetCredit/consume`
+- `account/workspaceMessages/read`
 - `feedback/upload`
 - `marketplace/add`
 - `marketplace/remove`
@@ -555,6 +558,7 @@ Experimental available methods:
 - `thread/backgroundTerminals/terminate`
 - `thread/increment_elicitation`
 - `thread/decrement_elicitation`
+- `thread/items/list`
 - `thread/memoryMode/set`
 - `thread/realtime/start`
 - `thread/realtime/appendAudio`
@@ -572,7 +576,7 @@ Experimental test-only methods:
 
 Experimental unsupported methods:
 
-- `thread/turns/items/list`
+None.
 
 Server requests:
 
@@ -642,7 +646,7 @@ Current protocol non-goals:
 - plugin marketplace administration
 - dynamic MCP resource/tool management as a product surface
 - external ChatGPT auth token mode
-- unsupported `thread/turns/items/list`
+- experimental `thread/items/list` item pagination
 
 Unrecognized notifications are never treated as chat text. The normalizer keeps
 known message, command, file-change, approval, plan, usage, account, warning,

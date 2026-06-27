@@ -57,6 +57,7 @@ export const stableProductizedMethods = [
 export const hostOnlyMethods = [
   "account/sendAddCreditsNudgeEmail",
   "account/rateLimitResetCredit/consume",
+  "account/workspaceMessages/read",
   "command/exec",
   "command/exec/resize",
   "command/exec/terminate",
@@ -140,6 +141,7 @@ export const experimentalAvailableMethods = [
   "thread/backgroundTerminals/terminate",
   "thread/decrement_elicitation",
   "thread/increment_elicitation",
+  "thread/items/list",
   "thread/memoryMode/set",
   "thread/realtime/appendAudio",
   "thread/realtime/appendSpeech",
@@ -152,9 +154,8 @@ export const experimentalAvailableMethods = [
   "thread/turns/list",
 ] as const satisfies readonly GeneratedExperimentalOnlyClientMethod[];
 
-export const experimentalUnsupportedMethods = [
-  "thread/turns/items/list",
-] as const satisfies readonly GeneratedExperimentalOnlyClientMethod[];
+export const experimentalUnsupportedMethods =
+  [] as const satisfies readonly GeneratedExperimentalOnlyClientMethod[];
 
 const experimentalTestOnlyMethods = [
   "mock/experimentalMethod",

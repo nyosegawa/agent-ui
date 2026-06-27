@@ -1,6 +1,6 @@
 import { RequestId, AgentError, AgentRequestOptions, AgentTransport } from '@nyosegawa/agent-ui-core';
 import { AppsListParams, HooksListParams, ModelListParams, SkillsConfigWriteParams, SkillsListParams, ThreadForkParams, ThreadInjectItemsParams, ThreadListParams, ThreadLoadedListParams, ThreadMetadataUpdateParams, ThreadResumeParams, ThreadStartParams, TurnStartParams, TurnSteerParams } from './request-<chunk>.js';
-import { T as ThreadId, R as RealtimeVoice, A as AbsolutePathBuf, J as JsonValue, U as UserInput, M as MessagePhase, L as LegacyAppPathString, a as ReasoningEffort, b as TurnItemsView, c as ThreadSource, d as ModeKind, C as CodexStableMethod, e as CancelLoginAccountResponse, f as LoginAccountResponse, g as LogoutAccountResponse, G as GetAccountRateLimitsResponse, h as GetAccountTokenUsageResponse, i as GetAccountResponse, j as AppsListResponse, H as HooksListResponse, I as InitializeResponse, k as ModelListResponse, S as SkillsConfigWriteResponse, l as SkillsListResponse, m as ThreadArchiveResponse, n as ThreadCompactStartResponse, o as ThreadForkResponse, p as ThreadInjectItemsResponse, q as ThreadListResponse, r as ThreadLoadedListResponse, s as ThreadMetadataUpdateResponse, t as ThreadSetNameResponse, u as ThreadReadResponse, v as ThreadResumeResponse, w as ThreadRollbackResponse, x as ThreadStartResponse, y as ThreadUnarchiveResponse, z as ThreadUnsubscribeResponse, B as TurnInterruptResponse, D as TurnStartResponse, E as TurnSteerResponse, F as CodexExperimentalMethod, K as CodexExperimentalMethodParams } from './method-params-<chunk>.js';
+import { T as ThreadId, R as RealtimeVoice, A as AbsolutePathBuf, J as JsonValue, U as UserInput, M as MessagePhase, L as LegacyAppPathString, a as ReasoningEffort, b as TurnItemsView, c as ThreadHistoryMode, d as ThreadSource, e as ModeKind, C as CodexStableMethod, f as CancelLoginAccountResponse, g as LoginAccountResponse, h as LogoutAccountResponse, G as GetAccountRateLimitsResponse, i as GetAccountTokenUsageResponse, j as GetAccountResponse, k as AppsListResponse, H as HooksListResponse, I as InitializeResponse, l as ModelListResponse, S as SkillsConfigWriteResponse, m as SkillsListResponse, n as ThreadArchiveResponse, o as ThreadCompactStartResponse, p as ThreadForkResponse, q as ThreadInjectItemsResponse, r as ThreadListResponse, s as ThreadLoadedListResponse, t as ThreadMetadataUpdateResponse, u as ThreadSetNameResponse, v as ThreadReadResponse, w as ThreadResumeResponse, x as ThreadRollbackResponse, y as ThreadStartResponse, z as ThreadUnarchiveResponse, B as ThreadUnsubscribeResponse, D as TurnInterruptResponse, E as TurnStartResponse, F as TurnSteerResponse, K as CodexExperimentalMethod, N as CodexExperimentalMethodParams } from './method-params-<chunk>.js';
 import { k as StableProductizedMethod, E as ExperimentalAvailableMethod, C as CodexInitializeOptions } from './protocol-<chunk>.js';
 import { U as UserInput$1 } from './UserInput-<chunk>.js';
 import './InitializeParams-<chunk>.js';
@@ -40,7 +40,7 @@ type NonSteerableTurnKind = "review" | "compact";
  * When an upstream HTTP status is available (for example, from the Responses API or a provider),
  * it is forwarded in `httpStatusCode` on the relevant `codexErrorInfo` variant.
  */
-type CodexErrorInfo = "contextWindowExceeded" | "usageLimitExceeded" | "serverOverloaded" | "cyberPolicy" | {
+type CodexErrorInfo = "contextWindowExceeded" | "sessionBudgetExceeded" | "usageLimitExceeded" | "serverOverloaded" | "cyberPolicy" | {
     "httpConnectionFailed": {
         httpStatusCode: number | null;
     };
@@ -136,6 +136,9 @@ type McpToolCallAppContext = {
     connectorId: string;
     linkId: string | null;
     resourceUri: string | null;
+    appName: string | null;
+    templateId: string | null;
+    actionName: string | null;
 };
 
 type McpToolCallError = {
@@ -332,7 +335,7 @@ type ThreadItem = {
 } | {
     "type": "imageView";
     id: string;
-    path: AbsolutePathBuf;
+    path: LegacyAppPathString;
 } | {
     "type": "sleep";
     id: string;
@@ -371,6 +374,11 @@ type SessionSource = "cli" | "vscode" | "exec" | "appServer" | {
     "subAgent": SubAgentSource;
 } | "unknown";
 
+/**
+ * Extra app-server data for a thread.
+ */
+type ThreadExtra = Record<string, never>;
+
 type ThreadActiveFlag = "waitingOnApproval" | "waitingOnUserInput";
 
 type ThreadStatus = {
@@ -387,6 +395,9 @@ type ThreadStatus = {
 type TurnStatus = "completed" | "interrupted" | "failed" | "inProgress";
 
 type Turn = {
+    /**
+     * Identifier for this turn. Codex-generated turn IDs are UUIDv7.
+     */
     id: string;
     /**
      * Thread items currently included in this turn payload.
@@ -416,7 +427,14 @@ type Turn = {
 };
 
 type Thread = {
+    /**
+     * Identifier for this thread. Codex-generated thread IDs are UUIDv7.
+     */
     id: string;
+    /**
+     * Optional implementation-specific thread data.
+     */
+    extra: ThreadExtra | null;
     /**
      * Session id shared by threads that belong to the same session tree.
      */
@@ -437,6 +455,10 @@ type Thread = {
      * Whether the thread is ephemeral and should not be materialized on disk.
      */
     ephemeral: boolean;
+    /**
+     * Persisted thread history contract selected when this thread was created.
+     */
+    historyMode: ThreadHistoryMode;
     /**
      * Model provider used for this thread (for example, 'openai').
      */
@@ -646,6 +668,20 @@ type ThreadIncrementElicitationResponse = {
     paused: boolean;
 };
 
+type ThreadItemsListResponse = {
+    data: Array<ThreadItem>;
+    /**
+     * Opaque cursor to pass to the next call to continue after the last item.
+     * if None, there are no more items to return.
+     */
+    nextCursor: string | null;
+    /**
+     * Opaque cursor to pass as `cursor` when reversing `sortDirection`.
+     * This is only populated when the page contains at least one item.
+     */
+    backwardsCursor: string | null;
+};
+
 type ThreadMemoryModeSetResponse = Record<string, never>;
 
 /**
@@ -773,6 +809,7 @@ interface ExperimentalMethodResultMap {
     "thread/backgroundTerminals/terminate": ThreadBackgroundTerminalsTerminateResponse;
     "thread/decrement_elicitation": ThreadDecrementElicitationResponse;
     "thread/increment_elicitation": ThreadIncrementElicitationResponse;
+    "thread/items/list": ThreadItemsListResponse;
     "thread/memoryMode/set": ThreadMemoryModeSetResponse;
     "thread/realtime/appendAudio": ThreadRealtimeAppendAudioResponse;
     "thread/realtime/appendSpeech": ThreadRealtimeAppendSpeechResponse;

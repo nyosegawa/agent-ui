@@ -184,7 +184,7 @@ export interface AgentBrowserVerificationInputOptions {
   skillName?: string;
 }
 
-export const disabledProductMethods = ["thread/turns/items/list"] as const;
+export const disabledProductMethods = [] as const;
 
 export function accountReadParams(refreshToken = false): GetAccountParams {
   const params = { refreshToken } satisfies GeneratedCodexStableMethodParams<"account/read">;

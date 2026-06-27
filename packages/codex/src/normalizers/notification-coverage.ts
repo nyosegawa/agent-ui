@@ -39,6 +39,7 @@ export const stableNotificationCoverage: Record<
   "mcpServer/oauthLogin/completed": "mapped",
   "mcpServer/startupStatus/updated": "mapped",
   "model/rerouted": "mapped",
+  "model/safetyBuffering/updated": "raw",
   "model/verification": "raw",
   "process/exited": "raw",
   "process/outputDelta": "raw",

@@ -50,6 +50,7 @@ import type {
   ThreadBackgroundTerminalsTerminateResponse,
   ThreadDecrementElicitationResponse,
   ThreadIncrementElicitationResponse,
+  ThreadItemsListResponse,
   ThreadMemoryModeSetResponse,
   ThreadRealtimeAppendAudioResponse,
   ThreadRealtimeAppendSpeechResponse,
@@ -126,6 +127,7 @@ interface ExperimentalMethodResultMap {
   "thread/backgroundTerminals/terminate": ThreadBackgroundTerminalsTerminateResponse;
   "thread/decrement_elicitation": ThreadDecrementElicitationResponse;
   "thread/increment_elicitation": ThreadIncrementElicitationResponse;
+  "thread/items/list": ThreadItemsListResponse;
   "thread/memoryMode/set": ThreadMemoryModeSetResponse;
   "thread/realtime/appendAudio": ThreadRealtimeAppendAudioResponse;
   "thread/realtime/appendSpeech": ThreadRealtimeAppendSpeechResponse;
