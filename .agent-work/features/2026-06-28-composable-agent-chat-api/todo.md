@@ -328,7 +328,7 @@ commit, push, PR, and CI follow-through remaining.
       impact in the changeset, name concrete breaking React migration targets,
       update stale P005 evidence, and re-run package resolution through
       `validate:release`.
-    - Commit: pending final P005 commit.
+    - Commit: `82251d0` (`Prepare composable AgentChat release`).
     - Push: pending final P005 push.
   - Tasks:
     - [x] T015 Update API snapshots intentionally after reviewing the public
