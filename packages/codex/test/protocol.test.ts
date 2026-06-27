@@ -49,7 +49,7 @@ import { generatedExperimentalOnlyClientMethods } from "../src/generated/protoco
 describe("Codex protocol metadata", () => {
   it("records upstream commit and stable release method surface", () => {
     expect(CODEX_PROTOCOL_COMMIT).toMatch(/^[0-9a-f]{40}$/);
-    expect(CODEX_PROTOCOL_COMMIT).toBe("64bdeed9f7adbe60c725153b3fb74ed044a36221");
+    expect(CODEX_PROTOCOL_COMMIT).toBe("a107b84967eb9a3444fd2d4de03f200337acd52b");
     expect(CODEX_PROTOCOL_GENERATED_AT).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(stableClientMethods).toBe(stableProductizedMethods);
     expect(stableProductizedMethods).toContain("account/rateLimits/read");
@@ -57,13 +57,15 @@ describe("Codex protocol metadata", () => {
     expect(stableProductizedMethods).toContain("skills/list");
     expect(stableProductizedMethods).toContain("app/list");
     expect(hostOnlyMethods).toContain("command/exec");
+    expect(hostOnlyMethods).toContain("account/workspaceMessages/read");
     expect(hostOnlyMethods).toContain("thread/delete");
+    expect(experimentalAvailableMethods).toContain("thread/items/list");
     expect(experimentalAvailableMethods).toContain("thread/turns/list");
     expect(experimentalAvailableMethods).toContain("thread/backgroundTerminals/list");
     expect(experimentalAvailableMethods).toContain(
       "thread/backgroundTerminals/terminate",
     );
-    expect(experimentalUnsupportedMethods).toContain("thread/turns/items/list");
+    expect(experimentalUnsupportedMethods).toEqual([]);
     expect(stableServerRequestMethods).toContain("item/commandExecution/requestApproval");
     expect(stableServerRequestMethods).toContain("attestation/generate");
     expect(stableNotificationMethods).toContain("item/agentMessage/delta");
@@ -116,8 +118,8 @@ describe("Codex protocol metadata", () => {
       status: "experimentalAvailable",
     });
     expect(codexCapabilityMetadata).toContainEqual({
-      method: "thread/turns/items/list",
-      status: "experimentalUnsupported",
+      method: "thread/items/list",
+      status: "experimentalAvailable",
     });
     expect(
       codexCapabilityMetadata.some((entry) => entry.method === "mock/experimentalMethod"),
@@ -149,9 +151,7 @@ describe("Codex protocol metadata", () => {
     expect(getCodexCapabilityStatus("thread/start")).toBe("stableProductized");
     expect(getCodexCapabilityStatus("command/exec")).toBe("hostOnly");
     expect(getCodexCapabilityStatus("thread/turns/list")).toBe("experimentalAvailable");
-    expect(getCodexCapabilityStatus("thread/turns/items/list")).toBe(
-      "experimentalUnsupported",
-    );
+    expect(getCodexCapabilityStatus("thread/items/list")).toBe("experimentalAvailable");
     expect(getCodexCapabilityStatus("mock/experimentalMethod")).toBeNull();
     expect(getCodexCapabilityStatus("not/a/method")).toBeNull();
 
@@ -161,10 +161,10 @@ describe("Codex protocol metadata", () => {
     expect(isHostOnlyMethod("command/exec")).toBe(true);
     expect(isHostOnlyMethod("thread/delete")).toBe(true);
     expect(isExperimentalAvailableMethod("thread/turns/list")).toBe(true);
+    expect(isExperimentalAvailableMethod("thread/items/list")).toBe(true);
     expect(isExperimentalAvailableMethod("remoteControl/pairing/start")).toBe(true);
     expect(isExperimentalAvailableMethod("mock/experimentalMethod")).toBe(false);
-    expect(isExperimentalAvailableMethod("thread/turns/items/list")).toBe(false);
-    expect(isExperimentalUnsupportedMethod("thread/turns/items/list")).toBe(true);
+    expect(isExperimentalUnsupportedMethod("thread/items/list")).toBe(false);
     expect(isStableProductizedMethod("skills/config/write")).toBe(true);
     expect(isHostOnlyMethod("config/value/write")).toBe(true);
     expect(isHostOnlyMethod("config/batchWrite")).toBe(true);
@@ -174,9 +174,7 @@ describe("Codex protocol metadata", () => {
     expect(() => assertCodexProductizedMethod("skills/config/write")).not.toThrow();
     expect(() => assertCodexProductizedMethod("config/value/write")).toThrow("hostOnly");
     expect(() => assertCodexExperimentalMethod("thread/turns/list")).not.toThrow();
-    expect(() => assertCodexExperimentalMethod("thread/turns/items/list")).toThrow(
-      "experimentalUnsupported",
-    );
+    expect(() => assertCodexExperimentalMethod("thread/items/list")).not.toThrow();
     expect(() => assertCodexExperimentalMethod("mock/experimentalMethod")).toThrow(
       "unknown",
     );
@@ -350,6 +348,7 @@ describe("Codex protocol metadata", () => {
     expect(stableNotificationCoverage["thread/goal/cleared"]).toBe("raw");
     expect(stableNotificationCoverage["thread/goal/updated"]).toBe("raw");
     expect(stableNotificationCoverage["thread/settings/updated"]).toBe("raw");
+    expect(stableNotificationCoverage["model/safetyBuffering/updated"]).toBe("raw");
     expect(
       normalizeCodexServerMessage({
         method: "rawResponseItem/completed",
@@ -2014,6 +2013,7 @@ describe("Codex protocol metadata", () => {
           "account/read",
           "account/sendAddCreditsNudgeEmail",
           "account/usage/read",
+          "account/workspaceMessages/read",
           "app/list",
           "command/exec",
           "command/exec/resize",
@@ -2137,6 +2137,7 @@ describe("Codex protocol metadata", () => {
           "mcpServer/oauthLogin/completed",
           "mcpServer/startupStatus/updated",
           "model/rerouted",
+          "model/safetyBuffering/updated",
           "model/verification",
           "process/exited",
           "process/outputDelta",
@@ -2234,6 +2235,7 @@ describe("Codex protocol metadata", () => {
         "thread/backgroundTerminals/terminate",
         "thread/decrement_elicitation",
         "thread/increment_elicitation",
+        "thread/items/list",
         "thread/memoryMode/set",
         "thread/realtime/appendAudio",
         "thread/realtime/appendSpeech",
@@ -2243,7 +2245,6 @@ describe("Codex protocol metadata", () => {
         "thread/realtime/stop",
         "thread/search",
         "thread/settings/update",
-        "thread/turns/items/list",
         "thread/turns/list",
       ]
     `);
@@ -2275,6 +2276,7 @@ function extractDocumentedMethods(markdown: string, sectionTitle: string): strin
       methods.push(match[1]);
       continue;
     }
+    if (methods.length === 0 && line.trim() !== "") break;
     if (methods.length > 0 && line.trim() !== "") break;
   }
   return methods.sort();

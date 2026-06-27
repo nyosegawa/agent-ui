@@ -60,6 +60,7 @@ import type {
   TurnSteerParams,
 } from "../src/generated/stable/v2";
 import type {
+  ThreadItemsListParams,
   ThreadTurnsListParams,
 } from "../src/generated/experimental/v2";
 
@@ -219,7 +220,7 @@ describe("Codex request builders", () => {
   });
 
   it("keeps unimplemented thread item pagination out of product APIs", () => {
-    expect(disabledProductMethods).toEqual(["thread/turns/items/list"]);
+    expect(disabledProductMethods).toEqual([]);
   });
 
   it("emits params accepted by generated ClientRequest method schemas", () => {
@@ -374,16 +375,13 @@ describe("Codex session facade", () => {
     ]);
   });
 
-  it("requires opt-in for experimental requests and disables thread item listing", async () => {
+  it("requires opt-in for experimental requests", async () => {
     const stable = createCodexSession(new FakeTransport());
     await expect(stable.requestExperimental("thread/turns/list", {})).rejects.toThrow(
       "requires opt-in",
     );
 
     const experimental = createCodexSession(new FakeTransport(), { experimental: true });
-    await expect(
-      experimental.requestExperimental("thread/turns/items/list", {}),
-    ).rejects.toThrow("disabled");
     await expect(experimental.requestExperimental("thread/start", {})).rejects.toThrow(
       "stableProductized",
     );
@@ -412,6 +410,29 @@ describe("Codex session facade", () => {
     expect(transport.calls).toEqual([
       {
         method: "thread/turns/list",
+        options: undefined,
+        params,
+      },
+    ]);
+  });
+
+  it("passes thread/items/list through the explicit experimental request path", async () => {
+    const transport = new FakeTransport();
+    const experimental = createCodexSession(transport, { experimental: true });
+    const params = {
+      cursor: "cursor-1",
+      limit: 10,
+      sortDirection: "asc",
+      threadId: "thread-1",
+      turnId: "turn-1",
+    } satisfies ThreadItemsListParams;
+
+    const response = await experimental.requestExperimental("thread/items/list", params);
+
+    expect(response).toEqual({});
+    expect(transport.calls).toEqual([
+      {
+        method: "thread/items/list",
         options: undefined,
         params,
       },

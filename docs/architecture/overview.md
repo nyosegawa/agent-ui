@@ -55,8 +55,8 @@ diagnostics, and one-shot RPC boundaries.
 - React imports request builders through the Codex package instead of carrying
   hand-written protocol copies
 - experimental methods require explicit `experimental: true` opt-in
-- `thread/turns/items/list` is classified as experimental unsupported and is
-  disabled even with opt-in until upstream implements it
+- `thread/items/list` is classified as experimental available and stays outside
+  productized clients until pagination semantics are designed
 
 The stdio transport retries overload error `-32001` only for read-only,
 idempotent methods such as `thread/read`, `thread/list`, `skills/list`,

@@ -103,7 +103,7 @@ against that classification before they are treated as stable public behavior.
 Current non-goals include remote or multi-user production hosting, external
 ChatGPT auth token mode, realtime audio or voice UX, plugin marketplace
 administration, dynamic MCP resource and tool management as a core UI workflow,
-and unsupported `thread/turns/items/list`.
+and experimental item pagination such as `thread/items/list`.
 
 ## Naming
 

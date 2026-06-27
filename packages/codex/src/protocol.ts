@@ -10,8 +10,8 @@ import {
   generatedStableServerRequestMethods,
 } from "./generated/protocol-capabilities";
 
-export const CODEX_PROTOCOL_COMMIT = "64bdeed9f7adbe60c725153b3fb74ed044a36221";
-export const CODEX_PROTOCOL_GENERATED_AT = "2026-06-20T01:10:34.448Z";
+export const CODEX_PROTOCOL_COMMIT = "a107b84967eb9a3444fd2d4de03f200337acd52b";
+export const CODEX_PROTOCOL_GENERATED_AT = "2026-06-27T00:04:59.122Z";
 
 export type CodexCapabilityStatus =
   | "stableAvailable"
@@ -57,6 +57,7 @@ export const stableProductizedMethods = [
 export const hostOnlyMethods = [
   "account/sendAddCreditsNudgeEmail",
   "account/rateLimitResetCredit/consume",
+  "account/workspaceMessages/read",
   "command/exec",
   "command/exec/resize",
   "command/exec/terminate",
@@ -140,6 +141,7 @@ export const experimentalAvailableMethods = [
   "thread/backgroundTerminals/terminate",
   "thread/decrement_elicitation",
   "thread/increment_elicitation",
+  "thread/items/list",
   "thread/memoryMode/set",
   "thread/realtime/appendAudio",
   "thread/realtime/appendSpeech",
@@ -152,9 +154,8 @@ export const experimentalAvailableMethods = [
   "thread/turns/list",
 ] as const satisfies readonly GeneratedExperimentalOnlyClientMethod[];
 
-export const experimentalUnsupportedMethods = [
-  "thread/turns/items/list",
-] as const satisfies readonly GeneratedExperimentalOnlyClientMethod[];
+export const experimentalUnsupportedMethods =
+  [] as const satisfies readonly GeneratedExperimentalOnlyClientMethod[];
 
 const experimentalTestOnlyMethods = [
   "mock/experimentalMethod",
