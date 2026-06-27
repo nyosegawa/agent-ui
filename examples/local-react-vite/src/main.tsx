@@ -1991,7 +1991,7 @@ function HostWorkflowComposition({
   const embedded = isEmbeddedPreview();
   const bootstrap = useAgentBootstrap();
   const { thread } = useAgentThread();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [contextSheetOpen, setContextSheetOpen] = useState(false);
   const [hostSheetOpen, setHostSheetOpen] = useState(() =>
     new URLSearchParams(window.location.search).get("hostSheet") === "open",

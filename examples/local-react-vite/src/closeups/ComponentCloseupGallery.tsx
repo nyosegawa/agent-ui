@@ -235,20 +235,24 @@ function CloseupComposerProvider({ children }: { children: ReactNode }) {
 function FocusFirstTextarea() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
-    const textarea = containerRef.current?.parentElement?.querySelector(
-      "textarea.aui-composer-input",
-    ) as HTMLTextAreaElement | null;
-    if (!textarea) return;
-    const valueSetter = Object.getOwnPropertyDescriptor(
-      HTMLTextAreaElement.prototype,
-      "value",
-    )?.set;
-    valueSetter?.call(
-      textarea,
-      "Apply the renderer audit findings and verify the diff.",
-    );
-    textarea.dispatchEvent(new Event("input", { bubbles: true }));
-    textarea.focus({ preventScroll: true });
+    const focusComposer = () => {
+      const textarea = containerRef.current?.parentElement?.querySelector(
+        "textarea.aui-composer-input",
+      ) as HTMLTextAreaElement | null;
+      if (!textarea) return;
+      const valueSetter = Object.getOwnPropertyDescriptor(
+        HTMLTextAreaElement.prototype,
+        "value",
+      )?.set;
+      valueSetter?.call(
+        textarea,
+        "Apply the renderer audit findings and verify the diff.",
+      );
+      textarea.dispatchEvent(new Event("input", { bubbles: true }));
+      textarea.focus({ preventScroll: true });
+    };
+    const frame = window.requestAnimationFrame(focusComposer);
+    return () => window.cancelAnimationFrame(frame);
   }, []);
   return (
     <div

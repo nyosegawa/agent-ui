@@ -2,7 +2,8 @@
 
 Planning package for a breaking composable `AgentChat` / headless /
 primitives redesign. P001-P004 are implemented, validated, reviewed, committed,
-and pushed; P005 is next.
+and pushed; P005 validation and review findings are addressed, with final
+commit, push, PR, and CI follow-through remaining.
 
 ## Branch And Planning Commit
 
@@ -16,8 +17,8 @@ and pushed; P005 is next.
 
 - [x] Public contract and context invariant
 - [x] Chat-flow controller and scoped composer ownership
-- [ ] AgentChat composition surface
-- [ ] Examples, docs, and migration story
+- [x] AgentChat composition surface
+- [x] Examples, docs, and migration story
 - [ ] Package validation, changeset, PR, and CI follow-through
 
 ## Task Checklist By Phase
@@ -304,20 +305,41 @@ and pushed; P005 is next.
   - Push: push branch.
   - PR/CI: open PR and watch required checks to success/failure.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: added a major Changesets release note for the composable
+      `AgentChat` public API; clarified the fixed-version-group impact across
+      all public packages; named removed/unsupported migration targets and
+      public replacements; classified newly exported non-visual primitive types
+      in the close-up catalog; fixed the host workflow composition example so
+      controlled mobile drawer state starts collapsed; stabilized the focused
+      composer close-up focus fixture after render.
+    - Validation: `bun run validate:release`; `bun run test:e2e:fixtures`
+      after addressing targeted mobile drawer/focus failures; targeted rerun of
+      `examples/local-react-vite/e2e/smoke.e2e.ts:442`,
+      `examples/local-react-vite/e2e/visual-approvals.e2e.ts:99`,
+      `examples/local-react-vite/e2e/visual-closeups.e2e.ts:228`, and
+      `examples/local-react-vite/e2e/visual-layout.e2e.ts:457`; `bun run
+      test:e2e:real-local`; `bunx changeset status --verbose`; `git diff
+      --check`; `bun run check:clean-build-output` after removing generated
+      build output directories.
+    - Review: 4 parallel subagent reviews completed for package/export
+      readiness, validation evidence, release/changeset impact, and PR/CI
+      readiness. Findings addressed: run the full release gate including
+      `check:dead-code`, run real-local E2E, clarify fixed-version-group major
+      impact in the changeset, name concrete breaking React migration targets,
+      update stale P005 evidence, and re-run package resolution through
+      `validate:release`.
+    - Commit: pending final P005 commit.
+    - Push: pending final P005 push.
   - Tasks:
-    - [ ] T015 Update API snapshots intentionally after reviewing the public
+    - [x] T015 Update API snapshots intentionally after reviewing the public
       declaration delta.
       - Expected files/areas: `test/api-snapshots/react__*.d.ts`.
-      - Validation note: use `bun run test:api-snapshots:update`.
-    - [ ] T016 Run package and browser gates.
+      - Validation note: snapshots are current; `bun run test:api-snapshots`
+        passes without updates.
+    - [x] T016 Run package and browser gates.
       - Expected files/areas: validation logs in PR notes.
       - Validation note: keep `validate:packages` order intact.
-    - [ ] T017 Add changeset with correct bump level.
+    - [x] T017 Add changeset with correct bump level.
       - Expected files/areas: `.changeset/*`.
       - Validation note: default to major if public removals/renames remain.
     - [ ] T018 Push, open PR, and watch CI.
