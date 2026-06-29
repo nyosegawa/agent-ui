@@ -27,6 +27,23 @@ import { AgentChat } from "@nyosegawa/agent-ui-react";
 
 const localMediaUrlsByPath = new Map<string, string>();
 
+function assertLocalMediaAsset(value: unknown): asserts value is {
+  path: string;
+  previewUrl?: string;
+  url?: string;
+} {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    typeof (value as { path?: unknown }).path !== "string" ||
+    ("previewUrl" in value &&
+      typeof (value as { previewUrl?: unknown }).previewUrl !== "string") ||
+    ("url" in value && typeof (value as { url?: unknown }).url !== "string")
+  ) {
+    throw new Error("Upload response did not include valid local media fields");
+  }
+}
+
 <AgentChat
   resolveLocalAttachment={async (file, kind) => {
     const response = await fetch("/agent-ui/upload", {
@@ -36,7 +53,11 @@ const localMediaUrlsByPath = new Map<string, string>();
       },
       method: "POST",
     });
+    if (!response.ok) {
+      throw new Error(`Upload failed with ${response.status}`);
+    }
     const asset = await response.json();
+    assertLocalMediaAsset(asset);
     const previewUrl = asset.previewUrl ?? asset.url;
     if (typeof asset.path === "string" && typeof previewUrl === "string") {
       localMediaUrlsByPath.set(asset.path, previewUrl);
@@ -59,6 +80,12 @@ const localMediaUrlsByPath = new Map<string, string>();
 React owns the attachment UI. Codex-shaped input construction stays explicit in
 the resolver's `input` field and should use
 `@nyosegawa/agent-ui-codex/request-builders`.
+
+Do not blindly trust `asset.path` from an upload route. Check `response.ok`,
+validate that the JSON contains the App Server-readable `path`, and keep browser
+rendering on validated `previewUrl`/`url` strings. Use a dedicated upload root
+for Agent UI managed files so host cleanup policy cannot sweep unrelated
+directories.
 
 The shared resource primitive is `AgentResolvedResource`: browser-facing
 metadata such as `displayName`, `url`, `previewUrl`, `redactedPath`,

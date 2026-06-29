@@ -9,7 +9,7 @@ Attachments are host-resolved local inputs. Agent UI can render and send
 attachment metadata, but the host owns:
 
 - upload route
-- storage directory or object store
+- dedicated upload root, storage directory, or object store
 - file size and content-type policy
 - expiry and cleanup
 - local path resolution for Codex App Server
@@ -25,6 +25,23 @@ Return structured attachment metadata with explicit Codex input items from
 import { localImageInput, textInput } from "@nyosegawa/agent-ui-codex/request-builders";
 import type { AgentResolvedLocalAttachment } from "@nyosegawa/agent-ui-react/primitives";
 
+function assertLocalMediaAsset(value: unknown): asserts value is {
+  path: string;
+  previewUrl?: string;
+  url?: string;
+} {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    typeof (value as { path?: unknown }).path !== "string" ||
+    ("previewUrl" in value &&
+      typeof (value as { previewUrl?: unknown }).previewUrl !== "string") ||
+    ("url" in value && typeof (value as { url?: unknown }).url !== "string")
+  ) {
+    throw new Error("Upload response did not include valid local media fields");
+  }
+}
+
 <AgentChat
   resolveLocalAttachment={async (file, kind) => {
     const response = await fetch("/agent-ui/upload", {
@@ -34,9 +51,15 @@ import type { AgentResolvedLocalAttachment } from "@nyosegawa/agent-ui-react/pri
       },
       method: "POST",
     });
+    if (!response.ok) {
+      throw new Error(`Upload failed with ${response.status}`);
+    }
     const asset = await response.json();
+    assertLocalMediaAsset(asset);
+    const previewUrl = asset.previewUrl ?? asset.url;
     return {
       ...asset,
+      previewUrl,
       input:
         kind === "image"
           ? localImageInput(asset.path)
@@ -45,6 +68,10 @@ import type { AgentResolvedLocalAttachment } from "@nyosegawa/agent-ui-react/pri
   }}
 />;
 ```
+
+Do not blindly trust `asset.path`. Check `response.ok`, validate the JSON shape,
+then use `path` only as explicit App Server input. Browser previews should use
+validated `previewUrl` or `url` strings.
 
 ## Codex Input Shape
 

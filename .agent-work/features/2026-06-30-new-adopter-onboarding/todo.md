@@ -3,18 +3,18 @@
 ## Status Summary
 
 - Overall status: In progress
-- Current phase: P002 Recipes and npm package README alignment
+- Current phase: P003 Public Agent Skill new-adopter refresh
 - Blockers: None
-- Last validation: P002 package/docs/example validations passed locally; PR #42 P002 CI checks passed after push.
-- Last review: P002 four-lane subagent review completed; lane 1 linkification finding fixed and lane 4 TODO evidence update applied.
-- PR/CI: Draft PR #42 open; latest P002 checks passed.
+- Last validation: P003 public skill and docs validation passed locally.
+- Last review: P003 four-lane subagent review completed; upload validation and public-skill leakage findings fixed.
+- PR/CI: Draft PR #42 open; P003 commit pending.
 
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
 - Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: planning, P001 docs commits, and P002 docs/package README commits pushed
+- Push result: planning, P001 docs commits, and P002 docs/package README commits pushed; P003 pending
 - Blockers: none
 
 ## Phase Checklist
@@ -76,7 +76,7 @@
       - Expected files/areas: `docs/reference/package-exports.md`.
       - Validation note: Align with actual `package.json` exports.
 
-- [ ] P003 Public Agent Skill new-adopter refresh
+- [x] P003 Public Agent Skill new-adopter refresh
   - Goal: Make `skills/agent-ui` route v3 first-time integration correctly and safely.
   - Scope: Public skill routing, local single-user path, server bridge reference, uploads reference, validation checklist, debug guide, integration profiles, OpenAI agent metadata.
   - Expected files/areas: `skills/agent-ui/SKILL.md`, `skills/agent-ui/references/*.md`, `skills/agent-ui/agents/openai.yaml`, `docs/maintenance/agent-ui-skills.md`, `test/agent-ui-skill.test.ts`.
@@ -87,23 +87,23 @@
   - Push: pending
   - PR/CI: pending
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - 4-Parallel Subagent Review:
-    - Commit:
-    - Push:
+    - Implementation: Prioritized new-adopter triggers in `skills/agent-ui/SKILL.md` and `agents/openai.yaml`; added first-host-app and `Node >=22` routing; added safe browser/server bridge skeleton guidance with root server APIs, `local-loopback` admission, and `browserMethodPolicy: "productized"`; hardened public skill and attachments upload snippets with `response.ok`, JSON shape checks for `path`/`previewUrl`/`url`, dedicated upload root wording, and no blind `asset.path` trust; expanded the external host validation checklist for send, `thread/start` through `turn/completed`, stop/interrupt, steer, approvals, image and non-image uploads, reload/resume, bridge admission, and mobile overflow; removed repo-maintainer validation commands/gates from the public skill.
+    - Validation: `bun run test:skills` passed; `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts test/docs-staleness.test.ts` passed; forbidden maintainer-command/gate search over public skill and attachments docs had no matches; `git diff --check` passed; artifact validator passed.
+    - Review: Manual pass confirmed public skill keeps progressive disclosure, host-owned runtime policy, root server bridge guidance, and external-host package-manager neutrality.
+    - 4-Parallel Subagent Review: Completed. Lane 1 trigger/metadata review passed; lane 2 bridge first-app safety review passed; lane 3 found optional `previewUrl`/`url` fields were not validated in upload snippets, fixed; lane 4 found repo-maintainer validation leakage and incomplete checklist assertions, fixed by removing repository gates from the public skill and expanding tests.
+    - Commit: pending
+    - Push: pending
   - Tasks:
-    - [ ] T007 Prioritize triggers for `v3 new adopter`, `first host app`, `AgentChat preset`, `headless + primitives`, `same-origin bridge skeleton`, `Node >=22`, `新規導入`, `初回導入`, and `最小構成`.
+    - [x] T007 Prioritize triggers for `v3 new adopter`, `first host app`, `AgentChat preset`, `headless + primitives`, `same-origin bridge skeleton`, `Node >=22`, `新規導入`, `初回導入`, and `最小構成`.
       - Expected files/areas: `skills/agent-ui/SKILL.md`, agent metadata.
       - Validation note: Keep description concise and routing-oriented.
-    - [ ] T008 Put safe browser + server bridge skeletons in the local single-user flow.
+    - [x] T008 Put safe browser + server bridge skeletons in the local single-user flow.
       - Expected files/areas: `skills/agent-ui/references/local-single-user.md`, `server-bridge.md`.
       - Validation note: Use root server APIs by default, not `/advanced`.
-    - [ ] T009 Harden upload examples with `response.ok`, response shape checks, dedicated upload root wording, and no blind `asset.path` usage.
+    - [x] T009 Harden upload examples with `response.ok`, response shape checks, dedicated upload root wording, and no blind `asset.path` usage.
       - Expected files/areas: `skills/agent-ui/references/uploads.md`, `docs/guides/attachments.md`.
       - Validation note: `test:skills` should assert the safe pattern.
-    - [ ] T010 Expand external host validation checklist for send, reload/resume, approval, upload, steer, interrupt, and mobile overflow.
+    - [x] T010 Expand external host validation checklist for send, reload/resume, approval, upload, steer, interrupt, and mobile overflow.
       - Expected files/areas: `skills/agent-ui/references/validation.md`.
       - Validation note: Avoid repository-only commands.
 
@@ -250,16 +250,16 @@
 
 ### P003 Public Agent Skill new-adopter refresh
 
-- [ ] T007 Prioritize new-adopter triggers.
+- [x] T007 Prioritize new-adopter triggers.
   - Expected files/areas: public skill entry and metadata.
   - Validation note: Keep `SKILL.md` routing-focused.
-- [ ] T008 Add safe first-app bridge skeletons.
+- [x] T008 Add safe first-app bridge skeletons.
   - Expected files/areas: local single-user and server bridge references.
   - Validation note: Root server APIs by default.
-- [ ] T009 Harden upload examples.
+- [x] T009 Harden upload examples.
   - Expected files/areas: public skill uploads reference and attachments guide.
   - Validation note: Assert with `test:skills`.
-- [ ] T010 Expand external validation checklist.
+- [x] T010 Expand external validation checklist.
   - Expected files/areas: public skill validation reference.
   - Validation note: No repo-only commands.
 
@@ -335,12 +335,18 @@
 - P002: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts test/docs-staleness.test.ts` passed.
 - P002: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-30-new-adopter-onboarding` passed.
 - P002 PR #42 checks passed after push: Detect changes, Detect compatibility changes, Repository policy, Typecheck, Lint, Unit tests, API snapshots, Package resolution, Package validation, Protocol and fixtures, Playwright fixtures, and Real local smoke. Compatibility matrix jobs were skipped by path filters.
+- P003: `bun run test:skills` passed.
+- P003: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts test/docs-staleness.test.ts` passed.
+- P003: forbidden maintainer-command/gate search over `skills/agent-ui` and `docs/guides/attachments.md` returned no matches.
+- P003: `git diff --check` passed.
+- P003: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-30-new-adopter-onboarding` passed.
 
 ## Review Evidence
 
 - Planning research used four subagent lanes: docs onboarding, implementation/public surface, validation/CI, and skill design.
 - P001 used four subagent review lanes after validation: information architecture, public package/API correctness, bridge/security boundary, and docs validation/link/TODO evidence.
 - P002 used four subagent review lanes after validation: recipe topic index, public import correctness, package boundary/changeset, and validation/TODO evidence. Lane 1 found non-clickable recipe entries and lane 4 requested TODO evidence updates; both were fixed before commit.
+- P003 used four subagent review lanes after validation: trigger/metadata, bridge first-app safety, upload/attachments safety, and validation/test leakage. Upload optional URL validation and public-skill maintainer-command leakage findings were fixed before commit.
 
 ## Commit Log
 

@@ -29,10 +29,15 @@ Package manager check:
 For browser-visible work, verify interactions, not only screenshots:
 
 - send a message
+- wait for a successful `thread/start` through `turn/completed` path when a
+  real or fake App Server is available
 - stop a running turn
 - queue a running-turn follow-up
+- steer a running turn when the host exposes follow-up controls
 - approve and decline a pending approval when available
 - attach image and non-image files when uploads are wired
+- verify upload failures show a host-visible composer error and successful
+  uploads return a validated `path` plus browser-safe `previewUrl` or `url`
 - open and close the mobile thread history drawer
 - open host sheets or dialogs over Agent UI overlays and verify focus returns
 - preview stored history with `thread/read`, then resume and verify the
@@ -50,12 +55,14 @@ For browser-visible work, verify interactions, not only screenshots:
   renders the fallback
 - verify bridge admission accepts and rejects the expected connections before
   App Server spawn
+- verify reload/resume keeps the canonical thread id and does not silently start
+  a new session
 - check mobile and tablet widths for overflow, reachable composer controls, and
   secondary status/usage/diagnostics opening from an explicit context trigger
-- in an external host app, build a small route and viewport smoke that checks
-  document overflow, visible composer controls, hit-testable primary actions,
-  mobile history drawer reachability when used, and host overlays/focus return
-  if the host composes sheets or dialogs around Agent UI
+- in an external host app, build a small host-local route and viewport smoke
+  that checks document overflow, visible composer controls, hit-testable primary
+  actions, mobile history drawer reachability when used, and host overlays/focus
+  return if the host composes sheets or dialogs around Agent UI
 
 Public boundary check:
 
@@ -64,27 +71,6 @@ Public boundary check:
 - Replace private CSS imports with `@nyosegawa/agent-ui-react/styles.css`.
 - Replace internal selector styling with `className`, slots, host wrappers, or
   `--aui-*` token overrides.
-
-## Agent UI Repository Checks
-
-Only when changing this repository, use its Bun scripts:
-
-```sh
-bun run typecheck
-bun run lint
-bun run test
-```
-
-For package or CSS changes, follow the repository docs for broader package,
-style, Playwright, and build validation.
-
-For Agent UI changes touching thread history, diagnostics, or responsive chat
-chrome, include the focused reducer/protocol/component tests plus the real-local
-thread lifecycle Playwright spec. Browser-visible layout changes should also run
-the fixture matrix for declared fixture viewports or the real-local layout gate
-for its desktop/mobile coverage. These are repository-maintainer gates; external
-hosts should mirror the same behaviors with host-local routes instead of copying
-maintainer fixture routes.
 
 ## Finish Report Template
 

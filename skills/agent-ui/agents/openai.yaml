@@ -2,7 +2,7 @@ interface:
   display_name: "Agent UI"
   short_description: "Integrate reusable Codex App Server UI components in host applications."
   brand_color: "#2563EB"
-  default_prompt: "Use the Agent UI skill to integrate or debug Agent UI in this host application."
+  default_prompt: "Use $agent-ui to integrate or debug Agent UI in this host application."
 
 policy:
   allow_implicit_invocation: true

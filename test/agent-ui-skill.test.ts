@@ -78,7 +78,7 @@ describe("public Agent UI skill", () => {
     expect(metadata.interface).toEqual({
       brand_color: "#2563EB",
       default_prompt:
-        "Use the Agent UI skill to integrate or debug Agent UI in this host application.",
+        "Use $agent-ui to integrate or debug Agent UI in this host application.",
       display_name: "Agent UI",
       short_description:
         "Integrate reusable Codex App Server UI components in host applications.",
@@ -141,9 +141,51 @@ describe("public Agent UI skill", () => {
     expect(allSkillText).toContain("Use published Agent UI packages from the registry");
     expect(allSkillText).toContain("Do not target internal `.aui-*` selectors");
     expect(allSkillText).toContain("changed host CSS contains no `.aui-` selectors");
-    expect(allSkillText).toMatch(/external\s+hosts should/);
-    expect(allSkillText).toContain("host-local routes");
-    expect(allSkillText).toMatch(/instead of copying\s+maintainer/);
+    expect(allSkillText).toContain("Use the host app's validation ladder");
+    expect(allSkillText).toContain("host-local route");
+    expect(allSkillText).toContain("local browser smoke against the Agent UI route");
+  });
+
+  it("routes new adopters through safe first-host-app and upload guidance", async () => {
+    const skillText = await readFile(
+      join(publicSkillRoot, "agent-ui", "SKILL.md"),
+      "utf8",
+    );
+    const allSkillText = await readSkillTreeText(join(publicSkillRoot, "agent-ui"));
+
+    for (const requiredTrigger of [
+      "new adopter",
+      "first host app",
+      "AgentChat preset",
+      "headless + primitives",
+      "same-origin bridge skeleton",
+      "Node >=22",
+      "新規導入",
+      "初回導入",
+      "最小構成",
+    ]) {
+      expect(skillText, requiredTrigger).toContain(requiredTrigger);
+    }
+
+    for (const requiredGuidance of [
+      'browserMethodPolicy: "productized"',
+      'admission: { mode: "local-loopback" }',
+      "Do not start new adopters on",
+      "Check `response.ok`",
+      "assertLocalMediaAsset",
+      "Do not blindly trust `asset.path`",
+      "dedicated upload root",
+      "turn/completed",
+      "send a message",
+      "stop a running turn",
+      "steer a running turn",
+      "approve and decline a pending approval",
+      "attach image and non-image files",
+      "mobile and tablet widths for overflow",
+      "verify reload/resume keeps the canonical thread id",
+    ]) {
+      expect(allSkillText, requiredGuidance).toContain(requiredGuidance);
+    }
   });
 
   it("keeps public skill docs free of maintainer-only or stale repository assumptions", async () => {
@@ -169,6 +211,12 @@ describe("public Agent UI skill", () => {
       "specimen",
       "visual-route-matrix.e2e.ts",
       "test:e2e:fixtures",
+      "bun run typecheck",
+      "bun run lint",
+      "bun run test",
+      "real-local",
+      "fixture matrix",
+      "maintainer fixture",
     ]) {
       expect(allSkillText, forbidden).not.toContain(forbidden);
     }
