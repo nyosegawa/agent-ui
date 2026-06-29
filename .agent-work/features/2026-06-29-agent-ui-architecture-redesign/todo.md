@@ -317,7 +317,7 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
       - Expected files/areas: phase diff, server tests, docs, API snapshots.
       - Validation note: record subagent findings and remediation in Evidence.
 
-- [ ] P006 Web Components lifecycle and option semantics
+- [x] P006 Web Components lifecycle and option semantics
   - Goal: make custom element behavior deterministic and aligned with final React contract.
   - Scope: registration, SSR, collision handling, option reset, transport replace,
     initial state/hydration semantics.
@@ -349,8 +349,9 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
       `agentOptions` fields and new transport reflection. React contract/product
       boundary: no P0/P1. Package/docs: fixed P1 stale API snapshot and accepted
       P2 docs wording cleanup.
-    - Commit:
-    - Push:
+    - Commit: `8f51658` (`Harden web component lifecycle semantics`).
+    - Push: pushed `codex/agent-ui-architecture-redesign-plan` to origin
+      (`ea555ac..8f51658`).
   - Tasks:
     - [x] T001 Define SSR and tag-collision behavior.
       - Expected files/areas: web-components source/tests.
