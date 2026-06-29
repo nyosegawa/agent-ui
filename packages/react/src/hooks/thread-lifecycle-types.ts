@@ -1,9 +1,4 @@
-import type {
-  AgentThreadResumeDiagnosticReasonCode,
-  ThreadId,
-  ThreadState,
-  ThreadStatus,
-} from "@nyosegawa/agent-ui-core";
+import type { ThreadId, ThreadStatus } from "@nyosegawa/agent-ui-core";
 import type { ThreadStartOptions, TurnStartOptions } from "../request-options";
 
 export interface AgentThreadStartResult {
@@ -25,14 +20,19 @@ export interface AgentThreadStartWithInputOptions {
 
 export interface AgentThreadResumeResult {
   activeTurnId?: string;
-  activity?: ThreadState["activity"];
+  activity?: AgentThreadActivity;
   requestedThreadId?: ThreadId;
   runSettings?: AgentThreadResumeRunSettings;
   status?: ThreadStatus;
   threadId: ThreadId;
 }
 
-export type { AgentThreadResumeDiagnosticReasonCode };
+export type AgentThreadActivity = "failed" | "idle" | "running" | "waitingForInput";
+
+export type AgentThreadResumeDiagnosticReasonCode =
+  | "canonical_thread_id_mismatch"
+  | "resume_response_missing_thread_id"
+  | "resume_response_normalization_failed";
 
 export interface AgentThreadResumeRunSettings {
   cwd?: string;

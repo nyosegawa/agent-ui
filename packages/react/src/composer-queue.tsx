@@ -1,8 +1,5 @@
-import type {
-  AgentSessionState,
-  ThreadId,
-  ThreadStatus,
-} from "@nyosegawa/agent-ui-core";
+import type { AgentSessionState } from "@nyosegawa/agent-ui-core/internal";
+import type { ThreadId, ThreadStatus } from "@nyosegawa/agent-ui-core";
 import {
   useCallback,
   useContext,

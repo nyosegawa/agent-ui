@@ -42,7 +42,7 @@ Use primitives when the host owns layout:
 
 ```tsx
 import {
-  AgentComposerPanel,
+  AgentComposer,
   AgentCriticalNoticeList,
   AgentThreadHeader,
   AgentThreadSurface,
@@ -53,7 +53,7 @@ import {
   <AgentThreadHeader thread={threadView} threadId={threadId} transcript={transcriptView} />
   <AgentCriticalNoticeList />
   <AgentThreadTimeline threadId={threadId} />
-  <AgentComposerPanel thread={thread} threadId={threadId} />
+  <AgentComposer threadId={threadId} />
 </AgentThreadSurface>
 ```
 
@@ -61,7 +61,7 @@ import {
 the transcript, anchored after source metadata when available and at the
 transcript tail otherwise, not as a separate pane.
 
-`AgentComposerPanel` owns the default running-turn follow-up UX. App Server has
+`AgentComposer` owns the default running-turn follow-up UX. App Server has
 no `queue/message` method, so queued follow-ups are UI-local until `Send now`.
 `Send now` and Cmd/Ctrl+Enter use `turn/steer`; Stop uses only
 `turn/interrupt`.

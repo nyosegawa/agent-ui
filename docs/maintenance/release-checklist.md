@@ -23,7 +23,7 @@ bun run validate:release
 bun run validate:e2e
 ```
 
-Do not run `bun run build` in parallel with `publint` or `attw`; use
+Do not run `bun run build:packages` in parallel with `publint` or `attw`; use
 `bun run validate:packages` or `bun run validate:release` so package output is
 built and inspected in order.
 
@@ -59,7 +59,8 @@ Use `.agents/skills/npm-release/` for the release flow.
 3. Open one release PR whose title includes the target version.
 4. Review and merge the release PR after required checks pass. The `Release`
    workflow runs on the resulting `main` push, detects unpublished public
-   package versions, validates, and publishes automatically.
+   package versions, rejects divergent public package versions, validates, and
+   publishes automatically.
 5. Confirm the workflow completed validation, publish, GitHub Release creation,
    and post-publish smoke for the intended commit and package versions.
 

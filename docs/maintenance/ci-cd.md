@@ -35,6 +35,7 @@ protection:
 - `API snapshots`
 - `Package resolution`
 - `Playwright fixtures`
+- `Real local smoke`
 
 Path filters skip expensive jobs when the changed files cannot affect that
 surface. Root config, workflow, lockfile, shared script, package, protocol, or
@@ -46,6 +47,11 @@ Docs that change documented example gates, package exports, protocol
 classification, bridge policy, or browser-visible contracts should still run
 the focused local validations named in [Testing](../architecture/testing.md)
 before review, even when hosted CI treats the PR as docs-only.
+
+Changes to the server bridge, Codex/core protocol surfaces,
+`examples/codex-local-web`, real-local Playwright config, or real-local helper
+scripts run the `Real local smoke` CI job. This keeps the local bridge path gated
+without making every UI-only pull request run the real-local suite.
 
 The `Compatibility` workflow covers Node 22 and 24 smoke checks plus pnpm
 workspace smoke for package and toolchain compatibility-sensitive changes.
@@ -65,8 +71,8 @@ npm publishing is driven by one reviewed release PR. Use
 4. Open one release PR whose title includes the target version.
 5. Review and merge the release PR after required checks pass.
 6. The `Release` workflow runs on the resulting `main` push, checks local
-   package versions against npm, and publishes only unpublished package versions
-   after release validation passes.
+   package versions against npm, fails if public package versions diverge, and
+   publishes only unpublished package versions after release validation passes.
 7. Verify the published packages with registry and clean consumer smoke.
 
 The publish job is the only job with npm provenance permissions. Store
@@ -110,6 +116,7 @@ bun run validate:packages
 bun run test:api-snapshots
 bun run test:package-resolution
 bun run test:e2e:fixtures
+bun run test:e2e:real-local
 ```
 
 For docs that document a narrower surface, use the focused example, protocol,

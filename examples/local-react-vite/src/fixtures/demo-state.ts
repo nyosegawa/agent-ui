@@ -14,7 +14,7 @@ import {
   type FakeTransportRequest,
   type FixtureStep,
   type PendingServerRequest,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import demoFixture from "../../../../fixtures/app-server/demo-session.json";
 import type { FixtureScenario } from "./gallery";
 

@@ -21,6 +21,7 @@
     "baseUrl": ".",
     "paths": {
       "@nyosegawa/agent-ui-core": ["packages/core/src/index.ts"],
+      "@nyosegawa/agent-ui-core/internal": ["packages/core/src/internal.ts"],
       "@nyosegawa/agent-ui-codex": ["packages/codex/src/index.ts"],
       "@nyosegawa/agent-ui-codex/clients": ["packages/codex/src/clients.ts"],
       "@nyosegawa/agent-ui-codex/normalizer": ["packages/codex/src/normalizer.ts"],

@@ -31,6 +31,13 @@ generated Codex schema files, bundled declaration chunks, private CSS chunks,
 and `.aui-*` implementation selectors stay outside the public contract unless a
 later design gate explicitly promotes them.
 
+Declaration snapshots are the contract guard for this redesign. Root, React
+headless, and React primitives must expose raw-free view models, explicit
+controller actions, and host-policy callback contexts instead of reducer store
+state, generated protocol payloads, or child-process internals. Remove old
+shapes instead of preserving them when the cleaner view-model/controller API
+replaces them.
+
 Agent UI package exports also do not make host runtime policy public. Hosts
 still own non-loopback bridge admission, hosted auth, persistence, tenant and
 workspace isolation, audit sinks, upload/static authorization, process
@@ -38,8 +45,8 @@ supervision, billing, and deployment policy.
 
 ## Export Inventory
 
-This inventory was verified from `test/api-snapshots/*__index.d.ts` with
-`bun run test:api-snapshots` on 2026-06-24. Freeze the export map only after
+This inventory was verified from `test/api-snapshots/*.d.ts` with
+`bun run test:api-snapshots` on 2026-06-29. Freeze the export map only after
 internal boundaries, examples, tests, and host integration docs agree.
 
 ### `@nyosegawa/agent-ui-core`
@@ -47,18 +54,21 @@ internal boundaries, examples, tests, and host integration docs agree.
 Keep public: `AGENT_RETENTION_POLICY`, `FakeAgentTransport`,
 `FakeAgentTransportOptions`, `FakeTransportRequest`, `AgentTransport`,
 `AgentTransportEvent`, `AgentRequestOptions`, `RequestId`, `RequestIdKey`,
-`requestIdKey`, `AgentEvent`, product-domain event/state types for account,
-apps, connection, diagnostics, hooks, items, models, run settings, server
-requests, skills, status banners, turns, usage, and warnings,
-`AgentDiagnosticAudience`, resource-aware item block types
+`requestIdKey`, `AgentEvent`, product-domain event/state/view types for account,
+apps, connection, diagnostics, hooks, models, run settings, skills, status
+banners, turns, usage, warnings, and raw-free thread views,
+`AgentDiagnosticAudience`, resource metadata types
 (`AgentItemBlockResource`, `AgentItemBlockResourceKind`), `agentReducer`,
-`createInitialAgentState`,
-`runEventFixture`, and selectors for account, apps, diagnostics,
-audience-filtered diagnostics, items, running turns, ordered items/turns,
-pending approvals, approval views, protocol notifications, run settings,
-server requests, server-request summaries, status banners, thread, thread
-runtime/execution state, thread summary views, transcript views, turn, and
-usage.
+`createInitialAgentState`, opaque `AgentSessionState`, and selectors for apps,
+diagnostics, audience-filtered diagnostics, approval views, protocol
+notifications, run settings, server-request summaries, status banners, thread
+collection metadata, thread runtime/execution state, thread summary views,
+transcript views, and usage.
+
+Implementation boundary: `@nyosegawa/agent-ui-core/internal` exposes raw
+normalized store state, raw reducer selectors, and fixture helpers for Agent UI
+packages and repository tests. It is not the host integration path and must not
+be used to justify adding raw store shape back to the root export.
 
 Replaced by the current API: registry-bucket public shapes
 (`ThreadRegistryState`, `ThreadRegistryStatus`, and `selectThreadRegistry`)
@@ -67,17 +77,21 @@ active-thread selectors, pending operation selectors, runtime-aware
 `AgentThreadSummaryView`, raw-free transcript selectors, and the separate
 public `AgentThreadView`.
 
-Move to subpath or make diagnostic-only: raw normalized `AgentSessionState`,
-`ThreadState`, `AgentThread`, `AgentTurn`, and store-wide selectors when they
-expose internal reconciliation details. Public controllers should consume view
+Moved to implementation boundary or made view-model-only at root: raw normalized
+`AgentSessionState`, `ThreadState`, `AgentItemBlock`, raw transcript block
+selectors, ordered raw thread/turn/item selectors, pending raw approval
+selectors, server-request queue selectors, and `runEventFixture`. Transcript
+blocks now expose display-oriented fields such as `argumentsText`,
+`resultText`, `errorText`, and `files` instead of raw `arguments`, `result`,
+`error`, `changes`, or `metadata`. Public controllers should consume view
 models rather than asking hosts to inspect raw store shape.
 
 Make private: reducer-internal registry/retention helper behavior and any
 canonical-ID reconciliation detail that is not part of an explicit diagnostic
 surface.
 
-Remove: no additional core root exports are removed at this gate beyond
-replacing the registry bucket model with the current collection model.
+Remove: no compatibility aliases are retained for the removed raw root
+selectors or raw root state shape.
 
 ### `@nyosegawa/agent-ui-codex`
 
@@ -137,8 +151,7 @@ The React package has three public JavaScript entrypoints:
   primitives backed by stable view models.
 - `@nyosegawa/agent-ui-react/headless`: controller entry. Exports
   `AgentProvider`, public hooks/controllers, input/resource types, run-policy
-  helpers, transcript-window helpers, usage helpers, and i18n helpers for hosts
-  that own layout.
+  helpers, usage helpers, and i18n helpers for hosts that own layout.
 
 Keep root small. New host-composition surfaces should go to `primitives` or
 `headless`; root should stay the drop-in preset API.
@@ -155,15 +168,13 @@ Transcript item customization uses `renderItem(entry, Default)` with
 scroll containers, approval anchor placement, composer toolbar internals,
 attachment mutation controls, sidebar pagination internals, and generated block
 normalization remain internal/source-level boundaries;
-`useAgentThread`, `useAgentThreadController`, `useAgentThreads`,
-`useAgentThreadHistory`, `useAgentThreadReader`,
-`useAgentThreadListController`, `useAgentComposer`,
-`useAgentComposerController`, `useAgentChatController`,
-`AgentComposerController`, `AgentChatController`, `ThreadList`, and
-`AgentThreadSidebar` are rebuilt on explicit session, active-thread,
-thread-list, composer, transcript, scroll, server-request, and diagnostics
-controllers. The generic `AgentWorkspace` side-panel preset is removed; hosts
-compose their own layout around `AgentChat` and primitives.
+`useAgentThreadController`, `useAgentThreadHistory`, `useAgentThreadReader`,
+`useAgentThreadListController`, `useAgentComposerController`,
+`useAgentChatController`, `AgentComposerController`, `AgentChatController`,
+`ThreadList`, and `AgentThreadSidebar` are rebuilt on explicit session,
+active-thread, thread-list, composer, transcript, scroll, server-request, and
+diagnostics controllers. The generic `AgentWorkspace` side-panel preset is
+removed; hosts compose their own layout around `AgentChat` and primitives.
 `startThreadWithInput()` is not a thread hook method;
 the raw-free first-message start behavior is public on
 `AgentComposerController` as
@@ -180,8 +191,24 @@ The source-level internal composer controller keeps its implementation helper na
 External UI that needs to send into the active `AgentChat` flow should use
 `useAgentChatController().sendMessage(input, options)`. It returns
 `started`, `sent`, `queued`, or `blocked` result objects and forwards
-`turnOptions` for active idle threads; hosts should not recreate that lifecycle
-with direct transport calls.
+`turnOptions` for active idle threads while creating an optimistic user message
+with `clientUserMessageId`; hosts should not recreate that lifecycle with
+direct transport calls.
+React image input uses `AgentImageInput { type: "image", url }`, matching the
+Codex stable input shape. `image_url` is not a React public API.
+Approval composition uses raw-free `AgentApprovalRequest` view models. The
+headless `useAgentApprovals()` hook returns command/file approval views and an
+`approve(requestId, decision?: AgentApprovalDecision)` controller where
+`decision` is `accept`, `acceptForSession`, or `decline`; internal upstream
+legacy decision names are not host-facing. `AgentApprovalQueue`,
+`AgentChat.components.Approval`, `AgentThreadTimeline.renderApproval`, and
+transcript approval anchors accept the same `AgentApprovalRequest` view type.
+File-change approvals carry renderable patch views, including structured
+changed-file entries, instead of requiring hosts to inspect generated
+`fileChanges` payloads.
+Broader server requests remain on `useAgentServerRequests()` as summaries plus
+neutral `respond()` / `reject()` because their response payloads are
+method-specific host policy, not approval UI decisions.
 
 Keep off root: transcript-window utilities
 (`DEFAULT_TRANSCRIPT_ITEM_LIMIT`, `TRANSCRIPT_ITEM_INCREMENT`,
@@ -200,10 +227,10 @@ Remove: compatibility aliases that only preserve unshipped branch behavior.
 ### `@nyosegawa/agent-ui-server`
 
 Keep public: `attachAgentUiWebSocketBridge`,
-`handleAgentUiWebSocketConnection`, `createCodexAppServerBridge`,
-`createAgentUiNextRpcRoute`, `createAgentUiExpressMiddleware`,
-one-shot method policy helpers, bridge option types, browser method capability
-policy types, `AgentUiBridgePolicy` admission mode types, structured bridge
+`handleAgentUiWebSocketConnection`, `createAgentUiNextRpcRoute`,
+`createAgentUiExpressMiddleware`, one-shot method policy helpers, high-level
+`CodexAppServerOptions`, bridge option types, browser method capability policy
+types, `AgentUiBridgePolicy` admission mode types, structured bridge
 rejection/result types such as `AgentUiBridgeRejection`,
 `AgentUiBridgeResult`, `AgentUiBridgeAdmissionDecision`, and
 `AgentUiBridgeRejectionReason`,
@@ -221,12 +248,18 @@ keeping static serving explicitly host-wired. `createAgentUiLocalUploadHandler()
 remains public for hosts that only need browser `File` to local-path upload
 adaptation.
 
-Move to subpath or make explicit advanced surface: dynamic tool helper-thread
-exports and one-shot RPC policy helpers are host-managed lower-level surfaces;
-they can stay public but should not be presented as default React workflow.
+Advanced subpath: `@nyosegawa/agent-ui-server/advanced` exports
+`createCodexAppServerBridge`, `CodexAppServerBridgeOptions`,
+`CodexAppServerBridge`, `CodexChildProcess`, `CodexSpawnOptions`, and the
+dynamic tool helper-thread functions `handleDynamicToolRequest`,
+`createDynamicToolHelperThread`, `maybeResolveHelperThreadRequest`, and
+`dynamicToolFailure`. These are explicit process/stdio composition surfaces,
+not the default React workflow.
 
-Make private: bridge process lifecycle internals and raw child-process details
-that hosts do not need for admission, diagnostics, or shutdown policy.
+Keep off root: bridge process lifecycle internals and raw child-process details
+that hosts do not need for admission, diagnostics, or shutdown policy. Root
+bridge and one-shot options expose only `cwd`, `env`, `initialize`, `shutdown`,
+and `stderr` from the App Server launch configuration.
 
 Remove: `defaultDynamicToolHandler` was removed; hosts now choose
 `dynamicToolPolicy: { mode: "disabled" }`, provide a host callback, or wrap the
@@ -282,8 +315,12 @@ the raw-free `AgentComposerController` view plus `AgentComposerSubmitMode`,
 `AgentComposerDisabledReason`,
 `AgentComposerFailedPendingMessage`, `AgentComposerIntegration`,
 `AgentComposerIntegrationAttachment`, and `AgentComposerIntegrationResolver`.
-Internal first-message operation maps,
-rollback payloads, and generated protocol payloads remain source-level only.
+`AgentComposerSubmitMode` is `"send" | "stop"`; queued follow-ups are local
+composer state, not a third submit-button mode. Internal provider-scoped
+first-message operation maps, rollback payloads, and generated protocol
+payloads remain source-level only. `AgentComposerFailedPendingMessage.retryable`
+is the public signal for whether Retry can be offered after remount or
+initial-state hydration.
 
 Thread lifecycle controller exports may add raw-free start/resume result or
 handle types only after the implementation, examples, tests, and snapshots use
@@ -316,7 +353,7 @@ providers, token stores, workspace registries, tenant/session models, or process
 supervisors.
 
 Composer styled parts exported from `@nyosegawa/agent-ui-react/primitives` are
-`AgentComposerPanel`, `AgentComposerInput`, `AgentComposerToolbar`,
+`AgentComposer`, `AgentComposerInput`, `AgentComposerToolbar`,
 `AgentAttachmentChips`, `AgentComposerSubmitButton`, and
 `AgentStartComposer`. They expose browser UI composition surfaces while keeping
 attachment mutation, preview revocation, queued attachment restore, and
@@ -405,7 +442,7 @@ The package root exports the protocol/session/transport facade: JSON-RPC
 helpers, protocol capability metadata, session helpers, stdio transport,
 WebSocket transport, SDK adapter, and auth helpers. Browser code should import
 the browser-safe grouped clients from
-`@nyosegawa/agent-ui-codex/clients`, the compatibility session facade from
+`@nyosegawa/agent-ui-codex/clients`, the stable session facade from
 `@nyosegawa/agent-ui-codex/session`, normalized event helpers from
 `@nyosegawa/agent-ui-codex/normalizer`, and the WebSocket transport from
 `@nyosegawa/agent-ui-codex/websocket` so Node stdio code stays out of the browser
@@ -504,14 +541,14 @@ Node and framework integration.
 
 Responsibilities:
 
-- local bridge
-- Codex App Server process lifecycle
+- high-level local WebSocket bridge
+- advanced raw stdio bridge subpath for hosts that own process details
 - Next.js one-shot RPC Route Handler helper
 - same-origin WebSocket bridge helpers for full chat integrations
 - local upload helper for browser `File` to App Server-readable path adapters
 - Express middleware
-- dynamic tool helper thread utilities, server-request policy helpers,
-  host-event sinks, and redaction utilities
+- dynamic tool mapping helpers, server-request policy helpers, host-event
+  sinks, and redaction utilities
 - auth/token forwarding recipes
 
 Browser packages must not spawn child processes directly.
@@ -525,15 +562,20 @@ Responsibilities:
 - define `<agent-chat>` or a caller-supplied tag name
 - accept `transport`, `initialState`, `components`, and `agentOptions` as JavaScript
   properties
-- pass `agentOptions.className` or the `chat-class` attribute through to the
-  rendered `AgentChat`
+- keep registration deterministic: no-DOM registration returns `undefined`,
+  same-tag registration is idempotent, and foreign tag collisions throw
+- treat `agentOptions` as a complete replacement for transport, initial state,
+  component replacements, and class name
+- pass `agentOptions.className` or the observed `chat-class` attribute through
+  to the rendered `AgentChat`
+- remount `AgentProvider` when `transport` or `initialState` changes
 - render the standard React `AgentChat` inside `AgentProvider`
 
 The wrapper does not create transports, spawn Codex, or include CSS
 automatically. Hosts should import `@nyosegawa/agent-ui-react/styles.css`.
 Token overrides on the custom element or a wrapper are the supported styling
-path. The `chat-class` attribute is read when the element renders; it is not a
-general observed-attribute API for every `AgentChat` option.
+path. `chat-class` is the only observed attribute; other options stay as
+JavaScript properties because they carry objects or functions.
 
 ## Examples
 
@@ -580,11 +622,12 @@ export function App() {
 }
 ```
 
-Browser hosts connect to a host-owned WebSocket endpoint. Node hosts that own
-the local process use the server package:
+Browser hosts connect to a host-owned WebSocket endpoint. Node hosts normally
+use the root WebSocket bridge. Hosts that intentionally compose their own stdio
+process bridge use the advanced subpath:
 
 ```ts
-import { createCodexAppServerBridge } from "@nyosegawa/agent-ui-server";
+import { createCodexAppServerBridge } from "@nyosegawa/agent-ui-server/advanced";
 
 const bridge = createCodexAppServerBridge({
   initialize: {
@@ -609,37 +652,39 @@ Headless usage:
 import {
   useAgentApprovals,
   useAgentComposerController,
-  useAgentThread,
+  useAgentThreadController,
 } from "@nyosegawa/agent-ui-react/headless";
 
-const thread = useAgentThread(threadId);
+const thread = useAgentThreadController(threadId);
 const approvals = useAgentApprovals(threadId);
 const composer = useAgentComposerController(threadId);
 ```
 
 ## Export Boundary Gates
 
-The package boundary is mechanically checked after `bun run build`:
+The package boundary is mechanically checked after `bun run build:packages`:
 
 - `bun run test:api-snapshots` reads every package `exports` map and compares
   only public declaration targets with `test/api-snapshots/*`. Missing,
   changed, and stale snapshots fail unless `bun run test:api-snapshots:update`
   is run intentionally. If a declaration target is missing because package
   output has not been built, the script reports the missing export target and
-  asks for `bun run build` or `bun run validate:packages` instead of surfacing a
+  asks for `bun run build:packages` or `bun run validate:packages` instead of surfacing a
   raw filesystem error. The check also normalizes private hashed declaration
   chunk names before comparing snapshots and verifies import/require declaration
   parity for each exported subpath. Internal declaration chunks generated by the
   bundler, including hashed `.d.ts` files, are not public API snapshots unless
   they are reachable from an export map.
-- `bun run test:packlist` runs after `bun run build` in `bun run
-  validate:packages`. It dry-runs each package packlist and rejects unexpected
+- `bun run test:packlist` runs after `bun run build:packages` in `bun run
+validate:packages`. It dry-runs each package packlist and rejects unexpected
   source files, stale build artifacts, and private generated files outside the
   current allowed publish surface.
 - `bun run test:package-resolution` reads the same export maps, verifies
   `import.meta.resolve`, ESM import, CJS `require`/`require.resolve`, and
   rejects undocumented deep imports such as package `dist/*`, `src/*`, generated
   Codex schema subpaths, and private CSS chunks.
+  It creates a fresh package build before resolving packages from an isolated
+  consumer project.
 - `bun run test:node-compat` runs inside `bun run validate:packages`. It checks
   representative named exports for package roots and documented JavaScript
   subpaths, then imports/requires every public JavaScript export target from the
@@ -647,7 +692,7 @@ The package boundary is mechanically checked after `bun run build`:
   `@nyosegawa/agent-ui-react/styles.css` are resolver-checked, not executed as
   JavaScript.
 
-Only these subpaths are public today:
+Stable host-facing public subpaths:
 
 - `@nyosegawa/agent-ui-core`
 - `@nyosegawa/agent-ui-codex`
@@ -662,7 +707,12 @@ Only these subpaths are public today:
 - `@nyosegawa/agent-ui-react/primitives`
 - `@nyosegawa/agent-ui-react/styles.css`
 - `@nyosegawa/agent-ui-server`
+- `@nyosegawa/agent-ui-server/advanced`
 - `@nyosegawa/agent-ui-web-components`
+
+Exported implementation subpaths:
+
+- `@nyosegawa/agent-ui-core/internal`
 
 React style chunks under `dist/styles/*` are copied package internals used by
 `styles.css`, not host imports. Internal `.aui-*` selectors are likewise

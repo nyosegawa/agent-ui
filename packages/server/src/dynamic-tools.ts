@@ -1,8 +1,8 @@
 import { createCodexSession } from "@nyosegawa/agent-ui-codex";
 import type {
   AgentDiagnosticAudience,
+  AgentServerRequest,
   AgentTransportEvent,
-  PendingServerRequest,
 } from "@nyosegawa/agent-ui-core";
 import type { createCodexAppServerBridge } from "./bridge";
 import {
@@ -132,7 +132,7 @@ const DEFAULT_DYNAMIC_TOOL_TIMEOUT_MS = 20_000;
 
 export async function handleDynamicToolRequest(
   event: AgentTransportEvent & {
-    request: PendingServerRequest;
+    request: AgentServerRequest;
     requestId: NonNullable<AgentTransportEvent["requestId"]>;
   },
   transport: ReturnType<typeof createCodexAppServerBridge>["transport"],
@@ -297,7 +297,7 @@ export function dynamicToolFailure(error: unknown): DynamicToolCallResponse {
   };
 }
 
-function dynamicToolRequestFromPending(request: PendingServerRequest | undefined): DynamicToolRequest {
+function dynamicToolRequestFromPending(request: AgentServerRequest | undefined): DynamicToolRequest {
   const payload = isRecord(request?.payload) ? request.payload : {};
   const namespace = payload.namespace;
   return {
@@ -397,7 +397,7 @@ function dynamicContentItemFromMcpContent(
   return [{ text: JSON.stringify(item), type: "inputText" }];
 }
 
-function threadIdFromRequest(request: PendingServerRequest): string | undefined {
+function threadIdFromRequest(request: AgentServerRequest): string | undefined {
   const payload = isRecord(request.payload) ? request.payload : undefined;
   const value = request.threadId ?? payload?.threadId ?? payload?.thread_id;
   return typeof value === "string" ? value : undefined;
@@ -412,7 +412,7 @@ function isMcpToolApprovalElicitation(payload: unknown): boolean {
 
 async function resolveHelperPermissionRequest(
   event: AgentTransportEvent & {
-    request: PendingServerRequest;
+    request: AgentServerRequest;
     requestId: NonNullable<AgentTransportEvent["requestId"]>;
   },
   transport: ReturnType<typeof createCodexAppServerBridge>["transport"],

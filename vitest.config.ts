@@ -3,6 +3,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   resolve: {
     alias: {
+      "@nyosegawa/agent-ui-core/internal": new URL("./packages/core/src/internal.ts", import.meta.url).pathname,
       "@nyosegawa/agent-ui-core": new URL("./packages/core/src/index.ts", import.meta.url).pathname,
       "@nyosegawa/agent-ui-codex/clients": new URL("./packages/codex/src/clients.ts", import.meta.url).pathname,
       "@nyosegawa/agent-ui-codex/normalizer": new URL("./packages/codex/src/normalizer.ts", import.meta.url).pathname,

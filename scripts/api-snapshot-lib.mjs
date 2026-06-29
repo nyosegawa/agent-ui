@@ -86,7 +86,7 @@ function assertBuiltDeclarationsExist(declarations, repoRoot) {
     [
       "Built declaration files are missing for public API snapshot checks.",
       ...missing.map((entry) => `- ${entry}`),
-      "Run bun run build or bun run validate:packages before bun run test:api-snapshots.",
+      "Run bun run build:packages or bun run validate:packages before bun run test:api-snapshots.",
     ].join("\n"),
   );
 }
@@ -138,7 +138,7 @@ function normalizeDeclarationForConditionParity(value) {
 
 function normalizePrivateDeclarationChunks(value) {
   return value.replace(
-    /(\.\/[A-Za-z0-9_$-]+-)[A-Za-z0-9_-]{6,}(\.(?:cjs|js))/g,
-    "$1<chunk>$2",
+    /(\.\/(?:InitializeParams|UserInput|advanced|chat|fake-transport|method-params|normalize|protocol|provider|usage))-[A-Za-z0-9_-]+(\.(?:cjs|js))/g,
+    "$1-<chunk>$2",
   );
 }

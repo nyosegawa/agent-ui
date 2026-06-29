@@ -1,15 +1,14 @@
 import type React from "react";
-import type { PendingServerRequest } from "@nyosegawa/agent-ui-core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useAgentBootstrap,
   useAgentDiagnostics,
-  useAgentThread,
   useAgentThreads,
   type ThreadStartOptions,
   type TurnStartOptions,
 } from "../hooks";
 import { useAgentChatController } from "../hooks/composer";
+import { useInternalAgentThread } from "../hooks/thread";
 import {
   AgentI18nProvider,
   useAgentI18n,
@@ -55,14 +54,15 @@ import {
 } from "./status";
 import type { AgentLocalMediaUrlResolver } from "../timeline";
 import { IconGauge } from "../components-internal";
+import type { AgentApprovalRequest } from "../approval-types";
 
 export interface AgentApprovalComponentProps {
-  approval: PendingServerRequest;
+  approval: AgentApprovalRequest;
   Default: React.ComponentType<AgentApprovalDefaultProps>;
 }
 
 export interface AgentApprovalDefaultProps {
-  approval: PendingServerRequest;
+  approval: AgentApprovalRequest;
 }
 
 export interface AgentItemDefaultProps {
@@ -224,7 +224,7 @@ function AgentChatInner({
   const compact = useCompactLayout();
   const contextSheetLayout = useContextSheetLayout();
   const { t } = useAgentI18n();
-  const { thread, threadId, startThread } = useAgentThread();
+  const { thread, threadId, startThread } = useInternalAgentThread();
   const chatController = useAgentChatController();
   const { activeThreadId, setActiveThread } = useAgentThreads();
   useThreadUrlRouting(threadUrlRouting, activeThreadId);

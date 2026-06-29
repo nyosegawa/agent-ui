@@ -33,9 +33,15 @@ export type {
   AgentThreadSourceKind,
   AgentThreadStartSource,
 } from "./request-options";
-export { useAgentApprovals, useAgentServerRequests } from "./hooks/approvals";
 export {
-  useAgentComposer,
+  useAgentApprovals,
+  useAgentServerRequests,
+} from "./hooks/approvals";
+export type {
+  AgentApprovalDecision,
+  AgentApprovalRequest,
+} from "./approval-types";
+export {
   useAgentChatController,
   useAgentComposerController,
   type AgentChatController,
@@ -60,7 +66,6 @@ export {
   type TurnStartOptions,
 } from "./hooks/run-settings";
 export {
-  useAgentThread,
   useAgentThreadActions,
   useAgentThreadController,
   useAgentThreadHistory,
@@ -89,7 +94,7 @@ export {
   type AgentThreadListControllerOptions,
   type AgentThreadListRequest,
 } from "./hooks/thread-list";
-export { useAgentTurn, useAgentTurnController } from "./hooks/turn";
+export { useAgentTurnController } from "./hooks/turn";
 export {
   useAgentTranscriptScrollController,
   type AgentTranscriptScrollController,

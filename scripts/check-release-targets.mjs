@@ -38,11 +38,14 @@ export async function checkReleaseTargets(root = repoRoot, options = {}) {
   );
   const unpublished = packageStatuses.filter((pkg) => !pkg.published);
   const published = packageStatuses.filter((pkg) => pkg.published);
-  const shouldPublish = changesets.length === 0 && unpublished.length > 0;
+  const versions = [...new Set(packageStatuses.map((pkg) => pkg.version))];
   const error =
-    changesets.length > 0 && unpublished.length > 0
+    versions.length > 1
+      ? `Public package versions diverge (${versions.join(", ")}). Run one reviewed Changesets version PR before publishing.`
+      : changesets.length > 0 && unpublished.length > 0
       ? "Unversioned changesets remain while unpublished package versions exist. Merge a reviewed Changesets version PR before publishing."
       : undefined;
+  const shouldPublish = !error && changesets.length === 0 && unpublished.length > 0;
 
   return {
     changesets,
@@ -54,7 +57,7 @@ export async function checkReleaseTargets(root = repoRoot, options = {}) {
     shouldPublish,
     unpublished,
     unpublishedCount: unpublished.length,
-    versions: [...new Set(packageStatuses.map((pkg) => pkg.version))],
+    versions,
   };
 }
 

@@ -1,10 +1,10 @@
 import type { AgentModel, ReasoningEffort } from "@nyosegawa/agent-ui-core";
 import { useCallback } from "react";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import { useCodexSession } from "./codex-session";
 
 export function useAgentModels() {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const refreshModels = useCallback(async () => {
     const response = await codex.models.list();

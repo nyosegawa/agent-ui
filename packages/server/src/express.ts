@@ -1,5 +1,9 @@
 import { jsonRpcErrorPayload } from "@nyosegawa/agent-ui-codex";
-import { createCodexAppServerBridge, type CodexAppServerBridgeOptions } from "./bridge";
+import {
+  codexAppServerBridgeOptionsFromRoot,
+  createCodexAppServerBridge,
+  type CodexAppServerOptions,
+} from "./bridge";
 import {
   isOneShotRpcMethodAllowed,
   oneShotRpcInvalidRequestError,
@@ -17,7 +21,7 @@ export interface MinimalExpressResponse {
   status(code: number): MinimalExpressResponse;
 }
 
-export type AgentUiExpressMiddlewareOptions = CodexAppServerBridgeOptions &
+export type AgentUiExpressMiddlewareOptions = CodexAppServerOptions &
   OneShotRpcMethodPolicyOptions;
 
 export function createAgentUiExpressMiddleware(
@@ -27,10 +31,12 @@ export function createAgentUiExpressMiddleware(
     req: MinimalExpressRequest,
     res: MinimalExpressResponse,
   ) {
-    const { allowedMethods, ...bridgeOptions } = options;
+    const { allowedMethods } = options;
     const method = req.body?.method;
     if (typeof method !== "string") {
-      res.status(400).json({ error: oneShotRpcInvalidRequestError("Missing or invalid method") });
+      res
+        .status(400)
+        .json({ error: oneShotRpcInvalidRequestError("Missing or invalid method") });
       return;
     }
     if (!isOneShotRpcMethodAllowed(method, { allowedMethods })) {
@@ -39,7 +45,7 @@ export function createAgentUiExpressMiddleware(
     }
     let bridge: ReturnType<typeof createCodexAppServerBridge> | undefined;
     try {
-      bridge = createCodexAppServerBridge(bridgeOptions);
+      bridge = createCodexAppServerBridge(codexAppServerBridgeOptionsFromRoot(options));
       await bridge.transport.connect();
       const result = await bridge.transport.request(method, req.body?.params);
       res.json({ result });

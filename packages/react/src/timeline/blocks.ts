@@ -1,7 +1,7 @@
 import type {
   AgentItemBlock,
   TurnState,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import {
   commandTextForItem,
   displayText,

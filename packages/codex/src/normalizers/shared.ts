@@ -1,10 +1,12 @@
 import type {
-  AgentItemMetadata,
-  AgentItemState,
   AgentThread,
   AgentTurn,
   ThreadStatus,
 } from "@nyosegawa/agent-ui-core";
+import type {
+  AgentItemMetadata,
+  AgentItemState,
+} from "@nyosegawa/agent-ui-core/internal";
 import type { ThreadActiveFlag as CodexThreadActiveFlag } from "../generated/stable/v2/ThreadActiveFlag";
 import type { ThreadStatus as CodexThreadRuntimeStatus } from "../generated/stable/v2/ThreadStatus";
 

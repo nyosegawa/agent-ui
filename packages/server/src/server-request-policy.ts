@@ -1,4 +1,5 @@
-import type { AgentTransportEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
+import type { AgentTransportEvent } from "@nyosegawa/agent-ui-core";
+import type { PendingServerRequest } from "@nyosegawa/agent-ui-core/internal";
 import {
   boundedFileSystemPermission,
   boundedGenericPermission,
@@ -14,9 +15,8 @@ export interface ServerRequestPolicy {
 }
 
 export interface ServerRequestPolicyContext {
-  kind: PendingServerRequest["kind"];
+  kind: string;
   payload: unknown;
-  request: PendingServerRequest;
   requestId: NonNullable<AgentTransportEvent["requestId"]>;
   threadId?: string;
   turnId?: string;
@@ -140,7 +140,7 @@ export function responseForServerRequest(
   policy: ResolvedServerRequestPolicy,
 ): {
   action: string;
-  kind: PendingServerRequest["kind"];
+  kind: string;
   requestId: NonNullable<AgentTransportEvent["requestId"]>;
   response: unknown;
 } | undefined {
@@ -289,7 +289,6 @@ function serverRequestPolicyContext(
   return {
     kind: request.kind,
     payload,
-    request,
     requestId,
     threadId: request.threadId ?? threadIdFromPayload(payload),
     turnId: request.turnId ?? turnIdFromPayload(payload),

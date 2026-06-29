@@ -1,4 +1,4 @@
-import type { ThreadState } from "@nyosegawa/agent-ui-core";
+import type { ThreadState } from "@nyosegawa/agent-ui-core/internal";
 
 export function displayText(value: unknown): string | undefined {
   if (typeof value === "string") return value;
@@ -82,11 +82,6 @@ export function numberValue(value: unknown): number | undefined {
 export function formatDuration(durationMs: number): string {
   if (durationMs < 1000) return `${durationMs}ms`;
   return `${(durationMs / 1000).toFixed(durationMs < 10_000 ? 1 : 0)}s`;
-}
-
-export function formatJson(value: unknown): string {
-  if (typeof value === "string") return value;
-  return JSON.stringify(value, null, 2) ?? "";
 }
 
 export function kindLabel(kind: string): string {

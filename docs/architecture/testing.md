@@ -23,7 +23,11 @@ bun run validate:release
 bun run validate:e2e
 ```
 
-`bun run validate:packages` is the ordered package path: build,
+`bun run build` runs package builds and example builds in that order. Use
+`bun run build:packages` when a gate needs publishable package artifacts only,
+and `bun run build:examples` when validating examples separately.
+
+`bun run validate:packages` is the ordered package path: package build,
 `test:packlist`, `test:node-compat`, `publint`, then `attw`. Do not run package
 build, `publint`, or `attw` in parallel because build cleans package `dist/`
 directories.
@@ -35,7 +39,7 @@ Canonical validation tiers:
   normalization coverage. The legacy `bun run test:fixtures` command delegates
   to `bun run test:core-fixtures`; both are the core reducer/state fixture gate,
   not browser fixture e2e and not raw JSON-RPC conformance.
-- `bun run validate:packages`: fresh package build, npm packlist smoke, Node
+- `bun run validate:packages`: fresh `build:packages`, npm packlist smoke, Node
   compatibility smoke, `publint`, and `arethetypeswrong` in the required order.
 - `bun run validate:e2e`: clean Playwright ports, then deterministic browser
   e2e.
@@ -81,8 +85,8 @@ Focused example gates:
   `playwright.fixtures.config.ts` spec when fixture routes, close-ups, density,
   resource resolution, scoped lists, or mobile layout changes.
 
-Fixture e2e is the pull request browser gate; real-local e2e is a release and
-local validation gate.
+Fixture e2e is the broad pull request browser gate; real-local e2e runs for
+local-bridge-sensitive pull requests plus release and local validation.
 
 Use `bun run check:clean-build-output` before claiming a clean-state validation
 when package, example, declaration, or TypeScript graph changes should be proven
@@ -102,6 +106,7 @@ focused jobs:
 - `API snapshots`
 - `Package resolution`
 - `Playwright fixtures`
+- `Real local smoke`
 
 The `API snapshots` job performs a fresh package build before checking
 declaration snapshots because the snapshot script reads `dist` declaration
@@ -131,10 +136,12 @@ they cover the most user-facing component wiring and are already backed by
 workspace TypeScript dependencies.
 
 The release workflow runs `bun run validate:release` and then
-`bun run validate:e2e`, so the real-local fake App Server suite is release
-evidence without blocking every pull request. On a reviewed release PR merge,
-the trusted `main` push path publishes only unpublished package versions after
-release validation. The publish job runs `bun run release:publish`, which
+`bun run validate:e2e`, so the full browser e2e suite is release evidence. Pull
+requests that change the local Codex bridge, package server boundary, or
+`examples/codex-local-web` run the CI `Real local smoke` job before merge. On a
+reviewed release PR merge, the trusted `main` push path publishes only
+unpublished package versions after release validation. The publish job runs
+`bun run release:publish`, which
 performs its own package build before Changesets publishes immutable npm
 tarballs, then runs post-publish registry install smoke.
 

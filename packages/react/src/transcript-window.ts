@@ -1,4 +1,4 @@
-import type { ThreadState, TurnState } from "@nyosegawa/agent-ui-core";
+import type { ThreadState, TurnState } from "@nyosegawa/agent-ui-core/internal";
 
 export const DEFAULT_TRANSCRIPT_ITEM_LIMIT = 48;
 export const TRANSCRIPT_ITEM_INCREMENT = 48;

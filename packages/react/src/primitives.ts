@@ -4,7 +4,26 @@ export * from "./resources";
 export * from "./timeline";
 export * from "./usage";
 export * from "./components/approvals";
-export * from "./components/composer";
+export {
+  AgentAttachmentChips,
+  AgentComposer,
+  AgentComposerInput,
+  AgentComposerSubmitButton,
+  AgentComposerToolbar,
+  type AgentAttachmentChip,
+  type AgentAttachmentChipKind,
+  type AgentAttachmentChipsProps,
+  type AgentComposerInputProps,
+  type AgentComposerIntegration,
+  type AgentComposerIntegrationAttachment,
+  type AgentComposerIntegrationResolver,
+  type AgentComposerProps,
+  type AgentComposerSubmitButtonProps,
+  type AgentComposerToolbarProps,
+  type AgentLocalAttachmentKind,
+  type AgentLocalAttachmentResolver,
+  type AgentResolvedLocalAttachment,
+} from "./components/composer";
 export * from "./components/context-usage";
 export * from "./components/first-run";
 export * from "./components/locale";

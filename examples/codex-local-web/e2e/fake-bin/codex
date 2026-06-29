@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+
+if [ "${1:-}" = "app-server" ] && [ "${2:-}" = "--listen" ] && [ "${3:-}" = "stdio://" ]; then
+  exec bun "$SCRIPT_DIR/fake-codex-app-server.ts"
+fi
+
+echo "fake codex only supports: codex app-server --listen stdio://" >&2
+exit 64

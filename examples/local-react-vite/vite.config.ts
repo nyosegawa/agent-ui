@@ -11,6 +11,7 @@ export default defineConfig({
       "@nyosegawa/agent-ui-codex/request-builders": `${repoRoot}/packages/codex/src/request-builders.ts`,
       "@nyosegawa/agent-ui-codex/session": `${repoRoot}/packages/codex/src/session.ts`,
       "@nyosegawa/agent-ui-codex/stable-types": `${repoRoot}/packages/codex/src/stable-types.ts`,
+      "@nyosegawa/agent-ui-core/internal": `${repoRoot}/packages/core/src/internal.ts`,
       "@nyosegawa/agent-ui-core": `${repoRoot}/packages/core/src/index.ts`,
       "@nyosegawa/agent-ui-react/styles.css": `${repoRoot}/packages/react/src/styles.css`,
       "@nyosegawa/agent-ui-react/headless": `${repoRoot}/packages/react/src/headless.ts`,

@@ -23,7 +23,7 @@ function HeadlessChatController() {
             onClick={() => thread.resumeThread(entry.id)}
             type="button"
           >
-            {entry.metadata.title ?? entry.thread.name ?? entry.id}
+            {entry.title || entry.subtitle || entry.id}
           </button>
         ))}
         <button onClick={() => void thread.startThread()} type="button">
@@ -31,7 +31,7 @@ function HeadlessChatController() {
         </button>
       </aside>
       <section aria-label="Active thread">
-        <h1>{thread.thread?.metadata.title ?? thread.thread?.thread.name ?? "No thread"}</h1>
+        <h1>{thread.thread?.title || "No thread"}</h1>
         <form
           onSubmit={(event) => {
             event.preventDefault();

@@ -11,7 +11,8 @@ import type { SkillsEvent } from "./events/skills";
 import type { ThreadEvent } from "./events/thread";
 import type { TurnEvent } from "./events/turn";
 import type { UsageEvent } from "./events/usage";
-import type { AgentError, PendingServerRequest, RequestId } from "./state";
+import type { AgentError, RequestId } from "./state";
+import type { AgentServerRequest } from "./events/server-requests";
 
 export type * from "./events/account";
 export type * from "./events/apps";
@@ -45,7 +46,7 @@ export type AgentEvent =
 export interface AgentTransportEvent {
   type: "event" | "request" | "response" | "error" | "stderr" | "raw";
   event?: AgentEvent;
-  request?: PendingServerRequest;
+  request?: AgentServerRequest;
   requestId?: RequestId;
   payload?: unknown;
   error?: AgentError;

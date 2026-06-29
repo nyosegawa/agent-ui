@@ -8,24 +8,30 @@ import process from "node:process";
 import { readWorkspacePackageSurfaces } from "./public-package-surface.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const buildResult = spawnSync("bun", ["run", "build"], {
+const buildResult = spawnSync("bun", ["run", "build:packages"], {
   cwd: repoRoot,
   encoding: "utf8",
   stdio: "inherit",
 });
 if (buildResult.status !== 0) {
-  throw new Error("package resolution smoke requires a fresh successful build");
+  throw new Error("package resolution smoke requires a fresh successful package build");
 }
 
-const tempRoot = await mkdir(join(tmpdir(), `agent-ui-package-resolution-${process.pid}`), {
-  recursive: true,
-}).then(() => join(tmpdir(), `agent-ui-package-resolution-${process.pid}`));
+const tempRoot = await mkdir(
+  join(tmpdir(), `agent-ui-package-resolution-${process.pid}`),
+  {
+    recursive: true,
+  },
+).then(() => join(tmpdir(), `agent-ui-package-resolution-${process.pid}`));
 
 const packageSurfaces = await readWorkspacePackageSurfaces(repoRoot);
 assertCanonicalPublicSpecifiers(packageSurfaces);
 const groupedSurfaces = new Map();
 for (const surface of packageSurfaces) {
-  groupedSurfaces.set(surface.packageName, [...(groupedSurfaces.get(surface.packageName) ?? []), surface]);
+  groupedSurfaces.set(surface.packageName, [
+    ...(groupedSurfaces.get(surface.packageName) ?? []),
+    surface,
+  ]);
 }
 const packages = [...groupedSurfaces.values()].map((surfaces) => {
   const first = surfaces[0];
@@ -47,11 +53,16 @@ try {
   const scopeDir = join(tempRoot, "node_modules", "@nyosegawa");
   await mkdir(scopeDir, { recursive: true });
   for (const pkg of packages) {
-    await cp(join(repoRoot, "packages", pkg.dir), join(scopeDir, pkg.name.split("/")[1]), {
-      dereference: false,
-      filter: (source) => source !== join(repoRoot, "packages", pkg.dir, "node_modules"),
-      recursive: true,
-    });
+    await cp(
+      join(repoRoot, "packages", pkg.dir),
+      join(scopeDir, pkg.name.split("/")[1]),
+      {
+        dereference: false,
+        filter: (source) =>
+          source !== join(repoRoot, "packages", pkg.dir, "node_modules"),
+        recursive: true,
+      },
+    );
     await linkPackageDependencies(pkg.dir, tempRoot);
   }
   await writeFile(join(tempRoot, "package.json"), JSON.stringify({ type: "module" }));
@@ -100,7 +111,10 @@ try {
   }
   await assertReactEntrypointContextSmoke(tempRoot);
 
-  const css = await readFile(join(repoRoot, "packages", "react", "dist", "styles.css"), "utf8");
+  const css = await readFile(
+    join(repoRoot, "packages", "react", "dist", "styles.css"),
+    "utf8",
+  );
   if (!css.includes('@import "./styles/tokens.css";')) {
     throw new Error("dist/styles.css does not reference copied style chunks");
   }
@@ -304,12 +318,19 @@ async function assertWebComponentsConsumerSmoke() {
       new globalThis.URL("../packages/web-components/dist/index.js", import.meta.url)
     );
     const ctor = module.defineAgentChatElement();
-    if (!ctor) throw new Error("defineAgentChatElement did not register a custom element");
+    if (!ctor)
+      throw new Error("defineAgentChatElement did not register a custom element");
     const element = dom.window.document.createElement("agent-chat");
     dom.window.document.body.append(element);
     await new Promise((resolve) => globalThis.setTimeout(resolve, 20));
-    if (!dom.window.document.body.textContent?.includes("Agent UI transport is not configured.")) {
-      throw new Error("web-components no-transport render smoke did not render fallback status");
+    if (
+      !dom.window.document.body.textContent?.includes(
+        "Agent UI transport is not configured.",
+      )
+    ) {
+      throw new Error(
+        "web-components no-transport render smoke did not render fallback status",
+      );
     }
     element.remove();
     await new Promise((resolve) => globalThis.setTimeout(resolve, 20));
@@ -384,7 +405,8 @@ function blockedSubpathsForPackage(dir) {
     return [...common, "./style.css", "./dist/styles.css", ...styleChunks];
   }
   if (dir === "server") return [...common, "./src/websocket.ts", "./dynamic-tools"];
-  if (dir === "web-components") return ["./dist/index.js", "./dist/index.cjs", "./src/index.tsx"];
+  if (dir === "web-components")
+    return ["./dist/index.js", "./dist/index.cjs", "./src/index.tsx"];
   return [...common, "./reducer"];
 }
 
@@ -398,11 +420,13 @@ function assertCanonicalPublicSpecifiers(surfaces) {
     "@nyosegawa/agent-ui-codex/stable-types",
     "@nyosegawa/agent-ui-codex/websocket",
     "@nyosegawa/agent-ui-core",
+    "@nyosegawa/agent-ui-core/internal",
     "@nyosegawa/agent-ui-react",
     "@nyosegawa/agent-ui-react/headless",
     "@nyosegawa/agent-ui-react/primitives",
     "@nyosegawa/agent-ui-react/styles.css",
     "@nyosegawa/agent-ui-server",
+    "@nyosegawa/agent-ui-server/advanced",
     "@nyosegawa/agent-ui-web-components",
   ];
   const actual = surfaces.map((surface) => surface.specifier).sort();

@@ -58,8 +58,9 @@ function upsertItemEvent(
   event: Extract<ItemEvent, { type: "item/started" | "item/completed" }>,
 ): AgentSessionState {
   const threadId = canonicalThreadId(state, event.threadId);
+  const eventItem = event.item as AgentItemState;
   const item =
-    event.item.threadId === threadId ? event.item : { ...event.item, threadId };
+    eventItem.threadId === threadId ? eventItem : { ...eventItem, threadId };
   const clientId =
     item.kind === "userMessage"
       ? clientUserMessageId(item)
@@ -111,14 +112,15 @@ function moveReconciledUserMessage(
       { id: event.turnId, status: "running", threadId: event.threadId },
       event.threadId,
     );
+  const eventItem = event.item as AgentItemState;
   const reconciledItem = reconcileUserMessageItem(
     match.item,
     {
-      ...event.item,
+      ...eventItem,
       threadId: event.threadId,
       turnId: event.turnId,
     },
-    clientUserMessageId(event.item) ?? match.item.id,
+    clientUserMessageId(eventItem) ?? match.item.id,
   );
   const nextSourceTurn = removeItemFromTurn(sourceTurn, match.item.id);
   const nextTargetTurn = itemStore.upsert(targetTurn, reconciledItem);

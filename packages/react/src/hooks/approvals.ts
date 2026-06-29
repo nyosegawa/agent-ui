@@ -1,31 +1,45 @@
 import {
   selectPendingApprovals,
-  selectServerRequestQueue,
-  type AgentError,
-  type RequestId,
-  type ThreadId,
-} from "@nyosegawa/agent-ui-core";
+  selectServerRequestSummaries,
+  type PendingServerRequest,
+} from "@nyosegawa/agent-ui-core/internal";
+import type { AgentError, RequestId, ThreadId } from "@nyosegawa/agent-ui-core";
 import { useCallback, useMemo } from "react";
-import { useAgentContext } from "../provider";
+import {
+  agentApprovalRequestView,
+  isLegacyApprovalRequest,
+  legacyApprovalDecisionResult,
+} from "../approval-view";
+import {
+  approvalDecisionResult,
+  type AgentApprovalDecision,
+} from "../approval-types";
+import { useInternalAgentContext } from "../provider";
 
 export function useAgentApprovals(threadId?: ThreadId) {
-  const { state, transport } = useAgentContext();
-  const approvals = useMemo(
+  const { state, transport } = useInternalAgentContext();
+  const internalApprovals = useMemo(
     () => selectPendingApprovals(state, threadId),
     [state, threadId],
   );
+  const approvals = useMemo(
+    () => internalApprovals.map(agentApprovalRequestView),
+    [internalApprovals],
+  );
+  const internalApprovalById = useMemo(
+    () => new Map(internalApprovals.map((approval) => [approval.id, approval])),
+    [internalApprovals],
+  );
 
   const approve = useCallback(
-    async (requestId: RequestId, result: unknown = { decision: "accept" }) => {
-      const matchedApproval = approvals.find((candidate) => candidate.id === requestId);
+    async (requestId: RequestId, decision: AgentApprovalDecision = "accept") => {
+      const matchedApproval = internalApprovalById.get(requestId);
       await transport.respond(
         requestId,
-        matchedApproval
-          ? approvalResponseResult(matchedApproval.payload, result)
-          : result,
+        approvalResponseResult(matchedApproval, decision),
       );
     },
-    [approvals, transport],
+    [internalApprovalById, transport],
   );
 
   const reject = useCallback(
@@ -40,9 +54,9 @@ export function useAgentApprovals(threadId?: ThreadId) {
 }
 
 export function useAgentServerRequests(threadId?: ThreadId) {
-  const { state, transport } = useAgentContext();
+  const { state, transport } = useInternalAgentContext();
   const requests = useMemo(
-    () => selectServerRequestQueue(state, threadId),
+    () => selectServerRequestSummaries(state, threadId),
     [state, threadId],
   );
   const respond = useCallback(
@@ -65,25 +79,12 @@ function normalizeServerRequestError(error: AgentError | string): AgentError {
   return error;
 }
 
-function approvalResponseResult(payload: unknown, result: unknown): unknown {
-  if (!isLegacyApprovalPayload(payload) || !isRecord(result)) return result;
-  switch (result.decision) {
-    case "accept":
-      return { ...result, decision: "approved" };
-    case "acceptForSession":
-      return { ...result, decision: "approved_for_session" };
-    case "decline":
-      return { ...result, decision: "denied" };
-    default:
-      return result;
+function approvalResponseResult(
+  approval: PendingServerRequest | undefined,
+  decision: AgentApprovalDecision,
+) {
+  if (approval && isLegacyApprovalRequest(approval)) {
+    return legacyApprovalDecisionResult(decision);
   }
-}
-
-function isLegacyApprovalPayload(payload: unknown): boolean {
-  if (!isRecord(payload)) return false;
-  return payload.upstreamMethod === "execCommandApproval" || payload.upstreamMethod === "applyPatchApproval";
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null;
+  return approvalDecisionResult(decision);
 }

@@ -144,7 +144,7 @@ describe("timeline pure helpers", () => {
       toolPreview({
         id: "tool",
         kind: "mcpToolCall",
-        result: { content: [{ text: "true", type: "text" }] },
+        resultText: "true",
         status: "completed",
       }),
     ).toBe("Result captured");
@@ -152,7 +152,7 @@ describe("timeline pure helpers", () => {
       toolPreview({
         id: "tool",
         kind: "mcpToolCall",
-        result: { content: [{ text: "DOM snapshot captured", type: "text" }] },
+        resultText: "DOM snapshot captured",
         status: "completed",
       }),
     ).toBe("DOM snapshot captured");

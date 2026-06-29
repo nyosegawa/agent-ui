@@ -1,4 +1,5 @@
-import type { AgentEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
+import type { AgentEvent } from "@nyosegawa/agent-ui-core";
+import type { PendingServerRequest } from "@nyosegawa/agent-ui-core/internal";
 import {
   isStableServerRequestMethod,
   stableServerRequestMethods,

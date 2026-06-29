@@ -11,6 +11,7 @@ const componentDir = join(reactSrc, "components");
 const hookDir = join(reactSrc, "hooks");
 const timelineDir = join(reactSrc, "timeline");
 const repoRoot = join(__dirname, "..", "..", "..");
+const coreSrc = join(repoRoot, "packages", "core", "src");
 const examplesDir = join(repoRoot, "examples");
 const codexLocalWebSrc = join(examplesDir, "codex-local-web", "src");
 const docsSiteSrc = join(examplesDir, "docs-site", "src");
@@ -244,6 +245,30 @@ describe("React package source structure", () => {
     expect(reactSnapshot).not.toContain("raw: any");
   });
 
+  it("keeps known public raw debt fixed while the redesign removes it", () => {
+    const coreSnapshot = readFileSync(
+      join(repoRoot, "test", "api-snapshots", "core__index.d.ts"),
+      "utf8",
+    );
+    const headlessSnapshot = readFileSync(reactHeadlessApiSnapshot, "utf8");
+    const rootSnapshot = readFileSync(reactApiSnapshot, "utf8");
+    const primitivesSnapshot = readFileSync(
+      join(repoRoot, "test", "api-snapshots", "react__primitives.d.ts"),
+      "utf8",
+    );
+
+    expect(rawDebtFindings("core", coreSnapshot)).toEqual([]);
+    expect(coreRootResidualRawDebt()).toEqual([]);
+    expect(rawDebtFindings("headless", headlessSnapshot)).toEqual([
+      "headless:member:respond: (requestId: RequestId, result: unknown) => Promise<void>;",
+      "headless:member:rateLimits: unknown;",
+    ]);
+    expect(rawDebtFindings("root", rootSnapshot)).toEqual([]);
+    expect(rawDebtFindings("primitives", primitivesSnapshot)).toEqual([
+      "primitives:member:patch: unknown;",
+    ]);
+  });
+
   it("keeps deprecated protocol fallback names out of public declaration snapshots", () => {
     const snapshots = [
       readFileSync(join(repoRoot, "test", "api-snapshots", "core__index.d.ts"), "utf8"),
@@ -410,7 +435,96 @@ function responsibilitySizeFailure(
   ].join("\n");
 }
 
+function coreRootResidualRawDebt(): string[] {
+  const index = readFileSync(join(coreSrc, "index.ts"), "utf8");
+  const rawSymbols = new Set([
+    "AgentItemBlock",
+    "AgentItemMetadata",
+    "AgentItemState",
+    "PendingServerRequest",
+    "ServerRequestQueueState",
+    "ThreadLifecycleState",
+    "ThreadState",
+  ]);
+  return Array.from(index.matchAll(/\b([A-Z]\w+)\b/g))
+    .map((match) => match[1] ?? "")
+    .filter((symbol, index, all) => rawSymbols.has(symbol) && all.indexOf(symbol) === index)
+    .map((symbol) => `core-source:export:${symbol}`);
+}
+
 function interfaceBody(snapshot: string, interfaceName: string): string {
   const match = new RegExp(`interface ${interfaceName} \\{([\\s\\S]*?)\\n\\}`).exec(snapshot);
   return match?.[1] ?? "";
+}
+
+function rawDebtFindings(scope: string, snapshot: string): string[] {
+  const rawDebtLine =
+    /(\b(raw|payload|arguments|changes|result|error|metadata|details|patch|rateLimits)\??: unknown\b|Record<string, unknown>|unknown\[\]|PendingServerRequest|ThreadState|AgentItemBlock|@nyosegawa\/agent-ui-core\/internal|@nyosegawa\/agent-ui-codex\/stable-types|CodexStable|ThreadStartParams|TurnStartParams)/;
+  const trackedSymbols = new Set([
+    "AgentItemBlock",
+    "AgentTranscriptBlockView",
+    "CodexStable",
+    "PendingServerRequest",
+    "ThreadStartParams",
+    "ThreadState",
+    "TurnStartParams",
+  ]);
+  const findings: string[] = [];
+
+  for (const rawLine of snapshot.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!rawDebtLine.test(line)) continue;
+
+    if (/^import ['"]/.test(line)) {
+      const moduleName = /import ['"]([^'"]+)['"]/.exec(line)?.[1] ?? "";
+      findings.push(`${scope}:import-module:${moduleName}`);
+      continue;
+    }
+
+    if (line.startsWith("import ")) {
+      const moduleName = /from '([^']+)'/.exec(line)?.[1] ?? "";
+      if (moduleName.includes("/internal")) {
+        findings.push(`${scope}:import-module:${moduleName}`);
+      }
+      const importedNames = /\{([^}]+)\}/.exec(line)?.[1] ?? "";
+      for (const importedName of importedNames
+        .split(",")
+        .map((name) => name.trim().replace(/ as .*/, ""))) {
+        if (trackedSymbols.has(importedName)) {
+          findings.push(`${scope}:import:${importedName} from ${moduleName}`);
+        }
+      }
+      continue;
+    }
+
+    if (line.startsWith("export ")) {
+      const exportBody = line.replace(/^export \{ /, "").replace(/ \};$/, "");
+      for (const exportedName of exportBody.split(", ")) {
+        const symbolName = exportedName.replace(/^type /, "");
+        if (trackedSymbols.has(symbolName)) {
+          findings.push(`${scope}:export:${exportedName}`);
+        }
+      }
+      continue;
+    }
+
+    if (line.startsWith("declare function ")) {
+      const functionName = /^declare function ([^(]+)/.exec(line)?.[1] ?? "unknown";
+      const rawTypes = Array.from(trackedSymbols).filter((symbol) => line.includes(symbol));
+      if (line.includes(": unknown")) rawTypes.push("unknown");
+      if (rawTypes.length > 0) {
+        findings.push(`${scope}:function:${functionName}:${rawTypes.join(",")}`);
+      }
+      continue;
+    }
+
+    if (/^(interface|type) /.test(line)) {
+      findings.push(`${scope}:${line}`);
+      continue;
+    }
+
+    findings.push(`${scope}:member:${line}`);
+  }
+
+  return findings;
 }

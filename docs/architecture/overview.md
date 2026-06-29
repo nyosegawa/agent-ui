@@ -195,6 +195,15 @@ unsent `queuedFollowUps` locally and scoped to their thread until `Send now` or
 Cmd/Ctrl+Enter calls `turn/steer` with the active `expectedTurnId`; Stop calls
 only `turn/interrupt`.
 
+Composer sends into idle threads create a provider-local optimistic turn and
+user message before `turn/start` resolves. The same `clientUserMessageId` is
+sent to App Server so later user-message events reconcile the optimistic item
+instead of duplicating it. If `turn/start` fails, React marks the item failed
+and completes the optimistic turn so the thread returns to an idle send state.
+First-message retry payloads, cancellation markers, and retry-in-flight markers
+are also provider-scoped runtime state, not module globals or host-visible
+operation maps.
+
 ## Resource Resolution
 
 Composer attachments and transcript local media use structured resource
@@ -226,7 +235,7 @@ Common primitives:
 - `AgentThreadHeader`
 - `AgentThreadTimeline`
 - `AgentApprovalQueue`
-- `AgentComposerPanel`
+- `AgentComposer`
 - `AgentUsagePanel`
 - `AgentDiagnosticsPanel`
 - `AgentSkillsPanel`

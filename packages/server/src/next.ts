@@ -1,5 +1,9 @@
 import { jsonRpcErrorPayload } from "@nyosegawa/agent-ui-codex";
-import { createCodexAppServerBridge, type CodexAppServerBridgeOptions } from "./bridge";
+import {
+  codexAppServerBridgeOptionsFromRoot,
+  createCodexAppServerBridge,
+  type CodexAppServerOptions,
+} from "./bridge";
 import {
   isOneShotRpcMethodAllowed,
   oneShotRpcInvalidRequestError,
@@ -8,7 +12,7 @@ import {
 } from "./one-shot-rpc-policy";
 import { redactStructuredValue } from "./redaction";
 
-export type AgentUiNextRpcRouteOptions = CodexAppServerBridgeOptions &
+export type AgentUiNextRpcRouteOptions = CodexAppServerOptions &
   OneShotRpcMethodPolicyOptions;
 
 /**
@@ -20,7 +24,7 @@ export type AgentUiNextRpcRouteOptions = CodexAppServerBridgeOptions &
  */
 export function createAgentUiNextRpcRoute(options: AgentUiNextRpcRouteOptions = {}) {
   return async function POST(request: Request): Promise<Response> {
-    const { allowedMethods, ...bridgeOptions } = options;
+    const { allowedMethods } = options;
     let body: unknown;
     try {
       body = await request.json();
@@ -50,7 +54,7 @@ export function createAgentUiNextRpcRoute(options: AgentUiNextRpcRouteOptions = 
     }
     let bridge: ReturnType<typeof createCodexAppServerBridge> | undefined;
     try {
-      bridge = createCodexAppServerBridge(bridgeOptions);
+      bridge = createCodexAppServerBridge(codexAppServerBridgeOptionsFromRoot(options));
       await bridge.transport.connect();
       const result = await bridge.transport.request(body.method, body.params);
       return Response.json({ result });

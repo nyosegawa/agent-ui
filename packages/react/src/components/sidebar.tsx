@@ -13,7 +13,7 @@ import {
 } from "../components-internal";
 import { useAgentThreadListController } from "../hooks/thread-list";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import { compactPath, useCompactLayout } from "./shared";
 
 export function ThreadList({
@@ -191,7 +191,7 @@ export function AgentThreadSidebar({
     setSearchTerm,
     threads: listedThreads,
   } = threadList;
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const didAutoLoad = useRef(false);
   const [searchTouched, setSearchTouched] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);

@@ -3,7 +3,7 @@ import type { useAgentBootstrap } from "../hooks";
 import { useAgentAccount, useAgentDiagnostics } from "../hooks";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
 import { IconHistory, buttonClass } from "../components-internal";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import { AgentAccountControl } from "./account-popover";
 import {
   diagnosticsTitle,
@@ -34,7 +34,7 @@ export function AgentStatusBar({
   onOpenThreads,
 }: AgentStatusBarProps = {}) {
   const { t } = useAgentI18n();
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const { account, cancelLogin, login } = useAgentAccount();
   const statusText =
     account.status === "unknown"

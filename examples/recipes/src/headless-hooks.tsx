@@ -1,81 +1,53 @@
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 import { AgentProvider } from "@nyosegawa/agent-ui-react";
 import {
-  useAgentApprovals,
-  useAgentComposer,
-  useAgentThread,
-  useAgentThreads,
+  AgentComposer,
+  AgentThreadTimeline,
+} from "@nyosegawa/agent-ui-react/primitives";
+import {
+  useAgentThreadController,
+  useAgentThreadListController,
 } from "@nyosegawa/agent-ui-react/headless";
 
 function HeadlessThreadView() {
-  const { activeThreadId, setActiveThread, threads } = useAgentThreads();
-  const { thread, turns, startThread } = useAgentThread(activeThreadId);
-  const composer = useAgentComposer(activeThreadId);
-  const { approvals, approve, reject } = useAgentApprovals(activeThreadId);
+  const threadController = useAgentThreadController();
+  const history = useAgentThreadListController({ kind: "history", key: "recipe" });
 
   return (
     <main>
-      <aside>
-        {threads.map((entry) => (
-          <button key={entry.thread.id} onClick={() => setActiveThread(entry.thread.id)}>
-            {entry.thread.name ?? entry.thread.id}
+      <aside aria-label="Thread history">
+        <button onClick={() => void history.refresh()} type="button">
+          Refresh
+        </button>
+        {history.threads.map((entry) => (
+          <button
+            key={entry.id}
+            onClick={() => void history.resumeThread(entry.id)}
+            type="button"
+          >
+            {entry.title || entry.subtitle || entry.id}
           </button>
         ))}
-        <button onClick={() => void startThread()}>New thread</button>
+        {history.nextCursor ? (
+          <button onClick={() => void history.loadNextPage()} type="button">
+            More
+          </button>
+        ) : null}
+        <button onClick={() => void threadController.startThread()} type="button">
+          New thread
+        </button>
       </aside>
-      <section>
-        <h1>{thread?.thread.name ?? "No thread"}</h1>
-        {turns.map((turn) =>
-          turn ? (
-            <ol key={turn.turn.id}>
-              {turn.itemOrder.map((itemId) => (
-                <li key={itemId}>
-                  {turn.items[itemId]?.text ?? turn.streamingTextByItemId[itemId]}
-                </li>
-              ))}
-            </ol>
-          ) : null,
-        )}
-        {approvals.map((approval) => (
-          <div key={String(approval.id)}>
-            <strong>
-              {approval.kind === "fileChangeApproval" ? "File change" : "Command"}
-            </strong>
-            <p>{approvalSummary(approval.payload)}</p>
-            <button onClick={() => void approve(approval.id)}>Approve</button>
-            <button onClick={() => void reject(approval.id)}>Reject</button>
-          </div>
-        ))}
-        <form
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (activeThreadId) {
-              void composer.submit();
-            } else if (composer.canSubmit) {
-              void composer.startThreadWithInput(composer.value);
-            }
-          }}
-        >
-          <input
-            aria-label="Message"
-            onChange={(event) => composer.setValue(event.currentTarget.value)}
-            value={composer.value}
-          />
-          <button disabled={!composer.canSubmit}>Send</button>
-        </form>
+      <section aria-label="Active thread">
+        <h1>{threadController.thread?.title || "No thread"}</h1>
+        {threadController.threadId ? (
+          <>
+            <AgentThreadTimeline threadId={threadController.threadId} />
+            <AgentComposer threadId={threadController.threadId} />
+          </>
+        ) : null}
       </section>
     </main>
   );
-}
-
-function approvalSummary(payload: unknown): string {
-  if (!payload || typeof payload !== "object") return "Review required";
-  const record = payload as Record<string, unknown>;
-  for (const key of ["command", "path", "summary", "reason"]) {
-    const value = record[key];
-    if (typeof value === "string" && value.trim()) return value.trim();
-  }
-  return "Review required";
 }
 
 export function HeadlessHooksExample({ transport }: { transport: AgentTransport }) {

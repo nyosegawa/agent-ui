@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import {
   codexHooksListParams,
   codexSkillsConfigWriteParams,
@@ -17,7 +17,7 @@ export type {
 } from "../request-options";
 
 export function useAgentSkills(cwd?: string) {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const key = cwd ?? "";
   const skills = state.skills.byCwd[key] ?? [];
@@ -56,7 +56,7 @@ export function useAgentSkills(cwd?: string) {
 }
 
 export function useAgentHooks(cwd?: string) {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const key = cwd ?? "";
   const hooks = state.hooks.byCwd[key] ?? [];

@@ -474,7 +474,7 @@ Use these primitives when embedding Agent UI into existing product chrome:
   `AgentThreadView` / `AgentChat` anchor it after source item or turn metadata
   when available, with a transcript-tail fallback for metadata-free or
   missing-source requests. Hosts can also place it standalone.
-- `AgentComposerPanel`: turn composer with inline policy / model / effort menus,
+- `AgentComposer`: turn composer with inline policy / model / effort menus,
   running-turn steering, composer-local Stop, and compact context usage.
 - `AgentComposerInput`, `AgentComposerToolbar`, `AgentAttachmentChips`,
   `AgentComposerSubmitButton`, and `AgentStartComposer`: composer styled parts
@@ -540,7 +540,7 @@ and the composer:
 
 ```tsx
 import {
-  AgentComposerPanel,
+  AgentComposer,
   AgentCriticalNoticeList,
   AgentThreadHeader,
   AgentThreadSurface,
@@ -551,7 +551,7 @@ import {
   <AgentThreadHeader thread={threadView} threadId={threadId} transcript={transcriptView} />
   <AgentCriticalNoticeList />
   <AgentThreadTimeline threadId={threadId} />
-  <AgentComposerPanel thread={thread} threadId={threadId} />
+  <AgentComposer threadId={threadId} />
 </AgentThreadSurface>
 ```
 
@@ -762,7 +762,8 @@ inside custom UI.
 element accepts `transport`, `initialState`, `components`, or the combined
 `agentOptions` object as JavaScript properties and renders the standard preset
 chat. Use the `chat-class` attribute or `agentOptions.className` to pass a class
-name to the rendered `AgentChat`.
+name to the rendered `AgentChat`. `agentOptions` is a complete replacement, and
+replacing `transport` or `initialState` remounts the underlying provider.
 
 ```ts
 import "@nyosegawa/agent-ui-react/styles.css";

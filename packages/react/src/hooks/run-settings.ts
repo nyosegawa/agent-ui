@@ -1,10 +1,7 @@
-import {
-  selectRunSettings,
-  type AgentModel,
-  type ReasoningEffort,
-} from "@nyosegawa/agent-ui-core";
+import { selectRunSettings } from "@nyosegawa/agent-ui-core/internal";
+import type { AgentModel, ReasoningEffort } from "@nyosegawa/agent-ui-core";
 import { useCallback } from "react";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import {
   effectiveAgentRunPolicies,
   type AgentRunPolicyId,
@@ -22,7 +19,7 @@ export {
 } from "../run-policies";
 
 export function useAgentRunSettings() {
-  const { dispatch, runPolicies, state } = useAgentContext();
+  const { dispatch, runPolicies, state } = useInternalAgentContext();
   const runSettings = selectRunSettings(state);
   const policies = effectiveAgentRunPolicies(runPolicies);
   const selectedPolicy =

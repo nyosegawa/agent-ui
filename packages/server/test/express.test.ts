@@ -1,19 +1,21 @@
 import { PassThrough } from "node:stream";
 import { describe, expect, it } from "vitest";
-import {
-  createAgentUiExpressMiddleware,
-  type CodexChildProcess,
-  type MinimalExpressResponse,
-} from "../src";
+import { createAgentUiExpressMiddleware, type MinimalExpressResponse } from "../src";
+import { agentUiServerInternalBridgeOptions } from "../src/bridge";
+import type { CodexChildProcess } from "../src/advanced";
 
 describe("createAgentUiExpressMiddleware", () => {
   it("handles an allowed productized request and closes the App Server process", async () => {
     const child = createFakeChildProcess();
-    const middleware = createAgentUiExpressMiddleware({ spawn: () => child.process });
+    const middleware = createAgentUiExpressMiddleware(
+      testBridgeOptions(() => child.process),
+    );
     const response = createResponse();
     const pending = middleware({ body: { method: "model/list", params: {} } }, response);
 
-    await waitFor(() => child.writes.some((line) => JSON.parse(line).method === "model/list"));
+    await waitFor(() =>
+      child.writes.some((line) => JSON.parse(line).method === "model/list"),
+    );
     const request = child.writes
       .map((line) => JSON.parse(line))
       .find((line) => line.method === "model/list");
@@ -27,11 +29,15 @@ describe("createAgentUiExpressMiddleware", () => {
 
   it("redacts App Server JSON-RPC errors before returning middleware responses", async () => {
     const child = createFakeChildProcess();
-    const middleware = createAgentUiExpressMiddleware({ spawn: () => child.process });
+    const middleware = createAgentUiExpressMiddleware(
+      testBridgeOptions(() => child.process),
+    );
     const response = createResponse();
     const pending = middleware({ body: { method: "model/list", params: {} } }, response);
 
-    await waitFor(() => child.writes.some((line) => JSON.parse(line).method === "model/list"));
+    await waitFor(() =>
+      child.writes.some((line) => JSON.parse(line).method === "model/list"),
+    );
     const request = child.writes
       .map((line) => JSON.parse(line))
       .find((line) => line.method === "model/list");
@@ -60,11 +66,11 @@ describe("createAgentUiExpressMiddleware", () => {
   });
 
   it("redacts spawn startup failures before returning middleware responses", async () => {
-    const middleware = createAgentUiExpressMiddleware({
-      spawn: () => {
+    const middleware = createAgentUiExpressMiddleware(
+      testBridgeOptions(() => {
         throw new Error("missing binary token: express-spawn-secret");
-      },
-    });
+      }),
+    );
     const response = createResponse();
 
     await middleware({ body: { method: "model/list", params: {} } }, response);
@@ -76,9 +82,9 @@ describe("createAgentUiExpressMiddleware", () => {
 
   it("returns generic startup failures when stdio streams are missing", async () => {
     const child = createFakeChildProcess();
-    const middleware = createAgentUiExpressMiddleware({
-      spawn: () => ({ ...child.process, stdout: null }),
-    });
+    const middleware = createAgentUiExpressMiddleware(
+      testBridgeOptions(() => ({ ...child.process, stdout: null })),
+    );
     const response = createResponse();
 
     await middleware({ body: { method: "model/list", params: {} } }, response);
@@ -90,14 +96,33 @@ describe("createAgentUiExpressMiddleware", () => {
     expect(child.killed()).toBe(true);
   });
 
-  it("rejects host-only methods before spawning the App Server process", async () => {
+  it("rejects unsupported root process options before spawning", async () => {
     let spawnCount = 0;
     const middleware = createAgentUiExpressMiddleware({
       spawn: () => {
         spawnCount += 1;
         return createFakeChildProcess().process;
       },
-    });
+    } as unknown as Parameters<typeof createAgentUiExpressMiddleware>[0]);
+    const response = createResponse();
+
+    await middleware({ body: { method: "model/list", params: {} } }, response);
+
+    expect(response.statusCode).toBe(500);
+    expect(JSON.stringify(response.body)).toContain(
+      "Unsupported root App Server bridge option: spawn",
+    );
+    expect(spawnCount).toBe(0);
+  });
+
+  it("rejects host-only methods before spawning the App Server process", async () => {
+    let spawnCount = 0;
+    const middleware = createAgentUiExpressMiddleware(
+      testBridgeOptions(() => {
+        spawnCount += 1;
+        return createFakeChildProcess().process;
+      }),
+    );
     const response = createResponse();
 
     await middleware(
@@ -118,15 +143,18 @@ describe("createAgentUiExpressMiddleware", () => {
 
   it("rejects command execution by default", async () => {
     let spawnCount = 0;
-    const middleware = createAgentUiExpressMiddleware({
-      spawn: () => {
+    const middleware = createAgentUiExpressMiddleware(
+      testBridgeOptions(() => {
         spawnCount += 1;
         return createFakeChildProcess().process;
-      },
-    });
+      }),
+    );
     const response = createResponse();
 
-    await middleware({ body: { method: "command/exec", params: { command: "pwd" } } }, response);
+    await middleware(
+      { body: { method: "command/exec", params: { command: "pwd" } } },
+      response,
+    );
 
     expect(response.statusCode).toBe(403);
     expect(response.body).toMatchObject({
@@ -145,12 +173,12 @@ describe("createAgentUiExpressMiddleware", () => {
       "config/value/write",
     ]) {
       let spawnCount = 0;
-      const middleware = createAgentUiExpressMiddleware({
-        spawn: () => {
+      const middleware = createAgentUiExpressMiddleware(
+        testBridgeOptions(() => {
           spawnCount += 1;
           return createFakeChildProcess().process;
-        },
-      });
+        }),
+      );
       const response = createResponse();
 
       await middleware({ body: { method, params: {} } }, response);
@@ -165,12 +193,12 @@ describe("createAgentUiExpressMiddleware", () => {
 
   it("rejects missing or invalid methods before spawning", async () => {
     let spawnCount = 0;
-    const middleware = createAgentUiExpressMiddleware({
-      spawn: () => {
+    const middleware = createAgentUiExpressMiddleware(
+      testBridgeOptions(() => {
         spawnCount += 1;
         return createFakeChildProcess().process;
-      },
-    });
+      }),
+    );
     const response = createResponse();
 
     await middleware({ body: { params: {} } }, response);
@@ -189,7 +217,7 @@ describe("createAgentUiExpressMiddleware", () => {
     const child = createFakeChildProcess();
     const middleware = createAgentUiExpressMiddleware({
       allowedMethods: ["fs/readFile"],
-      spawn: () => child.process,
+      ...testBridgeOptions(() => child.process),
     });
     const response = createResponse();
     const pending = middleware(
@@ -197,17 +225,27 @@ describe("createAgentUiExpressMiddleware", () => {
       response,
     );
 
-    await waitFor(() => child.writes.some((line) => JSON.parse(line).method === "fs/readFile"));
+    await waitFor(() =>
+      child.writes.some((line) => JSON.parse(line).method === "fs/readFile"),
+    );
     const request = child.writes
       .map((line) => JSON.parse(line))
       .find((line) => line.method === "fs/readFile");
-    child.stdout.write(`${JSON.stringify({ id: request.id, result: { content: "ok" } })}\n`);
+    child.stdout.write(
+      `${JSON.stringify({ id: request.id, result: { content: "ok" } })}\n`,
+    );
     await pending;
 
     expect(response.body).toEqual({ result: { content: "ok" } });
     expect(child.killed()).toBe(true);
   });
 });
+
+function testBridgeOptions(spawn: () => CodexChildProcess) {
+  return {
+    [agentUiServerInternalBridgeOptions]: { spawn },
+  };
+}
 
 function createResponse(): MinimalExpressResponse & {
   body: unknown;

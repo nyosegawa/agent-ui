@@ -8,7 +8,7 @@ import {
   IconGauge,
   IconShield,
 } from "../components-internal";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import { AuiMenu } from "./disclosure";
 import { useCompactLayout, useElementCompactLayout } from "./shared";
 
@@ -24,7 +24,7 @@ export function AgentRunControls({
   variant = "panel",
 }: AgentRunControlsProps = {}) {
   const { t } = useAgentI18n();
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const { models, refreshModels } = useAgentModels();
   const {
     policies,
@@ -258,7 +258,7 @@ export function ComposerRunControls() {
     520,
     viewportCompact,
   );
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const { models, refreshModels } = useAgentModels();
   const {
     policies,

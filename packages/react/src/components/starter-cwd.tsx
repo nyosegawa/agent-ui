@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { selectRunSettings } from "@nyosegawa/agent-ui-core";
+import { selectRunSettings } from "@nyosegawa/agent-ui-core/internal";
 import {
   IconCheck,
   IconChevronDown,
@@ -7,7 +7,7 @@ import {
   IconFolderAdd,
 } from "../components-internal";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import { isUserFacingPath } from "./sidebar";
 
 export type AgentWorkingDirectoryResolver = () =>
@@ -29,7 +29,7 @@ export function AgentStarterCwd({
   onRequestWorkingDirectory?: AgentWorkingDirectoryResolver;
 }) {
   const { t } = useAgentI18n();
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const runSettings = selectRunSettings(state);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);

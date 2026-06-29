@@ -15,7 +15,10 @@ export function reduceServerRequestEvent(
   switch (event.type) {
     case "serverRequest/created": {
       if (event.request.kind === "dynamicTool") return state;
-      const request = canonicalizeServerRequest(state, event.request);
+      const request = canonicalizeServerRequest(
+        state,
+        event.request as PendingServerRequest,
+      );
       if (hasConflictingServerRequest(state, request)) {
         return {
           ...state,

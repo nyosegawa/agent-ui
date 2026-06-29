@@ -1,4 +1,4 @@
-import type { ThreadState } from "@nyosegawa/agent-ui-core";
+import type { ThreadState } from "@nyosegawa/agent-ui-core/internal";
 import { useCallback, useMemo, useState } from "react";
 import {
   DEFAULT_TRANSCRIPT_ITEM_LIMIT,

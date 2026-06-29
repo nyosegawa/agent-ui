@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import type { ThreadId } from "@nyosegawa/agent-ui-core";
-import { useAgentThread, useAgentThreadReader } from "./thread";
+import { useAgentThreadController, useAgentThreadReader } from "./thread";
 import type { AgentThreadResumeResult } from "./thread-lifecycle-types";
 
 export interface AgentDirectThreadOpenResult {
@@ -15,7 +15,7 @@ export interface AgentDirectThreadController {
 }
 
 export function useAgentDirectThreadController(): AgentDirectThreadController {
-  const { resumeThread } = useAgentThread();
+  const { resumeThread } = useAgentThreadController();
   const { readThread } = useAgentThreadReader();
 
   const previewThread = useCallback(

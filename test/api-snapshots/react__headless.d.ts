@@ -1,10 +1,10 @@
 import { b as AgentRunPolicy } from './provider-<chunk>.js';
 export { c as AGENT_FULL_ACCESS_RUN_POLICY, d as AgentContextValue, A as AgentProvider, a as AgentProviderProps, D as DEFAULT_AGENT_RUN_POLICIES, e as agentRunPolicyTurnOptions, f as effectiveAgentRunPolicies, r as resolvedAgentRunPolicyId, u as useAgentAction, g as useAgentContext } from './provider-<chunk>.js';
-import { O as AgentAppsRefreshOptions, P as AgentHooksRefreshOptions, Q as AgentSkillsRefreshOptions, R as AgentSkillConfigWriteOptions, N as ThreadStartOptions, T as TurnStartOptions, D as AgentUserInput, S as ThreadResumeOptions, U as ThreadForkOptions, V as ThreadHistoryParams } from './normalize-<chunk>.js';
-export { W as AgentApprovalPolicy, X as AgentApprovalsReviewer, Y as AgentBootstrapState, k as AgentFileResourceRequest, A as AgentI18nDictionary, a as AgentI18nKey, b as AgentI18nMessages, c as AgentI18nProvider, d as AgentI18nProviderProps, e as AgentI18nValue, l as AgentImageInput, Z as AgentJsonValue, m as AgentLocalImageInput, o as AgentLocalMediaResourceRequest, f as AgentLocale, p as AgentMentionInput, _ as AgentPersonality, $ as AgentReasoningSummary, q as AgentResolvedResource, r as AgentResolvedResourceBase, s as AgentResolvedUrlResource, t as AgentResourceKind, v as AgentResourceRequest, w as AgentResourceResolution, x as AgentResourceResolver, a0 as AgentSandboxMode, a1 as AgentSandboxPolicy, y as AgentSkillInput, a2 as AgentSortDirection, z as AgentTextInput, a3 as AgentThreadConfigOptions, a4 as AgentThreadSortKey, a5 as AgentThreadSource, a6 as AgentThreadSourceKind, a7 as AgentThreadStartSource, I as AgentTranscriptBlock, a8 as AgentTranscriptController, a9 as AgentTranscriptControllerOptions, J as AgentTranscriptDensity, aa as AgentTranscriptDensityConfig, ab as AgentTranscriptDensityMode, K as AgentTranscriptEntry, H as AgentTranscriptItem, ac as AgentTranscriptPendingState, B as AgentUnavailableResource, C as AgentUnknownUserInput, g as agentI18nDictionaries, h as agentLocales, F as agentResourceDisplayName, G as agentResourceUrl, i as interpolate, j as interpolationVariables, n as normalizeAgentLocale, ad as useAgentAccount, M as useAgentBootstrap, u as useAgentI18n, ae as useAgentTranscriptController } from './normalize-<chunk>.js';
+import { P as AgentAppsRefreshOptions, Q as AgentHooksRefreshOptions, R as AgentSkillsRefreshOptions, S as AgentSkillConfigWriteOptions, O as ThreadStartOptions, T as TurnStartOptions, k as AgentApprovalRequest, U as AgentApprovalDecision, E as AgentUserInput, V as ThreadForkOptions, W as ThreadResumeOptions, X as ThreadHistoryParams } from './normalize-<chunk>.js';
+export { Y as AgentApprovalPolicy, Z as AgentApprovalsReviewer, _ as AgentBootstrapState, l as AgentFileResourceRequest, A as AgentI18nDictionary, a as AgentI18nKey, b as AgentI18nMessages, c as AgentI18nProvider, d as AgentI18nProviderProps, e as AgentI18nValue, m as AgentImageInput, $ as AgentJsonValue, o as AgentLocalImageInput, p as AgentLocalMediaResourceRequest, f as AgentLocale, q as AgentMentionInput, a0 as AgentPersonality, a1 as AgentReasoningSummary, r as AgentResolvedResource, s as AgentResolvedResourceBase, t as AgentResolvedUrlResource, v as AgentResourceKind, w as AgentResourceRequest, x as AgentResourceResolution, y as AgentResourceResolver, a2 as AgentSandboxMode, a3 as AgentSandboxPolicy, z as AgentSkillInput, a4 as AgentSortDirection, B as AgentTextInput, a5 as AgentThreadConfigOptions, a6 as AgentThreadSortKey, a7 as AgentThreadSource, a8 as AgentThreadSourceKind, a9 as AgentThreadStartSource, J as AgentTranscriptBlock, aa as AgentTranscriptController, ab as AgentTranscriptControllerOptions, K as AgentTranscriptDensity, ac as AgentTranscriptDensityConfig, ad as AgentTranscriptDensityMode, L as AgentTranscriptEntry, I as AgentTranscriptItem, ae as AgentTranscriptPendingState, C as AgentUnavailableResource, D as AgentUnknownUserInput, g as agentI18nDictionaries, h as agentLocales, G as agentResourceDisplayName, H as agentResourceUrl, i as interpolate, j as interpolationVariables, n as normalizeAgentLocale, af as useAgentAccount, N as useAgentBootstrap, u as useAgentI18n, ag as useAgentTranscriptController } from './normalize-<chunk>.js';
 import * as _nyosegawa_agent_ui_core from '@nyosegawa/agent-ui-core';
-import { AgentApp, ThreadId, ThreadState, ThreadStatus, AgentModel, RequestId, AgentError, ReasoningEffort, AgentRunPolicyId, AgentThreadScope, AgentThreadCollection, AgentThreadView, TurnState } from '@nyosegawa/agent-ui-core';
-export { AgentRunPolicyId, AgentThreadResumeDiagnosticReasonCode } from '@nyosegawa/agent-ui-core';
+import { AgentApp, ThreadId, ThreadStatus, AgentModel, RequestId, AgentError, ReasoningEffort, AgentRunPolicyId, AgentThreadView, AgentThreadTranscriptView, AgentThreadScope, AgentThreadCollection } from '@nyosegawa/agent-ui-core';
+export { AgentRunPolicyId } from '@nyosegawa/agent-ui-core';
 import React, { Dispatch, SetStateAction } from 'react';
 export { U as UsageWindow, n as normalizeUsageWindows } from './usage-<chunk>.js';
 import 'react/jsx-runtime';
@@ -74,13 +74,14 @@ interface AgentThreadStartWithInputOptions {
 }
 interface AgentThreadResumeResult {
     activeTurnId?: string;
-    activity?: ThreadState["activity"];
+    activity?: AgentThreadActivity;
     requestedThreadId?: ThreadId;
     runSettings?: AgentThreadResumeRunSettings;
     status?: ThreadStatus;
     threadId: ThreadId;
 }
-
+type AgentThreadActivity = "failed" | "idle" | "running" | "waitingForInput";
+type AgentThreadResumeDiagnosticReasonCode = "canonical_thread_id_mismatch" | "resume_response_missing_thread_id" | "resume_response_normalization_failed";
 interface AgentThreadResumeRunSettings {
     cwd?: string;
     effort?: string;
@@ -114,12 +115,12 @@ declare function useAgentModels(): {
 };
 
 declare function useAgentApprovals(threadId?: ThreadId): {
-    approvals: _nyosegawa_agent_ui_core.PendingServerRequest[];
-    approve: (requestId: RequestId, result?: unknown) => Promise<void>;
+    approvals: AgentApprovalRequest[];
+    approve: (requestId: RequestId, decision?: AgentApprovalDecision) => Promise<void>;
     reject: (requestId: RequestId, message?: string) => Promise<void>;
 };
 declare function useAgentServerRequests(threadId?: ThreadId): {
-    requests: _nyosegawa_agent_ui_core.PendingServerRequest[];
+    requests: _nyosegawa_agent_ui_core.AgentServerRequestSummary[];
     respond: (requestId: RequestId, result: unknown) => Promise<void>;
     reject: (requestId: RequestId, error: AgentError | string) => Promise<void>;
 };
@@ -182,9 +183,10 @@ type AgentComposerDisabledReason = "approval" | "empty" | "interrupting" | "subm
 interface AgentComposerFailedPendingMessage {
     error?: string;
     operationId: string;
+    retryable: boolean;
     threadId: string;
 }
-type AgentComposerSubmitMode = "queue" | "send" | "stop";
+type AgentComposerSubmitMode = "send" | "stop";
 interface AgentComposerSendMessageOptions extends AgentThreadStartWithInputOptions {
     queuedAttachments?: QueuedFollowUpAttachment[];
 }
@@ -203,7 +205,6 @@ type AgentComposerSendMessageResult = ({
     type: "blocked";
 };
 
-declare function useAgentComposer(threadId?: ThreadId): AgentComposerController;
 declare function useAgentComposerController(threadId?: ThreadId): AgentComposerController;
 declare function useAgentChatController(threadId?: ThreadId): AgentChatController;
 
@@ -219,23 +220,26 @@ declare function useAgentRunSettings(): {
     supportedEfforts: string[];
 };
 
-declare function useAgentThread(threadId?: ThreadId): {
-    resumeThread: (id: ThreadId, params?: ThreadResumeOptions) => Promise<{
-        threadId: string;
-        runSettings?: AgentThreadResumeRunSettings | undefined;
-        requestedThreadId?: string | undefined;
-        activity?: "idle" | "failed" | "running" | "waitingForInput" | undefined;
-        status?: ThreadStatus | undefined;
-        activeTurnId?: string | undefined;
-    }>;
-    startThread: (params?: ThreadStartOptions) => Promise<{
-        threadId: string;
-    }>;
-    thread: ThreadState | undefined;
-    threadId: string | undefined;
-    turns: (_nyosegawa_agent_ui_core.TurnState | undefined)[];
-};
-declare const useAgentThreadController: typeof useAgentThread;
+interface AgentThreadController {
+    resumeThread: (id: ThreadId, params?: ThreadResumeOptions) => Promise<AgentThreadResumeResult>;
+    startThread: (params?: ThreadStartOptions) => Promise<AgentThreadStartResult>;
+    thread?: AgentThreadView;
+    threadId?: ThreadId;
+    transcript?: AgentThreadTranscriptView;
+}
+interface AgentThreadsController {
+    activeThreadId?: ThreadId;
+    setActiveThread: (threadId?: ThreadId) => void;
+    threads: AgentThreadView[];
+}
+interface AgentThreadHistoryController {
+    cursor: string | null | undefined;
+    error?: Error;
+    isLoading: boolean;
+    listThreads: (params?: ThreadHistoryParams) => Promise<AgentThreadHistoryResult>;
+    threads: AgentThreadView[];
+}
+declare function useAgentThreadController(threadId?: ThreadId): AgentThreadController;
 declare function useAgentThreadActions(threadId?: ThreadId): {
     archiveThread: () => Promise<void>;
     compactThread: () => Promise<void>;
@@ -247,21 +251,8 @@ declare function useAgentThreadActions(threadId?: ThreadId): {
     threadId: string | undefined;
     unarchiveThread: () => Promise<void>;
 };
-declare function useAgentThreads(): {
-    activeThreadId: string | undefined;
-    setActiveThread: (threadId?: ThreadId) => void;
-    threads: ThreadState[];
-};
-declare function useAgentThreadHistory(): {
-    cursor: string | null | undefined;
-    error: Error | undefined;
-    isLoading: boolean;
-    listThreads: (params?: ThreadHistoryParams) => Promise<{
-        nextCursor: string | null;
-        threadIds: string[];
-    }>;
-    threads: ThreadState[];
-};
+declare function useAgentThreads(): AgentThreadsController;
+declare function useAgentThreadHistory(): AgentThreadHistoryController;
 declare function useAgentThreadReader(): {
     readThread: (threadId: ThreadId, options?: {
         activate?: boolean;
@@ -309,12 +300,12 @@ interface AgentThreadHistorySyncedEvent {
 }
 declare function useAgentThreadListController(scope?: AgentThreadScope, options?: AgentThreadListControllerOptions): AgentThreadListController;
 
-declare function useAgentTurn(threadId?: ThreadId): {
+interface AgentTurnController {
     interruptTurn: (turnId: string) => Promise<void>;
     startTurn: (input: string | AgentUserInput[], params?: TurnStartOptions) => Promise<void>;
     steerTurn: (expectedTurnId: string, input: string | AgentUserInput[]) => Promise<void>;
-};
-declare const useAgentTurnController: typeof useAgentTurn;
+}
+declare function useAgentTurnController(threadId?: ThreadId): AgentTurnController;
 
 interface AgentTranscriptScrollControllerOptions {
     hiddenItemCount?: number;
@@ -342,15 +333,4 @@ declare function useAgentUsage(): {
     refreshUsage: () => Promise<void>;
 };
 
-declare const DEFAULT_TRANSCRIPT_ITEM_LIMIT = 48;
-declare const TRANSCRIPT_ITEM_INCREMENT = 48;
-declare function transcriptItemIds(turn: TurnState): string[];
-declare function visibleTranscriptWindow(thread: ThreadState, visibleItemLimit: number, options?: {
-    pinnedItemIdsByTurnId?: Map<string, string[]>;
-}): {
-    itemIdsByTurnId: Map<string, string[]>;
-    totalItemCount: number;
-    visibleItemCount: number;
-};
-
-export { AgentAppsRefreshOptions, type AgentChatController, type AgentComposerController, type AgentComposerDisabledReason, type AgentComposerFailedPendingMessage, type AgentComposerSendMessageOptions, type AgentComposerSendMessageResult, type AgentComposerSubmitMode, type AgentDirectThreadController, type AgentDirectThreadOpenResult, AgentHooksRefreshOptions, AgentRunPolicy, AgentSkillConfigWriteOptions, AgentSkillsRefreshOptions, type AgentThreadForkResult, type AgentThreadHistoryResult, type AgentThreadHistorySyncedEvent, type AgentThreadListController, type AgentThreadListControllerOptions, type AgentThreadListRequest, type AgentThreadReadResult, type AgentThreadResumeResult, type AgentThreadResumeRunSettings, type AgentThreadStartResult, type AgentThreadStartWithInputOptions, type AgentThreadStartWithInputResult, type AgentTranscriptScrollController, type AgentTranscriptScrollControllerOptions, AgentUserInput, DEFAULT_TRANSCRIPT_ITEM_LIMIT, type QueuedFollowUp, type QueuedFollowUpAttachment, TRANSCRIPT_ITEM_INCREMENT, ThreadForkOptions, ThreadHistoryParams, ThreadResumeOptions, ThreadStartOptions, TurnStartOptions, transcriptItemIds, useAgentApprovals, useAgentApps, useAgentChatController, useAgentComposer, useAgentComposerController, useAgentDiagnostics, useAgentDirectThreadController, useAgentHooks, useAgentModels, useAgentRunSettings, useAgentServerRequests, useAgentSkills, useAgentThread, useAgentThreadActions, useAgentThreadController, useAgentThreadHistory, useAgentThreadListController, useAgentThreadReader, useAgentThreads, useAgentTranscriptScrollController, useAgentTurn, useAgentTurnController, useAgentUsage, visibleTranscriptWindow };
+export { AgentApprovalDecision, AgentApprovalRequest, AgentAppsRefreshOptions, type AgentChatController, type AgentComposerController, type AgentComposerDisabledReason, type AgentComposerFailedPendingMessage, type AgentComposerSendMessageOptions, type AgentComposerSendMessageResult, type AgentComposerSubmitMode, type AgentDirectThreadController, type AgentDirectThreadOpenResult, AgentHooksRefreshOptions, AgentRunPolicy, AgentSkillConfigWriteOptions, AgentSkillsRefreshOptions, type AgentThreadForkResult, type AgentThreadHistoryResult, type AgentThreadHistorySyncedEvent, type AgentThreadListController, type AgentThreadListControllerOptions, type AgentThreadListRequest, type AgentThreadReadResult, type AgentThreadResumeDiagnosticReasonCode, type AgentThreadResumeResult, type AgentThreadResumeRunSettings, type AgentThreadStartResult, type AgentThreadStartWithInputOptions, type AgentThreadStartWithInputResult, type AgentTranscriptScrollController, type AgentTranscriptScrollControllerOptions, AgentUserInput, type QueuedFollowUp, type QueuedFollowUpAttachment, ThreadForkOptions, ThreadHistoryParams, ThreadResumeOptions, ThreadStartOptions, TurnStartOptions, useAgentApprovals, useAgentApps, useAgentChatController, useAgentComposerController, useAgentDiagnostics, useAgentDirectThreadController, useAgentHooks, useAgentModels, useAgentRunSettings, useAgentServerRequests, useAgentSkills, useAgentThreadActions, useAgentThreadController, useAgentThreadHistory, useAgentThreadListController, useAgentThreadReader, useAgentThreads, useAgentTranscriptScrollController, useAgentTurnController, useAgentUsage };

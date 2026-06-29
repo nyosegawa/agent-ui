@@ -9,19 +9,14 @@ import demoFixture from "../../../fixtures/app-server/demo-session.json" with { 
 import {
   createInitialAgentState,
   FakeAgentTransport,
-  runEventFixture,
   selectDiagnosticWarnings,
   selectPendingOperations,
   type AgentThreadView as CoreAgentThreadView,
   type AgentThreadScope,
-  type FixtureStep,
   type ThreadState,
 } from "@nyosegawa/agent-ui-core";
-import {
-  AgentChat,
-  AgentProvider,
-  type AgentThreadHistorySyncedEvent,
-} from "../src";
+import { runEventFixture, type FixtureStep } from "@nyosegawa/agent-ui-core/internal";
+import { AgentChat, AgentProvider, type AgentThreadHistorySyncedEvent } from "../src";
 import {
   AgentAttachmentChips,
   AgentComposer,
@@ -55,9 +50,8 @@ import {
   useAgentHooks,
   useAgentRunSettings,
   useAgentSkills,
-  useAgentContext,
   useAgentDiagnostics,
-  useAgentThread,
+  useAgentThreadController,
   useAgentThreadReader,
   useAgentThreads,
   useAgentThreadListController,
@@ -65,9 +59,11 @@ import {
   useAgentComposerController,
   useAgentTranscriptController,
   useAgentTranscriptScrollController,
-  useAgentTurn,
+  useAgentTurnController,
+  type AgentApprovalRequest,
 } from "../src/headless";
 import { useInternalAgentComposerController } from "../src/hooks/composer";
+import { useInternalAgentContext } from "../src/provider";
 import { useTranscriptFollowScroll } from "../src/timeline/scroll-follow";
 
 function localImageInput(path: string) {
@@ -76,6 +72,20 @@ function localImageInput(path: string) {
 
 function textInput(text: string) {
   return { text, text_elements: [], type: "text" as const };
+}
+
+function approvalView(
+  approval: Pick<AgentApprovalRequest, "id" | "kind"> &
+    Partial<Omit<AgentApprovalRequest, "id" | "kind">>,
+): AgentApprovalRequest {
+  return {
+    canDecide:
+      approval.canDecide ??
+      (approval.kind === "commandApproval" || approval.kind === "fileChangeApproval"),
+    details: approval.details ?? [],
+    risk: approval.risk ?? "low",
+    ...approval,
+  };
 }
 
 function resolvedImageAttachment(path: string, label?: string, previewUrl?: string) {
@@ -97,15 +107,15 @@ function resolvedTextAttachment(path: string, label?: string) {
 
 describe("thread waiting status labels", () => {
   it("maps every waiting reason to the user-visible status label", () => {
-    expect(
-      formatThreadStatus("waitingForInput", { waitingReasons: ["approval"] }),
-    ).toBe("Needs approval");
+    expect(formatThreadStatus("waitingForInput", { waitingReasons: ["approval"] })).toBe(
+      "Needs approval",
+    );
     expect(
       formatThreadStatus("waitingForInput", { waitingReasons: ["permission"] }),
     ).toBe("Needs permission");
-    expect(
-      formatThreadStatus("waitingForInput", { waitingReasons: ["userInput"] }),
-    ).toBe("Needs input");
+    expect(formatThreadStatus("waitingForInput", { waitingReasons: ["userInput"] })).toBe(
+      "Needs input",
+    );
     expect(
       formatThreadStatus("waitingForInput", { waitingReasons: ["mcpElicitation"] }),
     ).toBe("Needs MCP input");
@@ -115,9 +125,9 @@ describe("thread waiting status labels", () => {
     expect(
       formatThreadStatus("waitingForInput", { waitingReasons: ["attestation"] }),
     ).toBe("Needs attestation");
-    expect(
-      formatThreadStatus("waitingForInput", { waitingReasons: ["unknown"] }),
-    ).toBe("Needs attention");
+    expect(formatThreadStatus("waitingForInput", { waitingReasons: ["unknown"] })).toBe(
+      "Needs attention",
+    );
     expect(
       formatThreadStatus("waitingForInput", {
         waitingReasons: ["approval", "permission"],
@@ -172,7 +182,7 @@ function ThreadListControllerProbe({
   onHistorySynced?: (event: AgentThreadHistorySyncedEvent) => void;
   scope: AgentThreadScope;
 }) {
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const controller = useAgentThreadListController(scope, { onHistorySynced });
   const activeThreadId = state.threadLifecycle.activeThreadId;
   const [resumeResult, setResumeResult] = useState("");
@@ -394,8 +404,8 @@ function ActiveThreadHarness(props: React.ComponentProps<typeof AgentChat>) {
 }
 
 function ResumeThreadHarness({ requestedId }: { requestedId: string }) {
-  const { state } = useAgentContext();
-  const { resumeThread } = useAgentThread();
+  const { state } = useInternalAgentContext();
+  const { resumeThread } = useAgentThreadController();
   const [resumeResult, setResumeResult] = useState("");
   const activeThreadId = state.threadLifecycle.activeThreadId;
   const activeThread = activeThreadId ? state.threads[activeThreadId] : undefined;
@@ -458,7 +468,7 @@ function ResumeDiagnosticsProbe() {
 }
 
 function ReadThreadHarness({ threadId }: { threadId: string }) {
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const { readThread } = useAgentThreadReader();
   const activeThreadId = state.threadLifecycle.activeThreadId;
   const previewThread = state.threads[threadId];
@@ -483,7 +493,7 @@ function ReadThreadHarness({ threadId }: { threadId: string }) {
 }
 
 function ActiveThreadStateProbe() {
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const activeThreadId = state.threadLifecycle.activeThreadId;
   const activeThread = activeThreadId ? state.threads[activeThreadId] : undefined;
   const turnId = activeThread?.orderedTurnIds[0];
@@ -507,6 +517,24 @@ function ActiveThreadStateProbe() {
       <output aria-label="pending operation status">
         {pendingOperations[0]?.status ?? "none"}
       </output>
+    </>
+  );
+}
+
+function LatestActiveThreadStateProbe() {
+  const { state } = useInternalAgentContext();
+  const activeThreadId = state.threadLifecycle.activeThreadId;
+  const activeThread = activeThreadId ? state.threads[activeThreadId] : undefined;
+  const turnId = activeThread?.orderedTurnIds.at(-1);
+  const turn = turnId ? activeThread?.turns[turnId] : undefined;
+  const itemId = turn?.itemOrder.at(-1);
+  const item = itemId ? turn?.items[itemId] : undefined;
+  return (
+    <>
+      <output aria-label="latest active turn id">{turnId ?? "none"}</output>
+      <output aria-label="latest active item id">{itemId ?? "none"}</output>
+      <output aria-label="latest active item text">{item?.text ?? "none"}</output>
+      <output aria-label="latest active item status">{item?.status ?? "none"}</output>
     </>
   );
 }
@@ -587,9 +615,12 @@ function PublicComposerControllerProbe() {
       <output aria-label="public failed pending id">
         {failedPendingMessage?.operationId ?? "none"}
       </output>
+      <output aria-label="public failed pending retryable">
+        {String(failedPendingMessage?.retryable ?? false)}
+      </output>
       <output aria-label="public retry error">{retryError || "none"}</output>
       <button
-        disabled={!failedPendingMessage}
+        disabled={!failedPendingMessage?.retryable}
         onClick={() => {
           if (failedPendingMessage) {
             void composer
@@ -677,10 +708,7 @@ function PublicChatControllerProbe() {
       <output aria-label="public chat thread id">{controller.threadId ?? "none"}</output>
       <output aria-label="public chat result">{result}</output>
       <output aria-label="public chat error">{error}</output>
-      <button
-        type="button"
-        onClick={() => controller.setValue("external draft")}
-      >
+      <button type="button" onClick={() => controller.setValue("external draft")}>
         Set external draft
       </button>
       <button
@@ -937,9 +965,9 @@ describe("AgentChat", () => {
           components={{
             blocks: {
               text: ({ block }) => (
-              <article>
+                <article>
                   Custom block {block.id}: {block.text}
-              </article>
+                </article>
               ),
             },
           }}
@@ -1136,12 +1164,16 @@ describe("AgentChat", () => {
     );
 
     expect(screen.getByLabelText("Host status wrapper")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Host status action" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Host status action" }),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText("Host thread header")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Host thread action thread-idle" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("heading", { name: "Composable header" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Composable header" }),
+    ).toBeInTheDocument();
   });
 
   it("applies fixed AgentChat start options through the first-message lifecycle", async () => {
@@ -1188,15 +1220,16 @@ describe("AgentChat", () => {
         name: "Working directory: /workspace/fixed-project",
       }),
     ).toHaveTextContent("fixed-project");
-    expect(screen.queryByRole("button", { name: "Working directory" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Working directory" }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Open folder" })).not.toBeInTheDocument();
     await user.type(screen.getByRole("textbox", { name: "Message" }), "fixed start");
     await user.click(screen.getByRole("button", { name: "Start thread" }));
 
     await waitFor(() =>
       expect(
-        transport.requests.find((request) => request.method === "turn/start")
-          ?.params,
+        transport.requests.find((request) => request.method === "turn/start")?.params,
       ).toMatchObject({
         effort: "high",
         input: [{ text: "fixed start", text_elements: [], type: "text" }],
@@ -1243,7 +1276,10 @@ describe("AgentChat", () => {
     }
 
     render(
-      <AgentProvider initialState={idleComposerState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={idleComposerState()}
+        transport={new FakeAgentTransport()}
+      >
         <ControlledOverlayHarness />
       </AgentProvider>,
     );
@@ -1252,7 +1288,9 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("controlled sidebar collapsed")).toHaveTextContent(
       "false",
     );
-    expect(screen.getByRole("button", { name: "Dismiss thread history" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Dismiss thread history" }),
+    ).toBeInTheDocument();
     await user.keyboard("{Escape}");
     expect(screen.getByLabelText("controlled sidebar collapsed")).toHaveTextContent(
       "true",
@@ -1285,13 +1323,20 @@ describe("AgentChat", () => {
     }
 
     render(
-      <AgentProvider initialState={idleComposerState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={idleComposerState()}
+        transport={new FakeAgentTransport()}
+      >
         <BothOpenOverlayHarness />
       </AgentProvider>,
     );
 
-    expect(screen.getByRole("button", { name: "Dismiss thread history" })).toBeInTheDocument();
-    expect(screen.queryByRole("complementary", { name: "Agent context" })).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Dismiss thread history" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("complementary", { name: "Agent context" }),
+    ).not.toBeInTheDocument();
   });
 
   it("does not refocus controlled overlays on unrelated host rerenders", async () => {
@@ -1324,7 +1369,10 @@ describe("AgentChat", () => {
     }
 
     render(
-      <AgentProvider initialState={idleComposerState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={idleComposerState()}
+        transport={new FakeAgentTransport()}
+      >
         <ControlledOverlayRerenderHarness />
       </AgentProvider>,
     );
@@ -1581,14 +1629,15 @@ describe("AgentChat", () => {
         approvalAnchors: {
           renderApprovalAnchor: () => null,
           requests: [
-            {
+            approvalView({
+              command: "bun test",
               id: "approval-command",
               itemId: "cmd-1",
               kind: "commandApproval",
-              payload: { command: "bun test" },
+              risk: "medium",
               threadId: "thread-transcript-entries",
               turnId: "turn-transcript-entries",
-            },
+            }),
           ],
         },
       });
@@ -1717,14 +1766,15 @@ describe("AgentChat", () => {
         approvalAnchors: {
           renderApprovalAnchor: () => null,
           requests: [
-            {
+            approvalView({
+              command: "bun test",
               id: "approval-command",
               itemId: "cmd-1",
               kind: "commandApproval",
-              payload: { command: "bun test" },
+              risk: "medium",
               threadId: "thread-density",
               turnId: "turn-density",
-            },
+            }),
           ],
         },
         density: {
@@ -1796,10 +1846,7 @@ describe("AgentChat", () => {
 
     const { container } = render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList
-          density="compact"
-          threadId="thread-density-dom"
-        />
+        <AgentMessageList density="compact" threadId="thread-density-dom" />
       </AgentProvider>,
     );
 
@@ -2726,7 +2773,7 @@ describe("AgentChat", () => {
     const transport = new FakeAgentTransport();
 
     function ApprovalStateProbe() {
-      const { state } = useAgentContext();
+      const { state } = useInternalAgentContext();
       const thread = state.threads["thread-approval-resolution"];
       const pending = state.serverRequestQueue.order.join(",") || "none";
       return (
@@ -2973,7 +3020,9 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    await user.click(await screen.findByRole("button", { name: /Aliased stored transcript/ }));
+    await user.click(
+      await screen.findByRole("button", { name: /Aliased stored transcript/ }),
+    );
 
     await waitFor(() => expect(onSelectThread).toHaveBeenCalledWith("thread-canonical"));
     expect(
@@ -3497,7 +3546,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     function Probe() {
-      const { steerTurn } = useAgentTurn("thread-steer");
+      const { steerTurn } = useAgentTurnController("thread-steer");
       return (
         <button onClick={() => void steerTurn("turn-1", "continue")} type="button">
           Steer
@@ -3830,7 +3879,11 @@ describe("AgentChat", () => {
               id: "browser",
               label: "Browser",
               resolve: () => ({
-                input: { name: "Browser", path: "agent://integration/browser", type: "mention" },
+                input: {
+                  name: "Browser",
+                  path: "agent://integration/browser",
+                  type: "mention",
+                },
                 label: "Browser",
               }),
             },
@@ -3884,7 +3937,9 @@ describe("AgentChat", () => {
     );
 
     expect(screen.queryByRole("button", { name: "Browser" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Workspace search" })).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Workspace search" }),
+    ).not.toBeInTheDocument();
   });
 
   it("never opens browser prompts from the composer", async () => {
@@ -4455,7 +4510,7 @@ describe("AgentChat", () => {
   it("does not retain raw transport events for diagnostics", async () => {
     const transport = new FakeAgentTransport();
     function WarningProbe() {
-      const { state } = useAgentContext();
+      const { state } = useInternalAgentContext();
       return (
         <output>
           {selectDiagnosticWarnings(state)
@@ -5282,6 +5337,7 @@ describe("AgentChat", () => {
     render(
       <AgentProvider initialState={initialState} transport={transport}>
         <AgentChat />
+        <ActiveThreadStateProbe />
       </AgentProvider>,
     );
 
@@ -5601,7 +5657,7 @@ describe("AgentChat", () => {
   it("keeps a queued follow-up when the active turn changes before Send now", async () => {
     const user = userEvent.setup();
     function TurnChanger() {
-      const { dispatch } = useAgentContext();
+      const { dispatch } = useInternalAgentContext();
       return (
         <button
           type="button"
@@ -5644,7 +5700,7 @@ describe("AgentChat", () => {
   it("hides Send now for queued follow-ups after their expected turn completes", async () => {
     const user = userEvent.setup();
     function TurnCompleter() {
-      const { dispatch } = useAgentContext();
+      const { dispatch } = useInternalAgentContext();
       return (
         <button
           type="button"
@@ -6088,7 +6144,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const revoke = vi.spyOn(URL, "revokeObjectURL");
     function ArchiveNotification() {
-      const { dispatch } = useAgentContext();
+      const { dispatch } = useInternalAgentContext();
       return (
         <button
           type="button"
@@ -6144,7 +6200,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const revoke = vi.spyOn(URL, "revokeObjectURL");
     function CloseNotification() {
-      const { dispatch } = useAgentContext();
+      const { dispatch } = useInternalAgentContext();
       return (
         <button
           type="button"
@@ -6445,6 +6501,49 @@ describe("AgentChat", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
+  it("renders structured file-change approval payloads before decision actions", async () => {
+    const initialState = createInitialAgentState();
+    initialState.serverRequestQueue = {
+      byId: {
+        "string:approval-file-structured": {
+          id: "approval-file-structured",
+          kind: "fileChangeApproval",
+          payload: {
+            fileChanges: {
+              "packages/react/src/components/approvals.tsx": {
+                type: "update",
+                unified_diff:
+                  "@@ -1 +1,2 @@\n-old approval\n+new approval\n+visible diff\n",
+              },
+            },
+            reason: "Review structured file changes before applying them.",
+          },
+          threadId: "thread-approval",
+        },
+      },
+      order: ["string:approval-file-structured"],
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentApprovalQueue threadId="thread-approval" />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("1 file")).toBeInTheDocument();
+    expect(screen.getByLabelText("Changed files")).toHaveTextContent(
+      "packages/react/src/components/approvals.tsx",
+    );
+    expect(screen.getByLabelText("CodeMirror patch viewer")).toHaveTextContent(
+      "visible diff",
+    );
+    expect(
+      screen.getByRole("button", {
+        name: "Approve file-change request approval-file-structured",
+      }),
+    ).toBeInTheDocument();
+  });
+
   it("summarizes structured App Server patch payloads", async () => {
     render(
       <AgentDiffViewer
@@ -6509,42 +6608,43 @@ describe("AgentChat", () => {
       <AgentProvider transport={transport}>
         <AgentApprovalQueue
           approvals={[
-            {
+            approvalView({
               id: "request-input",
               kind: "userInput",
-              payload: { prompt: "Choose a deployment target", itemId: "item-input" },
+              itemId: "item-input",
+              prompt: "Choose a deployment target",
               threadId: "thread-approval",
-            },
-            {
+            }),
+            approvalView({
               id: "request-permissions",
               kind: "permissionsApproval",
-              payload: { reason: "Need workspace read access" },
+              reason: "Need workspace read access",
               threadId: "thread-approval",
-            },
-            {
+            }),
+            approvalView({
               id: "request-mcp",
               kind: "mcpElicitation",
-              payload: { prompt: "MCP needs a value" },
+              prompt: "MCP needs a value",
               threadId: "thread-approval",
-            },
-            {
+            }),
+            approvalView({
+              argumentsText: '{\n  "url": "http://127.0.0.1:5174"\n}',
               id: "request-dynamic",
               kind: "dynamicTool",
-              payload: { namespace: "mcp__browser", tool: "get_app_state" },
+              namespace: "mcp__browser",
               threadId: "thread-approval",
-            },
-            {
+              tool: "get_app_state",
+            }),
+            approvalView({
               id: "request-auth",
               kind: "authRefresh",
-              payload: {},
               threadId: "thread-approval",
-            },
-            {
+            }),
+            approvalView({
               id: "request-attestation",
               kind: "attestation",
-              payload: {},
               threadId: "thread-approval",
-            },
+            }),
           ]}
         />
       </AgentProvider>,
@@ -6568,12 +6668,12 @@ describe("AgentChat", () => {
       <AgentProvider transport={new FakeAgentTransport()}>
         <AgentApprovalQueue
           approvals={[
-            {
+            approvalView({
               id: "request-mcp",
               kind: "mcpElicitation",
-              payload: { prompt: "MCP needs a value" },
+              prompt: "MCP needs a value",
               threadId: "thread-approval",
-            },
+            }),
           ]}
           renderApproval={(request) => (
             <div data-testid="host-request">{`Host handles ${request.kind}`}</div>
@@ -6666,22 +6766,20 @@ describe("AgentChat", () => {
     });
   });
 
-  it("responds to controlled legacy approval props with legacy decisions", async () => {
+  it("responds to controlled approval view props with public decisions", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     render(
       <AgentProvider transport={transport}>
         <AgentApprovalQueue
           approvals={[
-            {
+            approvalView({
+              command: "sh -lc 'bun test'",
               id: "legacy-controlled-command",
               kind: "commandApproval",
-              payload: {
-                command: ["sh", "-lc", "bun test"],
-                upstreamMethod: "execCommandApproval",
-              },
+              risk: "medium",
               threadId: "thread-legacy",
-            },
+            }),
           ]}
         />
       </AgentProvider>,
@@ -6693,7 +6791,7 @@ describe("AgentChat", () => {
       }),
     );
     expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
-      decision: "approved",
+      decision: "accept",
     });
 
     await user.click(
@@ -6702,7 +6800,7 @@ describe("AgentChat", () => {
       }),
     );
     expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
-      decision: "approved_for_session",
+      decision: "acceptForSession",
     });
 
     await user.click(
@@ -6711,7 +6809,7 @@ describe("AgentChat", () => {
       }),
     );
     expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
-      decision: "denied",
+      decision: "decline",
     });
   });
 
@@ -6733,6 +6831,7 @@ describe("AgentChat", () => {
     render(
       <AgentProvider initialState={initialState} transport={transport}>
         <AgentChat />
+        <LatestActiveThreadStateProbe />
       </AgentProvider>,
     );
 
@@ -6745,6 +6844,7 @@ describe("AgentChat", () => {
         method: "turn/start",
         params: {
           approvalPolicy: "on-request",
+          clientUserMessageId: expect.stringMatching(/^pending-user-message-/),
           input: [{ text: "hello codex", text_elements: [], type: "text" }],
           model: "fixture-demo-model",
           sandboxPolicy: {
@@ -6757,6 +6857,18 @@ describe("AgentChat", () => {
           threadId: "thread-demo",
         },
       }),
+    );
+    expect(screen.getByLabelText("latest active turn id")).toHaveTextContent(
+      /^pending-turn-/,
+    );
+    expect(screen.getByLabelText("latest active item id")).toHaveTextContent(
+      /^pending-user-message-/,
+    );
+    expect(screen.getByLabelText("latest active item text")).toHaveTextContent(
+      "hello codex",
+    );
+    expect(screen.getByLabelText("latest active item status")).toHaveTextContent(
+      "inProgress",
     );
   });
 
@@ -6836,7 +6948,11 @@ describe("AgentChat", () => {
               id: "browser",
               label: "Browser",
               resolve: () => ({
-                input: { name: "Browser", path: "agent://integration/browser", type: "mention" },
+                input: {
+                  name: "Browser",
+                  path: "agent://integration/browser",
+                  type: "mention",
+                },
                 label: "Browser",
               }),
             },
@@ -7097,32 +7213,32 @@ describe("AgentChat", () => {
 
   it("renders conversation messages as safe markdown", () => {
     renderMessageListWithThread({
-          orderedTurnIds: ["turn-markdown"],
-          status: "complete",
-          thread: { id: "thread-markdown", name: "Markdown" },
-          turns: {
-            "turn-markdown": {
-              commandOutputByItemId: {},
-              filePatchByItemId: {},
-              itemOrder: ["item-markdown"],
-              items: {
-                "item-markdown": {
-                  id: "item-markdown",
-                  kind: "agentMessage",
-                  status: "completed",
-                  text: "## Result\n\n- `bun test` passed\n- [Docs](https://example.com)\n\n```sh\nbun test\n```\n\n| File | State |\n| --- | --- |\n| README.md | updated |\n\n<script>alert('x')</script>",
-                  threadId: "thread-markdown",
-                  turnId: "turn-markdown",
-                },
-              },
-              streamingTextByItemId: {},
-              turn: {
-                id: "turn-markdown",
-                status: "completed",
-                threadId: "thread-markdown",
-              },
+      orderedTurnIds: ["turn-markdown"],
+      status: "complete",
+      thread: { id: "thread-markdown", name: "Markdown" },
+      turns: {
+        "turn-markdown": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-markdown"],
+          items: {
+            "item-markdown": {
+              id: "item-markdown",
+              kind: "agentMessage",
+              status: "completed",
+              text: "## Result\n\n- `bun test` passed\n- [Docs](https://example.com)\n\n```sh\nbun test\n```\n\n| File | State |\n| --- | --- |\n| README.md | updated |\n\n<script>alert('x')</script>",
+              threadId: "thread-markdown",
+              turnId: "turn-markdown",
             },
           },
+          streamingTextByItemId: {},
+          turn: {
+            id: "turn-markdown",
+            status: "completed",
+            threadId: "thread-markdown",
+          },
+        },
+      },
     });
 
     expect(screen.getByRole("heading", { name: "Result" })).toBeInTheDocument();
@@ -7464,6 +7580,126 @@ describe("AgentChat", () => {
     });
   });
 
+  it("keeps first-message retry payloads scoped to each provider", async () => {
+    const user = userEvent.setup();
+    const randomUuid = vi
+      .spyOn(globalThis.crypto, "randomUUID")
+      .mockReturnValue("00000000-0000-4000-8000-000000000004");
+    let turnStartCallsA = 0;
+    let turnStartCallsB = 0;
+    const transportA = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-provider-a",
+              name: "Provider A",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "turn/start") {
+          turnStartCallsA += 1;
+          if (turnStartCallsA === 1) throw new Error("provider A failed");
+          return {};
+        }
+        return {};
+      },
+    });
+    const transportB = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/start") {
+          return {
+            thread: {
+              id: "thread-provider-b",
+              name: "Provider B",
+              status: { type: "idle" },
+            },
+          };
+        }
+        if (request.method === "turn/start") {
+          turnStartCallsB += 1;
+          if (turnStartCallsB === 1) throw new Error("provider B failed");
+          return {};
+        }
+        return {};
+      },
+    });
+    try {
+      render(
+        <>
+          <section aria-label="provider a">
+            <AgentProvider transport={transportA}>
+              <PublicFirstMessageStartProbe />
+              <PublicComposerControllerProbe />
+            </AgentProvider>
+          </section>
+          <section aria-label="provider b">
+            <AgentProvider transport={transportB}>
+              <PublicFirstMessageStartProbe />
+              <PublicComposerControllerProbe />
+            </AgentProvider>
+          </section>
+        </>,
+      );
+
+      const providerA = within(screen.getByRole("region", { name: "provider a" }));
+      const providerB = within(screen.getByRole("region", { name: "provider b" }));
+      await user.type(
+        providerA.getByRole("textbox", { name: "Public first message" }),
+        "from provider a",
+      );
+      await user.click(
+        providerA.getByRole("button", { name: "Public start with input" }),
+      );
+      await waitFor(() =>
+        expect(providerA.getByLabelText("public failed pending count")).toHaveTextContent(
+          "1",
+        ),
+      );
+
+      await user.type(
+        providerB.getByRole("textbox", { name: "Public first message" }),
+        "from provider b",
+      );
+      await user.click(
+        providerB.getByRole("button", { name: "Public start with input" }),
+      );
+      await waitFor(() =>
+        expect(providerB.getByLabelText("public failed pending count")).toHaveTextContent(
+          "1",
+        ),
+      );
+
+      await user.click(
+        providerA.getByRole("button", { name: "Retry failed pending message" }),
+      );
+      await user.click(
+        providerB.getByRole("button", { name: "Retry failed pending message" }),
+      );
+      await waitFor(() =>
+        expect(
+          transportA.requests.filter((request) => request.method === "turn/start"),
+        ).toHaveLength(2),
+      );
+      await waitFor(() =>
+        expect(
+          transportB.requests.filter((request) => request.method === "turn/start"),
+        ).toHaveLength(2),
+      );
+      expect(
+        transportA.requests.filter((request) => request.method === "turn/start")[1]
+          ?.params,
+      ).toMatchObject({ threadId: "thread-provider-a" });
+      expect(
+        transportB.requests.filter((request) => request.method === "turn/start")[1]
+          ?.params,
+      ).toMatchObject({ threadId: "thread-provider-b" });
+    } finally {
+      randomUuid.mockRestore();
+    }
+  });
+
   it("does not start blank first-message threads through the public composer controller", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
@@ -7510,7 +7746,10 @@ describe("AgentChat", () => {
   it("shares draft state between AgentChat composer and external chat controller", async () => {
     const user = userEvent.setup();
     render(
-      <AgentProvider initialState={idleComposerState()} transport={new FakeAgentTransport()}>
+      <AgentProvider
+        initialState={idleComposerState()}
+        transport={new FakeAgentTransport()}
+      >
         <AgentChat />
         <PublicChatControllerProbe />
       </AgentProvider>,
@@ -7518,9 +7757,7 @@ describe("AgentChat", () => {
 
     const textarea = await screen.findByRole("textbox", { name: "Message" });
     await user.type(textarea, "shared draft");
-    expect(screen.getByLabelText("public chat value")).toHaveTextContent(
-      "shared draft",
-    );
+    expect(screen.getByLabelText("public chat value")).toHaveTextContent("shared draft");
     await user.click(screen.getByRole("button", { name: "Set external draft" }));
     expect(textarea).toHaveValue("external draft");
   });
@@ -7565,9 +7802,7 @@ describe("AgentChat", () => {
         "thread-external-first",
       ),
     );
-    expect(screen.getByLabelText("active item text")).toHaveTextContent(
-      "external first",
-    );
+    expect(screen.getByLabelText("active item text")).toHaveTextContent("external first");
     expect(screen.getByLabelText("public chat result")).toHaveTextContent(
       "started:thread-external-first",
     );
@@ -7591,6 +7826,7 @@ describe("AgentChat", () => {
       <AgentProvider initialState={idleComposerState()} transport={transport}>
         <AgentChat />
         <PublicChatControllerProbe />
+        <ActiveThreadStateProbe />
       </AgentProvider>,
     );
 
@@ -7600,23 +7836,44 @@ describe("AgentChat", () => {
       expect(
         transport.requests.find((request) => request.method === "turn/start")?.params,
       ).toMatchObject({
+        clientUserMessageId: expect.stringMatching(/^pending-user-message-/),
         input: [{ text: "external follow up", text_elements: [], type: "text" }],
         threadId: "thread-idle",
       }),
     );
+    expect(screen.getByLabelText("active item text")).toHaveTextContent(
+      "external follow up",
+    );
+    expect(screen.getByLabelText("active item status")).toHaveTextContent("inProgress");
     expect(transport.requests.map((request) => request.method)).not.toContain(
       "thread/start",
     );
     expect(screen.getByLabelText("public chat result")).toHaveTextContent("sent");
+  });
+
+  it("passes external follow-up turn options on an active idle thread", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/start") return {};
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={idleComposerState()} transport={transport}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+      </AgentProvider>,
+    );
 
     await user.click(
       screen.getByRole("button", { name: "Send external follow up with options" }),
     );
     await waitFor(() =>
       expect(
-        transport.requests.filter((request) => request.method === "turn/start")[1]
-          ?.params,
+        transport.requests.find((request) => request.method === "turn/start")?.params,
       ).toMatchObject({
+        clientUserMessageId: expect.stringMatching(/^pending-user-message-/),
         effort: "high",
         input: [
           {
@@ -7633,6 +7890,57 @@ describe("AgentChat", () => {
     expect(screen.getByLabelText("public chat result")).toHaveTextContent(
       "sent:thread-idle",
     );
+  });
+
+  it("keeps an idle thread sendable after turn start rejects", async () => {
+    const user = userEvent.setup();
+    let turnStartCalls = 0;
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "turn/start") {
+          turnStartCalls += 1;
+          if (turnStartCalls === 1) throw new Error("idle turn failed");
+          return {};
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={idleComposerState()} transport={transport}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+        <PublicComposerControllerProbe />
+        <ActiveThreadStateProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send external follow up" }));
+    await waitFor(() =>
+      expect(screen.getByLabelText("public chat error")).toHaveTextContent(
+        "idle turn failed",
+      ),
+    );
+    expect(screen.getByLabelText("active item text")).toHaveTextContent(
+      "external follow up",
+    );
+    expect(screen.getByLabelText("active item status")).toHaveTextContent("failed");
+    expect(screen.getByLabelText("public composer submit mode")).toHaveTextContent(
+      "send",
+    );
+    expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
+
+    await user.click(
+      screen.getByRole("button", { name: "Send external follow up with options" }),
+    );
+    await waitFor(() =>
+      expect(
+        transport.requests.filter((request) => request.method === "turn/start"),
+      ).toHaveLength(2),
+    );
+    expect(screen.getByLabelText("public chat result")).toHaveTextContent(
+      "sent:thread-idle",
+    );
+    expect(screen.queryByLabelText("Queued follow-ups")).not.toBeInTheDocument();
   });
 
   it("queues an external follow-up when the active thread is running", async () => {
@@ -7925,9 +8233,7 @@ describe("AgentChat", () => {
     );
     expect(screen.getByRole("heading", { name: "Message was not sent" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Retry message" })).toBeEnabled();
-    expect(
-      screen.getByRole("button", { name: "Dismiss failed message" }),
-    ).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Dismiss failed message" })).toBeEnabled();
     expect(screen.getByLabelText("public composer submit mode")).toHaveTextContent(
       "send",
     );
@@ -8004,12 +8310,13 @@ describe("AgentChat", () => {
       .map((node) => node.closest("article"))
       .find((article) => article?.classList.contains("aui-message"));
     expect(retryMessageArticle).toHaveAttribute("data-status", "failed");
-    await user.click(screen.getByRole("button", { name: "Retry message" }));
+    await user.click(screen.getByRole("button", { name: "Retry operation twice" }));
     await waitFor(() =>
       expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
         "pending",
       ),
     );
+    expect(screen.getByLabelText("composer retry error")).toHaveTextContent("none");
     expect(screen.getByLabelText("public failed pending count")).toHaveTextContent("0");
     expect(
       transport.requests.filter((request) => request.method === "turn/start"),
@@ -8040,9 +8347,9 @@ describe("AgentChat", () => {
   it("keeps a retried first message failed when the retry is dismissed while pending", async () => {
     const user = userEvent.setup();
     let turnStartCalls = 0;
-    let resolveRetryTurnStart: (() => void) | undefined;
-    const retryTurnStartResult = new Promise<void>((resolve) => {
-      resolveRetryTurnStart = resolve;
+    let rejectRetryTurnStart: ((error: Error) => void) | undefined;
+    const retryTurnStartResult = new Promise<void>((_resolve, reject) => {
+      rejectRetryTurnStart = reject;
     });
     const transport = new FakeAgentTransport({
       onRequest(request) {
@@ -8074,7 +8381,10 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    await user.type(await screen.findByRole("textbox", { name: "Message" }), "cancel retry");
+    await user.type(
+      await screen.findByRole("textbox", { name: "Message" }),
+      "cancel retry",
+    );
     await user.click(screen.getByRole("button", { name: "Start thread" }));
     await waitFor(() =>
       expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
@@ -8100,7 +8410,7 @@ describe("AgentChat", () => {
       "cancelled",
     );
     expect(retryMessageArticle).toHaveAttribute("data-status", "failed");
-    resolveRetryTurnStart?.();
+    rejectRetryTurnStart?.(new Error("late retry failed"));
     await new Promise((resolve) => setTimeout(resolve, 0));
     expect(screen.getByLabelText("composer operation status")).toHaveTextContent(
       "cancelled",
@@ -8132,6 +8442,72 @@ describe("AgentChat", () => {
     expect(
       screen.getByRole("button", { name: "Retry failed pending message" }),
     ).toBeDisabled();
+  });
+
+  it("keeps remounted failed first-message operations dismissible but not retryable", async () => {
+    const user = userEvent.setup();
+    const initialState = createInitialAgentState();
+    initialState.threadLifecycle.activeThreadId = "thread-stale-failed";
+    initialState.threadLifecycle.operations["operation-stale-failed"] = {
+      error: { message: "retry payload is gone" },
+      id: "operation-stale-failed",
+      kind: "firstMessage",
+      status: "failed",
+      threadId: "thread-stale-failed",
+    };
+    initialState.threads["thread-stale-failed"] = {
+      activity: "idle",
+      id: "thread-stale-failed",
+      orderedTurnIds: ["turn-stale-failed"],
+      runtime: { status: { type: "idle" } },
+      status: "complete",
+      thread: { id: "thread-stale-failed", name: "Stale failed thread" },
+      turns: {
+        "turn-stale-failed": {
+          blocksByItemId: {},
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["item-stale-failed"],
+          items: {
+            "item-stale-failed": {
+              id: "item-stale-failed",
+              kind: "userMessage",
+              status: "failed",
+              text: "stale failed message",
+              threadId: "thread-stale-failed",
+              turnId: "turn-stale-failed",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: {
+            id: "turn-stale-failed",
+            status: "failed",
+            threadId: "thread-stale-failed",
+          },
+        },
+      },
+    };
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentChat />
+        <PublicComposerControllerProbe />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByLabelText("public failed pending count")).toHaveTextContent("1");
+    expect(screen.getByLabelText("public failed pending retryable")).toHaveTextContent(
+      "false",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Retry message" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Dismiss failed message" })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "Retry failed pending message" }),
+    ).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: "Dismiss failed message" }));
+    expect(screen.getByLabelText("public failed pending count")).toHaveTextContent("0");
   });
 
   it("keeps cancelled retry operations cancelled when the retry resolves", async () => {
@@ -9149,8 +9525,12 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    await user.click(await screen.findByRole("button", { name: /Running stored session/ }));
-    expect(await screen.findByText("Running transcript remains readable.")).toBeInTheDocument();
+    await user.click(
+      await screen.findByRole("button", { name: /Running stored session/ }),
+    );
+    expect(
+      await screen.findByText("Running transcript remains readable."),
+    ).toBeInTheDocument();
 
     const message = screen.getByRole("textbox", { name: "Message" });
     await user.type(message, "resume while running");
@@ -9168,20 +9548,19 @@ describe("AgentChat", () => {
         .map((request) => request.method),
     ).toEqual(["thread/read", "thread/resume"]);
 
-    await user.click(
-      await screen.findByRole("button", { name: "Send now" }),
-    );
+    await user.click(await screen.findByRole("button", { name: "Send now" }));
 
     await waitFor(() =>
-      expect(transport.requests.findLast((request) => request.method === "turn/steer"))
-        .toMatchObject({
-          method: "turn/steer",
-          params: {
-            expectedTurnId: "turn-running-history",
-            input: [{ text: "resume while running", text_elements: [], type: "text" }],
-            threadId: "thread-running-history",
-          },
-        }),
+      expect(
+        transport.requests.findLast((request) => request.method === "turn/steer"),
+      ).toMatchObject({
+        method: "turn/steer",
+        params: {
+          expectedTurnId: "turn-running-history",
+          input: [{ text: "resume while running", text_elements: [], type: "text" }],
+          threadId: "thread-running-history",
+        },
+      }),
     );
   });
 
@@ -9236,7 +9615,9 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    await user.click(await screen.findByRole("button", { name: /Approval stored session/ }));
+    await user.click(
+      await screen.findByRole("button", { name: /Approval stored session/ }),
+    );
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     await user.upload(fileInput, new File(["notes"], "approval-notes.txt", { type: "" }));
     await screen.findByText("approval-notes.txt");
@@ -9308,14 +9689,15 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    await user.click(await screen.findByRole("button", { name: /Null effort stored session/ }));
+    await user.click(
+      await screen.findByRole("button", { name: /Null effort stored session/ }),
+    );
     await user.type(screen.getByRole("textbox", { name: "Message" }), "continue");
     await user.keyboard("{Enter}");
 
     await waitFor(() =>
       expect(
-        transport.requests.findLast((request) => request.method === "turn/start")
-          ?.params,
+        transport.requests.findLast((request) => request.method === "turn/start")?.params,
       ).toMatchObject({
         effort: undefined,
         model: "gpt-resumed",
@@ -10401,22 +10783,16 @@ describe("AgentChat", () => {
         .map((label) => label.replace(/(Preview|Ready).*$/, ""));
 
     await waitFor(() =>
-      expect(sidebarOrder()).toEqual([
-        "Server newest",
-        "Server middle",
-        "Server oldest",
-      ]),
+      expect(sidebarOrder()).toEqual(["Server newest", "Server middle", "Server oldest"]),
     );
 
     await user.click(screen.getByRole("button", { name: /Server middle/ }));
-    expect(await screen.findByRole("heading", { name: "Server middle" })).toBeInTheDocument();
+    expect(
+      await screen.findByRole("heading", { name: "Server middle" }),
+    ).toBeInTheDocument();
     expect(window.location.pathname).toBe("/threads/thread-server-middle");
     await waitFor(() =>
-      expect(sidebarOrder()).toEqual([
-        "Server newest",
-        "Server middle",
-        "Server oldest",
-      ]),
+      expect(sidebarOrder()).toEqual(["Server newest", "Server middle", "Server oldest"]),
     );
   });
 
@@ -10557,11 +10933,15 @@ describe("AgentChat", () => {
     expect(textarea).toBeDisabled();
     expect(textarea).toHaveAttribute("placeholder", "Needs approval");
     expect(screen.getAllByText("Needs approval").length).toBeGreaterThanOrEqual(2);
-    expect(screen.getByLabelText("public composer can submit")).toHaveTextContent("false");
+    expect(screen.getByLabelText("public composer can submit")).toHaveTextContent(
+      "false",
+    );
     expect(screen.getByLabelText("public composer disabled reason")).toHaveTextContent(
       "approval",
     );
-    expect(screen.getByLabelText("public composer submit mode")).toHaveTextContent("send");
+    expect(screen.getByLabelText("public composer submit mode")).toHaveTextContent(
+      "send",
+    );
   });
 
   it("shows approval-blocked state in the standalone composer primitive", async () => {

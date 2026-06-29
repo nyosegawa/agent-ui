@@ -40,7 +40,7 @@ describe("API snapshot checks", () => {
     }
 
     await expect(checkApiSnapshots({ repoRoot, snapshotRoot })).rejects.toThrow(
-      /Run bun run build or bun run validate:packages/,
+      /Run bun run build:packages or bun run validate:packages/,
     );
   });
 

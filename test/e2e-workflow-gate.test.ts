@@ -6,14 +6,15 @@ function readRepoFile(path: string): string {
 }
 
 describe("browser e2e workflow gate", () => {
-  it("runs fixture e2e as the pull request browser gate", () => {
+  it("runs fixture e2e broadly and real-local e2e only for sensitive changes", () => {
     const ci = readRepoFile(".github/workflows/ci.yml");
 
     expect(ci).toContain("bunx playwright install --with-deps chromium");
     expect(ci).toContain("bun run test:e2e:fixtures");
     expect(ci).toContain("playwright-report/");
     expect(ci).toContain("test-results/");
-    expect(ci).not.toContain("bun run test:e2e:real-local");
+    expect(ci).toContain("run-real-local:");
+    expect(ci).toContain("bun run test:e2e:real-local");
     expect(ci).not.toContain("bun run validate:e2e");
   });
 
@@ -24,7 +25,7 @@ describe("browser e2e workflow gate", () => {
     expect(release).toContain("bunx playwright install --with-deps chromium");
     expect(release).toContain("bun run validate:e2e");
     expect(testingDocs).toMatch(
-      /Fixture e2e is the pull request browser gate; real-local e2e is a release and\s+local validation gate\./,
+      /Fixture e2e is the broad pull request browser gate; real-local e2e runs for\s+local-bridge-sensitive pull requests plus release and local validation\./,
     );
   });
 });

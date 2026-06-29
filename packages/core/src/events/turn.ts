@@ -1,4 +1,5 @@
-import type { AgentItemState, AgentTurn, ThreadId, TurnId } from "../state";
+import type { AgentTurn, ThreadId, TurnId } from "../state";
+import type { AgentEventItem } from "./item";
 
 export type TurnEvent =
   | { type: "turn/started"; threadId: ThreadId; turn: AgentTurn }
@@ -6,7 +7,7 @@ export type TurnEvent =
       type: "turn/completed";
       threadId: ThreadId;
       turn: AgentTurn;
-      items?: AgentItemState[];
+      items?: AgentEventItem[];
       snapshot?: boolean;
     }
   | {

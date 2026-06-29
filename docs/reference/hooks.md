@@ -22,11 +22,11 @@ const thread = useAgentThreadController(threadId);
 const turns = useAgentTurnController(threadId);
 ```
 
-`useAgentThreadController()` is the preferred name for `useAgentThread()`. It can
-follow the active thread or lock to a supplied `threadId`. Use `startThread()`
-for a new Codex thread and `resumeThread(threadId)` only when the host explicitly
-wants to rejoin a stored session. Both actions return stable Agent UI result
-objects such as `{ threadId }`, not generated App Server response payloads.
+`useAgentThreadController()` can follow the active thread or lock to a supplied
+`threadId`. Use `startThread()` for a new Codex thread and
+`resumeThread(threadId)` only when the host explicitly wants to rejoin a stored
+session. Both actions return stable Agent UI result objects such as
+`{ threadId }`, not generated App Server response payloads.
 For thread lifecycle actions, `threadId` is the canonical id the host should
 persist after the operation completes. First-message start results use the same
 rule: if the action also starts a turn, any returned turn metadata is stable
@@ -44,9 +44,9 @@ experimental resume fields such as `excludeTurns`, `initialTurnsPage`,
 path/history resume, and cursor ownership remain host-managed raw protocol
 usage.
 
-`useAgentTurnController()` is the preferred name for `useAgentTurn()`. It sends
-`turn/start` with normalized run settings, `turn/steer` for continuing an active
-turn, and `turn/interrupt` for the visible stop action.
+`useAgentTurnController()` sends `turn/start` with normalized run settings,
+`turn/steer` for continuing an active turn, and `turn/interrupt` for the visible
+stop action.
 
 `turn/steer` is the Codex App Server same-turn continuation path. It requires
 an active regular turn and the matching `expectedTurnId`; review and manual
@@ -63,12 +63,13 @@ const history = useAgentThreadHistory();
 const reader = useAgentThreadReader();
 ```
 
-`useAgentThreads()` returns normalized thread state in `selectOrderedThreads()`
-order: the default lifecycle collection order, with uncollected in-memory
-thread entities appended last as a fallback. Implicit lifecycle upserts put the
-most recently changed default-collection thread first, while explicit scoped
-collections keep the order supplied by their page events. Selecting a thread
-does not promote it to the top of the collection.
+`useAgentThreads()` returns `AgentThreadView[]` entries in the default lifecycle
+collection order, with uncollected in-memory threads appended last as a
+fallback. Implicit lifecycle upserts put the most recently changed default
+collection thread first, while explicit scoped collections keep the order
+supplied by their page events. Selecting a thread does not promote it to the top
+of the collection. The hook does not expose reducer thread records, ordered turn
+ids, optimistic operation maps, or raw App Server payloads.
 
 `useAgentThreadHistory().listThreads()` calls `thread/list`, supports search and
 pagination cursor inputs, tracks the latest cursor, and upserts returned thread
@@ -129,11 +130,14 @@ const run = useAgentRunSettings();
 ```
 
 `useAgentComposerController()` owns input text and submits turns through the
-turn controller. `useAgentComposer()` remains a public alias for the same
-raw-free controller view. The public view exposes `value`, `setValue`,
+turn controller. The public view exposes `value`, `setValue`,
 `canSubmit`, `submitMode`, `disabledReason`, `isSubmitting`, `isInterrupting`,
 `activeTurnId`, queued follow-ups, failed first-message pending messages, and
-retry/cancel actions for those failed pending messages. It also exposes
+retry/cancel actions for those failed pending messages. Each failed pending
+message includes `retryable`; remounted or initial-state operations without a
+provider-local retry payload remain dismissible but do not offer Retry.
+`submitMode` is only `"send"` or `"stop"`: follow-up queueing is an execution
+path, not a submit-button mode. The controller also exposes
 `startThreadWithInput(input, { threadOptions, turnOptions })` for headless hosts
 that need the same safe first-message behavior as `AgentChat`: the first user
 message appears immediately, `thread/start` uses the current run settings plus
@@ -147,8 +151,12 @@ is the transient UI turn id used before live turn notifications reconcile the
 first user message, and `userMessageId` is the client id supplied to
 `turn/start`. It does not expose the internal operation map, raw
 `ThreadStartResponse`, raw `TurnStartResponse`, or reducer
-reconciliation records. Idle threads submit
-`turn/start`. Stored and preview threads automatically resume before submit; if
+reconciliation records. Idle threads submit `turn/start` with an optimistic user
+message and `clientUserMessageId` before the request resolves, then reconcile
+against live App Server item events by that client id. Failed idle-thread sends
+keep the visible user message, mark it failed, and close the optimistic turn so
+the composer returns to send mode. Stored and preview threads automatically
+resume before submit; if
 resume rejoins a running turn, Enter follows the same local queue path as any
 running thread instead of starting a second turn. Running threads keep the
 textarea editable: Enter adds to `queuedFollowUps`, Cmd/Ctrl+Enter calls
@@ -163,15 +171,16 @@ queue state separate from App Server pending input with `queuedFollowUps`,
 `sendingFollowUpIds`, `followUpErrors`, and `activeTurnId`. Attachment-local
 draft state and host-disabled states are composed by the visual composer layer;
 `canSubmit` reflects the controller's text/running state before those external
-constraints are applied. The default `AgentComposerPanel` still blocks
-submission for approval-waiting threads and stored read-only previews.
+constraints are applied. The default `AgentComposer` blocks submission for
+approval-waiting threads and stored read-only previews.
 `useAgentChatController()` exposes the same provider-scoped controller for
 host UI that needs to drive the current `AgentChat` flow from outside the
 composer. Its `sendMessage(input, { threadOptions, turnOptions })` method
 routes through the same lifecycle as the default composer: without an active
 thread it performs optimistic first-message thread start and canonical
 reconciliation, on an idle active thread it starts a turn and forwards
-`turnOptions`, on a running thread it queues the follow-up, and on an
+`turnOptions` through the same optimistic `clientUserMessageId` reconciliation
+as the visual composer, on a running thread it queues the follow-up, and on an
 approval-blocked thread it returns `{ type: "blocked", reason: "approval" }`.
 Successful results are discriminated as `{ type: "started", ... }`,
 `{ type: "sent", threadId }`, or
@@ -252,11 +261,14 @@ hook exposes neutral `respond(requestId, result)` and
 `reject(requestId, errorOrMessage)` actions so hosts can send method-specific
 payloads instead of approval-shaped decisions.
 
-`useAgentApprovals()` is approval-only: it returns only `commandApproval`,
-`fileChangeApproval` requests with stable `approve()` and `reject()` actions
-for decision flows. Older upstream `execCommandApproval` and
-`applyPatchApproval` requests are normalized to those canonical kinds before
-they reach React hooks.
+`useAgentApprovals()` is approval-only: it returns raw-free
+`AgentApprovalRequest` views for command and file-change decisions. Its
+`approve(requestId, decision)` method accepts only `accept`,
+`acceptForSession`, or `decline`; omitting the decision means `accept`.
+`reject(requestId, message)` rejects the request with a standard Agent UI
+error. Older upstream `execCommandApproval` and `applyPatchApproval` requests
+are normalized to `commandApproval` and `fileChangeApproval` views before they
+reach React hooks, and legacy upstream decision strings remain internal.
 
 Migration note: broad server-request handling should use
 `useAgentServerRequests().respond()` / `.reject()`. The broad hook no longer

@@ -7,9 +7,15 @@ Agent UI has two different server integration shapes. Keep them separate:
 
 Only the full chat bridge can power `AgentChat`.
 
-The public server package exports bridge, local media, one-shot RPC,
-server-request policy, dynamic-tool mapping, host-event, and redaction helpers.
-Those helpers are integration surfaces for a host-owned server process; they do
+The server package has two public layers:
+
+- `@nyosegawa/agent-ui-server`: the normal host integration surface for
+  WebSocket bridges, local media, one-shot RPC, server-request policy,
+  dynamic-tool mapping, host-event, and redaction helpers.
+- `@nyosegawa/agent-ui-server/advanced`: raw stdio bridge and dynamic-tool
+  helper-thread internals for hosts that deliberately own process details.
+
+Both layers are integration surfaces for a host-owned server process; they do
 not make Agent UI a hosted runtime. Authentication, non-loopback admission,
 process supervision, persistence, tenant/workspace isolation, upload/static
 authorization, audit retention, billing, and deployment topology stay outside
@@ -98,7 +104,7 @@ The explicit modes are:
 - `host-callback`: calls a host callback with the original HTTP request. A
   `false` result rejects with reason code `admission_rejected`. The callback may
   also return `{ accepted: false, reason, status, body, closeCode,
-  closeReason }` for host-controlled HTTP rejection before upgrade. Thrown or
+closeReason }` for host-controlled HTTP rejection before upgrade. Thrown or
   rejected errors reject with `admission_failed`, do not spawn the child
   process, and have diagnostics redacted before host stderr callbacks.
 - `unsafe-no-admission`: admits without request checks only when the host
@@ -106,12 +112,14 @@ The explicit modes are:
   experiments and should be paired with external auth, isolation, and audit
   logging.
 
-The legacy top-level `admission(request)` option is treated as
-`host-callback`. Use host-callback admission for session or explicit local-token
-checks on any bridge that is not a private loopback-only development endpoint;
-an Origin comparison alone is not authentication. Browser JSON-RPC requests are
-filtered by `browserMethodPolicy`; the default is the full-chat productized UI
-surface expressed as capability categories:
+There is no top-level `admission(request)` compatibility option. Admission is
+always configured through `bridgePolicy.admission` so host-owned security policy
+is visibly separate from process launch options. Use host-callback admission for
+session or explicit local-token checks on any bridge that is not a private
+loopback-only development endpoint; an Origin comparison alone is not
+authentication. Browser JSON-RPC requests are filtered by
+`browserMethodPolicy`; the default is the full-chat productized UI surface
+expressed as capability categories:
 
 Bridge health diagnostics are emitted through `hostEvents.onBridgeHealthEvent`.
 The event carries a snapshot with `admissionChecked`, `processSpawned`,
@@ -189,7 +197,9 @@ attachAgentUiWebSocketBridge({
       cwd: workspace.cwd,
       env: codexBridgeEnv(session),
       bridgePolicy: { admission: desktopAdmission(session) },
-      browserMethodPolicy: { capabilities: ["connection", "models", "threadLifecycle", "turns"] },
+      browserMethodPolicy: {
+        capabilities: ["connection", "models", "threadLifecycle", "turns"],
+      },
       dynamicToolPolicy: { mode: "disabled" },
       serverRequestPolicy: hostServerRequestPolicy(session),
       initialize: desktopInitializePayload(session),
@@ -240,6 +250,14 @@ transport, which rejects pending requests, then sends `SIGTERM` to the Codex
 child process, waits for the grace period, and escalates to `SIGKILL` if the
 child does not exit. Child stdout and stderr stay bound to the transport
 lifecycle; stderr is redacted before host callbacks or browser events see it.
+The root package exposes only the high-level launch options used by bridge and
+one-shot helpers: `cwd`, `env`, `initialize`, `shutdown`, and `stderr`.
+Advanced process customization such as `command`, `args`, `spawn`, the raw
+child-process shape, and direct access to the `CodexAppServerBridge` live under
+`@nyosegawa/agent-ui-server/advanced`. If root helpers receive unsupported raw
+process keys or the removed top-level `admission` key at runtime, they reject
+before spawning App Server instead of silently treating the request as
+loopback-only.
 
 Running-turn UX should map directly to App Server methods. App Server has no
 dedicated `queue/message` API. Agent UI's default pending follow-up cards are
@@ -378,6 +396,13 @@ thread id, success flag, duration, redacted message, and
 dynamic tool arguments or MCP result content. These events are for
 developer/audit logging by the host, not browser-visible approval UI.
 
+The bridge uses lower-level helpers such as `handleDynamicToolRequest()`,
+`createDynamicToolHelperThread()`, `maybeResolveHelperThreadRequest()`, and
+`dynamicToolFailure()` internally. They are exported only from
+`@nyosegawa/agent-ui-server/advanced` for hosts that intentionally compose their
+own bridge loop. Normal hosts should configure `dynamicToolPolicy` on the root
+WebSocket bridge instead of importing those helpers.
+
 Server request auto-resolution is controlled separately by
 `serverRequestPolicy`. The default policy forwards approval-like requests to
 the browser UI so the user can decide. The MCP tool approval shortcut only
@@ -386,7 +411,7 @@ accepts elicitations that carry `_meta.codex_approval_kind ===
 
 Hosts that need request-specific policy can provide
 `serverRequestPolicy.decide(context)`. The callback receives the normalized
-request kind, request id, thread id, turn id, full request object, and payload.
+request kind, request id, thread id, turn id, and method-specific payload.
 Return `{ action: "respond", response }` to resolve that request, return
 `{ action: "manual" }` to force browser/UI handling and skip fallback shortcuts,
 or return `undefined` to continue to the narrower built-in policies such as
@@ -440,9 +465,10 @@ attachAgentUiWebSocketBridge({
 });
 ```
 
-The callback receives `requestId`, `threadId`, `turnId`, `cwd`, requested
-filesystem/network permissions, and the raw App Server request payload. The
-normal policy path treats returned grants as trusted host policy but still
+The callback receives `requestId`, `threadId`, `turnId`, `cwd`,
+filesystem/network permissions requested by the server, and the
+method-specific payload for audit or host-policy checks. The normal policy path
+treats returned grants as trusted host policy but still
 clamps them to the requested subset: unrequested permission families are
 dropped, generic grants such as network must match the requested value,
 protocol-shaped filesystem `read`, `write`, and `entries` grants must be

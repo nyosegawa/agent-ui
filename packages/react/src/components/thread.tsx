@@ -3,14 +3,18 @@ import { useMemo } from "react";
 import type {
   AgentThreadSummaryView,
   AgentThreadTranscriptView,
-  PendingServerRequest,
 } from "@nyosegawa/agent-ui-core";
 import {
   selectActiveThreadSummaryView,
   selectThreadSummaryView,
   selectThreadTranscriptView,
 } from "@nyosegawa/agent-ui-core";
-import { useAgentApprovals, useAgentThread, useAgentThreadActions } from "../hooks";
+import {
+  useAgentApprovals,
+  useAgentThreadActions,
+} from "../hooks";
+import { useInternalAgentThread } from "../hooks/thread";
+import type { AgentApprovalRequest } from "../approval-types";
 import { useAgentI18n } from "../i18n";
 import { IconMoreVertical } from "../components-internal";
 import { AgentMessageList } from "../timeline";
@@ -25,12 +29,12 @@ import {
 import { AgentCriticalNoticeList } from "./status";
 import { deferAction } from "./shared";
 import { formatThreadStatus } from "./sidebar";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 
 export interface AgentThreadViewProps {
   composerIntegrations?: readonly AgentComposerIntegration[];
   components?: AgentComponents;
-  renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
+  renderApproval?: (approval: AgentApprovalRequest) => React.ReactNode;
   renderItem?: React.ComponentProps<typeof AgentMessageList>["renderItem"];
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
@@ -48,8 +52,8 @@ export function AgentThreadView({
   threadHeaderEnd,
   threadId,
 }: AgentThreadViewProps) {
-  const { thread, threadId: resolvedThreadId } = useAgentThread(threadId);
-  const { state } = useAgentContext();
+  const { thread, threadId: resolvedThreadId } = useInternalAgentThread(threadId);
+  const { state } = useInternalAgentContext();
   const threadView = resolvedThreadId
     ? selectThreadSummaryView(state, resolvedThreadId)
     : selectActiveThreadSummaryView(state);
@@ -92,14 +96,12 @@ export function AgentThreadView({
           Default={AgentComposerPanel}
           composerIntegrations={composerIntegrations}
           resolveLocalAttachment={resolveLocalAttachment}
-          thread={thread}
           threadId={resolvedThreadId}
         />
       ) : (
         <AgentComposerPanel
           composerIntegrations={composerIntegrations}
           resolveLocalAttachment={resolveLocalAttachment}
-          thread={thread}
           threadId={resolvedThreadId}
         />
       )}
@@ -173,18 +175,18 @@ export function AgentThreadTimeline({
   threadId,
 }: {
   components?: AgentComponents;
-  renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
+  renderApproval?: (approval: AgentApprovalRequest) => React.ReactNode;
   renderItem?: React.ComponentProps<typeof AgentMessageList>["renderItem"];
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   threadId?: string;
 }) {
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const { approvals } = useAgentApprovals(threadId);
   const transcript = threadId ? selectThreadTranscriptView(state, threadId) : undefined;
   const Approval = components?.Approval;
   const renderApprovalComponent =
     Approval || renderApproval
-      ? (approval: PendingServerRequest) => {
+      ? (approval: AgentApprovalRequest) => {
           if (!Approval) return renderApproval?.(approval);
           function DefaultApproval({ approval: defaultApproval }: AgentApprovalDefaultProps) {
             return (
@@ -237,14 +239,14 @@ export function AgentThreadTimeline({
 }
 
 function placeTranscriptApprovals(
-  approvals: PendingServerRequest[],
+  approvals: AgentApprovalRequest[],
   transcript: AgentThreadTranscriptView | undefined,
 ): {
-  anchored: PendingServerRequest[];
-  tail: PendingServerRequest[];
+  anchored: AgentApprovalRequest[];
+  tail: AgentApprovalRequest[];
 } {
-  const anchored: PendingServerRequest[] = [];
-  const tail: PendingServerRequest[] = [];
+  const anchored: AgentApprovalRequest[] = [];
+  const tail: AgentApprovalRequest[] = [];
   for (const approval of approvals) {
     if (transcriptApprovalExists(approval, transcript)) {
       anchored.push(approval);
@@ -256,7 +258,7 @@ function placeTranscriptApprovals(
 }
 
 function transcriptApprovalExists(
-  approval: PendingServerRequest,
+  approval: AgentApprovalRequest,
   transcript: AgentThreadTranscriptView | undefined,
 ): boolean {
   if (!transcript || (!approval.itemId && !approval.turnId)) return false;

@@ -40,14 +40,17 @@ describe("CI workflow policy", () => {
       "API snapshots",
       "Package resolution",
       "Playwright fixtures",
+      "Real local smoke",
     ]) {
       expect(ci, jobName).toContain(`name: ${jobName}`);
     }
 
     expect(ci).toContain("bun run validate:packages");
-    expect(ci).toMatch(/name: API snapshots[\s\S]+bun run build[\s\S]+bun run test:api-snapshots/);
+    expect(ci).toMatch(/name: API snapshots[\s\S]+bun run build:packages[\s\S]+bun run test:api-snapshots/);
     expect(ci).toContain("bun run test:package-resolution");
     expect(ci).toContain("bun run test:e2e:fixtures");
+    expect(ci).toContain("run-real-local:");
+    expect(ci).toContain("bun run test:e2e:real-local");
     expect(ci).toContain("actions/upload-artifact@v7");
   });
 

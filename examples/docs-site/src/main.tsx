@@ -1,18 +1,13 @@
-import {
-  FakeAgentTransport,
-  runEventFixture,
-  type FixtureStep,
-} from "@nyosegawa/agent-ui-core";
+import { FakeAgentTransport } from "@nyosegawa/agent-ui-core";
 import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
 import { useMemo } from "react";
 import { createRoot } from "react-dom/client";
-import demoFixture from "../../../fixtures/app-server/demo-session.json";
 import "./style.css";
 
 const sections = [
   {
-    body: "Protocol-neutral reducer, selectors, fake transport, and fixture runner. It has no React or child-process dependency.",
+    body: "Protocol-neutral state, public selectors, fake transport, and raw-free view models. It has no React or child-process dependency.",
     title: "@nyosegawa/agent-ui-core",
   },
   {
@@ -30,10 +25,9 @@ const sections = [
 ];
 
 function DocsSite() {
-  const initialState = useMemo(() => runEventFixture(demoFixture as FixtureStep[]), []);
   const transport = useMemo(() => new FakeAgentTransport(), []);
   return (
-    <AgentProvider initialState={initialState} transport={transport}>
+    <AgentProvider transport={transport}>
       <main className="docs-shell">
         <aside className="docs-nav" aria-label="Documentation">
           <strong>Agent UI</strong>

@@ -39,6 +39,10 @@ deployment policy into Agent UI core.
   and thread history.
 - Public React controllers and replacement maps that let hosts compose those
   primitives without depending on raw reducer state or internal CSS selectors.
+- Raw-free view models for normal host composition. Protocol payloads,
+  reducer-internal store shapes, and arbitrary `unknown` payloads belong behind
+  explicit transport, Codex adapter, diagnostics, or server host-policy
+  boundaries.
 - Codex App Server request builders, normalizers, transport adapters, and
   generated schema metadata needed by the public package surface.
 - Local-first bridge helpers for same-origin WebSocket chat, local uploads,

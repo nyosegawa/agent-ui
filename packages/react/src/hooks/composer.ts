@@ -2,8 +2,8 @@ import {
   selectLatestRunningTurnId,
   selectThread,
   type AgentOperationView,
-  type ThreadId,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
+import type { ThreadId } from "@nyosegawa/agent-ui-core";
 import { useCallback, useMemo, type SetStateAction } from "react";
 import type { AgentUserInput } from "../agent-input";
 import {
@@ -12,7 +12,7 @@ import {
 } from "../composer-queue";
 import { useAgentComposerDraftState } from "../composer-state";
 import { useAgentI18n } from "../i18n";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import type { ThreadStartOptions, TurnStartOptions } from "../request-options";
 import { useFirstMessageOperationController } from "./first-message-operations";
 import { composerActionError, followUpSendPreflightError } from "./composer-errors";
@@ -26,7 +26,7 @@ import type {
   AgentComposerSubmitMode,
 } from "./composer-types";
 import type { AgentThreadStartWithInputResult } from "./thread-lifecycle-types";
-import { useAgentTurn } from "./turn";
+import { useInternalAgentTurn } from "./turn";
 import { useComposerTurnStart } from "./composer-turn-start";
 import {
   hasSubmittableFirstInput,
@@ -44,10 +44,6 @@ export interface InternalAgentComposerController extends AgentComposerController
     params?: ThreadStartOptions,
     turnOptions?: TurnStartOptions,
   ) => Promise<AgentThreadStartWithInputResult>;
-}
-
-export function useAgentComposer(threadId?: ThreadId): AgentComposerController {
-  return useAgentComposerController(threadId);
 }
 
 export function useAgentComposerController(threadId?: ThreadId): AgentComposerController {
@@ -87,11 +83,11 @@ export function useInternalAgentComposerController(
   threadId?: ThreadId,
 ): InternalAgentComposerController {
   const { t } = useAgentI18n();
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const composerQueue = useAgentComposerQueueStore();
   const resolvedThreadId = threadId ?? state.threadLifecycle.activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;
-  const { interruptTurn, steerTurn } = useAgentTurn(threadId);
+  const { interruptTurn, steerTurn } = useInternalAgentTurn(threadId);
   const startComposerTurn = useComposerTurnStart(threadId);
   const activeTurnId = resolvedThreadId
     ? selectLatestRunningTurnId(state, resolvedThreadId)
@@ -146,7 +142,8 @@ export function useInternalAgentComposerController(
     (input: string | AgentUserInput[]) => {
       const inputItems = typeof input === "string" ? input.trim() : input;
       if (!hasSubmittableFirstInput(inputItems)) return undefined;
-      const items = typeof inputItems === "string" ? [textAgentInput(inputItems)] : inputItems;
+      const items =
+        typeof inputItems === "string" ? [textAgentInput(inputItems)] : inputItems;
       return {
         input: items,
         source: inputItems,
@@ -210,7 +207,9 @@ export function useInternalAgentComposerController(
       setError(undefined);
       setIsSubmitting(true);
       try {
-        const result = await startComposerTurn(built.input);
+        const result = await startComposerTurn(built.input, {
+          displayText: built.text,
+        });
         if (result.type === "resumedRunning") {
           return enqueueBuiltFollowUp(built, options.attachments, {
             expectedTurnId: result.activeTurnId,
@@ -257,8 +256,13 @@ export function useInternalAgentComposerController(
     setIsSubmitting,
     setValue,
   });
-  const { cancelOperation, getOperation, operationsById, retryOperation } =
-    useFirstMessageOperationController(startWithMessage);
+  const {
+    cancelOperation,
+    getOperation,
+    hasRetryPayload,
+    operationsById,
+    retryOperation,
+  } = useFirstMessageOperationController(startWithMessage);
   const sendMessage = useCallback(
     async (
       input: string | AgentUserInput[],
@@ -279,10 +283,7 @@ export function useInternalAgentComposerController(
         return { reason: "approval", threadId: resolvedThreadId, type: "blocked" };
       }
       if (isRunning) {
-        const queuedFollowUpId = enqueueBuiltFollowUp(
-          built,
-          options.queuedAttachments,
-        );
+        const queuedFollowUpId = enqueueBuiltFollowUp(built, options.queuedAttachments);
         if (!queuedFollowUpId) {
           return { reason: "approval", threadId: resolvedThreadId, type: "blocked" };
         }
@@ -291,7 +292,10 @@ export function useInternalAgentComposerController(
       setError(undefined);
       setIsSubmitting(true);
       try {
-        const result = await startComposerTurn(built.input, options.turnOptions);
+        const result = await startComposerTurn(built.input, {
+          displayText: built.text,
+          turnOptions: options.turnOptions,
+        });
         if (result.type === "resumedRunning") {
           const queuedFollowUpId = enqueueBuiltFollowUp(
             built,
@@ -360,10 +364,11 @@ export function useInternalAgentComposerController(
             .map((operation) => ({
               error: operation.error?.message,
               operationId: operation.id,
+              retryable: hasRetryPayload(operation.id),
               threadId: resolvedThreadId,
             }))
         : [],
-    [operationsById, resolvedThreadId],
+    [hasRetryPayload, operationsById, resolvedThreadId],
   );
   const submitMode: AgentComposerSubmitMode = isRunning ? "stop" : "send";
   const hasTextInput = value.trim().length > 0;

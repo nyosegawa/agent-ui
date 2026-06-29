@@ -20,6 +20,7 @@ declare const HTMLElementBase: {
 };
 declare class AgentChatElement extends HTMLElementBase implements AgentChatWebComponentElement {
     #private;
+    static get observedAttributes(): string[];
     get agentOptions(): AgentChatElementOptions;
     set agentOptions(options: AgentChatElementOptions | undefined);
     get components(): AgentComponents | undefined;
@@ -30,6 +31,7 @@ declare class AgentChatElement extends HTMLElementBase implements AgentChatWebCo
     set transport(value: AgentTransport | undefined);
     connectedCallback(): void;
     disconnectedCallback(): void;
+    attributeChangedCallback(): void;
 }
 
 export { AgentChatElement, type AgentChatElementOptions, type AgentChatWebComponentElement, defineAgentChatElement };

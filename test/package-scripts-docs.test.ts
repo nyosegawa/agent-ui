@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_ONE_SHOT_METHODS } from "../packages/server/src/one-shot-rpc-policy";
@@ -41,7 +41,16 @@ describe("package script documentation", () => {
 
   it("keeps validate:packages docs aligned with the script order", () => {
     expect(packageJson.scripts?.["validate:packages"]).toBe(
-      "bun run build && bun run test:packlist && bun run test:node-compat && bun run publint && bun run attw",
+      "bun run build:packages && bun run test:packlist && bun run test:node-compat && bun run publint && bun run attw",
+    );
+    expect(packageJson.scripts?.["build"]).toBe(
+      "bun run build:packages && bun run build:examples",
+    );
+    expect(packageJson.scripts?.["build:packages"]).toBe(
+      "node scripts/build-workspaces.mjs packages",
+    );
+    expect(packageJson.scripts?.["build:examples"]).toBe(
+      "node scripts/build-workspaces.mjs examples",
     );
     expect(packageJson.scripts?.["validate:release"]).toBe(
       "bun run validate:fast && bun run validate:protocol && bun run validate:packages && bun run check:dead-code && bun run test:api-snapshots && bun run test:package-resolution",
@@ -51,8 +60,10 @@ describe("package script documentation", () => {
     expect(testingDocs).toContain(
       "`test:packlist`, `test:node-compat`, `publint`, then `attw`",
     );
+    expect(testingDocs).toContain("bun run build:packages");
+    expect(testingDocs).toContain("bun run build:examples");
     expect(testingDocs).toContain(
-      "packlist smoke, Node\n  compatibility smoke, `publint`, and `arethetypeswrong`",
+      "fresh `build:packages`, npm packlist smoke, Node\n  compatibility smoke, `publint`, and `arethetypeswrong`",
     );
     expect(testingDocs).toMatch(
       /`validate:release` does not repeat\s+`test:node-compat` after `validate:packages`/,
@@ -188,6 +199,41 @@ describe("package script documentation", () => {
     expect(serverBridgeDocs).toContain("16 MB default limit");
     expect(serverBridgeDocs).toContain("one hour default TTL");
   });
+
+  it("keeps downstream application names out of public library docs", () => {
+    const publicDocs = [
+      "README.md",
+      "CONTRIBUTING.md",
+      "docs",
+      "packages/core/README.md",
+      "packages/core/CHANGELOG.md",
+      "packages/codex/README.md",
+      "packages/codex/CHANGELOG.md",
+      "packages/react/README.md",
+      "packages/react/CHANGELOG.md",
+      "packages/server/README.md",
+      "packages/server/CHANGELOG.md",
+      "packages/web-components/README.md",
+      "packages/web-components/CHANGELOG.md",
+      "examples",
+      ".changeset",
+    ];
+    const forbidden = [
+      /\bagent-app\b/i,
+      /\breceipt-agent-app\b/i,
+      /\bWatcher(?:\.app)?\b/,
+      /\bnyosegawa\/watcher\b/i,
+    ];
+    const violations = publicDocs.flatMap((path) =>
+      readPublicTextFiles(path).flatMap(({ filePath, text }) =>
+        forbidden
+          .filter((pattern) => pattern.test(text))
+          .map((pattern) => `${filePath}: ${String(pattern)}`),
+      ),
+    );
+
+    expect(violations).toEqual([]);
+  });
 });
 
 function publicPackageManifests(): PackageJson[] {
@@ -200,6 +246,26 @@ function publicPackageManifests(): PackageJson[] {
       ) as PackageJson;
     })
     .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function readPublicTextFiles(path: string): Array<{ filePath: string; text: string }> {
+  const root = new URL(`../${path}`, import.meta.url);
+  const stats = statSync(root);
+  if (stats.isFile()) return [{ filePath: path, text: readRepoFile(path) }];
+  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    if (
+      entry.isDirectory() &&
+      ["node_modules", "dist", ".next", "coverage", "playwright-report"].includes(
+        entry.name,
+      )
+    ) {
+      return [];
+    }
+    const childPath = `${path}/${entry.name}`;
+    if (entry.isDirectory()) return readPublicTextFiles(childPath);
+    if (!/\.(?:md|mdx|ts|tsx|json)$/.test(entry.name)) return [];
+    return [{ filePath: childPath, text: readRepoFile(childPath) }];
+  });
 }
 
 function publicExportSpecifiers(): string[] {

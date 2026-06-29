@@ -1,8 +1,7 @@
 import type { AgentI18nKey } from "../i18n";
 import { interpolate } from "../i18n/interpolate";
 import { en } from "../i18n/locales/en";
-import type { AgentItemBlock } from "@nyosegawa/agent-ui-core";
-import { formatJson, isRecord } from "./formatters";
+import type { AgentTranscriptBlock } from "../hooks/transcript";
 
 export function commandPreview(text: string): string {
   const preview = text
@@ -14,44 +13,28 @@ export function commandPreview(text: string): string {
 }
 
 export function toolPreview(
-  block: AgentItemBlock,
+  block: AgentTranscriptBlock,
   t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string = fallbackTimelineT,
 ): string | undefined {
   if (block.status === "failed") return undefined;
-  const resultPreview = toolResultPreview(block.result, t);
+  const compactResult = block.resultText
+    ? compactTextPreview(block.resultText)
+    : undefined;
+  const resultPreview =
+    compactResult && looksLikeMachinePreview(compactResult)
+      ? t("timeline.resultCaptured")
+      : compactResult;
   if (resultPreview) return resultPreview;
-  const argsPreview = block.status === "inProgress" ? compactJsonPreview(block.arguments) : undefined;
+  const argsPreview =
+    block.status === "inProgress" && block.argumentsText
+      ? compactTextPreview(block.argumentsText)
+      : undefined;
   if (argsPreview) return t("timeline.argumentsPreview", { preview: argsPreview });
   return undefined;
 }
 
 function fallbackTimelineT(key: AgentI18nKey, vars?: Record<string, string | number>) {
   return interpolate(en[key], vars);
-}
-
-function toolResultPreview(
-  value: unknown,
-  t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string,
-): string | undefined {
-  const record = isRecord(value) ? value : undefined;
-  const content = Array.isArray(record?.content) ? record.content : undefined;
-  if (content && content.length > 0) {
-    const textItem = content.find((item) => isRecord(item) && item.type === "text");
-    if (isRecord(textItem) && typeof textItem.text === "string") {
-      const preview = compactTextPreview(textItem.text);
-      return preview && looksLikeMachinePreview(preview) ? t("timeline.resultCaptured") : preview;
-    }
-    return t("timeline.resultItems", {
-      count: content.length,
-      label: content.length === 1 ? t("timeline.item") : t("timeline.items"),
-    });
-  }
-  return value === undefined || value === null ? undefined : t("timeline.resultCaptured");
-}
-
-function compactJsonPreview(value: unknown): string | undefined {
-  if (value === undefined || value === null) return undefined;
-  return compactTextPreview(formatJson(value));
 }
 
 function compactTextPreview(value: string): string | undefined {

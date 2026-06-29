@@ -21,10 +21,6 @@ const hostResolution = resolveExampleHost(
 const host = hostResolution.host;
 const port = Number(process.env.AGENT_UI_PORT ?? 5175);
 const cwd = process.env.AGENT_UI_CODEX_CWD ?? process.cwd();
-const codexCommand = process.env.AGENT_UI_CODEX_COMMAND;
-const codexArgs = process.env.AGENT_UI_CODEX_ARGS
-  ? JSON.parse(process.env.AGENT_UI_CODEX_ARGS)
-  : undefined;
 const root = dirname(fileURLToPath(import.meta.url));
 const execFileAsync = promisify(execFile);
 
@@ -44,7 +40,9 @@ async function handleSelectDirectory(response: ServerResponse) {
   if (process.platform !== "darwin") {
     response.statusCode = 501;
     response.setHeader("content-type", "application/json");
-    response.end(JSON.stringify({ error: "Directory picker is only implemented on macOS." }));
+    response.end(
+      JSON.stringify({ error: "Directory picker is only implemented on macOS." }),
+    );
     return;
   }
   try {
@@ -114,15 +112,15 @@ server.on("close", () => {
 });
 
 attachAgentUiWebSocketBridge({
-  ...(codexArgs ? { args: codexArgs } : {}),
-  ...(codexCommand ? { command: codexCommand } : {}),
   bridgePolicy: { admission: { mode: "local-loopback" } },
   browserMethodPolicy: "productized",
   cwd,
   resolveBridgeOptions({ request }) {
     const stateNamespace = request
-      ? new URL(request.url ?? "/", `http://${request.headers.host ?? "127.0.0.1"}`)
-          .searchParams.get("agentUiState")
+      ? new URL(
+          request.url ?? "/",
+          `http://${request.headers.host ?? "127.0.0.1"}`,
+        ).searchParams.get("agentUiState")
       : null;
     if (!stateNamespace) return {};
     return {

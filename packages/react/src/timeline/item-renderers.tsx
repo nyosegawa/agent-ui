@@ -12,14 +12,11 @@ import {
   commandTextForItem,
   displayText,
   formatDuration,
-  formatJson,
-  isRecord,
   isVideoPath,
   itemLabel,
   kindLabel,
   lineCount,
   shortId,
-  stringValue,
 } from "./formatters";
 import { commandPreview, toolPreview } from "./previews";
 
@@ -134,7 +131,7 @@ export function AgentFileChangeItem({
 }) {
   const { t } = useAgentI18n();
   const [isOpen, setOpen] = useState(false);
-  const changes = block?.changes ?? [];
+  const files = block?.files ?? [];
   return (
     <details
       aria-label={t("aria.diffPreview")}
@@ -145,16 +142,16 @@ export function AgentFileChangeItem({
         <span className="aui-terminal-label">{t("timeline.diff")}</span>
         <span className="aui-command-title">
           {displayText(item?.text) ??
-            (changes.length > 0
+            (files.length > 0
               ? t("timeline.filesChanged", {
-                  count: changes.length,
-                  label: changes.length === 1 ? t("timeline.file") : t("timeline.files"),
+                  count: files.length,
+                  label: files.length === 1 ? t("timeline.file") : t("timeline.files"),
                 })
               : t("timeline.fileChanges"))}
         </span>
         <span className="aui-command-meta">{block?.status ?? item?.status ?? "completed"}</span>
       </summary>
-      {isOpen && changes.length > 0 ? <ChangedFileList changes={changes} /> : null}
+      {isOpen && files.length > 0 ? <ChangedFileList files={files} /> : null}
       {isOpen && patch ? (
         <AgentDiffViewer patch={patch} />
       ) : isOpen ? (
@@ -210,9 +207,9 @@ export function AgentToolCallItem({ block }: { block: AgentTranscriptBlock }) {
       </summary>
       {isOpen ? (
         <>
-          <JsonSection label={t("timeline.arguments")} value={block.arguments} />
-          <JsonSection label={t("timeline.result")} value={block.result} />
-          <JsonSection label={t("timeline.error")} value={block.error} tone="danger" />
+          <JsonSection label={t("timeline.arguments")} value={block.argumentsText} />
+          <JsonSection label={t("timeline.result")} value={block.resultText} />
+          <JsonSection label={t("timeline.error")} value={block.errorText} tone="danger" />
         </>
       ) : null}
     </details>
@@ -221,10 +218,9 @@ export function AgentToolCallItem({ block }: { block: AgentTranscriptBlock }) {
 
 function CollabToolCallBlock({ block }: { block: AgentTranscriptBlock }) {
   const { t } = useAgentI18n();
-  const metadata = isRecord(block.metadata) ? block.metadata : {};
-  const senderThreadId = stringValue(metadata.senderThreadId ?? metadata.sender_thread_id);
-  const receiverThreadId = stringValue(metadata.receiverThreadId ?? metadata.receiver_thread_id);
-  const newThreadId = stringValue(metadata.newThreadId ?? metadata.new_thread_id);
+  const senderThreadId = block.senderThreadId;
+  const receiverThreadId = block.receiverThreadId;
+  const newThreadId = block.newThreadId;
   return (
     <section className="aui-content-block aui-collab-tool-block" aria-label={t("timeline.collabTool")}>
       <div className="aui-content-block-heading">
@@ -354,18 +350,19 @@ function SystemInfoBlock({ block }: { block: AgentTranscriptBlock }) {
   );
 }
 
-function ChangedFileList({ changes }: { changes: unknown[] }) {
+function ChangedFileList({
+  files,
+}: {
+  files: NonNullable<AgentTranscriptBlock["files"]>;
+}) {
   const { t } = useAgentI18n();
   return (
     <ul className="aui-changed-file-list" aria-label={t("aria.changedFiles")}>
-      {changes.map((change, index) => {
-        const record = isRecord(change) ? change : {};
-        const path = stringValue(record.path) ?? "unknown";
-        const kind = stringValue(record.kind) ?? "update";
+      {files.map((file, index) => {
         return (
-          <li key={`${path}:${index}`}>
-            <span>{kindLabel(kind)}</span>
-            <code>{path}</code>
+          <li key={`${file.path}:${index}`}>
+            <span>{kindLabel(file.kind)}</span>
+            <code>{file.path}</code>
           </li>
         );
       })}
@@ -380,13 +377,13 @@ function JsonSection({
 }: {
   label: string;
   tone?: "danger";
-  value: unknown;
+  value: string | undefined;
 }) {
-  if (value === undefined || value === null) return null;
+  if (!value) return null;
   return (
     <div className="aui-json-section" data-tone={tone}>
       <span>{label}</span>
-      <pre>{formatJson(value)}</pre>
+      <pre>{value}</pre>
     </div>
   );
 }

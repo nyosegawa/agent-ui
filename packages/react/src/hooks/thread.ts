@@ -1,14 +1,22 @@
 import {
   selectActiveThread,
+  selectActiveThreadView,
   selectOrderedThreads,
   selectOrderedTurns,
   selectRunSettings,
   selectThread,
   selectThreadLifecycle,
+  selectThreadTranscriptView,
+  selectThreadView,
   type AgentEvent,
-  type ThreadId,
   type ThreadState,
-  type ThreadStatus,
+  type TurnState,
+} from "@nyosegawa/agent-ui-core/internal";
+import type {
+  AgentThreadTranscriptView,
+  AgentThreadView,
+  ThreadId,
+  ThreadStatus,
 } from "@nyosegawa/agent-ui-core";
 import {
   normalizeThreadReadResponse,
@@ -16,7 +24,7 @@ import {
 } from "@nyosegawa/agent-ui-codex/normalizer";
 import { useCallback, useMemo, useState } from "react";
 import { useAgentComposerQueueStore } from "../composer-queue";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import {
   codexThreadForkParams,
   codexThreadHistoryParams,
@@ -62,8 +70,38 @@ export type {
   AgentThreadStartWithInputResult,
 } from "./thread-lifecycle-types";
 
-export function useAgentThread(threadId?: ThreadId) {
-  const { dispatch, state } = useAgentContext();
+export interface AgentThreadController {
+  resumeThread: (id: ThreadId, params?: ThreadResumeOptions) => Promise<AgentThreadResumeResult>;
+  startThread: (params?: ThreadStartOptions) => Promise<AgentThreadStartResult>;
+  thread?: AgentThreadView;
+  threadId?: ThreadId;
+  transcript?: AgentThreadTranscriptView;
+}
+
+export interface InternalAgentThreadController {
+  resumeThread: (id: ThreadId, params?: ThreadResumeOptions) => Promise<AgentThreadResumeResult>;
+  startThread: (params?: ThreadStartOptions) => Promise<AgentThreadStartResult>;
+  thread?: ThreadState;
+  threadId?: ThreadId;
+  turns: (TurnState | undefined)[];
+}
+
+export interface AgentThreadsController {
+  activeThreadId?: ThreadId;
+  setActiveThread: (threadId?: ThreadId) => void;
+  threads: AgentThreadView[];
+}
+
+export interface AgentThreadHistoryController {
+  cursor: string | null | undefined;
+  error?: Error;
+  isLoading: boolean;
+  listThreads: (params?: ThreadHistoryParams) => Promise<AgentThreadHistoryResult>;
+  threads: AgentThreadView[];
+}
+
+export function useInternalAgentThread(threadId?: ThreadId): InternalAgentThreadController {
+  const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const resolvedThreadId = threadId ?? selectThreadLifecycle(state).activeThreadId;
   const thread: ThreadState | undefined = resolvedThreadId
@@ -171,10 +209,26 @@ export function useAgentThread(threadId?: ThreadId) {
   };
 }
 
-export const useAgentThreadController = useAgentThread;
+export function useAgentThreadController(threadId?: ThreadId): AgentThreadController {
+  const { state } = useInternalAgentContext();
+  const internal = useInternalAgentThread(threadId);
+  const thread = internal.threadId
+    ? selectThreadView(state, internal.threadId)
+    : selectActiveThreadView(state);
+  const transcript = internal.threadId
+    ? selectThreadTranscriptView(state, internal.threadId)
+    : undefined;
+  return {
+    resumeThread: internal.resumeThread,
+    startThread: internal.startThread,
+    thread,
+    threadId: internal.threadId,
+    transcript,
+  };
+}
 
 export function useAgentThreadActions(threadId?: ThreadId) {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const composerQueue = useAgentComposerQueueStore();
   const resolvedThreadId = threadId ?? selectThreadLifecycle(state).activeThreadId;
@@ -239,10 +293,17 @@ export function useAgentThreadActions(threadId?: ThreadId) {
   };
 }
 
-export function useAgentThreads() {
-  const { dispatch, state } = useAgentContext();
+export function useAgentThreads(): AgentThreadsController {
+  const { dispatch, state } = useInternalAgentContext();
   const activeThreadId = selectThreadLifecycle(state).activeThreadId;
-  const threads = useMemo(() => selectOrderedThreads(state), [state]);
+  const threads = useMemo(
+    () =>
+      selectOrderedThreads(state).flatMap((thread) => {
+        const view = selectThreadView(state, thread.id);
+        return view ? [view] : [];
+      }),
+    [state],
+  );
   const setActiveThread = useCallback(
     (threadId?: ThreadId) => dispatch({ threadId, type: "thread/active/set" }),
     [dispatch],
@@ -250,8 +311,8 @@ export function useAgentThreads() {
   return { activeThreadId, setActiveThread, threads };
 }
 
-export function useAgentThreadHistory() {
-  const { dispatch, state } = useAgentContext();
+export function useAgentThreadHistory(): AgentThreadHistoryController {
+  const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const [isLoading, setIsLoading] = useState(false);
   const [cursor, setCursor] = useState<string | null>();
@@ -297,12 +358,15 @@ export function useAgentThreadHistory() {
     error,
     isLoading,
     listThreads,
-    threads: selectOrderedThreads(state),
+    threads: selectOrderedThreads(state).flatMap((thread) => {
+      const view = selectThreadView(state, thread.id);
+      return view ? [view] : [];
+    }),
   };
 }
 
 export function useAgentThreadReader() {
-  const { dispatch } = useAgentContext();
+  const { dispatch } = useInternalAgentContext();
   const codex = useCodexSession();
   const readThread = useCallback(
     async (
@@ -421,7 +485,7 @@ function stringValue(value: unknown): string | undefined {
 }
 
 function dispatchResumeDiagnostic(
-  dispatch: ReturnType<typeof useAgentContext>["dispatch"],
+  dispatch: ReturnType<typeof useInternalAgentContext>["dispatch"],
   diagnostic: {
     reasonCode: AgentThreadResumeDiagnosticReasonCode;
     requestedThreadId: ThreadId;

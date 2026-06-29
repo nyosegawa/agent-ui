@@ -22,10 +22,11 @@ does not retain them because they must be handled out of band by the bridge or
 host tool runner.
 
 Keep approval decisions separate from broader server-request policy. Agent UI
-can render approval cards and expose neutral `respond()` / `reject()` actions,
+can render approval cards and expose an approval-specific
+`approve(requestId, decision)` controller for command and file-change decisions,
 but hosts own permission grants, MCP elicitation payloads, user-input forms,
 dynamic-tool authorization, audit logging, and any workspace or tenant policy
-attached to a decision.
+attached to broader server requests.
 
 ## Default Placement
 
@@ -57,11 +58,13 @@ request will remain pending until the App Server resolves or rejects it.
 Use hooks for custom surfaces:
 
 ```tsx
-const approvals = useAgentApprovals(threadId);
+const { approvals, approve, reject: rejectApproval } = useAgentApprovals(threadId);
 const { requests, respond, reject } = useAgentServerRequests(threadId);
 ```
 
-`useAgentApprovals()` returns only command and file-change approval requests.
+`useAgentApprovals()` returns only raw-free command and file-change approval
+views. `approve()` accepts `accept`, `acceptForSession`, or `decline`; omitting
+the decision approves the request.
 `useAgentServerRequests()` returns the broader normalized request queue and
 intentionally uses neutral response names so hosts send method-specific
 payloads instead of approval-shaped decisions.
