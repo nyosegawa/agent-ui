@@ -6,41 +6,56 @@ Directory:
 examples/recipes
 ```
 
-Purpose:
+Recipes are typed host-integration examples. Use them when a guide explains the
+boundary and you need a copyable implementation shape that imports only public
+package entrypoints.
 
-- typed snippets for the custom components map
-- custom transcript block rendering
-- headless controller and primitive composition
-- public controller composition
-- scoped thread lists
-- host-owned composer controls
-- host-gated workflow composition with delayed first-message submission
-- local media upload/static resolution
-- bridge policy, local desktop admission, and diagnostics composition
-- host integration checklist
-- theming
-- optional same-origin WebSocket transport wiring
-- advanced deployment notes
+## Topics
 
-Files:
+| Need | Recipe | Related docs |
+| --- | --- | --- |
+| Customize `AgentChat` while keeping preset behavior | [custom components](../../examples/recipes/src/custom-components.tsx), [preset composition](../../examples/recipes/src/agent-chat-composition.tsx), [custom transcript blocks](../../examples/recipes/src/custom-transcript-blocks.tsx) | [React](../guides/react.md), [React Components](../reference/react-components.md) |
+| Build a host-owned layout from controllers and primitives | [headless controller](../../examples/recipes/src/headless-chat-controller.tsx), [headless hooks](../../examples/recipes/src/headless-hooks.tsx), [host composer](../../examples/recipes/src/host-owned-composer.tsx), [scoped thread list](../../examples/recipes/src/scoped-thread-list.tsx) | [React](../guides/react.md), [Hooks](../reference/hooks.md) |
+| Gate Codex turns behind host workflow state | [host-gated workflow](../../examples/recipes/src/host-gated-workflow.tsx), [host integration checklist](../../examples/recipes/src/host-integration-checklist.ts) | [Host Integration](../guides/host-integration.md), [Product Boundary](../architecture/product-boundary.md) |
+| Resolve local media and attachments | [local media helper](../../examples/recipes/src/local-media-helper.tsx) | [Attachments](../guides/attachments.md), [Server Bridge](../reference/server-bridge.md) |
+| Attach a same-origin bridge safely | [bridge policy](../../examples/recipes/src/bridge-policy.ts), [WebSocket remote demo](../../examples/recipes/src/websocket-remote-demo.tsx) | [First Host App](../guides/first-host-app.md), [Server Bridge](../reference/server-bridge.md) |
+| Add diagnostics or status chrome | [diagnostics panel](../../examples/recipes/src/diagnostics-panel.tsx), [host integration checklist](../../examples/recipes/src/host-integration-checklist.ts) | [Diagnostics](../guides/diagnostics.md), [Usage and Status](../guides/usage-and-status.md) |
+| Theme the default UI with tokens | [themed example](../../examples/recipes/src/themed.tsx), [theme CSS](../../examples/recipes/src/themed.css) | [Theming](../guides/theming.md) |
+| Plan advanced remote or multi-user deployment | [multi-user deployment](../../examples/recipes/multi-user-deployment.md), [API-key remote deployment](../../examples/recipes/api-key-remote-deployment.md) | [Remote Deployment](../guides/remote-deployment.md), [Security](../architecture/security.md) |
 
-- `src/custom-components.tsx`
-- `src/agent-chat-composition.tsx`
-- `src/custom-transcript-blocks.tsx`
-- `src/headless-chat-controller.tsx`
-- `src/headless-hooks.tsx`
-- `src/scoped-thread-list.tsx`
-- `src/host-owned-composer.tsx`
-- `src/host-gated-workflow.tsx`
-- `src/local-media-helper.tsx`
-- `src/bridge-policy.ts`
-- `src/diagnostics-panel.tsx`
-- `src/host-integration-checklist.ts`
-- `src/themed.tsx`
-- `src/themed.css`
-- `src/websocket-remote-demo.tsx`
-- `multi-user-deployment.md`
-- `api-key-remote-deployment.md`
+## Files
+
+- `src/custom-components.tsx`: `AgentChat` `components` prop for custom
+  approval and block rendering.
+- `src/agent-chat-composition.tsx`: preset composition with external send
+  controls, fixed start options, overlay coordination, and local media
+  resolution.
+- `src/custom-transcript-blocks.tsx`: custom transcript block renderers while
+  preserving default block rendering.
+- `src/headless-chat-controller.tsx`: chat UI composed from public controllers.
+- `src/headless-hooks.tsx`: custom layout built from public controllers and
+  primitives without reading reducer turn internals.
+- `src/scoped-thread-list.tsx`: host-owned thread list scope with search and
+  pagination.
+- `src/host-owned-composer.tsx`: transcript plus host toolbar using the public
+  composer controller.
+- `src/host-gated-workflow.tsx`: `AgentThreadTimeline` plus a host-owned
+  approval bar and delayed composer.
+- `src/local-media-helper.tsx`: upload/static handlers paired with structured
+  attachment and transcript media resolvers.
+- `src/bridge-policy.ts`: loopback bridge policy, local desktop admission, and
+  host health-event logging.
+- `src/diagnostics-panel.tsx`: standalone diagnostics rail composition.
+- `src/host-integration-checklist.ts`: host integration checklist for Agent UI
+  boundaries.
+- `src/themed.tsx` and `src/themed.css`: scoped CSS variable theme override.
+- `src/websocket-remote-demo.tsx`: optional same-origin WebSocket transport
+  wiring.
+- `multi-user-deployment.md`: host-owned multi-user bridge boundaries and audit
+  checklist.
+- `api-key-remote-deployment.md`: server-side API-key bridge constraints.
+
+## Boundaries
 
 Recipes show host composition patterns within the
 [Product Boundary](../architecture/product-boundary.md). They should not
@@ -64,8 +79,8 @@ host and calls `startThreadWithInput(input, { threadOptions, turnOptions })`
 only after the host gate approves the first Codex turn.
 
 `src/agent-chat-composition.tsx` keeps the complete `AgentChat` preset while
-using the public `components` map, `threadHeaderEnd`, `startOptions`, controlled
-overlay `controls`, local media resolvers, and
+using the public `components` prop, `threadHeaderEnd`, `startOptions`,
+controlled overlay `controls`, local media resolvers, and
 `useAgentChatController().sendMessage()` for external host UI. The host never
 calls raw transport methods and does not depend on private DOM selectors.
 Non-image attachments are rendered with safe browser metadata, but the App

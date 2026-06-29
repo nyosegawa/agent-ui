@@ -17,6 +17,16 @@ Import the public stylesheet once:
 import "@nyosegawa/agent-ui-react/styles.css";
 ```
 
+## Common Imports
+
+| Use case | Import |
+| --- | --- |
+| Default provider and chat preset | `import { AgentProvider, AgentChat } from "@nyosegawa/agent-ui-react";` |
+| Preset replacement map and defaults | `import { defaultAgentComponents, type AgentComponents } from "@nyosegawa/agent-ui-react";` |
+| Visual building blocks | `import { AgentThreadView, AgentComposer } from "@nyosegawa/agent-ui-react/primitives";` |
+| Host-owned controllers | `import { useAgentChatController } from "@nyosegawa/agent-ui-react/headless";` |
+| Bundled stylesheet | `import "@nyosegawa/agent-ui-react/styles.css";` |
+
 ## Package Boundary
 
 This package provides three public entrypoints:
@@ -30,7 +40,7 @@ This package provides three public entrypoints:
 It does not own routing, persistence, credentials, process lifecycle, or
 host-specific product workflows.
 
-Customize the preset through public props, the `components` map, primitives,
+Customize the preset through public props, the `components` prop, primitives,
 headless controllers, and tokens. Import
 `@nyosegawa/agent-ui-react/styles.css` once; do not depend on private style
 chunks, internal `.aui-*` selectors, source modules, or generated Codex

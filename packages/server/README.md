@@ -11,7 +11,23 @@ upload handling, or one-shot RPC utilities around Codex App Server.
 bun add @nyosegawa/agent-ui-server @nyosegawa/agent-ui-core @nyosegawa/agent-ui-codex
 ```
 
+## Common Imports
+
+| Use case | Import |
+| --- | --- |
+| Full-chat WebSocket bridge | `import { attachAgentUiWebSocketBridge } from "@nyosegawa/agent-ui-server";` |
+| Lower-level upgraded-socket handler | `import { handleAgentUiWebSocketConnection } from "@nyosegawa/agent-ui-server";` |
+| Local media upload/static helper | `import { createAgentUiLocalMediaHelper } from "@nyosegawa/agent-ui-server";` |
+| One-shot RPC helpers | `import { createAgentUiNextRpcRoute, createAgentUiExpressMiddleware } from "@nyosegawa/agent-ui-server";` |
+| Bearer WebSocket subprotocol verification | `import { verifyAgentUiBearerSubprotocol } from "@nyosegawa/agent-ui-server";` |
+| Raw stdio/process ownership | `import { createCodexAppServerBridge } from "@nyosegawa/agent-ui-server/advanced";` |
+
 ## Package Boundary
+
+Use the package root for normal host integration: WebSocket bridges, local
+media, one-shot RPC, method policy, server-request policy, dynamic-tool policy,
+redaction, and host-event helpers. Use `/advanced` only when the host
+deliberately owns raw stdio process composition.
 
 This package provides bridge helpers. Host applications own process lifecycle,
 authorization, network exposure, deployment topology, persistence, and resource

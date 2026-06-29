@@ -12,6 +12,17 @@ Codex App Server protocol.
 bun add @nyosegawa/agent-ui-codex @nyosegawa/agent-ui-core
 ```
 
+## Common Imports
+
+| Use case | Import |
+| --- | --- |
+| Browser WebSocket transport | `import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";` |
+| Text, image, mention, and skill input builders | `import { textInput, localImageInput } from "@nyosegawa/agent-ui-codex/request-builders";` |
+| Grouped productized clients | `import { createCodexClients } from "@nyosegawa/agent-ui-codex/clients";` |
+| Session facade | `import { createCodexSession } from "@nyosegawa/agent-ui-codex/session";` |
+| Stable generated method types | `import type { ThreadStartParams } from "@nyosegawa/agent-ui-codex/stable-types";` |
+| Normalized event helpers | `import { normalizeCodexServerMessage } from "@nyosegawa/agent-ui-codex/normalizer";` |
+
 ## Package Boundary
 
 This package models Codex App Server protocol behavior. It does not own the

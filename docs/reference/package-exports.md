@@ -12,6 +12,20 @@
 
 Packages are split by responsibility, but the local bridge is included in the official package set.
 
+## Common Import Paths
+
+| Package | Common public imports |
+| --- | --- |
+| `@nyosegawa/agent-ui-react` | Root `AgentProvider` / `AgentChat`, `/primitives` visual building blocks, `/headless` controllers, `styles.css` |
+| `@nyosegawa/agent-ui-server` | Root bridge, local media, policy, redaction, one-shot RPC helpers; `/advanced` raw stdio/process helpers |
+| `@nyosegawa/agent-ui-codex` | Root protocol/session facade, `/websocket`, `/request-builders`, `/clients`, `/session`, `/normalizer`, `/stable-types` |
+| `@nyosegawa/agent-ui-core` | Root state, transport, selectors, reducer, fake transport; `/internal` only for Agent UI packages and repository tests |
+| `@nyosegawa/agent-ui-web-components` | Root custom element definition and element option types |
+
+Host apps should import package names and documented subpaths only. Do not
+import `dist/*`, source files, generated schema chunks, or
+`@nyosegawa/agent-ui-core/internal` from host code.
+
 ## Export Freeze Policy
 
 The export map should change only when controller, resource, bridge, and
@@ -184,8 +198,9 @@ root preset external-send path is public on `AgentChatController` as
 `AgentChat` should call that controller instead of directly sequencing
 transport requests. `AgentChatSlots`, raw `components.Item`, private status or
 header DOM selectors, and direct local media paths are not migration targets;
-use `AgentChat.components`, `renderItem` / `components.blocks`,
-`statusBarEnd` / `threadHeaderEnd`, and structured media resolvers.
+use the `AgentChat` `components` prop, `renderItem` /
+`components.blocks`, `statusBarEnd` / `threadHeaderEnd`, and structured media
+resolvers.
 The source-level internal composer controller keeps its implementation helper named
 `startWithMessage()`.
 External UI that needs to send into the active `AgentChat` flow should use
@@ -200,9 +215,9 @@ Approval composition uses raw-free `AgentApprovalRequest` view models. The
 headless `useAgentApprovals()` hook returns command/file approval views and an
 `approve(requestId, decision?: AgentApprovalDecision)` controller where
 `decision` is `accept`, `acceptForSession`, or `decline`; internal upstream
-legacy decision names are not host-facing. `AgentApprovalQueue`,
-`AgentChat.components.Approval`, `AgentThreadTimeline.renderApproval`, and
-transcript approval anchors accept the same `AgentApprovalRequest` view type.
+legacy decision names are not host-facing. `AgentApprovalQueue`, the
+`AgentChat` `components.Approval` replacement, `AgentThreadTimeline.renderApproval`,
+and transcript approval anchors accept the same `AgentApprovalRequest` view type.
 File-change approvals carry renderable patch views, including structured
 changed-file entries, instead of requiring hosts to inspect generated
 `fileChanges` payloads.
@@ -513,13 +528,12 @@ and `AgentThemeToggle` / `AgentLocaleSelect` are controlled primitives hosts
 can render outside the transcript surface.
 
 The only public stylesheet export is
-`@nyosegawa/agent-ui-react/styles.css`. That file imports private source chunks
-from `packages/react/src/styles/*`; package builds copy those chunks under
-`dist/styles/*` for the bundled stylesheet only. Hosts should not import
+`@nyosegawa/agent-ui-react/styles.css`. Package builds copy private style chunks
+under `dist/styles/*` for the bundled stylesheet only. Hosts should not import
 `dist/styles/*` or rely on internal `.aui-*` selectors as a styling contract.
-The stable customization surface is the token set in
-`packages/react/src/styles/tokens.css`, plus documented component props,
-the `components` map, render props, and `className` attachment points.
+The stable customization surface is the public `--aui-*` token set, plus
+documented component props, the `components` map, render props, and `className`
+attachment points.
 
 The default UI keeps the high-traffic surfaces split internally:
 
@@ -716,5 +730,5 @@ Exported implementation subpaths:
 
 React style chunks under `dist/styles/*` are copied package internals used by
 `styles.css`, not host imports. Internal `.aui-*` selectors are likewise
-implementation details; the design-system contract is the `--aui-*` token set
-from `packages/react/src/styles/tokens.css`.
+implementation details; the design-system contract is the public `--aui-*`
+token set.

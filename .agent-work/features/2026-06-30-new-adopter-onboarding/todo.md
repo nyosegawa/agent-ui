@@ -3,18 +3,18 @@
 ## Status Summary
 
 - Overall status: In progress
-- Current phase: P001 Canonical new-adopter docs path
+- Current phase: P002 Recipes and npm package README alignment
 - Blockers: None
-- Last validation: P001 docs validation passed locally; PR #42 checks passed for pushed P001 docs commits.
-- Last review: P001 four-lane subagent review completed; lane 2 findings fixed.
-- PR/CI: Draft PR #42 open; latest P001 checks passed.
+- Last validation: P002 package/docs/example validations passed locally.
+- Last review: P002 four-lane subagent review completed; lane 1 linkification finding fixed and lane 4 TODO evidence update applied.
+- PR/CI: Draft PR #42 open; P002 commit pending.
 
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
 - Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: planning and P001 docs commits pushed
+- Push result: planning and P001 docs commits pushed; P002 pending
 - Blockers: none
 
 ## Phase Checklist
@@ -47,7 +47,7 @@
       - Expected files/areas: `docs/getting-started.md`, `docs/installation.md`, `README.md`.
       - Validation note: New adopter path must include `@nyosegawa/agent-ui-server` for full chat.
 
-- [ ] P002 Recipes and npm package README alignment
+- [x] P002 Recipes and npm package README alignment
   - Goal: Make package-level docs and recipes self-contained for npm consumers.
   - Scope: Topic-based recipes index, package README common imports, root versus advanced server boundary, web-components stylesheet note.
   - Expected files/areas: `docs/examples/recipes.md`, `examples/recipes/README.md` if present, `packages/*/README.md`, `docs/reference/package-exports.md`.
@@ -58,20 +58,20 @@
   - Push: pending
   - PR/CI: pending
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - 4-Parallel Subagent Review:
-    - Commit:
-    - Push:
+    - Implementation: Converted recipe docs to a topic-based index with direct links to typed recipe files; added package README Common Imports tables; clarified root versus `/advanced` server imports; added the web-components stylesheet note; updated package exports reference with common import paths and host-facing boundary guidance; added a patch changeset for the five public packages with npm-facing README changes.
+    - Validation: `bun run test:package-resolution` passed; `bun run validate:packages` passed with existing non-failing publint repository URL suggestions; `bun run --cwd examples/recipes typecheck` passed; `bun run --cwd examples/recipes build` passed; `bunx changeset status --verbose` passed; `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts test/docs-staleness.test.ts` passed; artifact validator passed.
+    - Review: Manual pass confirmed package README import paths, package export docs, and recipe links use public package surfaces and do not route host apps through `dist/*`, source files, generated schema chunks, or `@nyosegawa/agent-ui-core/internal`.
+    - 4-Parallel Subagent Review: Completed. Lane 1 found non-clickable recipe entries in the topic indexes, fixed by linkifying recipe targets; lane 2 found no public import findings; lane 3 found no package boundary or changeset findings; lane 4 found stale TODO evidence, fixed here.
+    - Commit: pending
+    - Push: pending
   - Tasks:
-    - [ ] T004 Convert recipes docs from file-list index to task index: bridge/security, local media, customize AgentChat, headless layout, dynamic tools, remote deployment, validation.
+    - [x] T004 Convert recipes docs from file-list index to task index: bridge/security, local media, customize AgentChat, headless layout, dynamic tools, remote deployment, validation.
       - Expected files/areas: `docs/examples/recipes.md`, `examples/recipes`.
       - Validation note: Cross-links should point to runnable examples or typed recipe files.
-    - [ ] T005 Add common import tables to package README files.
+    - [x] T005 Add common import tables to package README files.
       - Expected files/areas: `packages/react/README.md`, `packages/server/README.md`, `packages/codex/README.md`, `packages/core/README.md`, `packages/web-components/README.md`.
       - Validation note: Keep `@nyosegawa/agent-ui-core/internal` out of host guidance.
-    - [ ] T006 Update package exports reference for any clarified or changed public surfaces.
+    - [x] T006 Update package exports reference for any clarified or changed public surfaces.
       - Expected files/areas: `docs/reference/package-exports.md`.
       - Validation note: Align with actual `package.json` exports.
 
@@ -225,25 +225,25 @@
 
 ### P001 Canonical new-adopter docs path
 
-- [ ] T001 Add or integrate a first-host-app guide.
+- [x] T001 Add or integrate a first-host-app guide.
   - Expected files/areas: docs guide plus README/docs index links.
   - Validation note: Check snippets use public imports only.
-- [ ] T002 Add React entrypoint decision table.
+- [x] T002 Add React entrypoint decision table.
   - Expected files/areas: `docs/guides/react.md`, `docs/guides/host-integration.md`.
   - Validation note: Avoid `useAgentContext().state` and `internal` as host guidance.
-- [ ] T003 Reframe getting-started for contributor versus adopter setup.
+- [x] T003 Reframe getting-started for contributor versus adopter setup.
   - Expected files/areas: `docs/getting-started.md`, `docs/installation.md`, `README.md`.
   - Validation note: Full chat path includes server package.
 
 ### P002 Recipes and npm package README alignment
 
-- [ ] T004 Convert recipes docs to topic index.
+- [x] T004 Convert recipes docs to topic index.
   - Expected files/areas: `docs/examples/recipes.md`, `examples/recipes`.
   - Validation note: Cross-links point to runnable or typed examples.
-- [ ] T005 Add common import tables to package README files.
+- [x] T005 Add common import tables to package README files.
   - Expected files/areas: `packages/*/README.md`.
   - Validation note: Public imports only.
-- [ ] T006 Update package exports reference.
+- [x] T006 Update package exports reference.
   - Expected files/areas: `docs/reference/package-exports.md`.
   - Validation note: Match package manifests.
 
@@ -326,11 +326,19 @@
 - P001: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts` passed.
 - P001: `bunx vitest run test/docs-staleness.test.ts` passed.
 - P001 PR #42 checks passed after push: Detect changes, Detect compatibility changes, Repository policy, Typecheck, Lint, and Unit tests. API snapshots, package resolution, package validation, protocol/fixtures, Playwright fixtures, real-local smoke, and compatibility matrix jobs were skipped by path filters.
+- P002: `bun run test:package-resolution` passed.
+- P002: `bun run validate:packages` passed with existing non-failing publint repository URL suggestions.
+- P002: `bun run --cwd examples/recipes typecheck` passed.
+- P002: `bun run --cwd examples/recipes build` passed.
+- P002: `bunx changeset status --verbose` passed and reports patch bumps for the five public packages touched by npm-facing README changes.
+- P002: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts test/docs-staleness.test.ts` passed.
+- P002: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-30-new-adopter-onboarding` passed.
 
 ## Review Evidence
 
 - Planning research used four subagent lanes: docs onboarding, implementation/public surface, validation/CI, and skill design.
 - P001 used four subagent review lanes after validation: information architecture, public package/API correctness, bridge/security boundary, and docs validation/link/TODO evidence.
+- P002 used four subagent review lanes after validation: recipe topic index, public import correctness, package boundary/changeset, and validation/TODO evidence. Lane 1 found non-clickable recipe entries and lane 4 requested TODO evidence updates; both were fixed before commit.
 
 ## Commit Log
 
