@@ -5,16 +5,16 @@
 - Overall status: In progress
 - Current phase: P004 Repository skill and planning/review guardrails
 - Blockers: None
-- Last validation: P004 repo skill and public skill leakage validation passed locally.
+- Last validation: P004 repo skill and public skill leakage validation passed locally; PR #42 P004 CI checks passed after push.
 - Last review: P004 four-lane subagent review completed; public-skill leakage guard finding fixed.
-- PR/CI: Draft PR #42 open; P004 evidence push/CI pending.
+- PR/CI: Draft PR #42 open; latest P004 checks passed.
 
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
 - Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: planning, P001 docs commits, P002 docs/package README commits, and P003 public skill commits pushed; P004 guardrail commits pending push
+- Push result: planning, P001 docs commits, P002 docs/package README commits, P003 public skill commits, and P004 guardrail/evidence commits pushed
 - Blockers: none
 
 ## Phase Checklist
@@ -116,15 +116,16 @@
   - Review: Ensure maintainer guidance does not leak into public skill.
   - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: `1d83d396e91df305b496202fa0e98df6c67d510d`
-  - Push: pending
-  - PR/CI: pending
+  - Push: pushed to `origin/codex/new-adopter-onboarding-plan`
+  - PR/CI: Draft PR #42 open; P004 CI checks passed.
   - Evidence:
     - Implementation: Added new-adopter onboarding synchronization obligations to feature-planning, repo research summary, agent-ui-review, repository skill docs, and example-authoring guidance; corrected recipe destinations to `examples/recipes` plus `docs/examples/recipes.md`; added deterministic tests for repo skill synchronization and public skill leakage guards.
     - Validation: `bun run test:repo-skills` passed; `bun run test:skills` passed; forbidden maintainer-command/gate search over `skills/agent-ui` returned no matches; `git diff --check` passed; artifact validator passed.
     - Review: Manual pass confirmed public `skills/agent-ui` remains external-host focused and repo-maintainer commands stay in `.agents/skills` and maintenance docs.
     - 4-Parallel Subagent Review: Completed. Lane 1 planning guardrails found no issues; lane 2 recipe location found no issues and noted only future `docs/recipes/` references outside active guidance; lane 3 review/maintenance docs found no issues; lane 4 found the public-skill leakage guard was too narrow, fixed by extending `test/agent-ui-skill.test.ts` and `test/repository-skills.test.ts`.
     - Commit: `1d83d396e91df305b496202fa0e98df6c67d510d`
-    - Push:
+    - Push: pushed `1d83d396e91df305b496202fa0e98df6c67d510d` and `1bd6df0b7c64d3a873f547e03185663febd5bd96` to `origin/codex/new-adopter-onboarding-plan`
+    - PR/CI: PR #42 checks passed for pushed P004 commits: Detect changes, Detect compatibility changes, Repository policy, Typecheck, Lint, Unit tests, API snapshots, Package resolution, Package validation, Protocol and fixtures, Playwright fixtures, and Real local smoke. Compatibility matrix jobs were skipped by path filters.
   - Tasks:
     - [x] T011 Add new-adopter onboarding/docs/skills/examples synchronization as a planning and review concern.
       - Expected files/areas: feature-planning and review skills.
@@ -347,6 +348,7 @@
 - P004: forbidden maintainer-command/gate search over `skills/agent-ui` returned no matches.
 - P004: `git diff --check` passed.
 - P004: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-30-new-adopter-onboarding` passed.
+- P004 PR #42 checks passed after push: Detect changes, Detect compatibility changes, Repository policy, Typecheck, Lint, Unit tests, API snapshots, Package resolution, Package validation, Protocol and fixtures, Playwright fixtures, and Real local smoke. Compatibility matrix jobs were skipped by path filters.
 
 ## Review Evidence
 
@@ -365,6 +367,7 @@
 - `09c4bcd494f64ef7efbb59945021874b10b45869` - Refresh public Agent UI onboarding skill
 - `0eddec96a9dc66aba182aefa47f51ffbc7295158` - Record P003 onboarding evidence
 - `1d83d396e91df305b496202fa0e98df6c67d510d` - Add onboarding sync guardrails
+- `1bd6df0b7c64d3a873f547e03185663febd5bd96` - Record P004 onboarding evidence
 
 ## Final Checklist
 
