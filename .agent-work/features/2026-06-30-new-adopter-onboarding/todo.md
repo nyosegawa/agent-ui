@@ -25,6 +25,7 @@
   - Expected files/areas: `README.md`, `docs/README.md`, `docs/installation.md`, `docs/getting-started.md`, `docs/guides/react.md`, `docs/guides/host-integration.md`, possible `docs/guides/first-host-app.md`.
   - Validation: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts`; focused docs link/staleness tests if present.
   - Review: Fresh pass for host-boundary regressions and snippet completeness.
+  - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: pending
   - Push: pending
   - PR/CI: pending
@@ -32,6 +33,7 @@
     - Implementation:
     - Validation:
     - Review:
+    - 4-Parallel Subagent Review:
     - Commit:
     - Push:
   - Tasks:
@@ -51,6 +53,7 @@
   - Expected files/areas: `docs/examples/recipes.md`, `examples/recipes/README.md` if present, `packages/*/README.md`, `docs/reference/package-exports.md`.
   - Validation: `bun run test:package-resolution`; `bun run validate:packages`; example typecheck/builds for touched examples.
   - Review: Package export and npm README consistency review.
+  - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: pending
   - Push: pending
   - PR/CI: pending
@@ -58,6 +61,7 @@
     - Implementation:
     - Validation:
     - Review:
+    - 4-Parallel Subagent Review:
     - Commit:
     - Push:
   - Tasks:
@@ -77,6 +81,7 @@
   - Expected files/areas: `skills/agent-ui/SKILL.md`, `skills/agent-ui/references/*.md`, `skills/agent-ui/agents/openai.yaml`, `docs/maintenance/agent-ui-skills.md`, `test/agent-ui-skill.test.ts`.
   - Validation: `bun run test:skills`.
   - Review: Skill best-practices pass: short `SKILL.md`, progressive disclosure, no repo-maintainer command leakage, safe snippets.
+  - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: pending
   - Push: pending
   - PR/CI: pending
@@ -84,6 +89,7 @@
     - Implementation:
     - Validation:
     - Review:
+    - 4-Parallel Subagent Review:
     - Commit:
     - Push:
   - Tasks:
@@ -106,6 +112,7 @@
   - Expected files/areas: `.agents/skills/agent-ui-feature-planning/**`, `.agents/skills/example-authoring/SKILL.md`, `.agents/skills/agent-ui-review/SKILL.md`, `docs/maintenance/repository-skills.md`, `test/repository-skills.test.ts`.
   - Validation: `bun run test:repo-skills`.
   - Review: Ensure maintainer guidance does not leak into public skill.
+  - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: pending
   - Push: pending
   - PR/CI: pending
@@ -113,6 +120,7 @@
     - Implementation:
     - Validation:
     - Review:
+    - 4-Parallel Subagent Review:
     - Commit:
     - Push:
   - Tasks:
@@ -132,6 +140,7 @@
   - Expected files/areas: `packages/server/src/websocket.ts`, `packages/server/test/websocket.test.ts`, `packages/server/src/upload.ts`, `packages/server/test/upload.test.ts`, `packages/react/src/hooks/composer.ts`, `packages/react/src/hooks/composer-types.ts`, React tests, `docs/reference/server-bridge.md`, `docs/reference/hooks.md`, `docs/guides/attachments.md`, `docs/reference/package-exports.md`, `.changeset/*`.
   - Validation: focused Vitest for server/react; `bun run test:api-snapshots`; `bun run test:package-resolution`; `bun run validate:packages`; `bun run test:e2e:real-local`.
   - Review: Security/API review focusing on pre-spawn rejection, cleanup scope, and public result semantics.
+  - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: pending
   - Push: pending
   - PR/CI: pending
@@ -139,6 +148,7 @@
     - Implementation:
     - Validation:
     - Review:
+    - 4-Parallel Subagent Review:
     - Commit:
     - Push:
   - Tasks:
@@ -161,6 +171,7 @@
   - Expected files/areas: existing example fake App Server, package test support or explicit `test-fixtures` export, package exports docs, package README, host validation docs, tests.
   - Validation: fixture unit tests; relevant package tests; `bun run test:package-resolution` if exported; `bun run test:e2e:fixtures`; targeted real-local lifecycle suite.
   - Review: Public surface review before exporting anything new.
+  - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: pending
   - Push: pending
   - PR/CI: pending
@@ -168,6 +179,7 @@
     - Implementation:
     - Validation:
     - Review:
+    - 4-Parallel Subagent Review:
     - Commit:
     - Push:
   - Tasks:
@@ -187,6 +199,7 @@
   - Expected files/areas: all changed files, `todo.md` evidence, PR body.
   - Validation: `bun run validate:release`; `bun run validate:e2e`; `node scripts/check-release-targets.mjs`; any skipped checks recorded with blocker.
   - Review: Independent final review using `agent-ui-review` or a fresh-context manual review.
+  - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before final commit/PR readiness.
   - Commit: pending
   - Push: pending
   - PR/CI: pending
@@ -194,6 +207,7 @@
     - Implementation:
     - Validation:
     - Review:
+    - 4-Parallel Subagent Review:
     - Commit:
     - Push:
   - Tasks:
