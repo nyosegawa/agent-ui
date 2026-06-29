@@ -6,8 +6,9 @@ import {
   selectThreadSummaryView,
   selectThreadTranscriptView,
   type AgentThreadScope,
+  type AgentSessionState as InternalAgentSessionState,
   type ThreadId,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import {
   localImageInput,
   textInput,
@@ -288,7 +289,8 @@ function ScopedThreadListPanel({
   primaryThreadId: ThreadId;
   scopeKey: string;
 }) {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state: publicState } = useAgentContext();
+  const state = publicState as InternalAgentSessionState;
   const didSeed = useRef(false);
   const [searchTerm, setSearchTerm] = useState(defaultSearch);
   const scope: AgentThreadScope = {
@@ -490,7 +492,8 @@ function ComponentPreviewBody({
   initialLocale: AgentLocale;
   initialTheme: AgentTheme;
 }) {
-  const { state } = useAgentContext();
+  const { state: publicState } = useAgentContext();
+  const state = publicState as InternalAgentSessionState;
   const embedded = isEmbeddedPreview();
   const threadId = state.threadLifecycle.activeThreadId ?? "thread-rich-transcript";
   const threads = selectOrderedCollectionThreads(state)
@@ -1767,7 +1770,8 @@ function createHostWorkflowInitialState() {
 }
 
 function DemoThreadHeader({ threadId }: { threadId: ThreadId }) {
-  const { state } = useAgentContext();
+  const { state: publicState } = useAgentContext();
+  const state = publicState as InternalAgentSessionState;
   const thread = selectThreadSummaryView(state, threadId);
   const transcript = selectThreadTranscriptView(state, threadId);
   if (!thread) return null;
@@ -1929,7 +1933,8 @@ function ThreadNavigationExample() {
 }
 
 function ThreadNavigationPreview() {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state: publicState } = useAgentContext();
+  const state = publicState as InternalAgentSessionState;
   const activeThreadId = state.threadLifecycle.activeThreadId ?? "thread-rich-transcript";
   const threads = selectOrderedCollectionThreads(state)
     .map((thread) => selectThreadSummaryView(state, thread.id))

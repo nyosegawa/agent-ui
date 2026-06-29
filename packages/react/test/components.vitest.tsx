@@ -9,14 +9,16 @@ import demoFixture from "../../../fixtures/app-server/demo-session.json" with { 
 import {
   createInitialAgentState,
   FakeAgentTransport,
-  runEventFixture,
   selectDiagnosticWarnings,
   selectPendingOperations,
   type AgentThreadView as CoreAgentThreadView,
   type AgentThreadScope,
-  type FixtureStep,
   type ThreadState,
 } from "@nyosegawa/agent-ui-core";
+import {
+  runEventFixture,
+  type FixtureStep,
+} from "@nyosegawa/agent-ui-core/internal";
 import {
   AgentChat,
   AgentProvider,
@@ -55,7 +57,6 @@ import {
   useAgentHooks,
   useAgentRunSettings,
   useAgentSkills,
-  useAgentContext,
   useAgentDiagnostics,
   useAgentThread,
   useAgentThreadReader,
@@ -68,6 +69,7 @@ import {
   useAgentTurn,
 } from "../src/headless";
 import { useInternalAgentComposerController } from "../src/hooks/composer";
+import { useInternalAgentContext } from "../src/provider";
 import { useTranscriptFollowScroll } from "../src/timeline/scroll-follow";
 
 function localImageInput(path: string) {
@@ -172,7 +174,7 @@ function ThreadListControllerProbe({
   onHistorySynced?: (event: AgentThreadHistorySyncedEvent) => void;
   scope: AgentThreadScope;
 }) {
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const controller = useAgentThreadListController(scope, { onHistorySynced });
   const activeThreadId = state.threadLifecycle.activeThreadId;
   const [resumeResult, setResumeResult] = useState("");
@@ -394,7 +396,7 @@ function ActiveThreadHarness(props: React.ComponentProps<typeof AgentChat>) {
 }
 
 function ResumeThreadHarness({ requestedId }: { requestedId: string }) {
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const { resumeThread } = useAgentThread();
   const [resumeResult, setResumeResult] = useState("");
   const activeThreadId = state.threadLifecycle.activeThreadId;
@@ -458,7 +460,7 @@ function ResumeDiagnosticsProbe() {
 }
 
 function ReadThreadHarness({ threadId }: { threadId: string }) {
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const { readThread } = useAgentThreadReader();
   const activeThreadId = state.threadLifecycle.activeThreadId;
   const previewThread = state.threads[threadId];
@@ -483,7 +485,7 @@ function ReadThreadHarness({ threadId }: { threadId: string }) {
 }
 
 function ActiveThreadStateProbe() {
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const activeThreadId = state.threadLifecycle.activeThreadId;
   const activeThread = activeThreadId ? state.threads[activeThreadId] : undefined;
   const turnId = activeThread?.orderedTurnIds[0];
@@ -2726,7 +2728,7 @@ describe("AgentChat", () => {
     const transport = new FakeAgentTransport();
 
     function ApprovalStateProbe() {
-      const { state } = useAgentContext();
+      const { state } = useInternalAgentContext();
       const thread = state.threads["thread-approval-resolution"];
       const pending = state.serverRequestQueue.order.join(",") || "none";
       return (
@@ -4455,7 +4457,7 @@ describe("AgentChat", () => {
   it("does not retain raw transport events for diagnostics", async () => {
     const transport = new FakeAgentTransport();
     function WarningProbe() {
-      const { state } = useAgentContext();
+      const { state } = useInternalAgentContext();
       return (
         <output>
           {selectDiagnosticWarnings(state)
@@ -5601,7 +5603,7 @@ describe("AgentChat", () => {
   it("keeps a queued follow-up when the active turn changes before Send now", async () => {
     const user = userEvent.setup();
     function TurnChanger() {
-      const { dispatch } = useAgentContext();
+      const { dispatch } = useInternalAgentContext();
       return (
         <button
           type="button"
@@ -5644,7 +5646,7 @@ describe("AgentChat", () => {
   it("hides Send now for queued follow-ups after their expected turn completes", async () => {
     const user = userEvent.setup();
     function TurnCompleter() {
-      const { dispatch } = useAgentContext();
+      const { dispatch } = useInternalAgentContext();
       return (
         <button
           type="button"
@@ -6088,7 +6090,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const revoke = vi.spyOn(URL, "revokeObjectURL");
     function ArchiveNotification() {
-      const { dispatch } = useAgentContext();
+      const { dispatch } = useInternalAgentContext();
       return (
         <button
           type="button"
@@ -6144,7 +6146,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const revoke = vi.spyOn(URL, "revokeObjectURL");
     function CloseNotification() {
-      const { dispatch } = useAgentContext();
+      const { dispatch } = useInternalAgentContext();
       return (
         <button
           type="button"

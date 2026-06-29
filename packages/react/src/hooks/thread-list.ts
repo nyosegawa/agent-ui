@@ -7,9 +7,9 @@ import {
   type AgentThreadScope,
   type AgentThreadView,
   type ThreadId,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import {
   codexThreadHistoryParams,
   type ThreadHistoryParams,
@@ -70,7 +70,7 @@ export function useAgentThreadListController(
   scope: AgentThreadScope = DEFAULT_HISTORY_SCOPE,
   options: AgentThreadListControllerOptions = {},
 ): AgentThreadListController {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const threadController = useAgentThread();
   const { readThread } = useAgentThreadReader();

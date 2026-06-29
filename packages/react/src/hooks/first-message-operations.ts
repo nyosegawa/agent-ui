@@ -1,11 +1,11 @@
 import {
   selectRunSettings,
   selectThreadLifecycle,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import type { CodexStable } from "@nyosegawa/agent-ui-codex/stable-types";
 import { useCallback } from "react";
 import type { AgentUserInput } from "../agent-input";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import {
   codexTurnStartOptions,
   type ThreadStartOptions,
@@ -62,7 +62,7 @@ export function useFirstMessageOperationController(
     turnOptions?: TurnStartOptions,
   ) => Promise<AgentThreadStartWithInputResult>,
 ) {
-  const { dispatch, runPolicies, state } = useAgentContext();
+  const { dispatch, runPolicies, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const operationsById = selectThreadLifecycle(state).operations;
   const runSettings = selectRunSettings(state);

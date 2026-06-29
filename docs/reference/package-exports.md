@@ -45,8 +45,8 @@ supervision, billing, and deployment policy.
 
 ## Export Inventory
 
-This inventory was verified from `test/api-snapshots/*__index.d.ts` with
-`bun run test:api-snapshots` on 2026-06-24. Freeze the export map only after
+This inventory was verified from `test/api-snapshots/*.d.ts` with
+`bun run test:api-snapshots` on 2026-06-29. Freeze the export map only after
 internal boundaries, examples, tests, and host integration docs agree.
 
 ### `@nyosegawa/agent-ui-core`
@@ -54,18 +54,22 @@ internal boundaries, examples, tests, and host integration docs agree.
 Keep public: `AGENT_RETENTION_POLICY`, `FakeAgentTransport`,
 `FakeAgentTransportOptions`, `FakeTransportRequest`, `AgentTransport`,
 `AgentTransportEvent`, `AgentRequestOptions`, `RequestId`, `RequestIdKey`,
-`requestIdKey`, `AgentEvent`, product-domain event/state types for account,
-apps, connection, diagnostics, hooks, items, models, run settings, server
-requests, skills, status banners, turns, usage, and warnings,
+`requestIdKey`, `AgentEvent`, product-domain event/state/view types for account,
+apps, connection, diagnostics, hooks, models, run settings, skills, status
+banners, turns, usage, warnings, and raw-free thread views,
 `AgentDiagnosticAudience`, resource metadata types
 (`AgentItemBlockResource`, `AgentItemBlockResourceKind`), `agentReducer`,
-`createInitialAgentState`,
-`runEventFixture`, and selectors for account, apps, diagnostics,
-audience-filtered diagnostics, items, running turns, ordered items/turns,
-pending approvals, approval views, protocol notifications, run settings,
-server requests, server-request summaries, status banners, thread, thread
-runtime/execution state, thread summary views, transcript views, turn, and
-usage.
+`createInitialAgentState`, opaque `AgentSessionState`, and selectors for apps,
+diagnostics, audience-filtered diagnostics, approval views, protocol
+notifications, run settings, server-request summaries, status banners, thread
+collection metadata, thread runtime/execution state, thread summary views,
+transcript views, and usage.
+
+Advanced implementation boundary: `@nyosegawa/agent-ui-core/internal` exposes
+raw normalized store state, raw reducer selectors, and fixture helpers for
+Agent UI packages that still need implementation-level access during the
+redesign. It is not the normal host integration path and must not be used to
+justify adding raw store shape back to the root export.
 
 Replaced by the current API: registry-bucket public shapes
 (`ThreadRegistryState`, `ThreadRegistryStatus`, and `selectThreadRegistry`)
@@ -74,18 +78,27 @@ active-thread selectors, pending operation selectors, runtime-aware
 `AgentThreadSummaryView`, raw-free transcript selectors, and the separate
 public `AgentThreadView`.
 
-Move to subpath or make diagnostic-only: raw normalized `AgentSessionState`,
-`ThreadState`, `AgentThread`, `AgentTurn`, `AgentItemBlock`,
-`AgentTranscriptBlockView`, and store-wide selectors when they expose internal
-reconciliation details or broad `unknown` payload fields. Public controllers
-should consume view models rather than asking hosts to inspect raw store shape.
+Moved to implementation boundary or made view-model-only at root: raw normalized
+`AgentSessionState`, `ThreadState`, `AgentItemBlock`, raw transcript block
+selectors, ordered raw thread/turn/item selectors, pending raw approval
+selectors, server-request queue selectors, and `runEventFixture`. Transcript
+blocks now expose display-oriented fields such as `argumentsText`,
+`resultText`, `errorText`, and `files` instead of raw `arguments`, `result`,
+`error`, `changes`, or `metadata`. Public controllers should consume view
+models rather than asking hosts to inspect raw store shape.
+
+Known remaining raw-debt: root still exposes event/item metadata types through
+`AgentEvent`, `AgentItemState`, and `AgentItemMetadata`. They remain only
+because the public event contract has not yet been rebuilt. Do not use them as
+a host state-inspection API, and do not add new root APIs that depend on those
+metadata shapes.
 
 Make private: reducer-internal registry/retention helper behavior and any
 canonical-ID reconciliation detail that is not part of an explicit diagnostic
 surface.
 
-Remove: no additional core root exports are removed at this gate beyond
-replacing the registry bucket model with the current collection model.
+Remove: no compatibility aliases are retained for the removed raw root
+selectors or raw root state shape.
 
 ### `@nyosegawa/agent-ui-codex`
 
@@ -658,6 +671,7 @@ The package boundary is mechanically checked after `bun run build`:
 Only these subpaths are public today:
 
 - `@nyosegawa/agent-ui-core`
+- `@nyosegawa/agent-ui-core/internal`
 - `@nyosegawa/agent-ui-codex`
 - `@nyosegawa/agent-ui-codex/clients`
 - `@nyosegawa/agent-ui-codex/normalizer`

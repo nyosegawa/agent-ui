@@ -1,12 +1,12 @@
-import { selectAccountRateLimits } from "@nyosegawa/agent-ui-core";
+import { selectAccountRateLimits } from "@nyosegawa/agent-ui-core/internal";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import { useCodexSession } from "./codex-session";
 import { useAgentModels } from "./models";
 import { useAgentUsage } from "./usage";
 
 export function useAgentAccount() {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const readAccount = useCallback(async () => {
     const response = await codex.account.read(false);
@@ -61,7 +61,7 @@ export interface AgentBootstrapState {
 }
 
 export function useAgentBootstrap(): AgentBootstrapState {
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const { readAccount } = useAgentAccount();
   const { refreshUsage } = useAgentUsage();
   const { refreshModels } = useAgentModels();

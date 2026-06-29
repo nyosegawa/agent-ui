@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from "react";
 import { useAgentAccount } from "../hooks";
 import { useAgentI18n } from "../i18n";
 import { buttonClass } from "../components-internal";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import {
   AgentStarterCwd,
   ComposerRunControls,
@@ -25,7 +25,7 @@ export function AgentFirstRun({
 }) {
   const { t } = useAgentI18n();
   const { account, cancelLogin, login } = useAgentAccount();
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   if (state.connection.status === "error" || state.connection.status === "closed") {
     return (
       <div className="aui-first-run">

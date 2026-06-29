@@ -1,6 +1,6 @@
 import type {
   PendingServerRequest,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import type React from "react";
 
 export interface ApprovalAnchors {

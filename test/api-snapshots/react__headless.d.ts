@@ -3,8 +3,11 @@ export { c as AGENT_FULL_ACCESS_RUN_POLICY, d as AgentContextValue, A as AgentPr
 import { O as AgentAppsRefreshOptions, P as AgentHooksRefreshOptions, Q as AgentSkillsRefreshOptions, R as AgentSkillConfigWriteOptions, N as ThreadStartOptions, T as TurnStartOptions, D as AgentUserInput, S as ThreadResumeOptions, U as ThreadForkOptions, V as ThreadHistoryParams } from './normalize-<chunk>.js';
 export { W as AgentApprovalPolicy, X as AgentApprovalsReviewer, Y as AgentBootstrapState, k as AgentFileResourceRequest, A as AgentI18nDictionary, a as AgentI18nKey, b as AgentI18nMessages, c as AgentI18nProvider, d as AgentI18nProviderProps, e as AgentI18nValue, l as AgentImageInput, Z as AgentJsonValue, m as AgentLocalImageInput, o as AgentLocalMediaResourceRequest, f as AgentLocale, p as AgentMentionInput, _ as AgentPersonality, $ as AgentReasoningSummary, q as AgentResolvedResource, r as AgentResolvedResourceBase, s as AgentResolvedUrlResource, t as AgentResourceKind, v as AgentResourceRequest, w as AgentResourceResolution, x as AgentResourceResolver, a0 as AgentSandboxMode, a1 as AgentSandboxPolicy, y as AgentSkillInput, a2 as AgentSortDirection, z as AgentTextInput, a3 as AgentThreadConfigOptions, a4 as AgentThreadSortKey, a5 as AgentThreadSource, a6 as AgentThreadSourceKind, a7 as AgentThreadStartSource, I as AgentTranscriptBlock, a8 as AgentTranscriptController, a9 as AgentTranscriptControllerOptions, J as AgentTranscriptDensity, aa as AgentTranscriptDensityConfig, ab as AgentTranscriptDensityMode, K as AgentTranscriptEntry, H as AgentTranscriptItem, ac as AgentTranscriptPendingState, B as AgentUnavailableResource, C as AgentUnknownUserInput, g as agentI18nDictionaries, h as agentLocales, F as agentResourceDisplayName, G as agentResourceUrl, i as interpolate, j as interpolationVariables, n as normalizeAgentLocale, ad as useAgentAccount, M as useAgentBootstrap, u as useAgentI18n, ae as useAgentTranscriptController } from './normalize-<chunk>.js';
 import * as _nyosegawa_agent_ui_core from '@nyosegawa/agent-ui-core';
-import { AgentApp, ThreadId, ThreadState, ThreadStatus, AgentModel, RequestId, AgentError, ReasoningEffort, AgentRunPolicyId, AgentThreadScope, AgentThreadCollection, AgentThreadView, TurnState } from '@nyosegawa/agent-ui-core';
-export { AgentRunPolicyId, AgentThreadResumeDiagnosticReasonCode } from '@nyosegawa/agent-ui-core';
+import { AgentApp, ThreadId as ThreadId$1, AgentModel, AgentRunPolicyId } from '@nyosegawa/agent-ui-core';
+export { AgentRunPolicyId } from '@nyosegawa/agent-ui-core';
+import * as _nyosegawa_agent_ui_core_internal from '@nyosegawa/agent-ui-core/internal';
+import { ThreadId, ThreadState, ThreadStatus, RequestId, AgentError, AgentModel as AgentModel$1, ReasoningEffort, AgentThreadScope, AgentThreadCollection, AgentThreadView, TurnState } from '@nyosegawa/agent-ui-core/internal';
+export { AgentThreadResumeDiagnosticReasonCode } from '@nyosegawa/agent-ui-core/internal';
 import React, { Dispatch, SetStateAction } from 'react';
 export { U as UsageWindow, n as normalizeUsageWindows } from './usage-<chunk>.js';
 import 'react/jsx-runtime';
@@ -98,13 +101,13 @@ interface AgentThreadHistoryResult {
 }
 
 interface AgentDirectThreadOpenResult {
-    readThreadId: ThreadId;
+    readThreadId: ThreadId$1;
     resume: AgentThreadResumeResult;
-    threadId: ThreadId;
+    threadId: ThreadId$1;
 }
 interface AgentDirectThreadController {
-    openThread: (threadId: ThreadId) => Promise<AgentDirectThreadOpenResult>;
-    previewThread: (threadId: ThreadId) => Promise<ThreadId>;
+    openThread: (threadId: ThreadId$1) => Promise<AgentDirectThreadOpenResult>;
+    previewThread: (threadId: ThreadId$1) => Promise<ThreadId$1>;
 }
 declare function useAgentDirectThreadController(): AgentDirectThreadController;
 
@@ -114,12 +117,12 @@ declare function useAgentModels(): {
 };
 
 declare function useAgentApprovals(threadId?: ThreadId): {
-    approvals: _nyosegawa_agent_ui_core.PendingServerRequest[];
+    approvals: _nyosegawa_agent_ui_core_internal.PendingServerRequest[];
     approve: (requestId: RequestId, result?: unknown) => Promise<void>;
     reject: (requestId: RequestId, message?: string) => Promise<void>;
 };
 declare function useAgentServerRequests(threadId?: ThreadId): {
-    requests: _nyosegawa_agent_ui_core.PendingServerRequest[];
+    requests: _nyosegawa_agent_ui_core_internal.PendingServerRequest[];
     respond: (requestId: RequestId, result: unknown) => Promise<void>;
     reject: (requestId: RequestId, error: AgentError | string) => Promise<void>;
 };
@@ -208,10 +211,10 @@ declare function useAgentComposerController(threadId?: ThreadId): AgentComposerC
 declare function useAgentChatController(threadId?: ThreadId): AgentChatController;
 
 declare function useAgentRunSettings(): {
-    models: AgentModel[];
+    models: AgentModel$1[];
     policies: readonly AgentRunPolicy[];
     runSettings: _nyosegawa_agent_ui_core.RunSettingsState;
-    selectedModel: AgentModel | undefined;
+    selectedModel: AgentModel$1 | undefined;
     selectedPolicy: AgentRunPolicy | undefined;
     setEffort: (effort: ReasoningEffort) => void;
     setModelId: (modelId: string) => void;
@@ -233,7 +236,7 @@ declare function useAgentThread(threadId?: ThreadId): {
     }>;
     thread: ThreadState | undefined;
     threadId: string | undefined;
-    turns: (_nyosegawa_agent_ui_core.TurnState | undefined)[];
+    turns: (_nyosegawa_agent_ui_core_internal.TurnState | undefined)[];
 };
 declare const useAgentThreadController: typeof useAgentThread;
 declare function useAgentThreadActions(threadId?: ThreadId): {

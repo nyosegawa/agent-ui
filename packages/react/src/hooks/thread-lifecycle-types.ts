@@ -3,7 +3,7 @@ import type {
   ThreadId,
   ThreadState,
   ThreadStatus,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import type { ThreadStartOptions, TurnStartOptions } from "../request-options";
 
 export interface AgentThreadStartResult {

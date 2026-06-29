@@ -4,12 +4,12 @@ import {
   type AgentError,
   type RequestId,
   type ThreadId,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import { useCallback, useMemo } from "react";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 
 export function useAgentApprovals(threadId?: ThreadId) {
-  const { state, transport } = useAgentContext();
+  const { state, transport } = useInternalAgentContext();
   const approvals = useMemo(
     () => selectPendingApprovals(state, threadId),
     [state, threadId],
@@ -40,7 +40,7 @@ export function useAgentApprovals(threadId?: ThreadId) {
 }
 
 export function useAgentServerRequests(threadId?: ThreadId) {
-  const { state, transport } = useAgentContext();
+  const { state, transport } = useInternalAgentContext();
   const requests = useMemo(
     () => selectServerRequestQueue(state, threadId),
     [state, threadId],

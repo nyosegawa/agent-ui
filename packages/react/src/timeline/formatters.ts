@@ -1,4 +1,4 @@
-import type { ThreadState } from "@nyosegawa/agent-ui-core";
+import type { ThreadState } from "@nyosegawa/agent-ui-core/internal";
 
 export function displayText(value: unknown): string | undefined {
   if (typeof value === "string") return value;

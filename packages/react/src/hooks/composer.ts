@@ -3,7 +3,7 @@ import {
   selectThread,
   type AgentOperationView,
   type ThreadId,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import { useCallback, useMemo, type SetStateAction } from "react";
 import type { AgentUserInput } from "../agent-input";
 import {
@@ -12,7 +12,7 @@ import {
 } from "../composer-queue";
 import { useAgentComposerDraftState } from "../composer-state";
 import { useAgentI18n } from "../i18n";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import type { ThreadStartOptions, TurnStartOptions } from "../request-options";
 import { useFirstMessageOperationController } from "./first-message-operations";
 import { composerActionError, followUpSendPreflightError } from "./composer-errors";
@@ -87,7 +87,7 @@ export function useInternalAgentComposerController(
   threadId?: ThreadId,
 ): InternalAgentComposerController {
   const { t } = useAgentI18n();
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const composerQueue = useAgentComposerQueueStore();
   const resolvedThreadId = threadId ?? state.threadLifecycle.activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;

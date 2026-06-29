@@ -1,10 +1,13 @@
 import {
-  agentReducer,
-  createInitialAgentState,
   type AgentEvent,
   type AgentSessionState,
   type AgentTransport,
 } from "@nyosegawa/agent-ui-core";
+import {
+  agentReducer,
+  createInitialAgentState,
+  type AgentSessionState as InternalAgentSessionState,
+} from "@nyosegawa/agent-ui-core/internal";
 import { AgentComposerQueueProvider } from "./composer-queue";
 import { AgentComposerStateProvider } from "./composer-state";
 import {
@@ -32,7 +35,14 @@ export interface AgentContextValue {
   transport: AgentTransport;
 }
 
-const AgentContext = sharedReactContext<AgentContextValue | null>(
+interface InternalAgentContextValue {
+  dispatch: (event: AgentEvent) => void;
+  runPolicies: readonly AgentRunPolicy[];
+  state: InternalAgentSessionState;
+  transport: AgentTransport;
+}
+
+const AgentContext = sharedReactContext<InternalAgentContextValue | null>(
   "@nyosegawa/agent-ui-react/v1/AgentContext",
   null,
 );
@@ -56,13 +66,17 @@ export function AgentProvider({
     [runPolicies],
   );
   const initialSessionState = useMemo(() => {
-    const requestedPolicyId = defaultRunPolicyId ?? initialState?.runSettings.policyId;
+    const initialInternalState = initialState as unknown as
+      | InternalAgentSessionState
+      | undefined;
+    const requestedPolicyId =
+      defaultRunPolicyId ?? initialInternalState?.runSettings.policyId;
     const policyId = resolvedAgentRunPolicyId(requestedPolicyId, effectiveRunPolicies);
-    if (initialState) {
+    if (initialInternalState) {
       return {
-        ...initialState,
+        ...initialInternalState,
         runSettings: {
-          ...initialState.runSettings,
+          ...initialInternalState.runSettings,
           ...(policyId ? { policyId } : {}),
         },
       };
@@ -100,10 +114,14 @@ export function AgentProvider({
   );
 }
 
-export function useAgentContext(): AgentContextValue {
+export function useInternalAgentContext(): InternalAgentContextValue {
   const context = useContext(AgentContext);
   if (!context) throw new Error("Agent hooks must be used inside AgentProvider");
   return context;
+}
+
+export function useAgentContext(): AgentContextValue {
+  return useInternalAgentContext() as unknown as AgentContextValue;
 }
 
 export function useAgentAction<TArgs extends unknown[], TResult>(

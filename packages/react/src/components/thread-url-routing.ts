@@ -3,7 +3,7 @@ import {
   useAgentDirectThreadController,
   useAgentThreads,
 } from "../hooks";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 
 export interface AgentThreadUrlRoutingOptions {
   basePath?: string;
@@ -16,7 +16,7 @@ export function useThreadUrlRouting(
   options: AgentThreadUrlRoutingConfig,
   activeThreadId?: string,
 ): void {
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const { openThread, previewThread } = useAgentDirectThreadController();
   const { setActiveThread, threads } = useAgentThreads();
   const lastPathRef = useRef<string | undefined>(undefined);

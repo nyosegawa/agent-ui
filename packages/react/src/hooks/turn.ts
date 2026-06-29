@@ -2,10 +2,10 @@ import {
   selectRunSettings,
   selectThreadLifecycle,
   type ThreadId,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import { useCallback } from "react";
 import type { AgentUserInput } from "../agent-input";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import { codexTurnStartOptions } from "../request-options";
 import { agentRunPolicyTurnOptions } from "../run-policies";
 import type { TurnStartOptions } from "./run-settings";
@@ -13,7 +13,7 @@ import { useCodexSession } from "./codex-session";
 import { codexReasoningEffort, normalizeTurnInput } from "./turn-input";
 
 export function useAgentTurn(threadId?: ThreadId) {
-  const { runPolicies, state } = useAgentContext();
+  const { runPolicies, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const resolvedThreadId = threadId ?? selectThreadLifecycle(state).activeThreadId;
   const runSettings = selectRunSettings(state);

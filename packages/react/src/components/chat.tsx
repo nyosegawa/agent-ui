@@ -1,5 +1,5 @@
 import type React from "react";
-import type { PendingServerRequest } from "@nyosegawa/agent-ui-core";
+import type { PendingServerRequest } from "@nyosegawa/agent-ui-core/internal";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useAgentBootstrap,

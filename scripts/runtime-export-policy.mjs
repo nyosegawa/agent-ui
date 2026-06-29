@@ -23,7 +23,7 @@ export const representativeNamedExportsBySpecifier = {
     "agentReducer",
     "FakeAgentTransport",
     "createInitialAgentState",
-    "selectServerRequestQueue",
+    "selectServerRequestSummaries",
   ],
   "@nyosegawa/agent-ui-react": [
     "AgentChat",

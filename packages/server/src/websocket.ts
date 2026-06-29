@@ -5,7 +5,8 @@ import {
   jsonRpcErrorPayload,
   parseJsonRpcLine,
 } from "@nyosegawa/agent-ui-codex";
-import type { AgentTransportEvent, PendingServerRequest } from "@nyosegawa/agent-ui-core";
+import type { AgentTransportEvent } from "@nyosegawa/agent-ui-core";
+import type { PendingServerRequest } from "@nyosegawa/agent-ui-core/internal";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { STATUS_CODES, type IncomingMessage, type Server } from "node:http";
 import type { Duplex } from "node:stream";

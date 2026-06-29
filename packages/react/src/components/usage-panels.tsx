@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { IconRefresh, buttonClass } from "../components-internal";
 import { useAgentApps, useAgentSkills, useAgentUsage } from "../hooks";
 import { useAgentI18n, type AgentI18nKey } from "../i18n";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import { normalizeUsageWindows } from "../usage";
 import { useCompactLayout } from "./shared";
 
@@ -12,7 +12,7 @@ export interface AgentUsageProps {
 
 export function AgentUsagePanel({ autoRefresh = true }: AgentUsageProps = {}) {
   const { t } = useAgentI18n();
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const { rateLimits, refreshUsage } = useAgentUsage();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const didAutoRefresh = useRef(false);

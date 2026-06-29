@@ -4,12 +4,12 @@ import type {
   AgentThreadSummaryView,
   AgentThreadTranscriptView,
   PendingServerRequest,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import {
   selectActiveThreadSummaryView,
   selectThreadSummaryView,
   selectThreadTranscriptView,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import { useAgentApprovals, useAgentThread, useAgentThreadActions } from "../hooks";
 import { useAgentI18n } from "../i18n";
 import { IconMoreVertical } from "../components-internal";
@@ -25,7 +25,7 @@ import {
 import { AgentCriticalNoticeList } from "./status";
 import { deferAction } from "./shared";
 import { formatThreadStatus } from "./sidebar";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 
 export interface AgentThreadViewProps {
   composerIntegrations?: readonly AgentComposerIntegration[];
@@ -49,7 +49,7 @@ export function AgentThreadView({
   threadId,
 }: AgentThreadViewProps) {
   const { thread, threadId: resolvedThreadId } = useAgentThread(threadId);
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const threadView = resolvedThreadId
     ? selectThreadSummaryView(state, resolvedThreadId)
     : selectActiveThreadSummaryView(state);
@@ -178,7 +178,7 @@ export function AgentThreadTimeline({
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   threadId?: string;
 }) {
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const { approvals } = useAgentApprovals(threadId);
   const transcript = threadId ? selectThreadTranscriptView(state, threadId) : undefined;
   const Approval = components?.Approval;

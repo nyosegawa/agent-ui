@@ -7,11 +7,11 @@ import {
   selectProtocolNotifications,
   selectStatusBanners,
   selectUserDiagnostics,
-} from "@nyosegawa/agent-ui-core";
-import { useAgentContext } from "../provider";
+} from "@nyosegawa/agent-ui-core/internal";
+import { useInternalAgentContext } from "../provider";
 
 export function useAgentDiagnostics() {
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   return {
     auditDiagnostics: selectAuditDiagnostics(state),
     banners: selectStatusBanners(state),

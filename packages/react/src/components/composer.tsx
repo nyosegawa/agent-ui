@@ -4,12 +4,12 @@ import {
   type AgentThreadWaitingReason,
   type ThreadState,
   type ThreadTokenUsage,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import { useEffect, useId, useRef, useState } from "react";
 import { type AgentComposerController } from "../hooks";
 import { useInternalAgentComposerController } from "../hooks/composer";
 import { useAgentI18n } from "../i18n";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import type { AgentResourceKind } from "../resources";
 import {
   IconAlert,
@@ -482,7 +482,7 @@ export function AgentComposerPanel({
 }: AgentComposerPanelProps) {
   const { t } = useAgentI18n();
   const isBlocked = thread.activity === "waitingForInput";
-  const { state } = useAgentContext();
+  const { state } = useInternalAgentContext();
   const waitingReasons = threadId
     ? selectThreadSummaryView(state, threadId)?.execution.runtime.waitingReasons
     : undefined;

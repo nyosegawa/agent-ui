@@ -1,8 +1,8 @@
-import type { PendingServerRequest } from "@nyosegawa/agent-ui-core";
 import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
+import type { AgentApprovalDefaultProps } from "@nyosegawa/agent-ui-react";
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 
-export function CustomApprovalCard({ approval }: { approval: PendingServerRequest }) {
+export function CustomApprovalCard({ approval }: AgentApprovalDefaultProps) {
   const payload = approval.payload as Record<string, unknown>;
   const primary =
     stringField(payload, "command") ??

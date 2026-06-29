@@ -3,10 +3,10 @@ import {
   selectThread,
   type ThreadId,
   type ThreadState,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import { useCallback } from "react";
 import type { AgentUserInput } from "../agent-input";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import { codexTurnStartOptions, type TurnStartOptions } from "../request-options";
 import { agentRunPolicyTurnOptions } from "../run-policies";
 import { useCodexSession } from "./codex-session";
@@ -20,7 +20,7 @@ export type ComposerTurnStartResult =
   | { threadId: ThreadId; type: "resumedWaitingForInput" };
 
 export function useComposerTurnStart(threadId?: ThreadId) {
-  const { runPolicies, state } = useAgentContext();
+  const { runPolicies, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const resolvedThreadId = threadId ?? state.threadLifecycle.activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;

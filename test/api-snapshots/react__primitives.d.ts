@@ -3,8 +3,9 @@ export { k as AgentFileResourceRequest, A as AgentI18nDictionary, a as AgentI18n
 import * as react_jsx_runtime from 'react/jsx-runtime';
 export { s as AgentAttachmentChip, t as AgentAttachmentChipKind, u as AgentAttachmentChips, v as AgentAttachmentChipsProps, w as AgentCommandItem, x as AgentCommandOutputItem, y as AgentComposer, z as AgentComposerInput, B as AgentComposerInputProps, C as AgentComposerIntegration, D as AgentComposerIntegrationAttachment, E as AgentComposerIntegrationResolver, F as AgentComposerPanel, G as AgentComposerPanelProps, H as AgentComposerProps, I as AgentComposerToolbar, J as AgentComposerToolbarProps, K as AgentContentBlockView, L as AgentCriticalNoticeList, M as AgentDiagnosticsPanel, N as AgentDiffItem, O as AgentFileChangeItem, P as AgentFirstRun, Q as AgentLocalAttachmentKind, R as AgentLocalAttachmentResolver, S as AgentLocalMediaUrlResolver, T as AgentMessageItem, U as AgentMessageList, V as AgentReasoningItem, W as AgentResolvedLocalAttachment, X as AgentShell, Y as AgentShellProps, Z as AgentStartComposer, _ as AgentStartComposerProps, $ as AgentStarterCwd, a0 as AgentStatusBar, a1 as AgentStatusBarProps, a2 as AgentStatusDetails, a3 as AgentStatusSummary, a4 as AgentTheme, a5 as AgentThemeToggle, a6 as AgentThemeToggleProps, a7 as AgentThreadHeader, p as AgentThreadHeaderEnd, q as AgentThreadHeaderEndContext, a8 as AgentThreadHeaderProps, a9 as AgentThreadSidebar, aa as AgentThreadSurface, ab as AgentThreadTimeline, ac as AgentThreadView, ad as AgentThreadViewProps, ae as AgentToolCallItem, af as AgentTranscript, ag as AgentTurn, ah as AgentWorkingDirectoryResolver, ai as ThreadList, aj as formatThreadStatus, ak as isUserFacingPath, al as threadSubtitle } from './chat-<chunk>.js';
 export { U as UsageWindow, n as normalizeUsageWindows } from './usage-<chunk>.js';
-import { PendingServerRequest, ThreadTokenUsage } from '@nyosegawa/agent-ui-core';
+import { PendingServerRequest } from '@nyosegawa/agent-ui-core/internal';
 import React from 'react';
+import { ThreadTokenUsage } from '@nyosegawa/agent-ui-core';
 
 interface AgentComposerSubmitButtonProps {
     canSubmit: boolean;

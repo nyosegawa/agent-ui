@@ -27,7 +27,7 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
 ## Phase Checklist
 
 - [x] Protocol, raw-boundary, and public-surface contract
-- [ ] Core view models, controllers, and internal state split
+- [x] Core view models, controllers, and internal state split
 - [ ] React input, transcript, approval, and controller cleanup
 - [ ] Composer and first-message lifecycle hardening
 - [ ] Server bridge root and host-policy boundary cleanup
@@ -84,7 +84,7 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
       - Expected files/areas: phase diff, docs, tests, API snapshots if changed.
       - Validation note: record subagent findings and remediation in Evidence.
 
-- [ ] P002 Core view models, controllers, and internal state split
+- [x] P002 Core view models, controllers, and internal state split
   - Goal: stop making raw normalized store the normal public integration API.
   - Scope: core state exports, view models, selectors, controller planning helpers.
   - Expected files/areas:
@@ -98,22 +98,48 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
   - Push: push after validation.
   - PR/CI: package/API impact.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
+    - Implementation: added core public state/reducer/selector wrappers with
+      opaque `AgentSessionState`; moved raw reducer state, raw selectors, and
+      fixtures to `@nyosegawa/agent-ui-core/internal`; added package export,
+      path alias, package-resolution, runtime-export-policy, and tsup support
+      for the implementation boundary; rebuilt transcript block views as
+      display-oriented view models with `argumentsText`, `resultText`,
+      `errorText`, and `files` instead of raw `arguments`, `result`, `error`,
+      `changes`, and `metadata`; updated React provider internals so public
+      provider props use the opaque root state while implementation code reads
+      internal state; updated server, web-components, examples, recipes, and
+      docs to match the new boundary.
+    - Validation: `bun run --workspaces --if-present typecheck` passed;
+      `bun run validate:protocol` passed; `bun run test:package-resolution`
+      passed; `bun run test:api-snapshots:update && bun run test:api-snapshots`
+      passed; `bunx vitest run packages/core/test/public-surface.test.ts
+      packages/react/test/source-structure.vitest.ts packages/react/test/components.vitest.tsx`
+      passed; `bun run validate:fast` passed with the existing
+      `packages/react/src/hooks/composer.ts` React-hook warnings; `bun run
+      validate:packages` passed with existing publint repository-url
+      suggestions.
+    - Review: ran 4 parallel phase-review subagents. Resolved P1 findings for
+      missing `/internal` aliases, public provider `initialState` leaking raw
+      state, stale server/web-components snapshots, package-resolution
+      canonical export mismatch, and runtime export policy drift. Resolved P2
+      findings by removing public `selectThreadLifecycle`, replacing raw
+      transcript block fields with display view fields, avoiding internal
+      imports in public recipes, strengthening core root public-surface tests,
+      and adding an explicit source-level allowlist for remaining root
+      `AgentItemState`/`AgentItemMetadata` raw debt.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T001 Introduce core transcript/thread/approval/usage view models.
+    - [x] T001 Introduce core transcript/thread/approval/usage view models.
       - Expected files/areas: `packages/core/src`.
       - Validation note: core unit and fixture tests.
-    - [ ] T002 Move raw reducer/store exports out of root or behind advanced/internal boundary.
+    - [x] T002 Move raw reducer/store exports out of root or behind advanced/internal boundary.
       - Expected files/areas: core entrypoints and package exports.
       - Validation note: API snapshots and package resolution.
-    - [ ] T003 Replace raw approval payload public views with canonical approval views.
+    - [x] T003 Replace raw approval payload public views with canonical approval views.
       - Expected files/areas: core server-request selectors/tests.
       - Validation note: reducer tests for approval lifecycle.
-    - [ ] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
+    - [x] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
       - Expected files/areas: phase diff, docs, tests, API snapshots.
       - Validation note: record subagent findings and remediation in Evidence.
 

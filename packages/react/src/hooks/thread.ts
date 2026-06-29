@@ -9,14 +9,14 @@ import {
   type ThreadId,
   type ThreadState,
   type ThreadStatus,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import {
   normalizeThreadReadResponse,
   normalizeThreadResumeResponse,
 } from "@nyosegawa/agent-ui-codex/normalizer";
 import { useCallback, useMemo, useState } from "react";
 import { useAgentComposerQueueStore } from "../composer-queue";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import {
   codexThreadForkParams,
   codexThreadHistoryParams,
@@ -63,7 +63,7 @@ export type {
 } from "./thread-lifecycle-types";
 
 export function useAgentThread(threadId?: ThreadId) {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const resolvedThreadId = threadId ?? selectThreadLifecycle(state).activeThreadId;
   const thread: ThreadState | undefined = resolvedThreadId
@@ -174,7 +174,7 @@ export function useAgentThread(threadId?: ThreadId) {
 export const useAgentThreadController = useAgentThread;
 
 export function useAgentThreadActions(threadId?: ThreadId) {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const composerQueue = useAgentComposerQueueStore();
   const resolvedThreadId = threadId ?? selectThreadLifecycle(state).activeThreadId;
@@ -240,7 +240,7 @@ export function useAgentThreadActions(threadId?: ThreadId) {
 }
 
 export function useAgentThreads() {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const activeThreadId = selectThreadLifecycle(state).activeThreadId;
   const threads = useMemo(() => selectOrderedThreads(state), [state]);
   const setActiveThread = useCallback(
@@ -251,7 +251,7 @@ export function useAgentThreads() {
 }
 
 export function useAgentThreadHistory() {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const [isLoading, setIsLoading] = useState(false);
   const [cursor, setCursor] = useState<string | null>();
@@ -302,7 +302,7 @@ export function useAgentThreadHistory() {
 }
 
 export function useAgentThreadReader() {
-  const { dispatch } = useAgentContext();
+  const { dispatch } = useInternalAgentContext();
   const codex = useCodexSession();
   const readThread = useCallback(
     async (
@@ -421,7 +421,7 @@ function stringValue(value: unknown): string | undefined {
 }
 
 function dispatchResumeDiagnostic(
-  dispatch: ReturnType<typeof useAgentContext>["dispatch"],
+  dispatch: ReturnType<typeof useInternalAgentContext>["dispatch"],
   diagnostic: {
     reasonCode: AgentThreadResumeDiagnosticReasonCode;
     requestedThreadId: ThreadId;

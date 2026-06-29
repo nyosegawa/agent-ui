@@ -11,6 +11,7 @@ const componentDir = join(reactSrc, "components");
 const hookDir = join(reactSrc, "hooks");
 const timelineDir = join(reactSrc, "timeline");
 const repoRoot = join(__dirname, "..", "..", "..");
+const coreSrc = join(repoRoot, "packages", "core", "src");
 const examplesDir = join(repoRoot, "examples");
 const codexLocalWebSrc = join(examplesDir, "codex-local-web", "src");
 const docsSiteSrc = join(examplesDir, "docs-site", "src");
@@ -256,101 +257,19 @@ describe("React package source structure", () => {
       "utf8",
     );
 
-    expect(rawDebtFindings("core", coreSnapshot)).toEqual([
-      "core:member:account?: Record<string, unknown>;",
-      "core:member:metadata?: unknown;",
-      "core:member:raw?: unknown;",
-      "core:member:raw?: unknown;",
-      'core:type PendingServerRequestKind = "attestation" | "authRefresh" | "commandApproval" | "dynamicTool" | "fileChangeApproval" | "mcpElicitation" | "permissionsApproval" | "userInput" | "unknown";',
-      "core:interface PendingServerRequest {",
-      "core:member:kind: PendingServerRequestKind;",
-      "core:member:payload: unknown;",
-      "core:member:byId: Record<RequestIdKey, PendingServerRequest>;",
-      "core:member:arguments?: unknown;",
-      "core:member:changes?: unknown[];",
-      "core:member:error?: unknown;",
-      "core:member:result?: unknown;",
-      'core:type AgentItemBlockKind = "text" | "thinking" | "plan" | "commandExecution" | "fileChange" | "toolCall" | "mcpToolCall" | "collabToolCall" | "webSearch" | "image" | "systemInfo" | "unknown";',
-      'core:type AgentItemBlockResourceKind = "image" | "video" | "file" | "local-media";',
-      "core:interface AgentItemBlockResource {",
-      "core:member:kind?: AgentItemBlockResourceKind;",
-      "core:interface AgentItemBlock {",
-      "core:member:kind: AgentItemBlockKind;",
-      "core:member:changes?: unknown[];",
-      "core:member:arguments?: unknown;",
-      "core:member:result?: unknown;",
-      "core:member:error?: unknown;",
-      "core:member:resource?: AgentItemBlockResource;",
-      "core:member:metadata?: Record<string, unknown>;",
-      "core:member:blocksByItemId: Record<ItemId, AgentItemBlock>;",
-      "core:interface AgentPendingThreadState {",
-      "core:member:pending?: AgentPendingThreadState;",
-      "core:member:kind: PendingServerRequestKind;",
-      'core:type AgentTranscriptBlockView = Pick<AgentItemBlock, "arguments" | "changes" | "command" | "content" | "cwd" | "durationMs" | "error" | "exitCode" | "id" | "kind" | "metadata" | "output" | "path" | "query" | "resource" | "result" | "server" | "status" | "subtype" | "summary" | "text" | "tool" | "toolType">;',
-      "core:interface ThreadState {",
-      "core:interface AgentSessionState {",
-      "core:member:threads: Record<ThreadId, ThreadState>;",
-      "core:function:createInitialAgentState:AgentSessionState",
-      "core:member:rateLimits: unknown;",
-      "core:member:patch: unknown;",
-      "core:member:request: PendingServerRequest;",
-      "core:member:request?: PendingServerRequest;",
-      "core:member:payload?: unknown;",
-      "core:member:respond(requestId: RequestId, result: unknown): Promise<void>;",
-      "core:member:respond(requestId: RequestId, result: unknown): Promise<void>;",
-      "core:function:runEventFixture:AgentSessionState",
-      "core:function:agentReducer:AgentSessionState",
-      "core:function:selectActiveThread:AgentSessionState,ThreadState",
-      "core:function:selectThread:AgentSessionState,ThreadState",
-      "core:function:selectOrderedTurns:AgentSessionState",
-      "core:function:selectTurn:AgentSessionState",
-      "core:function:selectLatestRunningTurnId:AgentSessionState",
-      "core:function:selectLatestRunningTurn:AgentSessionState",
-      "core:function:selectTurnItem:AgentSessionState",
-      "core:function:selectOrderedItems:AgentSessionState",
-      "core:function:selectItemBlock:AgentItemBlock,AgentSessionState",
-      "core:function:selectOrderedThreads:AgentSessionState,ThreadState",
-      "core:function:selectThreadCollection:AgentSessionState",
-      "core:function:selectOrderedCollectionThreads:AgentSessionState,ThreadState",
-      "core:function:selectPendingOperations:AgentSessionState",
-      "core:function:selectThreadView:AgentSessionState",
-      "core:function:selectActiveThreadView:AgentSessionState",
-      "core:function:selectThreadRuntimeView:AgentSessionState",
-      "core:function:selectThreadExecutionState:AgentSessionState",
-      "core:function:selectThreadSummaryView:AgentSessionState",
-      "core:function:selectActiveThreadSummaryView:AgentSessionState",
-      "core:function:selectThreadTranscriptView:AgentSessionState",
-      "core:function:selectPendingApprovals:AgentSessionState,PendingServerRequest",
-      "core:function:selectPendingApprovalViews:AgentSessionState",
-      "core:function:selectServerRequestQueue:AgentSessionState,PendingServerRequest",
-      "core:function:selectServerRequestSummaries:AgentSessionState",
-      "core:function:selectApps:AgentSessionState",
-      "core:function:selectDiagnostics:AgentSessionState",
-      "core:function:selectDiagnosticsForAudience:AgentSessionState",
-      "core:function:selectUserDiagnostics:AgentSessionState",
-      "core:function:selectDeveloperDiagnostics:AgentSessionState",
-      "core:function:selectAuditDiagnostics:AgentSessionState",
-      "core:function:selectStatusBanners:AgentSessionState",
-      "core:function:selectDiagnosticWarnings:AgentSessionState",
-      "core:function:selectDiagnosticErrors:AgentSessionState",
-      "core:function:selectProtocolNotifications:AgentSessionState",
-      "core:function:selectUsage:AgentSessionState",
-      "core:function:selectAccountRateLimits:AgentSessionState,unknown",
-      "core:function:selectHostMetrics:AgentSessionState,unknown",
-      "core:function:selectThreadLifecycle:AgentSessionState",
-      "core:function:selectRunSettings:AgentSessionState",
-      "core:export:type AgentItemBlock",
-      "core:export:type AgentSessionState",
-      "core:export:type AgentTranscriptBlockView",
-      "core:export:type PendingServerRequest",
-      "core:export:type ThreadState",
+    expect(rawDebtFindings("core", coreSnapshot)).toEqual([]);
+    expect(coreRootResidualRawDebt()).toEqual([
+      "core-source:export:AgentItemMetadata",
+      "core-source:export:AgentItemState",
     ]);
     expect(rawDebtFindings("headless", headlessSnapshot)).toEqual([
-      "headless:import:ThreadState from @nyosegawa/agent-ui-core",
+      "headless:import-module:@nyosegawa/agent-ui-core/internal",
+      "headless:import-module:@nyosegawa/agent-ui-core/internal",
+      "headless:import:ThreadState from @nyosegawa/agent-ui-core/internal",
       'headless:member:activity?: ThreadState["activity"];',
-      "headless:member:approvals: _nyosegawa_agent_ui_core.PendingServerRequest[];",
+      "headless:member:approvals: _nyosegawa_agent_ui_core_internal.PendingServerRequest[];",
       "headless:member:approve: (requestId: RequestId, result?: unknown) => Promise<void>;",
-      "headless:member:requests: _nyosegawa_agent_ui_core.PendingServerRequest[];",
+      "headless:member:requests: _nyosegawa_agent_ui_core_internal.PendingServerRequest[];",
       "headless:member:respond: (requestId: RequestId, result: unknown) => Promise<void>;",
       "headless:member:thread: ThreadState | undefined;",
       "headless:member:threads: ThreadState[];",
@@ -358,9 +277,12 @@ describe("React package source structure", () => {
       "headless:member:rateLimits: unknown;",
       "headless:function:visibleTranscriptWindow:ThreadState",
     ]);
-    expect(rawDebtFindings("root", rootSnapshot)).toEqual([]);
+    expect(rawDebtFindings("root", rootSnapshot)).toEqual([
+      "root:import-module:@nyosegawa/agent-ui-core/internal",
+    ]);
     expect(rawDebtFindings("primitives", primitivesSnapshot)).toEqual([
-      "primitives:import:PendingServerRequest from @nyosegawa/agent-ui-core",
+      "primitives:import-module:@nyosegawa/agent-ui-core/internal",
+      "primitives:import:PendingServerRequest from @nyosegawa/agent-ui-core/internal",
       "primitives:member:patch: unknown;",
       "primitives:member:approvals?: PendingServerRequest[];",
       "primitives:member:renderApproval?: (approval: PendingServerRequest) => React.ReactNode;",
@@ -533,6 +455,23 @@ function responsibilitySizeFailure(
   ].join("\n");
 }
 
+function coreRootResidualRawDebt(): string[] {
+  const index = readFileSync(join(coreSrc, "index.ts"), "utf8");
+  const rawSymbols = new Set([
+    "AgentItemBlock",
+    "AgentItemMetadata",
+    "AgentItemState",
+    "PendingServerRequest",
+    "ServerRequestQueueState",
+    "ThreadLifecycleState",
+    "ThreadState",
+  ]);
+  return Array.from(index.matchAll(/\b([A-Z]\w+)\b/g))
+    .map((match) => match[1] ?? "")
+    .filter((symbol, index, all) => rawSymbols.has(symbol) && all.indexOf(symbol) === index)
+    .map((symbol) => `core-source:export:${symbol}`);
+}
+
 function interfaceBody(snapshot: string, interfaceName: string): string {
   const match = new RegExp(`interface ${interfaceName} \\{([\\s\\S]*?)\\n\\}`).exec(snapshot);
   return match?.[1] ?? "";
@@ -540,10 +479,9 @@ function interfaceBody(snapshot: string, interfaceName: string): string {
 
 function rawDebtFindings(scope: string, snapshot: string): string[] {
   const rawDebtLine =
-    /(\b(raw|payload|arguments|changes|result|error|metadata|details|patch|rateLimits)\??: unknown\b|Record<string, unknown>|unknown\[\]|PendingServerRequest|ThreadState|AgentSessionState|AgentItemBlock|@nyosegawa\/agent-ui-codex\/stable-types|CodexStable|ThreadStartParams|TurnStartParams)/;
+    /(\b(raw|payload|arguments|changes|result|error|metadata|details|patch|rateLimits)\??: unknown\b|Record<string, unknown>|unknown\[\]|PendingServerRequest|ThreadState|AgentItemBlock|@nyosegawa\/agent-ui-core\/internal|@nyosegawa\/agent-ui-codex\/stable-types|CodexStable|ThreadStartParams|TurnStartParams)/;
   const trackedSymbols = new Set([
     "AgentItemBlock",
-    "AgentSessionState",
     "AgentTranscriptBlockView",
     "CodexStable",
     "PendingServerRequest",
@@ -557,10 +495,21 @@ function rawDebtFindings(scope: string, snapshot: string): string[] {
     const line = rawLine.trim();
     if (!rawDebtLine.test(line)) continue;
 
+    if (/^import ['"]/.test(line)) {
+      const moduleName = /import ['"]([^'"]+)['"]/.exec(line)?.[1] ?? "";
+      findings.push(`${scope}:import-module:${moduleName}`);
+      continue;
+    }
+
     if (line.startsWith("import ")) {
       const moduleName = /from '([^']+)'/.exec(line)?.[1] ?? "";
+      if (moduleName.includes("/internal")) {
+        findings.push(`${scope}:import-module:${moduleName}`);
+      }
       const importedNames = /\{([^}]+)\}/.exec(line)?.[1] ?? "";
-      for (const importedName of importedNames.split(",").map((name) => name.trim())) {
+      for (const importedName of importedNames
+        .split(",")
+        .map((name) => name.trim().replace(/ as .*/, ""))) {
         if (trackedSymbols.has(importedName)) {
           findings.push(`${scope}:import:${importedName} from ${moduleName}`);
         }
@@ -583,7 +532,9 @@ function rawDebtFindings(scope: string, snapshot: string): string[] {
       const functionName = /^declare function ([^(]+)/.exec(line)?.[1] ?? "unknown";
       const rawTypes = Array.from(trackedSymbols).filter((symbol) => line.includes(symbol));
       if (line.includes(": unknown")) rawTypes.push("unknown");
-      findings.push(`${scope}:function:${functionName}:${rawTypes.join(",")}`);
+      if (rawTypes.length > 0) {
+        findings.push(`${scope}:function:${functionName}:${rawTypes.join(",")}`);
+      }
       continue;
     }
 

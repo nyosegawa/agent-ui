@@ -144,12 +144,19 @@ The current package surface still contains known raw-debt while the architecture
 redesign is in progress. That debt is intentional only as an implementation
 queue, not as a stable design:
 
-- core root declarations still expose raw normalized store shapes such as
-  `AgentSessionState`, `ThreadState`, `AgentItemBlock`, and
-  `PendingServerRequest.payload`.
-- React headless/primitives still expose `ThreadState` and
-  `PendingServerRequest` in selected declarations.
-- transcript declarations still derive their block view from `AgentItemBlock`.
+- core root declarations expose an opaque `AgentSessionState` token and
+  raw-free public selectors. Raw normalized reducer state and raw selectors are
+  confined to the explicit `@nyosegawa/agent-ui-core/internal` implementation
+  boundary.
+- core root still exposes residual event/item metadata types through
+  `AgentEvent` and item resource declarations. Those are known raw-debt, not a
+  store-inspection API, and later phases should replace them with raw-free
+  public event/view models before treating the root as completely clean.
+- React root/headless/primitives still depend on that internal boundary in
+  selected declarations while the React controller redesign is in progress.
+- React approval declarations still expose internal pending-request values while
+  the approval-controller redesign is in progress. Transcript block views are
+  now projected to raw-free display fields.
 
 `packages/react/test/source-structure.vitest.ts` fixes those known declaration
 leaks to an exact allowlist so new raw public surface cannot be added while the

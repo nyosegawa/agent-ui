@@ -2067,12 +2067,11 @@ describe("agentReducer", () => {
           blocks: [
             {
               id: "item-runtime",
-              arguments: { command: "bun test" },
-              changes: [{ kind: "update", path: "src/runtime.ts" }],
-              error: { message: "recoverable" },
+              argumentsText: '{\n  "command": "bun test"\n}',
+              errorText: '{\n  "message": "recoverable"\n}',
+              files: [{ kind: "update", path: "src/runtime.ts" }],
               kind: "text",
-              metadata: { source: "normalized" },
-              result: { exitCode: 0 },
+              resultText: '{\n  "exitCode": 0\n}',
               status: "completed",
               text: "Runtime view",
             },

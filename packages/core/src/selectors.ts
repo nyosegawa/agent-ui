@@ -4,6 +4,7 @@ import type {
   AgentApprovalView,
   AgentServerRequestSummary,
   AgentSessionState,
+  AgentItemBlock,
   AgentTranscriptBlockView,
   AgentThreadExecutionState,
   AgentThreadCollection,
@@ -412,25 +413,44 @@ function unique<T>(values: readonly T[]): T[] {
   return values.filter((value, index) => values.indexOf(value) === index);
 }
 
-function transcriptBlockView(block: AgentTranscriptBlockView): AgentTranscriptBlockView {
+function transcriptBlockView(block: AgentItemBlock): AgentTranscriptBlockView {
+  const collabMetadata = isRecord(block.metadata) ? block.metadata : {};
   return {
-    ...(block.arguments !== undefined ? { arguments: block.arguments } : {}),
-    ...(block.changes !== undefined ? { changes: block.changes } : {}),
+    ...(block.arguments !== undefined ? { argumentsText: displayValue(block.arguments) } : {}),
     ...(block.command !== undefined ? { command: block.command } : {}),
     ...(block.content !== undefined ? { content: block.content } : {}),
     ...(block.cwd !== undefined ? { cwd: block.cwd } : {}),
     ...(block.durationMs != null ? { durationMs: block.durationMs } : {}),
-    ...(block.error !== undefined ? { error: block.error } : {}),
+    ...(block.error !== undefined ? { errorText: displayValue(block.error) } : {}),
     ...(block.exitCode != null ? { exitCode: block.exitCode } : {}),
+    ...(block.changes !== undefined ? { files: changedFileViews(block.changes) } : {}),
     id: block.id,
     kind: block.kind,
-    ...(block.metadata !== undefined ? { metadata: block.metadata } : {}),
+    ...(stringValue(collabMetadata.newThreadId ?? collabMetadata.new_thread_id)
+      ? {
+          newThreadId: stringValue(collabMetadata.newThreadId ?? collabMetadata.new_thread_id),
+        }
+      : {}),
     ...(block.output !== undefined ? { output: block.output } : {}),
     ...(block.path !== undefined ? { path: block.path } : {}),
     ...(block.query !== undefined ? { query: block.query } : {}),
+    ...(stringValue(collabMetadata.receiverThreadId ?? collabMetadata.receiver_thread_id)
+      ? {
+          receiverThreadId: stringValue(
+            collabMetadata.receiverThreadId ?? collabMetadata.receiver_thread_id,
+          ),
+        }
+      : {}),
     ...(block.resource !== undefined ? { resource: block.resource } : {}),
-    ...(block.result !== undefined ? { result: block.result } : {}),
+    ...(block.result !== undefined ? { resultText: resultDisplayValue(block.result) } : {}),
     ...(block.server !== undefined ? { server: block.server } : {}),
+    ...(stringValue(collabMetadata.senderThreadId ?? collabMetadata.sender_thread_id)
+      ? {
+          senderThreadId: stringValue(
+            collabMetadata.senderThreadId ?? collabMetadata.sender_thread_id,
+          ),
+        }
+      : {}),
     ...(block.status !== undefined ? { status: block.status } : {}),
     ...(block.subtype !== undefined ? { subtype: block.subtype } : {}),
     ...(block.summary !== undefined ? { summary: block.summary } : {}),
@@ -438,6 +458,44 @@ function transcriptBlockView(block: AgentTranscriptBlockView): AgentTranscriptBl
     ...(block.tool !== undefined ? { tool: block.tool } : {}),
     ...(block.toolType !== undefined ? { toolType: block.toolType } : {}),
   };
+}
+
+function changedFileViews(changes: readonly unknown[]) {
+  return changes.map((change) => {
+    const record = isRecord(change) ? change : {};
+    return {
+      kind: stringValue(record.kind) ?? "update",
+      path: stringValue(record.path) ?? "unknown",
+    };
+  });
+}
+
+function displayValue(value: unknown): string {
+  if (typeof value === "string") return value;
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+}
+
+function resultDisplayValue(value: unknown): string {
+  const record = isRecord(value) ? value : undefined;
+  const content = Array.isArray(record?.content) ? record.content : undefined;
+  const textItem = content?.find(
+    (item) => isRecord(item) && item.type === "text" && typeof item.text === "string",
+  );
+  return isRecord(textItem) && typeof textItem.text === "string"
+    ? textItem.text
+    : displayValue(value);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function stringValue(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
 function threadDisplayStatus(thread: AgentSessionState["threads"][ThreadId]): AgentThreadView["displayStatus"] {

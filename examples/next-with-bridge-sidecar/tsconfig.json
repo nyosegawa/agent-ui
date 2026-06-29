@@ -32,6 +32,9 @@
       "@nyosegawa/agent-ui-core": [
         "../../packages/core/src/index.ts"
       ],
+      "@nyosegawa/agent-ui-core/internal": [
+        "../../packages/core/src/internal.ts"
+      ],
       "@nyosegawa/agent-ui-react": [
         "../../packages/react/src/index.ts"
       ],

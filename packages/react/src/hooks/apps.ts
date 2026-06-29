@@ -1,8 +1,8 @@
 import type { AgentApp } from "@nyosegawa/agent-ui-core";
-import { selectApps } from "@nyosegawa/agent-ui-core";
+import { selectApps } from "@nyosegawa/agent-ui-core/internal";
 import { normalizeAppsListResponse } from "@nyosegawa/agent-ui-codex/normalizer";
 import { useCallback } from "react";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import {
   codexAppsListParams,
   type AgentAppsRefreshOptions,
@@ -12,7 +12,7 @@ import { useCodexSession } from "./codex-session";
 export type { AgentAppsRefreshOptions } from "../request-options";
 
 export function useAgentApps(threadId?: string) {
-  const { dispatch, state } = useAgentContext();
+  const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const scopedApps = selectApps(state, threadId);
   const refreshApps = useCallback(

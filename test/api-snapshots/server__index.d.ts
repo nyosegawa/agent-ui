@@ -1,6 +1,7 @@
 import { CodexInitializeOptions } from '@nyosegawa/agent-ui-codex';
-import { AgentTransport, AgentDiagnosticAudience, AgentTransportEvent, PendingServerRequest } from '@nyosegawa/agent-ui-core';
+import { AgentTransport, AgentDiagnosticAudience, AgentTransportEvent } from '@nyosegawa/agent-ui-core';
 import { Readable, Writable } from 'node:stream';
+import { PendingServerRequest } from '@nyosegawa/agent-ui-core/internal';
 import { IncomingMessage, ServerResponse, Server } from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
 

@@ -4,3 +4,4 @@ export { A as AgentI18nDictionary, a as AgentI18nKey, b as AgentI18nMessages, c 
 import 'react/jsx-runtime';
 import '@nyosegawa/agent-ui-core';
 import 'react';
+import '@nyosegawa/agent-ui-core/internal';

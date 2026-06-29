@@ -1,4 +1,4 @@
-import type { PendingServerRequest } from "@nyosegawa/agent-ui-core";
+import type { PendingServerRequest } from "@nyosegawa/agent-ui-core/internal";
 import type React from "react";
 import { useState } from "react";
 import {

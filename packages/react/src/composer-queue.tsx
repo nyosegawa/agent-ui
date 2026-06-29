@@ -2,7 +2,7 @@ import type {
   AgentSessionState,
   ThreadId,
   ThreadStatus,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import {
   useCallback,
   useContext,

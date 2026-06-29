@@ -2,8 +2,8 @@ import { createCodexSession } from "@nyosegawa/agent-ui-codex";
 import type {
   AgentDiagnosticAudience,
   AgentTransportEvent,
-  PendingServerRequest,
 } from "@nyosegawa/agent-ui-core";
+import type { PendingServerRequest } from "@nyosegawa/agent-ui-core/internal";
 import type { createCodexAppServerBridge } from "./bridge";
 import {
   boundedFileSystemPermission,

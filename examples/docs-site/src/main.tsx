@@ -1,8 +1,10 @@
 import {
   FakeAgentTransport,
+} from "@nyosegawa/agent-ui-core";
+import {
   runEventFixture,
   type FixtureStep,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
 import "@nyosegawa/agent-ui-react/styles.css";
 import { useMemo } from "react";

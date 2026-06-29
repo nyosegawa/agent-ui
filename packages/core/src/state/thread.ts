@@ -155,32 +155,38 @@ export interface AgentThreadSummaryView extends AgentThreadView {
   execution: AgentThreadExecutionState;
 }
 
-export type AgentTranscriptBlockView = Pick<
-  AgentItemBlock,
-  | "arguments"
-  | "changes"
-  | "command"
-  | "content"
-  | "cwd"
-  | "durationMs"
-  | "error"
-  | "exitCode"
-  | "id"
-  | "kind"
-  | "metadata"
-  | "output"
-  | "path"
-  | "query"
-  | "resource"
-  | "result"
-  | "server"
-  | "status"
-  | "subtype"
-  | "summary"
-  | "text"
-  | "tool"
-  | "toolType"
->;
+export interface AgentChangedFileView {
+  kind: string;
+  path: string;
+}
+
+export interface AgentTranscriptBlockView {
+  id: ItemId;
+  kind: AgentItemBlock["kind"];
+  status?: AgentItemBlock["status"];
+  text?: string;
+  summary?: string;
+  content?: string;
+  command?: string;
+  cwd?: string;
+  output?: string;
+  exitCode?: number;
+  durationMs?: number;
+  argumentsText?: string;
+  resultText?: string;
+  errorText?: string;
+  files?: AgentChangedFileView[];
+  tool?: string;
+  toolType?: AgentItemBlock["toolType"];
+  server?: string;
+  senderThreadId?: string;
+  receiverThreadId?: string;
+  newThreadId?: string;
+  query?: string;
+  path?: string;
+  resource?: AgentItemBlock["resource"];
+  subtype?: AgentItemBlock["subtype"];
+}
 
 export interface AgentTranscriptTurnView {
   blocks: AgentTranscriptBlockView[];

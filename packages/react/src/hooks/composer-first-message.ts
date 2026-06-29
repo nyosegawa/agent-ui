@@ -1,7 +1,7 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import type { AgentUserInput } from "../agent-input";
 import { useAgentI18n } from "../i18n";
-import { useAgentContext } from "../provider";
+import { useInternalAgentContext } from "../provider";
 import {
   codexThreadStartParams,
   codexTurnStartOptions,
@@ -39,7 +39,7 @@ export function useComposerFirstMessageStart({
   setValue,
 }: ComposerFirstMessageStartOptions) {
   const { t } = useAgentI18n();
-  const { dispatch, runPolicies, state } = useAgentContext();
+  const { dispatch, runPolicies, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const runSettings = state.runSettings;
 

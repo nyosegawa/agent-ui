@@ -5,7 +5,7 @@ import {
   type AgentSessionState,
   type AgentThreadView as AgentThreadListView,
   type PendingServerRequest,
-} from "@nyosegawa/agent-ui-core";
+} from "@nyosegawa/agent-ui-core/internal";
 import {
   localImageInput,
   textInput,
@@ -528,7 +528,8 @@ function CloseupThreadSurfaceHeader() {
 }
 
 function ThreadSurfaceHeaderContent() {
-  const { state } = useAgentContext();
+  const { state: publicState } = useAgentContext();
+  const state = publicState as AgentSessionState;
   const thread = selectThreadSummaryView(state, "thread-rich-transcript");
   if (!thread) return null;
   return (
@@ -1266,11 +1267,11 @@ function CloseupTranscriptContentBlocks() {
     summary: "Renderer contract audit",
   };
   const toolBlock: React.ComponentProps<typeof AgentToolCallItem>["block"] = {
-    arguments: { route: "/maintainer-gallery" },
+    argumentsText: '{\n  "route": "/maintainer-gallery"\n}',
     durationMs: 820,
     id: "block-tool-closeup",
     kind: "toolCall",
-    result: { status: "ok" },
+    resultText: '{\n  "status": "ok"\n}',
     status: "completed",
     tool: "browser.snapshot",
     toolType: "generic",
@@ -1381,7 +1382,7 @@ function CloseupDiffBlock() {
 + <Toolbar />
 `;
   const block: React.ComponentProps<typeof AgentFileChangeItem>["block"] = {
-    changes: [
+    files: [
       {
         kind: "update",
         path: "react-components/composer.tsx",
