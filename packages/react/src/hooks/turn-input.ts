@@ -63,8 +63,8 @@ function toCodexUserInput(input: AgentUserInput): CodexUserInput {
       return { text, text_elements: textElements, type: "text" };
     }
     case "image": {
-      const url = stringValue(record.image_url);
-      if (!url) throw new Error("Codex image input requires image_url");
+      const url = stringValue(record.url);
+      if (!url) throw new Error("Codex image input requires url");
       return { type: "image", url };
     }
     case "localImage": {

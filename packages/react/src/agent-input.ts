@@ -13,7 +13,7 @@ export interface AgentTextInput {
 }
 
 export interface AgentImageInput {
-  image_url: string;
+  url: string;
   type: "image";
 }
 

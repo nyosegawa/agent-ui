@@ -1,11 +1,11 @@
-import { f as AgentLocale } from './normalize-<chunk>.js';
-export { k as AgentFileResourceRequest, A as AgentI18nDictionary, a as AgentI18nKey, b as AgentI18nMessages, c as AgentI18nProvider, d as AgentI18nProviderProps, e as AgentI18nValue, l as AgentImageInput, m as AgentLocalImageInput, o as AgentLocalMediaResourceRequest, p as AgentMentionInput, q as AgentResolvedResource, r as AgentResolvedResourceBase, s as AgentResolvedUrlResource, t as AgentResourceKind, v as AgentResourceRequest, w as AgentResourceResolution, x as AgentResourceResolver, y as AgentSkillInput, z as AgentTextInput, B as AgentUnavailableResource, C as AgentUnknownUserInput, D as AgentUserInput, E as TranscriptApprovalAnchors, g as agentI18nDictionaries, h as agentLocales, F as agentResourceDisplayName, G as agentResourceUrl, i as interpolate, j as interpolationVariables, n as normalizeAgentLocale, u as useAgentI18n } from './normalize-<chunk>.js';
+import { k as AgentApprovalRequest, f as AgentLocale } from './normalize-<chunk>.js';
+export { l as AgentFileResourceRequest, A as AgentI18nDictionary, a as AgentI18nKey, b as AgentI18nMessages, c as AgentI18nProvider, d as AgentI18nProviderProps, e as AgentI18nValue, m as AgentImageInput, o as AgentLocalImageInput, p as AgentLocalMediaResourceRequest, q as AgentMentionInput, r as AgentResolvedResource, s as AgentResolvedResourceBase, t as AgentResolvedUrlResource, v as AgentResourceKind, w as AgentResourceRequest, x as AgentResourceResolution, y as AgentResourceResolver, z as AgentSkillInput, B as AgentTextInput, C as AgentUnavailableResource, D as AgentUnknownUserInput, E as AgentUserInput, F as TranscriptApprovalAnchors, g as agentI18nDictionaries, h as agentLocales, G as agentResourceDisplayName, H as agentResourceUrl, i as interpolate, j as interpolationVariables, n as normalizeAgentLocale, u as useAgentI18n } from './normalize-<chunk>.js';
 import * as react_jsx_runtime from 'react/jsx-runtime';
 export { s as AgentAttachmentChip, t as AgentAttachmentChipKind, u as AgentAttachmentChips, v as AgentAttachmentChipsProps, w as AgentCommandItem, x as AgentCommandOutputItem, y as AgentComposer, z as AgentComposerInput, B as AgentComposerInputProps, C as AgentComposerIntegration, D as AgentComposerIntegrationAttachment, E as AgentComposerIntegrationResolver, F as AgentComposerPanel, G as AgentComposerPanelProps, H as AgentComposerProps, I as AgentComposerToolbar, J as AgentComposerToolbarProps, K as AgentContentBlockView, L as AgentCriticalNoticeList, M as AgentDiagnosticsPanel, N as AgentDiffItem, O as AgentFileChangeItem, P as AgentFirstRun, Q as AgentLocalAttachmentKind, R as AgentLocalAttachmentResolver, S as AgentLocalMediaUrlResolver, T as AgentMessageItem, U as AgentMessageList, V as AgentReasoningItem, W as AgentResolvedLocalAttachment, X as AgentShell, Y as AgentShellProps, Z as AgentStartComposer, _ as AgentStartComposerProps, $ as AgentStarterCwd, a0 as AgentStatusBar, a1 as AgentStatusBarProps, a2 as AgentStatusDetails, a3 as AgentStatusSummary, a4 as AgentTheme, a5 as AgentThemeToggle, a6 as AgentThemeToggleProps, a7 as AgentThreadHeader, p as AgentThreadHeaderEnd, q as AgentThreadHeaderEndContext, a8 as AgentThreadHeaderProps, a9 as AgentThreadSidebar, aa as AgentThreadSurface, ab as AgentThreadTimeline, ac as AgentThreadView, ad as AgentThreadViewProps, ae as AgentToolCallItem, af as AgentTranscript, ag as AgentTurn, ah as AgentWorkingDirectoryResolver, ai as ThreadList, aj as formatThreadStatus, ak as isUserFacingPath, al as threadSubtitle } from './chat-<chunk>.js';
 export { U as UsageWindow, n as normalizeUsageWindows } from './usage-<chunk>.js';
-import { PendingServerRequest } from '@nyosegawa/agent-ui-core/internal';
 import React from 'react';
 import { ThreadTokenUsage } from '@nyosegawa/agent-ui-core';
+import '@nyosegawa/agent-ui-core/internal';
 
 interface AgentComposerSubmitButtonProps {
     canSubmit: boolean;
@@ -56,8 +56,8 @@ declare function AgentDiffViewer({ patch }: {
 }): react_jsx_runtime.JSX.Element;
 
 declare function AgentApprovalQueue({ approvals: approvalsProp, renderApproval, threadId, }: {
-    approvals?: PendingServerRequest[];
-    renderApproval?: (approval: PendingServerRequest) => React.ReactNode;
+    approvals?: AgentApprovalRequest[];
+    renderApproval?: (approval: AgentApprovalRequest) => React.ReactNode;
     threadId?: string;
 }): react_jsx_runtime.JSX.Element | null;
 

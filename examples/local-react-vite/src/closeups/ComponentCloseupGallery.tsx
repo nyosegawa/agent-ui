@@ -61,6 +61,7 @@ import {
 import {
   useAgentBootstrap,
   useAgentContext,
+  type AgentApprovalRequest,
   type AgentTranscriptEntry,
 } from "@nyosegawa/agent-ui-react/headless";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -1216,20 +1217,22 @@ function CloseupApprovalCommand() {
 }
 
 function CloseupApprovalUserInput() {
-  const request = useMemo(
-    () =>
-      createRichTranscriptInitialState().serverRequestQueue.byId[
-        "string:approval-input-rich-transcript"
-      ] as PendingServerRequest | undefined,
-    [],
-  );
+  const request: AgentApprovalRequest = {
+    canDecide: false,
+    details: [],
+    id: "approval-input-rich-transcript",
+    kind: "userInput",
+    prompt: "Choose the verification target for this thread.",
+    risk: "low",
+    threadId: "thread-rich-transcript",
+  };
   return (
     <CloseupFrame
       title="Approval · user input"
       caption="Passive host request context without default decision actions."
     >
       <AgentProvider transport={new FakeAgentTransport()}>
-        <AgentApprovalQueue approvals={request ? [request] : []} />
+        <AgentApprovalQueue approvals={[request]} />
       </AgentProvider>
     </CloseupFrame>
   );
@@ -1307,6 +1310,24 @@ function CloseupCustomCommandBlock() {
   const approval = initialState.serverRequestQueue.byId[
     "string:approval-command-custom-renderer"
   ];
+  const approvalView: AgentApprovalRequest = {
+    canDecide: true,
+    command: "bun run test:e2e:playwright",
+    cwd: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+    details: [
+      {
+        label: "workingDirectory",
+        value: "/Users/sakasegawa/src/github.com/nyosegawa/agent-ui",
+      },
+    ],
+    id: "approval-command-custom-renderer",
+    itemId: "item-command",
+    kind: "commandApproval",
+    reason: "Verify the host command renderer replacement.",
+    risk: "medium",
+    threadId: "thread-rich-transcript",
+    turnId: "turn-rich-transcript",
+  };
   if (!thread || !approval) return null;
   return (
     <CloseupFrame
@@ -1318,7 +1339,7 @@ function CloseupCustomCommandBlock() {
         <AgentMessageList
           approvalAnchors={{
             renderApprovalAnchor: (request) => <AgentApprovalQueue approvals={[request]} />,
-            requests: [approval],
+            requests: [approvalView],
           }}
           components={{
             blocks: {

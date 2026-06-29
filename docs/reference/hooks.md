@@ -252,11 +252,14 @@ hook exposes neutral `respond(requestId, result)` and
 `reject(requestId, errorOrMessage)` actions so hosts can send method-specific
 payloads instead of approval-shaped decisions.
 
-`useAgentApprovals()` is approval-only: it returns only `commandApproval`,
-`fileChangeApproval` requests with stable `approve()` and `reject()` actions
-for decision flows. Older upstream `execCommandApproval` and
-`applyPatchApproval` requests are normalized to those canonical kinds before
-they reach React hooks.
+`useAgentApprovals()` is approval-only: it returns raw-free
+`AgentApprovalRequest` views for command and file-change decisions. Its
+`approve(requestId, decision)` method accepts only `accept`,
+`acceptForSession`, or `decline`; omitting the decision means `accept`.
+`reject(requestId, message)` rejects the request with a standard Agent UI
+error. Older upstream `execCommandApproval` and `applyPatchApproval` requests
+are normalized to `commandApproval` and `fileChangeApproval` views before they
+reach React hooks, and legacy upstream decision strings remain internal.
 
 Migration note: broad server-request handling should use
 `useAgentServerRequests().respond()` / `.reject()`. The broad hook no longer

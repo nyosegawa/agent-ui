@@ -154,9 +154,11 @@ queue, not as a stable design:
   public event/view models before treating the root as completely clean.
 - React root/headless/primitives still depend on that internal boundary in
   selected declarations while the React controller redesign is in progress.
-- React approval declarations still expose internal pending-request values while
-  the approval-controller redesign is in progress. Transcript block views are
-  now projected to raw-free display fields.
+- React approval declarations now expose `AgentApprovalRequest` and
+  `AgentApprovalDecision` view/controller types instead of internal pending
+  request values. `useAgentServerRequests().respond(result)` remains an
+  explicit low-level server-request boundary for method-specific host payloads.
+  Transcript block views are projected to raw-free display fields.
 
 `packages/react/test/source-structure.vitest.ts` fixes those known declaration
 leaks to an exact allowlist so new raw public surface cannot be added while the

@@ -28,7 +28,7 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
 
 - [x] Protocol, raw-boundary, and public-surface contract
 - [x] Core view models, controllers, and internal state split
-- [ ] React input, transcript, approval, and controller cleanup
+- [x] React input, transcript, approval, and controller cleanup
 - [ ] Composer and first-message lifecycle hardening
 - [ ] Server bridge root and host-policy boundary cleanup
 - [ ] Web Components lifecycle and option semantics
@@ -127,8 +127,8 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
       imports in public recipes, strengthening core root public-surface tests,
       and adding an explicit source-level allowlist for remaining root
       `AgentItemState`/`AgentItemMetadata` raw debt.
-    - Commit:
-    - Push:
+    - Commit: `a281a7b` (`Split core public state boundary`).
+    - Push: pushed to `origin/codex/agent-ui-architecture-redesign-plan`.
   - Tasks:
     - [x] T001 Introduce core transcript/thread/approval/usage view models.
       - Expected files/areas: `packages/core/src`.
@@ -143,7 +143,7 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
       - Expected files/areas: phase diff, docs, tests, API snapshots.
       - Validation note: record subagent findings and remediation in Evidence.
 
-- [ ] P003 React input, transcript, approval, and controller cleanup
+- [x] P003 React input, transcript, approval, and controller cleanup
   - Goal: make React headless/primitives consume and expose raw-free controller contracts.
   - Scope: React input types, transcript controller, approval hooks/primitives, recipes.
   - Expected files/areas:
@@ -160,22 +160,54 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
   - Push: push after validation.
   - PR/CI: React API and browser-visible impact.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: aligned `AgentImageInput` with Codex stable
+      `{ type: "image", url }` input and rejected stale `image_url`; introduced
+      React `AgentApprovalRequest`, `AgentApprovalDecision`, and structured
+      `AgentApprovalPatch` view types; moved public approval hooks,
+      `AgentApprovalQueue`, `AgentChat.components.Approval`,
+      `AgentThreadTimeline.renderApproval`, transcript approval anchors, recipes,
+      closeups, and component tests off `PendingServerRequest`/`payload` and onto
+      raw-free approval views; changed `useAgentApprovals().approve()` to accept
+      only `accept`, `acceptForSession`, or `decline`; kept broader
+      server-request handling on neutral `useAgentServerRequests().respond()` /
+      `.reject()`; preserved internal legacy decision mapping for old upstream
+      approval request metadata; projected structured file-change `fileChanges`
+      into renderable patch views so approval cards show changed files before
+      decisions; updated docs, API snapshots, source-structure raw-debt
+      allowlists, examples, and a major Changeset for the breaking React API.
+    - Validation: `bun run --workspaces --if-present typecheck` passed;
+      `bunx vitest run packages/react/test/source-structure.vitest.ts
+      packages/react/test/turn-input.vitest.ts
+      packages/react/test/components.vitest.tsx` passed with 236 tests;
+      `bun --filter @nyosegawa/agent-ui-react build && bun run
+      test:api-snapshots:update && bun run test:api-snapshots` passed; `bun run
+      validate:fast` passed with the existing
+      `packages/react/src/hooks/composer.ts` React-hook warnings; `bun run
+      test:package-resolution` passed; `bun run validate:packages` passed with
+      existing publint repository-url suggestions; `bun run test:e2e:fixtures`
+      passed with 231 passed / 1 skipped; `bunx changeset status --verbose`
+      reported a fixed public package major bump to 3.0.0.
+    - Review: ran 4 parallel phase-review subagents for input/API snapshots,
+      approval API, transcript/controller anchoring, and examples/docs/browser
+      risk. Three found no P0/P1 issues. Resolved one P1 by converting
+      structured App Server file-change approval payloads into renderable
+      approval patch views and adding a component test that asserts changed
+      files are visible before approval actions.
+    - Commit: P003 phase commit contains this evidence; final hash is reported
+      outside this file because embedding a commit's own final hash is
+      self-referential.
+    - Push: push after P003 phase commit.
   - Tasks:
-    - [ ] T001 Align `AgentImageInput` with Codex `url`.
+    - [x] T001 Align `AgentImageInput` with Codex `url`.
       - Expected files/areas: React input and turn normalization tests.
       - Validation note: test `normalizeTurnInput(imageInput(...))`.
-    - [ ] T002 Rebuild transcript entries from core view models.
+    - [x] T002 Rebuild transcript entries from core view models.
       - Expected files/areas: transcript hook, timeline/primitives.
       - Validation note: component tests and fixture e2e.
-    - [ ] T003 Replace public approval payload APIs with approval views/controllers.
+    - [x] T003 Replace public approval payload APIs with approval views/controllers.
       - Expected files/areas: hooks, primitives, docs, tests.
       - Validation note: approval lifecycle tests.
-    - [ ] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
+    - [x] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
       - Expected files/areas: phase diff, React tests, fixture e2e notes, docs.
       - Validation note: record subagent findings and remediation in Evidence.
 

@@ -1,5 +1,4 @@
 import type React from "react";
-import type { PendingServerRequest } from "@nyosegawa/agent-ui-core/internal";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useAgentBootstrap,
@@ -55,14 +54,15 @@ import {
 } from "./status";
 import type { AgentLocalMediaUrlResolver } from "../timeline";
 import { IconGauge } from "../components-internal";
+import type { AgentApprovalRequest } from "../approval-types";
 
 export interface AgentApprovalComponentProps {
-  approval: PendingServerRequest;
+  approval: AgentApprovalRequest;
   Default: React.ComponentType<AgentApprovalDefaultProps>;
 }
 
 export interface AgentApprovalDefaultProps {
-  approval: PendingServerRequest;
+  approval: AgentApprovalRequest;
 }
 
 export interface AgentItemDefaultProps {

@@ -1,21 +1,19 @@
-import type {
-  PendingServerRequest,
-} from "@nyosegawa/agent-ui-core/internal";
 import type React from "react";
+import type { AgentApprovalRequest } from "../approval-types";
 
 export interface ApprovalAnchors {
-  afterTurn: PendingServerRequest[];
-  byItemId: Record<string, PendingServerRequest[]>;
-  renderApprovalAnchor: (approval: PendingServerRequest) => React.ReactNode;
+  afterTurn: AgentApprovalRequest[];
+  byItemId: Record<string, AgentApprovalRequest[]>;
+  renderApprovalAnchor: (approval: AgentApprovalRequest) => React.ReactNode;
 }
 
 export interface TranscriptApprovalAnchors {
-  requests: PendingServerRequest[];
-  renderApprovalAnchor: (approval: PendingServerRequest) => React.ReactNode;
+  requests: AgentApprovalRequest[];
+  renderApprovalAnchor: (approval: AgentApprovalRequest) => React.ReactNode;
 }
 
 export function anchoredApprovalNodes(
-  requests: PendingServerRequest[] | undefined,
+  requests: AgentApprovalRequest[] | undefined,
   anchors?: ApprovalAnchors,
 ): React.ReactNode[] {
   return (requests ?? []).map((approval) => (

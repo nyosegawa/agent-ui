@@ -267,9 +267,6 @@ describe("React package source structure", () => {
       "headless:import-module:@nyosegawa/agent-ui-core/internal",
       "headless:import:ThreadState from @nyosegawa/agent-ui-core/internal",
       'headless:member:activity?: ThreadState["activity"];',
-      "headless:member:approvals: _nyosegawa_agent_ui_core_internal.PendingServerRequest[];",
-      "headless:member:approve: (requestId: RequestId, result?: unknown) => Promise<void>;",
-      "headless:member:requests: _nyosegawa_agent_ui_core_internal.PendingServerRequest[];",
       "headless:member:respond: (requestId: RequestId, result: unknown) => Promise<void>;",
       "headless:member:thread: ThreadState | undefined;",
       "headless:member:threads: ThreadState[];",
@@ -282,10 +279,7 @@ describe("React package source structure", () => {
     ]);
     expect(rawDebtFindings("primitives", primitivesSnapshot)).toEqual([
       "primitives:import-module:@nyosegawa/agent-ui-core/internal",
-      "primitives:import:PendingServerRequest from @nyosegawa/agent-ui-core/internal",
       "primitives:member:patch: unknown;",
-      "primitives:member:approvals?: PendingServerRequest[];",
-      "primitives:member:renderApproval?: (approval: PendingServerRequest) => React.ReactNode;",
     ]);
   });
 

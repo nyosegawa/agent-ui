@@ -3,13 +3,13 @@ import type {
   AgentItemBlockKind,
   AgentItemState,
   AgentTranscriptBlockView,
-  PendingServerRequest,
   ThreadState,
   TurnState,
 } from "@nyosegawa/agent-ui-core/internal";
 import { selectThread, type ThreadId } from "@nyosegawa/agent-ui-core/internal";
 import { useMemo } from "react";
 import { useInternalAgentContext } from "../provider";
+import type { AgentApprovalRequest } from "../approval-types";
 import { transcriptItemIds } from "../transcript-window";
 import type { TranscriptApprovalAnchors } from "../timeline/approval-anchors";
 import { blockForTranscriptItem } from "../timeline/blocks";
@@ -56,7 +56,7 @@ export interface AgentTranscriptItem {
 }
 
 export interface AgentTranscriptEntry {
-  approvals: PendingServerRequest[];
+  approvals: AgentApprovalRequest[];
   block: AgentTranscriptBlock;
   dataKind: string;
   density: AgentTranscriptDensityMode;
@@ -324,7 +324,7 @@ function approvalAnchorsForEntry(
   turn: TurnState,
   itemId: string,
   anchors?: TranscriptApprovalAnchors,
-): PendingServerRequest[] {
+): AgentApprovalRequest[] {
   if (!anchors) return [];
   const isLastTurnItem = turn.itemOrder.at(-1) === itemId;
   return anchors.requests.filter((request) => {
@@ -337,7 +337,7 @@ function approvalAnchorsForEntry(
 function afterTurnApprovalsForDensity(
   turn: TurnState,
   anchors?: TranscriptApprovalAnchors,
-): PendingServerRequest[] {
+): AgentApprovalRequest[] {
   if (!anchors) return [];
   return anchors.requests.filter(
     (request) =>
@@ -368,7 +368,7 @@ function transcriptRole(
 
 function pinnedApprovalItemIdsByTurnId(
   thread: ThreadState | undefined,
-  approvals?: PendingServerRequest[],
+  approvals?: AgentApprovalRequest[],
 ): Map<string, string[]> | undefined {
   if (!thread || !approvals?.length) return undefined;
   const pinned = new Map<string, string[]>();
@@ -384,7 +384,7 @@ function pinnedApprovalItemIdsByTurnId(
 
 function pinnedApprovalSource(
   thread: ThreadState,
-  approval: PendingServerRequest,
+  approval: AgentApprovalRequest,
 ): { itemId?: string; turnId: string } | undefined {
   if (!approval.itemId && !approval.turnId) return undefined;
   const turns = approval.turnId

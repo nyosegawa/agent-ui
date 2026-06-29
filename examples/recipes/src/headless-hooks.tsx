@@ -41,7 +41,7 @@ function HeadlessThreadView() {
             <strong>
               {approval.kind === "fileChangeApproval" ? "File change" : "Command"}
             </strong>
-            <p>{approvalSummary(approval.payload)}</p>
+            <p>{approvalSummary(approval)}</p>
             <button onClick={() => void approve(approval.id)}>Approve</button>
             <button onClick={() => void reject(approval.id)}>Reject</button>
           </div>
@@ -68,14 +68,14 @@ function HeadlessThreadView() {
   );
 }
 
-function approvalSummary(payload: unknown): string {
-  if (!payload || typeof payload !== "object") return "Review required";
-  const record = payload as Record<string, unknown>;
-  for (const key of ["command", "path", "summary", "reason"]) {
-    const value = record[key];
-    if (typeof value === "string" && value.trim()) return value.trim();
-  }
-  return "Review required";
+function approvalSummary(approval: { command?: string; path?: string; reason?: string; summary?: string }): string {
+  return (
+    approval.command ??
+    approval.path ??
+    approval.summary ??
+    approval.reason ??
+    "Review required"
+  );
 }
 
 export function HeadlessHooksExample({ transport }: { transport: AgentTransport }) {

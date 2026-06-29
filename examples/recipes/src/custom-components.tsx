@@ -3,12 +3,11 @@ import type { AgentApprovalDefaultProps } from "@nyosegawa/agent-ui-react";
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 
 export function CustomApprovalCard({ approval }: AgentApprovalDefaultProps) {
-  const payload = approval.payload as Record<string, unknown>;
   const primary =
-    stringField(payload, "command") ??
-    stringField(payload, "path") ??
-    stringField(payload, "summary") ??
-    stringField(payload, "reason") ??
+    approval.command ??
+    approval.path ??
+    approval.summary ??
+    approval.reason ??
     "Review required";
   return (
     <section className="custom-approval">
@@ -16,11 +15,6 @@ export function CustomApprovalCard({ approval }: AgentApprovalDefaultProps) {
       <p>{primary}</p>
     </section>
   );
-}
-
-function stringField(record: Record<string, unknown>, key: string): string | undefined {
-  const value = record[key];
-  return typeof value === "string" && value.trim() ? value.trim() : undefined;
 }
 
 export function CustomComponentsExample({ transport }: { transport: AgentTransport }) {

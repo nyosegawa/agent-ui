@@ -67,6 +67,7 @@ import {
   useAgentTranscriptController,
   useAgentTranscriptScrollController,
   useAgentTurn,
+  type AgentApprovalRequest,
 } from "../src/headless";
 import { useInternalAgentComposerController } from "../src/hooks/composer";
 import { useInternalAgentContext } from "../src/provider";
@@ -78,6 +79,20 @@ function localImageInput(path: string) {
 
 function textInput(text: string) {
   return { text, text_elements: [], type: "text" as const };
+}
+
+function approvalView(
+  approval: Pick<AgentApprovalRequest, "id" | "kind"> &
+    Partial<Omit<AgentApprovalRequest, "id" | "kind">>,
+): AgentApprovalRequest {
+  return {
+    canDecide:
+      approval.canDecide ??
+      (approval.kind === "commandApproval" || approval.kind === "fileChangeApproval"),
+    details: approval.details ?? [],
+    risk: approval.risk ?? "low",
+    ...approval,
+  };
 }
 
 function resolvedImageAttachment(path: string, label?: string, previewUrl?: string) {
@@ -1583,14 +1598,15 @@ describe("AgentChat", () => {
         approvalAnchors: {
           renderApprovalAnchor: () => null,
           requests: [
-            {
+            approvalView({
+              command: "bun test",
               id: "approval-command",
               itemId: "cmd-1",
               kind: "commandApproval",
-              payload: { command: "bun test" },
+              risk: "medium",
               threadId: "thread-transcript-entries",
               turnId: "turn-transcript-entries",
-            },
+            }),
           ],
         },
       });
@@ -1719,14 +1735,15 @@ describe("AgentChat", () => {
         approvalAnchors: {
           renderApprovalAnchor: () => null,
           requests: [
-            {
+            approvalView({
+              command: "bun test",
               id: "approval-command",
               itemId: "cmd-1",
               kind: "commandApproval",
-              payload: { command: "bun test" },
+              risk: "medium",
               threadId: "thread-density",
               turnId: "turn-density",
-            },
+            }),
           ],
         },
         density: {
@@ -6447,6 +6464,49 @@ describe("AgentChat", () => {
     expect(await axe(container)).toHaveNoViolations();
   });
 
+  it("renders structured file-change approval payloads before decision actions", async () => {
+    const initialState = createInitialAgentState();
+    initialState.serverRequestQueue = {
+      byId: {
+        "string:approval-file-structured": {
+          id: "approval-file-structured",
+          kind: "fileChangeApproval",
+          payload: {
+            fileChanges: {
+              "packages/react/src/components/approvals.tsx": {
+                type: "update",
+                unified_diff:
+                  "@@ -1 +1,2 @@\n-old approval\n+new approval\n+visible diff\n",
+              },
+            },
+            reason: "Review structured file changes before applying them.",
+          },
+          threadId: "thread-approval",
+        },
+      },
+      order: ["string:approval-file-structured"],
+    };
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <AgentApprovalQueue threadId="thread-approval" />
+      </AgentProvider>,
+    );
+
+    expect(screen.getByText("1 file")).toBeInTheDocument();
+    expect(screen.getByLabelText("Changed files")).toHaveTextContent(
+      "packages/react/src/components/approvals.tsx",
+    );
+    expect(screen.getByLabelText("CodeMirror patch viewer")).toHaveTextContent(
+      "visible diff",
+    );
+    expect(
+      screen.getByRole("button", {
+        name: "Approve file-change request approval-file-structured",
+      }),
+    ).toBeInTheDocument();
+  });
+
   it("summarizes structured App Server patch payloads", async () => {
     render(
       <AgentDiffViewer
@@ -6511,42 +6571,43 @@ describe("AgentChat", () => {
       <AgentProvider transport={transport}>
         <AgentApprovalQueue
           approvals={[
-            {
+            approvalView({
               id: "request-input",
               kind: "userInput",
-              payload: { prompt: "Choose a deployment target", itemId: "item-input" },
+              itemId: "item-input",
+              prompt: "Choose a deployment target",
               threadId: "thread-approval",
-            },
-            {
+            }),
+            approvalView({
               id: "request-permissions",
               kind: "permissionsApproval",
-              payload: { reason: "Need workspace read access" },
+              reason: "Need workspace read access",
               threadId: "thread-approval",
-            },
-            {
+            }),
+            approvalView({
               id: "request-mcp",
               kind: "mcpElicitation",
-              payload: { prompt: "MCP needs a value" },
+              prompt: "MCP needs a value",
               threadId: "thread-approval",
-            },
-            {
+            }),
+            approvalView({
+              argumentsText: '{\n  "url": "http://127.0.0.1:5174"\n}',
               id: "request-dynamic",
               kind: "dynamicTool",
-              payload: { namespace: "mcp__browser", tool: "get_app_state" },
+              namespace: "mcp__browser",
               threadId: "thread-approval",
-            },
-            {
+              tool: "get_app_state",
+            }),
+            approvalView({
               id: "request-auth",
               kind: "authRefresh",
-              payload: {},
               threadId: "thread-approval",
-            },
-            {
+            }),
+            approvalView({
               id: "request-attestation",
               kind: "attestation",
-              payload: {},
               threadId: "thread-approval",
-            },
+            }),
           ]}
         />
       </AgentProvider>,
@@ -6570,12 +6631,12 @@ describe("AgentChat", () => {
       <AgentProvider transport={new FakeAgentTransport()}>
         <AgentApprovalQueue
           approvals={[
-            {
+            approvalView({
               id: "request-mcp",
               kind: "mcpElicitation",
-              payload: { prompt: "MCP needs a value" },
+              prompt: "MCP needs a value",
               threadId: "thread-approval",
-            },
+            }),
           ]}
           renderApproval={(request) => (
             <div data-testid="host-request">{`Host handles ${request.kind}`}</div>
@@ -6668,22 +6729,20 @@ describe("AgentChat", () => {
     });
   });
 
-  it("responds to controlled legacy approval props with legacy decisions", async () => {
+  it("responds to controlled approval view props with public decisions", async () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     render(
       <AgentProvider transport={transport}>
         <AgentApprovalQueue
           approvals={[
-            {
+            approvalView({
+              command: "sh -lc 'bun test'",
               id: "legacy-controlled-command",
               kind: "commandApproval",
-              payload: {
-                command: ["sh", "-lc", "bun test"],
-                upstreamMethod: "execCommandApproval",
-              },
+              risk: "medium",
               threadId: "thread-legacy",
-            },
+            }),
           ]}
         />
       </AgentProvider>,
@@ -6695,7 +6754,7 @@ describe("AgentChat", () => {
       }),
     );
     expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
-      decision: "approved",
+      decision: "accept",
     });
 
     await user.click(
@@ -6704,7 +6763,7 @@ describe("AgentChat", () => {
       }),
     );
     expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
-      decision: "approved_for_session",
+      decision: "acceptForSession",
     });
 
     await user.click(
@@ -6713,7 +6772,7 @@ describe("AgentChat", () => {
       }),
     );
     expect(transport.responses.get("string:legacy-controlled-command")).toEqual({
-      decision: "denied",
+      decision: "decline",
     });
   });
 

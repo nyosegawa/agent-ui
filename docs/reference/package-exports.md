@@ -203,6 +203,21 @@ External UI that needs to send into the active `AgentChat` flow should use
 `started`, `sent`, `queued`, or `blocked` result objects and forwards
 `turnOptions` for active idle threads; hosts should not recreate that lifecycle
 with direct transport calls.
+React image input uses `AgentImageInput { type: "image", url }`, matching the
+Codex stable input shape. `image_url` is not a React public API.
+Approval composition uses raw-free `AgentApprovalRequest` view models. The
+headless `useAgentApprovals()` hook returns command/file approval views and an
+`approve(requestId, decision?: AgentApprovalDecision)` controller where
+`decision` is `accept`, `acceptForSession`, or `decline`; internal upstream
+legacy decision names are not host-facing. `AgentApprovalQueue`,
+`AgentChat.components.Approval`, `AgentThreadTimeline.renderApproval`, and
+transcript approval anchors accept the same `AgentApprovalRequest` view type.
+File-change approvals carry renderable patch views, including structured
+changed-file entries, instead of requiring hosts to inspect generated
+`fileChanges` payloads.
+Broader server requests remain on `useAgentServerRequests()` as summaries plus
+neutral `respond()` / `reject()` because their response payloads are
+method-specific host policy, not approval UI decisions.
 
 Keep off root: transcript-window utilities
 (`DEFAULT_TRANSCRIPT_ITEM_LIMIT`, `TRANSCRIPT_ITEM_INCREMENT`,
