@@ -2,8 +2,8 @@
 
 ## Status Summary
 
-Planning package for a large breaking Agent UI architecture redesign. No
-implementation has started. Execute phases on the same branch and keep each
+Planning package for a large breaking Agent UI architecture redesign.
+Implementation has started. Execute phases on the same branch and keep each
 phase reviewable, validated, committed, pushed, and recorded.
 
 This is not an MVP plan. The implementation is complete only when every phase
@@ -26,7 +26,7 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
 
 ## Phase Checklist
 
-- [ ] Protocol, raw-boundary, and public-surface contract
+- [x] Protocol, raw-boundary, and public-surface contract
 - [ ] Core view models, controllers, and internal state split
 - [ ] React input, transcript, approval, and controller cleanup
 - [ ] Composer and first-message lifecycle hardening
@@ -38,7 +38,7 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
 
 ## Task Checklist By Phase
 
-- [ ] P001 Protocol, raw-boundary, and public-surface contract
+- [x] P001 Protocol, raw-boundary, and public-surface contract
   - Goal: define the precise raw-free contract before moving code.
   - Scope: docs, structural tests, package-export policy, diagnostics boundary.
   - Expected files/areas:
@@ -52,22 +52,35 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
   - Push: push after validation.
   - PR/CI: record protocol/docs impact.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: added a raw-boundary policy to protocol drift docs,
+      clarified product and package-export boundaries, and tightened React
+      source-structure tests so core/root/headless/primitives declaration
+      raw-debt findings are fixed to explicit allowlists instead of loose
+      counts. Root React declarations are asserted raw-debt-free.
+    - Validation: `bunx vitest run packages/react/test/source-structure.vitest.ts`
+      passed with 25 tests; `bun run validate:protocol` passed with 12 Codex
+      protocol test files / 98 tests plus 82 core fixture tests.
+    - Review: ran 4 parallel phase-review subagents. Resolved P1/P2 findings by
+      moving `AgentItemBlock`/`AgentTranscriptBlockView` out of keep-public docs,
+      narrowing experimental generated type wording, correcting diagnostics
+      redaction wording to developer/audit raw diagnostics, adding React root
+      snapshot coverage, and replacing count-based raw-debt guards with
+      declaration-specific findings.
+    - Commit: P001 phase commit contains this evidence; final hash is reported
+      outside this file because embedding a commit's own final hash is
+      self-referential.
+    - Push: push after P001 phase commit.
   - Tasks:
-    - [ ] T001 Write raw-boundary decision record.
+    - [x] T001 Write raw-boundary decision record.
       - Expected files/areas: architecture and package-export docs.
       - Validation note: docs plus structural policy tests.
-    - [ ] T002 Add or tighten public raw-leak guards.
+    - [x] T002 Add or tighten public raw-leak guards.
       - Expected files/areas: `packages/react/test`, core/source-structure tests.
       - Validation note: focused unit tests plus API snapshots.
-    - [ ] T003 Classify diagnostics as advanced/audience-filtered.
+    - [x] T003 Classify diagnostics as advanced/audience-filtered.
       - Expected files/areas: core diagnostics docs/tests.
       - Validation note: reducer/diagnostic tests.
-    - [ ] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
+    - [x] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
       - Expected files/areas: phase diff, docs, tests, API snapshots if changed.
       - Validation note: record subagent findings and remediation in Evidence.
 

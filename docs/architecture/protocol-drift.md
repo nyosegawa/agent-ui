@@ -73,12 +73,40 @@ bun run test:api-snapshots
 
 If the upstream schema adds methods outside the release surface, keep them generated but do not expose them through high-level React APIs unless the current product plan says so.
 
+## Raw Boundary Policy
+
+Agent UI separates user-facing public surfaces from protocol and diagnostic
+edges. The raw-free requirement applies to default user, controller,
+view-model, and primitive surfaces. Raw protocol-shaped values are allowed only
+at explicit boundary surfaces:
+
+- `AgentTransport` and JSON-RPC transport plumbing, where arbitrary request
+  params and results are the point of the abstraction.
+- `@nyosegawa/agent-ui-codex` protocol adapters, generated stable types on the
+  `stable-types` subpath, request builders, normalizers, and low-level clients.
+  Experimental generated shapes remain adapter/internal or explicit
+  experimental-client detail unless a future export gate promotes a documented
+  experimental subpath.
+- diagnostics, warnings, and protocol notification records that are bounded and
+  audience-filtered. Raw protocol notification params are developer/audit
+  diagnostics, not user-facing display data; hosts must not treat them as
+  redacted output until an explicit redacted projection exists.
+- `@nyosegawa/agent-ui-server` host-policy callbacks, dynamic-tool callbacks,
+  server-request policy callbacks, and bridge diagnostics, where hosts make
+  explicit runtime and audit decisions.
+
+Everything else should expose stable Agent UI view models and controller
+methods. React root, `/headless`, and `/primitives` should not ask hosts to
+inspect generated protocol payloads, raw reducer state, `unknown` server
+request payloads, or internal reconciliation maps.
+
 ## Raw Retention Policy
 
-Public thread, turn, item, token-usage, and block state is raw-free. Codex
-normalizers must project protocol payloads into Agent UI metadata, lifecycle
-status, transcript blocks, diagnostics, or resource objects before they cross
-the public package boundary:
+Reducer-internal thread, turn, item, token-usage, and block state may retain
+bounded protocol-derived data while it is being normalized into public views.
+Codex normalizers must project protocol payloads into Agent UI metadata,
+lifecycle status, transcript blocks, diagnostics, or resource objects before
+they cross the default public user/controller/view-model boundary:
 
 - Thread lifecycle exposes closed Agent UI status/activity fields rather than
   arbitrary App Server status strings.
@@ -109,3 +137,22 @@ the public package boundary:
 The policy is implemented in `packages/core/src/retention.ts` and store-specific
 bounded update helpers. Reducer tests assert both index lengths and backing map
 sizes.
+
+## Public Raw-Debt Gate
+
+The current package surface still contains known raw-debt while the architecture
+redesign is in progress. That debt is intentional only as an implementation
+queue, not as a stable design:
+
+- core root declarations still expose raw normalized store shapes such as
+  `AgentSessionState`, `ThreadState`, `AgentItemBlock`, and
+  `PendingServerRequest.payload`.
+- React headless/primitives still expose `ThreadState` and
+  `PendingServerRequest` in selected declarations.
+- transcript declarations still derive their block view from `AgentItemBlock`.
+
+`packages/react/test/source-structure.vitest.ts` fixes those known declaration
+leaks to an exact allowlist so new raw public surface cannot be added while the
+redesign proceeds. Follow-up phases must delete entries from that allowlist as
+core view models, React controllers, and approval views replace the old
+contracts.

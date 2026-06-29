@@ -31,6 +31,13 @@ generated Codex schema files, bundled declaration chunks, private CSS chunks,
 and `.aui-*` implementation selectors stay outside the public contract unless a
 later design gate explicitly promotes them.
 
+Known raw-debt in declaration snapshots is not a compatibility promise. It is a
+temporary implementation queue for the architecture redesign. New public exports
+must not add more raw reducer state, generated protocol payloads, generic
+`unknown` payload fields, or child-process internals to root, React headless, or
+React primitives. Remove old shapes instead of preserving them when the cleaner
+view-model/controller API replaces them.
+
 Agent UI package exports also do not make host runtime policy public. Hosts
 still own non-loopback bridge admission, hosted auth, persistence, tenant and
 workspace isolation, audit sinks, upload/static authorization, process
@@ -50,7 +57,7 @@ Keep public: `AGENT_RETENTION_POLICY`, `FakeAgentTransport`,
 `requestIdKey`, `AgentEvent`, product-domain event/state types for account,
 apps, connection, diagnostics, hooks, items, models, run settings, server
 requests, skills, status banners, turns, usage, and warnings,
-`AgentDiagnosticAudience`, resource-aware item block types
+`AgentDiagnosticAudience`, resource metadata types
 (`AgentItemBlockResource`, `AgentItemBlockResourceKind`), `agentReducer`,
 `createInitialAgentState`,
 `runEventFixture`, and selectors for account, apps, diagnostics,
@@ -68,9 +75,10 @@ active-thread selectors, pending operation selectors, runtime-aware
 public `AgentThreadView`.
 
 Move to subpath or make diagnostic-only: raw normalized `AgentSessionState`,
-`ThreadState`, `AgentThread`, `AgentTurn`, and store-wide selectors when they
-expose internal reconciliation details. Public controllers should consume view
-models rather than asking hosts to inspect raw store shape.
+`ThreadState`, `AgentThread`, `AgentTurn`, `AgentItemBlock`,
+`AgentTranscriptBlockView`, and store-wide selectors when they expose internal
+reconciliation details or broad `unknown` payload fields. Public controllers
+should consume view models rather than asking hosts to inspect raw store shape.
 
 Make private: reducer-internal registry/retention helper behavior and any
 canonical-ID reconciliation detail that is not part of an explicit diagnostic

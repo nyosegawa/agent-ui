@@ -244,6 +244,129 @@ describe("React package source structure", () => {
     expect(reactSnapshot).not.toContain("raw: any");
   });
 
+  it("keeps known public raw debt fixed while the redesign removes it", () => {
+    const coreSnapshot = readFileSync(
+      join(repoRoot, "test", "api-snapshots", "core__index.d.ts"),
+      "utf8",
+    );
+    const headlessSnapshot = readFileSync(reactHeadlessApiSnapshot, "utf8");
+    const rootSnapshot = readFileSync(reactApiSnapshot, "utf8");
+    const primitivesSnapshot = readFileSync(
+      join(repoRoot, "test", "api-snapshots", "react__primitives.d.ts"),
+      "utf8",
+    );
+
+    expect(rawDebtFindings("core", coreSnapshot)).toEqual([
+      "core:member:account?: Record<string, unknown>;",
+      "core:member:metadata?: unknown;",
+      "core:member:raw?: unknown;",
+      "core:member:raw?: unknown;",
+      'core:type PendingServerRequestKind = "attestation" | "authRefresh" | "commandApproval" | "dynamicTool" | "fileChangeApproval" | "mcpElicitation" | "permissionsApproval" | "userInput" | "unknown";',
+      "core:interface PendingServerRequest {",
+      "core:member:kind: PendingServerRequestKind;",
+      "core:member:payload: unknown;",
+      "core:member:byId: Record<RequestIdKey, PendingServerRequest>;",
+      "core:member:arguments?: unknown;",
+      "core:member:changes?: unknown[];",
+      "core:member:error?: unknown;",
+      "core:member:result?: unknown;",
+      'core:type AgentItemBlockKind = "text" | "thinking" | "plan" | "commandExecution" | "fileChange" | "toolCall" | "mcpToolCall" | "collabToolCall" | "webSearch" | "image" | "systemInfo" | "unknown";',
+      'core:type AgentItemBlockResourceKind = "image" | "video" | "file" | "local-media";',
+      "core:interface AgentItemBlockResource {",
+      "core:member:kind?: AgentItemBlockResourceKind;",
+      "core:interface AgentItemBlock {",
+      "core:member:kind: AgentItemBlockKind;",
+      "core:member:changes?: unknown[];",
+      "core:member:arguments?: unknown;",
+      "core:member:result?: unknown;",
+      "core:member:error?: unknown;",
+      "core:member:resource?: AgentItemBlockResource;",
+      "core:member:metadata?: Record<string, unknown>;",
+      "core:member:blocksByItemId: Record<ItemId, AgentItemBlock>;",
+      "core:interface AgentPendingThreadState {",
+      "core:member:pending?: AgentPendingThreadState;",
+      "core:member:kind: PendingServerRequestKind;",
+      'core:type AgentTranscriptBlockView = Pick<AgentItemBlock, "arguments" | "changes" | "command" | "content" | "cwd" | "durationMs" | "error" | "exitCode" | "id" | "kind" | "metadata" | "output" | "path" | "query" | "resource" | "result" | "server" | "status" | "subtype" | "summary" | "text" | "tool" | "toolType">;',
+      "core:interface ThreadState {",
+      "core:interface AgentSessionState {",
+      "core:member:threads: Record<ThreadId, ThreadState>;",
+      "core:function:createInitialAgentState:AgentSessionState",
+      "core:member:rateLimits: unknown;",
+      "core:member:patch: unknown;",
+      "core:member:request: PendingServerRequest;",
+      "core:member:request?: PendingServerRequest;",
+      "core:member:payload?: unknown;",
+      "core:member:respond(requestId: RequestId, result: unknown): Promise<void>;",
+      "core:member:respond(requestId: RequestId, result: unknown): Promise<void>;",
+      "core:function:runEventFixture:AgentSessionState",
+      "core:function:agentReducer:AgentSessionState",
+      "core:function:selectActiveThread:AgentSessionState,ThreadState",
+      "core:function:selectThread:AgentSessionState,ThreadState",
+      "core:function:selectOrderedTurns:AgentSessionState",
+      "core:function:selectTurn:AgentSessionState",
+      "core:function:selectLatestRunningTurnId:AgentSessionState",
+      "core:function:selectLatestRunningTurn:AgentSessionState",
+      "core:function:selectTurnItem:AgentSessionState",
+      "core:function:selectOrderedItems:AgentSessionState",
+      "core:function:selectItemBlock:AgentItemBlock,AgentSessionState",
+      "core:function:selectOrderedThreads:AgentSessionState,ThreadState",
+      "core:function:selectThreadCollection:AgentSessionState",
+      "core:function:selectOrderedCollectionThreads:AgentSessionState,ThreadState",
+      "core:function:selectPendingOperations:AgentSessionState",
+      "core:function:selectThreadView:AgentSessionState",
+      "core:function:selectActiveThreadView:AgentSessionState",
+      "core:function:selectThreadRuntimeView:AgentSessionState",
+      "core:function:selectThreadExecutionState:AgentSessionState",
+      "core:function:selectThreadSummaryView:AgentSessionState",
+      "core:function:selectActiveThreadSummaryView:AgentSessionState",
+      "core:function:selectThreadTranscriptView:AgentSessionState",
+      "core:function:selectPendingApprovals:AgentSessionState,PendingServerRequest",
+      "core:function:selectPendingApprovalViews:AgentSessionState",
+      "core:function:selectServerRequestQueue:AgentSessionState,PendingServerRequest",
+      "core:function:selectServerRequestSummaries:AgentSessionState",
+      "core:function:selectApps:AgentSessionState",
+      "core:function:selectDiagnostics:AgentSessionState",
+      "core:function:selectDiagnosticsForAudience:AgentSessionState",
+      "core:function:selectUserDiagnostics:AgentSessionState",
+      "core:function:selectDeveloperDiagnostics:AgentSessionState",
+      "core:function:selectAuditDiagnostics:AgentSessionState",
+      "core:function:selectStatusBanners:AgentSessionState",
+      "core:function:selectDiagnosticWarnings:AgentSessionState",
+      "core:function:selectDiagnosticErrors:AgentSessionState",
+      "core:function:selectProtocolNotifications:AgentSessionState",
+      "core:function:selectUsage:AgentSessionState",
+      "core:function:selectAccountRateLimits:AgentSessionState,unknown",
+      "core:function:selectHostMetrics:AgentSessionState,unknown",
+      "core:function:selectThreadLifecycle:AgentSessionState",
+      "core:function:selectRunSettings:AgentSessionState",
+      "core:export:type AgentItemBlock",
+      "core:export:type AgentSessionState",
+      "core:export:type AgentTranscriptBlockView",
+      "core:export:type PendingServerRequest",
+      "core:export:type ThreadState",
+    ]);
+    expect(rawDebtFindings("headless", headlessSnapshot)).toEqual([
+      "headless:import:ThreadState from @nyosegawa/agent-ui-core",
+      'headless:member:activity?: ThreadState["activity"];',
+      "headless:member:approvals: _nyosegawa_agent_ui_core.PendingServerRequest[];",
+      "headless:member:approve: (requestId: RequestId, result?: unknown) => Promise<void>;",
+      "headless:member:requests: _nyosegawa_agent_ui_core.PendingServerRequest[];",
+      "headless:member:respond: (requestId: RequestId, result: unknown) => Promise<void>;",
+      "headless:member:thread: ThreadState | undefined;",
+      "headless:member:threads: ThreadState[];",
+      "headless:member:threads: ThreadState[];",
+      "headless:member:rateLimits: unknown;",
+      "headless:function:visibleTranscriptWindow:ThreadState",
+    ]);
+    expect(rawDebtFindings("root", rootSnapshot)).toEqual([]);
+    expect(rawDebtFindings("primitives", primitivesSnapshot)).toEqual([
+      "primitives:import:PendingServerRequest from @nyosegawa/agent-ui-core",
+      "primitives:member:patch: unknown;",
+      "primitives:member:approvals?: PendingServerRequest[];",
+      "primitives:member:renderApproval?: (approval: PendingServerRequest) => React.ReactNode;",
+    ]);
+  });
+
   it("keeps deprecated protocol fallback names out of public declaration snapshots", () => {
     const snapshots = [
       readFileSync(join(repoRoot, "test", "api-snapshots", "core__index.d.ts"), "utf8"),
@@ -413,4 +536,64 @@ function responsibilitySizeFailure(
 function interfaceBody(snapshot: string, interfaceName: string): string {
   const match = new RegExp(`interface ${interfaceName} \\{([\\s\\S]*?)\\n\\}`).exec(snapshot);
   return match?.[1] ?? "";
+}
+
+function rawDebtFindings(scope: string, snapshot: string): string[] {
+  const rawDebtLine =
+    /(\b(raw|payload|arguments|changes|result|error|metadata|details|patch|rateLimits)\??: unknown\b|Record<string, unknown>|unknown\[\]|PendingServerRequest|ThreadState|AgentSessionState|AgentItemBlock|@nyosegawa\/agent-ui-codex\/stable-types|CodexStable|ThreadStartParams|TurnStartParams)/;
+  const trackedSymbols = new Set([
+    "AgentItemBlock",
+    "AgentSessionState",
+    "AgentTranscriptBlockView",
+    "CodexStable",
+    "PendingServerRequest",
+    "ThreadStartParams",
+    "ThreadState",
+    "TurnStartParams",
+  ]);
+  const findings: string[] = [];
+
+  for (const rawLine of snapshot.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!rawDebtLine.test(line)) continue;
+
+    if (line.startsWith("import ")) {
+      const moduleName = /from '([^']+)'/.exec(line)?.[1] ?? "";
+      const importedNames = /\{([^}]+)\}/.exec(line)?.[1] ?? "";
+      for (const importedName of importedNames.split(",").map((name) => name.trim())) {
+        if (trackedSymbols.has(importedName)) {
+          findings.push(`${scope}:import:${importedName} from ${moduleName}`);
+        }
+      }
+      continue;
+    }
+
+    if (line.startsWith("export ")) {
+      const exportBody = line.replace(/^export \{ /, "").replace(/ \};$/, "");
+      for (const exportedName of exportBody.split(", ")) {
+        const symbolName = exportedName.replace(/^type /, "");
+        if (trackedSymbols.has(symbolName)) {
+          findings.push(`${scope}:export:${exportedName}`);
+        }
+      }
+      continue;
+    }
+
+    if (line.startsWith("declare function ")) {
+      const functionName = /^declare function ([^(]+)/.exec(line)?.[1] ?? "unknown";
+      const rawTypes = Array.from(trackedSymbols).filter((symbol) => line.includes(symbol));
+      if (line.includes(": unknown")) rawTypes.push("unknown");
+      findings.push(`${scope}:function:${functionName}:${rawTypes.join(",")}`);
+      continue;
+    }
+
+    if (/^(interface|type) /.test(line)) {
+      findings.push(`${scope}:${line}`);
+      continue;
+    }
+
+    findings.push(`${scope}:member:${line}`);
+  }
+
+  return findings;
 }
