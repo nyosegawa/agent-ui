@@ -5,16 +5,16 @@
 - Overall status: In progress
 - Current phase: P002 Recipes and npm package README alignment
 - Blockers: None
-- Last validation: P002 package/docs/example validations passed locally.
+- Last validation: P002 package/docs/example validations passed locally; PR #42 P002 CI checks passed after push.
 - Last review: P002 four-lane subagent review completed; lane 1 linkification finding fixed and lane 4 TODO evidence update applied.
-- PR/CI: Draft PR #42 open; P002 implementation commit pending push.
+- PR/CI: Draft PR #42 open; latest P002 checks passed.
 
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
 - Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: planning and P001 docs commits pushed; P002 implementation commit pending push
+- Push result: planning, P001 docs commits, and P002 docs/package README commits pushed
 - Blockers: none
 
 ## Phase Checklist
@@ -55,15 +55,16 @@
   - Review: Package export and npm README consistency review.
   - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: `ce002c9e7542a853d2e48f3e669ca1550a4d1f08`
-  - Push: pending
-  - PR/CI: pending
+  - Push: pushed to `origin/codex/new-adopter-onboarding-plan`
+  - PR/CI: Draft PR #42 open; P002 CI checks passed.
   - Evidence:
     - Implementation: Converted recipe docs to a topic-based index with direct links to typed recipe files; added package README Common Imports tables; clarified root versus `/advanced` server imports; added the web-components stylesheet note; updated package exports reference with common import paths and host-facing boundary guidance; added a patch changeset for the five public packages with npm-facing README changes.
     - Validation: `bun run test:package-resolution` passed; `bun run validate:packages` passed with existing non-failing publint repository URL suggestions; `bun run --cwd examples/recipes typecheck` passed; `bun run --cwd examples/recipes build` passed; `bunx changeset status --verbose` passed; `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts test/docs-staleness.test.ts` passed; artifact validator passed.
     - Review: Manual pass confirmed package README import paths, package export docs, and recipe links use public package surfaces and do not route host apps through `dist/*`, source files, generated schema chunks, or `@nyosegawa/agent-ui-core/internal`.
     - 4-Parallel Subagent Review: Completed. Lane 1 found non-clickable recipe entries in the topic indexes, fixed by linkifying recipe targets; lane 2 found no public import findings; lane 3 found no package boundary or changeset findings; lane 4 found stale TODO evidence, fixed here.
     - Commit: `ce002c9e7542a853d2e48f3e669ca1550a4d1f08`
-    - Push: pending
+    - Push: pushed to `origin/codex/new-adopter-onboarding-plan`
+    - PR/CI: PR #42 checks passed for pushed P002 commits: Detect changes, Detect compatibility changes, Repository policy, Typecheck, Lint, Unit tests, API snapshots, Package resolution, Package validation, Protocol and fixtures, Playwright fixtures, and Real local smoke. Compatibility matrix jobs were skipped by path filters.
   - Tasks:
     - [x] T004 Convert recipes docs from file-list index to task index: bridge/security, local media, customize AgentChat, headless layout, dynamic tools, remote deployment, validation.
       - Expected files/areas: `docs/examples/recipes.md`, `examples/recipes`.
@@ -333,6 +334,7 @@
 - P002: `bunx changeset status --verbose` passed and reports patch bumps for the five public packages touched by npm-facing README changes.
 - P002: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts test/docs-staleness.test.ts` passed.
 - P002: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-30-new-adopter-onboarding` passed.
+- P002 PR #42 checks passed after push: Detect changes, Detect compatibility changes, Repository policy, Typecheck, Lint, Unit tests, API snapshots, Package resolution, Package validation, Protocol and fixtures, Playwright fixtures, and Real local smoke. Compatibility matrix jobs were skipped by path filters.
 
 ## Review Evidence
 
