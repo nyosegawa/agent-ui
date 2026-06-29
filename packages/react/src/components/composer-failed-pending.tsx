@@ -27,18 +27,26 @@ export function FailedPendingMessageList({
             <p>{message.error ?? t("composer.failedMessageBody")}</p>
           </div>
           <div className="aui-composer-failed-actions">
-            <button
-              className={buttonClass("primary", { size: "sm" })}
-              onClick={() =>
-                deferAction(() =>
-                  composer.retryFailedPendingMessage(message.operationId),
-                )
-              }
-              type="button"
-            >
-              <IconRefresh size={14} />
-              <span>{t("composer.retryFailedMessage")}</span>
-            </button>
+            {message.retryable ? (
+              <button
+                className={buttonClass("primary", { size: "sm" })}
+                onClick={() =>
+                  deferAction(async () => {
+                    try {
+                      await composer.retryFailedPendingMessage(message.operationId);
+                    } catch (caught) {
+                      composer.setError(
+                        caught instanceof Error ? caught.message : String(caught),
+                      );
+                    }
+                  })
+                }
+                type="button"
+              >
+                <IconRefresh size={14} />
+                <span>{t("composer.retryFailedMessage")}</span>
+              </button>
+            ) : null}
             <button
               aria-label={t("composer.dismissFailedMessage")}
               className={buttonClass("ghost", { iconOnly: true, size: "sm" })}

@@ -146,7 +146,8 @@ export function useInternalAgentComposerController(
     (input: string | AgentUserInput[]) => {
       const inputItems = typeof input === "string" ? input.trim() : input;
       if (!hasSubmittableFirstInput(inputItems)) return undefined;
-      const items = typeof inputItems === "string" ? [textAgentInput(inputItems)] : inputItems;
+      const items =
+        typeof inputItems === "string" ? [textAgentInput(inputItems)] : inputItems;
       return {
         input: items,
         source: inputItems,
@@ -210,7 +211,9 @@ export function useInternalAgentComposerController(
       setError(undefined);
       setIsSubmitting(true);
       try {
-        const result = await startComposerTurn(built.input);
+        const result = await startComposerTurn(built.input, {
+          displayText: built.text,
+        });
         if (result.type === "resumedRunning") {
           return enqueueBuiltFollowUp(built, options.attachments, {
             expectedTurnId: result.activeTurnId,
@@ -257,8 +260,13 @@ export function useInternalAgentComposerController(
     setIsSubmitting,
     setValue,
   });
-  const { cancelOperation, getOperation, operationsById, retryOperation } =
-    useFirstMessageOperationController(startWithMessage);
+  const {
+    cancelOperation,
+    getOperation,
+    hasRetryPayload,
+    operationsById,
+    retryOperation,
+  } = useFirstMessageOperationController(startWithMessage);
   const sendMessage = useCallback(
     async (
       input: string | AgentUserInput[],
@@ -279,10 +287,7 @@ export function useInternalAgentComposerController(
         return { reason: "approval", threadId: resolvedThreadId, type: "blocked" };
       }
       if (isRunning) {
-        const queuedFollowUpId = enqueueBuiltFollowUp(
-          built,
-          options.queuedAttachments,
-        );
+        const queuedFollowUpId = enqueueBuiltFollowUp(built, options.queuedAttachments);
         if (!queuedFollowUpId) {
           return { reason: "approval", threadId: resolvedThreadId, type: "blocked" };
         }
@@ -291,7 +296,10 @@ export function useInternalAgentComposerController(
       setError(undefined);
       setIsSubmitting(true);
       try {
-        const result = await startComposerTurn(built.input, options.turnOptions);
+        const result = await startComposerTurn(built.input, {
+          displayText: built.text,
+          turnOptions: options.turnOptions,
+        });
         if (result.type === "resumedRunning") {
           const queuedFollowUpId = enqueueBuiltFollowUp(
             built,
@@ -360,10 +368,11 @@ export function useInternalAgentComposerController(
             .map((operation) => ({
               error: operation.error?.message,
               operationId: operation.id,
+              retryable: hasRetryPayload(operation.id),
               threadId: resolvedThreadId,
             }))
         : [],
-    [operationsById, resolvedThreadId],
+    [hasRetryPayload, operationsById, resolvedThreadId],
   );
   const submitMode: AgentComposerSubmitMode = isRunning ? "stop" : "send";
   const hasTextInput = value.trim().length > 0;

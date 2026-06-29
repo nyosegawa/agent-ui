@@ -133,7 +133,11 @@ turn controller. `useAgentComposer()` remains a public alias for the same
 raw-free controller view. The public view exposes `value`, `setValue`,
 `canSubmit`, `submitMode`, `disabledReason`, `isSubmitting`, `isInterrupting`,
 `activeTurnId`, queued follow-ups, failed first-message pending messages, and
-retry/cancel actions for those failed pending messages. It also exposes
+retry/cancel actions for those failed pending messages. Each failed pending
+message includes `retryable`; remounted or initial-state operations without a
+provider-local retry payload remain dismissible but do not offer Retry.
+`submitMode` is only `"send"` or `"stop"`: follow-up queueing is an execution
+path, not a submit-button mode. The controller also exposes
 `startThreadWithInput(input, { threadOptions, turnOptions })` for headless hosts
 that need the same safe first-message behavior as `AgentChat`: the first user
 message appears immediately, `thread/start` uses the current run settings plus
@@ -147,8 +151,12 @@ is the transient UI turn id used before live turn notifications reconcile the
 first user message, and `userMessageId` is the client id supplied to
 `turn/start`. It does not expose the internal operation map, raw
 `ThreadStartResponse`, raw `TurnStartResponse`, or reducer
-reconciliation records. Idle threads submit
-`turn/start`. Stored and preview threads automatically resume before submit; if
+reconciliation records. Idle threads submit `turn/start` with an optimistic user
+message and `clientUserMessageId` before the request resolves, then reconcile
+against live App Server item events by that client id. Failed idle-thread sends
+keep the visible user message, mark it failed, and close the optimistic turn so
+the composer returns to send mode. Stored and preview threads automatically
+resume before submit; if
 resume rejoins a running turn, Enter follows the same local queue path as any
 running thread instead of starting a second turn. Running threads keep the
 textarea editable: Enter adds to `queuedFollowUps`, Cmd/Ctrl+Enter calls
@@ -171,7 +179,8 @@ composer. Its `sendMessage(input, { threadOptions, turnOptions })` method
 routes through the same lifecycle as the default composer: without an active
 thread it performs optimistic first-message thread start and canonical
 reconciliation, on an idle active thread it starts a turn and forwards
-`turnOptions`, on a running thread it queues the follow-up, and on an
+`turnOptions` through the same optimistic `clientUserMessageId` reconciliation
+as the visual composer, on a running thread it queues the follow-up, and on an
 approval-blocked thread it returns `{ type: "blocked", reason: "approval" }`.
 Successful results are discriminated as `{ type: "started", ... }`,
 `{ type: "sent", threadId }`, or

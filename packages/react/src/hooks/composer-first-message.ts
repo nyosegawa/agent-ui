@@ -1,5 +1,9 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
 import type { AgentUserInput } from "../agent-input";
+import {
+  createFirstMessageOperationIds,
+  useFirstMessageOperationRuntime,
+} from "../first-message-state";
 import { useAgentI18n } from "../i18n";
 import { useInternalAgentContext } from "../provider";
 import {
@@ -12,11 +16,6 @@ import { agentRunPolicyTurnOptions } from "../run-policies";
 import { rawThreadId, threadProjectPath } from "../thread-history";
 import { useCodexSession } from "./codex-session";
 import { composerActionError } from "./composer-errors";
-import {
-  createFirstMessageOperationIds,
-  forgetFirstMessagePayload,
-  rememberFirstMessagePayload,
-} from "./first-message-operations";
 import type { AgentThreadStartWithInputResult } from "./thread-lifecycle-types";
 import { turnStartResultId } from "./thread-lifecycle-results";
 import { syncRunSettingsFromRawThread } from "./thread-run-settings";
@@ -41,6 +40,7 @@ export function useComposerFirstMessageStart({
   const { t } = useAgentI18n();
   const { dispatch, runPolicies, state } = useInternalAgentContext();
   const codex = useCodexSession();
+  const firstMessageRuntime = useFirstMessageOperationRuntime();
   const runSettings = state.runSettings;
 
   return useCallback(
@@ -54,7 +54,7 @@ export function useComposerFirstMessageStart({
       const promptText = summarizeUserInput(inputItems, t);
       const pending = createFirstMessageOperationIds();
       let canonicalThreadId: string | undefined;
-      rememberFirstMessagePayload({
+      firstMessageRuntime.remember({
         displayText: promptText,
         input,
         normalizedInput,
@@ -125,7 +125,7 @@ export function useComposerFirstMessageStart({
         const nextThreadId = rawThreadId(rawThreadRecord);
         if (!nextThreadId) throw new Error("thread/start returned no thread id");
         canonicalThreadId = nextThreadId;
-        rememberFirstMessagePayload({
+        firstMessageRuntime.remember({
           displayText: promptText,
           input,
           normalizedInput,
@@ -171,7 +171,7 @@ export function useComposerFirstMessageStart({
           },
           type: "thread/operation/updated",
         });
-        forgetFirstMessagePayload(pending.operationId);
+        firstMessageRuntime.forget(pending.operationId);
         setValue("");
         return {
           operationId: pending.operationId,
@@ -188,7 +188,7 @@ export function useComposerFirstMessageStart({
             threadId: pending.threadId,
             type: "thread/optimistic/rolledBack",
           });
-          forgetFirstMessagePayload(pending.operationId);
+          firstMessageRuntime.forget(pending.operationId);
         } else {
           dispatch({
             itemId: pending.userMessageId,
@@ -196,6 +196,19 @@ export function useComposerFirstMessageStart({
             threadId: canonicalThreadId,
             turnId: pending.turnId,
             type: "item/failed",
+          });
+          dispatch({
+            threadId: canonicalThreadId,
+            turn: {
+              id: pending.turnId,
+              metadata: {
+                optimistic: true,
+                operationId: pending.operationId,
+              },
+              status: "failed",
+              threadId: canonicalThreadId,
+            },
+            type: "turn/completed",
           });
           dispatch({
             operation: {
@@ -217,6 +230,7 @@ export function useComposerFirstMessageStart({
     [
       codex,
       dispatch,
+      firstMessageRuntime,
       runSettings.cwd,
       runSettings.effort,
       runSettings.modelId,
@@ -245,4 +259,3 @@ function agentError(caught: unknown) {
     message: caught instanceof Error ? caught.message : String(caught),
   };
 }
-

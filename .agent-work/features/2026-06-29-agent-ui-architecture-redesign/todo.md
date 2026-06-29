@@ -29,7 +29,7 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
 - [x] Protocol, raw-boundary, and public-surface contract
 - [x] Core view models, controllers, and internal state split
 - [x] React input, transcript, approval, and controller cleanup
-- [ ] Composer and first-message lifecycle hardening
+- [x] Composer and first-message lifecycle hardening
 - [ ] Server bridge root and host-policy boundary cleanup
 - [ ] Web Components lifecycle and option semantics
 - [ ] Build/package/release gate hardening
@@ -97,38 +97,33 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
   - Commit: one phase commit unless export-map migration needs split.
   - Push: push after validation.
   - PR/CI: package/API impact.
-  - Evidence:
-    - Implementation: added core public state/reducer/selector wrappers with
-      opaque `AgentSessionState`; moved raw reducer state, raw selectors, and
-      fixtures to `@nyosegawa/agent-ui-core/internal`; added package export,
-      path alias, package-resolution, runtime-export-policy, and tsup support
-      for the implementation boundary; rebuilt transcript block views as
-      display-oriented view models with `argumentsText`, `resultText`,
-      `errorText`, and `files` instead of raw `arguments`, `result`, `error`,
-      `changes`, and `metadata`; updated React provider internals so public
-      provider props use the opaque root state while implementation code reads
-      internal state; updated server, web-components, examples, recipes, and
-      docs to match the new boundary.
-    - Validation: `bun run --workspaces --if-present typecheck` passed;
-      `bun run validate:protocol` passed; `bun run test:package-resolution`
-      passed; `bun run test:api-snapshots:update && bun run test:api-snapshots`
-      passed; `bunx vitest run packages/core/test/public-surface.test.ts
-      packages/react/test/source-structure.vitest.ts packages/react/test/components.vitest.tsx`
-      passed; `bun run validate:fast` passed with the existing
-      `packages/react/src/hooks/composer.ts` React-hook warnings; `bun run
-      validate:packages` passed with existing publint repository-url
-      suggestions.
-    - Review: ran 4 parallel phase-review subagents. Resolved P1 findings for
-      missing `/internal` aliases, public provider `initialState` leaking raw
-      state, stale server/web-components snapshots, package-resolution
-      canonical export mismatch, and runtime export policy drift. Resolved P2
-      findings by removing public `selectThreadLifecycle`, replacing raw
-      transcript block fields with display view fields, avoiding internal
-      imports in public recipes, strengthening core root public-surface tests,
-      and adding an explicit source-level allowlist for remaining root
-      `AgentItemState`/`AgentItemMetadata` raw debt.
-    - Commit: `a281a7b` (`Split core public state boundary`).
-    - Push: pushed to `origin/codex/agent-ui-architecture-redesign-plan`.
+  - Evidence: - Implementation: added core public state/reducer/selector wrappers with
+    opaque `AgentSessionState`; moved raw reducer state, raw selectors, and
+    fixtures to `@nyosegawa/agent-ui-core/internal`; added package export,
+    path alias, package-resolution, runtime-export-policy, and tsup support
+    for the implementation boundary; rebuilt transcript block views as
+    display-oriented view models with `argumentsText`, `resultText`,
+    `errorText`, and `files` instead of raw `arguments`, `result`, `error`,
+    `changes`, and `metadata`; updated React provider internals so public
+    provider props use the opaque root state while implementation code reads
+    internal state; updated server, web-components, examples, recipes, and
+    docs to match the new boundary. - Validation: `bun run --workspaces --if-present typecheck` passed;
+    `bun run validate:protocol` passed; `bun run test:package-resolution`
+    passed; `bun run test:api-snapshots:update && bun run test:api-snapshots`
+    passed; `bunx vitest run packages/core/test/public-surface.test.ts
+packages/react/test/source-structure.vitest.ts packages/react/test/components.vitest.tsx`
+    passed; `bun run validate:fast` passed with the existing
+    `packages/react/src/hooks/composer.ts` React-hook warnings; `bun run
+validate:packages` passed with existing publint repository-url
+    suggestions. - Review: ran 4 parallel phase-review subagents. Resolved P1 findings for
+    missing `/internal` aliases, public provider `initialState` leaking raw
+    state, stale server/web-components snapshots, package-resolution
+    canonical export mismatch, and runtime export policy drift. Resolved P2
+    findings by removing public `selectThreadLifecycle`, replacing raw
+    transcript block fields with display view fields, avoiding internal
+    imports in public recipes, strengthening core root public-surface tests,
+    and adding an explicit source-level allowlist for remaining root
+    `AgentItemState`/`AgentItemMetadata` raw debt. - Commit: `a281a7b` (`Split core public state boundary`). - Push: pushed to `origin/codex/agent-ui-architecture-redesign-plan`.
   - Tasks:
     - [x] T001 Introduce core transcript/thread/approval/usage view models.
       - Expected files/areas: `packages/core/src`.
@@ -159,45 +154,40 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
   - Commit: one phase commit.
   - Push: push after validation.
   - PR/CI: React API and browser-visible impact.
-  - Evidence:
-    - Implementation: aligned `AgentImageInput` with Codex stable
-      `{ type: "image", url }` input and rejected stale `image_url`; introduced
-      React `AgentApprovalRequest`, `AgentApprovalDecision`, and structured
-      `AgentApprovalPatch` view types; moved public approval hooks,
-      `AgentApprovalQueue`, `AgentChat.components.Approval`,
-      `AgentThreadTimeline.renderApproval`, transcript approval anchors, recipes,
-      closeups, and component tests off `PendingServerRequest`/`payload` and onto
-      raw-free approval views; changed `useAgentApprovals().approve()` to accept
-      only `accept`, `acceptForSession`, or `decline`; kept broader
-      server-request handling on neutral `useAgentServerRequests().respond()` /
-      `.reject()`; preserved internal legacy decision mapping for old upstream
-      approval request metadata; projected structured file-change `fileChanges`
-      into renderable patch views so approval cards show changed files before
-      decisions; updated docs, API snapshots, source-structure raw-debt
-      allowlists, examples, and a major Changeset for the breaking React API.
-    - Validation: `bun run --workspaces --if-present typecheck` passed;
-      `bunx vitest run packages/react/test/source-structure.vitest.ts
-      packages/react/test/turn-input.vitest.ts
-      packages/react/test/components.vitest.tsx` passed with 236 tests;
-      `bun --filter @nyosegawa/agent-ui-react build && bun run
-      test:api-snapshots:update && bun run test:api-snapshots` passed; `bun run
-      validate:fast` passed with the existing
-      `packages/react/src/hooks/composer.ts` React-hook warnings; `bun run
-      test:package-resolution` passed; `bun run validate:packages` passed with
-      existing publint repository-url suggestions; `bun run test:e2e:fixtures`
-      passed with 231 passed / 1 skipped; `bunx changeset status --verbose`
-      reported a fixed public package major bump to 3.0.0.
-    - Review: ran 4 parallel phase-review subagents for input/API snapshots,
-      approval API, transcript/controller anchoring, and examples/docs/browser
-      risk. Three found no P0/P1 issues. Resolved one P1 by converting
-      structured App Server file-change approval payloads into renderable
-      approval patch views and adding a component test that asserts changed
-      files are visible before approval actions.
-    - Commit: P003 phase commit (`Clean React approval public contracts`).
-    - Push: pushed to `origin/codex/agent-ui-architecture-redesign-plan`.
-      Push evidence was recorded in a follow-up evidence-only commit because the
-      repository hook blocks force-pushing an amended phase commit after the
-      first successful push.
+  - Evidence: - Implementation: aligned `AgentImageInput` with Codex stable
+    `{ type: "image", url }` input and rejected stale `image_url`; introduced
+    React `AgentApprovalRequest`, `AgentApprovalDecision`, and structured
+    `AgentApprovalPatch` view types; moved public approval hooks,
+    `AgentApprovalQueue`, `AgentChat.components.Approval`,
+    `AgentThreadTimeline.renderApproval`, transcript approval anchors, recipes,
+    closeups, and component tests off `PendingServerRequest`/`payload` and onto
+    raw-free approval views; changed `useAgentApprovals().approve()` to accept
+    only `accept`, `acceptForSession`, or `decline`; kept broader
+    server-request handling on neutral `useAgentServerRequests().respond()` /
+    `.reject()`; preserved internal legacy decision mapping for old upstream
+    approval request metadata; projected structured file-change `fileChanges`
+    into renderable patch views so approval cards show changed files before
+    decisions; updated docs, API snapshots, source-structure raw-debt
+    allowlists, examples, and a major Changeset for the breaking React API. - Validation: `bun run --workspaces --if-present typecheck` passed;
+    `bunx vitest run packages/react/test/source-structure.vitest.ts
+packages/react/test/turn-input.vitest.ts
+packages/react/test/components.vitest.tsx` passed with 236 tests;
+    `bun --filter @nyosegawa/agent-ui-react build && bun run
+test:api-snapshots:update && bun run test:api-snapshots` passed; `bun run
+validate:fast` passed with the existing
+    `packages/react/src/hooks/composer.ts` React-hook warnings; `bun run
+test:package-resolution` passed; `bun run validate:packages` passed with
+    existing publint repository-url suggestions; `bun run test:e2e:fixtures`
+    passed with 231 passed / 1 skipped; `bunx changeset status --verbose`
+    reported a fixed public package major bump to 3.0.0. - Review: ran 4 parallel phase-review subagents for input/API snapshots,
+    approval API, transcript/controller anchoring, and examples/docs/browser
+    risk. Three found no P0/P1 issues. Resolved one P1 by converting
+    structured App Server file-change approval payloads into renderable
+    approval patch views and adding a component test that asserts changed
+    files are visible before approval actions. - Commit: P003 phase commit (`Clean React approval public contracts`). - Push: pushed to `origin/codex/agent-ui-architecture-redesign-plan`.
+    Push evidence was recorded in a follow-up evidence-only commit because the
+    repository hook blocks force-pushing an amended phase commit after the
+    first successful push.
   - Tasks:
     - [x] T001 Align `AgentImageInput` with Codex `url`.
       - Expected files/areas: React input and turn normalization tests.
@@ -212,7 +202,7 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
       - Expected files/areas: phase diff, React tests, fixture e2e notes, docs.
       - Validation note: record subagent findings and remediation in Evidence.
 
-- [ ] P004 Composer and first-message lifecycle hardening
+- [x] P004 Composer and first-message lifecycle hardening
   - Goal: make submit/retry/cancel/external send deterministic and provider-scoped.
   - Scope: first-message operations, composer controller, external send,
     optimistic user item reconciliation.
@@ -227,23 +217,41 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
   - Commit: one phase commit.
   - Push: push after validation.
   - PR/CI: browser-visible and public controller impact.
-  - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+  - Evidence: - Implementation: moved first-message retry payloads, cancellation markers,
+    and retry-in-flight guards into provider-scoped runtime state using the
+    shared React context registry; made retry/cancel idempotent and
+    cancellation-aware; added `retryable` to failed pending message views so
+    remounted failed operations remain dismissible without offering broken
+    Retry actions; changed idle-thread composer and external sends to create
+    optimistic user messages with `clientUserMessageId` before `turn/start`
+    resolves; completed optimistic turns on failed sends so composer state
+    returns to send mode; removed `"queue"` from `AgentComposerSubmitMode`. - Validation: `bun run typecheck` passed; `bun run lint` passed with the
+    existing composer hook warnings; `bunx vitest run
+packages/react/test/components.vitest.tsx
+packages/react/test/source-structure.vitest.ts` passed with 238 tests;
+    `bun run test:api-snapshots` passed; `bun run
+test:package-resolution` passed; `bun run test:node-compat` passed; `bun
+run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
+    passed / 1 skipped. - Review: ran 4 parallel phase-review subagents. Resolved P1 findings by
+    completing optimistic turns on failed idle sends, making failed
+    first-message operations non-retryable after provider remount when their
+    runtime payload is gone, making double retry and cancel-late-failure
+    races no-op/cancellation-aware instead of unhandled promise rejections,
+    and switching the first-message runtime context to `sharedReactContext`
+    so mixed ESM/CJS entrypoints share the provider. - Commit: P004 phase commit contains this evidence; final hash is reported
+    outside this file because embedding a commit's own final hash is
+    self-referential. - Push: push after P004 phase commit.
   - Tasks:
-    - [ ] T001 Remove or scope module-global first-message maps/sets.
+    - [x] T001 Remove or scope module-global first-message maps/sets.
       - Expected files/areas: first-message operations/provider state.
       - Validation note: multi-provider and remount tests.
-    - [ ] T002 Give existing idle-thread sends optimistic transcript behavior.
+    - [x] T002 Give existing idle-thread sends optimistic transcript behavior.
       - Expected files/areas: composer turn-start/controller tests.
       - Validation note: reconciliation tests for `clientUserMessageId`.
-    - [ ] T003 Resolve `AgentComposerSubmitMode` `"queue"` contract.
+    - [x] T003 Resolve `AgentComposerSubmitMode` `"queue"` contract.
       - Expected files/areas: composer types/docs/tests.
       - Validation note: implement or remove consistently.
-    - [ ] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
+    - [x] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
       - Expected files/areas: phase diff, lifecycle tests, browser fixture evidence.
       - Validation note: record subagent findings and remediation in Evidence.
 

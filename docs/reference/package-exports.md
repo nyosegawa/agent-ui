@@ -201,8 +201,9 @@ The source-level internal composer controller keeps its implementation helper na
 External UI that needs to send into the active `AgentChat` flow should use
 `useAgentChatController().sendMessage(input, options)`. It returns
 `started`, `sent`, `queued`, or `blocked` result objects and forwards
-`turnOptions` for active idle threads; hosts should not recreate that lifecycle
-with direct transport calls.
+`turnOptions` for active idle threads while creating an optimistic user message
+with `clientUserMessageId`; hosts should not recreate that lifecycle with
+direct transport calls.
 React image input uses `AgentImageInput { type: "image", url }`, matching the
 Codex stable input shape. `image_url` is not a React public API.
 Approval composition uses raw-free `AgentApprovalRequest` view models. The
@@ -318,8 +319,12 @@ the raw-free `AgentComposerController` view plus `AgentComposerSubmitMode`,
 `AgentComposerDisabledReason`,
 `AgentComposerFailedPendingMessage`, `AgentComposerIntegration`,
 `AgentComposerIntegrationAttachment`, and `AgentComposerIntegrationResolver`.
-Internal first-message operation maps,
-rollback payloads, and generated protocol payloads remain source-level only.
+`AgentComposerSubmitMode` is `"send" | "stop"`; queued follow-ups are local
+composer state, not a third submit-button mode. Internal provider-scoped
+first-message operation maps, rollback payloads, and generated protocol
+payloads remain source-level only. `AgentComposerFailedPendingMessage.retryable`
+is the public signal for whether Retry can be offered after remount or
+initial-state hydration.
 
 Thread lifecycle controller exports may add raw-free start/resume result or
 handle types only after the implementation, examples, tests, and snapshots use
@@ -669,7 +674,7 @@ The package boundary is mechanically checked after `bun run build`:
   bundler, including hashed `.d.ts` files, are not public API snapshots unless
   they are reachable from an export map.
 - `bun run test:packlist` runs after `bun run build` in `bun run
-  validate:packages`. It dry-runs each package packlist and rejects unexpected
+validate:packages`. It dry-runs each package packlist and rejects unexpected
   source files, stale build artifacts, and private generated files outside the
   current allowed publish surface.
 - `bun run test:package-resolution` reads the same export maps, verifies

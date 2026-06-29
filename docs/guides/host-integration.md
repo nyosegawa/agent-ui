@@ -80,7 +80,8 @@ preset composition before dropping to primitives:
 Do not sequence `thread/start` and `turn/start` from host chrome just because
 the send button lives outside the composer. The public chat controller routes
 that action through the same optimistic state, canonical thread reconciliation,
-queueing, blocked-approval handling, and error handling as `AgentChat`.
+idle-thread `clientUserMessageId` reconciliation, queueing, blocked-approval
+handling, and error handling as `AgentChat`.
 
 Use `useAgentComposerController()`,
 `useAgentTranscriptController()`, and
@@ -137,7 +138,9 @@ attachAgentUiWebSocketBridge({
       cwd: workspace.cwd,
       env: codexBridgeEnv(session),
       bridgePolicy: { admission: desktopAdmission(session) },
-      browserMethodPolicy: { capabilities: ["connection", "models", "threadLifecycle", "turns"] },
+      browserMethodPolicy: {
+        capabilities: ["connection", "models", "threadLifecycle", "turns"],
+      },
       dynamicToolPolicy: { mode: "disabled" },
       serverRequestPolicy: hostServerRequestPolicy(session),
     };
@@ -199,7 +202,9 @@ input plumbing.
 Do not call source-level first-message helpers from host code. Start empty
 threads through `useAgentThreadController().startThread()` or submit the first
 message through `useAgentComposerController()`. The public composer controller
-owns pending first-message retry/cancel state without exposing operation maps.
+owns provider-scoped pending first-message retry/cancel state without exposing
+operation maps. Failed pending messages include a `retryable` flag so remounted
+state can remain dismissible without offering a broken Retry action.
 When using headless hooks, call
 `useAgentComposerController().startThreadWithInput(input, { threadOptions,
 turnOptions })` for the first user message so it appears immediately,

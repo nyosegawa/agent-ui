@@ -1,8 +1,5 @@
 import type { AgentUserInput } from "../agent-input";
-import type {
-  QueuedFollowUp,
-  QueuedFollowUpAttachment,
-} from "../composer-queue";
+import type { QueuedFollowUp, QueuedFollowUpAttachment } from "../composer-queue";
 import type { Dispatch, SetStateAction } from "react";
 import type {
   AgentThreadStartWithInputOptions,
@@ -58,10 +55,11 @@ export type AgentComposerDisabledReason =
 export interface AgentComposerFailedPendingMessage {
   error?: string;
   operationId: string;
+  retryable: boolean;
   threadId: string;
 }
 
-export type AgentComposerSubmitMode = "queue" | "send" | "stop";
+export type AgentComposerSubmitMode = "send" | "stop";
 
 export interface AgentComposerSendMessageOptions extends AgentThreadStartWithInputOptions {
   queuedAttachments?: QueuedFollowUpAttachment[];

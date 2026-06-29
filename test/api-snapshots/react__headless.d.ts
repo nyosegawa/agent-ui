@@ -185,9 +185,10 @@ type AgentComposerDisabledReason = "approval" | "empty" | "interrupting" | "subm
 interface AgentComposerFailedPendingMessage {
     error?: string;
     operationId: string;
+    retryable: boolean;
     threadId: string;
 }
-type AgentComposerSubmitMode = "queue" | "send" | "stop";
+type AgentComposerSubmitMode = "send" | "stop";
 interface AgentComposerSendMessageOptions extends AgentThreadStartWithInputOptions {
     queuedAttachments?: QueuedFollowUpAttachment[];
 }

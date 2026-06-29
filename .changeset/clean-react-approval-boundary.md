@@ -18,3 +18,14 @@ Approval decisions are sent with `AgentApprovalDecision` values:
 
 Broad server-request handling remains separate on `useAgentServerRequests()`
 with method-specific `respond()` / `reject()` actions.
+
+Composer sends on idle threads now create optimistic user messages with
+`clientUserMessageId` before `turn/start` resolves, and failed idle sends remain
+visible as failed transcript items while the optimistic turn is completed so the
+composer returns to send mode. First-message retry/cancel runtime state is
+provider-scoped instead of module-global, and failed pending messages expose
+whether they are still retryable after remount.
+
+`AgentComposerSubmitMode` is now `"send" | "stop"`; queued follow-ups are
+represented by the queued-follow-up controller state and send results, not by a
+submit-button mode.
