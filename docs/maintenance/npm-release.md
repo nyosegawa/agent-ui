@@ -51,14 +51,15 @@ After the reviewed release PR has merged, the `main` push workflow:
 1. Runs `node scripts/check-release-targets.mjs` to compare local public package
    versions with npm.
 2. Skips publishing when no public package has an unpublished version.
-3. Fails before publishing if `.changeset/*.md` files remain alongside
+3. Fails before publishing if public package manifest versions diverge.
+4. Fails before publishing if `.changeset/*.md` files remain alongside
    unpublished package versions.
-4. Runs the same release validation ladder.
-5. Runs `bun run release:publish`, which builds package `dist` output inside
+5. Runs the same release validation ladder.
+6. Runs `bun run release:publish`, which builds package `dist` output inside
    the publish job, normalizes npm publish manifests so internal `workspace:`
    dependencies become semver ranges, then runs `bunx changeset publish`.
-6. Creates GitHub Releases for the package tags.
-7. Runs `node scripts/post-publish-smoke.mjs` against the published registry
+7. Creates GitHub Releases for the package tags.
+8. Runs `node scripts/post-publish-smoke.mjs` against the published registry
    packages.
 
 The publish job uses `NPM_TOKEN` and grants `id-token: write` so npm can attach

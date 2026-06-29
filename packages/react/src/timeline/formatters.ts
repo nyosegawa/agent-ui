@@ -84,11 +84,6 @@ export function formatDuration(durationMs: number): string {
   return `${(durationMs / 1000).toFixed(durationMs < 10_000 ? 1 : 0)}s`;
 }
 
-export function formatJson(value: unknown): string {
-  if (typeof value === "string") return value;
-  return JSON.stringify(value, null, 2) ?? "";
-}
-
 export function kindLabel(kind: string): string {
   if (kind === "add" || kind === "created") return "+";
   if (kind === "delete" || kind === "deleted") return "-";

@@ -87,7 +87,7 @@ jobs:
           key: ${{ runner.os }}-bun-${{ hashFiles('bun.lock') }}
           restore-keys: ${{ runner.os }}-bun-
       - run: bun install --frozen-lockfile
-      - run: bun run build
+      - run: bun run build:packages
       - run: bun run test:node-compat
 
   pnpm-smoke:

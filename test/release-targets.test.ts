@@ -45,9 +45,28 @@ describe("release target detection", () => {
     expect(result.shouldPublish).toBe(false);
     expect(result.error).toContain("Unversioned changesets remain");
   });
+
+  it("hard-fails when fixed public package versions diverge", async () => {
+    const root = await fakeReleaseRepo("0.4.0", {
+      react: "0.5.0",
+    });
+    const registryVersions = new Map([
+      ["@nyosegawa/agent-ui-core@0.4.0", false],
+      ["@nyosegawa/agent-ui-codex@0.4.0", false],
+      ["@nyosegawa/agent-ui-react@0.5.0", false],
+      ["@nyosegawa/agent-ui-server@0.4.0", false],
+      ["@nyosegawa/agent-ui-web-components@0.4.0", false],
+    ]);
+
+    const result = await checkReleaseTargets(root, { registryVersions });
+
+    expect(result.shouldPublish).toBe(false);
+    expect(result.error).toContain("Public package versions diverge");
+    expect(result.versions.sort()).toEqual(["0.4.0", "0.5.0"]);
+  });
 });
 
-async function fakeReleaseRepo(version: string) {
+async function fakeReleaseRepo(version: string, versionOverrides: Record<string, string> = {}) {
   const root = join(tmpdir(), `agent-ui-release-targets-${process.pid}-${Math.random()}`);
   await mkdir(join(root, ".changeset"), { recursive: true });
   for (const dir of ["core", "codex", "react", "server", "web-components"]) {
@@ -57,7 +76,7 @@ async function fakeReleaseRepo(version: string) {
       JSON.stringify(
         {
           name: `@nyosegawa/agent-ui-${dir}`,
-          version,
+          version: versionOverrides[dir] ?? version,
         },
         null,
         2,

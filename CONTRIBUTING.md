@@ -71,8 +71,8 @@ bun run test:package-resolution
 bun run test:e2e:fixtures
 ```
 
-Use `bun run validate:packages` for package output because build, `publint`, and
-`attw` must run in order. For browser-visible changes, run the relevant
+Use `bun run validate:packages` for package output because `build:packages`,
+`publint`, and `attw` must run in order. For browser-visible changes, run the relevant
 Playwright suite and verify real interactions when layout, focus, hit testing,
 scrolling, or overflow is involved.
 

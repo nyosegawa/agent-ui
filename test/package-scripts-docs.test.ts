@@ -41,7 +41,16 @@ describe("package script documentation", () => {
 
   it("keeps validate:packages docs aligned with the script order", () => {
     expect(packageJson.scripts?.["validate:packages"]).toBe(
-      "bun run build && bun run test:packlist && bun run test:node-compat && bun run publint && bun run attw",
+      "bun run build:packages && bun run test:packlist && bun run test:node-compat && bun run publint && bun run attw",
+    );
+    expect(packageJson.scripts?.["build"]).toBe(
+      "bun run build:packages && bun run build:examples",
+    );
+    expect(packageJson.scripts?.["build:packages"]).toBe(
+      "node scripts/build-workspaces.mjs packages",
+    );
+    expect(packageJson.scripts?.["build:examples"]).toBe(
+      "node scripts/build-workspaces.mjs examples",
     );
     expect(packageJson.scripts?.["validate:release"]).toBe(
       "bun run validate:fast && bun run validate:protocol && bun run validate:packages && bun run check:dead-code && bun run test:api-snapshots && bun run test:package-resolution",
@@ -51,8 +60,10 @@ describe("package script documentation", () => {
     expect(testingDocs).toContain(
       "`test:packlist`, `test:node-compat`, `publint`, then `attw`",
     );
+    expect(testingDocs).toContain("bun run build:packages");
+    expect(testingDocs).toContain("bun run build:examples");
     expect(testingDocs).toContain(
-      "packlist smoke, Node\n  compatibility smoke, `publint`, and `arethetypeswrong`",
+      "fresh `build:packages`, npm packlist smoke, Node\n  compatibility smoke, `publint`, and `arethetypeswrong`",
     );
     expect(testingDocs).toMatch(
       /`validate:release` does not repeat\s+`test:node-compat` after `validate:packages`/,

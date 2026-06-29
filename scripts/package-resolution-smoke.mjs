@@ -8,13 +8,13 @@ import process from "node:process";
 import { readWorkspacePackageSurfaces } from "./public-package-surface.mjs";
 
 const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const buildResult = spawnSync("bun", ["run", "build"], {
+const buildResult = spawnSync("bun", ["run", "build:packages"], {
   cwd: repoRoot,
   encoding: "utf8",
   stdio: "inherit",
 });
 if (buildResult.status !== 0) {
-  throw new Error("package resolution smoke requires a fresh successful build");
+  throw new Error("package resolution smoke requires a fresh successful package build");
 }
 
 const tempRoot = await mkdir(

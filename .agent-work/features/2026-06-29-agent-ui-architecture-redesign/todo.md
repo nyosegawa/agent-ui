@@ -366,7 +366,7 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
       - Expected files/areas: phase diff, web-component tests, package docs.
       - Validation note: record subagent findings and remediation in Evidence.
 
-- [ ] P007 Build/package/release gate hardening
+- [x] P007 Build/package/release gate hardening
   - Goal: make package validation reliable for the redesigned public surface.
   - Scope: build scripts, release target checks, CI/docs policy tests.
   - Expected files/areas:
@@ -383,22 +383,38 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
   - Push: push after validation.
   - PR/CI: CI/build/release impact.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
+    - Implementation: split root build into `build:packages` and
+      `build:examples` via `scripts/build-workspaces.mjs`; moved
+      `validate:packages`, API snapshots, package resolution, and compatibility
+      package checks onto fresh package-only builds; added release-target
+      hard-fail for divergent public package versions; added CI `Real local
+      smoke` path filtering for local-bridge-sensitive changes; updated
+      package/release/CI docs and policy tests; removed dead internal React
+      exports flagged by release validation.
+    - Validation: `bunx vitest run test/package-scripts-docs.test.ts
+      test/ci-workflow-policy.test.ts test/e2e-workflow-gate.test.ts
+      test/api-snapshot-lib.test.ts test/release-targets.test.ts`; `bun run
+      typecheck`; `bun run lint` (0 errors, existing React hook warnings only);
+      `bun run validate:packages`; `bun run test:api-snapshots`; `bun run
+      test:package-resolution`; `bun run build:examples`; `bun run
+      validate:release`.
+    - Review: 4 parallel subagent reviews completed. Package build ordering:
+      no P0/P1. CI policy: no P0/P1. Release target behavior: no P0/P1; accepted
+      release-docs supplement for divergent public package versions. Docs/tests
+      coherence and stale-output prevention: no P0/P1.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T001 Split package and example builds without weakening package validation.
+    - [x] T001 Split package and example builds without weakening package validation.
       - Expected files/areas: root scripts/docs/tests.
       - Validation note: package validation and package-script docs tests.
-    - [ ] T002 Hard-fail divergent fixed package versions in release target checks.
+    - [x] T002 Hard-fail divergent fixed package versions in release target checks.
       - Expected files/areas: release scripts/tests.
       - Validation note: npm release readiness tests.
-    - [ ] T003 Add/adjust CI gates for real-local-sensitive changes.
+    - [x] T003 Add/adjust CI gates for real-local-sensitive changes.
       - Expected files/areas: workflows/docs/tests.
       - Validation note: workflow policy tests.
-    - [ ] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
+    - [x] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
       - Expected files/areas: phase diff, scripts, workflow docs/tests.
       - Validation note: record subagent findings and remediation in Evidence.
 

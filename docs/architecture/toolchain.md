@@ -65,7 +65,7 @@ bun run test:package-resolution
 bun run test:node-compat
 ```
 
-`validate:packages` is the ordered build, `test:packlist`,
+`validate:packages` is the ordered `build:packages`, `test:packlist`,
 `test:node-compat`, `publint`, and `attw` path. Do not run build, `publint`, or
 `attw` in parallel because build cleans package `dist/` directories. API
 snapshots are export-map driven and compare public declaration targets only.

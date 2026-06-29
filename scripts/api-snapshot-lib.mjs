@@ -86,7 +86,7 @@ function assertBuiltDeclarationsExist(declarations, repoRoot) {
     [
       "Built declaration files are missing for public API snapshot checks.",
       ...missing.map((entry) => `- ${entry}`),
-      "Run bun run build or bun run validate:packages before bun run test:api-snapshots.",
+      "Run bun run build:packages or bun run validate:packages before bun run test:api-snapshots.",
     ].join("\n"),
   );
 }
