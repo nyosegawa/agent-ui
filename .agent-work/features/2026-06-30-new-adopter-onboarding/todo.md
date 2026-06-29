@@ -5,16 +5,16 @@
 - Overall status: In progress
 - Current phase: P007 Final validation, release readiness, PR, and CI follow-through
 - Blockers: None
-- Last validation: P006 fixture, package export, package validation, skill, fixture e2e, and targeted real-local lifecycle validation passed locally.
+- Last validation: P006 fixture, package export, package validation, skill, fixture e2e, targeted real-local lifecycle, and PR #42 CI checks passed.
 - Last review: P006 four-lane subagent review completed; fixture response-shape and runtime export findings fixed.
-- PR/CI: Draft PR #42 open; latest P005 checks passed.
+- PR/CI: Draft PR #42 open; latest P006 checks passed.
 
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
 - Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: planning, P001 docs commits, P002 docs/package README commits, P003 public skill commits, P004 guardrail/evidence commits, and P005 behavior/evidence commits pushed
+- Push result: planning, P001 docs commits, P002 docs/package README commits, P003 public skill commits, P004 guardrail/evidence commits, P005 behavior/evidence commits, and P006 fixture/evidence commits pushed
 - Blockers: none
 
 ## Phase Checklist
@@ -189,8 +189,8 @@
   - Review: Public surface review before exporting anything new.
   - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: `601ca157d455e436c28b5a19da82b32561071f48` - Add Codex success test fixture
-  - Push: pending
-  - PR/CI: pending
+  - Push: pushed to `origin/codex/new-adopter-onboarding-plan`
+  - PR/CI: PR #42 checks passed after P006 push.
   - Evidence:
     - Implementation: Added public `@nyosegawa/agent-ui-codex/test-fixtures` subpath with `createCodexAppServerSuccessFixture()`, an in-memory `FakeAgentTransport`-backed Codex App Server success fixture for host tests.
     - Implementation: Fixture covers canonical thread ids, `thread/start`, `thread/read`, `thread/resume`, `thread/list`, `turn/start`, streamed assistant delta events, queued `turn/steer`, `turn/interrupt`, and manual or automatic `turn/completed`.
@@ -210,7 +210,8 @@
     - Review: Manual review confirmed the public fixture is a host test helper only and does not claim to validate auth, storage, process lifecycle, upload storage, bridge admission, bearer tokens, workspace authorization, or multi-user policy.
     - 4-Parallel Subagent Review: Completed. Lane 1 found missing runtime named-export coverage for the new public subpath; fixed by updating `runtime-export-policy`, its test, and package validation. Lane 2 found fixture response-shape mismatch, `running` versus App Server `inProgress`, and incomplete `thread/read` behavior; fixed with generated response type `satisfies` checks, `inProgress` status, `includeTurns` handling, and completed item snapshots. Lane 3 found no docs/public skill issues. Lane 4 found missing runtime/post-publish export smoke coverage; fixed by adding the `test-fixtures` subpath to runtime export policy and post-publish smoke.
     - Commit: `601ca157d455e436c28b5a19da82b32561071f48` - Add Codex success test fixture.
-    - Push:
+    - Push: `git push origin codex/new-adopter-onboarding-plan` pushed `fe420a7..777ad54`.
+    - PR/CI: PR #42 checks passed after P006 push: API snapshots, Detect changes, Detect compatibility changes, Lint, Node.js 22.x, Node.js 24.x, Package resolution, Package validation, Playwright fixtures, Protocol and fixtures, Real local smoke, Repository policy, Typecheck, Unit tests, and pnpm workspace smoke.
   - Tasks:
     - [x] T018 Decide public `test-fixtures` subpath versus repo-internal fixture and record rationale in docs.
       - Expected files/areas: `docs/reference/package-exports.md`, package README or testing docs.
