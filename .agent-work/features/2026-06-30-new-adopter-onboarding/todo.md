@@ -5,16 +5,16 @@
 - Overall status: In progress
 - Current phase: P001 Canonical new-adopter docs path
 - Blockers: None
-- Last validation: P001 docs validation passed locally.
+- Last validation: P001 docs validation passed locally; PR #42 checks passed for pushed P001 docs commits.
 - Last review: P001 four-lane subagent review completed; lane 2 findings fixed.
-- PR/CI: Draft PR #42 open; P001 commit pending.
+- PR/CI: Draft PR #42 open; latest P001 checks passed.
 
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
 - Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: planning commits pushed; P001 commits pending push
+- Push result: planning and P001 docs commits pushed
 - Blockers: none
 
 ## Phase Checklist
@@ -27,15 +27,15 @@
   - Review: Fresh pass for host-boundary regressions and snippet completeness. Completed.
   - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: `014ce7b5f0e36ad917af2650d2ba77b892cc8ec3`
-  - Push: pending
-  - PR/CI: Draft PR #42 open; CI pending for the P001 commit.
+  - Push: pushed to `origin/codex/new-adopter-onboarding-plan`
+  - PR/CI: Draft PR #42 open; Detect changes, Detect compatibility changes, Repository policy, Typecheck, Lint, and Unit tests passed for pushed P001 docs commits. Path-filtered package/e2e jobs skipped.
   - Evidence:
     - Implementation: Added `docs/guides/first-host-app.md`; linked it from README, docs index, installation, getting-started, React, and host-integration docs; added the React surface decision table.
     - Validation: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts` passed; `bunx vitest run test/docs-staleness.test.ts` passed.
     - Review: Manual pass confirmed public imports, host-owned boundary language, and contributor/adopter separation.
     - 4-Parallel Subagent Review: Completed. Lane 1 found no IA blocker and reminded to include new file; lane 2 found incorrect `AgentChat.components` wording and internal token source references, fixed; lane 3 found no bridge/security blockers; lane 4 found no broken links and requested TODO evidence updates, fixed.
     - Commit: `014ce7b5f0e36ad917af2650d2ba77b892cc8ec3`
-    - Push: pending
+    - Push: pushed to `origin/codex/new-adopter-onboarding-plan`
   - Tasks:
     - [x] T001 Add or integrate a first-host-app guide with browser code, server bridge code, stylesheet import, package install, Node requirements, Codex CLI/auth assumptions, same-origin WebSocket, and local-loopback admission.
       - Expected files/areas: docs guide plus README/docs index links.
@@ -325,6 +325,7 @@
 
 - P001: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts` passed.
 - P001: `bunx vitest run test/docs-staleness.test.ts` passed.
+- P001 PR #42 checks passed after push: Detect changes, Detect compatibility changes, Repository policy, Typecheck, Lint, and Unit tests. API snapshots, package resolution, package validation, protocol/fixtures, Playwright fixtures, real-local smoke, and compatibility matrix jobs were skipped by path filters.
 
 ## Review Evidence
 
