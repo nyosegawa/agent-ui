@@ -468,8 +468,9 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
       no P0/P1; resolved P2 findings by removing a leaked downstream product
       name, expanding the guard to public examples, and skipping generated or
       dependency directories.
-    - Commit: pending.
-    - Push: pending.
+    - Commit: `8a34fe2` (`Refresh docs and examples for public controllers`).
+    - Push: pushed `codex/agent-ui-architecture-redesign-plan` to origin
+      (`1046bf1..8a34fe2`).
   - Tasks:
     - [x] T001 Replace raw-state headless recipe with controller/primitives usage.
       - Expected files/areas: `examples/recipes/src/headless-hooks.tsx`.
