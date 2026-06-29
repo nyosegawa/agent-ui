@@ -5,10 +5,10 @@ import {
   selectThreadCollection,
   selectThreadSummaryView,
   selectThreadTranscriptView,
+  type AgentSessionState,
   type AgentThreadScope,
-  type AgentSessionState as InternalAgentSessionState,
   type ThreadId,
-} from "@nyosegawa/agent-ui-core/internal";
+} from "@nyosegawa/agent-ui-core";
 import {
   localImageInput,
   textInput,
@@ -101,6 +101,14 @@ declare global {
     __agentUiLocalReactViteRoot?: Root;
   }
 }
+
+type MutableFixtureState = AgentSessionState & {
+  account: { account?: unknown; status?: string };
+  apps: { byScope: Record<string, unknown> };
+  threadLifecycle: { activeThreadId?: string };
+  threads: Record<string, unknown>;
+  usage: { accountRateLimits?: unknown };
+};
 
 function DemoApp() {
   const { pathname } = window.location;
@@ -291,7 +299,7 @@ function ScopedThreadListPanel({
   scopeKey: string;
 }) {
   const { dispatch, state: publicState } = useAgentContext();
-  const state = publicState as InternalAgentSessionState;
+  const state = publicState as MutableFixtureState;
   const didSeed = useRef(false);
   const [searchTerm, setSearchTerm] = useState(defaultSearch);
   const scope: AgentThreadScope = {
@@ -380,12 +388,12 @@ function ScopedThreadListPanel({
       <ul aria-label={`${label} threads`}>
         {threads.length > 0 ? (
           threads.map((thread) => (
-            <li key={thread.thread.id}>
+            <li key={thread.id}>
               <button
                 type="button"
-                onClick={() => dispatch({ threadId: thread.thread.id, type: "thread/active/set" })}
+                onClick={() => dispatch({ threadId: thread.id, type: "thread/active/set" })}
               >
-                {thread.thread.name ?? thread.thread.id}
+                {thread.title ?? thread.id}
               </button>
             </li>
           ))
@@ -494,12 +502,10 @@ function ComponentPreviewBody({
   initialTheme: AgentTheme;
 }) {
   const { state: publicState } = useAgentContext();
-  const state = publicState as InternalAgentSessionState;
+  const state = publicState as MutableFixtureState;
   const embedded = isEmbeddedPreview();
   const threadId = state.threadLifecycle.activeThreadId ?? "thread-rich-transcript";
-  const threads = selectOrderedCollectionThreads(state)
-    .map((thread) => selectThreadSummaryView(state, thread.id))
-    .filter((thread): thread is NonNullable<typeof thread> => Boolean(thread));
+  const threads = selectOrderedCollectionThreads(state);
   const [locale, setLocale] = useState<AgentLocale>(initialLocale);
   const [theme, setTheme] = useState<AgentTheme>(initialTheme);
   const startThread = useCallback(() => undefined, []);
@@ -1314,7 +1320,7 @@ function localeFromLocation(): AgentLocale {
 
 function ScopedThreadPaneExample() {
   const initialState = useMemo(() => {
-    const state = createInitialAgentState();
+    const state = createInitialAgentState() as MutableFixtureState;
     state.threadLifecycle.activeThreadId = "thread-active";
     state.threads["thread-active"] = {
       activity: "idle",
@@ -1379,7 +1385,7 @@ function UsageOnlyExample() {
   const theme = themeFromLocation();
   const embedded = isEmbeddedPreview();
   const initialState = useMemo(() => {
-    const state = createInitialAgentState();
+    const state = createInitialAgentState() as MutableFixtureState;
     state.account = {
       account: { email: "fixture@example.com", planType: "pro" },
       status: "authenticated",
@@ -1538,7 +1544,7 @@ function UsageDashboardCard({
 
 function AppConnectorsExample() {
   const initialState = useMemo(() => {
-    const state = createInitialAgentState();
+    const state = createInitialAgentState() as MutableFixtureState;
     state.apps.byScope["thread-connectors"] = {
       apps: [
         {
@@ -1772,7 +1778,7 @@ function createHostWorkflowInitialState() {
 
 function DemoThreadHeader({ threadId }: { threadId: ThreadId }) {
   const { state: publicState } = useAgentContext();
-  const state = publicState as InternalAgentSessionState;
+  const state = publicState;
   const thread = selectThreadSummaryView(state, threadId);
   const transcript = selectThreadTranscriptView(state, threadId);
   if (!thread) return null;
@@ -1935,11 +1941,9 @@ function ThreadNavigationExample() {
 
 function ThreadNavigationPreview() {
   const { dispatch, state: publicState } = useAgentContext();
-  const state = publicState as InternalAgentSessionState;
+  const state = publicState as MutableFixtureState;
   const activeThreadId = state.threadLifecycle.activeThreadId ?? "thread-rich-transcript";
-  const threads = selectOrderedCollectionThreads(state)
-    .map((thread) => selectThreadSummaryView(state, thread.id))
-    .filter((thread): thread is NonNullable<typeof thread> => Boolean(thread));
+  const threads = selectOrderedCollectionThreads(state);
   const selectThread = useCallback(
     (threadId: string) => dispatch({ threadId, type: "thread/active/set" }),
     [dispatch],
@@ -1996,7 +2000,7 @@ function HostWorkflowComposition({
   const theme = themeFromLocation();
   const embedded = isEmbeddedPreview();
   const bootstrap = useAgentBootstrap();
-  const { thread } = useAgentThreadController();
+  const { thread, transcript } = useAgentThreadController();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [contextSheetOpen, setContextSheetOpen] = useState(false);
   const [hostSheetOpen, setHostSheetOpen] = useState(() =>
@@ -2050,8 +2054,8 @@ function HostWorkflowComposition({
     },
     [],
   );
-  const turnCount = thread?.orderedTurnIds.length ?? 0;
-  const threadName = thread?.thread.name ?? thread?.thread.id ?? "No thread selected";
+  const turnCount = transcript?.turns.length ?? 0;
+  const threadName = thread?.title ?? thread?.id ?? "No thread selected";
   return (
     <main
       className="aui-host-recipe"
@@ -2075,7 +2079,7 @@ function HostWorkflowComposition({
             </span>
             <span className="aui-host-recipe-meta-status">
               {turnCount} turn{turnCount === 1 ? "" : "s"} · status{" "}
-              {thread?.status ?? "idle"}
+              {thread?.displayStatus ?? "idle"}
             </span>
             <button
               className="aui-host-action"
@@ -2268,7 +2272,7 @@ function HostFirstMessagePanel({
   stats: HostFirstMessageStats;
 }) {
   const { thread } = useAgentThreadController();
-  const pending = thread?.thread.ephemeral === true && stats.turnStartCalls === 0;
+  const pending = thread?.pending != null && stats.turnStartCalls === 0;
   return (
     <section className="aui-host-block" aria-label="Host first-message probe">
       <header className="aui-host-block-header">
@@ -2315,7 +2319,7 @@ function HostScopedHistoryPanel() {
     searchTerm: "host scoped",
   });
   const firstThread = scopedHistory.threads[0];
-  const activeThreadId = activeThread?.thread.id ?? "none";
+  const activeThreadId = activeThread?.id ?? "none";
   return (
     <section className="aui-host-block" aria-label="Host scoped history">
       <header className="aui-host-block-header">
@@ -2425,7 +2429,7 @@ function HostWorkflowGatePanel({
   open: boolean;
 }) {
   const { thread } = useAgentThreadController();
-  const { approvals } = useAgentApprovals(thread?.thread.id);
+  const { approvals } = useAgentApprovals(thread?.id);
   const blocked = !open;
   return (
     <section className="aui-host-block" aria-label="Host workflow gate">
@@ -2481,8 +2485,8 @@ function HostWorkflowPanel({
 }) {
   const { thread } = useAgentThreadController();
   const chat = useAgentChatController();
-  const { approvals } = useAgentApprovals(thread?.thread.id);
-  const transcript = useAgentTranscriptController(thread?.thread.id);
+  const { approvals } = useAgentApprovals(thread?.id);
+  const transcript = useAgentTranscriptController(thread?.id);
   const { rateLimits } = useAgentUsage();
   const [externalSendStatus, setExternalSendStatus] = useState("Ready");
   const windows = normalizeUsageWindows(rateLimits);
@@ -2513,13 +2517,13 @@ function HostWorkflowPanel({
     <section className="aui-host-block" aria-label="Host-owned panel">
       <header className="aui-host-block-header">
         <strong>Host workflow context</strong>
-        <span>{thread?.thread.name ?? "no thread"}</span>
+        <span>{thread?.title ?? "no thread"}</span>
       </header>
       <div className="aui-host-block-body">
         <dl className="aui-host-stat-row" aria-label="Current thread summary">
           <div>
             <dt>Turns</dt>
-            <dd>{thread?.orderedTurnIds.length ?? 0}</dd>
+            <dd>{transcript.turnIds.length}</dd>
           </div>
           <div>
             <dt>Requests</dt>

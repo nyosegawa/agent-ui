@@ -21,12 +21,15 @@ bumps, changelogs, and aligned internal workspace ranges. main push checks
 whether already-versioned packages are unpublished; only reviewed release PR
 merges should produce unpublished package versions.
 
-Before `1.0`, use:
+Use semver against the documented public package surface:
 
-- `patch` for fixes and small compatibility/documentation updates.
-- `minor` for new public APIs, new components/hooks, package surface changes,
-  and the first public `0.1.0` release.
-- `major` only when a future release policy explicitly needs it.
+- `patch` for bug fixes, documentation corrections, packaging fixes, and
+  internal implementation changes that do not alter public behavior.
+- `minor` for additive public APIs, new components/hooks, new examples that
+  document an additive surface, and non-breaking package export additions.
+- `major` for breaking public APIs, package boundary changes, runtime contract
+  changes, removed compatibility aliases, or redesigns that require host code to
+  migrate.
 
 ## Release Workflow
 

@@ -55,7 +55,7 @@ Codex process lifecycle, persistence, billing, and deployment policy.
 primitives. It does not walk reducer turns, item maps, streaming text maps, or
 raw App Server payloads. Hosts that need their own chrome should compose
 `useAgentThreadController()`, `useAgentThreadListController()`,
-`AgentThreadTimeline`, and `AgentComposerPanel` instead of depending on internal
+`AgentThreadTimeline`, and `AgentComposer` instead of depending on internal
 transcript storage.
 
 `src/host-gated-workflow.tsx` composes `AgentThreadTimeline`, a host-owned

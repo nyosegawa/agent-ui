@@ -3,17 +3,17 @@ import { useMemo } from "react";
 import type {
   AgentThreadSummaryView,
   AgentThreadTranscriptView,
-} from "@nyosegawa/agent-ui-core/internal";
+} from "@nyosegawa/agent-ui-core";
 import {
   selectActiveThreadSummaryView,
   selectThreadSummaryView,
   selectThreadTranscriptView,
-} from "@nyosegawa/agent-ui-core/internal";
+} from "@nyosegawa/agent-ui-core";
 import {
   useAgentApprovals,
-  useAgentThread,
   useAgentThreadActions,
 } from "../hooks";
+import { useInternalAgentThread } from "../hooks/thread";
 import type { AgentApprovalRequest } from "../approval-types";
 import { useAgentI18n } from "../i18n";
 import { IconMoreVertical } from "../components-internal";
@@ -52,7 +52,7 @@ export function AgentThreadView({
   threadHeaderEnd,
   threadId,
 }: AgentThreadViewProps) {
-  const { thread, threadId: resolvedThreadId } = useAgentThread(threadId);
+  const { thread, threadId: resolvedThreadId } = useInternalAgentThread(threadId);
   const { state } = useInternalAgentContext();
   const threadView = resolvedThreadId
     ? selectThreadSummaryView(state, resolvedThreadId)
@@ -96,14 +96,12 @@ export function AgentThreadView({
           Default={AgentComposerPanel}
           composerIntegrations={composerIntegrations}
           resolveLocalAttachment={resolveLocalAttachment}
-          thread={thread}
           threadId={resolvedThreadId}
         />
       ) : (
         <AgentComposerPanel
           composerIntegrations={composerIntegrations}
           resolveLocalAttachment={resolveLocalAttachment}
-          thread={thread}
           threadId={resolvedThreadId}
         />
       )}

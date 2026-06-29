@@ -63,7 +63,7 @@ export function reduceTurnEvent(
           for (const item of event.items ?? []) {
             completedTurn = itemStore.upsert(
               completedTurn,
-              canonicalItem(item, threadId),
+              canonicalItem(item as AgentItemState, threadId),
             );
           }
         }

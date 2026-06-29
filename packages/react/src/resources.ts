@@ -1,4 +1,4 @@
-import type { AgentItemState } from "@nyosegawa/agent-ui-core";
+import type { AgentTranscriptItem } from "./hooks/transcript";
 import type { AgentUserInput } from "./agent-input";
 
 export type AgentResourceKind =
@@ -41,7 +41,7 @@ export interface AgentFileResourceRequest {
 }
 
 export interface AgentLocalMediaResourceRequest {
-  item?: AgentItemState;
+  item?: AgentTranscriptItem;
   path: string;
   source: "local-media";
 }

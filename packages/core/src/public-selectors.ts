@@ -10,6 +10,7 @@ import {
   selectDiagnostics as selectInternalDiagnostics,
   selectDiagnosticsForAudience as selectInternalDiagnosticsForAudience,
   selectHostMetrics as selectInternalHostMetrics,
+  selectOrderedCollectionThreads as selectInternalOrderedCollectionThreads,
   selectPendingApprovalViews as selectInternalPendingApprovalViews,
   selectPendingOperations as selectInternalPendingOperations,
   selectProtocolNotifications as selectInternalProtocolNotifications,
@@ -138,6 +139,17 @@ export function selectThreadCollection(
   scope?: AgentThreadScope | string,
 ) {
   return selectInternalThreadCollection(internalAgentSessionState(state), scope);
+}
+
+export function selectOrderedCollectionThreads(
+  state: AgentSessionState,
+  scope?: AgentThreadScope | string,
+) {
+  const internalState = internalAgentSessionState(state);
+  return selectInternalOrderedCollectionThreads(internalState, scope).flatMap((thread) => {
+    const view = selectInternalThreadView(internalState, thread.id);
+    return view ? [view] : [];
+  });
 }
 
 export function selectRunSettings(state: AgentSessionState) {

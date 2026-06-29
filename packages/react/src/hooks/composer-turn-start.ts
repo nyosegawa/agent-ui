@@ -1,16 +1,16 @@
 import {
   selectRunSettings,
   selectThread,
-  type ThreadId,
   type ThreadState,
 } from "@nyosegawa/agent-ui-core/internal";
+import type { ThreadId } from "@nyosegawa/agent-ui-core";
 import { useCallback } from "react";
 import type { AgentUserInput } from "../agent-input";
 import { useInternalAgentContext } from "../provider";
 import { codexTurnStartOptions, type TurnStartOptions } from "../request-options";
 import { agentRunPolicyTurnOptions } from "../run-policies";
 import { useCodexSession } from "./codex-session";
-import { useAgentThread } from "./thread";
+import { useAgentThreadController } from "./thread";
 import type { AgentThreadResumeResult } from "./thread-lifecycle-types";
 import { codexReasoningEffort, normalizeTurnInput } from "./turn-input";
 
@@ -40,7 +40,7 @@ export function useComposerTurnStart(threadId?: ThreadId) {
   const resolvedThreadId = threadId ?? state.threadLifecycle.activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;
   const runSettings = selectRunSettings(state);
-  const { resumeThread } = useAgentThread(threadId);
+  const { resumeThread } = useAgentThreadController(threadId);
 
   return useCallback(
     async (

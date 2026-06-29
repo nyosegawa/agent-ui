@@ -258,27 +258,13 @@ describe("React package source structure", () => {
     );
 
     expect(rawDebtFindings("core", coreSnapshot)).toEqual([]);
-    expect(coreRootResidualRawDebt()).toEqual([
-      "core-source:export:AgentItemMetadata",
-      "core-source:export:AgentItemState",
-    ]);
+    expect(coreRootResidualRawDebt()).toEqual([]);
     expect(rawDebtFindings("headless", headlessSnapshot)).toEqual([
-      "headless:import-module:@nyosegawa/agent-ui-core/internal",
-      "headless:import-module:@nyosegawa/agent-ui-core/internal",
-      "headless:import:ThreadState from @nyosegawa/agent-ui-core/internal",
-      'headless:member:activity?: ThreadState["activity"];',
       "headless:member:respond: (requestId: RequestId, result: unknown) => Promise<void>;",
-      "headless:member:thread: ThreadState | undefined;",
-      "headless:member:threads: ThreadState[];",
-      "headless:member:threads: ThreadState[];",
       "headless:member:rateLimits: unknown;",
-      "headless:function:visibleTranscriptWindow:ThreadState",
     ]);
-    expect(rawDebtFindings("root", rootSnapshot)).toEqual([
-      "root:import-module:@nyosegawa/agent-ui-core/internal",
-    ]);
+    expect(rawDebtFindings("root", rootSnapshot)).toEqual([]);
     expect(rawDebtFindings("primitives", primitivesSnapshot)).toEqual([
-      "primitives:import-module:@nyosegawa/agent-ui-core/internal",
       "primitives:member:patch: unknown;",
     ]);
   });

@@ -1,13 +1,16 @@
 import React from "react";
 import {
-  selectThreadSummaryView,
   type AgentThreadWaitingReason,
-  type ThreadState,
   type ThreadTokenUsage,
+} from "@nyosegawa/agent-ui-core";
+import {
+  selectThreadSummaryView,
+  type ThreadState,
 } from "@nyosegawa/agent-ui-core/internal";
 import { useEffect, useId, useRef, useState } from "react";
 import { type AgentComposerController } from "../hooks";
 import { useInternalAgentComposerController } from "../hooks/composer";
+import { useInternalAgentThread } from "../hooks/thread";
 import { useAgentI18n } from "../i18n";
 import { useInternalAgentContext } from "../provider";
 import type { AgentResourceKind } from "../resources";
@@ -470,26 +473,26 @@ export interface AgentComposerProps {
 export interface AgentComposerPanelProps {
   composerIntegrations?: readonly AgentComposerIntegration[];
   resolveLocalAttachment?: AgentLocalAttachmentResolver;
-  thread: ThreadState;
   threadId?: string;
 }
 
 export function AgentComposerPanel({
   composerIntegrations,
   resolveLocalAttachment,
-  thread,
   threadId,
 }: AgentComposerPanelProps) {
   const { t } = useAgentI18n();
-  const isBlocked = thread.activity === "waitingForInput";
+  const { thread, threadId: resolvedThreadId } = useInternalAgentThread(threadId);
   const { state } = useInternalAgentContext();
-  const waitingReasons = threadId
-    ? selectThreadSummaryView(state, threadId)?.execution.runtime.waitingReasons
+  const waitingReasons = resolvedThreadId
+    ? selectThreadSummaryView(state, resolvedThreadId)?.execution.runtime.waitingReasons
     : undefined;
-  const composer = useInternalAgentComposerController(threadId);
+  const composer = useInternalAgentComposerController(resolvedThreadId);
   const attachmentRestoreRef = useRef<
     ((attachments: ComposerAttachment[]) => void) | null
   >(null);
+  if (!thread) return null;
+  const isBlocked = thread.activity === "waitingForInput";
   return (
     <section className="aui-compose-panel" aria-label={t("aria.messageComposer")}>
       <FailedPendingMessageList composer={composer} />
@@ -510,7 +513,7 @@ export function AgentComposerPanel({
         placeholder={composerPlaceholder(thread.activity, t, waitingReasons)}
         resolveLocalAttachment={resolveLocalAttachment}
         tokenUsage={thread.tokenUsage}
-        threadId={threadId}
+        threadId={resolvedThreadId}
       />
     </section>
   );

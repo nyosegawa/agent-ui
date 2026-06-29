@@ -2,15 +2,6 @@
 
 ## 2.0.0
 
-### Major Changes
-
-- Make the Web Components wrapper lifecycle deterministic.
-
-  SSR/no-DOM registration returns `undefined`, same-tag registration is
-  idempotent, foreign tag collisions throw, `agentOptions` fully replaces the
-  element configuration, `chat-class` is the only observed attribute, and
-  changing `transport` or `initialState` remounts the underlying provider.
-
 ### Patch Changes
 
 - Updated dependencies [042aaf4]

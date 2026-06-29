@@ -66,8 +66,8 @@ export function useThreadUrlRouting(
         setActiveThread(undefined);
         return;
       }
-      const existingThread = threads.find((thread) => thread.thread.id === threadId);
-      if (existingThread && !isPreviewUrlThread(existingThread.status)) {
+      const existingThread = threads.find((thread) => thread.id === threadId);
+      if (existingThread && !isPreviewUrlThread(existingThread.displayStatus)) {
         setActiveThread(threadId);
         return;
       }
@@ -110,5 +110,5 @@ function trimTrailingSlash(path: string): string {
 }
 
 function isPreviewUrlThread(status?: string): boolean {
-  return status === "notLoaded" || status === "loaded";
+  return status === "preview";
 }

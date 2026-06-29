@@ -14,8 +14,6 @@ export type * from "./state/hooks";
 export type {
   AgentItemBlockResource,
   AgentItemBlockResourceKind,
-  AgentItemMetadata,
-  AgentItemState,
 } from "./state/item";
 export type * from "./state/models";
 export type * from "./state/run-settings";
@@ -26,6 +24,9 @@ export type {
   AgentOperationView,
   AgentPendingThreadState,
   AgentServerRequestSummary,
+  AgentChangedFileView,
+  AgentTranscriptBlockView,
+  AgentTranscriptTurnView,
   AgentThread,
   AgentThreadActiveFlag,
   AgentThreadCollection,

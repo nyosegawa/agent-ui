@@ -411,7 +411,7 @@ accepts elicitations that carry `_meta.codex_approval_kind ===
 
 Hosts that need request-specific policy can provide
 `serverRequestPolicy.decide(context)`. The callback receives the normalized
-request kind, request id, thread id, turn id, full request object, and payload.
+request kind, request id, thread id, turn id, and method-specific payload.
 Return `{ action: "respond", response }` to resolve that request, return
 `{ action: "manual" }` to force browser/UI handling and skip fallback shortcuts,
 or return `undefined` to continue to the narrower built-in policies such as
@@ -465,9 +465,10 @@ attachAgentUiWebSocketBridge({
 });
 ```
 
-The callback receives `requestId`, `threadId`, `turnId`, `cwd`, requested
-filesystem/network permissions, and the raw App Server request payload. The
-normal policy path treats returned grants as trusted host policy but still
+The callback receives `requestId`, `threadId`, `turnId`, `cwd`,
+filesystem/network permissions requested by the server, and the
+method-specific payload for audit or host-policy checks. The normal policy path
+treats returned grants as trusted host policy but still
 clamps them to the requested subset: unrequested permission families are
 dropped, generic grants such as network must match the requested value,
 protocol-shaped filesystem `read`, `write`, and `entries` grants must be

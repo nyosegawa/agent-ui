@@ -46,8 +46,8 @@ Agent UI as reusable primitives, avoid editing `third_party/codex`, use
 generators for generated files, use Bun, and report validation.
 
 `UserPromptSubmit` adds context when a request appears to involve upstream Codex
-checkout edits, package publication, or host-runtime behavior such as watcher or
-skill-with-app logic.
+ checkout edits, package publication, or host-runtime behavior such as
+file-watching runtimes or skill-with-app logic.
 
 `PreToolUse` blocks a narrow set of unsafe tool calls before they run:
 

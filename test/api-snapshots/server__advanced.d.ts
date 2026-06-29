@@ -2,4 +2,3 @@ export { o as CodexAppServerBridge, p as CodexAppServerBridgeOptions, C as Codex
 import '@nyosegawa/agent-ui-codex';
 import '@nyosegawa/agent-ui-core';
 import 'node:stream';
-import '@nyosegawa/agent-ui-core/internal';

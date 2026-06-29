@@ -20,7 +20,6 @@ import {
   AgentAttachmentChips,
   AgentCommandItem,
   AgentComposer,
-  AgentComposerPanel,
   AgentComposerSubmitButton,
   AgentContentBlockView,
   AgentContextUsageIndicator,
@@ -107,7 +106,7 @@ export function ComponentCloseupGallery() {
         <CloseupComposerFocused />
         <CloseupComposerDisabled />
         <CloseupComposerMobile />
-        <CloseupComposerPanelInternals />
+        <CloseupComposerParts />
         <CloseupComposerPastedImage />
         <CloseupComposerAttachments />
         <CloseupComposerSubmitButton />
@@ -338,18 +337,18 @@ function CloseupComposerMobile() {
   );
 }
 
-function CloseupComposerPanelInternals() {
+function CloseupComposerParts() {
   const initialState = useMemo(() => createRichTranscriptInitialState(), []);
   const threadId = "thread-rich-transcript";
   const thread = initialState.threads[threadId];
   if (!thread) return null;
   return (
     <CloseupFrame
-      title="Composer panel internals"
-      caption="Panel, input, toolbar, and submit render as public composer parts."
+      title="Composer parts"
+      caption="Input, toolbar, and submit render as public composer parts."
     >
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentComposerPanel thread={thread} threadId={threadId} />
+        <AgentComposer threadId={threadId} />
       </AgentProvider>
     </CloseupFrame>
   );

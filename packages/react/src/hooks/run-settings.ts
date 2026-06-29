@@ -1,8 +1,5 @@
-import {
-  selectRunSettings,
-  type AgentModel,
-  type ReasoningEffort,
-} from "@nyosegawa/agent-ui-core/internal";
+import { selectRunSettings } from "@nyosegawa/agent-ui-core/internal";
+import type { AgentModel, ReasoningEffort } from "@nyosegawa/agent-ui-core";
 import { useCallback } from "react";
 import { useInternalAgentContext } from "../provider";
 import {

@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from "react";
+import type { ReactNode } from "react";
 
 export type AgentLocale = "en" | "ja" | "ko" | "zh-CN" | "es" | "fr";
 
@@ -341,7 +341,8 @@ export interface AgentI18nValue {
   t: (key: AgentI18nKey, vars?: Record<string, string | number>) => string;
 }
 
-export interface AgentI18nProviderProps extends PropsWithChildren {
+export interface AgentI18nProviderProps {
+  children?: ReactNode;
   locale?: AgentLocale | string;
   messages?: AgentI18nMessages;
 }

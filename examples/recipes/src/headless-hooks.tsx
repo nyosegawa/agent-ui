@@ -1,7 +1,7 @@
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 import { AgentProvider } from "@nyosegawa/agent-ui-react";
 import {
-  AgentComposerPanel,
+  AgentComposer,
   AgentThreadTimeline,
 } from "@nyosegawa/agent-ui-react/primitives";
 import {
@@ -38,20 +38,11 @@ function HeadlessThreadView() {
         </button>
       </aside>
       <section aria-label="Active thread">
-        <h1>
-          {threadController.thread?.metadata.title ??
-            threadController.thread?.thread.name ??
-            "No thread"}
-        </h1>
+        <h1>{threadController.thread?.title || "No thread"}</h1>
         {threadController.threadId ? (
           <>
             <AgentThreadTimeline threadId={threadController.threadId} />
-            {threadController.thread ? (
-              <AgentComposerPanel
-                thread={threadController.thread}
-                threadId={threadController.threadId}
-              />
-            ) : null}
+            <AgentComposer threadId={threadController.threadId} />
           </>
         ) : null}
       </section>

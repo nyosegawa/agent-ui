@@ -1,8 +1,8 @@
 import {
   selectRunSettings,
   selectThreadLifecycle,
-  type ThreadId,
 } from "@nyosegawa/agent-ui-core/internal";
+import type { ThreadId } from "@nyosegawa/agent-ui-core";
 import { useCallback } from "react";
 import type { AgentUserInput } from "../agent-input";
 import { useInternalAgentContext } from "../provider";
@@ -12,7 +12,13 @@ import type { TurnStartOptions } from "./run-settings";
 import { useCodexSession } from "./codex-session";
 import { codexReasoningEffort, normalizeTurnInput } from "./turn-input";
 
-export function useAgentTurn(threadId?: ThreadId) {
+export interface AgentTurnController {
+  interruptTurn: (turnId: string) => Promise<void>;
+  startTurn: (input: string | AgentUserInput[], params?: TurnStartOptions) => Promise<void>;
+  steerTurn: (expectedTurnId: string, input: string | AgentUserInput[]) => Promise<void>;
+}
+
+export function useInternalAgentTurn(threadId?: ThreadId): AgentTurnController {
   const { runPolicies, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const resolvedThreadId = threadId ?? selectThreadLifecycle(state).activeThreadId;
@@ -65,4 +71,6 @@ export function useAgentTurn(threadId?: ThreadId) {
   return { interruptTurn, startTurn, steerTurn };
 }
 
-export const useAgentTurnController = useAgentTurn;
+export function useAgentTurnController(threadId?: ThreadId): AgentTurnController {
+  return useInternalAgentTurn(threadId);
+}

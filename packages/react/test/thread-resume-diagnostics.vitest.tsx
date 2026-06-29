@@ -24,7 +24,7 @@ describe("thread resume diagnostics", () => {
     const {
       AgentProvider,
     } = await import("../src");
-    const { useAgentDiagnostics, useAgentThread } = await import("../src/headless");
+    const { useAgentDiagnostics, useAgentThreadController } = await import("../src/headless");
     const user = userEvent.setup();
     const transport = new FakeAgentTransport({
       onRequest(request) {
@@ -42,7 +42,7 @@ describe("thread resume diagnostics", () => {
     });
 
     function Probe() {
-      const { resumeThread } = useAgentThread();
+      const { resumeThread } = useAgentThreadController();
       const { auditDiagnostics, developerDiagnostics, userDiagnostics } =
         useAgentDiagnostics();
       const [result, setResult] = useState("none");

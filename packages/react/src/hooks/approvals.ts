@@ -1,11 +1,9 @@
 import {
   selectPendingApprovals,
   selectServerRequestSummaries,
-  type AgentError,
   type PendingServerRequest,
-  type RequestId,
-  type ThreadId,
 } from "@nyosegawa/agent-ui-core/internal";
+import type { AgentError, RequestId, ThreadId } from "@nyosegawa/agent-ui-core";
 import { useCallback, useMemo } from "react";
 import {
   agentApprovalRequestView,

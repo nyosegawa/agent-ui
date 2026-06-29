@@ -1,11 +1,20 @@
 ---
+"@nyosegawa/agent-ui-core": major
+"@nyosegawa/agent-ui-codex": major
 "@nyosegawa/agent-ui-react": major
 "@nyosegawa/agent-ui-server": major
 "@nyosegawa/agent-ui-web-components": major
 ---
 
-Redesign the React approval and input public contracts around raw-free view
-models and Codex-stable input shapes.
+Redesign Agent UI public contracts around raw-free view models, controller
+composition, and Codex-stable input shapes.
+
+The core package now keeps reducer store shapes, raw protocol-normalized
+entities, raw selectors, fixtures, and compatibility helpers behind
+`@nyosegawa/agent-ui-core/internal`. The root core entrypoint exposes only the
+stable reusable library surface. Hosts should consume React controllers,
+primitives, or explicit core view models instead of depending on reducer
+internals.
 
 `AgentImageInput` now uses `{ type: "image", url }`. The old `image_url` shape
 is removed from the React public API.
@@ -31,6 +40,10 @@ whether they are still retryable after remount.
 `AgentComposerSubmitMode` is now `"send" | "stop"`; queued follow-ups are
 represented by the queued-follow-up controller state and send results, not by a
 submit-button mode.
+
+The codex package participates in the fixed-version major release so its
+normalizers and request builders target the redesigned core and React public
+contracts.
 
 The server package root now exposes only the high-level bridge, one-shot RPC,
 local media, policy, dynamic-tool mapping, host-event, and redaction surfaces.

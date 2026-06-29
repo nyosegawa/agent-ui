@@ -3,12 +3,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useAgentBootstrap,
   useAgentDiagnostics,
-  useAgentThread,
   useAgentThreads,
   type ThreadStartOptions,
   type TurnStartOptions,
 } from "../hooks";
 import { useAgentChatController } from "../hooks/composer";
+import { useInternalAgentThread } from "../hooks/thread";
 import {
   AgentI18nProvider,
   useAgentI18n,
@@ -224,7 +224,7 @@ function AgentChatInner({
   const compact = useCompactLayout();
   const contextSheetLayout = useContextSheetLayout();
   const { t } = useAgentI18n();
-  const { thread, threadId, startThread } = useAgentThread();
+  const { thread, threadId, startThread } = useInternalAgentThread();
   const chatController = useAgentChatController();
   const { activeThreadId, setActiveThread } = useAgentThreads();
   useThreadUrlRouting(threadUrlRouting, activeThreadId);

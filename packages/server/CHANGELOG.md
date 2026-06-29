@@ -2,18 +2,6 @@
 
 ## 2.0.0
 
-### Major Changes
-
-- Redesign the public server boundary around the high-level bridge, one-shot
-  RPC, local media, policy, dynamic-tool mapping, host-event, and redaction
-  surfaces.
-
-  Raw stdio process helpers, child-process spawn types, and dynamic-tool
-  helper-thread internals now live under
-  `@nyosegawa/agent-ui-server/advanced`. Bridge admission is configured only
-  through `bridgePolicy.admission`; the former top-level admission option is
-  removed.
-
 ### Patch Changes
 
 - @nyosegawa/agent-ui-core@2.0.0

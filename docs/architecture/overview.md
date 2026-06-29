@@ -235,7 +235,7 @@ Common primitives:
 - `AgentThreadHeader`
 - `AgentThreadTimeline`
 - `AgentApprovalQueue`
-- `AgentComposerPanel`
+- `AgentComposer`
 - `AgentUsagePanel`
 - `AgentDiagnosticsPanel`
 - `AgentSkillsPanel`

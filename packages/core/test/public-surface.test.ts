@@ -51,7 +51,6 @@ describe("core public surface", () => {
     expect(lines).not.toContain('export * from "./state";');
     for (const forbiddenRawStoreSymbol of [
       "AgentItemBlock",
-      "AgentTranscriptBlockView",
       "PendingServerRequest",
       "ServerRequestQueueState",
       "ThreadLifecycleState",

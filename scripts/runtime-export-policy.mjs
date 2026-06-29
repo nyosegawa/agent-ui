@@ -30,7 +30,7 @@ export const representativeNamedExportsBySpecifier = {
     "useAgentApprovals",
     "useAgentContext",
     "useAgentComposerController",
-    "useAgentThread",
+    "useAgentThreadController",
   ],
   "@nyosegawa/agent-ui-react/primitives": [
     "AgentComposer",

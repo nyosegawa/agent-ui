@@ -2,12 +2,14 @@ import {
   selectOrderedCollectionThreads,
   selectThreadCollection,
   selectThreadView,
-  type AgentError,
-  type AgentThreadCollection,
-  type AgentThreadScope,
-  type AgentThreadView,
-  type ThreadId,
 } from "@nyosegawa/agent-ui-core/internal";
+import type {
+  AgentError,
+  AgentThreadCollection,
+  AgentThreadScope,
+  AgentThreadView,
+  ThreadId,
+} from "@nyosegawa/agent-ui-core";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useInternalAgentContext } from "../provider";
 import {
@@ -17,7 +19,7 @@ import {
 } from "../request-options";
 import { rawThreadId, threadUpsertEvent } from "../thread-history";
 import { useCodexSession } from "./codex-session";
-import { useAgentThread, useAgentThreadReader } from "./thread";
+import { useAgentThreadController, useAgentThreadReader } from "./thread";
 import type { AgentThreadResumeResult } from "./thread-lifecycle-types";
 
 export interface AgentThreadListController {
@@ -72,7 +74,7 @@ export function useAgentThreadListController(
 ): AgentThreadListController {
   const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
-  const threadController = useAgentThread();
+  const threadController = useAgentThreadController();
   const { readThread } = useAgentThreadReader();
   const onHistorySynced = options.onHistorySynced;
   const requestSequenceRef = useRef(0);

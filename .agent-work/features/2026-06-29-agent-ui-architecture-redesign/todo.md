@@ -504,16 +504,51 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
   - Push: push final branch.
   - PR/CI: open/update PR and follow required checks to success/failure.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: opened draft PR #40, then resolved final-review P1/P2
+      findings by adding the missing core major changeset entry, removing
+      manual unreleased edits from historical package changelogs, rewriting the
+      npm versioning policy away from pre-1.0 guidance, removing legacy
+      headless hook aliases from the public export, replacing public thread
+      hooks with raw-free `AgentThreadView` / transcript view controllers,
+      moving internal raw-thread consumers to `useInternalAgentThread`,
+      removing transcript-window utilities from the headless entrypoint,
+      replacing server root `ServerRequestPolicyContext.request` with explicit
+      `kind` / `payload` / id fields, and refreshing docs/examples/API guards
+      for the new boundary.
+    - Validation: final closeout passed `bun run validate:release`
+      (typecheck, lint with 0 errors and existing composer hook dependency
+      warnings, 65 Vitest files / 729 tests, protocol tests, core fixtures,
+      package build/packlist/node-compat/publint/attw, dead-code check, API
+      snapshots, and package-resolution smoke) and `bun run validate:e2e`
+      (231 fixture browser tests passed / 1 screenshot refresh skipped, 20
+      real-local browser tests passed). Focused reruns also passed for API
+      snapshot normalization, public showcase/maintainer catalog coverage,
+      source-structure public surface guards, and the close-up gallery e2e that
+      changed during the public composer cleanup.
+    - Downstream smoke: rebuilt publish-like package tarballs, installed them
+      into temporary downstream copies through extracted `file:` packages, and
+      confirmed expected breaking failures. One downstream copy fails typecheck
+      on removed legacy headless hook and preset sidebar prop shapes. The other
+      copy passes typecheck, then fails build on removed
+      `AgentComposerPanel` primitive export; after a temporary migration to
+      `AgentComposer`, provider/i18n `children` types are fixed and only a
+      downstream implicit-any annotation remains. No downstream-specific names
+      were added to public library docs.
+    - Review: ran 4 final-review subagents for release readiness, docs
+      currentness, architecture boundary, and browser/examples. Resolved P1
+      findings for missing core changeset coverage, manual changelog edits,
+      React headless raw `ThreadState` leaks, legacy public hook aliases, and
+      server root `PendingServerRequest` leakage. Resolved P2 findings for
+      docs-site core package copy, npm release policy wording, package export
+      wording, stale `AgentComposerPanel` docs/examples, and API snapshot
+      guardrails. No unresolved P0/P1 findings remain.
+    - Commit: pending final evidence commit.
+    - Push: pending final evidence commit.
   - Tasks:
-    - [ ] T001 Run full release/e2e closeout.
+    - [x] T001 Run full release/e2e closeout.
       - Expected files/areas: command evidence.
       - Validation note: `validate:release && validate:e2e`.
-    - [ ] T002 Run downstream smoke without copying downstream concepts into docs.
+    - [x] T002 Run downstream smoke without copying downstream concepts into docs.
       - Expected files/areas: external smoke notes only.
       - Validation note: record commands/results in PR notes.
     - [ ] T003 Create PR evidence matrix.
@@ -522,7 +557,7 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
     - [ ] T004 Watch CI to concrete result.
       - Expected files/areas: GitHub Actions evidence.
       - Validation note: required checks green or exact failures recorded.
-    - [ ] T005 Run 4 parallel final-review subagents and resolve P0/P1 findings.
+    - [x] T005 Run 4 parallel final-review subagents and resolve P0/P1 findings.
       - Expected files/areas: full PR diff, PR evidence matrix, CI/browser/package evidence.
       - Validation note: record subagent findings and remediation in Evidence.
 
@@ -549,13 +584,17 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
 - Planning artifact validation:
   `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-29-agent-ui-architecture-redesign`
   passed.
-- Implementation validation: pending.
+- Implementation validation: `bun run validate:release` and
+  `bun run validate:e2e` passed after final P009 fixes. Downstream temp
+  tarball smoke found only intentional breaking changes and one downstream
+  implicit-any follow-up after temporary migration.
 
 ## Review Evidence
 
 - Previous same-session architecture review: 15 rounds / 60 subagents.
 - Planning review lanes: four parallel subagents.
-- Final implementation review: pending.
+- Final implementation review: 4 parallel final-review subagents completed;
+  P0/P1 findings were resolved and no unresolved P0/P1 remains.
 
 ## Commit Log
 
@@ -564,12 +603,12 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
 ## Final Checklist
 
 - [ ] All phases complete or explicitly deferred.
-- [ ] No unresolved P0/P1 findings.
-- [ ] Product boundary intact.
-- [ ] Public API changes documented, snapshotted, and package-resolution tested.
-- [ ] Docs and examples current.
-- [ ] Changeset/changelog accurate.
-- [ ] `bun run validate:release` passed.
-- [ ] `bun run validate:e2e` passed.
+- [x] No unresolved P0/P1 findings.
+- [x] Product boundary intact.
+- [x] Public API changes documented, snapshotted, and package-resolution tested.
+- [x] Docs and examples current.
+- [x] Changeset/changelog accurate.
+- [x] `bun run validate:release` passed.
+- [x] `bun run validate:e2e` passed.
 - [ ] PR opened/updated.
 - [ ] CI followed to concrete success or failure.

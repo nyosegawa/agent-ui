@@ -2,11 +2,11 @@ import type {
   AgentItemBlock,
   AgentItemBlockKind,
   AgentItemState,
-  AgentTranscriptBlockView,
   ThreadState,
   TurnState,
 } from "@nyosegawa/agent-ui-core/internal";
-import { selectThread, type ThreadId } from "@nyosegawa/agent-ui-core/internal";
+import { selectThread } from "@nyosegawa/agent-ui-core/internal";
+import type { AgentTranscriptBlockView, ThreadId } from "@nyosegawa/agent-ui-core";
 import { useMemo } from "react";
 import { useInternalAgentContext } from "../provider";
 import type { AgentApprovalRequest } from "../approval-types";
@@ -24,8 +24,8 @@ import { useTranscriptWindowing } from "../timeline/windowing";
 export type AgentTranscriptDensityMode = "default" | "compact" | "verbose" | "critical-only";
 
 export interface AgentTranscriptDensityConfig {
+  byBlockKind?: Partial<Record<AgentTranscriptBlockView["kind"], AgentTranscriptDensityMode>>;
   default?: AgentTranscriptDensityMode;
-  byBlockKind?: Partial<Record<AgentItemBlockKind, AgentTranscriptDensityMode>>;
 }
 
 export type AgentTranscriptDensity =

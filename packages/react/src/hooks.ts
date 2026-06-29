@@ -42,7 +42,6 @@ export type {
   AgentApprovalRequest,
 } from "./approval-types";
 export {
-  useAgentComposer,
   useAgentChatController,
   useAgentComposerController,
   type AgentChatController,
@@ -67,7 +66,6 @@ export {
   type TurnStartOptions,
 } from "./hooks/run-settings";
 export {
-  useAgentThread,
   useAgentThreadActions,
   useAgentThreadController,
   useAgentThreadHistory,
@@ -96,7 +94,7 @@ export {
   type AgentThreadListControllerOptions,
   type AgentThreadListRequest,
 } from "./hooks/thread-list";
-export { useAgentTurn, useAgentTurnController } from "./hooks/turn";
+export { useAgentTurnController } from "./hooks/turn";
 export {
   useAgentTranscriptScrollController,
   type AgentTranscriptScrollController,

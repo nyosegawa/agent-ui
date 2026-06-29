@@ -1,7 +1,7 @@
 import { AgentTransport } from '@nyosegawa/agent-ui-core';
 import { CodexAccountClient, CodexAppsClient, CodexHooksClient, CodexModelsClient, CodexClients, CodexSkillsClient, CodexThreadsClient, CodexTurnsClient, CodexClientsOptions } from './clients.js';
 export { CodexThreadForkOptions, CodexThreadMetadataUpdateOptions, CodexThreadResumeOptions, CodexTurnStartOptions, CodexTurnSteerOptions } from './clients.js';
-import './request-<chunk>.js';
+import './request-builders.js';
 import './UserInput-<chunk>.js';
 import './method-params-<chunk>.js';
 import './InitializeParams-<chunk>.js';

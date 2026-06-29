@@ -31,12 +31,12 @@ generated Codex schema files, bundled declaration chunks, private CSS chunks,
 and `.aui-*` implementation selectors stay outside the public contract unless a
 later design gate explicitly promotes them.
 
-Known raw-debt in declaration snapshots is not a compatibility promise. It is a
-temporary implementation queue for the architecture redesign. New public exports
-must not add more raw reducer state, generated protocol payloads, generic
-`unknown` payload fields, or child-process internals to root, React headless, or
-React primitives. Remove old shapes instead of preserving them when the cleaner
-view-model/controller API replaces them.
+Declaration snapshots are the contract guard for this redesign. Root, React
+headless, and React primitives must expose raw-free view models, explicit
+controller actions, and host-policy callback contexts instead of reducer store
+state, generated protocol payloads, or child-process internals. Remove old
+shapes instead of preserving them when the cleaner view-model/controller API
+replaces them.
 
 Agent UI package exports also do not make host runtime policy public. Hosts
 still own non-loopback bridge admission, hosted auth, persistence, tenant and
@@ -65,11 +65,10 @@ notifications, run settings, server-request summaries, status banners, thread
 collection metadata, thread runtime/execution state, thread summary views,
 transcript views, and usage.
 
-Advanced implementation boundary: `@nyosegawa/agent-ui-core/internal` exposes
-raw normalized store state, raw reducer selectors, and fixture helpers for
-Agent UI packages that still need implementation-level access during the
-redesign. It is not the normal host integration path and must not be used to
-justify adding raw store shape back to the root export.
+Implementation boundary: `@nyosegawa/agent-ui-core/internal` exposes raw
+normalized store state, raw reducer selectors, and fixture helpers for Agent UI
+packages and repository tests. It is not the host integration path and must not
+be used to justify adding raw store shape back to the root export.
 
 Replaced by the current API: registry-bucket public shapes
 (`ThreadRegistryState`, `ThreadRegistryStatus`, and `selectThreadRegistry`)
@@ -86,12 +85,6 @@ blocks now expose display-oriented fields such as `argumentsText`,
 `resultText`, `errorText`, and `files` instead of raw `arguments`, `result`,
 `error`, `changes`, or `metadata`. Public controllers should consume view
 models rather than asking hosts to inspect raw store shape.
-
-Known remaining raw-debt: root still exposes event/item metadata types through
-`AgentEvent`, `AgentItemState`, and `AgentItemMetadata`. They remain only
-because the public event contract has not yet been rebuilt. Do not use them as
-a host state-inspection API, and do not add new root APIs that depend on those
-metadata shapes.
 
 Make private: reducer-internal registry/retention helper behavior and any
 canonical-ID reconciliation detail that is not part of an explicit diagnostic
@@ -158,8 +151,7 @@ The React package has three public JavaScript entrypoints:
   primitives backed by stable view models.
 - `@nyosegawa/agent-ui-react/headless`: controller entry. Exports
   `AgentProvider`, public hooks/controllers, input/resource types, run-policy
-  helpers, transcript-window helpers, usage helpers, and i18n helpers for hosts
-  that own layout.
+  helpers, usage helpers, and i18n helpers for hosts that own layout.
 
 Keep root small. New host-composition surfaces should go to `primitives` or
 `headless`; root should stay the drop-in preset API.
@@ -361,7 +353,7 @@ providers, token stores, workspace registries, tenant/session models, or process
 supervisors.
 
 Composer styled parts exported from `@nyosegawa/agent-ui-react/primitives` are
-`AgentComposerPanel`, `AgentComposerInput`, `AgentComposerToolbar`,
+`AgentComposer`, `AgentComposerInput`, `AgentComposerToolbar`,
 `AgentAttachmentChips`, `AgentComposerSubmitButton`, and
 `AgentStartComposer`. They expose browser UI composition surfaces while keeping
 attachment mutation, preview revocation, queued attachment restore, and
@@ -660,10 +652,10 @@ Headless usage:
 import {
   useAgentApprovals,
   useAgentComposerController,
-  useAgentThread,
+  useAgentThreadController,
 } from "@nyosegawa/agent-ui-react/headless";
 
-const thread = useAgentThread(threadId);
+const thread = useAgentThreadController(threadId);
 const approvals = useAgentApprovals(threadId);
 const composer = useAgentComposerController(threadId);
 ```
@@ -700,10 +692,9 @@ validate:packages`. It dry-runs each package packlist and rejects unexpected
   `@nyosegawa/agent-ui-react/styles.css` are resolver-checked, not executed as
   JavaScript.
 
-Only these subpaths are public today:
+Stable host-facing public subpaths:
 
 - `@nyosegawa/agent-ui-core`
-- `@nyosegawa/agent-ui-core/internal`
 - `@nyosegawa/agent-ui-codex`
 - `@nyosegawa/agent-ui-codex/clients`
 - `@nyosegawa/agent-ui-codex/normalizer`
@@ -718,6 +709,10 @@ Only these subpaths are public today:
 - `@nyosegawa/agent-ui-server`
 - `@nyosegawa/agent-ui-server/advanced`
 - `@nyosegawa/agent-ui-web-components`
+
+Exported implementation subpaths:
+
+- `@nyosegawa/agent-ui-core/internal`
 
 React style chunks under `dist/styles/*` are copied package internals used by
 `styles.css`, not host imports. Internal `.aui-*` selectors are likewise

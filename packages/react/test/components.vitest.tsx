@@ -51,7 +51,7 @@ import {
   useAgentRunSettings,
   useAgentSkills,
   useAgentDiagnostics,
-  useAgentThread,
+  useAgentThreadController,
   useAgentThreadReader,
   useAgentThreads,
   useAgentThreadListController,
@@ -59,7 +59,7 @@ import {
   useAgentComposerController,
   useAgentTranscriptController,
   useAgentTranscriptScrollController,
-  useAgentTurn,
+  useAgentTurnController,
   type AgentApprovalRequest,
 } from "../src/headless";
 import { useInternalAgentComposerController } from "../src/hooks/composer";
@@ -405,7 +405,7 @@ function ActiveThreadHarness(props: React.ComponentProps<typeof AgentChat>) {
 
 function ResumeThreadHarness({ requestedId }: { requestedId: string }) {
   const { state } = useInternalAgentContext();
-  const { resumeThread } = useAgentThread();
+  const { resumeThread } = useAgentThreadController();
   const [resumeResult, setResumeResult] = useState("");
   const activeThreadId = state.threadLifecycle.activeThreadId;
   const activeThread = activeThreadId ? state.threads[activeThreadId] : undefined;
@@ -3546,7 +3546,7 @@ describe("AgentChat", () => {
     const user = userEvent.setup();
     const transport = new FakeAgentTransport();
     function Probe() {
-      const { steerTurn } = useAgentTurn("thread-steer");
+      const { steerTurn } = useAgentTurnController("thread-steer");
       return (
         <button onClick={() => void steerTurn("turn-1", "continue")} type="button">
           Steer

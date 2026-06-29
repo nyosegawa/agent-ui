@@ -24,7 +24,7 @@ import {
   useEffect,
   useMemo,
   useReducer,
-  type PropsWithChildren,
+  type ReactNode,
 } from "react";
 import { sharedReactContext } from "./context-registry";
 import { useAgentTransportEvents } from "./transport-events";
@@ -48,7 +48,8 @@ const AgentContext = sharedReactContext<InternalAgentContextValue | null>(
   null,
 );
 
-export interface AgentProviderProps extends PropsWithChildren {
+export interface AgentProviderProps {
+  children?: ReactNode;
   defaultRunPolicyId?: AgentRunPolicyId;
   initialState?: AgentSessionState;
   runPolicies?: readonly AgentRunPolicy[];

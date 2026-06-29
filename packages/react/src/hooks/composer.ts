@@ -2,8 +2,8 @@ import {
   selectLatestRunningTurnId,
   selectThread,
   type AgentOperationView,
-  type ThreadId,
 } from "@nyosegawa/agent-ui-core/internal";
+import type { ThreadId } from "@nyosegawa/agent-ui-core";
 import { useCallback, useMemo, type SetStateAction } from "react";
 import type { AgentUserInput } from "../agent-input";
 import {
@@ -26,7 +26,7 @@ import type {
   AgentComposerSubmitMode,
 } from "./composer-types";
 import type { AgentThreadStartWithInputResult } from "./thread-lifecycle-types";
-import { useAgentTurn } from "./turn";
+import { useInternalAgentTurn } from "./turn";
 import { useComposerTurnStart } from "./composer-turn-start";
 import {
   hasSubmittableFirstInput,
@@ -44,10 +44,6 @@ export interface InternalAgentComposerController extends AgentComposerController
     params?: ThreadStartOptions,
     turnOptions?: TurnStartOptions,
   ) => Promise<AgentThreadStartWithInputResult>;
-}
-
-export function useAgentComposer(threadId?: ThreadId): AgentComposerController {
-  return useAgentComposerController(threadId);
 }
 
 export function useAgentComposerController(threadId?: ThreadId): AgentComposerController {
@@ -91,7 +87,7 @@ export function useInternalAgentComposerController(
   const composerQueue = useAgentComposerQueueStore();
   const resolvedThreadId = threadId ?? state.threadLifecycle.activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;
-  const { interruptTurn, steerTurn } = useAgentTurn(threadId);
+  const { interruptTurn, steerTurn } = useInternalAgentTurn(threadId);
   const startComposerTurn = useComposerTurnStart(threadId);
   const activeTurnId = resolvedThreadId
     ? selectLatestRunningTurnId(state, resolvedThreadId)

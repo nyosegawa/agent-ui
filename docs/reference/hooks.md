@@ -63,12 +63,13 @@ const history = useAgentThreadHistory();
 const reader = useAgentThreadReader();
 ```
 
-`useAgentThreads()` returns normalized thread state in `selectOrderedThreads()`
-order: the default lifecycle collection order, with uncollected in-memory
-thread entities appended last as a fallback. Implicit lifecycle upserts put the
-most recently changed default-collection thread first, while explicit scoped
-collections keep the order supplied by their page events. Selecting a thread
-does not promote it to the top of the collection.
+`useAgentThreads()` returns `AgentThreadView[]` entries in the default lifecycle
+collection order, with uncollected in-memory threads appended last as a
+fallback. Implicit lifecycle upserts put the most recently changed default
+collection thread first, while explicit scoped collections keep the order
+supplied by their page events. Selecting a thread does not promote it to the top
+of the collection. The hook does not expose reducer thread records, ordered turn
+ids, optimistic operation maps, or raw App Server payloads.
 
 `useAgentThreadHistory().listThreads()` calls `thread/list`, supports search and
 pagination cursor inputs, tracks the latest cursor, and upserts returned thread
@@ -170,8 +171,8 @@ queue state separate from App Server pending input with `queuedFollowUps`,
 `sendingFollowUpIds`, `followUpErrors`, and `activeTurnId`. Attachment-local
 draft state and host-disabled states are composed by the visual composer layer;
 `canSubmit` reflects the controller's text/running state before those external
-constraints are applied. The default `AgentComposerPanel` still blocks
-submission for approval-waiting threads and stored read-only previews.
+constraints are applied. The default `AgentComposer` blocks submission for
+approval-waiting threads and stored read-only previews.
 `useAgentChatController()` exposes the same provider-scoped controller for
 host UI that needs to drive the current `AgentChat` flow from outside the
 composer. Its `sendMessage(input, { threadOptions, turnOptions })` method

@@ -1,7 +1,6 @@
 import { C as CodexAppServerOptions, D as DynamicToolDebugEvent, a as DynamicToolHandler, b as DynamicToolHelperPermissionPolicy } from './advanced-<chunk>.js';
 export { c as CodexBridgeShutdownOptions, d as DynamicToolCallOutputContentItem, e as DynamicToolCallResponse, f as DynamicToolDebugEventDetails, g as DynamicToolDebugPhase, h as DynamicToolDebugRequest, i as DynamicToolHandlerContext, j as DynamicToolHelperPermissionContext, k as DynamicToolHelperPermissionDecision, l as DynamicToolRequest, M as McpDynamicToolHandlerOptions, m as McpDynamicToolMapping, n as createMcpDynamicToolHandler } from './advanced-<chunk>.js';
 import { AgentDiagnosticAudience, AgentTransportEvent } from '@nyosegawa/agent-ui-core';
-import { PendingServerRequest } from '@nyosegawa/agent-ui-core/internal';
 import { IncomingMessage, ServerResponse, Server } from 'node:http';
 import { WebSocketServer, WebSocket } from 'ws';
 import '@nyosegawa/agent-ui-codex';
@@ -93,9 +92,8 @@ interface ServerRequestPolicy$1 {
     userInput?: "manual";
 }
 interface ServerRequestPolicyContext {
-    kind: PendingServerRequest["kind"];
+    kind: string;
     payload: unknown;
-    request: PendingServerRequest;
     requestId: NonNullable<AgentTransportEvent["requestId"]>;
     threadId?: string;
     turnId?: string;
@@ -174,7 +172,7 @@ type ResolvedServerRequestPolicy = {
 declare function resolveServerRequestPolicy(policy?: ServerRequestPolicy$1): ResolvedServerRequestPolicy;
 declare function responseForServerRequest(event: AgentTransportEvent, policy: ResolvedServerRequestPolicy): {
     action: string;
-    kind: PendingServerRequest["kind"];
+    kind: string;
     requestId: NonNullable<AgentTransportEvent["requestId"]>;
     response: unknown;
 } | undefined;

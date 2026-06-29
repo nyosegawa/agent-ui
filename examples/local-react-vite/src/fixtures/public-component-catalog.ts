@@ -89,7 +89,7 @@ export function App({ transport }) {
       "AgentStatusBar",
       "AgentThreadHeader",
       "AgentThreadSidebar",
-      "AgentComposerPanel",
+      "AgentComposer",
     ],
     copyCode: `import { AgentChat, AgentProvider } from "@nyosegawa/agent-ui-react";
 import { useAgentChatController } from "@nyosegawa/agent-ui-react/headless";
@@ -153,7 +153,7 @@ export function App({ transport }) {
       "AgentThreadView",
       "AgentThreadSurface",
       "AgentThreadHeader",
-      "AgentComposerPanel",
+      "AgentComposer",
       "AgentStatusBar",
     ],
     copyCode: `import { AgentProvider } from "@nyosegawa/agent-ui-react";
