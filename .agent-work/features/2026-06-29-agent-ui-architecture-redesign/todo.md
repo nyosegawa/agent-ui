@@ -10,6 +10,10 @@ This is not an MVP plan. The implementation is complete only when every phase
 is done or superseded by an equal-or-stronger design that satisfies the same
 requirements with evidence.
 
+Backward compatibility is not a design goal. Remove legacy public shapes,
+aliases, duplicated docs, and compatibility shims when they conflict with the
+clean redesigned API. Migration help belongs in rewritten docs and examples.
+
 ## Branch And Planning Commit
 
 - Branch: `codex/agent-ui-architecture-redesign-plan`
@@ -279,8 +283,11 @@ requirements with evidence.
       - Validation note: record subagent findings and remediation in Evidence.
 
 - [ ] P008 Examples, recipes, docs, migration, and changelog refresh
-  - Goal: make docs and examples the migration source of truth.
-  - Scope: README/docs/package READMEs/changelogs/recipes/changesets.
+  - Goal: make docs and examples the migration source of truth, rewriting
+    affected pages around the new architecture instead of patching stale text.
+  - Scope: README/docs/package READMEs/changelogs/recipes/changesets. This may
+    include large rewrites of guides/reference pages whose current structure no
+    longer matches the final API.
   - Expected files/areas:
     - `README.md`
     - `docs/**`
@@ -290,7 +297,7 @@ requirements with evidence.
     - `examples/recipes/**`
   - Validation: `bun run --cwd examples/recipes typecheck`,
     docs/skill/staleness tests, API snapshots as needed.
-  - Review: run 4 parallel subagent reviews before commit, covering docs currentness, migration coherence, example correctness, and downstream-name leakage. Confirm no downstream app-specific names or product workflows.
+  - Review: run 4 parallel subagent reviews before commit, covering docs currentness, whole-page coherence, migration coherence, example correctness, and downstream-name leakage. Confirm no downstream app-specific names, product workflows, stale old/new duplicated API stories, or compatibility-shim guidance.
   - Commit: one phase commit, split if docs exceed reviewable size.
   - Push: push after validation.
   - PR/CI: docs/release impact.
@@ -307,9 +314,9 @@ requirements with evidence.
     - [ ] T002 Fix attachment recipe to use real path for non-image App Server input.
       - Expected files/areas: `examples/recipes/src/agent-chat-composition.tsx`.
       - Validation note: recipe typecheck.
-    - [ ] T003 Update migration docs, package exports, package READMEs, changelogs, changeset.
+    - [ ] T003 Rewrite affected migration docs, package exports, package READMEs, changelogs, changeset.
       - Expected files/areas: docs and package metadata.
-      - Validation note: docs review plus package/API gates.
+      - Validation note: docs review plus package/API gates; reject scattered partial edits when a page needs restructuring.
     - [ ] T004 Add downstream-name leakage guard.
       - Expected files/areas: docs staleness or repository policy tests.
       - Validation note: focused docs/staleness test.
@@ -362,6 +369,8 @@ requirements with evidence.
 - Do not narrow the work to an MVP, demo path, compatibility shim, or easiest
   passing subset. Scope reduction is allowed only when replaced by a stronger
   design that satisfies the same requirement and is recorded in Evidence.
+- Do not preserve backward compatibility for its own sake. Remove old API
+  shapes, docs, examples, and aliases when the new design supersedes them.
 - Each implementation phase must run 4 parallel subagent reviews before its
   phase commit. Use distinct prompts for architecture/boundary, implementation
   correctness, validation coverage, and docs/release impact. Record findings,

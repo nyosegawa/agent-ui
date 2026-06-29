@@ -30,7 +30,7 @@ Work phase-first from `todo.md`. Implement one phase at a time, validate it, run
 
 ## validation rules
 
-Use focused validation per phase. Final local closeout must include `bun run validate:release` and `bun run validate:e2e`. Public API changes require API snapshots, package-resolution, docs, examples/recipes, and changeset/changelog review.
+Use focused validation per phase. Final closeout needs `bun run validate:release` and `bun run validate:e2e`. Public API changes need snapshots, package-resolution, docs/examples, changeset/changelog review.
 
 ## review rules
 
@@ -54,7 +54,7 @@ Follow GitHub Actions to concrete success/failure. Required CI success cannot be
 
 ## evidence rules
 
-Record implementation, validation, review, commit, push, PR, and CI evidence in `todo.md`. Keep docs generic and do not mention downstream apps.
+Record implementation, validation, review, commit, push, PR, and CI evidence in `todo.md`. Keep docs generic; no downstream apps. Rewrite docs when partial edits keep stale structure.
 
 ## repo-specific forbidden edits
 
@@ -62,7 +62,7 @@ Do not edit `third_party/codex` directly. Do not hand-edit `packages/codex/src/g
 
 ## repo-specific checks
 
-Read current source before editing public surfaces. Use Bun. Preserve `validate:packages` ordering: fresh build, packlist, Node compatibility, `publint`, `attw`.
+Read current source before editing public surfaces. Use Bun. Preserve `validate:packages` ordering. Do not keep old APIs, aliases, or docs for backward compatibility.
 
 ## stop conditions
 

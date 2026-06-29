@@ -49,6 +49,8 @@ library needs stronger generic primitives, not app-specific workflow APIs.
 - Split build scripts without weakening ordered package validation.
 - Update docs, examples, API snapshots, package-resolution smoke, changelogs,
   and changesets as part of the same PR.
+- Rewrite affected documentation as needed instead of applying narrow patch
+  edits over outdated structure.
 - Add a PR evidence matrix proving public surface, docs, examples, tests, and
   release impact are aligned.
 
@@ -58,6 +60,10 @@ library needs stronger generic primitives, not app-specific workflow APIs.
   Completion requires the full redesign, docs, tests, examples, release
   metadata, browser evidence, downstream smoke evidence, PR evidence matrix,
   and CI follow-through described here.
+- No backward-compatibility preservation as a goal. Old public APIs, aliases,
+  option names, types, docs, examples, and recipes should be removed or replaced
+  when the redesigned API is cleaner. Compatibility is allowed only if the old
+  shape is independently still the best design.
 - No hosted service behavior.
 - No host auth, billing, tenant/session isolation, credential storage, audit
   retention, upload storage, process supervision, or deployment policy.
@@ -66,7 +72,9 @@ library needs stronger generic primitives, not app-specific workflow APIs.
 - No public `/testing` subpath in this PR.
 - No direct edits under `third_party/codex`.
 - No hand edits to generated schema or compiled output.
-- No compatibility shims for unshipped branch behavior.
+- No compatibility shims, legacy aliases, or duplicate old/new docs to soften
+  the migration. Migration support belongs in clear docs and examples, not in
+  preserving a worse API.
 
 ## Repo-Specific Constraints
 
@@ -96,6 +104,9 @@ library needs stronger generic primitives, not app-specific workflow APIs.
    `/headless` returns view models and controller methods. `/primitives` renders
    view models. Root remains the drop-in preset.
 
+   Do not keep old React hook return shapes, slot names, raw item render paths,
+   or option aliases for backward compatibility if the new shape is cleaner.
+
 4. **Approvals**
    Public approvals expose `AgentApprovalView` and action methods. Raw
    `PendingServerRequest.payload` is not a primitive rendering contract.
@@ -116,6 +127,12 @@ library needs stronger generic primitives, not app-specific workflow APIs.
 8. **Build gates**
    Add package/example build separation only if package validation still proves
    fresh package output before export checks.
+
+9. **Documentation rewrite**
+   Treat docs as part of the architecture, not release notes pasted over old
+   text. Rewrite affected guides/reference pages around the final concepts:
+   product boundary, raw-free view models, controllers, primitives, bridge
+   boundaries, Web Components, validation, and migration.
 
 ## Impacted Areas
 
@@ -207,6 +224,8 @@ Focused gates:
 - Web Component prop expansion can freeze unstable React internals.
 - Build split can accidentally validate stale package output.
 - Docs can leak downstream app concepts if examples are copied too literally.
+- Docs can become inconsistent if they are only patched locally. Large affected
+  pages should be rewritten around the new architecture.
 - The PR can become too large to review if phase commits are not kept coherent.
 
 ## Completion Criteria
@@ -227,6 +246,8 @@ Focused gates:
   traversal.
 - Package exports, API snapshots, package resolution, docs, examples, and
   changesets agree.
+- Affected docs are internally coherent after rewrite, not merely updated by
+  scattered partial edits.
 - `bun run validate:release` and `bun run validate:e2e` pass.
 - PR CI completes green.
 
