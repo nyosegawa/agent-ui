@@ -145,8 +145,8 @@
   - Review: Security/API review focusing on pre-spawn rejection, cleanup scope, and public result semantics.
   - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: `a854cb8a9a7d7dd3c1f7d7e368f0c590185bfb2a` - Harden bridge upload and composer states
-  - Push: pending
-  - PR/CI: pending
+  - Push: pushed to `origin/codex/new-adopter-onboarding-plan`
+  - PR/CI: PR #42 checks passed after push
   - Evidence:
     - Implementation: Bridge preflight now rejects invalid top-level `browserMethodPolicy` values before admission/spawn, including invalid resolver-returned policies, while preserving explicit `productized`, `all`, and valid capability policies.
     - Implementation: Upload TTL cleanup now deletes only Agent UI marked managed sessions, skips live helper sessions in the same process, preserves unmanaged/malformed/symlink-marker directories, and does not convert existing unmarked host directories into managed deletion targets.
@@ -165,7 +165,8 @@
     - Review: Manual review confirmed the bridge rejection path runs before admission/spawn, upload cleanup remains host-boundary safe, React blocked result semantics match core waiting reasons, public skill guidance is updated, and API snapshots include the new public types/rejection reason.
     - 4-Parallel Subagent Review: Completed after final validation. Lane 1 found no bridge/security findings. Lane 2 found live managed sessions could be TTL-deleted by another helper and public upload skill guidance was stale; fixed with a process-local active managed-session registry, tests, docs, and skill updates. Lane 3 found resume-to-waiting `sendMessage()` returned `unknown`; fixed by propagating `waitingReasons` through resume/turn-start results, adding a resume-blocked test, and regenerating snapshots. Lane 4 found no release/docs/validation findings.
     - Commit: `a854cb8a9a7d7dd3c1f7d7e368f0c590185bfb2a` - Harden bridge upload and composer states.
-    - Push:
+    - Push: `git push origin codex/new-adopter-onboarding-plan` pushed `04f2e41..7f35699`.
+    - PR/CI: PR #42 checks passed after push: API snapshots, Detect changes, Detect compatibility changes, Lint, Node.js 22.x, Node.js 24.x, Package resolution, Package validation, Playwright fixtures, Protocol and fixtures, Real local smoke, Repository policy, Typecheck, Unit tests, and pnpm workspace smoke.
   - Tasks:
     - [x] T014 Reject invalid top-level `browserMethodPolicy` values before spawn, including values returned by `resolveBridgeOptions`.
       - Expected files/areas: server websocket implementation/tests.
@@ -371,6 +372,8 @@
 - P005: `bun run test:e2e:real-local` passed: 20 tests.
 - P005: `bunx changeset status --verbose` reported patch bumps for `@nyosegawa/agent-ui-react` and `@nyosegawa/agent-ui-server` from `.changeset/quiet-bridges-clean.md`.
 - P005: `git diff --check` passed.
+- P005: branch pushed to `origin/codex/new-adopter-onboarding-plan`.
+- P005 PR #42 checks passed after push: API snapshots, Detect changes, Detect compatibility changes, Lint, Node.js 22.x, Node.js 24.x, Package resolution, Package validation, Playwright fixtures, Protocol and fixtures, Real local smoke, Repository policy, Typecheck, Unit tests, and pnpm workspace smoke.
 
 ## Review Evidence
 
