@@ -7,14 +7,14 @@
 - Blockers: None
 - Last validation: P004 repo skill and public skill leakage validation passed locally.
 - Last review: P004 four-lane subagent review completed; public-skill leakage guard finding fixed.
-- PR/CI: Draft PR #42 open; P004 push/CI pending.
+- PR/CI: Draft PR #42 open; P004 evidence push/CI pending.
 
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
 - Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: planning, P001 docs commits, P002 docs/package README commits, and P003 public skill commits pushed; P004 pending
+- Push result: planning, P001 docs commits, P002 docs/package README commits, and P003 public skill commits pushed; P004 guardrail commits pending push
 - Blockers: none
 
 ## Phase Checklist
@@ -115,7 +115,7 @@
   - Validation: `bun run test:repo-skills`.
   - Review: Ensure maintainer guidance does not leak into public skill.
   - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
-  - Commit: pending
+  - Commit: `1d83d396e91df305b496202fa0e98df6c67d510d`
   - Push: pending
   - PR/CI: pending
   - Evidence:
@@ -123,7 +123,7 @@
     - Validation: `bun run test:repo-skills` passed; `bun run test:skills` passed; forbidden maintainer-command/gate search over `skills/agent-ui` returned no matches; `git diff --check` passed; artifact validator passed.
     - Review: Manual pass confirmed public `skills/agent-ui` remains external-host focused and repo-maintainer commands stay in `.agents/skills` and maintenance docs.
     - 4-Parallel Subagent Review: Completed. Lane 1 planning guardrails found no issues; lane 2 recipe location found no issues and noted only future `docs/recipes/` references outside active guidance; lane 3 review/maintenance docs found no issues; lane 4 found the public-skill leakage guard was too narrow, fixed by extending `test/agent-ui-skill.test.ts` and `test/repository-skills.test.ts`.
-    - Commit:
+    - Commit: `1d83d396e91df305b496202fa0e98df6c67d510d`
     - Push:
   - Tasks:
     - [x] T011 Add new-adopter onboarding/docs/skills/examples synchronization as a planning and review concern.
@@ -364,6 +364,7 @@
 - `ce002c9e7542a853d2e48f3e669ca1550a4d1f08` - Align recipe and package README guidance
 - `09c4bcd494f64ef7efbb59945021874b10b45869` - Refresh public Agent UI onboarding skill
 - `0eddec96a9dc66aba182aefa47f51ffbc7295158` - Record P003 onboarding evidence
+- `1d83d396e91df305b496202fa0e98df6c67d510d` - Add onboarding sync guardrails
 
 ## Final Checklist
 
