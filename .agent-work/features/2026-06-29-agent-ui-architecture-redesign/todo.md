@@ -542,8 +542,16 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
       docs-site core package copy, npm release policy wording, package export
       wording, stale `AgentComposerPanel` docs/examples, and API snapshot
       guardrails. No unresolved P0/P1 findings remain.
-    - Commit: pending final evidence commit.
-    - Push: pending final evidence commit.
+    - PR/CI: updated PR #40 with the public surface -> source -> API
+      snapshot -> docs -> example/test -> changeset evidence matrix. GitHub
+      Actions on pushed commit `a7a76ab` completed successfully: CI
+      `Detect changes`, `Repository policy`, `Typecheck`, `Lint`, `Unit tests`,
+      `Protocol and fixtures`, `Package validation`, `API snapshots`,
+      `Package resolution`, `Playwright fixtures`, and `Real local smoke`
+      passed; Compatibility `Detect compatibility changes`, `Node.js 22.x`,
+      `Node.js 24.x`, and `pnpm workspace smoke` passed.
+    - Commit: pending final PR/CI evidence commit.
+    - Push: pending final PR/CI evidence commit.
   - Tasks:
     - [x] T001 Run full release/e2e closeout.
       - Expected files/areas: command evidence.
@@ -551,10 +559,10 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
     - [x] T002 Run downstream smoke without copying downstream concepts into docs.
       - Expected files/areas: external smoke notes only.
       - Validation note: record commands/results in PR notes.
-    - [ ] T003 Create PR evidence matrix.
+    - [x] T003 Create PR evidence matrix.
       - Expected files/areas: PR body.
       - Validation note: public surface -> docs -> tests -> examples -> changeset.
-    - [ ] T004 Watch CI to concrete result.
+    - [x] T004 Watch CI to concrete result.
       - Expected files/areas: GitHub Actions evidence.
       - Validation note: required checks green or exact failures recorded.
     - [x] T005 Run 4 parallel final-review subagents and resolve P0/P1 findings.
@@ -588,6 +596,9 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
   `bun run validate:e2e` passed after final P009 fixes. Downstream temp
   tarball smoke found only intentional breaking changes and one downstream
   implicit-any follow-up after temporary migration.
+- PR/CI validation: PR #40 body was updated with the release evidence matrix.
+  GitHub Actions on pushed commit `a7a76ab` completed successfully across CI
+  and Compatibility workflows.
 
 ## Review Evidence
 
@@ -599,10 +610,11 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
 ## Commit Log
 
 - Planning commit: `56226daa25176ebc60e8f8859384b09f7b16905a`
+- Final implementation commit: `a7a76ab`
 
 ## Final Checklist
 
-- [ ] All phases complete or explicitly deferred.
+- [x] All phases complete or explicitly deferred.
 - [x] No unresolved P0/P1 findings.
 - [x] Product boundary intact.
 - [x] Public API changes documented, snapshotted, and package-resolution tested.
@@ -610,5 +622,5 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
 - [x] Changeset/changelog accurate.
 - [x] `bun run validate:release` passed.
 - [x] `bun run validate:e2e` passed.
-- [ ] PR opened/updated.
-- [ ] CI followed to concrete success or failure.
+- [x] PR opened/updated.
+- [x] CI followed to concrete success or failure.
