@@ -1,6 +1,6 @@
 import { PassThrough } from "node:stream";
 import { describe, expect, it } from "vitest";
-import { createCodexAppServerBridge, type CodexChildProcess } from "../src/bridge";
+import { createCodexAppServerBridge, type CodexChildProcess } from "../src/advanced";
 
 describe("createCodexAppServerBridge", () => {
   it("spawns codex app-server over stdio and shuts down safely", async () => {
@@ -98,7 +98,9 @@ describe("createCodexAppServerBridge", () => {
     });
     await bridge.transport.connect();
 
-    stderr.write("Authorization: Bearer raw.token OPENAI_API_KEY=sk-raw userCode=ABCD-EFGH\n");
+    stderr.write(
+      "Authorization: Bearer raw.token OPENAI_API_KEY=sk-raw userCode=ABCD-EFGH\n",
+    );
     const event = await nextTransportEvent(bridge.transport.events, "stderr");
 
     expect(callbackMessages.join("")).toContain("Authorization: [REDACTED]");

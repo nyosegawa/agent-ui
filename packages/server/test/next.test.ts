@@ -1,11 +1,13 @@
 import { PassThrough } from "node:stream";
 import { describe, expect, it } from "vitest";
-import { createAgentUiNextRpcRoute, type CodexChildProcess } from "../src";
+import { createAgentUiNextRpcRoute } from "../src";
+import { agentUiServerInternalBridgeOptions } from "../src/bridge";
+import type { CodexChildProcess } from "../src/advanced";
 
 describe("createAgentUiNextRpcRoute", () => {
   it("handles an allowed productized request and closes the App Server process", async () => {
     const child = createFakeChildProcess();
-    const route = createAgentUiNextRpcRoute({ spawn: () => child.process });
+    const route = createAgentUiNextRpcRoute(testBridgeOptions(() => child.process));
     const responsePromise = route(
       new Request("http://localhost/api/agent-ui", {
         body: JSON.stringify({ method: "model/list", params: {} }),
@@ -13,7 +15,9 @@ describe("createAgentUiNextRpcRoute", () => {
       }),
     );
 
-    await waitFor(() => child.writes.some((line) => JSON.parse(line).method === "model/list"));
+    await waitFor(() =>
+      child.writes.some((line) => JSON.parse(line).method === "model/list"),
+    );
     const request = child.writes
       .map((line) => JSON.parse(line))
       .find((line) => line.method === "model/list");
@@ -27,7 +31,7 @@ describe("createAgentUiNextRpcRoute", () => {
 
   it("redacts App Server JSON-RPC errors before returning one-shot responses", async () => {
     const child = createFakeChildProcess();
-    const route = createAgentUiNextRpcRoute({ spawn: () => child.process });
+    const route = createAgentUiNextRpcRoute(testBridgeOptions(() => child.process));
     const responsePromise = route(
       new Request("http://localhost/api/agent-ui", {
         body: JSON.stringify({ method: "model/list", params: {} }),
@@ -35,7 +39,9 @@ describe("createAgentUiNextRpcRoute", () => {
       }),
     );
 
-    await waitFor(() => child.writes.some((line) => JSON.parse(line).method === "model/list"));
+    await waitFor(() =>
+      child.writes.some((line) => JSON.parse(line).method === "model/list"),
+    );
     const request = child.writes
       .map((line) => JSON.parse(line))
       .find((line) => line.method === "model/list");
@@ -65,11 +71,11 @@ describe("createAgentUiNextRpcRoute", () => {
   });
 
   it("redacts startup failures before returning one-shot responses", async () => {
-    const route = createAgentUiNextRpcRoute({
-      spawn: () => {
+    const route = createAgentUiNextRpcRoute(
+      testBridgeOptions(() => {
         throw new Error("missing binary token: next-spawn-secret");
-      },
-    });
+      }),
+    );
     const response = await route(
       new Request("http://localhost/api/agent-ui", {
         body: JSON.stringify({ method: "model/list", params: {} }),
@@ -85,9 +91,9 @@ describe("createAgentUiNextRpcRoute", () => {
 
   it("cleans up partial child state when stdio streams are missing", async () => {
     const child = createFakeChildProcess();
-    const route = createAgentUiNextRpcRoute({
-      spawn: () => ({ ...child.process, stdin: null }),
-    });
+    const route = createAgentUiNextRpcRoute(
+      testBridgeOptions(() => ({ ...child.process, stdin: null })),
+    );
     const response = await route(
       new Request("http://localhost/api/agent-ui", {
         body: JSON.stringify({ method: "model/list", params: {} }),
@@ -102,14 +108,38 @@ describe("createAgentUiNextRpcRoute", () => {
     expect(child.killed()).toBe(true);
   });
 
-  it("rejects host-only methods before spawning the App Server process", async () => {
+  it("rejects unsupported root process options before spawning", async () => {
     let spawnCount = 0;
     const route = createAgentUiNextRpcRoute({
       spawn: () => {
         spawnCount += 1;
         return createFakeChildProcess().process;
       },
-    });
+    } as unknown as Parameters<typeof createAgentUiNextRpcRoute>[0]);
+
+    const response = await route(
+      new Request("http://localhost/api/agent-ui", {
+        body: JSON.stringify({ method: "model/list", params: {} }),
+        method: "POST",
+      }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(JSON.stringify(body)).toContain(
+      "Unsupported root App Server bridge option: spawn",
+    );
+    expect(spawnCount).toBe(0);
+  });
+
+  it("rejects host-only methods before spawning the App Server process", async () => {
+    let spawnCount = 0;
+    const route = createAgentUiNextRpcRoute(
+      testBridgeOptions(() => {
+        spawnCount += 1;
+        return createFakeChildProcess().process;
+      }),
+    );
     const response = await route(
       new Request("http://localhost/api/agent-ui", {
         body: JSON.stringify({ method: "fs/readFile", params: { path: "/tmp/secret" } }),
@@ -130,12 +160,12 @@ describe("createAgentUiNextRpcRoute", () => {
 
   it("rejects command execution by default", async () => {
     let spawnCount = 0;
-    const route = createAgentUiNextRpcRoute({
-      spawn: () => {
+    const route = createAgentUiNextRpcRoute(
+      testBridgeOptions(() => {
         spawnCount += 1;
         return createFakeChildProcess().process;
-      },
-    });
+      }),
+    );
     const response = await route(
       new Request("http://localhost/api/agent-ui", {
         body: JSON.stringify({ method: "command/exec", params: { command: "pwd" } }),
@@ -152,12 +182,12 @@ describe("createAgentUiNextRpcRoute", () => {
 
   it("rejects missing or invalid methods before spawning", async () => {
     let spawnCount = 0;
-    const route = createAgentUiNextRpcRoute({
-      spawn: () => {
+    const route = createAgentUiNextRpcRoute(
+      testBridgeOptions(() => {
         spawnCount += 1;
         return createFakeChildProcess().process;
-      },
-    });
+      }),
+    );
     const response = await route(
       new Request("http://localhost/api/agent-ui", {
         body: JSON.stringify({ params: {} }),
@@ -179,7 +209,7 @@ describe("createAgentUiNextRpcRoute", () => {
     const child = createFakeChildProcess();
     const route = createAgentUiNextRpcRoute({
       allowedMethods: "all",
-      spawn: () => child.process,
+      ...testBridgeOptions(() => child.process),
     });
     const responsePromise = route(
       new Request("http://localhost/api/agent-ui", {
@@ -188,11 +218,15 @@ describe("createAgentUiNextRpcRoute", () => {
       }),
     );
 
-    await waitFor(() => child.writes.some((line) => JSON.parse(line).method === "fs/readFile"));
+    await waitFor(() =>
+      child.writes.some((line) => JSON.parse(line).method === "fs/readFile"),
+    );
     const request = child.writes
       .map((line) => JSON.parse(line))
       .find((line) => line.method === "fs/readFile");
-    child.stdout.write(`${JSON.stringify({ id: request.id, result: { content: "ok" } })}\n`);
+    child.stdout.write(
+      `${JSON.stringify({ id: request.id, result: { content: "ok" } })}\n`,
+    );
 
     await expect(responsePromise.then((response) => response.json())).resolves.toEqual({
       result: { content: "ok" },
@@ -200,6 +234,12 @@ describe("createAgentUiNextRpcRoute", () => {
     expect(child.killed()).toBe(true);
   });
 });
+
+function testBridgeOptions(spawn: () => CodexChildProcess) {
+  return {
+    [agentUiServerInternalBridgeOptions]: { spawn },
+  };
+}
 
 function createFakeChildProcess(): {
   killed: () => boolean;

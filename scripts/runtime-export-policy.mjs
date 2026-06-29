@@ -25,11 +25,7 @@ export const representativeNamedExportsBySpecifier = {
     "createInitialAgentState",
     "selectServerRequestSummaries",
   ],
-  "@nyosegawa/agent-ui-react": [
-    "AgentChat",
-    "AgentProvider",
-    "defaultAgentComponents",
-  ],
+  "@nyosegawa/agent-ui-react": ["AgentChat", "AgentProvider", "defaultAgentComponents"],
   "@nyosegawa/agent-ui-react/headless": [
     "useAgentApprovals",
     "useAgentContext",
@@ -44,14 +40,14 @@ export const representativeNamedExportsBySpecifier = {
   ],
   "@nyosegawa/agent-ui-server": [
     "attachAgentUiWebSocketBridge",
-    "createCodexAppServerBridge",
     "createAgentUiLocalUploadHandler",
     "resolveServerRequestPolicy",
   ],
-  "@nyosegawa/agent-ui-web-components": [
-    "AgentChatElement",
-    "defineAgentChatElement",
+  "@nyosegawa/agent-ui-server/advanced": [
+    "createCodexAppServerBridge",
+    "createDynamicToolHelperThread",
   ],
+  "@nyosegawa/agent-ui-web-components": ["AgentChatElement", "defineAgentChatElement"],
 };
 
 export function assertRepresentativeNamedExports(specifier, format, moduleNamespace) {

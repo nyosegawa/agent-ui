@@ -79,9 +79,12 @@ The default transport:
 Implementation status:
 
 - `@nyosegawa/agent-ui-codex` owns JSON-RPC-lite framing over existing stdio streams.
-- `@nyosegawa/agent-ui-server` owns local process spawning for `codex app-server --listen stdio://`.
-- `createCodexAppServerBridge()` returns a `CodexAppServerBridge` with a
-  `transport` property and redacts stderr before forwarding logs.
+- `@nyosegawa/agent-ui-server` owns high-level WebSocket and one-shot helpers
+  for `codex app-server --listen stdio://`; the raw stdio process bridge is
+  exported from `@nyosegawa/agent-ui-server/advanced`.
+- `createCodexAppServerBridge()` in the advanced subpath returns a
+  `CodexAppServerBridge` with a `transport` property and redacts stderr before
+  forwarding logs.
 - The generated stable and experimental TypeScript schemas are vendored under `packages/codex/src/generated`.
 - `request-builders.ts` is the product request boundary. Builders return Agent
   UI-owned request/input types that are checked against the generated stable

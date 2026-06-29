@@ -255,7 +255,7 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
       - Expected files/areas: phase diff, lifecycle tests, browser fixture evidence.
       - Validation note: record subagent findings and remediation in Evidence.
 
-- [ ] P005 Server bridge root and host-policy boundary cleanup
+- [x] P005 Server bridge root and host-policy boundary cleanup
   - Goal: keep server root high-level while preserving host-owned policy hooks.
   - Scope: server root exports, bridge process internals, method policy tests,
     server docs.
@@ -272,22 +272,47 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
   - Push: push after validation.
   - PR/CI: security/boundary impact.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
+    - Implementation: split `@nyosegawa/agent-ui-server` into a high-level root
+      export surface and `@nyosegawa/agent-ui-server/advanced` for raw stdio
+      process helpers; removed root `admission`, raw `command`/`args`/`spawn`,
+      child-process, and helper-thread exports from the primary contract.
+      Root WebSocket/Next/Express helpers now construct sanitized App Server
+      options and reject unsupported raw root keys before spawning. Browser
+      method classification remains capability-based and covered by server
+      tests. Docs, package exports, API snapshots, changeset, recipes, and
+      real-local fake Codex setup were rewritten around the root/advanced
+      boundary.
+    - Validation: `bunx vitest run packages/server/test --config
+      vitest.config.ts` (124 passed); `bun run typecheck` (all workspaces);
+      `bun run lint` (0 errors, existing React hook warnings only);
+      `bun run test:api-snapshots`; `bun run validate:packages`; `bun run
+      test:package-resolution`; `bun run test:e2e:real-local` (20 passed).
+      Note: one concurrent `validate:packages` attempt failed because it raced
+      another build from `test:package-resolution` and hit a Next build lock;
+      the same gate passed when rerun alone.
+    - Review: 4 parallel subagent reviews completed. Bridge security review
+      found P1 silent fail-open for legacy top-level `admission`; fixed by
+      rejecting unsupported root keys before spawn and adding a regression
+      test. Host-boundary review found P1 raw process override compatibility in
+      root helpers and stale API-key recipe; fixed by sanitized root bridge
+      options, source-only internal test seam, removing example command/args
+      root overrides, PATH-based fake Codex e2e shim, and rewriting the recipe
+      around `bridgePolicy.admission` / `resolveBridgeOptions`. Root export
+      boundary and browser method policy reviews found no P0/P1 after the
+      boundary changes.
+    - Commit: phase commit `Clean server bridge public boundary`.
     - Push:
   - Tasks:
-    - [ ] T001 Freeze browser method classification and policy tests.
+    - [x] T001 Freeze browser method classification and policy tests.
       - Expected files/areas: server/codex policy tests.
       - Validation note: focused server tests.
-    - [ ] T002 Remove raw child-process details from root primary contract.
+    - [x] T002 Remove raw child-process details from root primary contract.
       - Expected files/areas: server entrypoints, API snapshots.
       - Validation note: package/API gates.
-    - [ ] T003 Update server docs to distinguish root, advanced, and host-owned policy.
+    - [x] T003 Update server docs to distinguish root, advanced, and host-owned policy.
       - Expected files/areas: server bridge docs/package exports.
       - Validation note: docs review and package snapshots.
-    - [ ] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
+    - [x] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
       - Expected files/areas: phase diff, server tests, docs, API snapshots.
       - Validation note: record subagent findings and remediation in Evidence.
 

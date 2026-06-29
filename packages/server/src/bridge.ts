@@ -1,18 +1,74 @@
-import { createCodexStdioTransport, type CodexInitializeOptions } from "@nyosegawa/agent-ui-codex";
+import {
+  createCodexStdioTransport,
+  type CodexInitializeOptions,
+} from "@nyosegawa/agent-ui-codex";
 import type { AgentTransport } from "@nyosegawa/agent-ui-core";
 import { execa } from "execa";
 import { PassThrough, type Readable, type Writable } from "node:stream";
 import { redactSecrets } from "./redaction";
 
-export interface CodexAppServerBridgeOptions {
-  args?: string[];
-  command?: string;
+export const agentUiServerInternalBridgeOptions: unique symbol = Symbol(
+  "agent-ui-server internal bridge options",
+);
+
+export interface CodexAppServerOptions {
   cwd?: string;
   env?: NodeJS.ProcessEnv;
   initialize?: CodexInitializeOptions;
   shutdown?: CodexBridgeShutdownOptions;
-  spawn?: (command: string, args: string[], options: CodexSpawnOptions) => CodexChildProcess;
   stderr?: (line: string) => void;
+}
+
+export interface CodexAppServerBridgeOptions extends CodexAppServerOptions {
+  args?: string[];
+  command?: string;
+  spawn?: (
+    command: string,
+    args: string[],
+    options: CodexSpawnOptions,
+  ) => CodexChildProcess;
+}
+
+export interface CodexAppServerInternalOptions {
+  [agentUiServerInternalBridgeOptions]?: Pick<
+    CodexAppServerBridgeOptions,
+    "args" | "command" | "spawn"
+  >;
+}
+
+const UNSUPPORTED_ROOT_BRIDGE_OPTION_KEYS = [
+  "admission",
+  "args",
+  "command",
+  "spawn",
+] as const;
+
+export function unsupportedRootBridgeOptionKeys(options: object): string[] {
+  return UNSUPPORTED_ROOT_BRIDGE_OPTION_KEYS.filter((key) =>
+    Object.prototype.hasOwnProperty.call(options, key),
+  );
+}
+
+export function codexAppServerBridgeOptionsFromRoot(
+  options: CodexAppServerOptions & CodexAppServerInternalOptions,
+): CodexAppServerBridgeOptions {
+  const unsupported = unsupportedRootBridgeOptionKeys(options);
+  if (unsupported.length > 0) {
+    throw new Error(
+      `Unsupported root App Server bridge option: ${unsupported.join(", ")}`,
+    );
+  }
+  const internal = options[agentUiServerInternalBridgeOptions];
+  return {
+    ...(internal?.args ? { args: internal.args } : {}),
+    ...(internal?.command ? { command: internal.command } : {}),
+    ...(options.cwd ? { cwd: options.cwd } : {}),
+    ...(options.env ? { env: options.env } : {}),
+    ...(options.initialize ? { initialize: options.initialize } : {}),
+    ...(options.shutdown ? { shutdown: options.shutdown } : {}),
+    ...(internal?.spawn ? { spawn: internal.spawn } : {}),
+    ...(options.stderr ? { stderr: options.stderr } : {}),
+  };
 }
 
 export interface CodexBridgeShutdownOptions {
@@ -61,10 +117,14 @@ export function createCodexAppServerBridge(
     throw new Error("Codex app-server stdio streams were not created");
   }
 
-  const childPromise = child as unknown as { catch?: (handler: (error: unknown) => void) => void };
+  const childPromise = child as unknown as {
+    catch?: (handler: (error: unknown) => void) => void;
+  };
   childPromise.catch?.(() => undefined);
 
-  const stderr = child.stderr ? createRedactedStderr(child.stderr, options.stderr) : undefined;
+  const stderr = child.stderr
+    ? createRedactedStderr(child.stderr, options.stderr)
+    : undefined;
 
   const transport = createCodexStdioTransport({
     initialize: options.initialize,
@@ -143,9 +203,10 @@ function createRedactedStderr(
     carry += String(chunk);
     let newlineIndex = carry.search(/\r?\n/);
     while (newlineIndex >= 0) {
-      const lineEnd = carry[newlineIndex] === "\r" && carry[newlineIndex + 1] === "\n"
-        ? newlineIndex + 2
-        : newlineIndex + 1;
+      const lineEnd =
+        carry[newlineIndex] === "\r" && carry[newlineIndex + 1] === "\n"
+          ? newlineIndex + 2
+          : newlineIndex + 1;
       flush(carry.slice(0, lineEnd));
       carry = carry.slice(lineEnd);
       newlineIndex = carry.search(/\r?\n/);

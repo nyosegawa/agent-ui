@@ -15,10 +15,6 @@ const host = hostResolution.host;
 const port = Number(process.env.AGENT_UI_PORT ?? 5174);
 const dev = process.env.NODE_ENV !== "production";
 const cwd = process.env.AGENT_UI_CODEX_CWD ?? process.cwd();
-const codexCommand = process.env.AGENT_UI_CODEX_COMMAND;
-const codexArgs = process.env.AGENT_UI_CODEX_ARGS
-  ? JSON.parse(process.env.AGENT_UI_CODEX_ARGS)
-  : undefined;
 
 const app = next({ dev, hostname: host, port });
 const handle = app.getRequestHandler();
@@ -52,8 +48,6 @@ const server = createServer((request, response) => {
 });
 
 attachAgentUiWebSocketBridge({
-  ...(codexArgs ? { args: codexArgs } : {}),
-  ...(codexCommand ? { command: codexCommand } : {}),
   bridgePolicy: { admission: { mode: "local-loopback" } },
   browserMethodPolicy: "productized",
   cwd,

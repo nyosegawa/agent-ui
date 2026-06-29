@@ -237,10 +237,10 @@ Remove: compatibility aliases that only preserve unshipped branch behavior.
 ### `@nyosegawa/agent-ui-server`
 
 Keep public: `attachAgentUiWebSocketBridge`,
-`handleAgentUiWebSocketConnection`, `createCodexAppServerBridge`,
-`createAgentUiNextRpcRoute`, `createAgentUiExpressMiddleware`,
-one-shot method policy helpers, bridge option types, browser method capability
-policy types, `AgentUiBridgePolicy` admission mode types, structured bridge
+`handleAgentUiWebSocketConnection`, `createAgentUiNextRpcRoute`,
+`createAgentUiExpressMiddleware`, one-shot method policy helpers, high-level
+`CodexAppServerOptions`, bridge option types, browser method capability policy
+types, `AgentUiBridgePolicy` admission mode types, structured bridge
 rejection/result types such as `AgentUiBridgeRejection`,
 `AgentUiBridgeResult`, `AgentUiBridgeAdmissionDecision`, and
 `AgentUiBridgeRejectionReason`,
@@ -258,12 +258,18 @@ keeping static serving explicitly host-wired. `createAgentUiLocalUploadHandler()
 remains public for hosts that only need browser `File` to local-path upload
 adaptation.
 
-Move to subpath or make explicit advanced surface: dynamic tool helper-thread
-exports and one-shot RPC policy helpers are host-managed lower-level surfaces;
-they can stay public but should not be presented as default React workflow.
+Advanced subpath: `@nyosegawa/agent-ui-server/advanced` exports
+`createCodexAppServerBridge`, `CodexAppServerBridgeOptions`,
+`CodexAppServerBridge`, `CodexChildProcess`, `CodexSpawnOptions`, and the
+dynamic tool helper-thread functions `handleDynamicToolRequest`,
+`createDynamicToolHelperThread`, `maybeResolveHelperThreadRequest`, and
+`dynamicToolFailure`. These are explicit process/stdio composition surfaces,
+not the default React workflow.
 
-Make private: bridge process lifecycle internals and raw child-process details
-that hosts do not need for admission, diagnostics, or shutdown policy.
+Keep off root: bridge process lifecycle internals and raw child-process details
+that hosts do not need for admission, diagnostics, or shutdown policy. Root
+bridge and one-shot options expose only `cwd`, `env`, `initialize`, `shutdown`,
+and `stderr` from the App Server launch configuration.
 
 Remove: `defaultDynamicToolHandler` was removed; hosts now choose
 `dynamicToolPolicy: { mode: "disabled" }`, provide a host callback, or wrap the
@@ -545,14 +551,14 @@ Node and framework integration.
 
 Responsibilities:
 
-- local bridge
-- Codex App Server process lifecycle
+- high-level local WebSocket bridge
+- advanced raw stdio bridge subpath for hosts that own process details
 - Next.js one-shot RPC Route Handler helper
 - same-origin WebSocket bridge helpers for full chat integrations
 - local upload helper for browser `File` to App Server-readable path adapters
 - Express middleware
-- dynamic tool helper thread utilities, server-request policy helpers,
-  host-event sinks, and redaction utilities
+- dynamic tool mapping helpers, server-request policy helpers, host-event
+  sinks, and redaction utilities
 - auth/token forwarding recipes
 
 Browser packages must not spawn child processes directly.
@@ -621,11 +627,12 @@ export function App() {
 }
 ```
 
-Browser hosts connect to a host-owned WebSocket endpoint. Node hosts that own
-the local process use the server package:
+Browser hosts connect to a host-owned WebSocket endpoint. Node hosts normally
+use the root WebSocket bridge. Hosts that intentionally compose their own stdio
+process bridge use the advanced subpath:
 
 ```ts
-import { createCodexAppServerBridge } from "@nyosegawa/agent-ui-server";
+import { createCodexAppServerBridge } from "@nyosegawa/agent-ui-server/advanced";
 
 const bridge = createCodexAppServerBridge({
   initialize: {
@@ -704,6 +711,7 @@ Only these subpaths are public today:
 - `@nyosegawa/agent-ui-react/primitives`
 - `@nyosegawa/agent-ui-react/styles.css`
 - `@nyosegawa/agent-ui-server`
+- `@nyosegawa/agent-ui-server/advanced`
 - `@nyosegawa/agent-ui-web-components`
 
 React style chunks under `dist/styles/*` are copied package internals used by

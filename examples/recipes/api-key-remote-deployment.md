@@ -28,25 +28,42 @@ Rules:
 
 ## Server Environment
 
-If the selected Codex App Server build supports API-key authentication, inject the key only into the child process environment:
+If the selected Codex App Server build supports API-key authentication, inject
+the key only after the host has authenticated the browser session and admitted
+the bridge request:
 
 ```ts
-import { createCodexAppServerBridge } from "@nyosegawa/agent-ui-server";
+import { attachAgentUiWebSocketBridge } from "@nyosegawa/agent-ui-server";
 
-const bridge = createCodexAppServerBridge({
-  env: {
-    OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+attachAgentUiWebSocketBridge({
+  server,
+  bridgePolicy: {
+    admission: {
+      mode: "host-callback",
+      admit: requireAuthenticatedSession,
+    },
   },
-  initialize: {
-    capabilities: {
-      experimentalApi: false,
-      requestAttestation: false,
-    },
-    clientInfo: {
-      name: "agent_ui_api_key_host",
-      title: "Agent UI API Key Host",
-      version: "0.1.0",
-    },
+  resolveBridgeOptions: async ({ request }) => {
+    const session = await requireAuthenticatedSession(request);
+    const workspace = await resolveAllowedWorkspace(session);
+    return {
+      cwd: workspace.cwd,
+      env: {
+        ...process.env,
+        OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+      },
+      initialize: {
+        capabilities: {
+          experimentalApi: false,
+          requestAttestation: false,
+        },
+        clientInfo: {
+          name: "agent_ui_api_key_host",
+          title: "Agent UI API Key Host",
+          version: "0.1.0",
+        },
+      },
+    };
   },
 });
 ```

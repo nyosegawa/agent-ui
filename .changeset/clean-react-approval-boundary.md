@@ -1,5 +1,6 @@
 ---
 "@nyosegawa/agent-ui-react": major
+"@nyosegawa/agent-ui-server": major
 ---
 
 Redesign the React approval and input public contracts around raw-free view
@@ -29,3 +30,10 @@ whether they are still retryable after remount.
 `AgentComposerSubmitMode` is now `"send" | "stop"`; queued follow-ups are
 represented by the queued-follow-up controller state and send results, not by a
 submit-button mode.
+
+The server package root now exposes only the high-level bridge, one-shot RPC,
+local media, policy, dynamic-tool mapping, host-event, and redaction surfaces.
+Raw stdio process helpers (`createCodexAppServerBridge`, child-process spawn
+types, and dynamic-tool helper-thread internals) moved to
+`@nyosegawa/agent-ui-server/advanced`. Bridge admission must be configured via
+`bridgePolicy.admission`; the legacy top-level `admission` option is removed.

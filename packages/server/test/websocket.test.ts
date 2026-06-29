@@ -9,19 +9,19 @@ import {
   createCodexWebSocketTransport,
 } from "../../codex/src/websocket";
 import {
-  attachAgentUiWebSocketBridge,
+  attachAgentUiWebSocketBridge as attachAgentUiWebSocketBridgePublic,
   createMcpDynamicToolHandler,
   handleAgentUiWebSocketConnection,
   parseAgentUiBearerSubprotocol,
   type AgentUiWebSocketBridgeOptions,
   type AgentUiBridgeHealthEvent,
   type BrowserMethodCapability,
-  type CodexChildProcess,
-  type CodexSpawnOptions,
   type DynamicToolDebugEvent,
   type DynamicToolHelperPermissionPolicy,
   verifyAgentUiBearerSubprotocol,
 } from "../src";
+import { agentUiServerInternalBridgeOptions } from "../src/bridge";
+import type { CodexChildProcess, CodexSpawnOptions } from "../src/advanced";
 
 const servers: Array<{ close: () => void }> = [];
 
@@ -56,7 +56,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     let spawnCount = 0;
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       bridgePolicy: {
         admission: {
           admit: (request) => verifyAgentUiBearerSubprotocol(request, "expected-token"),
@@ -73,7 +73,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const missing = await rawUpgradeResponse(address.port, "/agent-ui/ws");
     const malformed = await rawUpgradeResponse(address.port, "/agent-ui/ws", [
@@ -94,7 +95,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     let sawRequest = false;
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       bridgePolicy: {
         admission: {
           admit(request) {
@@ -114,7 +115,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
     expect(response.statusLine).toContain("403 Forbidden");
@@ -127,7 +129,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     let spawnCount = 0;
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       server: httpServer,
       spawn: () => {
         spawnCount += 1;
@@ -138,7 +140,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const response = await rawUpgradeResponse(address.port, "/not-agent-ui/ws");
 
@@ -151,7 +154,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     let spawnCount = 0;
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       server: httpServer,
       spawn: () => {
         spawnCount += 1;
@@ -175,7 +178,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const response = await rawUpgradeResponse(address.port, "/other/ws");
 
@@ -188,8 +192,10 @@ describe("attachAgentUiWebSocketBridge", () => {
     const spawns: Array<CodexSpawnOptions> = [];
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
-      bridgePolicy: { admission: { mode: "unsafe-no-admission", reason: "resolver test" } },
+    const webSocketServer = attachTestWebSocketBridge({
+      bridgePolicy: {
+        admission: { mode: "unsafe-no-admission", reason: "resolver test" },
+      },
       resolveBridgeOptions({ request }) {
         const url = new URL(request?.url ?? "/", "http://127.0.0.1");
         const workspace = url.searchParams.get("workspace") ?? "default";
@@ -208,10 +214,15 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
-    const first = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws?workspace=one`);
-    const second = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws?workspace=two`);
+    const first = new WebSocket(
+      `ws://127.0.0.1:${address.port}/agent-ui/ws?workspace=one`,
+    );
+    const second = new WebSocket(
+      `ws://127.0.0.1:${address.port}/agent-ui/ws?workspace=two`,
+    );
     await Promise.all([onceOpen(first), onceOpen(second)]);
 
     expect(spawns).toEqual([
@@ -231,8 +242,10 @@ describe("attachAgentUiWebSocketBridge", () => {
       const logs: string[] = [];
       const httpServer = createServer();
       servers.push(httpServer);
-      const webSocketServer = attachAgentUiWebSocketBridge({
-        bridgePolicy: { admission: { mode: "unsafe-no-admission", reason: "resolver rejection test" } },
+      const webSocketServer = attachTestWebSocketBridge({
+        bridgePolicy: {
+          admission: { mode: "unsafe-no-admission", reason: "resolver rejection test" },
+        },
         resolveBridgeOptions,
         server: httpServer,
         spawn: () => {
@@ -245,7 +258,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
       await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
       const address = httpServer.address();
-      if (!address || typeof address === "string") throw new Error("missing server address");
+      if (!address || typeof address === "string")
+        throw new Error("missing server address");
 
       const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
 
@@ -263,7 +277,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     const healthEvents: AgentUiBridgeHealthEvent[] = [];
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       bridgePolicy: {
         admission: {
           admit: () => {
@@ -287,7 +301,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
 
@@ -314,7 +329,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     const healthEvents: AgentUiBridgeHealthEvent[] = [];
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       hostEvents: {
         onBridgeHealthEvent: (event) => healthEvents.push(event),
       },
@@ -335,7 +350,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
 
@@ -359,7 +375,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     let spawnCount = 0;
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       resolveBridgeOptions: () => ({
         accepted: false,
         body: "bad status",
@@ -377,7 +393,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
 
@@ -392,7 +409,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     const healthEvents: AgentUiBridgeHealthEvent[] = [];
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       bridgePolicy: {
         admission: {
           admit: () => ({
@@ -419,7 +436,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
 
@@ -451,29 +469,36 @@ describe("attachAgentUiWebSocketBridge", () => {
       server: httpServer,
     });
     webSocketServer.on("connection", (socket, request) => {
-      void handleAgentUiWebSocketConnection(socket, {
-        bridgePolicy: {
-          admission: {
-            admit: () => ({
-              accepted: false,
-              closeCode: 1008,
-              closeReason: "Agent UI bridge manual admission rejected",
-              reason: "token_rejected",
-            }),
-            mode: "host-callback",
+      void handleAgentUiWebSocketConnection(
+        socket,
+        {
+          bridgePolicy: {
+            admission: {
+              admit: () => ({
+                accepted: false,
+                closeCode: 1008,
+                closeReason: "Agent UI bridge manual admission rejected",
+                reason: "token_rejected",
+              }),
+              mode: "host-callback",
+            },
           },
-        },
-        spawn: () => {
-          spawnCount += 1;
-          throw new Error("spawn should not run");
-        },
-      }, request);
+          [agentUiServerInternalBridgeOptions]: {
+            spawn: () => {
+              spawnCount += 1;
+              throw new Error("spawn should not run");
+            },
+          },
+        } as unknown as AgentUiWebSocketBridgeOptions,
+        request,
+      );
     });
     servers.push(webSocketServer);
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const client = new WebSocket(`ws://127.0.0.1:${address.port}/manual/ws`);
     const close = await onceCloseWithInfo(client);
@@ -494,29 +519,36 @@ describe("attachAgentUiWebSocketBridge", () => {
       server: httpServer,
     });
     webSocketServer.on("connection", (socket, request) => {
-      void handleAgentUiWebSocketConnection(socket, {
-        bridgePolicy: {
-          admission: {
-            admit: () => ({
-              accepted: false,
-              closeCode: 999,
-              closeReason: "x".repeat(124),
-              reason: "bad_close_metadata",
-            }),
-            mode: "host-callback",
+      void handleAgentUiWebSocketConnection(
+        socket,
+        {
+          bridgePolicy: {
+            admission: {
+              admit: () => ({
+                accepted: false,
+                closeCode: 999,
+                closeReason: "x".repeat(124),
+                reason: "bad_close_metadata",
+              }),
+              mode: "host-callback",
+            },
           },
-        },
-        spawn: () => {
-          spawnCount += 1;
-          throw new Error("spawn should not run");
-        },
-      }, request);
+          [agentUiServerInternalBridgeOptions]: {
+            spawn: () => {
+              spawnCount += 1;
+              throw new Error("spawn should not run");
+            },
+          },
+        } as unknown as AgentUiWebSocketBridgeOptions,
+        request,
+      );
     });
     servers.push(webSocketServer);
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const client = new WebSocket(`ws://127.0.0.1:${address.port}/manual/ws`);
     const close = await onceCloseWithInfo(client);
@@ -533,7 +565,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     const logs: string[] = [];
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       bridgePolicy: { admission: { mode: "unsafe-no-admission", reason: "" } },
       server: httpServer,
       spawn: () => {
@@ -546,7 +578,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
     expect(response.statusLine).toContain("500 Internal Server Error");
@@ -575,8 +608,13 @@ describe("attachAgentUiWebSocketBridge", () => {
     let spawnCount = 0;
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
-      admission: () => false,
+    const webSocketServer = attachTestWebSocketBridge({
+      bridgePolicy: {
+        admission: {
+          admit: () => false,
+          mode: "host-callback",
+        },
+      },
       server: httpServer,
       spawn: () => {
         spawnCount += 1;
@@ -587,7 +625,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
     expect(response.statusLine).toContain("403 Forbidden");
@@ -595,8 +634,35 @@ describe("attachAgentUiWebSocketBridge", () => {
     expect(spawnCount).toBe(0);
   });
 
-  it("closes deterministically when admission throws or rejects before spawning", async () => {
-    for (const admission of [
+  it("rejects legacy top-level admission instead of silently admitting loopback clients", async () => {
+    let spawnCount = 0;
+    const httpServer = createServer();
+    servers.push(httpServer);
+    const webSocketServer = attachAgentUiWebSocketBridgePublic({
+      admission: () => false,
+      server: httpServer,
+      [agentUiServerInternalBridgeOptions]: {
+        spawn: () => {
+          spawnCount += 1;
+          throw new Error("spawn should not run");
+        },
+      },
+    } as unknown as Parameters<typeof attachAgentUiWebSocketBridgePublic>[0]);
+    servers.push(webSocketServer);
+
+    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+    const address = httpServer.address();
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
+
+    const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
+    expect(response.statusLine).toContain("400 Bad Request");
+    expect(response.body).toContain("Unsupported Agent UI root bridge option: admission");
+    expect(spawnCount).toBe(0);
+  });
+
+  it("closes deterministically when bridgePolicy admission throws or rejects before spawning", async () => {
+    for (const admit of [
       () => {
         throw new Error("token: sync-admission-secret");
       },
@@ -606,8 +672,13 @@ describe("attachAgentUiWebSocketBridge", () => {
       const logs: string[] = [];
       const httpServer = createServer();
       servers.push(httpServer);
-      const webSocketServer = attachAgentUiWebSocketBridge({
-        admission,
+      const webSocketServer = attachTestWebSocketBridge({
+        bridgePolicy: {
+          admission: {
+            admit,
+            mode: "host-callback",
+          },
+        },
         server: httpServer,
         spawn: () => {
           spawnCount += 1;
@@ -619,7 +690,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
       await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
       const address = httpServer.address();
-      if (!address || typeof address === "string") throw new Error("missing server address");
+      if (!address || typeof address === "string")
+        throw new Error("missing server address");
 
       const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
 
@@ -642,7 +714,7 @@ describe("attachAgentUiWebSocketBridge", () => {
       const logs: string[] = [];
       const httpServer = createServer();
       servers.push(httpServer);
-      const webSocketServer = attachAgentUiWebSocketBridge({
+      const webSocketServer = attachTestWebSocketBridge({
         server: httpServer,
         spawn,
         stderr: (line) => logs.push(line),
@@ -651,7 +723,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
       await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
       const address = httpServer.address();
-      if (!address || typeof address === "string") throw new Error("missing server address");
+      if (!address || typeof address === "string")
+        throw new Error("missing server address");
 
       const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
       const close = await onceCloseWithInfo(client);
@@ -668,7 +741,9 @@ describe("attachAgentUiWebSocketBridge", () => {
   it("rejects host-only browser methods before forwarding to App Server", async () => {
     const { socket, writes } = await createBridgeBackedSocket();
 
-    socket.send(JSON.stringify({ id: 1, method: "fs/readFile", params: { path: "/tmp/secret" } }));
+    socket.send(
+      JSON.stringify({ id: 1, method: "fs/readFile", params: { path: "/tmp/secret" } }),
+    );
     await expect(nextResponseMessage(socket, 1)).resolves.toMatchObject({
       error: {
         code: -32601,
@@ -676,7 +751,11 @@ describe("attachAgentUiWebSocketBridge", () => {
       },
       id: 1,
     });
-    expect(writes.map((line) => JSON.parse(line)).some((message) => message.method === "fs/readFile")).toBe(false);
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .some((message) => message.method === "fs/readFile"),
+    ).toBe(false);
     socket.close();
   });
 
@@ -691,9 +770,7 @@ describe("attachAgentUiWebSocketBridge", () => {
       }),
     );
 
-    await waitFor(() =>
-      writes.some((line) => JSON.parse(line).method === "turn/start"),
-    );
+    await waitFor(() => writes.some((line) => JSON.parse(line).method === "turn/start"));
     expect(writes.map((line) => JSON.parse(line)).at(-1)).toMatchObject({
       method: "turn/start",
       params: { threadId: "thread-1" },
@@ -707,9 +784,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     });
 
     socket.send(JSON.stringify({ id: "model-list", method: "model/list", params: {} }));
-    await waitFor(() =>
-      writes.some((line) => JSON.parse(line).method === "model/list"),
-    );
+    await waitFor(() => writes.some((line) => JSON.parse(line).method === "model/list"));
     expect(writes.map((line) => JSON.parse(line)).at(-1)).toMatchObject({
       method: "model/list",
     });
@@ -728,7 +803,11 @@ describe("attachAgentUiWebSocketBridge", () => {
       },
       id: "turn-start",
     });
-    expect(writes.map((line) => JSON.parse(line)).filter((message) => message.method === "turn/start")).toHaveLength(0);
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .filter((message) => message.method === "turn/start"),
+    ).toHaveLength(0);
     socket.close();
   });
 
@@ -737,7 +816,7 @@ describe("attachAgentUiWebSocketBridge", () => {
     const logs: string[] = [];
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       browserMethodPolicy: {
         capabilities: [
           "models",
@@ -761,7 +840,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
     const close = await onceCloseWithInfo(client);
@@ -780,10 +860,14 @@ describe("attachAgentUiWebSocketBridge", () => {
       browserMethodPolicy: "all",
     });
 
-    socket.send(JSON.stringify({ id: "fs-read", method: "fs/readFile", params: { path: "/tmp/secret" } }));
-    await waitFor(() =>
-      writes.some((line) => JSON.parse(line).method === "fs/readFile"),
+    socket.send(
+      JSON.stringify({
+        id: "fs-read",
+        method: "fs/readFile",
+        params: { path: "/tmp/secret" },
+      }),
     );
+    await waitFor(() => writes.some((line) => JSON.parse(line).method === "fs/readFile"));
     expect(writes.map((line) => JSON.parse(line)).at(-1)).toMatchObject({
       method: "fs/readFile",
     });
@@ -820,7 +904,11 @@ describe("attachAgentUiWebSocketBridge", () => {
       },
       id: "browser-init",
     });
-    expect(writes.map((line) => JSON.parse(line)).filter((message) => message.method === "initialize")).toHaveLength(1);
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .filter((message) => message.method === "initialize"),
+    ).toHaveLength(1);
     socket.close();
   });
 
@@ -837,7 +925,7 @@ describe("attachAgentUiWebSocketBridge", () => {
   it("applies inbound byte limits to the attached WebSocket server", () => {
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       inbound: { maxMessageBytes: 1234 },
       server: httpServer,
       spawn: () => createFakeChildProcess().process,
@@ -859,12 +947,24 @@ describe("attachAgentUiWebSocketBridge", () => {
 
   it("forwards browser request trace to the stdio transport", async () => {
     const { socket, stdout, writes } = await createBridgeBackedSocket();
-    socket.send(JSON.stringify({ id: 41, method: "model/list", params: {}, trace: { span: "browser" } }));
+    socket.send(
+      JSON.stringify({
+        id: 41,
+        method: "model/list",
+        params: {},
+        trace: { span: "browser" },
+      }),
+    );
     await waitFor(() => writes.some((line) => JSON.parse(line).method === "model/list"));
-    const forwarded = writes.map((line) => JSON.parse(line)).find((message) => message.method === "model/list");
+    const forwarded = writes
+      .map((line) => JSON.parse(line))
+      .find((message) => message.method === "model/list");
     expect(forwarded.trace).toEqual({ span: "browser" });
     stdout.write(`${JSON.stringify({ id: forwarded.id, result: { data: [] } })}\n`);
-    await expect(nextResponseMessage(socket, 41)).resolves.toEqual({ id: 41, result: { data: [] } });
+    await expect(nextResponseMessage(socket, 41)).resolves.toEqual({
+      id: 41,
+      result: { data: [] },
+    });
     socket.close();
   });
 
@@ -935,7 +1035,7 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       server: httpServer,
       spawn: () => process,
     });
@@ -943,7 +1043,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
     await onceOpen(client);
@@ -953,7 +1054,9 @@ describe("attachAgentUiWebSocketBridge", () => {
     const request = JSON.parse(writes[0] ?? "{}") as { id: number; method: string };
     expect(request.method).toBe("initialize");
 
-    stdout.write(`${JSON.stringify({ id: request.id, result: { userAgent: "test" } })}\n`);
+    stdout.write(
+      `${JSON.stringify({ id: request.id, result: { userAgent: "test" } })}\n`,
+    );
     expect(await nextMessage(client)).toEqual({ id: 7, result: { userAgent: "test" } });
 
     stdout.write(
@@ -994,7 +1097,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     const requestPromise = transport.request("model/list", {});
     await waitFor(() => writes.some((line) => JSON.parse(line).method === "model/list"));
-    const modelList = writes.map((line) => JSON.parse(line) as { id: number; method?: string })
+    const modelList = writes
+      .map((line) => JSON.parse(line) as { id: number; method?: string })
       .find((message) => message.method === "model/list");
     if (!modelList) throw new Error("missing model/list request");
     expect(modelList.method).toBe("model/list");
@@ -1004,7 +1108,12 @@ describe("attachAgentUiWebSocketBridge", () => {
     stdout.write(
       `${JSON.stringify({
         method: "item/agentMessage/delta",
-        params: { delta: "hello", itemId: "item-1", threadId: "thread-1", turnId: "turn-1" },
+        params: {
+          delta: "hello",
+          itemId: "item-1",
+          threadId: "thread-1",
+          turnId: "turn-1",
+        },
       })}\n`,
     );
     await expect(
@@ -1024,7 +1133,12 @@ describe("attachAgentUiWebSocketBridge", () => {
     stdout.write(
       `${JSON.stringify({
         method: "item/commandExecution/outputDelta",
-        params: { delta: "ok\n", itemId: "cmd-1", threadId: "thread-1", turnId: "turn-1" },
+        params: {
+          delta: "ok\n",
+          itemId: "cmd-1",
+          threadId: "thread-1",
+          turnId: "turn-1",
+        },
       })}\n`,
     );
     await expect(
@@ -1096,7 +1210,9 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await transport.respond("approval-1", { decision: "accept" });
     await waitFor(() => writes.some((line) => JSON.parse(line).id === "approval-1"));
-    const approvalResponse = writes.map((line) => JSON.parse(line)).find((message) => message.id === "approval-1");
+    const approvalResponse = writes
+      .map((line) => JSON.parse(line))
+      .find((message) => message.id === "approval-1");
     expect(approvalResponse).toEqual({
       id: "approval-1",
       result: { decision: "accept" },
@@ -1118,7 +1234,9 @@ describe("attachAgentUiWebSocketBridge", () => {
     });
     await transport.respond("approval-2", { decision: "decline" });
     await waitFor(() => writes.some((line) => JSON.parse(line).id === "approval-2"));
-    const declineResponse = writes.map((line) => JSON.parse(line)).find((message) => message.id === "approval-2");
+    const declineResponse = writes
+      .map((line) => JSON.parse(line))
+      .find((message) => message.id === "approval-2");
     expect(declineResponse).toEqual({
       id: "approval-2",
       result: { decision: "decline" },
@@ -1155,9 +1273,13 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "dynamic-disabled"));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "dynamic-disabled"),
+    );
     expect(
-      writes.map((line) => JSON.parse(line)).find((message) => message.id === "dynamic-disabled"),
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "dynamic-disabled"),
     ).toEqual({
       id: "dynamic-disabled",
       result: {
@@ -1223,9 +1345,13 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "dynamic-disabled-sink"));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "dynamic-disabled-sink"),
+    );
     expect(
-      writes.map((line) => JSON.parse(line)).find((message) => message.id === "dynamic-disabled-sink"),
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "dynamic-disabled-sink"),
     ).toMatchObject({
       id: "dynamic-disabled-sink",
       result: { success: false },
@@ -1276,7 +1402,9 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).method === "thread/start"));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).method === "thread/start"),
+    );
     const helperThreadStart = writes
       .map((line) => JSON.parse(line))
       .find((message) => message.method === "thread/start");
@@ -1414,9 +1542,13 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "dynamic-success-sink"));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "dynamic-success-sink"),
+    );
     expect(
-      writes.map((line) => JSON.parse(line)).find((message) => message.id === "dynamic-success-sink"),
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "dynamic-success-sink"),
     ).toEqual({
       id: "dynamic-success-sink",
       result: {
@@ -1537,7 +1669,9 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).method === "thread/start"));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).method === "thread/start"),
+    );
     const helperThreadStart = writes
       .map((line) => JSON.parse(line))
       .find((message) => message.method === "thread/start");
@@ -1576,8 +1710,14 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "mcp-approval-request-1"));
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "mcp-approval-request-1")).toEqual({
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "mcp-approval-request-1"),
+    );
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "mcp-approval-request-1"),
+    ).toEqual({
       id: "mcp-approval-request-1",
       result: {
         _meta: null,
@@ -1596,8 +1736,14 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "dynamic-approval-1"));
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "dynamic-approval-1")).toEqual({
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "dynamic-approval-1"),
+    );
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "dynamic-approval-1"),
+    ).toEqual({
       id: "dynamic-approval-1",
       result: {
         contentItems: [{ text: "screen visible after approval", type: "inputText" }],
@@ -1648,7 +1794,9 @@ describe("attachAgentUiWebSocketBridge", () => {
     expect(
       writes
         .map((line) => JSON.parse(line))
-        .find((message) => message.id === "helper-permissions-manual" && "result" in message),
+        .find(
+          (message) => message.id === "helper-permissions-manual" && "result" in message,
+        ),
     ).toBeUndefined();
     await transport.close();
   });
@@ -1677,9 +1825,13 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "helper-permissions-grant"));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "helper-permissions-grant"),
+    );
     expect(
-      writes.map((line) => JSON.parse(line)).find((message) => message.id === "helper-permissions-grant"),
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "helper-permissions-grant"),
     ).toEqual({
       id: "helper-permissions-grant",
       result: {
@@ -1714,9 +1866,13 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "helper-permissions-broad"));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "helper-permissions-broad"),
+    );
     expect(
-      writes.map((line) => JSON.parse(line)).find((message) => message.id === "helper-permissions-broad"),
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "helper-permissions-broad"),
     ).toEqual({
       id: "helper-permissions-broad",
       result: {
@@ -1768,9 +1924,13 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "helper-permissions-protocol-subset"));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "helper-permissions-protocol-subset"),
+    );
     expect(
-      writes.map((line) => JSON.parse(line)).find((message) => message.id === "helper-permissions-protocol-subset"),
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "helper-permissions-protocol-subset"),
     ).toEqual({
       id: "helper-permissions-protocol-subset",
       result: {
@@ -1833,9 +1993,13 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "helper-permissions-protocol-broad"));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "helper-permissions-protocol-broad"),
+    );
     expect(
-      writes.map((line) => JSON.parse(line)).find((message) => message.id === "helper-permissions-protocol-broad"),
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "helper-permissions-protocol-broad"),
     ).toEqual({
       id: "helper-permissions-protocol-broad",
       result: {
@@ -1863,9 +2027,13 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "helper-permissions-deny"));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "helper-permissions-deny"),
+    );
     expect(
-      writes.map((line) => JSON.parse(line)).find((message) => message.id === "helper-permissions-deny"),
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "helper-permissions-deny"),
     ).toMatchObject({
       error: {
         code: -32001,
@@ -1908,8 +2076,14 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "mcp-active-approval-1"));
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "mcp-active-approval-1")).toEqual({
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "mcp-active-approval-1"),
+    );
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "mcp-active-approval-1"),
+    ).toEqual({
       id: "mcp-active-approval-1",
       result: {
         _meta: null,
@@ -1962,7 +2136,13 @@ describe("attachAgentUiWebSocketBridge", () => {
       },
       type: "event",
     });
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "mcp-active-elicitation-1" && "result" in message)).toBeUndefined();
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find(
+          (message) => message.id === "mcp-active-elicitation-1" && "result" in message,
+        ),
+    ).toBeUndefined();
     await transport.close();
   });
 
@@ -1997,8 +2177,14 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === 0 && "result" in JSON.parse(line)));
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === 0 && "result" in message)).toEqual({
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === 0 && "result" in JSON.parse(line)),
+    );
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === 0 && "result" in message),
+    ).toEqual({
       id: 0,
       result: {
         _meta: null,
@@ -2045,7 +2231,11 @@ describe("attachAgentUiWebSocketBridge", () => {
       },
       type: "event",
     });
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-manual-1" && "result" in message)).toBeUndefined();
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "permissions-manual-1" && "result" in message),
+    ).toBeUndefined();
     await transport.close();
   });
 
@@ -2090,7 +2280,9 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "permissions-active-1"));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "permissions-active-1"),
+    );
     expect(contexts).toEqual([
       expect.objectContaining({
         cwd: "/tmp/project",
@@ -2103,7 +2295,11 @@ describe("attachAgentUiWebSocketBridge", () => {
         turnId: "turn-1",
       }),
     ]);
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-active-1")).toEqual({
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "permissions-active-1"),
+    ).toEqual({
       id: "permissions-active-1",
       result: {
         permissions: {
@@ -2150,8 +2346,14 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "permissions-family-bound-1"));
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-family-bound-1")).toEqual({
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "permissions-family-bound-1"),
+    );
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "permissions-family-bound-1"),
+    ).toEqual({
       id: "permissions-family-bound-1",
       result: {
         permissions: {
@@ -2213,8 +2415,14 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "permissions-protocol-subset-1"));
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-protocol-subset-1")).toEqual({
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "permissions-protocol-subset-1"),
+    );
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "permissions-protocol-subset-1"),
+    ).toEqual({
       id: "permissions-protocol-subset-1",
       result: {
         permissions: {
@@ -2285,8 +2493,14 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "permissions-filesystem-bound-1"));
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-filesystem-bound-1")).toEqual({
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "permissions-filesystem-bound-1"),
+    );
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "permissions-filesystem-bound-1"),
+    ).toEqual({
       id: "permissions-filesystem-bound-1",
       result: {
         permissions: {},
@@ -2335,7 +2549,13 @@ describe("attachAgentUiWebSocketBridge", () => {
         type: "serverRequest/created",
       },
     });
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "permissions-declined-1" && "result" in message)).toBeUndefined();
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find(
+          (message) => message.id === "permissions-declined-1" && "result" in message,
+        ),
+    ).toBeUndefined();
     await transport.close();
   });
 
@@ -2388,7 +2608,11 @@ describe("attachAgentUiWebSocketBridge", () => {
         turnId: "turn-1",
       }),
     ]);
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "input-active-1")).toEqual({
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "input-active-1"),
+    ).toEqual({
       id: "input-active-1",
       result: {
         content: [{ text: "Use the fixture target.", type: "inputText" }],
@@ -2439,7 +2663,13 @@ describe("attachAgentUiWebSocketBridge", () => {
         type: "serverRequest/created",
       },
     });
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "command-manual-callback-1" && "result" in message)).toBeUndefined();
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find(
+          (message) => message.id === "command-manual-callback-1" && "result" in message,
+        ),
+    ).toBeUndefined();
     await transport.close();
   });
 
@@ -2488,7 +2718,14 @@ describe("attachAgentUiWebSocketBridge", () => {
         type: "serverRequest/created",
       },
     });
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "command-throwing-callback-1" && "result" in message)).toBeUndefined();
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find(
+          (message) =>
+            message.id === "command-throwing-callback-1" && "result" in message,
+        ),
+    ).toBeUndefined();
     expect(logs.join("")).toContain("server request policy failed");
     expect(logs.join("")).toContain("token=[REDACTED]");
     expect(logs.join("")).not.toContain("server-request-policy-secret");
@@ -2502,7 +2739,10 @@ describe("attachAgentUiWebSocketBridge", () => {
       serverRequestPolicy: {
         commandExecution: (context) => {
           commandContexts.push(context);
-          if (context.cwd === "/tmp/project" && context.command === "open -a 'Google Chrome'") {
+          if (
+            context.cwd === "/tmp/project" &&
+            context.command === "open -a 'Google Chrome'"
+          ) {
             return { action: "accept", scope: "session" };
           }
           return { action: "manual" };
@@ -2550,13 +2790,23 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "command-active-1"));
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "command-active-1"),
+    );
     await waitFor(() => writes.some((line) => JSON.parse(line).id === "file-active-1"));
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "command-active-1")).toEqual({
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "command-active-1"),
+    ).toEqual({
       id: "command-active-1",
       result: { decision: "acceptForSession" },
     });
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "file-active-1")).toEqual({
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "file-active-1"),
+    ).toEqual({
       id: "file-active-1",
       result: { decision: "acceptForSession" },
     });
@@ -2634,13 +2884,25 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "legacy-command-active-1"));
-    await waitFor(() => writes.some((line) => JSON.parse(line).id === "legacy-file-active-1"));
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "legacy-command-active-1")).toEqual({
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "legacy-command-active-1"),
+    );
+    await waitFor(() =>
+      writes.some((line) => JSON.parse(line).id === "legacy-file-active-1"),
+    );
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "legacy-command-active-1"),
+    ).toEqual({
       id: "legacy-command-active-1",
       result: { decision: "approved_for_session" },
     });
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "legacy-file-active-1")).toEqual({
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "legacy-file-active-1"),
+    ).toEqual({
       id: "legacy-file-active-1",
       result: { decision: "approved_for_session" },
     });
@@ -2731,8 +2993,18 @@ describe("attachAgentUiWebSocketBridge", () => {
         type: "serverRequest/created",
       },
     });
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "command-legacy-string-1" && "result" in message)).toBeUndefined();
-    expect(writes.map((line) => JSON.parse(line)).find((message) => message.id === "file-legacy-string-1" && "result" in message)).toBeUndefined();
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find(
+          (message) => message.id === "command-legacy-string-1" && "result" in message,
+        ),
+    ).toBeUndefined();
+    expect(
+      writes
+        .map((line) => JSON.parse(line))
+        .find((message) => message.id === "file-legacy-string-1" && "result" in message),
+    ).toBeUndefined();
     await transport.close();
   });
 
@@ -2769,13 +3041,19 @@ describe("attachAgentUiWebSocketBridge", () => {
     stdout.write(
       `${JSON.stringify({
         method: "turn/started",
-        params: { threadId: "thread-host", turn: { id: "turn-host", threadId: "thread-host" } },
+        params: {
+          threadId: "thread-host",
+          turn: { id: "turn-host", threadId: "thread-host" },
+        },
       })}\n`,
     );
     stdout.write(
       `${JSON.stringify({
         method: "thread/tokenUsage/updated",
-        params: { threadId: "thread-host", tokenUsage: { inputTokens: 1, outputTokens: 2, totalTokens: 3 } },
+        params: {
+          threadId: "thread-host",
+          tokenUsage: { inputTokens: 1, outputTokens: 2, totalTokens: 3 },
+        },
       })}\n`,
     );
     stdout.write(
@@ -2788,9 +3066,15 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await nextTransportEvent(transport, (event) => event.type === "request");
     await waitFor(() => received.requests.length === 1);
-    expect(received.threads.some((event) => event.event?.type === "thread/status/changed")).toBe(true);
-    expect(received.turns.some((event) => event.event?.type === "turn/started")).toBe(true);
-    expect(received.usage.some((event) => event.event?.type === "thread/tokenUsage/updated")).toBe(true);
+    expect(
+      received.threads.some((event) => event.event?.type === "thread/status/changed"),
+    ).toBe(true);
+    expect(received.turns.some((event) => event.event?.type === "turn/started")).toBe(
+      true,
+    );
+    expect(
+      received.usage.some((event) => event.event?.type === "thread/tokenUsage/updated"),
+    ).toBe(true);
     expect(received.requests[0]?.request?.kind).toBe("commandApproval");
     expect(received.transports.length).toBeGreaterThanOrEqual(4);
     await transport.close();
@@ -2829,7 +3113,8 @@ describe("attachAgentUiWebSocketBridge", () => {
     await nextTransportEvent(transport, (candidate) => candidate.type === "request");
     await waitFor(() =>
       healthEvents.some(
-        (event) => event.phase === "pendingRequestCount" && event.state.pendingRequestCount === 1,
+        (event) =>
+          event.phase === "pendingRequestCount" && event.state.pendingRequestCount === 1,
       ),
     );
     await transport.respond("unknown-health-command", { decision: "decline" });
@@ -2839,11 +3124,15 @@ describe("attachAgentUiWebSocketBridge", () => {
         return message.id === "unknown-health-command";
       }),
     );
-    expect(healthEvents.findLast((event) => event.phase === "pendingRequestCount")?.state.pendingRequestCount).toBe(1);
+    expect(
+      healthEvents.findLast((event) => event.phase === "pendingRequestCount")?.state
+        .pendingRequestCount,
+    ).toBe(1);
     await transport.respond("health-command-1", { decision: "decline" });
     await waitFor(() =>
       healthEvents.some(
-        (event) => event.phase === "pendingRequestCount" && event.state.pendingRequestCount === 0,
+        (event) =>
+          event.phase === "pendingRequestCount" && event.state.pendingRequestCount === 0,
       ),
     );
 
@@ -2866,7 +3155,9 @@ describe("attachAgentUiWebSocketBridge", () => {
       processSpawned: true,
     });
     const lastDiagnostic = healthEvents.findLast((event) => event.phase === "diagnostic");
-    expect(lastDiagnostic?.state.lastRedactedDiagnostic).toContain("request kind=commandApproval");
+    expect(lastDiagnostic?.state.lastRedactedDiagnostic).toContain(
+      "request kind=commandApproval",
+    );
     expect(JSON.stringify(healthEvents)).not.toContain("health-secret");
     expect(logs.join("")).not.toContain("health-secret");
     await transport.close();
@@ -2894,7 +3185,7 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       hostEvents: {
         onBridgeHealthEvent: (event) => healthEvents.push(event),
       },
@@ -2906,7 +3197,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
     await onceOpen(client);
@@ -2946,7 +3238,9 @@ describe("attachAgentUiWebSocketBridge", () => {
       })}\n`,
     );
 
-    await waitFor(() => healthEvents.some((event) => event.phase === "backpressureClosed"));
+    await waitFor(() =>
+      healthEvents.some((event) => event.phase === "backpressureClosed"),
+    );
     expect(healthEvents).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -2969,7 +3263,10 @@ describe("attachAgentUiWebSocketBridge", () => {
     await connected;
 
     stderr.write("Authorization: Bearer raw.secret token=raw-token password=raw-pass\n");
-    const event = await nextTransportEvent(transport, (candidate) => candidate.type === "stderr");
+    const event = await nextTransportEvent(
+      transport,
+      (candidate) => candidate.type === "stderr",
+    );
 
     expect(event.message).toContain("Authorization: [REDACTED]");
     expect(event.message).not.toContain("raw.secret");
@@ -2999,7 +3296,7 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     const httpServer = createServer();
     servers.push(httpServer);
-    const webSocketServer = attachAgentUiWebSocketBridge({
+    const webSocketServer = attachTestWebSocketBridge({
       idleTimeoutMs: 20,
       server: httpServer,
       spawn: () => process,
@@ -3008,7 +3305,8 @@ describe("attachAgentUiWebSocketBridge", () => {
 
     await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
     const address = httpServer.address();
-    if (!address || typeof address === "string") throw new Error("missing server address");
+    if (!address || typeof address === "string")
+      throw new Error("missing server address");
 
     const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
     await onceOpen(client);
@@ -3101,7 +3399,7 @@ async function createBridgeBackedTransport(
 
   const httpServer = createServer();
   servers.push(httpServer);
-  const webSocketServer = attachAgentUiWebSocketBridge({
+  const webSocketServer = attachTestWebSocketBridge({
     ...options,
     server: httpServer,
     spawn: () => process,
@@ -3157,7 +3455,7 @@ async function createBridgeBackedSocket(
 
   const httpServer = createServer();
   servers.push(httpServer);
-  const webSocketServer = attachAgentUiWebSocketBridge({
+  const webSocketServer = attachTestWebSocketBridge({
     ...options,
     server: httpServer,
     spawn: () => process,
@@ -3181,6 +3479,22 @@ function createSocketTestProcess(): CodexChildProcess {
   };
 }
 
+function attachTestWebSocketBridge(
+  options: Parameters<typeof attachAgentUiWebSocketBridgePublic>[0] & {
+    spawn?: (
+      command: string,
+      args: string[],
+      options: CodexSpawnOptions,
+    ) => CodexChildProcess;
+  },
+) {
+  const { spawn, ...publicOptions } = options;
+  return attachAgentUiWebSocketBridgePublic({
+    ...publicOptions,
+    ...(spawn ? { [agentUiServerInternalBridgeOptions]: { spawn } } : {}),
+  } as Parameters<typeof attachAgentUiWebSocketBridgePublic>[0]);
+}
+
 function onceOpen(socket: WebSocket): Promise<void> {
   return new Promise((resolve, reject) => {
     socket.once("open", () => resolve());
@@ -3190,9 +3504,7 @@ function onceOpen(socket: WebSocket): Promise<void> {
 
 function onceCloseWithInfo(socket: WebSocket): Promise<{ code: number; reason: string }> {
   return new Promise((resolve, reject) => {
-    socket.once("close", (code, reason) =>
-      resolve({ code, reason: reason.toString() }),
-    );
+    socket.once("close", (code, reason) => resolve({ code, reason: reason.toString() }));
     socket.once("error", reject);
   });
 }
@@ -3268,9 +3580,12 @@ async function waitFor(predicate: () => boolean, timeoutMs = 1000): Promise<void
   }
 }
 
-async function nextTransportEvent(transport: {
-  events: AsyncIterable<AgentTransportEvent>;
-}, predicate: (event: AgentTransportEvent) => boolean): Promise<AgentTransportEvent> {
+async function nextTransportEvent(
+  transport: {
+    events: AsyncIterable<AgentTransportEvent>;
+  },
+  predicate: (event: AgentTransportEvent) => boolean,
+): Promise<AgentTransportEvent> {
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error("timed out waiting for transport event")), 1000),
   );

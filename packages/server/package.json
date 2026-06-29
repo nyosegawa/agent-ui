@@ -27,6 +27,16 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./advanced": {
+      "import": {
+        "types": "./dist/advanced.d.ts",
+        "default": "./dist/advanced.js"
+      },
+      "require": {
+        "types": "./dist/advanced.d.cts",
+        "default": "./dist/advanced.cjs"
+      }
     }
   },
   "engines": {

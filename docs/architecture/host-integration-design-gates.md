@@ -173,9 +173,8 @@ to documented public API.
   `examples/recipes` local desktop bridge/admission recipe.
 - Tests that protect the contract: websocket tests proving connection-specific
   `cwd`/`env`, resolver/admission rejection without spawn, dynamic-tool helper
-  threads using the resolved cwd, and bridge tests proving
-  `createCodexAppServerBridge()` passes resolved `cwd`/`env` to the spawn
-  callback.
+  threads using the resolved cwd, and advanced bridge tests proving the raw
+  stdio bridge passes resolved `cwd`/`env` to the spawn callback.
 - Promotion rule: `attachAgentUiWebSocketBridge()` may accept the resolver only
   while it remains a thin adapter around host-owned decisions. If resolver
   support starts to require Agent UI-owned auth, workspace storage, token
