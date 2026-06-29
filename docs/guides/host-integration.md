@@ -4,6 +4,10 @@ This guide is for host applications that embed Agent UI packages. Agent UI
 provides reusable Codex App Server UI components and integration helpers, but it
 does not move hosted runtime policy into core.
 
+If you are wiring a new host from scratch, start with
+[First Host App](./first-host-app.md), then use this guide for boundary and
+composition decisions.
+
 ## Who Should Read This
 
 Use this guide if your host imports Agent UI packages and does any of the
@@ -234,7 +238,7 @@ impose host document/body scroll-lock policy.
 
 ## Migration Notes
 
-- Replace removed `AgentChatSlots` usage with `AgentChat.components`.
+- Replace removed `AgentChatSlots` usage with the `AgentChat` `components` prop.
 - Replace raw `components.Item` transcript customization with `renderItem` or
   `components.blocks`.
 - Replace host-side `transport.request("thread/start")` followed by

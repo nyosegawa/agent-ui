@@ -1,6 +1,10 @@
 # Getting Started
 
-This page gets a checkout into the normal local development loop:
+This page is for contributors working in the Agent UI repository checkout. If
+you are adding Agent UI to a separate host app, start with
+[First Host App](./guides/first-host-app.md) instead.
+
+This repository flow gets a checkout into the normal local development loop:
 
 - install dependencies
 - run the deterministic fixture app for UI review

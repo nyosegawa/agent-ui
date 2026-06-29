@@ -2,12 +2,12 @@
 
 ## Status Summary
 
-- Overall status: Not started
-- Current phase: Planning package complete; implementation not started
+- Overall status: In progress
+- Current phase: P001 Canonical new-adopter docs path
 - Blockers: None
-- Last validation: Artifact validation pending
-- Last review: Four-lane research pass complete; implementation review pending
-- PR/CI: Not opened
+- Last validation: P001 docs validation passed locally.
+- Last review: P001 four-lane subagent review completed; lane 2 findings fixed.
+- PR/CI: Draft PR #42 open; P001 commit pending.
 
 ## Branch And Planning Commit
 
@@ -19,31 +19,31 @@
 
 ## Phase Checklist
 
-- [ ] P001 Canonical new-adopter docs path
+- [x] P001 Canonical new-adopter docs path
   - Goal: Give a first-time host app one authoritative full-chat setup path.
   - Scope: README/docs navigation, install/getting-started split, first host app guide, React guide decision table, host-integration cross-links.
   - Expected files/areas: `README.md`, `docs/README.md`, `docs/installation.md`, `docs/getting-started.md`, `docs/guides/react.md`, `docs/guides/host-integration.md`, possible `docs/guides/first-host-app.md`.
   - Validation: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts`; focused docs link/staleness tests if present.
-  - Review: Fresh pass for host-boundary regressions and snippet completeness.
+  - Review: Fresh pass for host-boundary regressions and snippet completeness. Completed.
   - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: pending
   - Push: pending
-  - PR/CI: pending
+  - PR/CI: Draft PR #42 open; CI pending for the P001 commit.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - 4-Parallel Subagent Review:
+    - Implementation: Added `docs/guides/first-host-app.md`; linked it from README, docs index, installation, getting-started, React, and host-integration docs; added the React surface decision table.
+    - Validation: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts` passed; `bunx vitest run test/docs-staleness.test.ts` passed.
+    - Review: Manual pass confirmed public imports, host-owned boundary language, and contributor/adopter separation.
+    - 4-Parallel Subagent Review: Completed. Lane 1 found no IA blocker and reminded to include new file; lane 2 found incorrect `AgentChat.components` wording and internal token source references, fixed; lane 3 found no bridge/security blockers; lane 4 found no broken links and requested TODO evidence updates, fixed.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T001 Add or integrate a first-host-app guide with browser code, server bridge code, stylesheet import, package install, Node requirements, Codex CLI/auth assumptions, same-origin WebSocket, and local-loopback admission.
+    - [x] T001 Add or integrate a first-host-app guide with browser code, server bridge code, stylesheet import, package install, Node requirements, Codex CLI/auth assumptions, same-origin WebSocket, and local-loopback admission.
       - Expected files/areas: docs guide plus README/docs index links.
       - Validation note: Check snippets use public imports only.
-    - [ ] T002 Add React entrypoint decision table for `AgentChat`, `components`, controller, `/headless`, and `/primitives`.
+    - [x] T002 Add React entrypoint decision table for `AgentChat`, `components`, controller, `/headless`, and `/primitives`.
       - Expected files/areas: `docs/guides/react.md`, `docs/guides/host-integration.md`.
       - Validation note: Ensure `useAgentContext().state` and `internal` imports are discouraged.
-    - [ ] T003 Reframe getting-started so repo contributor setup does not masquerade as package adopter setup.
+    - [x] T003 Reframe getting-started so repo contributor setup does not masquerade as package adopter setup.
       - Expected files/areas: `docs/getting-started.md`, `docs/installation.md`, `README.md`.
       - Validation note: New adopter path must include `@nyosegawa/agent-ui-server` for full chat.
 
@@ -323,11 +323,13 @@
 
 ## Validation Evidence
 
-- Pending
+- P001: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts` passed.
+- P001: `bunx vitest run test/docs-staleness.test.ts` passed.
 
 ## Review Evidence
 
 - Planning research used four subagent lanes: docs onboarding, implementation/public surface, validation/CI, and skill design.
+- P001 used four subagent review lanes after validation: information architecture, public package/API correctness, bridge/security boundary, and docs validation/link/TODO evidence.
 
 ## Commit Log
 

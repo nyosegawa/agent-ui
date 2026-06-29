@@ -1,8 +1,9 @@
 # Agent UI Documentation
 
 Agent UI is an embeddable Codex App Server UI component library for host
-applications. The docs are organized for a public library: start by running the
-local app, then choose a guide, then use reference and architecture pages when
+applications. The docs are organized for a public library: start with the
+first-host-app path when adopting the packages, use repository getting-started
+when developing this checkout, then use reference and architecture pages when
 you need exact contracts. Use [Package Exports](./reference/package-exports.md)
 and [Host Integration Design Gates](./architecture/host-integration-design-gates.md)
 together when promoting public surfaces: exports are not final until internal
@@ -10,10 +11,13 @@ boundaries, examples, tests, and host integration docs agree.
 
 ## Start Here
 
-- [Getting Started](./getting-started.md): run the real local Codex web app and
-  the deterministic fixture app.
+- [First Host App](./guides/first-host-app.md): add Agent UI to a new host app
+  with React, the browser transport, the same-origin WebSocket bridge, CSS, and
+  the local-loopback security posture.
 - [Installation](./installation.md): packages, peer dependencies, and the
   single public React stylesheet import.
+- [Getting Started](./getting-started.md): run the real local Codex web app and
+  the deterministic fixture app from this repository checkout.
 - [Contributing](../CONTRIBUTING.md): pull requests, changesets, validation, and
   maintainer-owned release workflows.
 
@@ -30,6 +34,8 @@ boundaries, examples, tests, and host integration docs agree.
 - [React](./guides/react.md): use root `AgentProvider` / `AgentChat`, compose
   visual primitives from `/primitives`, and drive host-owned layouts with
   controllers from `/headless`.
+- [First Host App](./guides/first-host-app.md): canonical new-adopter browser
+  and server setup for full chat.
 - [Web Components](./guides/web-components.md): wrap the React preset in a
   custom element when a host cannot mount React directly.
 - [Approvals](./guides/approvals.md): default command and file-change

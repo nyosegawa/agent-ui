@@ -31,24 +31,28 @@ own layout import visual building blocks from
 @nyosegawa/agent-ui-web-components
 ```
 
-Install the React package set in a host app:
+Install the full-chat package set in a host app:
 
 ```sh
-bun add @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex
+bun add @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex @nyosegawa/agent-ui-server
 ```
 
 Use the package manager already owned by the host project. With npm:
 
 ```sh
-npm install @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex
+npm install @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex @nyosegawa/agent-ui-server
 ```
 
-Add `@nyosegawa/agent-ui-server` for a local Node bridge, or
-`@nyosegawa/agent-ui-web-components` for the custom element wrapper. See
-[Installation](./docs/installation.md) for package responsibilities and peer
-dependencies.
+Use `@nyosegawa/agent-ui-web-components` for the custom element wrapper. See
+[First Host App](./docs/guides/first-host-app.md) for the browser and server
+setup, and [Installation](./docs/installation.md) for package responsibilities
+and peer dependencies.
 
 ## Quickstart
+
+Adding Agent UI to a new host app? Start with
+[First Host App](./docs/guides/first-host-app.md). The steps below are for
+working in this repository.
 
 Install repository dependencies:
 
@@ -184,6 +188,7 @@ validation and npm publish operations.
 
 Key pages:
 
+- [First Host App](./docs/guides/first-host-app.md)
 - [Getting Started](./docs/getting-started.md)
 - [React Guide](./docs/guides/react.md)
 - [Server Bridge](./docs/reference/server-bridge.md)
