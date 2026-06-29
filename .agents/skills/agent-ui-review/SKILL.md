@@ -26,6 +26,11 @@ public API drift, product-boundary issues, missing validation, and release risk.
 - Cite concrete files and symbols.
 - Prioritize correctness, security, API compatibility, UI regressions, test gaps,
   docs drift, and release risk.
+- For new-adopter, host-integration, public API, or package README changes,
+  check alignment across README/docs, package README files, `docs/examples/recipes.md`,
+  `examples/recipes`, and the public `skills/agent-ui` skill. Flag public skill
+  leakage if repo-maintainer commands or CI gates appear in external-host
+  guidance.
 - Keep summaries brief and secondary.
 - If there are no findings, say that clearly and note any residual test gaps.
 

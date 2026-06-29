@@ -3,18 +3,18 @@
 ## Status Summary
 
 - Overall status: In progress
-- Current phase: P003 Public Agent Skill new-adopter refresh
+- Current phase: P004 Repository skill and planning/review guardrails
 - Blockers: None
-- Last validation: P003 public skill and docs validation passed locally; PR #42 P003 CI checks passed after push.
-- Last review: P003 four-lane subagent review completed; upload validation and public-skill leakage findings fixed.
-- PR/CI: Draft PR #42 open; latest P003 checks passed.
+- Last validation: P004 repo skill and public skill leakage validation passed locally.
+- Last review: P004 four-lane subagent review completed; public-skill leakage guard finding fixed.
+- PR/CI: Draft PR #42 open; P004 push/CI pending.
 
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
 - Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: planning, P001 docs commits, P002 docs/package README commits, and P003 public skill commits pushed
+- Push result: planning, P001 docs commits, P002 docs/package README commits, and P003 public skill commits pushed; P004 pending
 - Blockers: none
 
 ## Phase Checklist
@@ -108,7 +108,7 @@
       - Expected files/areas: `skills/agent-ui/references/validation.md`.
       - Validation note: Avoid repository-only commands.
 
-- [ ] P004 Repository skill and planning/review guardrails
+- [x] P004 Repository skill and planning/review guardrails
   - Goal: Ensure future repo agents keep docs, examples, package README files, and public skill in sync.
   - Scope: Maintainer skills and tests for onboarding review obligations.
   - Expected files/areas: `.agents/skills/agent-ui-feature-planning/**`, `.agents/skills/example-authoring/SKILL.md`, `.agents/skills/agent-ui-review/SKILL.md`, `docs/maintenance/repository-skills.md`, `test/repository-skills.test.ts`.
@@ -119,20 +119,20 @@
   - Push: pending
   - PR/CI: pending
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - 4-Parallel Subagent Review:
+    - Implementation: Added new-adopter onboarding synchronization obligations to feature-planning, repo research summary, agent-ui-review, repository skill docs, and example-authoring guidance; corrected recipe destinations to `examples/recipes` plus `docs/examples/recipes.md`; added deterministic tests for repo skill synchronization and public skill leakage guards.
+    - Validation: `bun run test:repo-skills` passed; `bun run test:skills` passed; forbidden maintainer-command/gate search over `skills/agent-ui` returned no matches; `git diff --check` passed; artifact validator passed.
+    - Review: Manual pass confirmed public `skills/agent-ui` remains external-host focused and repo-maintainer commands stay in `.agents/skills` and maintenance docs.
+    - 4-Parallel Subagent Review: Completed. Lane 1 planning guardrails found no issues; lane 2 recipe location found no issues and noted only future `docs/recipes/` references outside active guidance; lane 3 review/maintenance docs found no issues; lane 4 found the public-skill leakage guard was too narrow, fixed by extending `test/agent-ui-skill.test.ts` and `test/repository-skills.test.ts`.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T011 Add new-adopter onboarding/docs/skills/examples synchronization as a planning and review concern.
+    - [x] T011 Add new-adopter onboarding/docs/skills/examples synchronization as a planning and review concern.
       - Expected files/areas: feature-planning and review skills.
       - Validation note: Include public skill and package README in the expected inspection surface.
-    - [ ] T012 Correct example-authoring wording around recipe locations and topic-based recipe indexes.
+    - [x] T012 Correct example-authoring wording around recipe locations and topic-based recipe indexes.
       - Expected files/areas: `.agents/skills/example-authoring/SKILL.md`.
       - Validation note: Do not point agents to non-existent `docs/recipes/` as an active destination.
-    - [ ] T013 Update repo skill tests to assert public-skill/docs alignment expectations.
+    - [x] T013 Update repo skill tests to assert public-skill/docs alignment expectations.
       - Expected files/areas: `test/repository-skills.test.ts`.
       - Validation note: Keep tests deterministic and text-based.
 
@@ -266,13 +266,13 @@
 
 ### P004 Repository skill and planning/review guardrails
 
-- [ ] T011 Add onboarding sync to planning/review skills.
+- [x] T011 Add onboarding sync to planning/review skills.
   - Expected files/areas: feature-planning and review skills.
   - Validation note: Include docs/examples/public-skill/package README.
-- [ ] T012 Correct recipe location wording.
+- [x] T012 Correct recipe location wording.
   - Expected files/areas: example-authoring skill.
   - Validation note: Use current recipe destinations.
-- [ ] T013 Update repo skill tests.
+- [x] T013 Update repo skill tests.
   - Expected files/areas: `test/repository-skills.test.ts`.
   - Validation note: Deterministic text assertions.
 
@@ -342,6 +342,11 @@
 - P003: `git diff --check` passed.
 - P003: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-30-new-adopter-onboarding` passed.
 - P003 PR #42 checks passed after push: Detect changes, Detect compatibility changes, Repository policy, Typecheck, Lint, Unit tests, API snapshots, Package resolution, Package validation, Protocol and fixtures, Playwright fixtures, and Real local smoke. Compatibility matrix jobs were skipped by path filters.
+- P004: `bun run test:repo-skills` passed.
+- P004: `bun run test:skills` passed.
+- P004: forbidden maintainer-command/gate search over `skills/agent-ui` returned no matches.
+- P004: `git diff --check` passed.
+- P004: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-30-new-adopter-onboarding` passed.
 
 ## Review Evidence
 
@@ -349,6 +354,7 @@
 - P001 used four subagent review lanes after validation: information architecture, public package/API correctness, bridge/security boundary, and docs validation/link/TODO evidence.
 - P002 used four subagent review lanes after validation: recipe topic index, public import correctness, package boundary/changeset, and validation/TODO evidence. Lane 1 found non-clickable recipe entries and lane 4 requested TODO evidence updates; both were fixed before commit.
 - P003 used four subagent review lanes after validation: trigger/metadata, bridge first-app safety, upload/attachments safety, and validation/test leakage. Upload optional URL validation and public-skill maintainer-command leakage findings were fixed before commit.
+- P004 used four subagent review lanes after validation: feature-planning guardrails, example-authoring recipe destinations, review/maintenance docs, and tests/public-skill leakage. Lane 4 found the public-skill leakage guard was too narrow; this was fixed before commit by extending public skill and repository skill tests.
 
 ## Commit Log
 
