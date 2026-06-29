@@ -144,7 +144,7 @@
   - Validation: focused Vitest for server/react; `bun run test:api-snapshots`; `bun run test:package-resolution`; `bun run validate:packages`; `bun run test:e2e:real-local`.
   - Review: Security/API review focusing on pre-spawn rejection, cleanup scope, and public result semantics.
   - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
-  - Commit: pending
+  - Commit: `a854cb8a9a7d7dd3c1f7d7e368f0c590185bfb2a` - Harden bridge upload and composer states
   - Push: pending
   - PR/CI: pending
   - Evidence:
@@ -164,7 +164,7 @@
     - Validation: `git diff --check` passed.
     - Review: Manual review confirmed the bridge rejection path runs before admission/spawn, upload cleanup remains host-boundary safe, React blocked result semantics match core waiting reasons, public skill guidance is updated, and API snapshots include the new public types/rejection reason.
     - 4-Parallel Subagent Review: Completed after final validation. Lane 1 found no bridge/security findings. Lane 2 found live managed sessions could be TTL-deleted by another helper and public upload skill guidance was stale; fixed with a process-local active managed-session registry, tests, docs, and skill updates. Lane 3 found resume-to-waiting `sendMessage()` returned `unknown`; fixed by propagating `waitingReasons` through resume/turn-start results, adding a resume-blocked test, and regenerating snapshots. Lane 4 found no release/docs/validation findings.
-    - Commit:
+    - Commit: `a854cb8a9a7d7dd3c1f7d7e368f0c590185bfb2a` - Harden bridge upload and composer states.
     - Push:
   - Tasks:
     - [x] T014 Reject invalid top-level `browserMethodPolicy` values before spawn, including values returned by `resolveBridgeOptions`.
@@ -393,6 +393,7 @@
 - `1d83d396e91df305b496202fa0e98df6c67d510d` - Add onboarding sync guardrails
 - `1bd6df0b7c64d3a873f547e03185663febd5bd96` - Record P004 onboarding evidence
 - `04f2e411cc5ab88c921e8a577dcd2e8f85b08680` - Record P004 CI evidence
+- `a854cb8a9a7d7dd3c1f7d7e368f0c590185bfb2a` - Harden bridge upload and composer states
 
 ## Final Checklist
 
