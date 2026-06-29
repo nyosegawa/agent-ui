@@ -6,14 +6,18 @@ Planning package for a large breaking Agent UI architecture redesign. No
 implementation has started. Execute phases on the same branch and keep each
 phase reviewable, validated, committed, pushed, and recorded.
 
+This is not an MVP plan. The implementation is complete only when every phase
+is done or superseded by an equal-or-stronger design that satisfies the same
+requirements with evidence.
+
 ## Branch And Planning Commit
 
 - Branch: `codex/agent-ui-architecture-redesign-plan`
 - Planning commit: committed; final hash reported in final response because embedding
   a commit's own final hash is self-referential.
 - Remote: `origin`
-- Push result: ready to push after final artifact validation; final response
-  records the remote push result.
+- Push result: pushed to `origin/codex/agent-ui-architecture-redesign-plan`
+  after artifact validation.
 - Blockers: none known
 
 ## Phase Checklist
@@ -355,6 +359,9 @@ phase reviewable, validated, committed, pushed, and recorded.
 
 - Keep implementation phase-first. Split a phase before coding if it mixes
   incompatible validation or cannot be reviewed as one unit.
+- Do not narrow the work to an MVP, demo path, compatibility shim, or easiest
+  passing subset. Scope reduction is allowed only when replaced by a stronger
+  design that satisfies the same requirement and is recorded in Evidence.
 - Each implementation phase must run 4 parallel subagent reviews before its
   phase commit. Use distinct prompts for architecture/boundary, implementation
   correctness, validation coverage, and docs/release impact. Record findings,
@@ -366,7 +373,9 @@ phase reviewable, validated, committed, pushed, and recorded.
 
 ## Validation Evidence
 
-- Planning artifact validation: pending.
+- Planning artifact validation:
+  `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-29-agent-ui-architecture-redesign`
+  passed.
 - Implementation validation: pending.
 
 ## Review Evidence
@@ -377,7 +386,7 @@ phase reviewable, validated, committed, pushed, and recorded.
 
 ## Commit Log
 
-- Planning commit: pending.
+- Planning commit: `56226daa25176ebc60e8f8859384b09f7b16905a`
 
 ## Final Checklist
 

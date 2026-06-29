@@ -54,6 +54,10 @@ library needs stronger generic primitives, not app-specific workflow APIs.
 
 ## Non-Goals
 
+- No MVP-sized subset, compatibility-only patch, or demonstration-only finish.
+  Completion requires the full redesign, docs, tests, examples, release
+  metadata, browser evidence, downstream smoke evidence, PR evidence matrix,
+  and CI follow-through described here.
 - No hosted service behavior.
 - No host auth, billing, tenant/session isolation, credential storage, audit
   retention, upload storage, process supervision, or deployment policy.
@@ -207,6 +211,9 @@ Focused gates:
 
 ## Completion Criteria
 
+- All planned phases are complete or explicitly replaced by a stronger design
+  that satisfies the same requirement. Deferring a phase because it is large is
+  not completion.
 - Public React/headless/primitives APIs no longer expose raw reducer/protocol
   payloads for normal host composition.
 - Raw/internal state boundaries are documented and tested.
