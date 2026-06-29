@@ -12,9 +12,9 @@
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
-- Planning commit: pending
+- Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: pending
+- Push result: planning commits pushed; P001 commits pending push
 - Blockers: none
 
 ## Phase Checklist
@@ -26,7 +26,7 @@
   - Validation: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts`; focused docs link/staleness tests if present.
   - Review: Fresh pass for host-boundary regressions and snippet completeness. Completed.
   - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
-  - Commit: pending
+  - Commit: `014ce7b5f0e36ad917af2650d2ba77b892cc8ec3`
   - Push: pending
   - PR/CI: Draft PR #42 open; CI pending for the P001 commit.
   - Evidence:
@@ -34,8 +34,8 @@
     - Validation: `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts` passed; `bunx vitest run test/docs-staleness.test.ts` passed.
     - Review: Manual pass confirmed public imports, host-owned boundary language, and contributor/adopter separation.
     - 4-Parallel Subagent Review: Completed. Lane 1 found no IA blocker and reminded to include new file; lane 2 found incorrect `AgentChat.components` wording and internal token source references, fixed; lane 3 found no bridge/security blockers; lane 4 found no broken links and requested TODO evidence updates, fixed.
-    - Commit:
-    - Push:
+    - Commit: `014ce7b5f0e36ad917af2650d2ba77b892cc8ec3`
+    - Push: pending
   - Tasks:
     - [x] T001 Add or integrate a first-host-app guide with browser code, server bridge code, stylesheet import, package install, Node requirements, Codex CLI/auth assumptions, same-origin WebSocket, and local-loopback admission.
       - Expected files/areas: docs guide plus README/docs index links.
@@ -333,7 +333,9 @@
 
 ## Commit Log
 
-- Pending
+- `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7` - Plan new adopter onboarding overhaul
+- `bef201296285e3d8a025315fdf5880d8b07f68e8` - Add phase subagent review checkpoints
+- `014ce7b5f0e36ad917af2650d2ba77b892cc8ec3` - Add first host app onboarding guide
 
 ## Final Checklist
 
