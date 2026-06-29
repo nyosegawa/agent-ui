@@ -14,6 +14,9 @@ Run the closest available commands:
 - production build
 - local browser smoke against the Agent UI route
 - real Codex App Server smoke when local auth and `codex` are available
+- in-memory success-path smoke with
+  `@nyosegawa/agent-ui-codex/test-fixtures` when host tests should not spawn a
+  real App Server
 
 Package manager check:
 
@@ -63,6 +66,14 @@ For browser-visible work, verify interactions, not only screenshots:
   that checks document overflow, visible composer controls, hit-testable primary
   actions, mobile history drawer reachability when used, and host overlays/focus
   return if the host composes sheets or dialogs around Agent UI
+
+Use `createCodexAppServerSuccessFixture()` from
+`@nyosegawa/agent-ui-codex/test-fixtures` for host-owned unit or component tests
+that need canonical thread ids, `thread/start`, `thread/read`, `turn/start`,
+assistant deltas, queued `turn/steer`, `turn/interrupt`, and `turn/completed`
+without spawning Codex. Do not treat this fixture as validation for bridge
+admission, bearer tokens, process lifecycle, upload storage, workspace
+authorization, or multi-user policy; those checks remain host-owned.
 
 Public boundary check:
 

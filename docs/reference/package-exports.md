@@ -18,7 +18,7 @@ Packages are split by responsibility, but the local bridge is included in the of
 | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
 | `@nyosegawa/agent-ui-react`          | Root `AgentProvider` / `AgentChat`, `/primitives` visual building blocks, `/headless` controllers, `styles.css`         |
 | `@nyosegawa/agent-ui-server`         | Root bridge, local media, policy, redaction, one-shot RPC helpers; `/advanced` raw stdio/process helpers                |
-| `@nyosegawa/agent-ui-codex`          | Root protocol/session facade, `/websocket`, `/request-builders`, `/clients`, `/session`, `/normalizer`, `/stable-types` |
+| `@nyosegawa/agent-ui-codex`          | Root protocol/session facade, `/websocket`, `/request-builders`, `/clients`, `/session`, `/normalizer`, `/stable-types`, `/test-fixtures` |
 | `@nyosegawa/agent-ui-core`           | Root state, transport, selectors, reducer, fake transport; `/internal` only for Agent UI packages and repository tests  |
 | `@nyosegawa/agent-ui-web-components` | Root custom element definition and element option types                                                                 |
 
@@ -140,6 +140,12 @@ Request builders such as `textInput()` and `TextInputOptions` remain on the
 `request-builders` subpath; hosts may pass generated `TextElement` values
 explicitly, but Agent UI does not derive App/Plugin or marketplace semantics
 from those elements.
+Success-path Codex App Server fixtures remain on the
+`@nyosegawa/agent-ui-codex/test-fixtures` subpath. They are public because new
+host apps need a stable way to exercise `thread/start`, `turn/start`, streamed
+assistant deltas, queued `turn/steer`, `turn/interrupt`, and `turn/completed`
+without copying repository-only fake servers. They are not a production
+process, authentication, storage, admission, or bridge-policy runtime.
 
 Replace with current API: lifecycle-dependent normalizer contracts that still
 produce old registry status names should be updated after protocol
@@ -453,6 +459,7 @@ Responsibilities:
 - App Server notifications to normalized events
 - device-code login request helpers
 - optional Codex SDK-like client adapter for hosts that already own a compatible client
+- success-path App Server test fixture for host validation
 - generated-schema-backed input helpers for text, images, mentions, skills, and
   agent-browser verification turns
 
@@ -472,7 +479,9 @@ type-only surface at `@nyosegawa/agent-ui-codex/stable-types`; the grouped typed
 client surface lives at `@nyosegawa/agent-ui-codex/clients`; request builders
 and structured user-input helpers live at
 `@nyosegawa/agent-ui-codex/request-builders`; and host-owned normalization
-helpers live at `@nyosegawa/agent-ui-codex/normalizer`. Request builders are the
+helpers live at `@nyosegawa/agent-ui-codex/normalizer`. The in-memory success
+fixture for host tests lives at `@nyosegawa/agent-ui-codex/test-fixtures`.
+Request builders are the
 preferred raw-free request boundary: their public path fields use Agent UI-owned
 string aliases such as `AgentWorkingDirectory`, `AgentResourcePath`,
 `AgentSkillPath`, and `AgentMentionPath` instead of generated schema names such
@@ -494,6 +503,14 @@ Undocumented deep imports such as
 Generated source files are not published; hosts that need App Server types
 should use `@nyosegawa/agent-ui-codex/stable-types` or the typed client and
 request-builder subpaths.
+
+The `test-fixtures` subpath intentionally covers only the success-path protocol
+shape that host tests commonly need: canonical thread ids, thread start/read,
+turn start, assistant deltas, queued steer, interrupt, and completion events.
+Use it to test the host's Agent UI wiring. Do not use it as evidence that
+bridge admission, bearer tokens, App Server process lifecycle, upload storage,
+or multi-user authorization are production-ready; those policies remain
+host-owned and need separate validation.
 
 The SDK adapter is not the primary integration path and does not add an `@openai/codex` runtime dependency.
 
@@ -718,6 +735,7 @@ Stable host-facing public subpaths:
 - `@nyosegawa/agent-ui-codex/request-builders`
 - `@nyosegawa/agent-ui-codex/session`
 - `@nyosegawa/agent-ui-codex/stable-types`
+- `@nyosegawa/agent-ui-codex/test-fixtures`
 - `@nyosegawa/agent-ui-codex/websocket`
 - `@nyosegawa/agent-ui-react`
 - `@nyosegawa/agent-ui-react/headless`

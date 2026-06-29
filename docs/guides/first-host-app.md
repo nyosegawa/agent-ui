@@ -132,6 +132,31 @@ Verify the first host app with host-appropriate checks:
 - Attachments, if enabled, use host-owned upload authorization and return an
   App Server-readable local path plus a browser-safe preview URL.
 
+For unit or component tests that should not spawn a real Codex App Server, use
+the public success-path fixture from the Codex package:
+
+```ts
+import { createCodexSession } from "@nyosegawa/agent-ui-codex/session";
+import { createCodexAppServerSuccessFixture } from "@nyosegawa/agent-ui-codex/test-fixtures";
+
+const fixture = createCodexAppServerSuccessFixture();
+await fixture.transport.connect();
+const session = createCodexSession(fixture.transport);
+
+const start = await session.thread.start({ cwd: "/repo" });
+const threadId = start.thread.id;
+await session.turn.start({ input: "hello", threadId });
+
+expect(fixture.events.map((event) => event.type)).toContain("turn/completed");
+```
+
+This fixture covers the App Server success path: canonical thread ids,
+`thread/start`, `thread/read`, `turn/start`, assistant deltas, queued
+`turn/steer`, `turn/interrupt`, and `turn/completed`. It does not validate
+bridge admission, bearer tokens, Codex process lifecycle, upload storage,
+workspace authorization, or multi-user policy; keep separate host checks for
+those production concerns.
+
 For package-specific examples, see [React](./react.md),
 [Host Integration](./host-integration.md), and
 [Server Bridge](../reference/server-bridge.md).

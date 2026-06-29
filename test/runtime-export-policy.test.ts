@@ -22,6 +22,9 @@ describe("runtime named export policy", () => {
         "threadStartParams",
       ]),
       "@nyosegawa/agent-ui-codex/session": expect.arrayContaining(["createCodexSession"]),
+      "@nyosegawa/agent-ui-codex/test-fixtures": expect.arrayContaining([
+        "createCodexAppServerSuccessFixture",
+      ]),
       "@nyosegawa/agent-ui-codex/websocket": expect.arrayContaining([
         "createCodexWebSocketTransport",
       ]),

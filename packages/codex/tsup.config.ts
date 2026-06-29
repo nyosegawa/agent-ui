@@ -9,6 +9,7 @@ export default {
     "src/request-builders.ts",
     "src/session.ts",
     "src/stable-types.ts",
+    "src/test-fixtures.ts",
     "src/websocket.ts",
   ],
 };

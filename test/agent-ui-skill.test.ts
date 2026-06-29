@@ -181,6 +181,7 @@ describe("public Agent UI skill", () => {
       "steer a running turn",
       "approve and decline a pending approval",
       "attach image and non-image files",
+      "@nyosegawa/agent-ui-codex/test-fixtures",
       "mobile and tablet widths for overflow",
       "verify reload/resume keeps the canonical thread id",
     ]) {

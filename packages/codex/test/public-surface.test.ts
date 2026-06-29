@@ -17,6 +17,11 @@ describe("Codex package public surface", () => {
     expect(rootBarrel).not.toContain('export * from "./method-results"');
   });
 
+  it("keeps success-path test fixtures on their explicit subpath", () => {
+    const rootBarrel = readFileSync(join(codexSrc, "index.ts"), "utf8");
+    expect(rootBarrel).not.toContain('export * from "./test-fixtures"');
+  });
+
   it("keeps request-builders as the preferred raw-free request boundary", () => {
     const source = readFileSync(join(codexSrc, "request-builders.ts"), "utf8");
     expect(source).not.toContain('export type { CodexStableMethodParams');
