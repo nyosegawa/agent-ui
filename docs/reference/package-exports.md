@@ -572,15 +572,20 @@ Responsibilities:
 - define `<agent-chat>` or a caller-supplied tag name
 - accept `transport`, `initialState`, `components`, and `agentOptions` as JavaScript
   properties
-- pass `agentOptions.className` or the `chat-class` attribute through to the
-  rendered `AgentChat`
+- keep registration deterministic: no-DOM registration returns `undefined`,
+  same-tag registration is idempotent, and foreign tag collisions throw
+- treat `agentOptions` as a complete replacement for transport, initial state,
+  component replacements, and class name
+- pass `agentOptions.className` or the observed `chat-class` attribute through
+  to the rendered `AgentChat`
+- remount `AgentProvider` when `transport` or `initialState` changes
 - render the standard React `AgentChat` inside `AgentProvider`
 
 The wrapper does not create transports, spawn Codex, or include CSS
 automatically. Hosts should import `@nyosegawa/agent-ui-react/styles.css`.
 Token overrides on the custom element or a wrapper are the supported styling
-path. The `chat-class` attribute is read when the element renders; it is not a
-general observed-attribute API for every `AgentChat` option.
+path. `chat-class` is the only observed attribute; other options stay as
+JavaScript properties because they carry objects or functions.
 
 ## Examples
 

@@ -333,22 +333,35 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
   - Push: push after validation.
   - PR/CI: web-components package impact.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
+    - Implementation: `defineAgentChatElement()` is now no-DOM safe, same-tag
+      idempotent, foreign-collision rejecting, and multi-tag capable via
+      per-tag subclasses. `AgentChatElement` observes only `chat-class`, treats
+      `agentOptions` as a full replacement, and remounts `AgentProvider` when
+      `transport` or opaque `initialState` changes. Web-component docs,
+      README, package export docs, API snapshot, and changeset were updated.
+    - Validation: `bunx vitest run packages/web-components/test --config
+      vitest.config.ts`; `bun run typecheck`; `bun run lint` (0 errors, existing
+      React hook warnings only); `bun run test:api-snapshots`; `bun run
+      validate:packages`; `bun run test:package-resolution` (rerun alone after
+      an intentional parallel Next build lock collision).
+    - Review: 4 parallel subagent reviews completed. SSR/lifecycle: no P0/P1.
+      Option semantics: no P0/P1; accepted P2 test hardening for omitted
+      `agentOptions` fields and new transport reflection. React contract/product
+      boundary: no P0/P1. Package/docs: fixed P1 stale API snapshot and accepted
+      P2 docs wording cleanup.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T001 Define SSR and tag-collision behavior.
+    - [x] T001 Define SSR and tag-collision behavior.
       - Expected files/areas: web-components source/tests.
       - Validation note: no-DOM import and foreign tag tests.
-    - [ ] T002 Define `initialState` replacement or raw-free hydration contract.
+    - [x] T002 Define `initialState` replacement or raw-free hydration contract.
       - Expected files/areas: web-components and React provider docs/types.
       - Validation note: remount/reset tests.
-    - [ ] T003 Fix `agentOptions` and `chat-class` reset semantics.
+    - [x] T003 Fix `agentOptions` and `chat-class` reset semantics.
       - Expected files/areas: web-components tests/docs.
       - Validation note: property/attribute tests.
-    - [ ] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
+    - [x] T004 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
       - Expected files/areas: phase diff, web-component tests, package docs.
       - Validation note: record subagent findings and remediation in Evidence.
 

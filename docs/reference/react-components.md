@@ -762,7 +762,8 @@ inside custom UI.
 element accepts `transport`, `initialState`, `components`, or the combined
 `agentOptions` object as JavaScript properties and renders the standard preset
 chat. Use the `chat-class` attribute or `agentOptions.className` to pass a class
-name to the rendered `AgentChat`.
+name to the rendered `AgentChat`. `agentOptions` is a complete replacement, and
+replacing `transport` or `initialState` remounts the underlying provider.
 
 ```ts
 import "@nyosegawa/agent-ui-react/styles.css";

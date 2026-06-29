@@ -16,12 +16,22 @@ export interface AgentChatWebComponentElement extends HTMLElement {
   transport?: AgentTransport;
 }
 
-export function defineAgentChatElement(tagName = "agent-chat") {
+const definedAgentChatElements = new Map<string, CustomElementConstructor>();
+
+export function defineAgentChatElement(tagName = "agent-chat"): CustomElementConstructor | undefined {
   if (typeof customElements === "undefined") return undefined;
   const existing = customElements.get(tagName);
-  if (existing) return existing;
-  customElements.define(tagName, AgentChatElement);
-  return AgentChatElement;
+  const defined = definedAgentChatElements.get(tagName);
+  if (existing && defined && existing === defined) return existing;
+  if (existing) {
+    throw new Error(
+      `Cannot define AgentChatElement as <${tagName}> because that tag is already registered.`,
+    );
+  }
+  const Element = class extends AgentChatElement {};
+  customElements.define(tagName, Element);
+  definedAgentChatElements.set(tagName, Element);
+  return Element;
 }
 
 const HTMLElementBase =
@@ -30,8 +40,13 @@ const HTMLElementBase =
 export class AgentChatElement extends HTMLElementBase implements AgentChatWebComponentElement {
   #components?: AgentComponents;
   #initialState?: AgentSessionState;
+  #providerKey = 0;
   #root?: Root;
   #transport?: AgentTransport;
+
+  static get observedAttributes() {
+    return ["chat-class"];
+  }
 
   get agentOptions(): AgentChatElementOptions {
     return {
@@ -44,9 +59,8 @@ export class AgentChatElement extends HTMLElementBase implements AgentChatWebCom
 
   set agentOptions(options: AgentChatElementOptions | undefined) {
     this.#components = options?.components;
-    this.#initialState = options?.initialState;
-    this.#transport = options?.transport;
-    if (options?.className) this.setAttribute("chat-class", options.className);
+    this.#replaceSessionOptions(options?.transport, options?.initialState);
+    this.#setChatClass(options?.className);
     this.#render();
   }
 
@@ -64,7 +78,7 @@ export class AgentChatElement extends HTMLElementBase implements AgentChatWebCom
   }
 
   set initialState(value: AgentSessionState | undefined) {
-    this.#initialState = value;
+    this.#replaceSessionOptions(this.#transport, value);
     this.#render();
   }
 
@@ -73,7 +87,7 @@ export class AgentChatElement extends HTMLElementBase implements AgentChatWebCom
   }
 
   set transport(value: AgentTransport | undefined) {
-    this.#transport = value;
+    this.#replaceSessionOptions(value, this.#initialState);
     this.#render();
   }
 
@@ -86,6 +100,29 @@ export class AgentChatElement extends HTMLElementBase implements AgentChatWebCom
     this.#root = undefined;
   }
 
+  attributeChangedCallback() {
+    this.#render();
+  }
+
+  #replaceSessionOptions(
+    transport: AgentTransport | undefined,
+    initialState: AgentSessionState | undefined,
+  ) {
+    if (this.#transport !== transport || this.#initialState !== initialState) {
+      this.#providerKey += 1;
+    }
+    this.#transport = transport;
+    this.#initialState = initialState;
+  }
+
+  #setChatClass(className: string | undefined) {
+    if (className === undefined) {
+      this.removeAttribute("chat-class");
+      return;
+    }
+    this.setAttribute("chat-class", className);
+  }
+
   #render() {
     if (!this.isConnected) return;
     if (!this.#root) this.#root = createRoot(this);
@@ -95,7 +132,11 @@ export class AgentChatElement extends HTMLElementBase implements AgentChatWebCom
       return;
     }
     this.#root.render(
-      <AgentProvider initialState={this.#initialState} transport={this.#transport}>
+      <AgentProvider
+        key={this.#providerKey}
+        initialState={this.#initialState}
+        transport={this.#transport}
+      >
         <AgentChat className={className} components={this.#components} />
       </AgentProvider>,
     );

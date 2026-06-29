@@ -1,6 +1,7 @@
 ---
 "@nyosegawa/agent-ui-react": major
 "@nyosegawa/agent-ui-server": major
+"@nyosegawa/agent-ui-web-components": major
 ---
 
 Redesign the React approval and input public contracts around raw-free view
@@ -37,3 +38,9 @@ Raw stdio process helpers (`createCodexAppServerBridge`, child-process spawn
 types, and dynamic-tool helper-thread internals) moved to
 `@nyosegawa/agent-ui-server/advanced`. Bridge admission must be configured via
 `bridgePolicy.admission`; the legacy top-level `admission` option is removed.
+
+The Web Components wrapper now has deterministic lifecycle semantics:
+SSR/no-DOM registration returns `undefined`, same-tag registration is
+idempotent, foreign tag collisions throw, `agentOptions` is a full replacement
+for the element configuration, `chat-class` is the only observed attribute, and
+changing `transport` or `initialState` remounts the underlying provider.
