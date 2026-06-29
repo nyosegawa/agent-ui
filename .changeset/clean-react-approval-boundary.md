@@ -44,3 +44,9 @@ SSR/no-DOM registration returns `undefined`, same-tag registration is
 idempotent, foreign tag collisions throw, `agentOptions` is a full replacement
 for the element configuration, `chat-class` is the only observed attribute, and
 changing `transport` or `initialState` remounts the underlying provider.
+
+Recipes and integration docs now present the redesigned public composition
+boundary as the source of truth: headless examples compose controllers and
+primitives instead of reducer internals, arbitrary files send the absolute saved
+path as explicit text input, and downstream product names are guarded from
+public library documentation.

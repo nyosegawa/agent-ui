@@ -22,11 +22,11 @@ const thread = useAgentThreadController(threadId);
 const turns = useAgentTurnController(threadId);
 ```
 
-`useAgentThreadController()` is the preferred name for `useAgentThread()`. It can
-follow the active thread or lock to a supplied `threadId`. Use `startThread()`
-for a new Codex thread and `resumeThread(threadId)` only when the host explicitly
-wants to rejoin a stored session. Both actions return stable Agent UI result
-objects such as `{ threadId }`, not generated App Server response payloads.
+`useAgentThreadController()` can follow the active thread or lock to a supplied
+`threadId`. Use `startThread()` for a new Codex thread and
+`resumeThread(threadId)` only when the host explicitly wants to rejoin a stored
+session. Both actions return stable Agent UI result objects such as
+`{ threadId }`, not generated App Server response payloads.
 For thread lifecycle actions, `threadId` is the canonical id the host should
 persist after the operation completes. First-message start results use the same
 rule: if the action also starts a turn, any returned turn metadata is stable
@@ -44,9 +44,9 @@ experimental resume fields such as `excludeTurns`, `initialTurnsPage`,
 path/history resume, and cursor ownership remain host-managed raw protocol
 usage.
 
-`useAgentTurnController()` is the preferred name for `useAgentTurn()`. It sends
-`turn/start` with normalized run settings, `turn/steer` for continuing an active
-turn, and `turn/interrupt` for the visible stop action.
+`useAgentTurnController()` sends `turn/start` with normalized run settings,
+`turn/steer` for continuing an active turn, and `turn/interrupt` for the visible
+stop action.
 
 `turn/steer` is the Codex App Server same-turn continuation path. It requires
 an active regular turn and the matching `expectedTurnId`; review and manual
@@ -129,8 +129,7 @@ const run = useAgentRunSettings();
 ```
 
 `useAgentComposerController()` owns input text and submits turns through the
-turn controller. `useAgentComposer()` remains a public alias for the same
-raw-free controller view. The public view exposes `value`, `setValue`,
+turn controller. The public view exposes `value`, `setValue`,
 `canSubmit`, `submitMode`, `disabledReason`, `isSubmitting`, `isInterrupting`,
 `activeTurnId`, queued follow-ups, failed first-message pending messages, and
 retry/cancel actions for those failed pending messages. Each failed pending

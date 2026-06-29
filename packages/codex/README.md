@@ -19,9 +19,9 @@ Codex process lifecycle, user credentials, remote deployment policy, or
 application-specific workflow orchestration.
 
 Use the documented subpaths for browser-safe clients, request builders,
-normalizers, stable generated types, session compatibility, and WebSocket
-transport. Generated schema files are source-owned implementation inputs, not
-deep-import targets.
+normalizers, stable generated types, the session facade, and WebSocket transport.
+Generated schema files are source-owned implementation inputs, not deep-import
+targets.
 
 See the repository docs for current package exports and integration guidance:
 https://github.com/nyosegawa/agent-ui

@@ -10,7 +10,7 @@ Purpose:
 
 - typed snippets for the custom components map
 - custom transcript block rendering
-- headless hook composition
+- headless controller and primitive composition
 - public controller composition
 - scoped thread lists
 - host-owned composer controls
@@ -51,6 +51,13 @@ integration points. Host applications still own authentication, bridge
 admission, tenant and workspace scoping, upload authorization, audit sinks,
 Codex process lifecycle, persistence, billing, and deployment policy.
 
+`src/headless-hooks.tsx` is intentionally built from public controllers and
+primitives. It does not walk reducer turns, item maps, streaming text maps, or
+raw App Server payloads. Hosts that need their own chrome should compose
+`useAgentThreadController()`, `useAgentThreadListController()`,
+`AgentThreadTimeline`, and `AgentComposerPanel` instead of depending on internal
+transcript storage.
+
 `src/host-gated-workflow.tsx` composes `AgentThreadTimeline`, a host-owned
 approval bar, and a delayed composer. The recipe keeps plan/update state in the
 host and calls `startThreadWithInput(input, { threadOptions, turnOptions })`
@@ -61,6 +68,9 @@ using the public `components` map, `threadHeaderEnd`, `startOptions`, controlled
 overlay `controls`, local media resolvers, and
 `useAgentChatController().sendMessage()` for external host UI. The host never
 calls raw transport methods and does not depend on private DOM selectors.
+Non-image attachments are rendered with safe browser metadata, but the App
+Server input receives the absolute saved path because redacted display paths are
+not readable by Codex.
 
 `src/themed.css` intentionally demonstrates host theming by overriding `--aui-*`
 tokens on a wrapper. It should not be read as permission to import

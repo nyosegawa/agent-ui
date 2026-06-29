@@ -33,7 +33,7 @@ async function uploadToHostLocalMedia(
     input:
       kind === "image"
         ? localImageInput(uploaded.path)
-        : textInput(`Attached file: ${uploaded.redactedPath ?? uploaded.path}`),
+        : textInput(`Attached file: ${uploaded.path}`),
     mimeType: uploaded.mimeType ?? file.type,
     name: uploaded.name ?? file.name,
     path: uploaded.path,

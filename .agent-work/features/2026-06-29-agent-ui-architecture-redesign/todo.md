@@ -30,10 +30,10 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
 - [x] Core view models, controllers, and internal state split
 - [x] React input, transcript, approval, and controller cleanup
 - [x] Composer and first-message lifecycle hardening
-- [ ] Server bridge root and host-policy boundary cleanup
-- [ ] Web Components lifecycle and option semantics
-- [ ] Build/package/release gate hardening
-- [ ] Examples, recipes, docs, migration, and changelog refresh
+- [x] Server bridge root and host-policy boundary cleanup
+- [x] Web Components lifecycle and option semantics
+- [x] Build/package/release gate hardening
+- [x] Examples, recipes, docs, migration, and changelog refresh
 - [ ] Browser, package, downstream-smoke evidence and PR closeout
 
 ## Task Checklist By Phase
@@ -419,7 +419,7 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
       - Expected files/areas: phase diff, scripts, workflow docs/tests.
       - Validation note: record subagent findings and remediation in Evidence.
 
-- [ ] P008 Examples, recipes, docs, migration, and changelog refresh
+- [x] P008 Examples, recipes, docs, migration, and changelog refresh
   - Goal: make docs and examples the migration source of truth, rewriting
     affected pages around the new architecture instead of patching stale text.
   - Scope: README/docs/package READMEs/changelogs/recipes/changesets. This may
@@ -439,25 +439,51 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
   - Push: push after validation.
   - PR/CI: docs/release impact.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - Commit:
-    - Push:
+    - Implementation: rewrote the raw-state headless recipe to compose public
+      controllers and primitives (`useAgentThreadController`,
+      `useAgentThreadListController`, `AgentThreadTimeline`, and
+      `AgentComposerPanel`); fixed the AgentChat composition attachment
+      resolver so non-image App Server input receives the absolute uploaded
+      path instead of redacted display metadata; updated recipe docs,
+      package-export docs, hook reference docs, package README/changelog text,
+      and the breaking changeset so the docs tell one controller/primitives
+      architecture story; removed downstream product names from public docs;
+      added a public-doc/example leakage guard for downstream app names; and
+      moved the public local-react-vite showcase off old short hook names and
+      off direct turn/item reads for host workflow panel block extraction.
+    - Validation: `bun run --cwd examples/recipes typecheck`; `bun run --cwd
+      examples/local-react-vite typecheck`; `bunx vitest run
+      test/package-scripts-docs.test.ts`; `bun run typecheck`; `bun run lint`
+      (0 errors, existing React hook warnings only); `bun run build:examples`
+      (Vite chunk-size warnings only); `bun run test:api-snapshots`; `bun run
+      validate:packages` (existing publint repository-url suggestions only).
+      Search checks for downstream names, stale short-hook call examples,
+      compatibility session wording, and redacted-path App Server input returned
+      no matches in public docs/examples.
+    - Review: 4 parallel subagent reviews completed. Docs currentness:
+      no P0/P1/P2. Recipe correctness: no P0/P1/P2. Migration/package boundary:
+      no P0/P1; resolved P2 findings by removing alias-style hook docs,
+      renaming compatibility session wording to stable session facade, and
+      adding server/web-components major changelog entries. Repository guard:
+      no P0/P1; resolved P2 findings by removing a leaked downstream product
+      name, expanding the guard to public examples, and skipping generated or
+      dependency directories.
+    - Commit: pending.
+    - Push: pending.
   - Tasks:
-    - [ ] T001 Replace raw-state headless recipe with controller/primitives usage.
+    - [x] T001 Replace raw-state headless recipe with controller/primitives usage.
       - Expected files/areas: `examples/recipes/src/headless-hooks.tsx`.
       - Validation note: recipe typecheck.
-    - [ ] T002 Fix attachment recipe to use real path for non-image App Server input.
+    - [x] T002 Fix attachment recipe to use real path for non-image App Server input.
       - Expected files/areas: `examples/recipes/src/agent-chat-composition.tsx`.
       - Validation note: recipe typecheck.
-    - [ ] T003 Rewrite affected migration docs, package exports, package READMEs, changelogs, changeset.
+    - [x] T003 Rewrite affected migration docs, package exports, package READMEs, changelogs, changeset.
       - Expected files/areas: docs and package metadata.
       - Validation note: docs review plus package/API gates; reject scattered partial edits when a page needs restructuring.
-    - [ ] T004 Add downstream-name leakage guard.
+    - [x] T004 Add downstream-name leakage guard.
       - Expected files/areas: docs staleness or repository policy tests.
       - Validation note: focused docs/staleness test.
-    - [ ] T005 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
+    - [x] T005 Run 4 parallel phase-review subagents and resolve P0/P1 findings.
       - Expected files/areas: phase diff, docs, recipes, changelog/changeset.
       - Validation note: record subagent findings and remediation in Evidence.
 

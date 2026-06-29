@@ -208,7 +208,7 @@ to documented public API.
 ## Host-Gated Workflow Composition
 
 - What remains internal: workflow-specific state machines, proposal/approval
-  orchestration, Watcher- or product-specific lifecycle names, host panel
+  orchestration, product-specific lifecycle names, host panel
   persistence, routing, and custom registry state.
 - What becomes public: primitives, controllers, replacement points, and recipes
   that let a host gate when a thread or turn can be started while Agent UI owns

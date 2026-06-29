@@ -9,7 +9,8 @@ Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
 - `src/custom-transcript-blocks.tsx`: custom transcript block renderers while
   preserving default block rendering.
 - `src/headless-chat-controller.tsx`: chat UI composed from public controllers.
-- `src/headless-hooks.tsx`: custom layout built from hooks only.
+- `src/headless-hooks.tsx`: custom layout built from public controllers and
+  primitives without reading reducer turn internals.
 - `src/scoped-thread-list.tsx`: host-owned thread list scope with search and
   pagination.
 - `src/host-owned-composer.tsx`: transcript plus host toolbar using the public

@@ -52,7 +52,8 @@ import {
   useAgentChatController,
   useAgentComposerController,
   useAgentContext,
-  useAgentThread,
+  useAgentTranscriptController,
+  useAgentThreadController,
   useAgentThreadListController,
   useAgentUsage,
 } from "@nyosegawa/agent-ui-react/headless";
@@ -1995,7 +1996,7 @@ function HostWorkflowComposition({
   const theme = themeFromLocation();
   const embedded = isEmbeddedPreview();
   const bootstrap = useAgentBootstrap();
-  const { thread } = useAgentThread();
+  const { thread } = useAgentThreadController();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [contextSheetOpen, setContextSheetOpen] = useState(false);
   const [hostSheetOpen, setHostSheetOpen] = useState(() =>
@@ -2266,7 +2267,7 @@ function HostFirstMessagePanel({
   controls: HostFirstMessageControls;
   stats: HostFirstMessageStats;
 }) {
-  const { thread } = useAgentThread();
+  const { thread } = useAgentThreadController();
   const pending = thread?.thread.ephemeral === true && stats.turnStartCalls === 0;
   return (
     <section className="aui-host-block" aria-label="Host first-message probe">
@@ -2306,7 +2307,7 @@ function HostFirstMessagePanel({
 }
 
 function HostScopedHistoryPanel() {
-  const { thread: activeThread } = useAgentThread();
+  const { thread: activeThread } = useAgentThreadController();
   const [previewThreadId, setPreviewThreadId] = useState<string>("none");
   const scopedHistory = useAgentThreadListController({
     key: "host-workflow-reference",
@@ -2404,7 +2405,7 @@ function HostScopedHistoryPanel() {
 }
 
 function HostScopedPreview({ threadId }: { threadId: string }) {
-  const { thread } = useAgentThread(threadId);
+  const { thread } = useAgentThreadController(threadId);
   if (!thread) return null;
   return (
     <div aria-label="Host scoped preview transcript">
@@ -2423,7 +2424,7 @@ function HostWorkflowGatePanel({
   onOpenChange: (open: boolean) => void;
   open: boolean;
 }) {
-  const { thread } = useAgentThread();
+  const { thread } = useAgentThreadController();
   const { approvals } = useAgentApprovals(thread?.thread.id);
   const blocked = !open;
   return (
@@ -2478,35 +2479,22 @@ function HostWorkflowPanel({
 }: {
   latestAttachment: HostAttachmentMetadata | null;
 }) {
-  const { thread } = useAgentThread();
+  const { thread } = useAgentThreadController();
   const chat = useAgentChatController();
   const { approvals } = useAgentApprovals(thread?.thread.id);
+  const transcript = useAgentTranscriptController(thread?.thread.id);
   const { rateLimits } = useAgentUsage();
   const [externalSendStatus, setExternalSendStatus] = useState("Ready");
   const windows = normalizeUsageWindows(rateLimits);
-  const latestTurn = thread?.orderedTurnIds.at(-1)
-    ? thread.turns[thread.orderedTurnIds.at(-1)!]
-    : undefined;
-  const blocks = latestTurn
-    ? latestTurn.itemOrder
-        .map((itemId) => latestTurn.blocksByItemId[itemId])
-        .filter((block) => block !== undefined)
+  const latestTurnId = transcript.turnIds.at(-1);
+  const blocks = latestTurnId
+    ? (transcript.entriesByTurnId.get(latestTurnId) ?? []).map((entry) => entry.block)
     : [];
   const plan = blocks.find((block) => block.kind === "plan");
   const changedFiles = blocks
     .filter((block) => block.kind === "fileChange")
-    .flatMap((block) => (Array.isArray(block.changes) ? block.changes : []))
-    .map((change) =>
-      change && typeof change === "object" && "path" in change
-        ? {
-            kind:
-              typeof (change as Record<string, unknown>).kind === "string"
-                ? String((change as Record<string, unknown>).kind)
-                : "update",
-            path: String((change as Record<string, unknown>).path),
-          }
-        : { kind: "update", path: "unknown" },
-    );
+    .flatMap((block) => block.files ?? [])
+    .map((change) => ({ kind: change.kind, path: change.path }));
   const commands = blocks.filter((block) => block.kind === "commandExecution");
   const verificationCommand = commands.find((block) =>
     typeof block.command === "string"

@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_ONE_SHOT_METHODS } from "../packages/server/src/one-shot-rpc-policy";
@@ -199,6 +199,41 @@ describe("package script documentation", () => {
     expect(serverBridgeDocs).toContain("16 MB default limit");
     expect(serverBridgeDocs).toContain("one hour default TTL");
   });
+
+  it("keeps downstream application names out of public library docs", () => {
+    const publicDocs = [
+      "README.md",
+      "CONTRIBUTING.md",
+      "docs",
+      "packages/core/README.md",
+      "packages/core/CHANGELOG.md",
+      "packages/codex/README.md",
+      "packages/codex/CHANGELOG.md",
+      "packages/react/README.md",
+      "packages/react/CHANGELOG.md",
+      "packages/server/README.md",
+      "packages/server/CHANGELOG.md",
+      "packages/web-components/README.md",
+      "packages/web-components/CHANGELOG.md",
+      "examples",
+      ".changeset",
+    ];
+    const forbidden = [
+      /\bagent-app\b/i,
+      /\breceipt-agent-app\b/i,
+      /\bWatcher(?:\.app)?\b/,
+      /\bnyosegawa\/watcher\b/i,
+    ];
+    const violations = publicDocs.flatMap((path) =>
+      readPublicTextFiles(path).flatMap(({ filePath, text }) =>
+        forbidden
+          .filter((pattern) => pattern.test(text))
+          .map((pattern) => `${filePath}: ${String(pattern)}`),
+      ),
+    );
+
+    expect(violations).toEqual([]);
+  });
 });
 
 function publicPackageManifests(): PackageJson[] {
@@ -211,6 +246,26 @@ function publicPackageManifests(): PackageJson[] {
       ) as PackageJson;
     })
     .sort((left, right) => left.name.localeCompare(right.name));
+}
+
+function readPublicTextFiles(path: string): Array<{ filePath: string; text: string }> {
+  const root = new URL(`../${path}`, import.meta.url);
+  const stats = statSync(root);
+  if (stats.isFile()) return [{ filePath: path, text: readRepoFile(path) }];
+  return readdirSync(root, { withFileTypes: true }).flatMap((entry) => {
+    if (
+      entry.isDirectory() &&
+      ["node_modules", "dist", ".next", "coverage", "playwright-report"].includes(
+        entry.name,
+      )
+    ) {
+      return [];
+    }
+    const childPath = `${path}/${entry.name}`;
+    if (entry.isDirectory()) return readPublicTextFiles(childPath);
+    if (!/\.(?:md|mdx|ts|tsx|json)$/.test(entry.name)) return [];
+    return [{ filePath: childPath, text: readRepoFile(childPath) }];
+  });
 }
 
 function publicExportSpecifiers(): string[] {

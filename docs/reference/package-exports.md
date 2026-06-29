@@ -176,15 +176,13 @@ Transcript item customization uses `renderItem(entry, Default)` with
 scroll containers, approval anchor placement, composer toolbar internals,
 attachment mutation controls, sidebar pagination internals, and generated block
 normalization remain internal/source-level boundaries;
-`useAgentThread`, `useAgentThreadController`, `useAgentThreads`,
-`useAgentThreadHistory`, `useAgentThreadReader`,
-`useAgentThreadListController`, `useAgentComposer`,
-`useAgentComposerController`, `useAgentChatController`,
-`AgentComposerController`, `AgentChatController`, `ThreadList`, and
-`AgentThreadSidebar` are rebuilt on explicit session, active-thread,
-thread-list, composer, transcript, scroll, server-request, and diagnostics
-controllers. The generic `AgentWorkspace` side-panel preset is removed; hosts
-compose their own layout around `AgentChat` and primitives.
+`useAgentThreadController`, `useAgentThreadHistory`, `useAgentThreadReader`,
+`useAgentThreadListController`, `useAgentComposerController`,
+`useAgentChatController`, `AgentComposerController`, `AgentChatController`,
+`ThreadList`, and `AgentThreadSidebar` are rebuilt on explicit session,
+active-thread, thread-list, composer, transcript, scroll, server-request, and
+diagnostics controllers. The generic `AgentWorkspace` side-panel preset is
+removed; hosts compose their own layout around `AgentChat` and primitives.
 `startThreadWithInput()` is not a thread hook method;
 the raw-free first-message start behavior is public on
 `AgentComposerController` as
@@ -452,7 +450,7 @@ The package root exports the protocol/session/transport facade: JSON-RPC
 helpers, protocol capability metadata, session helpers, stdio transport,
 WebSocket transport, SDK adapter, and auth helpers. Browser code should import
 the browser-safe grouped clients from
-`@nyosegawa/agent-ui-codex/clients`, the compatibility session facade from
+`@nyosegawa/agent-ui-codex/clients`, the stable session facade from
 `@nyosegawa/agent-ui-codex/session`, normalized event helpers from
 `@nyosegawa/agent-ui-codex/normalizer`, and the WebSocket transport from
 `@nyosegawa/agent-ui-codex/websocket` so Node stdio code stays out of the browser
