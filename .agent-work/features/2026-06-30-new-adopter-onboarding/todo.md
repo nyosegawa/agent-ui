@@ -5,16 +5,16 @@
 - Overall status: In progress
 - Current phase: P003 Public Agent Skill new-adopter refresh
 - Blockers: None
-- Last validation: P003 public skill and docs validation passed locally.
+- Last validation: P003 public skill and docs validation passed locally; PR #42 P003 CI checks passed after push.
 - Last review: P003 four-lane subagent review completed; upload validation and public-skill leakage findings fixed.
-- PR/CI: Draft PR #42 open; P003 implementation commit pending push.
+- PR/CI: Draft PR #42 open; latest P003 checks passed.
 
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
 - Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: planning, P001 docs commits, and P002 docs/package README commits pushed; P003 implementation commit pending push
+- Push result: planning, P001 docs commits, P002 docs/package README commits, and P003 public skill commits pushed
 - Blockers: none
 
 ## Phase Checklist
@@ -84,15 +84,16 @@
   - Review: Skill best-practices pass: short `SKILL.md`, progressive disclosure, no repo-maintainer command leakage, safe snippets.
   - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
   - Commit: `09c4bcd494f64ef7efbb59945021874b10b45869`
-  - Push: pending
-  - PR/CI: pending
+  - Push: pushed to `origin/codex/new-adopter-onboarding-plan`
+  - PR/CI: Draft PR #42 open; P003 CI checks passed.
   - Evidence:
     - Implementation: Prioritized new-adopter triggers in `skills/agent-ui/SKILL.md` and `agents/openai.yaml`; added first-host-app and `Node >=22` routing; added safe browser/server bridge skeleton guidance with root server APIs, `local-loopback` admission, and `browserMethodPolicy: "productized"`; hardened public skill and attachments upload snippets with `response.ok`, JSON shape checks for `path`/`previewUrl`/`url`, dedicated upload root wording, and no blind `asset.path` trust; expanded the external host validation checklist for send, `thread/start` through `turn/completed`, stop/interrupt, steer, approvals, image and non-image uploads, reload/resume, bridge admission, and mobile overflow; removed repo-maintainer validation commands/gates from the public skill.
     - Validation: `bun run test:skills` passed; `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts test/docs-staleness.test.ts` passed; forbidden maintainer-command/gate search over public skill and attachments docs had no matches; `git diff --check` passed; artifact validator passed.
     - Review: Manual pass confirmed public skill keeps progressive disclosure, host-owned runtime policy, root server bridge guidance, and external-host package-manager neutrality.
     - 4-Parallel Subagent Review: Completed. Lane 1 trigger/metadata review passed; lane 2 bridge first-app safety review passed; lane 3 found optional `previewUrl`/`url` fields were not validated in upload snippets, fixed; lane 4 found repo-maintainer validation leakage and incomplete checklist assertions, fixed by removing repository gates from the public skill and expanding tests.
     - Commit: `09c4bcd494f64ef7efbb59945021874b10b45869`
-    - Push: pending
+    - Push: pushed to `origin/codex/new-adopter-onboarding-plan`
+    - PR/CI: PR #42 checks passed for pushed P003 commits: Detect changes, Detect compatibility changes, Repository policy, Typecheck, Lint, Unit tests, API snapshots, Package resolution, Package validation, Protocol and fixtures, Playwright fixtures, and Real local smoke. Compatibility matrix jobs were skipped by path filters.
   - Tasks:
     - [x] T007 Prioritize triggers for `v3 new adopter`, `first host app`, `AgentChat preset`, `headless + primitives`, `same-origin bridge skeleton`, `Node >=22`, `新規導入`, `初回導入`, and `最小構成`.
       - Expected files/areas: `skills/agent-ui/SKILL.md`, agent metadata.
@@ -340,6 +341,7 @@
 - P003: forbidden maintainer-command/gate search over `skills/agent-ui` and `docs/guides/attachments.md` returned no matches.
 - P003: `git diff --check` passed.
 - P003: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-30-new-adopter-onboarding` passed.
+- P003 PR #42 checks passed after push: Detect changes, Detect compatibility changes, Repository policy, Typecheck, Lint, Unit tests, API snapshots, Package resolution, Package validation, Protocol and fixtures, Playwright fixtures, and Real local smoke. Compatibility matrix jobs were skipped by path filters.
 
 ## Review Evidence
 
@@ -355,6 +357,7 @@
 - `014ce7b5f0e36ad917af2650d2ba77b892cc8ec3` - Add first host app onboarding guide
 - `ce002c9e7542a853d2e48f3e669ca1550a4d1f08` - Align recipe and package README guidance
 - `09c4bcd494f64ef7efbb59945021874b10b45869` - Refresh public Agent UI onboarding skill
+- `0eddec96a9dc66aba182aefa47f51ffbc7295158` - Record P003 onboarding evidence
 
 ## Final Checklist
 
