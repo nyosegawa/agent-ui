@@ -301,7 +301,8 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
       boundary and browser method policy reviews found no P0/P1 after the
       boundary changes.
     - Commit: phase commit `Clean server bridge public boundary`.
-    - Push:
+    - Push: pushed `4af3653` to
+      `origin/codex/agent-ui-architecture-redesign-plan`.
   - Tasks:
     - [x] T001 Freeze browser method classification and policy tests.
       - Expected files/areas: server/codex policy tests.
