@@ -271,7 +271,7 @@ type AgentUiDynamicToolPolicy = {
     helperPermissions?: DynamicToolHelperPermissionPolicy;
     mode: "host-callback";
 };
-type AgentUiBridgeRejectionReason = "request_context_missing" | "loopback_required" | "resolver_rejected" | "resolver_failed" | "admission_rejected" | "admission_failed" | "unsafe_admission_reason_missing" | "unsupported_root_bridge_option" | "bearer_subprotocol_missing" | "bearer_subprotocol_malformed" | "bearer_subprotocol_mismatch" | (string & {});
+type AgentUiBridgeRejectionReason = "request_context_missing" | "loopback_required" | "resolver_rejected" | "resolver_failed" | "admission_rejected" | "admission_failed" | "unsafe_admission_reason_missing" | "unsupported_root_bridge_option" | "invalid_browser_method_policy" | "bearer_subprotocol_missing" | "bearer_subprotocol_malformed" | "bearer_subprotocol_mismatch" | (string & {});
 interface AgentUiBridgeRejection {
     body?: string | Buffer;
     closeCode?: number;

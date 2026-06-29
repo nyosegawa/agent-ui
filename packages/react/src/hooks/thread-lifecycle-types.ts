@@ -1,4 +1,8 @@
-import type { ThreadId, ThreadStatus } from "@nyosegawa/agent-ui-core";
+import type {
+  AgentThreadWaitingReason,
+  ThreadId,
+  ThreadStatus,
+} from "@nyosegawa/agent-ui-core";
 import type { ThreadStartOptions, TurnStartOptions } from "../request-options";
 
 export interface AgentThreadStartResult {
@@ -25,6 +29,7 @@ export interface AgentThreadResumeResult {
   runSettings?: AgentThreadResumeRunSettings;
   status?: ThreadStatus;
   threadId: ThreadId;
+  waitingReasons?: AgentThreadWaitingReason[];
 }
 
 export type AgentThreadActivity = "failed" | "idle" | "running" | "waitingForInput";

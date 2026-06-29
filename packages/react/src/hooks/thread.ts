@@ -35,11 +35,7 @@ import {
   type ThreadResumeOptions,
   type ThreadStartOptions,
 } from "../request-options";
-import {
-  rawThreadId,
-  threadProjectPath,
-  threadUpsertEvent,
-} from "../thread-history";
+import { rawThreadId, threadProjectPath, threadUpsertEvent } from "../thread-history";
 import { useCodexSession } from "./codex-session";
 import type {
   AgentThreadForkResult,
@@ -53,6 +49,7 @@ import {
   runSettingsFromRawThread,
   syncRunSettingsFromRawThread,
 } from "./thread-run-settings";
+import { waitingReasonsFromResumeEvents } from "./thread-resume-waiting-reasons";
 
 export type {
   ThreadForkOptions,
@@ -71,7 +68,10 @@ export type {
 } from "./thread-lifecycle-types";
 
 export interface AgentThreadController {
-  resumeThread: (id: ThreadId, params?: ThreadResumeOptions) => Promise<AgentThreadResumeResult>;
+  resumeThread: (
+    id: ThreadId,
+    params?: ThreadResumeOptions,
+  ) => Promise<AgentThreadResumeResult>;
   startThread: (params?: ThreadStartOptions) => Promise<AgentThreadStartResult>;
   thread?: AgentThreadView;
   threadId?: ThreadId;
@@ -79,7 +79,10 @@ export interface AgentThreadController {
 }
 
 export interface InternalAgentThreadController {
-  resumeThread: (id: ThreadId, params?: ThreadResumeOptions) => Promise<AgentThreadResumeResult>;
+  resumeThread: (
+    id: ThreadId,
+    params?: ThreadResumeOptions,
+  ) => Promise<AgentThreadResumeResult>;
   startThread: (params?: ThreadStartOptions) => Promise<AgentThreadStartResult>;
   thread?: ThreadState;
   threadId?: ThreadId;
@@ -100,7 +103,9 @@ export interface AgentThreadHistoryController {
   threads: AgentThreadView[];
 }
 
-export function useInternalAgentThread(threadId?: ThreadId): InternalAgentThreadController {
+export function useInternalAgentThread(
+  threadId?: ThreadId,
+): InternalAgentThreadController {
   const { dispatch, state } = useInternalAgentContext();
   const codex = useCodexSession();
   const resolvedThreadId = threadId ?? selectThreadLifecycle(state).activeThreadId;
@@ -145,7 +150,9 @@ export function useInternalAgentThread(threadId?: ThreadId): InternalAgentThread
       const resultRecord = asRecord(result) ?? {};
       const rawThread = resultRecord.thread ?? result;
       const rawThreadRecord = asRecord(rawThread);
-      const canonicalThreadId = rawThreadRecord ? rawThreadId(rawThreadRecord) : undefined;
+      const canonicalThreadId = rawThreadRecord
+        ? rawThreadId(rawThreadRecord)
+        : undefined;
       const resumeRunSettings = rawThreadRecord
         ? runSettingsFromRawThread({ ...rawThreadRecord, ...resultRecord })
         : undefined;
@@ -189,12 +196,17 @@ export function useInternalAgentThread(threadId?: ThreadId): InternalAgentThread
         normalized.events,
         resolvedThreadId,
       );
+      const waitingReasons = waitingReasonsFromResumeEvents(
+        normalized.events,
+        resolvedThreadId,
+      );
       return {
         ...(activeTurnId ? { activeTurnId } : {}),
         ...(status ? { activity: threadActivityFromStatus(status), status } : {}),
         ...(resolvedThreadId !== id ? { requestedThreadId: id } : {}),
         ...(resumeRunSettings ? { runSettings: resumeRunSettings } : {}),
         threadId: resolvedThreadId,
+        ...(waitingReasons.length > 0 ? { waitingReasons } : {}),
       } satisfies AgentThreadResumeResult;
     },
     [codex, dispatch],
@@ -264,7 +276,9 @@ export function useAgentThreadActions(threadId?: ThreadId) {
     async (params: ThreadForkOptions = {}) => {
       const id = requireThreadId();
       const response = await codex.thread.fork(id, codexThreadForkParams(params));
-      return { threadId: responseThreadId(response) ?? id } satisfies AgentThreadForkResult;
+      return {
+        threadId: responseThreadId(response) ?? id,
+      } satisfies AgentThreadForkResult;
     },
     [codex, requireThreadId],
   );
@@ -382,7 +396,9 @@ export function useAgentThreadReader() {
         });
       } catch (caught) {
         if (caught instanceof Error && caught.message.includes("missing a thread id")) {
-          throw new Error(`thread/read returned no thread for ${threadId}`, { cause: caught });
+          throw new Error(`thread/read returned no thread for ${threadId}`, {
+            cause: caught,
+          });
         }
         throw caught;
       }
@@ -391,7 +407,9 @@ export function useAgentThreadReader() {
       if (options.activate !== false) {
         syncRunSettingsFromRawThread(dispatch, rawThreadRecord);
       }
-      return { threadId: rawThreadId(rawThreadRecord) ?? threadId } satisfies AgentThreadReadResult;
+      return {
+        threadId: rawThreadId(rawThreadRecord) ?? threadId,
+      } satisfies AgentThreadReadResult;
     },
     [codex, dispatch],
   );

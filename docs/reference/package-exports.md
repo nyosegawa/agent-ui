@@ -14,13 +14,13 @@ Packages are split by responsibility, but the local bridge is included in the of
 
 ## Common Import Paths
 
-| Package | Common public imports |
-| --- | --- |
-| `@nyosegawa/agent-ui-react` | Root `AgentProvider` / `AgentChat`, `/primitives` visual building blocks, `/headless` controllers, `styles.css` |
-| `@nyosegawa/agent-ui-server` | Root bridge, local media, policy, redaction, one-shot RPC helpers; `/advanced` raw stdio/process helpers |
-| `@nyosegawa/agent-ui-codex` | Root protocol/session facade, `/websocket`, `/request-builders`, `/clients`, `/session`, `/normalizer`, `/stable-types` |
-| `@nyosegawa/agent-ui-core` | Root state, transport, selectors, reducer, fake transport; `/internal` only for Agent UI packages and repository tests |
-| `@nyosegawa/agent-ui-web-components` | Root custom element definition and element option types |
+| Package                              | Common public imports                                                                                                   |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `@nyosegawa/agent-ui-react`          | Root `AgentProvider` / `AgentChat`, `/primitives` visual building blocks, `/headless` controllers, `styles.css`         |
+| `@nyosegawa/agent-ui-server`         | Root bridge, local media, policy, redaction, one-shot RPC helpers; `/advanced` raw stdio/process helpers                |
+| `@nyosegawa/agent-ui-codex`          | Root protocol/session facade, `/websocket`, `/request-builders`, `/clients`, `/session`, `/normalizer`, `/stable-types` |
+| `@nyosegawa/agent-ui-core`           | Root state, transport, selectors, reducer, fake transport; `/internal` only for Agent UI packages and repository tests  |
+| `@nyosegawa/agent-ui-web-components` | Root custom element definition and element option types                                                                 |
 
 Host apps should import package names and documented subpaths only. Do not
 import `dist/*`, source files, generated schema chunks, or
@@ -208,7 +208,9 @@ External UI that needs to send into the active `AgentChat` flow should use
 `started`, `sent`, `queued`, or `blocked` result objects and forwards
 `turnOptions` for active idle threads while creating an optimistic user message
 with `clientUserMessageId`; hosts should not recreate that lifecycle with
-direct transport calls.
+direct transport calls. Blocked results carry `AgentComposerBlockedReason`,
+matching the core thread waiting reasons instead of collapsing every wait state
+to approval.
 React image input uses `AgentImageInput { type: "image", url }`, matching the
 Codex stable input shape. `image_url` is not a React public API.
 Approval composition uses raw-free `AgentApprovalRequest` view models. The
@@ -327,7 +329,7 @@ string shorthand is not part of the public contract.
 
 Composer controller exports on `@nyosegawa/agent-ui-react/headless` include
 the raw-free `AgentComposerController` view plus `AgentComposerSubmitMode`,
-`AgentComposerDisabledReason`,
+`AgentComposerDisabledReason`, `AgentComposerBlockedReason`,
 `AgentComposerFailedPendingMessage`, `AgentComposerIntegration`,
 `AgentComposerIntegrationAttachment`, and `AgentComposerIntegrationResolver`.
 `AgentComposerSubmitMode` is `"send" | "stop"`; queued follow-ups are local
@@ -346,9 +348,10 @@ the same names. The public result contract for `AgentThreadStartResult`,
   message start, or resume.
 - `requestedThreadId` is optional diagnostic metadata for resume paths where
   the host asked for an alias or stale persisted id.
-- Resume may also return raw-free `status`, `activity`, `activeTurnId`, and
-  `runSettings` metadata so hosts can distinguish idle resumes from rejoined
-  running or approval-waiting threads without inspecting App Server payloads.
+- Resume may also return raw-free `status`, `activity`, `activeTurnId`,
+  `waitingReasons`, and `runSettings` metadata so hosts can distinguish idle
+  resumes from rejoined running or input-waiting threads without inspecting App
+  Server payloads.
 - First-message start returns stable `operationId`, `turnId`,
   `optimisticTurnId`, and `userMessageId` metadata as Agent UI view-model
   fields, not as a generated `ThreadStartResponse` or `TurnStartResponse`.

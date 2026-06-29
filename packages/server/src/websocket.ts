@@ -110,6 +110,7 @@ export type AgentUiBridgeRejectionReason =
   | "admission_failed"
   | "unsafe_admission_reason_missing"
   | "unsupported_root_bridge_option"
+  | "invalid_browser_method_policy"
   | "bearer_subprotocol_missing"
   | "bearer_subprotocol_malformed"
   | "bearer_subprotocol_mismatch"
@@ -831,6 +832,32 @@ async function evaluateBridgePreflight({
     });
     return { accepted: false, bridgeHealth, rejection };
   }
+  try {
+    resolveBrowserMethodPolicy(resolvedOptions.browserMethodPolicy);
+  } catch (error) {
+    resolvedOptions.stderr?.(
+      redactSecrets(
+        `[agent-ui] browser method policy rejected message=${error instanceof Error ? error.message : String(error)}\n`,
+      ),
+    );
+    const rejection = bridgeRejection(
+      {
+        body: "Invalid Agent UI browser method policy.\n",
+        reason: "invalid_browser_method_policy",
+        status: 400,
+      },
+      {
+        closeCode: 1008,
+        closeReason: "Agent UI bridge browser method policy rejected",
+      },
+    );
+    emitBridgeHealthEventForOptions(resolvedOptions, bridgeHealth, "rejected", {
+      closeCode: rejection.closeCode,
+      closeReason: bridgeCloseReason(rejection),
+      reasonCode: rejection.reason,
+    });
+    return { accepted: false, bridgeHealth, rejection };
+  }
   const admissionResult = await checkBridgeAdmission({
     policy: admissionPolicy,
     request,
@@ -1324,16 +1351,22 @@ interface ResolvedBrowserMethodPolicy {
 function resolveBrowserMethodPolicy(
   policy?: BrowserMethodPolicy,
 ): ResolvedBrowserMethodPolicy {
+  if (policy === undefined || policy === "productized") {
+    return browserMethodPolicyForCapabilities(DEFAULT_BROWSER_METHOD_CAPABILITIES);
+  }
   if (policy === "all") {
     return {
       notifications: new Set(["initialized"]),
       requests: new Set(["*"]),
     };
   }
-  if (policy && typeof policy === "object") {
+  if (policy && typeof policy === "object" && !Array.isArray(policy)) {
+    if (policy.capabilities !== undefined && !Array.isArray(policy.capabilities)) {
+      throw new Error("Browser method policy capabilities must be an array.");
+    }
     return browserMethodPolicyForCapabilities(policy.capabilities);
   }
-  return browserMethodPolicyForCapabilities(DEFAULT_BROWSER_METHOD_CAPABILITIES);
+  throw new Error(`Unknown browser method policy: ${String(policy)}`);
 }
 
 function browserMethodPolicyForCapabilities(

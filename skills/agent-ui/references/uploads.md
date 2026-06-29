@@ -119,9 +119,14 @@ path; Agent UI will render the local-media fallback.
 `@nyosegawa/agent-ui-server` exports `createAgentUiLocalMediaHelper()` for
 local apps. It accepts `POST`, sanitizes `x-agent-ui-filename`, enforces a 16 MB
 default limit, stores files in per-session temp directories, expires sessions
-after a one hour default TTL, registers opaque asset IDs, and returns structured
-JSON with `path`, `url`, `previewUrl`, `id`, `displayName`, `redactedPath`,
-`mimeType`, and `sizeBytes`.
+after a one hour default TTL only for Agent UI marked managed session
+directories, registers opaque asset IDs, and returns structured JSON with
+`path`, `url`, `previewUrl`, `id`, `displayName`, `redactedPath`, `mimeType`,
+and `sizeBytes`. Unmarked host-owned directories under the upload root are
+preserved. If a host points the helper at an existing unmarked directory, the
+helper does not mark the directory as Agent UI managed; `cleanup()` removes only
+files registered by that helper. Live helper sessions in the same process are
+excluded from TTL cleanup.
 
 Use `path` only for explicit App Server input such as `localImageInput(path)`.
 Use `url` or `previewUrl` for browser rendering. The helper does not install a

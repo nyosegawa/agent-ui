@@ -74,7 +74,7 @@ function assertLocalMediaAsset(value: unknown): asserts value is {
     const previewUrl = localMediaUrlsByPath.get(path);
     return previewUrl ? { kind: "url", previewUrl } : null;
   }}
-/>
+/>;
 ```
 
 React owns the attachment UI. Codex-shaped input construction stays explicit in
@@ -85,7 +85,11 @@ Do not blindly trust `asset.path` from an upload route. Check `response.ok`,
 validate that the JSON contains the App Server-readable `path`, and keep browser
 rendering on validated `previewUrl`/`url` strings. Use a dedicated upload root
 for Agent UI managed files so host cleanup policy cannot sweep unrelated
-directories.
+directories. The local helper's TTL cleanup only deletes Agent UI marked
+session directories, but a dedicated root keeps host authorization and retention
+policy auditable. If a host points the helper at an existing unmarked
+directory, the helper does not mark that directory as Agent UI managed. Live
+helper sessions in the same process are excluded from TTL cleanup.
 
 The shared resource primitive is `AgentResolvedResource`: browser-facing
 metadata such as `displayName`, `url`, `previewUrl`, `redactedPath`,
@@ -152,7 +156,8 @@ non-loopback or shared use.
 Call `releaseAsset(id)` when a preview-only asset is no longer needed. If the
 asset's `path` was sent to Codex App Server as `localImageInput(path)` or as
 explicit attachment text, keep it registered until the App Server has finished
-reading it. `cleanup()` removes the whole helper session.
+reading it. `cleanup()` removes a helper-managed session directory. For an
+existing unmarked directory, it removes only files registered by that helper.
 
 `createAgentUiLocalUploadHandler()` remains public for hosts that only need a
 browser `File` to local-path upload adapter. It is backed by the same local

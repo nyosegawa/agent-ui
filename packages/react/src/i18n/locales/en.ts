@@ -128,7 +128,8 @@ export const en = {
   "composer.couldNotStop": "Could not stop the turn: {message}",
   "composer.enterToSend": "Enter to send",
   "composer.dismissFailedMessage": "Dismiss failed message",
-  "composer.failedMessageBody": "The first message did not start. Retry it or dismiss the draft.",
+  "composer.failedMessageBody":
+    "The first message did not start. Retry it or dismiss the draft.",
   "composer.failedMessages": "Failed messages",
   "composer.failedMessageTitle": "Message was not sent",
   "composer.followUpNoActiveTurn":
@@ -140,7 +141,7 @@ export const en = {
   "composer.placeholder": "Ask Codex to work in this thread",
   "composer.removeAttachment": "Remove {label}",
   "composer.resolveApprovalReason":
-    "Resolve the pending approval before sending another message.",
+    "Resolve the pending input before sending another message.",
   "composer.retryFailedMessage": "Retry message",
   "composer.send": "Send",
   "composer.sendMessage": "Send message",
@@ -215,14 +216,17 @@ export const en = {
   "run.effort.minimal": "Minimal",
   "run.effort.veryHigh": "Very high",
   "run.policy": "Run policy",
-  "run.policy.auto.description": "Run in the workspace and ask only after a command fails.",
+  "run.policy.auto.description":
+    "Run in the workspace and ask only after a command fails.",
   "run.policy.auto.label": "Auto",
-  "run.policy.full-access.description": "Allow full local access for trusted one-off work.",
+  "run.policy.full-access.description":
+    "Allow full local access for trusted one-off work.",
   "run.policy.full-access.label": "Full access",
   "run.policy.read-only.description":
     "Read files and plan changes without writing to the workspace.",
   "run.policy.read-only.label": "Read-only",
-  "run.policy.review.description": "Ask before commands or file changes that need review.",
+  "run.policy.review.description":
+    "Ask before commands or file changes that need review.",
   "run.policy.review.label": "Review",
   "run.model": "Model",
   "run.modelAndEffort": "Model and effort",

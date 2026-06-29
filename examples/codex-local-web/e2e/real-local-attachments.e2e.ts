@@ -140,7 +140,7 @@ test("queues attachment follow-ups, restores them for edit, and sends payloads",
   });
   await fillMessage(page, "remove queued image");
   await message.press("Enter");
-  await page
+  await queuedFollowUps(page)
     .getByRole("button", { name: "Remove" })
     .click({ timeout: FAST_EXPECT_TIMEOUT });
   await expect(queuedFollowUps(page)).toHaveCount(0, {

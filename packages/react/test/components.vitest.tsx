@@ -346,6 +346,49 @@ function idleComposerState() {
   return initialState;
 }
 
+function waitingComposerState() {
+  const initialState = idleComposerState();
+  const thread = initialState.threads["thread-idle"];
+  if (!thread) throw new Error("missing idle thread");
+  initialState.threads["thread-idle"] = {
+    ...thread,
+    activity: "waitingForInput",
+    orderedTurnIds: ["turn-waiting"],
+    runtime: {
+      activeTurnId: "turn-waiting",
+      status: { activeFlags: ["waitingOnApproval"], type: "active" },
+    },
+    status: "waitingForInput",
+    turns: {
+      "turn-waiting": {
+        commandOutputByItemId: {},
+        filePatchByItemId: {},
+        itemOrder: [],
+        items: {},
+        streamingTextByItemId: {},
+        turn: {
+          id: "turn-waiting",
+          status: "running",
+          threadId: "thread-idle",
+        },
+      },
+    },
+  };
+  initialState.serverRequestQueue = {
+    byId: {
+      "string:permission-request": {
+        id: "permission-request",
+        kind: "permissionsApproval",
+        payload: {},
+        threadId: "thread-idle",
+        turnId: "turn-waiting",
+      },
+    },
+    order: ["string:permission-request"],
+  };
+  return initialState;
+}
+
 function twoRunningThreadsState() {
   const initialState = runningComposerState();
   initialState.threads["thread-running"].thread.name = "Thread A";
@@ -701,7 +744,9 @@ function PublicChatControllerProbe() {
   const [error, setError] = useState("none");
   const controller = useAgentChatController();
   const formatResult = (nextResult: Awaited<ReturnType<typeof controller.sendMessage>>) =>
-    `${nextResult.type}:${nextResult.threadId ?? "none"}`;
+    `${nextResult.type}:${nextResult.threadId ?? "none"}${
+      nextResult.type === "blocked" ? `:${nextResult.reason}` : ""
+    }`;
   return (
     <>
       <output aria-label="public chat value">{controller.value}</output>
@@ -7969,6 +8014,76 @@ describe("AgentChat", () => {
     );
   });
 
+  it("returns the concrete waiting reason when external send is blocked", async () => {
+    const user = userEvent.setup();
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={waitingComposerState()} transport={transport}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send external follow up" }));
+
+    expect(screen.getByLabelText("public chat result")).toHaveTextContent(
+      "blocked:thread-idle:permission",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/steer",
+    );
+  });
+
+  it("returns the concrete waiting reason when resume blocks external send", async () => {
+    const user = userEvent.setup();
+    const initialState = idleComposerState();
+    const thread = initialState.threads["thread-idle"];
+    initialState.threads["thread-idle"] = {
+      ...thread,
+      availability: "preview",
+      storage: "stored",
+      status: "loaded",
+      thread: { id: "thread-idle", name: "Stored waiting thread" },
+    };
+    const transport = new FakeAgentTransport({
+      onRequest(request) {
+        if (request.method === "thread/resume") {
+          return {
+            thread: {
+              id: "thread-idle",
+              name: "Stored waiting thread",
+              status: { activeFlags: ["waitingOnUserInput"], type: "active" },
+              turns: [],
+            },
+          };
+        }
+        return {};
+      },
+    });
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send external follow up" }));
+
+    expect(await screen.findByLabelText("public chat result")).toHaveTextContent(
+      "blocked:thread-idle:userInput",
+    );
+    expect(
+      transport.requests
+        .filter((request) =>
+          ["thread/resume", "turn/start", "turn/steer"].includes(request.method),
+        )
+        .map((request) => request.method),
+    ).toEqual(["thread/resume"]);
+  });
+
   it("starts new threads with selected model and working directory", async () => {
     const user = userEvent.setup();
     let resolveThreadStart:
@@ -9626,7 +9741,7 @@ describe("AgentChat", () => {
     await user.keyboard("{Enter}");
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      "Resolve the pending approval before sending another message.",
+      "Resolve the pending input before sending another message.",
     );
     expect(message).toHaveValue("send after approval");
     expect(screen.getByLabelText("Pending attachments")).toHaveTextContent(
@@ -10956,8 +11071,28 @@ describe("AgentChat", () => {
 
     expect(await screen.findByLabelText("Message")).toBeDisabled();
     expect(
-      screen.getByText("Resolve the pending approval before sending another message."),
+      screen.getByText("Resolve the pending input before sending another message."),
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
+  });
+
+  it("shows generic blocked state for non-approval waiting composer primitives", async () => {
+    render(
+      <AgentProvider
+        initialState={waitingComposerState()}
+        transport={new FakeAgentTransport()}
+      >
+        <AgentComposer threadId="thread-idle" />
+      </AgentProvider>,
+    );
+
+    expect(await screen.findByLabelText("Message")).toBeDisabled();
+    expect(
+      screen.getByText("Resolve the pending input before sending another message."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Resolve the pending approval before sending another message."),
+    ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Send" })).toBeDisabled();
   });
 

@@ -118,7 +118,8 @@ is visibly separate from process launch options. Use host-callback admission for
 session or explicit local-token checks on any bridge that is not a private
 loopback-only development endpoint; an Origin comparison alone is not
 authentication. Browser JSON-RPC requests are filtered by
-`browserMethodPolicy`; the default is the full-chat productized UI surface
+`browserMethodPolicy`; the default, and explicit
+`browserMethodPolicy: "productized"`, is the full-chat productized UI surface
 expressed as capability categories:
 
 Bridge health diagnostics are emitted through `hostEvents.onBridgeHealthEvent`.
@@ -152,11 +153,13 @@ browser surface by category. This is intentionally broader than the one-shot
 HTTP default below. Host-only methods such as `fs/readFile`, `command/exec`,
 `mcpServer/tool/call`, and configuration writes outside the listed categories
 require `browserMethodPolicy: "all"` plus host-owned auth, isolation, and audit
-logging. Rejected methods return a JSON-RPC error with `code: -32601` and
-`data.method`. When an allowed App Server request fails, the bridge preserves
-the App Server error `code` and `data` in the browser response instead of
-collapsing it to a message string. Browser request `trace` is forwarded as
-JSON-RPC-lite top-level `trace` to the underlying transport.
+logging. Invalid top-level policy strings, malformed capability objects, or
+unknown capabilities are rejected during bridge preflight before admission or
+process spawn. Rejected browser methods return a JSON-RPC error with
+`code: -32601` and `data.method`. When an allowed App Server request fails, the
+bridge preserves the App Server error `code` and `data` in the browser response
+instead of collapsing it to a message string. Browser request `trace` is
+forwarded as JSON-RPC-lite top-level `trace` to the underlying transport.
 
 The upstream App Server may reject direct browser WebSocket connections by
 `Origin`, but that does not protect an Agent UI same-origin bridge endpoint.
@@ -295,11 +298,13 @@ paths. The library therefore requires a host resolver for attachments.
 - writes into a per-session temp directory under a host temp root, defaulting
   to the OS temp dir
 - enforces a 16 MB default limit
-- runs expired-session cleanup with a one hour default TTL
+- runs expired-session cleanup with a one hour default TTL for Agent UI managed
+  session directories only; live helper sessions in the same process are
+  excluded from TTL cleanup
 - preserves arbitrary sanitized extensions; images and non-images differ only
   in the host's resolver return value
 - exposes `cleanup()` for explicit per-session cleanup and runs best-effort TTL
-  cleanup for expired session directories before writes
+  cleanup for expired managed session directories before writes
 - returns JSON with `path`, `url`, `id`, `name`, `displayName`,
   `redactedPath`, `mimeType`, `sizeBytes`, and `previewUrl`
 - serves registered assets with `Cache-Control: no-store` and
@@ -327,11 +332,20 @@ resource limits, and audit logging before routing the handler.
 point. It is backed by the local media helper and returns the same structured
 JSON while preserving the `path` field used by existing resolvers.
 
+TTL cleanup is scoped to session directories created by the Agent UI helper.
+Unmarked host-owned directories under the same root are preserved so a shared
+temp parent cannot be swept accidentally. If a host points the helper at an
+existing unmarked directory, the helper does not mark that directory as Agent UI
+managed. Live helper sessions in the same process are excluded from TTL cleanup.
+Still prefer a dedicated empty upload root for Agent UI managed files so host
+cleanup and authorization policy remain easy to audit.
+
 Preview cleanup is explicit. Call `releaseAsset(id)` to remove a registered
 asset and delete its temporary file after browser preview use is finished. Do
 not release an asset whose `path` was just sent to Codex App Server until the
-server has finished reading it. Call `cleanup()` to remove the whole helper
-session.
+server has finished reading it. Call `cleanup()` to remove a helper-managed
+session directory. For an existing unmarked directory, `cleanup()` removes only
+files registered by that helper.
 
 The React composer calls the host's `resolveLocalAttachment(file)` resolver.
 The resolver may upload the file, then return structured metadata with an

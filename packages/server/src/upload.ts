@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, readdir, rm, stat, writeFile } from "node:fs/promises";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { tmpdir } from "node:os";
 import { basename, join, relative, resolve, sep } from "node:path";
@@ -64,6 +64,9 @@ interface RegisteredLocalMediaAsset {
 const DEFAULT_MAX_UPLOAD_BYTES = 16 * 1024 * 1024;
 const DEFAULT_UPLOAD_TTL_MS = 60 * 60 * 1000;
 const DEFAULT_ASSET_URL_PATH = "/agent-ui/assets";
+const MANAGED_UPLOAD_SESSION_MARKER = ".agent-ui-upload-session";
+const MANAGED_UPLOAD_SESSION_MARKER_CONTENT = "agent-ui-managed-upload-session\n";
+const activeManagedUploadSessionDirectories = new Map<string, Set<string>>();
 
 export function createAgentUiLocalUploadHandler(
   options: AgentUiUploadHandlerOptions = {},
@@ -75,7 +78,9 @@ export function createAgentUiLocalMediaHelper(
   options: AgentUiLocalMediaHelperOptions = {},
 ): AgentUiLocalMediaHelper {
   const now = options.now ?? Date.now;
-  const sessionId = sanitizeSegment(options.sessionId ?? `${now()}-${Math.random().toString(36).slice(2, 10)}`);
+  const sessionId = sanitizeSegment(
+    options.sessionId ?? `${now()}-${Math.random().toString(36).slice(2, 10)}`,
+  );
   const rootDirectory = options.directory ?? join(tmpdir(), "agent-ui-uploads");
   const directory = join(rootDirectory, sessionId);
   const maxBytes = options.maxBytes ?? DEFAULT_MAX_UPLOAD_BYTES;
@@ -84,21 +89,33 @@ export function createAgentUiLocalMediaHelper(
   const createAssetId = options.createAssetId ?? defaultAssetId;
   const redactPath = options.redactPath ?? defaultRedactedPath;
   const assets = new Map<string, RegisteredLocalMediaAsset>();
+  let managesDirectory = false;
 
   const helper: AgentUiLocalMediaHelper = {
     assetUrl(id) {
       return `${assetUrlPath}/${encodeURIComponent(id)}`;
     },
     cleanup: async () => {
+      const registeredPaths = [...assets.values()].map((record) => record.path);
       assets.clear();
-      await rm(directory, { force: true, recursive: true });
+      if (managesDirectory || (await isManagedUploadSessionDirectory(directory))) {
+        unregisterActiveManagedUploadSessionDirectory(rootDirectory, directory);
+        await rm(directory, { force: true, recursive: true });
+        return;
+      }
+      await Promise.all(
+        registeredPaths.map(async (path) => {
+          const safePath = safeRegisteredPath(directory, path);
+          if (safePath) await rm(safePath, { force: true });
+        }),
+      );
     },
     directory,
     getAsset(id) {
       return copyAsset(assets.get(id)?.attachment);
     },
     handleUpload: async (request, response) => {
-      await cleanupExpiredUploadSessions(rootDirectory, ttlMs, now());
+      await cleanupExpiredUploadSessions(rootDirectory, ttlMs, now(), directory);
       if (request.method && request.method !== "POST") {
         request.resume();
         writeJson(response, 405, { error: "Uploads require POST." });
@@ -135,8 +152,14 @@ export function createAgentUiLocalMediaHelper(
         writeJson(response, 415, { error: "Unsupported upload content type." });
         return;
       }
-      await mkdir(directory, { recursive: true });
-      const path = join(directory, `${now()}-${Math.random().toString(36).slice(2, 8)}-${name}`);
+      managesDirectory =
+        (await ensureUploadSessionDirectory(directory)) || managesDirectory;
+      if (managesDirectory)
+        registerActiveManagedUploadSessionDirectory(rootDirectory, directory);
+      const path = join(
+        directory,
+        `${now()}-${Math.random().toString(36).slice(2, 8)}-${name}`,
+      );
       await writeFile(path, body);
       const id = createUniqueAssetId(assets, createAssetId);
       const asset = Object.freeze({
@@ -186,7 +209,9 @@ export function createAgentUiLocalMediaHelper(
         request,
       }) ?? true);
       if (!admitted) {
-        writeJson(response, 403, { error: "Local media asset request was not admitted." });
+        writeJson(response, 403, {
+          error: "Local media asset request was not admitted.",
+        });
         return;
       }
       const safePath = safeRegisteredPath(directory, record.path);
@@ -228,11 +253,14 @@ async function cleanupExpiredUploadSessions(
   rootDirectory: string,
   ttlMs: number,
   now: number,
+  activeDirectory: string,
 ): Promise<void> {
   if (ttlMs <= 0) return;
   let entries: Array<{ isDirectory(): boolean; name: string }>;
   try {
-    entries = (await readdir(rootDirectory, { withFileTypes: true })) as unknown as Array<{
+    entries = (await readdir(rootDirectory, {
+      withFileTypes: true,
+    })) as unknown as Array<{
       isDirectory(): boolean;
       name: string;
     }>;
@@ -245,12 +273,84 @@ async function cleanupExpiredUploadSessions(
       .map(async (entry) => {
         const path = join(rootDirectory, entry.name);
         try {
+          if (resolve(path) === resolve(activeDirectory)) return;
+          if (isActiveManagedUploadSessionDirectory(rootDirectory, path)) return;
+          if (!(await isManagedUploadSessionDirectory(path))) return;
           const info = await stat(path);
-          if (now - info.mtimeMs > ttlMs) await rm(path, { force: true, recursive: true });
+          if (now - info.mtimeMs > ttlMs)
+            await rm(path, { force: true, recursive: true });
         } catch {
           // Best-effort cleanup for local temporary files.
         }
       }),
+  );
+}
+
+async function ensureUploadSessionDirectory(directory: string): Promise<boolean> {
+  const directoryAlreadyExisted = await pathExists(directory);
+  await mkdir(directory, { recursive: true });
+  if (directoryAlreadyExisted && !(await isManagedUploadSessionDirectory(directory))) {
+    return false;
+  }
+  await writeFile(
+    join(directory, MANAGED_UPLOAD_SESSION_MARKER),
+    MANAGED_UPLOAD_SESSION_MARKER_CONTENT,
+    { flag: "w" },
+  );
+  return true;
+}
+
+async function isManagedUploadSessionDirectory(directory: string): Promise<boolean> {
+  try {
+    const markerPath = join(directory, MANAGED_UPLOAD_SESSION_MARKER);
+    const markerInfo = await lstat(markerPath);
+    if (!markerInfo.isFile()) return false;
+    const marker = await readFile(markerPath, "utf8");
+    return marker === MANAGED_UPLOAD_SESSION_MARKER_CONTENT;
+  } catch {
+    return false;
+  }
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await lstat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function registerActiveManagedUploadSessionDirectory(
+  rootDirectory: string,
+  directory: string,
+): void {
+  const rootKey = resolve(rootDirectory);
+  const directories =
+    activeManagedUploadSessionDirectories.get(rootKey) ?? new Set<string>();
+  directories.add(resolve(directory));
+  activeManagedUploadSessionDirectories.set(rootKey, directories);
+}
+
+function unregisterActiveManagedUploadSessionDirectory(
+  rootDirectory: string,
+  directory: string,
+): void {
+  const rootKey = resolve(rootDirectory);
+  const directories = activeManagedUploadSessionDirectories.get(rootKey);
+  if (!directories) return;
+  directories.delete(resolve(directory));
+  if (directories.size === 0) activeManagedUploadSessionDirectories.delete(rootKey);
+}
+
+function isActiveManagedUploadSessionDirectory(
+  rootDirectory: string,
+  directory: string,
+): boolean {
+  return (
+    activeManagedUploadSessionDirectories
+      .get(resolve(rootDirectory))
+      ?.has(resolve(directory)) ?? false
   );
 }
 
@@ -266,7 +366,12 @@ function decodeFilenameHeader(value: IncomingMessage["headers"][string]): string
 }
 
 function sanitizeFilename(rawName: string): string {
-  return rawName.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^[._-]+/, "").slice(-80) || "upload";
+  return (
+    rawName
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .replace(/^[._-]+/, "")
+      .slice(-80) || "upload"
+  );
 }
 
 function sanitizeSegment(value: string): string {
@@ -394,14 +499,14 @@ function doctypeRootElementName(doctype: string): string | undefined {
 
 function findDoctypeEnd(text: string, start: number): number {
   let bracketDepth = 0;
-  let quote: "\"" | "'" | undefined;
+  let quote: '"' | "'" | undefined;
   for (let index = start; index < text.length; index += 1) {
     const char = text[index];
     if (quote) {
       if (char === quote) quote = undefined;
       continue;
     }
-    if (char === "\"" || char === "'") {
+    if (char === '"' || char === "'") {
       quote = char;
       continue;
     }
