@@ -193,10 +193,11 @@ clean redesigned API. Migration help belongs in rewritten docs and examples.
       structured App Server file-change approval payloads into renderable
       approval patch views and adding a component test that asserts changed
       files are visible before approval actions.
-    - Commit: P003 phase commit contains this evidence; final hash is reported
-      outside this file because embedding a commit's own final hash is
-      self-referential.
-    - Push: push after P003 phase commit.
+    - Commit: P003 phase commit (`Clean React approval public contracts`).
+    - Push: pushed to `origin/codex/agent-ui-architecture-redesign-plan`.
+      Push evidence was recorded in a follow-up evidence-only commit because the
+      repository hook blocks force-pushing an amended phase commit after the
+      first successful push.
   - Tasks:
     - [x] T001 Align `AgentImageInput` with Codex `url`.
       - Expected files/areas: React input and turn normalization tests.
