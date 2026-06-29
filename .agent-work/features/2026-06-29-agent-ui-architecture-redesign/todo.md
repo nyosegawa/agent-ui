@@ -402,8 +402,9 @@ run test:packlist` passed; `bun run test:e2e:fixtures` passed with 231
       no P0/P1. CI policy: no P0/P1. Release target behavior: no P0/P1; accepted
       release-docs supplement for divergent public package versions. Docs/tests
       coherence and stale-output prevention: no P0/P1.
-    - Commit:
-    - Push:
+    - Commit: `4fd3366` (`Harden package validation gates`).
+    - Push: pushed `codex/agent-ui-architecture-redesign-plan` to origin
+      (`625f501..4fd3366`).
   - Tasks:
     - [x] T001 Split package and example builds without weakening package validation.
       - Expected files/areas: root scripts/docs/tests.
