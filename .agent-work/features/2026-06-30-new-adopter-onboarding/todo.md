@@ -7,14 +7,14 @@
 - Blockers: None
 - Last validation: P002 package/docs/example validations passed locally.
 - Last review: P002 four-lane subagent review completed; lane 1 linkification finding fixed and lane 4 TODO evidence update applied.
-- PR/CI: Draft PR #42 open; P002 commit pending.
+- PR/CI: Draft PR #42 open; P002 implementation commit pending push.
 
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
 - Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: planning and P001 docs commits pushed; P002 pending
+- Push result: planning and P001 docs commits pushed; P002 implementation commit pending push
 - Blockers: none
 
 ## Phase Checklist
@@ -54,7 +54,7 @@
   - Validation: `bun run test:package-resolution`; `bun run validate:packages`; example typecheck/builds for touched examples.
   - Review: Package export and npm README consistency review.
   - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before commit.
-  - Commit: pending
+  - Commit: `ce002c9e7542a853d2e48f3e669ca1550a4d1f08`
   - Push: pending
   - PR/CI: pending
   - Evidence:
@@ -62,7 +62,7 @@
     - Validation: `bun run test:package-resolution` passed; `bun run validate:packages` passed with existing non-failing publint repository URL suggestions; `bun run --cwd examples/recipes typecheck` passed; `bun run --cwd examples/recipes build` passed; `bunx changeset status --verbose` passed; `bunx vitest run test/package-scripts-docs.test.ts test/ci-workflow-policy.test.ts test/docs-staleness.test.ts` passed; artifact validator passed.
     - Review: Manual pass confirmed package README import paths, package export docs, and recipe links use public package surfaces and do not route host apps through `dist/*`, source files, generated schema chunks, or `@nyosegawa/agent-ui-core/internal`.
     - 4-Parallel Subagent Review: Completed. Lane 1 found non-clickable recipe entries in the topic indexes, fixed by linkifying recipe targets; lane 2 found no public import findings; lane 3 found no package boundary or changeset findings; lane 4 found stale TODO evidence, fixed here.
-    - Commit: pending
+    - Commit: `ce002c9e7542a853d2e48f3e669ca1550a4d1f08`
     - Push: pending
   - Tasks:
     - [x] T004 Convert recipes docs from file-list index to task index: bridge/security, local media, customize AgentChat, headless layout, dynamic tools, remote deployment, validation.
@@ -345,6 +345,7 @@
 - `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7` - Plan new adopter onboarding overhaul
 - `bef201296285e3d8a025315fdf5880d8b07f68e8` - Add phase subagent review checkpoints
 - `014ce7b5f0e36ad917af2650d2ba77b892cc8ec3` - Add first host app onboarding guide
+- `ce002c9e7542a853d2e48f3e669ca1550a4d1f08` - Align recipe and package README guidance
 
 ## Final Checklist
 
