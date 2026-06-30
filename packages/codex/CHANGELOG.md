@@ -1,5 +1,16 @@
 # @nyosegawa/agent-ui-codex
 
+## 3.1.0
+
+### Minor Changes
+
+- b872ea7: Clarify new-adopter package README import paths, recipe navigation, public package boundary guidance, and Codex success-path test fixture coverage.
+
+### Patch Changes
+
+- Updated dependencies [b872ea7]
+  - @nyosegawa/agent-ui-core@3.1.0
+
 ## 3.0.0
 
 ### Major Changes

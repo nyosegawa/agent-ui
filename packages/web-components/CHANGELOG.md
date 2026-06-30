@@ -1,5 +1,15 @@
 # @nyosegawa/agent-ui-web-components
 
+## 3.1.0
+
+### Patch Changes
+
+- b872ea7: Clarify new-adopter package README import paths, recipe navigation, public package boundary guidance, and Codex success-path test fixture coverage.
+- Updated dependencies [b872ea7]
+- Updated dependencies [b872ea7]
+  - @nyosegawa/agent-ui-react@3.1.0
+  - @nyosegawa/agent-ui-core@3.1.0
+
 ## 3.0.0
 
 ### Major Changes

@@ -1,5 +1,15 @@
 # @nyosegawa/agent-ui-server
 
+## 3.1.0
+
+### Patch Changes
+
+- b872ea7: Clarify new-adopter package README import paths, recipe navigation, public package boundary guidance, and Codex success-path test fixture coverage.
+- b872ea7: Harden new-adopter bridge and local media behavior by rejecting invalid browser method policies before spawn, scoping upload TTL cleanup to Agent UI managed sessions, and returning concrete composer blocked reasons.
+- Updated dependencies [b872ea7]
+  - @nyosegawa/agent-ui-codex@3.1.0
+  - @nyosegawa/agent-ui-core@3.1.0
+
 ## 3.0.0
 
 ### Major Changes
