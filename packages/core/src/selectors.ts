@@ -12,6 +12,7 @@ import type {
   AgentThreadSummaryView,
   AgentThreadTranscriptView,
   AgentThreadRuntimeView,
+  AgentThreadWaitingReason,
   AgentThreadView,
   DiagnosticsState,
   ItemId,
@@ -205,10 +206,22 @@ export function selectThreadRuntimeView(
     lastTurn: runtime.lastTurn,
     needsInput: thread.activity === "waitingForInput",
     status: runtime.status.type,
-    waitingReasons: unique(
-      visibleRequestSummaries.map((request) => request.waitingReason),
-    ),
+    waitingReasons: unique([
+      ...visibleRequestSummaries.map((request) => request.waitingReason),
+      ...waitingReasonsFromActiveFlags(activeFlags),
+    ]),
   };
+}
+
+function waitingReasonsFromActiveFlags(
+  activeFlags: readonly string[],
+): AgentThreadWaitingReason[] {
+  const reasons: AgentThreadWaitingReason[] = [];
+  for (const flag of activeFlags) {
+    if (flag === "waitingOnApproval") reasons.push("approval");
+    if (flag === "waitingOnUserInput") reasons.push("userInput");
+  }
+  return reasons;
 }
 
 export function selectThreadExecutionState(

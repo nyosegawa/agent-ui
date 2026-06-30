@@ -1,7 +1,7 @@
 ---
 "@nyosegawa/agent-ui-react": patch
 "@nyosegawa/agent-ui-server": patch
-"@nyosegawa/agent-ui-codex": patch
+"@nyosegawa/agent-ui-codex": minor
 "@nyosegawa/agent-ui-core": patch
 "@nyosegawa/agent-ui-web-components": patch
 ---

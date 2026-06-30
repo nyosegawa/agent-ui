@@ -8037,6 +8037,40 @@ describe("AgentChat", () => {
     );
   });
 
+  it("uses runtime active flags when a waiting external send has no visible request", async () => {
+    const user = userEvent.setup();
+    const initialState = waitingComposerState();
+    const thread = initialState.threads["thread-idle"];
+    if (!thread) throw new Error("missing waiting thread");
+    initialState.threads["thread-idle"] = {
+      ...thread,
+      runtime: {
+        ...thread.runtime,
+        status: { activeFlags: ["waitingOnUserInput"], type: "active" },
+      },
+    };
+    initialState.serverRequestQueue = { byId: {}, order: [] };
+    const transport = new FakeAgentTransport();
+    render(
+      <AgentProvider initialState={initialState} transport={transport}>
+        <AgentChat />
+        <PublicChatControllerProbe />
+      </AgentProvider>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Send external follow up" }));
+
+    expect(screen.getByLabelText("public chat result")).toHaveTextContent(
+      "blocked:thread-idle:userInput",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/start",
+    );
+    expect(transport.requests.map((request) => request.method)).not.toContain(
+      "turn/steer",
+    );
+  });
+
   it("returns the concrete waiting reason when resume blocks external send", async () => {
     const user = userEvent.setup();
     const initialState = idleComposerState();

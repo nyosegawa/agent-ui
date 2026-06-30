@@ -5,16 +5,16 @@
 - Overall status: In progress
 - Current phase: P007 Final validation, release readiness, PR, and CI follow-through
 - Blockers: None
-- Last validation: P006 fixture, package export, package validation, skill, fixture e2e, targeted real-local lifecycle, and PR #42 CI checks passed.
-- Last review: P006 four-lane subagent review completed; fixture response-shape and runtime export findings fixed.
-- PR/CI: Draft PR #42 open; latest P006 checks passed.
+- Last validation: P007 final local gates passed after final review fixes: `bun run validate:release`, `bun run validate:e2e`, `node scripts/check-release-targets.mjs`, `bunx changeset status --verbose`, `git diff --check`, and artifact validation.
+- Last review: P007 four-lane subagent review completed; changeset semver and runtime active-flag waiting-reason findings fixed.
+- PR/CI: Draft PR #42 open; P007 fixes are pending commit, push, and CI follow-through.
 
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
 - Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: planning, P001 docs commits, P002 docs/package README commits, P003 public skill commits, P004 guardrail/evidence commits, P005 behavior/evidence commits, and P006 fixture/evidence commits pushed
+- Push result: planning, P001 docs commits, P002 docs/package README commits, P003 public skill commits, P004 guardrail/evidence commits, P005 behavior/evidence commits, and P006 fixture/evidence commits pushed; P007 final review fixes pending push
 - Blockers: none
 
 ## Phase Checklist
@@ -234,17 +234,24 @@
   - Push: pending
   - PR/CI: pending
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
-    - 4-Parallel Subagent Review:
+    - Implementation: Fixed final release-review findings by changing the new public `@nyosegawa/agent-ui-codex/test-fixtures` changeset from patch to minor and adding runtime active-flag-derived waiting reasons to `selectThreadRuntimeView()` so already-waiting external sends do not degrade to `unknown` when no visible server request is queued.
+    - Implementation: Added React coverage for `useAgentChatController().sendMessage()` on a waiting thread whose concrete waiting reason comes only from App Server runtime `activeFlags`.
+    - Validation: `bunx vitest run packages/core/test/reducer.test.ts packages/react/test/components.vitest.tsx` passed: 2 files, 285 tests.
+    - Validation: `bunx changeset status --verbose` passed and now reports minor bumps to `3.1.0` for the fixed public package group, including `@nyosegawa/agent-ui-codex`, with no patch or major releases.
+    - Validation: `bun run validate:release` passed after final fixes: workspace typecheck, lint with 4 existing React hook dependency warnings, unit tests 66 files / 743 tests, protocol tests 13 files / 103 tests, core fixtures 82 tests, package build/packlist/node-compat/publint/attw, dead-code check, API snapshots, and package resolution.
+    - Validation: `bun run validate:e2e` passed after final fixes: fixture Playwright 231 passed / 1 skipped; real-local Playwright 20 passed.
+    - Validation: `node scripts/check-release-targets.mjs` passed and reported all five public packages at published `3.0.0`, `shouldPublish: false`, and no unpublished versions.
+    - Validation: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-30-new-adopter-onboarding` passed.
+    - Validation: `git diff --check` passed.
+    - Review: Manual final review covered changesets, package exports, API snapshots, public skill, repo skills, docs, bridge/upload behavior, composer waiting-state semantics, and release-facing validation gates.
+    - 4-Parallel Subagent Review: Completed. Lane 1 package/release found the new public `@nyosegawa/agent-ui-codex/test-fixtures` subpath used a patch changeset despite release policy requiring minor for non-breaking export additions; fixed by changing the Codex changeset entry to `minor` and rerunning changeset status. Lane 2 docs/skill found no issues. Lane 3 behavior/security found already-waiting external sends could return `unknown` when concrete runtime active flags were present without visible server requests; fixed in the core runtime selector with React coverage. Lane 4 validation/plan audit found P006 roll-up evidence and P007 evidence were missing from `todo.md`; fixed here.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T021 Run final broad validation and record exact command results.
+    - [x] T021 Run final broad validation and record exact command results.
       - Expected files/areas: `todo.md`.
       - Validation note: Include failures and fixes, not only final success.
-    - [ ] T022 Review changesets, API snapshots, package exports, public skill, and repo skills as release-facing surfaces.
+    - [x] T022 Review changesets, API snapshots, package exports, public skill, and repo skills as release-facing surfaces.
       - Expected files/areas: changed docs/tests/package files.
       - Validation note: Public package docs changes may require changesets.
     - [ ] T023 Push branch, create PR, and follow GitHub Actions to concrete success or failure.
@@ -388,6 +395,25 @@
 - P005: `git diff --check` passed.
 - P005: branch pushed to `origin/codex/new-adopter-onboarding-plan`.
 - P005 PR #42 checks passed after push: API snapshots, Detect changes, Detect compatibility changes, Lint, Node.js 22.x, Node.js 24.x, Package resolution, Package validation, Playwright fixtures, Protocol and fixtures, Real local smoke, Repository policy, Typecheck, Unit tests, and pnpm workspace smoke.
+- P006: `bunx vitest run packages/codex/test/test-fixtures.test.ts packages/codex/test/public-surface.test.ts test/runtime-export-policy.test.ts` passed.
+- P006: `bun run --cwd packages/codex typecheck` passed.
+- P006: `bun run test:api-snapshots:update && bun run test:api-snapshots` passed.
+- P006: `bun run test:package-resolution` passed.
+- P006: `bun run validate:packages` passed with existing non-failing publint repository URL suggestions.
+- P006: `bun run test:skills` passed.
+- P006: `bun run test:e2e:fixtures` passed: 231 passed, 1 skipped.
+- P006: `bun run test:e2e:clean-ports && env -u NO_COLOR -u FORCE_COLOR bunx playwright test --config playwright.real-local.config.ts examples/codex-local-web/e2e/real-local-thread-lifecycle.e2e.ts` passed: 9 passed.
+- P006: `bun run lint` passed with 4 existing React hook dependency warnings.
+- P006: `bun run test:protocol` passed: 13 files, 103 tests.
+- P006: `git diff --check` passed.
+- P006 PR #42 checks passed after push: API snapshots, Detect changes, Detect compatibility changes, Lint, Node.js 22.x, Node.js 24.x, Package resolution, Package validation, Playwright fixtures, Protocol and fixtures, Real local smoke, Repository policy, Typecheck, Unit tests, and pnpm workspace smoke.
+- P007: `bunx vitest run packages/core/test/reducer.test.ts packages/react/test/components.vitest.tsx` passed: 2 files, 285 tests.
+- P007: `bunx changeset status --verbose` passed and reports minor bumps to `3.1.0` for `@nyosegawa/agent-ui-core`, `@nyosegawa/agent-ui-codex`, `@nyosegawa/agent-ui-react`, `@nyosegawa/agent-ui-server`, and `@nyosegawa/agent-ui-web-components`, with no patch or major releases.
+- P007: `bun run validate:release` passed after final fixes: typecheck, lint with 4 existing warnings, unit tests 66 files / 743 tests, protocol tests 13 files / 103 tests, core fixtures 82 tests, package validation, dead-code check, API snapshots, and package resolution.
+- P007: `bun run validate:e2e` passed after final fixes: fixture Playwright 231 passed / 1 skipped; real-local Playwright 20 passed.
+- P007: `node scripts/check-release-targets.mjs` passed and reported all public packages already published at `3.0.0`, `shouldPublish: false`, and no unpublished versions.
+- P007: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-30-new-adopter-onboarding` passed.
+- P007: `git diff --check` passed.
 
 ## Review Evidence
 
@@ -397,6 +423,8 @@
 - P003 used four subagent review lanes after validation: trigger/metadata, bridge first-app safety, upload/attachments safety, and validation/test leakage. Upload optional URL validation and public-skill maintainer-command leakage findings were fixed before commit.
 - P004 used four subagent review lanes after validation: feature-planning guardrails, example-authoring recipe destinations, review/maintenance docs, and tests/public-skill leakage. Lane 4 found the public-skill leakage guard was too narrow; this was fixed before commit by extending public skill and repository skill tests.
 - P005 used four subagent review lanes after final validation: server bridge security, upload ownership/cleanup safety, React composer waiting-state API/UI, and release/docs/validation evidence. Lane 2 found active managed sessions could be TTL-deleted by another helper and stale public upload skill guidance; both were fixed. Lane 3 found resume-to-waiting sends returned `unknown`; fixed by propagating waiting reasons through resume results and adding coverage. Lanes 1 and 4 found no blocking issues.
+- P006 used four subagent review lanes after validation: package/runtime export surface, fixture response shape, docs/public skill, and validation/release coverage. Runtime export and post-publish smoke coverage gaps plus App Server response-shape/status/includeTurns issues were fixed before commit.
+- P007 used four subagent review lanes after final validation: package/release surface, docs/Agent Skill consistency, behavior/security, and validation/plan completion audit. Lane 1 found the Codex changeset needed a minor bump for the new public `test-fixtures` subpath; fixed. Lane 2 found no issues. Lane 3 found runtime active-flag-only waiting states could still return `unknown` for external sends; fixed. Lane 4 found P006/P007 roll-up evidence gaps; fixed in `todo.md`.
 
 ## Commit Log
 
@@ -411,6 +439,11 @@
 - `1bd6df0b7c64d3a873f547e03185663febd5bd96` - Record P004 onboarding evidence
 - `04f2e411cc5ab88c921e8a577dcd2e8f85b08680` - Record P004 CI evidence
 - `a854cb8a9a7d7dd3c1f7d7e368f0c590185bfb2a` - Harden bridge upload and composer states
+- `7f35699f2592d0926384ad9e2a4742d39b9daf04` - Record P005 onboarding evidence
+- `fe420a75e3227dc1c1979d246cf49f5ed0881cd2` - Record P005 CI evidence
+- `601ca157d455e436c28b5a19da82b32561071f48` - Add Codex success test fixture
+- `777ad5472928515e9f5f528f0dfe58086f5af4d1` - Record P006 onboarding evidence
+- `dad645bb5eed8e7ce5ef08c01568d19a0176bca3` - Record P006 CI evidence
 
 ## Final Checklist
 
