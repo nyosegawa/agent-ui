@@ -12,6 +12,18 @@ Codex App Server protocol.
 bun add @nyosegawa/agent-ui-codex @nyosegawa/agent-ui-core
 ```
 
+## Common Imports
+
+| Use case | Import |
+| --- | --- |
+| Browser WebSocket transport | `import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";` |
+| Text, image, mention, and skill input builders | `import { textInput, localImageInput } from "@nyosegawa/agent-ui-codex/request-builders";` |
+| Grouped productized clients | `import { createCodexClients } from "@nyosegawa/agent-ui-codex/clients";` |
+| Session facade | `import { createCodexSession } from "@nyosegawa/agent-ui-codex/session";` |
+| Stable generated method types | `import type { ThreadStartParams } from "@nyosegawa/agent-ui-codex/stable-types";` |
+| Normalized event helpers | `import { normalizeCodexServerMessage } from "@nyosegawa/agent-ui-codex/normalizer";` |
+| Success-path App Server test fixture | `import { createCodexAppServerSuccessFixture } from "@nyosegawa/agent-ui-codex/test-fixtures";` |
+
 ## Package Boundary
 
 This package models Codex App Server protocol behavior. It does not own the
@@ -22,6 +34,11 @@ Use the documented subpaths for browser-safe clients, request builders,
 normalizers, stable generated types, the session facade, and WebSocket transport.
 Generated schema files are source-owned implementation inputs, not deep-import
 targets.
+
+The `test-fixtures` subpath provides an in-memory success-path Codex App Server
+fixture for host tests that need to exercise `thread/start`, `turn/start`,
+streamed assistant deltas, `turn/steer`, `turn/interrupt`, and `turn/completed`.
+It is not a process, authentication, storage, or bridge-policy runtime.
 
 See the repository docs for current package exports and integration guidance:
 https://github.com/nyosegawa/agent-ui

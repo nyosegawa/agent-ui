@@ -18,16 +18,16 @@ need.
 @nyosegawa/agent-ui-web-components
 ```
 
-Most React hosts use:
+Full-chat React hosts use:
 
 ```sh
-bun add @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex
+bun add @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex @nyosegawa/agent-ui-server
 ```
 
 With npm:
 
 ```sh
-npm install @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex
+npm install @nyosegawa/agent-ui-react @nyosegawa/agent-ui-codex @nyosegawa/agent-ui-server
 ```
 
 Hosts that use the custom element wrapper also install:
@@ -36,11 +36,15 @@ Hosts that use the custom element wrapper also install:
 bun add @nyosegawa/agent-ui-web-components
 ```
 
-Local Node hosts that start or proxy Codex App Server also use:
+Hosts that only render against an already-owned transport may omit the server
+package. Local Node hosts that start or proxy Codex App Server need:
 
 ```sh
 bun add @nyosegawa/agent-ui-server
 ```
+
+For a complete browser and server setup, see
+[First Host App](./guides/first-host-app.md).
 
 ## React And CSS
 
@@ -58,11 +62,11 @@ This is the only public React stylesheet entry point. Do not import copied
 package chunks such as `@nyosegawa/agent-ui-react/dist/styles/*`; they are
 private files used by `styles.css`.
 
-The design-system API is the `--aui-*` token set defined in
-`packages/react/src/styles/tokens.css`. Override those tokens on a host wrapper
-or theme scope when customizing color, type, spacing, radii, elevation,
-control sizing, focus, or motion. Internal `.aui-*` selectors can change with
-component implementation and are not a stable host styling contract.
+The design-system API is the public `--aui-*` token set. Override those tokens
+on a host wrapper or theme scope when customizing color, type, spacing, radii,
+elevation, control sizing, focus, or motion. Internal `.aui-*` selectors can
+change with component implementation and are not a stable host styling
+contract.
 
 ## Browser Transport
 

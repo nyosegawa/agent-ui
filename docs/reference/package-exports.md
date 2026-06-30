@@ -12,6 +12,20 @@
 
 Packages are split by responsibility, but the local bridge is included in the official package set.
 
+## Common Import Paths
+
+| Package                              | Common public imports                                                                                                   |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `@nyosegawa/agent-ui-react`          | Root `AgentProvider` / `AgentChat`, `/primitives` visual building blocks, `/headless` controllers, `styles.css`         |
+| `@nyosegawa/agent-ui-server`         | Root bridge, local media, policy, redaction, one-shot RPC helpers; `/advanced` raw stdio/process helpers                |
+| `@nyosegawa/agent-ui-codex`          | Root protocol/session facade, `/websocket`, `/request-builders`, `/clients`, `/session`, `/normalizer`, `/stable-types`, `/test-fixtures` |
+| `@nyosegawa/agent-ui-core`           | Root state, transport, selectors, reducer, fake transport; `/internal` only for Agent UI packages and repository tests  |
+| `@nyosegawa/agent-ui-web-components` | Root custom element definition and element option types                                                                 |
+
+Host apps should import package names and documented subpaths only. Do not
+import `dist/*`, source files, generated schema chunks, or
+`@nyosegawa/agent-ui-core/internal` from host code.
+
 ## Export Freeze Policy
 
 The export map should change only when controller, resource, bridge, and
@@ -126,6 +140,12 @@ Request builders such as `textInput()` and `TextInputOptions` remain on the
 `request-builders` subpath; hosts may pass generated `TextElement` values
 explicitly, but Agent UI does not derive App/Plugin or marketplace semantics
 from those elements.
+Success-path Codex App Server fixtures remain on the
+`@nyosegawa/agent-ui-codex/test-fixtures` subpath. They are public because new
+host apps need a stable way to exercise `thread/start`, `turn/start`, streamed
+assistant deltas, queued `turn/steer`, `turn/interrupt`, and `turn/completed`
+without copying repository-only fake servers. They are not a production
+process, authentication, storage, admission, or bridge-policy runtime.
 
 Replace with current API: lifecycle-dependent normalizer contracts that still
 produce old registry status names should be updated after protocol
@@ -184,8 +204,9 @@ root preset external-send path is public on `AgentChatController` as
 `AgentChat` should call that controller instead of directly sequencing
 transport requests. `AgentChatSlots`, raw `components.Item`, private status or
 header DOM selectors, and direct local media paths are not migration targets;
-use `AgentChat.components`, `renderItem` / `components.blocks`,
-`statusBarEnd` / `threadHeaderEnd`, and structured media resolvers.
+use the `AgentChat` `components` prop, `renderItem` /
+`components.blocks`, `statusBarEnd` / `threadHeaderEnd`, and structured media
+resolvers.
 The source-level internal composer controller keeps its implementation helper named
 `startWithMessage()`.
 External UI that needs to send into the active `AgentChat` flow should use
@@ -193,16 +214,18 @@ External UI that needs to send into the active `AgentChat` flow should use
 `started`, `sent`, `queued`, or `blocked` result objects and forwards
 `turnOptions` for active idle threads while creating an optimistic user message
 with `clientUserMessageId`; hosts should not recreate that lifecycle with
-direct transport calls.
+direct transport calls. Blocked results carry `AgentComposerBlockedReason`,
+matching the core thread waiting reasons instead of collapsing every wait state
+to approval.
 React image input uses `AgentImageInput { type: "image", url }`, matching the
 Codex stable input shape. `image_url` is not a React public API.
 Approval composition uses raw-free `AgentApprovalRequest` view models. The
 headless `useAgentApprovals()` hook returns command/file approval views and an
 `approve(requestId, decision?: AgentApprovalDecision)` controller where
 `decision` is `accept`, `acceptForSession`, or `decline`; internal upstream
-legacy decision names are not host-facing. `AgentApprovalQueue`,
-`AgentChat.components.Approval`, `AgentThreadTimeline.renderApproval`, and
-transcript approval anchors accept the same `AgentApprovalRequest` view type.
+legacy decision names are not host-facing. `AgentApprovalQueue`, the
+`AgentChat` `components.Approval` replacement, `AgentThreadTimeline.renderApproval`,
+and transcript approval anchors accept the same `AgentApprovalRequest` view type.
 File-change approvals carry renderable patch views, including structured
 changed-file entries, instead of requiring hosts to inspect generated
 `fileChanges` payloads.
@@ -312,7 +335,7 @@ string shorthand is not part of the public contract.
 
 Composer controller exports on `@nyosegawa/agent-ui-react/headless` include
 the raw-free `AgentComposerController` view plus `AgentComposerSubmitMode`,
-`AgentComposerDisabledReason`,
+`AgentComposerDisabledReason`, `AgentComposerBlockedReason`,
 `AgentComposerFailedPendingMessage`, `AgentComposerIntegration`,
 `AgentComposerIntegrationAttachment`, and `AgentComposerIntegrationResolver`.
 `AgentComposerSubmitMode` is `"send" | "stop"`; queued follow-ups are local
@@ -331,9 +354,10 @@ the same names. The public result contract for `AgentThreadStartResult`,
   message start, or resume.
 - `requestedThreadId` is optional diagnostic metadata for resume paths where
   the host asked for an alias or stale persisted id.
-- Resume may also return raw-free `status`, `activity`, `activeTurnId`, and
-  `runSettings` metadata so hosts can distinguish idle resumes from rejoined
-  running or approval-waiting threads without inspecting App Server payloads.
+- Resume may also return raw-free `status`, `activity`, `activeTurnId`,
+  `waitingReasons`, and `runSettings` metadata so hosts can distinguish idle
+  resumes from rejoined running or input-waiting threads without inspecting App
+  Server payloads.
 - First-message start returns stable `operationId`, `turnId`,
   `optimisticTurnId`, and `userMessageId` metadata as Agent UI view-model
   fields, not as a generated `ThreadStartResponse` or `TurnStartResponse`.
@@ -435,6 +459,7 @@ Responsibilities:
 - App Server notifications to normalized events
 - device-code login request helpers
 - optional Codex SDK-like client adapter for hosts that already own a compatible client
+- success-path App Server test fixture for host validation
 - generated-schema-backed input helpers for text, images, mentions, skills, and
   agent-browser verification turns
 
@@ -454,7 +479,9 @@ type-only surface at `@nyosegawa/agent-ui-codex/stable-types`; the grouped typed
 client surface lives at `@nyosegawa/agent-ui-codex/clients`; request builders
 and structured user-input helpers live at
 `@nyosegawa/agent-ui-codex/request-builders`; and host-owned normalization
-helpers live at `@nyosegawa/agent-ui-codex/normalizer`. Request builders are the
+helpers live at `@nyosegawa/agent-ui-codex/normalizer`. The in-memory success
+fixture for host tests lives at `@nyosegawa/agent-ui-codex/test-fixtures`.
+Request builders are the
 preferred raw-free request boundary: their public path fields use Agent UI-owned
 string aliases such as `AgentWorkingDirectory`, `AgentResourcePath`,
 `AgentSkillPath`, and `AgentMentionPath` instead of generated schema names such
@@ -476,6 +503,14 @@ Undocumented deep imports such as
 Generated source files are not published; hosts that need App Server types
 should use `@nyosegawa/agent-ui-codex/stable-types` or the typed client and
 request-builder subpaths.
+
+The `test-fixtures` subpath intentionally covers only the success-path protocol
+shape that host tests commonly need: canonical thread ids, thread start/read,
+turn start, assistant deltas, queued steer, interrupt, and completion events.
+Use it to test the host's Agent UI wiring. Do not use it as evidence that
+bridge admission, bearer tokens, App Server process lifecycle, upload storage,
+or multi-user authorization are production-ready; those policies remain
+host-owned and need separate validation.
 
 The SDK adapter is not the primary integration path and does not add an `@openai/codex` runtime dependency.
 
@@ -513,13 +548,12 @@ and `AgentThemeToggle` / `AgentLocaleSelect` are controlled primitives hosts
 can render outside the transcript surface.
 
 The only public stylesheet export is
-`@nyosegawa/agent-ui-react/styles.css`. That file imports private source chunks
-from `packages/react/src/styles/*`; package builds copy those chunks under
-`dist/styles/*` for the bundled stylesheet only. Hosts should not import
+`@nyosegawa/agent-ui-react/styles.css`. Package builds copy private style chunks
+under `dist/styles/*` for the bundled stylesheet only. Hosts should not import
 `dist/styles/*` or rely on internal `.aui-*` selectors as a styling contract.
-The stable customization surface is the token set in
-`packages/react/src/styles/tokens.css`, plus documented component props,
-the `components` map, render props, and `className` attachment points.
+The stable customization surface is the public `--aui-*` token set, plus
+documented component props, the `components` map, render props, and `className`
+attachment points.
 
 The default UI keeps the high-traffic surfaces split internally:
 
@@ -701,6 +735,7 @@ Stable host-facing public subpaths:
 - `@nyosegawa/agent-ui-codex/request-builders`
 - `@nyosegawa/agent-ui-codex/session`
 - `@nyosegawa/agent-ui-codex/stable-types`
+- `@nyosegawa/agent-ui-codex/test-fixtures`
 - `@nyosegawa/agent-ui-codex/websocket`
 - `@nyosegawa/agent-ui-react`
 - `@nyosegawa/agent-ui-react/headless`
@@ -716,5 +751,5 @@ Exported implementation subpaths:
 
 React style chunks under `dist/styles/*` are copied package internals used by
 `styles.css`, not host imports. Internal `.aui-*` selectors are likewise
-implementation details; the design-system contract is the `--aui-*` token set
-from `packages/react/src/styles/tokens.css`.
+implementation details; the design-system contract is the public `--aui-*`
+token set.

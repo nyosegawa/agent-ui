@@ -93,7 +93,10 @@ preview-hydrated. The scoped controller keeps `resumeThread(threadId)` returning
 the canonical thread id for existing callers, and exposes
 `resumeThreadWithResult(threadId)` when hosts need the same
 `{ threadId, requestedThreadId? }` diagnostic result shape as
-`useAgentThreadController().resumeThread()`.
+`useAgentThreadController().resumeThread()`. When a resumed thread is waiting
+for input, the result may include `waitingReasons` so host controls can
+distinguish approval, permission, user input, MCP elicitation, auth refresh,
+attestation, and unknown waits.
 
 `useAgentThreadReader().readThread(threadId, { includeTurns: true })` calls
 `thread/read` and hydrates persisted turns/items before activation. This is the
@@ -172,7 +175,7 @@ queue state separate from App Server pending input with `queuedFollowUps`,
 draft state and host-disabled states are composed by the visual composer layer;
 `canSubmit` reflects the controller's text/running state before those external
 constraints are applied. The default `AgentComposer` blocks submission for
-approval-waiting threads and stored read-only previews.
+threads waiting on pending input and stored read-only previews.
 `useAgentChatController()` exposes the same provider-scoped controller for
 host UI that needs to drive the current `AgentChat` flow from outside the
 composer. Its `sendMessage(input, { threadOptions, turnOptions })` method
@@ -181,7 +184,9 @@ thread it performs optimistic first-message thread start and canonical
 reconciliation, on an idle active thread it starts a turn and forwards
 `turnOptions` through the same optimistic `clientUserMessageId` reconciliation
 as the visual composer, on a running thread it queues the follow-up, and on an
-approval-blocked thread it returns `{ type: "blocked", reason: "approval" }`.
+input-waiting thread it returns `{ type: "blocked", reason }` where `reason`
+is the concrete waiting reason: `approval`, `permission`, `userInput`,
+`mcpElicitation`, `authRefresh`, `attestation`, or `unknown`.
 Successful results are discriminated as `{ type: "started", ... }`,
 `{ type: "sent", threadId }`, or
 `{ type: "queued", threadId, queuedFollowUpId }`. `queuedAttachments` is only

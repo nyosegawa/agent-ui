@@ -81,7 +81,7 @@ On idle or complete threads, Cmd/Ctrl+Enter starts a normal new turn. The
 running primary button is Stop and calls only `turn/interrupt`. Unsent follow-ups
 remain in Agent UI state after Stop. Stored threads opened through the default
 sidebar use `thread/read` preview hydration. Thread URL routing hydrates and then
-resumes the conversation; approval-waiting turns remain blocked until resolved.
+resumes the conversation; input-waiting turns remain blocked until resolved.
 
 The automatic resume path can replay restored token usage via
 `thread/tokenUsage/updated`. The example shows nonzero context usage beside the

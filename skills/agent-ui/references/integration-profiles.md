@@ -5,11 +5,14 @@ Use this reference to classify the host app before implementing Agent UI.
 ## Local Single-User Codex App
 
 Choose this profile when the app is for localhost, personal use, demos, local
-developer tooling, or one trusted user on the same machine.
+developer tooling, or one trusted user on the same machine. This is the default
+new-adopter, first host app, and 最小構成 profile unless the host is already
+remote, authenticated, workspace-scoped, or multi-user.
 
 Expected shape:
 
 - React UI uses Agent UI packages.
+- Published packages run on Node.js `>=22`.
 - The host exposes a same-origin WebSocket route.
 - The route starts or connects to `codex app-server --listen stdio://`.
 - Browser method policy stays on the productized full-chat surface.

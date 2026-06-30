@@ -418,6 +418,7 @@ function assertCanonicalPublicSpecifiers(surfaces) {
     "@nyosegawa/agent-ui-codex/request-builders",
     "@nyosegawa/agent-ui-codex/session",
     "@nyosegawa/agent-ui-codex/stable-types",
+    "@nyosegawa/agent-ui-codex/test-fixtures",
     "@nyosegawa/agent-ui-codex/websocket",
     "@nyosegawa/agent-ui-core",
     "@nyosegawa/agent-ui-core/internal",

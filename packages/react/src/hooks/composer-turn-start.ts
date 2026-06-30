@@ -3,7 +3,7 @@ import {
   selectThread,
   type ThreadState,
 } from "@nyosegawa/agent-ui-core/internal";
-import type { ThreadId } from "@nyosegawa/agent-ui-core";
+import type { AgentThreadWaitingReason, ThreadId } from "@nyosegawa/agent-ui-core";
 import { useCallback } from "react";
 import type { AgentUserInput } from "../agent-input";
 import { useInternalAgentContext } from "../provider";
@@ -22,7 +22,11 @@ export type ComposerTurnStartResult =
       userMessageId: string;
     }
   | { activeTurnId?: string; threadId: ThreadId; type: "resumedRunning" }
-  | { threadId: ThreadId; type: "resumedWaitingForInput" };
+  | {
+      threadId: ThreadId;
+      type: "resumedWaitingForInput";
+      waitingReasons: AgentThreadWaitingReason[];
+    };
 
 export interface ComposerTurnStartOptions {
   displayText: string;
@@ -62,7 +66,11 @@ export function useComposerTurnStart(threadId?: ThreadId) {
         };
       }
       if (resumeResult?.activity === "waitingForInput") {
-        return { threadId: targetThreadId, type: "resumedWaitingForInput" };
+        return {
+          threadId: targetThreadId,
+          type: "resumedWaitingForInput",
+          waitingReasons: resumeResult.waitingReasons ?? ["unknown"],
+        };
       }
       const turnRunSettings = composerTurnRunSettings(
         {

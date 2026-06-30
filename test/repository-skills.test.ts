@@ -88,6 +88,47 @@ describe("repository development skills", () => {
     expect(featurePlanning).toContain("Host applications own");
   });
 
+  it("keeps new-adopter onboarding surfaces synchronized in maintainer skills", async () => {
+    const review = await readSkillText("agent-ui-review");
+    const examples = await readSkillText("example-authoring");
+    const featurePlanning = await readSkillText("agent-ui-feature-planning");
+    const publicSkillText = await readMarkdownTree(join(root, "skills", "agent-ui"));
+    const repositoryDocs = await readFile(
+      join(root, "docs", "maintenance", "repository-skills.md"),
+      "utf8",
+    );
+
+    for (const text of [featurePlanning, review, repositoryDocs]) {
+      expect(text).toContain("skills/agent-ui");
+      expect(text).toContain("package README");
+      expect(text).toContain("docs/examples/recipes.md");
+      expect(text).toContain("examples/recipes");
+    }
+
+    expect(featurePlanning).toContain("docs/guides/first-host-app.md");
+    expect(featurePlanning).toContain("repository-maintainer commands out of the public skill");
+    expect(review).toMatch(/public skill\s+leakage/);
+    expect(repositoryDocs).toContain("external-host focused");
+    expect(examples).toContain("topic-based index at `docs/examples/recipes.md`");
+    expect(examples).toContain("examples/recipes");
+    expect(examples).not.toContain("docs/recipes/");
+
+    for (const forbidden of [
+      "validate:packages",
+      "test:api-snapshots",
+      "test:repo-skills",
+      "GitHub Actions",
+      "CI gate",
+      "Repository policy",
+      "Playwright fixtures",
+      "bun run typecheck",
+      "bun run lint",
+      "bun run test",
+    ]) {
+      expect(publicSkillText, forbidden).not.toContain(forbidden);
+    }
+  });
+
   it("keeps M4 skills focused on ownership boundaries instead of narrow host names", async () => {
     const m4Text = await Promise.all(
       m4SkillNames.map((name) => readSkillText(name)),

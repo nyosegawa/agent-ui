@@ -49,6 +49,10 @@ attachAgentUiWebSocketBridge({
   server,
   path: "/agent-ui/ws",
   cwd: process.cwd(),
+  bridgePolicy: {
+    admission: { mode: "local-loopback" },
+  },
+  browserMethodPolicy: "productized",
   initialize: {
     capabilities: {
       experimentalApi: false,
@@ -62,6 +66,12 @@ attachAgentUiWebSocketBridge({
   },
 });
 ```
+
+This is the same-origin bridge skeleton for a first host app. It uses the root
+server API, binds the browser to `/agent-ui/ws`, and keeps the default browser
+surface on productized full-chat methods. Do not start new adopters on
+`@nyosegawa/agent-ui-server/advanced`; reserve `/advanced` for hosts that
+deliberately own raw stdio process composition.
 
 For non-loopback or authenticated hosts, configure admission before any App
 Server process can be spawned. If using the lower-level

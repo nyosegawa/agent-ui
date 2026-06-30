@@ -26,8 +26,10 @@ Host-owned behavior includes:
 ## Documentation
 
 When an example changes public guidance, update the matching docs page under
-`docs/examples/` or `docs/recipes/`. Keep docs current-state oriented. Do not
-include planning logs or historical migration notes in public docs.
+`docs/examples/`. For recipe changes, keep the runnable or typed recipe in
+`examples/recipes` and update the topic-based index at
+`docs/examples/recipes.md`. Keep docs current-state oriented. Do not include
+planning logs or historical migration notes in public docs.
 
 ## Tests
 

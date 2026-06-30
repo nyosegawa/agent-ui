@@ -33,18 +33,13 @@ export type {
   AgentThreadSourceKind,
   AgentThreadStartSource,
 } from "./request-options";
-export {
-  useAgentApprovals,
-  useAgentServerRequests,
-} from "./hooks/approvals";
-export type {
-  AgentApprovalDecision,
-  AgentApprovalRequest,
-} from "./approval-types";
+export { useAgentApprovals, useAgentServerRequests } from "./hooks/approvals";
+export type { AgentApprovalDecision, AgentApprovalRequest } from "./approval-types";
 export {
   useAgentChatController,
   useAgentComposerController,
   type AgentChatController,
+  type AgentComposerBlockedReason,
   type AgentComposerController,
   type AgentComposerDisabledReason,
   type AgentComposerFailedPendingMessage,

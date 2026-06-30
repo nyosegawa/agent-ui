@@ -1,6 +1,7 @@
 import {
   selectLatestRunningTurnId,
   selectThread,
+  selectThreadRuntimeView,
   type AgentOperationView,
 } from "@nyosegawa/agent-ui-core/internal";
 import type { ThreadId } from "@nyosegawa/agent-ui-core";
@@ -20,6 +21,7 @@ import { useComposerFirstMessageStart } from "./composer-first-message";
 import type {
   AgentChatController,
   AgentComposerController,
+  AgentComposerBlockedReason,
   AgentComposerDisabledReason,
   AgentComposerSendMessageOptions,
   AgentComposerSendMessageResult,
@@ -87,6 +89,9 @@ export function useInternalAgentComposerController(
   const composerQueue = useAgentComposerQueueStore();
   const resolvedThreadId = threadId ?? state.threadLifecycle.activeThreadId;
   const thread = resolvedThreadId ? selectThread(state, resolvedThreadId) : undefined;
+  const threadRuntime = resolvedThreadId
+    ? selectThreadRuntimeView(state, resolvedThreadId)
+    : undefined;
   const { interruptTurn, steerTurn } = useInternalAgentTurn(threadId);
   const startComposerTurn = useComposerTurnStart(threadId);
   const activeTurnId = resolvedThreadId
@@ -127,6 +132,8 @@ export function useInternalAgentComposerController(
   );
   const isRunning = thread?.activity === "running";
   const isWaitingForInput = thread?.activity === "waitingForInput";
+  const blockedReason: AgentComposerBlockedReason =
+    threadRuntime?.waitingReasons[0] ?? "unknown";
   const buildInput = useCallback(
     (items: AgentUserInput[] = []) => {
       const input = value.trim();
@@ -280,12 +287,12 @@ export function useInternalAgentComposerController(
       }
       if (isWaitingForInput) {
         setError(t("composer.resolveApprovalReason"));
-        return { reason: "approval", threadId: resolvedThreadId, type: "blocked" };
+        return { reason: blockedReason, threadId: resolvedThreadId, type: "blocked" };
       }
       if (isRunning) {
         const queuedFollowUpId = enqueueBuiltFollowUp(built, options.queuedAttachments);
         if (!queuedFollowUpId) {
-          return { reason: "approval", threadId: resolvedThreadId, type: "blocked" };
+          return { reason: blockedReason, threadId: resolvedThreadId, type: "blocked" };
         }
         return { queuedFollowUpId, threadId: resolvedThreadId, type: "queued" };
       }
@@ -310,7 +317,11 @@ export function useInternalAgentComposerController(
         }
         if (result.type === "resumedWaitingForInput") {
           setError(t("composer.resolveApprovalReason"));
-          return { reason: "approval", threadId: result.threadId, type: "blocked" };
+          return {
+            reason: result.waitingReasons[0] ?? "unknown",
+            threadId: result.threadId,
+            type: "blocked",
+          };
         }
         setValue("");
         return { threadId: result.threadId, type: "sent" };
@@ -326,6 +337,7 @@ export function useInternalAgentComposerController(
       enqueueBuiltFollowUp,
       isRunning,
       isWaitingForInput,
+      blockedReason,
       resolvedThreadId,
       setError,
       setIsSubmitting,
@@ -489,6 +501,7 @@ export type { QueuedFollowUp, QueuedFollowUpAttachment } from "../composer-queue
 export type {
   AgentComposerController,
   AgentChatController,
+  AgentComposerBlockedReason,
   AgentComposerDisabledReason,
   AgentComposerFailedPendingMessage,
   AgentComposerSendMessageOptions,

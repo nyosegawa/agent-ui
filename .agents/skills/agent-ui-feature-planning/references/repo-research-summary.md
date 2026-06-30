@@ -70,6 +70,15 @@ Public surface promotion requires agreement across package export maps, docs,
 examples or recipes importing through package names, focused tests, API
 snapshots, and package-resolution checks.
 
+New-adopter onboarding and host-integration changes also require synchronized
+guidance across the root README, docs index, installation/getting-started
+guides, `docs/guides/first-host-app.md`, `docs/guides/react.md`,
+`docs/guides/host-integration.md`, `docs/reference/server-bridge.md`,
+`docs/guides/attachments.md`, package README files, `docs/examples/recipes.md`,
+`examples/recipes`, and the public external-host skill under `skills/agent-ui`.
+Keep repo-maintainer commands and CI gates in `.agents/skills` and maintenance
+docs, not in the public skill.
+
 ## Examples
 
 - `examples/local-react-vite`: deterministic fixture and visual QA.

@@ -1,6 +1,7 @@
 import type { AgentUserInput } from "../agent-input";
 import type { QueuedFollowUp, QueuedFollowUpAttachment } from "../composer-queue";
 import type { Dispatch, SetStateAction } from "react";
+import type { AgentThreadWaitingReason } from "@nyosegawa/agent-ui-core";
 import type {
   AgentThreadStartWithInputOptions,
   AgentThreadStartWithInputResult,
@@ -52,6 +53,8 @@ export type AgentComposerDisabledReason =
   | "interrupting"
   | "submitting";
 
+export type AgentComposerBlockedReason = AgentThreadWaitingReason;
+
 export interface AgentComposerFailedPendingMessage {
   error?: string;
   operationId: string;
@@ -70,7 +73,7 @@ export type AgentComposerSendMessageResult =
   | { threadId: string; type: "sent" }
   | { queuedFollowUpId: string; threadId: string; type: "queued" }
   | {
-      reason: Extract<AgentComposerDisabledReason, "approval">;
+      reason: AgentComposerBlockedReason;
       threadId?: string;
       type: "blocked";
     };

@@ -1,6 +1,6 @@
 ---
 name: agent-ui
-description: Integrate, customize, debug, or upgrade Agent UI in external Codex App Server applications. Use when adding Agent UI, building a Codex UI, wiring a same-origin WebSocket bridge, composing React primitives, handling thread lifecycle, canonical resume, thread history, local media helper uploads, local desktop bridge policy, mobile drawer, overlay layers, host-gated workflow recipes, theming with --aui-* tokens, dynamic tools, Agent UI errors, or when the user says Agent UI導入, Codex UI, ローカルCodexアプリ, bridge, attachments, approvals, resume, local media, or upgrade Agent UI.
+description: Integrate, customize, debug, or upgrade Agent UI v3 in external Codex App Server applications. Use for new adopter, first host app, AgentChat preset, headless + primitives, same-origin bridge skeleton, Node >=22, local media helper uploads, thread lifecycle, canonical resume, host-gated workflows, dynamic tools, theming with --aui-* tokens, Agent UI errors, or when the user says Agent UI導入, 新規導入, 初回導入, 最小構成, Codex UI, ローカルCodexアプリ, bridge, attachments, approvals, resume, local media, or upgrade Agent UI.
 ---
 
 # Agent UI
@@ -12,7 +12,11 @@ generic chatbot kit.
 ## Start Here
 
 1. Identify the user's job:
-   - new local single-user Codex app integration
+   - new local single-user Codex app integration, first host app, or 最小構成
+     setup
+   - choosing `AgentChat` preset, the `components` prop, or
+     `headless + primitives`
+   - same-origin bridge skeleton for Node >=22
    - host-owned remote or multi-user integration review
    - thread lifecycle, canonical resume, or history integration
    - server bridge, uploads, or dynamic tools
@@ -38,9 +42,11 @@ generic chatbot kit.
    - [dynamic tools](references/dynamic-tools.md)
    - [debugging and upgrades](references/debug.md)
    - [validation](references/validation.md)
-4. Explain the selected profile in user language. Do not ask the user whether
-   "React only" or "server bridge" is needed; infer that from whether the app
-   must actually talk to Codex App Server.
+4. For new adopters, start with the local single-user profile unless the host
+   is already remote, authenticated, workspace-scoped, or multi-user. Explain
+   the selected profile in user language. Do not ask the user whether "React
+   only" or "server bridge" is needed; infer that from whether the app must
+   actually talk to Codex App Server.
 5. Implement only after the integration boundary is clear. If a remote or
    multi-user app lacks auth, admission, workspace isolation, or process policy,
    stop and ask for those host decisions before exposing a bridge.

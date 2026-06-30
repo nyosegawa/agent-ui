@@ -1,6 +1,6 @@
 ---
 name: example-authoring
-description: Add, update, or review Agent UI examples, recipes, fixture routes, docs-site examples, Next.js/Vite integrations, local Codex web demos, theming recipes, uploads examples, dynamic tools examples, or example documentation. Use when working in examples/, docs/examples/, docs/recipes/, fixture routes, or browser-visible sample apps.
+description: Add, update, or review Agent UI examples, recipes, fixture routes, docs-site examples, Next.js/Vite integrations, local Codex web demos, theming recipes, uploads examples, dynamic tools examples, or example documentation. Use when working in examples/, docs/examples/, examples/recipes, fixture routes, or browser-visible sample apps.
 ---
 
 # Example Authoring
@@ -16,6 +16,8 @@ are validation surfaces for the library, not independent product experiments.
 4. Use `--aui-*` tokens and the public stylesheet contract.
 5. Add or update focused tests/docs when the example changes public guidance or
    browser-visible contracts.
+6. For recipe work, keep runnable or typed examples in `examples/recipes` and
+   update the topic-based index at `docs/examples/recipes.md`.
 
 ## Implementation Rules
 
@@ -29,6 +31,9 @@ are validation surfaces for the library, not independent product experiments.
   approvals, uploads, streaming, steer, interrupt, and token usage behavior.
 - Keep host-owned runtime decisions in examples or docs, not public package
   internals.
+- Keep recipe guidance task-oriented. Link from `docs/examples/recipes.md` to
+  the concrete `examples/recipes` files instead of introducing a separate
+  active recipe docs tree.
 
 ## Validation
 

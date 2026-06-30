@@ -18,6 +18,9 @@ export const representativeNamedExportsBySpecifier = {
     "textInput",
   ],
   "@nyosegawa/agent-ui-codex/session": ["createCodexSession"],
+  "@nyosegawa/agent-ui-codex/test-fixtures": [
+    "createCodexAppServerSuccessFixture",
+  ],
   "@nyosegawa/agent-ui-codex/websocket": ["createCodexWebSocketTransport"],
   "@nyosegawa/agent-ui-core": [
     "agentReducer",

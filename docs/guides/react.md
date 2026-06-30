@@ -1,7 +1,8 @@
 # React Guide
 
 The smallest React app provides a transport, wraps the tree in
-`AgentProvider`, and renders `AgentChat`.
+`AgentProvider`, and renders `AgentChat`. For the complete browser plus server
+bridge setup, start with [First Host App](./first-host-app.md).
 
 ```tsx
 import { createCodexWebSocketTransport } from "@nyosegawa/agent-ui-codex/websocket";
@@ -23,9 +24,8 @@ export function App() {
 
 `@nyosegawa/agent-ui-react/styles.css` is the only public stylesheet import for
 React hosts. It includes the default component CSS and the `--aui-*`
-design-system tokens from `packages/react/src/styles/tokens.css`. Override
-tokens on a host wrapper for theming; avoid depending on `dist/styles/*` files
-or internal `.aui-*` selectors.
+design-system tokens. Override tokens on a host wrapper for theming; avoid
+depending on `dist/styles/*` files or internal `.aui-*` selectors.
 
 `AgentChat` is a convenience preset. It renders the transcript, composer,
 approvals, and optional thread sidebar. Usage and diagnostics are opt-in
@@ -35,6 +35,19 @@ Customize the preset with `components`, not source imports or private slots.
 the replacement points. Use `renderItem` or `blocks` for transcript
 customization; raw item/turn replacement components are not part of the public
 API.
+
+## Choose The React Surface
+
+| Need | Use |
+| --- | --- |
+| Default transcript, composer, approvals, and optional sidebar | `AgentChat` |
+| Replace visible pieces while keeping preset behavior | `AgentChat` `components` prop |
+| Send from host-owned buttons or menus into preset chat | `useAgentChatController().sendMessage()` |
+| Own layout, routing, or workflow gates while using Agent UI state | `@nyosegawa/agent-ui-react/headless` |
+| Render Agent UI visual building blocks inside a host-owned shell | `@nyosegawa/agent-ui-react/primitives` |
+
+Use the preset first. Move to `/headless` and `/primitives` when the host owns
+the layout or workflow, not just to change copy, colors, or individual blocks.
 
 ## Compose From Primitives
 

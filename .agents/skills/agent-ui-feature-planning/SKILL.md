@@ -63,6 +63,10 @@ Do not create root-level aliases unless the user explicitly asks.
    the plan depends on external or time-sensitive facts such as current OpenAI
    Codex behavior, package registry state, GitHub Actions state, dependency
    versions, browser/tooling behavior, or external API/spec changes.
+   For new-adopter onboarding, public API, package README, or host-integration
+   changes, include the public Agent UI skill under `skills/agent-ui`, package
+   README files, `docs/guides/first-host-app.md`, `docs/examples/recipes.md`,
+   and `examples/recipes` in the inspection surface.
 6. **Plan**: write `plan.md` with Agent UI ownership, design decisions,
    impacted areas, validation, commit/PR/CI, risks, and open questions.
 7. **Tasks**: write `todo.md` phase-first. Phases are the default unit for
@@ -111,6 +115,9 @@ unknowns or review a risky planning contract.
 - Do not plan hand edits to auto-created schema files or compiled artifacts.
 - Public API plans must include package exports, docs, examples, tests, API
   snapshots or package-resolution evidence, and release impact.
+- New-adopter and host-integration plans must explicitly keep README/docs,
+  package README files, recipes, and the public `skills/agent-ui` skill aligned
+  while keeping repository-maintainer commands out of the public skill.
 - Browser-visible plans must include Playwright and/or `agent-browser`
   evidence.
 

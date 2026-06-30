@@ -27,6 +27,23 @@ import { AgentChat } from "@nyosegawa/agent-ui-react";
 
 const localMediaUrlsByPath = new Map<string, string>();
 
+function assertLocalMediaAsset(value: unknown): asserts value is {
+  path: string;
+  previewUrl?: string;
+  url?: string;
+} {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    typeof (value as { path?: unknown }).path !== "string" ||
+    ("previewUrl" in value &&
+      typeof (value as { previewUrl?: unknown }).previewUrl !== "string") ||
+    ("url" in value && typeof (value as { url?: unknown }).url !== "string")
+  ) {
+    throw new Error("Upload response did not include valid local media fields");
+  }
+}
+
 <AgentChat
   resolveLocalAttachment={async (file, kind) => {
     const response = await fetch("/agent-ui/upload", {
@@ -36,7 +53,11 @@ const localMediaUrlsByPath = new Map<string, string>();
       },
       method: "POST",
     });
+    if (!response.ok) {
+      throw new Error(`Upload failed with ${response.status}`);
+    }
     const asset = await response.json();
+    assertLocalMediaAsset(asset);
     const previewUrl = asset.previewUrl ?? asset.url;
     if (typeof asset.path === "string" && typeof previewUrl === "string") {
       localMediaUrlsByPath.set(asset.path, previewUrl);
@@ -53,12 +74,22 @@ const localMediaUrlsByPath = new Map<string, string>();
     const previewUrl = localMediaUrlsByPath.get(path);
     return previewUrl ? { kind: "url", previewUrl } : null;
   }}
-/>
+/>;
 ```
 
 React owns the attachment UI. Codex-shaped input construction stays explicit in
 the resolver's `input` field and should use
 `@nyosegawa/agent-ui-codex/request-builders`.
+
+Do not blindly trust `asset.path` from an upload route. Check `response.ok`,
+validate that the JSON contains the App Server-readable `path`, and keep browser
+rendering on validated `previewUrl`/`url` strings. Use a dedicated upload root
+for Agent UI managed files so host cleanup policy cannot sweep unrelated
+directories. The local helper's TTL cleanup only deletes Agent UI marked
+session directories, but a dedicated root keeps host authorization and retention
+policy auditable. If a host points the helper at an existing unmarked
+directory, the helper does not mark that directory as Agent UI managed. Live
+helper sessions in the same process are excluded from TTL cleanup.
 
 The shared resource primitive is `AgentResolvedResource`: browser-facing
 metadata such as `displayName`, `url`, `previewUrl`, `redactedPath`,
@@ -125,7 +156,8 @@ non-loopback or shared use.
 Call `releaseAsset(id)` when a preview-only asset is no longer needed. If the
 asset's `path` was sent to Codex App Server as `localImageInput(path)` or as
 explicit attachment text, keep it registered until the App Server has finished
-reading it. `cleanup()` removes the whole helper session.
+reading it. `cleanup()` removes a helper-managed session directory. For an
+existing unmarked directory, it removes only files registered by that helper.
 
 `createAgentUiLocalUploadHandler()` remains public for hosts that only need a
 browser `File` to local-path upload adapter. It is backed by the same local

@@ -811,48 +811,99 @@ describe("attachAgentUiWebSocketBridge", () => {
     socket.close();
   });
 
-  it("rejects unknown browser method capabilities before spawning", async () => {
-    let spawnCount = 0;
-    const logs: string[] = [];
-    const httpServer = createServer();
-    servers.push(httpServer);
-    const webSocketServer = attachTestWebSocketBridge({
-      browserMethodPolicy: {
-        capabilities: [
-          "models",
-          "token=browser-method-policy-secret",
-        ] as unknown as BrowserMethodCapability[],
-      },
-      bridgePolicy: {
-        admission: {
-          mode: "unsafe-no-admission",
-          reason: "test invalid runtime capability before spawn",
+  it("rejects invalid browser method policies before spawning", async () => {
+    const invalidPolicies: Array<{
+      name: string;
+      options: Partial<AgentUiWebSocketBridgeOptions>;
+    }> = [
+      {
+        name: "unknown top-level string",
+        options: {
+          browserMethodPolicy:
+            "token=browser-method-policy-secret" as unknown as AgentUiWebSocketBridgeOptions["browserMethodPolicy"],
         },
       },
-      server: httpServer,
-      spawn: () => {
-        spawnCount += 1;
-        throw new Error("spawn should not run");
+      {
+        name: "malformed capabilities object",
+        options: {
+          browserMethodPolicy: {
+            capabilities: "models",
+          } as unknown as AgentUiWebSocketBridgeOptions["browserMethodPolicy"],
+        },
       },
-      stderr: (line) => logs.push(line),
-    });
-    servers.push(webSocketServer);
+      {
+        name: "unknown capability",
+        options: {
+          browserMethodPolicy: {
+            capabilities: [
+              "models",
+              "token=browser-method-policy-secret",
+            ] as unknown as BrowserMethodCapability[],
+          },
+        },
+      },
+      {
+        name: "resolver returned invalid policy",
+        options: {
+          resolveBridgeOptions: () =>
+            ({
+              browserMethodPolicy: "token=browser-method-policy-secret",
+            }) as unknown as AgentUiWebSocketBridgeOptions,
+        },
+      },
+    ];
 
-    await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
-    const address = httpServer.address();
-    if (!address || typeof address === "string")
-      throw new Error("missing server address");
+    for (const { name, options } of invalidPolicies) {
+      let spawnCount = 0;
+      const logs: string[] = [];
+      const httpServer = createServer();
+      servers.push(httpServer);
+      const webSocketServer = attachTestWebSocketBridge({
+        ...options,
+        bridgePolicy: {
+          admission: {
+            mode: "unsafe-no-admission",
+            reason: `test invalid policy before spawn: ${name}`,
+          },
+        },
+        server: httpServer,
+        spawn: () => {
+          spawnCount += 1;
+          throw new Error("spawn should not run");
+        },
+        stderr: (line) => logs.push(line),
+      });
+      servers.push(webSocketServer);
 
-    const client = new WebSocket(`ws://127.0.0.1:${address.port}/agent-ui/ws`);
-    const close = await onceCloseWithInfo(client);
-    expect(close).toMatchObject({
-      code: 1011,
-      reason: "Agent UI bridge browser method policy failed",
-    });
-    expect(spawnCount).toBe(0);
-    expect(logs.join("")).toContain("browser method policy failed");
-    expect(logs.join("")).toContain("token=[REDACTED]");
-    expect(logs.join("")).not.toContain("browser-method-policy-secret");
+      await new Promise<void>((resolve) => httpServer.listen(0, "127.0.0.1", resolve));
+      const address = httpServer.address();
+      if (!address || typeof address === "string")
+        throw new Error("missing server address");
+
+      const response = await rawUpgradeResponse(address.port, "/agent-ui/ws");
+
+      expect(response.statusLine, name).toContain("400 Bad Request");
+      expect(response.body, name).toContain("Invalid Agent UI browser method policy");
+      expect(spawnCount, name).toBe(0);
+      expect(logs.join(""), name).toContain("browser method policy rejected");
+      if (JSON.stringify(options).includes("browser-method-policy-secret")) {
+        expect(logs.join(""), name).toContain("token=[REDACTED]");
+      }
+      expect(logs.join(""), name).not.toContain("browser-method-policy-secret");
+      httpServer.close();
+      webSocketServer.close();
+    }
+  });
+
+  it("accepts explicit productized and capability browser method policies", async () => {
+    for (const browserMethodPolicy of [
+      "productized",
+      "all",
+      { capabilities: ["connection", "models"] },
+    ] satisfies AgentUiWebSocketBridgeOptions["browserMethodPolicy"][]) {
+      const { socket } = await createBridgeBackedSocket({ browserMethodPolicy });
+      socket.close();
+    }
   });
 
   it("keeps unsafe all browser method policy explicit", async () => {

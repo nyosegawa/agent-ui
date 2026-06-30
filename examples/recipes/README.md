@@ -4,8 +4,33 @@ Typed implementation recipes for host applications.
 
 Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
 
-- `src/custom-components.tsx`: `AgentChat` components map for custom approval and item rendering.
-- `src/agent-chat-composition.tsx`: `AgentChat` preset composition with external send controls, fixed start options, overlay coordination, and local media resolution.
+## Topic Index
+
+- Customize `AgentChat`: [custom components](src/custom-components.tsx),
+  [preset composition](src/agent-chat-composition.tsx),
+  [custom transcript blocks](src/custom-transcript-blocks.tsx)
+- Host-owned layout: [headless controller](src/headless-chat-controller.tsx),
+  [headless hooks](src/headless-hooks.tsx),
+  [host composer](src/host-owned-composer.tsx),
+  [scoped thread list](src/scoped-thread-list.tsx)
+- Host workflow gates: [host-gated workflow](src/host-gated-workflow.tsx),
+  [host integration checklist](src/host-integration-checklist.ts)
+- Local media: [local media helper](src/local-media-helper.tsx)
+- Bridge/security: [bridge policy](src/bridge-policy.ts),
+  [WebSocket remote demo](src/websocket-remote-demo.tsx)
+- Diagnostics/status: [diagnostics panel](src/diagnostics-panel.tsx),
+  [host integration checklist](src/host-integration-checklist.ts)
+- Theming: [themed example](src/themed.tsx), [theme CSS](src/themed.css)
+- Advanced deployment: [multi-user deployment](multi-user-deployment.md),
+  [API-key remote deployment](api-key-remote-deployment.md)
+
+## Files
+
+- `src/custom-components.tsx`: `AgentChat` `components` prop for custom
+  approval and item rendering.
+- `src/agent-chat-composition.tsx`: `AgentChat` preset composition with
+  external send controls, fixed start options, overlay coordination, and local
+  media resolution.
 - `src/custom-transcript-blocks.tsx`: custom transcript block renderers while
   preserving default block rendering.
 - `src/headless-chat-controller.tsx`: chat UI composed from public controllers.

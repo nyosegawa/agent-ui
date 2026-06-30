@@ -78,6 +78,16 @@
         "default": "./dist/stable-types.cjs"
       }
     },
+    "./test-fixtures": {
+      "import": {
+        "types": "./dist/test-fixtures.d.ts",
+        "default": "./dist/test-fixtures.js"
+      },
+      "require": {
+        "types": "./dist/test-fixtures.d.cts",
+        "default": "./dist/test-fixtures.cjs"
+      }
+    },
     "./websocket": {
       "import": {
         "types": "./dist/websocket.d.ts",

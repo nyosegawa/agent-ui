@@ -52,10 +52,22 @@ Use `agent-ui-feature-planning` when the user asks to plan a feature, solve a
 problem group, research before implementation, or produce plan/TODO/goal-prompt
 artifacts before coding. It should create planning artifacts only under
 `.agent-work/features/<date>-<slug>/` and should not implement the feature.
+For new-adopter, host-integration, public API, or npm-facing README work, plans
+must inspect and synchronize README/docs, package README files,
+`docs/examples/recipes.md`, `examples/recipes`, and the public external-host
+skill under `skills/agent-ui`.
 
-Use `example-authoring` when changing `examples/`, `docs/examples/`, recipes,
-fixture routes, Next.js/Vite integrations, uploads examples, dynamic tools
-examples, or example docs.
+Use `example-authoring` when changing `examples/`, `docs/examples/`,
+`examples/recipes`, fixture routes, Next.js/Vite integrations, uploads
+examples, dynamic tools examples, or example docs. Recipe source stays in
+`examples/recipes`; the docs entry point is the topic-based
+`docs/examples/recipes.md` index.
+
+Use `agent-ui-review` to catch onboarding drift when a change touches a
+first-host-app path, package README, server bridge, attachments, React
+composition, examples, or public skill content. Review should verify the public
+`skills/agent-ui` skill stays external-host focused and does not inherit
+repository-maintainer commands or CI gates.
 
 Use `browser-qa` when a change is browser-visible. Playwright remains the
 deterministic CI gate; agent-browser is for exploratory checks, screenshots,

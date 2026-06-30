@@ -9,7 +9,7 @@ Attachments are host-resolved local inputs. Agent UI can render and send
 attachment metadata, but the host owns:
 
 - upload route
-- storage directory or object store
+- dedicated upload root, storage directory, or object store
 - file size and content-type policy
 - expiry and cleanup
 - local path resolution for Codex App Server
@@ -25,6 +25,23 @@ Return structured attachment metadata with explicit Codex input items from
 import { localImageInput, textInput } from "@nyosegawa/agent-ui-codex/request-builders";
 import type { AgentResolvedLocalAttachment } from "@nyosegawa/agent-ui-react/primitives";
 
+function assertLocalMediaAsset(value: unknown): asserts value is {
+  path: string;
+  previewUrl?: string;
+  url?: string;
+} {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    typeof (value as { path?: unknown }).path !== "string" ||
+    ("previewUrl" in value &&
+      typeof (value as { previewUrl?: unknown }).previewUrl !== "string") ||
+    ("url" in value && typeof (value as { url?: unknown }).url !== "string")
+  ) {
+    throw new Error("Upload response did not include valid local media fields");
+  }
+}
+
 <AgentChat
   resolveLocalAttachment={async (file, kind) => {
     const response = await fetch("/agent-ui/upload", {
@@ -34,9 +51,15 @@ import type { AgentResolvedLocalAttachment } from "@nyosegawa/agent-ui-react/pri
       },
       method: "POST",
     });
+    if (!response.ok) {
+      throw new Error(`Upload failed with ${response.status}`);
+    }
     const asset = await response.json();
+    assertLocalMediaAsset(asset);
+    const previewUrl = asset.previewUrl ?? asset.url;
     return {
       ...asset,
+      previewUrl,
       input:
         kind === "image"
           ? localImageInput(asset.path)
@@ -45,6 +68,10 @@ import type { AgentResolvedLocalAttachment } from "@nyosegawa/agent-ui-react/pri
   }}
 />;
 ```
+
+Do not blindly trust `asset.path`. Check `response.ok`, validate the JSON shape,
+then use `path` only as explicit App Server input. Browser previews should use
+validated `previewUrl` or `url` strings.
 
 ## Codex Input Shape
 
@@ -92,9 +119,14 @@ path; Agent UI will render the local-media fallback.
 `@nyosegawa/agent-ui-server` exports `createAgentUiLocalMediaHelper()` for
 local apps. It accepts `POST`, sanitizes `x-agent-ui-filename`, enforces a 16 MB
 default limit, stores files in per-session temp directories, expires sessions
-after a one hour default TTL, registers opaque asset IDs, and returns structured
-JSON with `path`, `url`, `previewUrl`, `id`, `displayName`, `redactedPath`,
-`mimeType`, and `sizeBytes`.
+after a one hour default TTL only for Agent UI marked managed session
+directories, registers opaque asset IDs, and returns structured JSON with
+`path`, `url`, `previewUrl`, `id`, `displayName`, `redactedPath`, `mimeType`,
+and `sizeBytes`. Unmarked host-owned directories under the upload root are
+preserved. If a host points the helper at an existing unmarked directory, the
+helper does not mark the directory as Agent UI managed; `cleanup()` removes only
+files registered by that helper. Live helper sessions in the same process are
+excluded from TTL cleanup.
 
 Use `path` only for explicit App Server input such as `localImageInput(path)`.
 Use `url` or `previewUrl` for browser rendering. The helper does not install a
