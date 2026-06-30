@@ -2,19 +2,19 @@
 
 ## Status Summary
 
-- Overall status: In progress
-- Current phase: P007 Final validation, release readiness, PR, and CI follow-through
+- Overall status: Complete
+- Current phase: P007 complete
 - Blockers: None
 - Last validation: P007 final local gates passed after final review fixes: `bun run validate:release`, `bun run validate:e2e`, `node scripts/check-release-targets.mjs`, `bunx changeset status --verbose`, `git diff --check`, and artifact validation.
 - Last review: P007 four-lane subagent review completed; changeset semver and runtime active-flag waiting-reason findings fixed.
-- PR/CI: Draft PR #42 open; P007 fixes are pending commit, push, and CI follow-through.
+- PR/CI: Draft PR #42 open at <https://github.com/nyosegawa/agent-ui/pull/42>; P007 review-fix commit CI passed.
 
 ## Branch And Planning Commit
 
 - Branch: codex/new-adopter-onboarding-plan
 - Planning commit: `211c00c38fb5b99f7bdfa348fc1a6558e6dc37f7`; review checkpoint update `bef201296285e3d8a025315fdf5880d8b07f68e8`
 - Remote: `origin` (`ssh://git@github.com/nyosegawa/agent-ui.git`)
-- Push result: planning, P001 docs commits, P002 docs/package README commits, P003 public skill commits, P004 guardrail/evidence commits, P005 behavior/evidence commits, and P006 fixture/evidence commits pushed; P007 final review fixes pending push
+- Push result: planning, P001 docs commits, P002 docs/package README commits, P003 public skill commits, P004 guardrail/evidence commits, P005 behavior/evidence commits, P006 fixture/evidence commits, and P007 final review fixes pushed
 - Blockers: none
 
 ## Phase Checklist
@@ -223,16 +223,16 @@
       - Expected files/areas: first-host-app docs, public skill validation reference.
       - Validation note: External guidance should describe observable behavior and host-appropriate test choices.
 
-- [ ] P007 Final validation, release readiness, PR, and CI follow-through
+- [x] P007 Final validation, release readiness, PR, and CI follow-through
   - Goal: Prove the whole package is coherent, shareable, and ready for review.
   - Scope: Broad local gates, changeset review, final docs/skill review, branch push, PR creation, CI monitoring.
   - Expected files/areas: all changed files, `todo.md` evidence, PR body.
   - Validation: `bun run validate:release`; `bun run validate:e2e`; `node scripts/check-release-targets.mjs`; any skipped checks recorded with blocker.
   - Review: Independent final review using `agent-ui-review` or a fresh-context manual review.
   - 4-Parallel Subagent Review: Run four independent subagent review lanes for this phase after validation and before final commit/PR readiness.
-  - Commit: pending
-  - Push: pending
-  - PR/CI: pending
+  - Commit: `f6b0bd3be6f9bfd12dbc82507e249bcb19e5653c` - Fix final onboarding review findings
+  - Push: pushed to `origin/codex/new-adopter-onboarding-plan`
+  - PR/CI: Draft PR #42 open at <https://github.com/nyosegawa/agent-ui/pull/42>; P007 review-fix checks passed.
   - Evidence:
     - Implementation: Fixed final release-review findings by changing the new public `@nyosegawa/agent-ui-codex/test-fixtures` changeset from patch to minor and adding runtime active-flag-derived waiting reasons to `selectThreadRuntimeView()` so already-waiting external sends do not degrade to `unknown` when no visible server request is queued.
     - Implementation: Added React coverage for `useAgentChatController().sendMessage()` on a waiting thread whose concrete waiting reason comes only from App Server runtime `activeFlags`.
@@ -245,8 +245,9 @@
     - Validation: `git diff --check` passed.
     - Review: Manual final review covered changesets, package exports, API snapshots, public skill, repo skills, docs, bridge/upload behavior, composer waiting-state semantics, and release-facing validation gates.
     - 4-Parallel Subagent Review: Completed. Lane 1 package/release found the new public `@nyosegawa/agent-ui-codex/test-fixtures` subpath used a patch changeset despite release policy requiring minor for non-breaking export additions; fixed by changing the Codex changeset entry to `minor` and rerunning changeset status. Lane 2 docs/skill found no issues. Lane 3 behavior/security found already-waiting external sends could return `unknown` when concrete runtime active flags were present without visible server requests; fixed in the core runtime selector with React coverage. Lane 4 validation/plan audit found P006 roll-up evidence and P007 evidence were missing from `todo.md`; fixed here.
-    - Commit:
-    - Push:
+    - Commit: `f6b0bd3be6f9bfd12dbc82507e249bcb19e5653c` - Fix final onboarding review findings.
+    - Push: `git push origin codex/new-adopter-onboarding-plan` pushed `dad645b..f6b0bd3`.
+    - PR/CI: PR #42 checks passed after P007 review-fix push: API snapshots, Detect changes, Detect compatibility changes, Lint, Node.js 22.x, Node.js 24.x, Package resolution, Package validation, Playwright fixtures, Protocol and fixtures, Real local smoke, Repository policy, Typecheck, Unit tests, and pnpm workspace smoke.
   - Tasks:
     - [x] T021 Run final broad validation and record exact command results.
       - Expected files/areas: `todo.md`.
@@ -254,7 +255,7 @@
     - [x] T022 Review changesets, API snapshots, package exports, public skill, and repo skills as release-facing surfaces.
       - Expected files/areas: changed docs/tests/package files.
       - Validation note: Public package docs changes may require changesets.
-    - [ ] T023 Push branch, create PR, and follow GitHub Actions to concrete success or failure.
+    - [x] T023 Push branch, create PR, and follow GitHub Actions to concrete success or failure.
       - Expected files/areas: PR metadata and `todo.md`.
       - Validation note: Use `gh pr checks` and failed-log inspection if needed.
 
@@ -414,6 +415,7 @@
 - P007: `node scripts/check-release-targets.mjs` passed and reported all public packages already published at `3.0.0`, `shouldPublish: false`, and no unpublished versions.
 - P007: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-06-30-new-adopter-onboarding` passed.
 - P007: `git diff --check` passed.
+- P007 PR #42 checks passed after review-fix push: API snapshots, Detect changes, Detect compatibility changes, Lint, Node.js 22.x, Node.js 24.x, Package resolution, Package validation, Playwright fixtures, Protocol and fixtures, Real local smoke, Repository policy, Typecheck, Unit tests, and pnpm workspace smoke.
 
 ## Review Evidence
 
@@ -444,16 +446,17 @@
 - `601ca157d455e436c28b5a19da82b32561071f48` - Add Codex success test fixture
 - `777ad5472928515e9f5f528f0dfe58086f5af4d1` - Record P006 onboarding evidence
 - `dad645bb5eed8e7ce5ef08c01568d19a0176bca3` - Record P006 CI evidence
+- `f6b0bd3be6f9bfd12dbc82507e249bcb19e5653c` - Fix final onboarding review findings
 
 ## Final Checklist
 
-- [ ] Every phase is complete or explicitly deferred.
-- [ ] Every task in completed phases is complete or explicitly skipped with a reason.
-- [ ] Every completion criterion in `plan.md` is satisfied.
-- [ ] Required validation passed or an explicit user-approved exception is recorded.
-- [ ] Review evidence is recorded.
-- [ ] Branch, planning commit, remote, push result, and blockers are recorded.
-- [ ] Commit hashes are recorded for completed phases.
-- [ ] Push evidence is recorded when commits need to be shared or a PR will be created.
-- [ ] PR URL is recorded when applicable.
-- [ ] CI was followed to concrete success or failure when applicable.
+- [x] Every phase is complete or explicitly deferred.
+- [x] Every task in completed phases is complete or explicitly skipped with a reason.
+- [x] Every completion criterion in `plan.md` is satisfied.
+- [x] Required validation passed or an explicit user-approved exception is recorded.
+- [x] Review evidence is recorded.
+- [x] Branch, planning commit, remote, push result, and blockers are recorded.
+- [x] Commit hashes are recorded for completed phases.
+- [x] Push evidence is recorded when commits need to be shared or a PR will be created.
+- [x] PR URL is recorded when applicable.
+- [x] CI was followed to concrete success or failure when applicable.
