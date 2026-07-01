@@ -173,7 +173,7 @@
     - Validation: `bunx vitest run packages/react/test/components.vitest.tsx -t "transcript|display|answer-focused|category|collapsed|approval"` passed; `bun run test:skills` passed; `bun run test:api-snapshots:update && bun run test:api-snapshots` passed; stale wording search returned no matches; `bun run validate:release` passed after snapshot refresh; `bun run validate:e2e` passed with fixture 231 passed/1 skipped and real-local 20 passed.
     - Review: Final 4-lane review completed. API/export lane was clean after fixes and reran snapshot/package checks. Runtime lane's P1 collapsed-safety finding was remediated and re-verified clean. Docs/skills lane's stale wording/high-level guide findings were remediated and re-verified clean. Release/product-boundary lane's unknown-label finding was remediated and re-verified clean.
     - Commit: `7bc5a0c` Harden transcript display release gates
-    - Push:
+    - Push: P005 commits pushed to `origin/codex/transcript-semantic-category-plan`.
   - Tasks:
     - [x] T001 Run final release and e2e gates.
       - Expected files/areas: command evidence.
@@ -416,6 +416,7 @@
 - `4c571c2` Record transcript display docs phase
 - `343b985` Record transcript display docs push
 - `7bc5a0c` Harden transcript display release gates
+- `a8dbec1` Record transcript display final validation
 
 ## Final Checklist
 
