@@ -5,8 +5,8 @@
 - Overall status: P004 complete; P005 next.
 - Current phase: P005 Final validation, review, PR, and CI follow-through.
 - Blockers: none for planning; implementation should refresh if watched guidance changes again.
-- Last validation: P004 docs/examples/skill/snapshot/package checks passed, including `bun run test:skills`, API snapshots, package resolution, recipe/local Vite type/build, catalog tests, component tests, and `bunx playwright test examples/local-react-vite/e2e/transcript-display.e2e.ts --config playwright.fixtures.config.ts`.
-- Last review: P004 final 4-lane subagent review completed; package export docs, showcase route naming, and public skill contract findings were remediated.
+- Last validation: P005 `bun run validate:release` and `bun run validate:e2e` passed after final review fixes.
+- Last review: P005 final 4-lane subagent review completed; P1/P2 findings were remediated and all four lanes re-verified clean.
 - PR/CI: no PR yet.
 
 ## Branch And Planning Commit
@@ -169,16 +169,16 @@
   - Push: push all commits.
   - PR/CI: open PR and follow GitHub Actions to concrete success/failure.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
+    - Implementation: Final review fixes force failed, in-progress, and approval-anchored transcript entries to full `visible` state even when policies collapse them; unknown transcript labels now use `timeline.unknown`; stale public "transcript density" wording was removed from high-level docs/skill guidance; unused `itemLabel` was removed.
+    - Validation: `bunx vitest run packages/react/test/components.vitest.tsx -t "transcript|display|answer-focused|category|collapsed|approval"` passed; `bun run test:skills` passed; `bun run test:api-snapshots:update && bun run test:api-snapshots` passed; stale wording search returned no matches; `bun run validate:release` passed after snapshot refresh; `bun run validate:e2e` passed with fixture 231 passed/1 skipped and real-local 20 passed.
+    - Review: Final 4-lane review completed. API/export lane was clean after fixes and reran snapshot/package checks. Runtime lane's P1 collapsed-safety finding was remediated and re-verified clean. Docs/skills lane's stale wording/high-level guide findings were remediated and re-verified clean. Release/product-boundary lane's unknown-label finding was remediated and re-verified clean.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T001 Run final release and e2e gates.
+    - [x] T001 Run final release and e2e gates.
       - Expected files/areas: command evidence.
       - Validation note: `bun run validate:release`; `bun run validate:e2e`.
-    - [ ] T002 Run 4 parallel final subagent reviews and remediate findings.
+    - [x] T002 Run 4 parallel final subagent reviews and remediate findings.
       - Expected files/areas: full diff.
       - Validation note: Rerun focused gates after fixes.
     - [ ] T003 Push branch and open PR.
@@ -350,6 +350,19 @@
   - Result: passed.
   - Command: `rg -n "transcript-density|Transcript density|AgentTranscriptDensity|byBlockKind|critical-only|verbose" docs packages examples skills test .changeset`
   - Result: no matches.
+- P005 validation passed:
+  - Command: `bunx vitest run packages/react/test/components.vitest.tsx -t "transcript|display|answer-focused|category|collapsed|approval"`
+  - Result: passed, 36 focused tests run.
+  - Command: `bun run test:skills`
+  - Result: passed, 6 tests.
+  - Command: `bun run test:api-snapshots:update && bun run test:api-snapshots`
+  - Result: passed; React API snapshots refreshed for the i18n dictionary chunk after adding `timeline.unknown`.
+  - Command: `rg -n "transcript density|density props|density prop|transcript display density|transcript-density|Transcript density|AgentTranscriptDensity|byBlockKind|critical-only|verbose|timeline\\.system.*unknown|itemLabel" skills/agent-ui docs packages examples test .changeset`
+  - Result: no matches.
+  - Command: `bun run validate:release`
+  - Result: passed; lint still reports existing `packages/react/src/hooks/composer.ts` hook dependency warnings only, and `publint` still reports repository URL suggestions only.
+  - Command: `bun run validate:e2e`
+  - Result: passed; fixture e2e 231 passed / 1 skipped, real-local e2e 20 passed.
 
 ## Review Evidence
 
@@ -379,6 +392,11 @@
   - Docs/examples/recipes: found local Vite showcase still exposed "transcript density" route/title/catalog/test naming; remediated by renaming public route and e2e to `transcript-display` / "Transcript display policy".
   - Public skill: found missing durable `default`/`byCategory`/`byRole` contract, resolution order, and `transcriptDisplay` versus `transcriptMode` preset scoping; remediated in skill guidance and tests.
   - Release/product-boundary: found the same showcase naming issue; no P0/P1 findings and no host-specific runtime policy leakage.
+- P005 final 4-lane review:
+  - API/export/snapshot: initial review clean; follow-up clean after `timeline.unknown` and API snapshot refresh.
+  - Transcript behavior: found P1 collapsed safety issue for failed, in-progress, and approval-anchored entries; remediated by forcing safety-critical entries to `visible` after policy resolution and adding tests; follow-up clean.
+  - Docs/examples/skills: found stale top-level "transcript density" framing and missing high-level `transcriptDisplay` guide links; remediated; follow-up clean.
+  - Release/product-boundary: found unknown transcript blocks were labeled as system; remediated with `timeline.unknown`; follow-up clean.
 
 ## Commit Log
 

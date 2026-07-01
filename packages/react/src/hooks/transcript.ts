@@ -45,7 +45,7 @@ export interface AgentTranscriptDisplayRule {
 /**
  * Public transcript display policy. Resolution order is default -> byCategory -> byRole.
  * Safety overrides are applied after policy resolution, so failed, in-progress,
- * and approval-anchored entries cannot be made unreachable by a hidden rule.
+ * and approval-anchored entries remain fully visible.
  */
 export interface AgentTranscriptDisplayPolicy {
   byCategory?: Partial<Record<AgentTranscriptCategory, AgentTranscriptDisplayRule>>;
@@ -298,10 +298,7 @@ function resolvedTranscriptRule(
     ...policy.byCategory?.[category],
     ...policy.byRole?.[role],
   };
-  if (
-    merged.visibility === "hidden" &&
-    (approvals.length > 0 || status === "failed" || status === "inProgress")
-  ) {
+  if (approvals.length > 0 || status === "failed" || status === "inProgress") {
     return { ...merged, visibility: "visible" };
   }
   return merged;
@@ -506,7 +503,7 @@ function transcriptLabelKey(
     case "systemInfo":
       return "timeline.system";
     default:
-      return "timeline.system";
+      return "timeline.unknown";
   }
 }
 

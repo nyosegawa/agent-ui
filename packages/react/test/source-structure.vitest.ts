@@ -179,7 +179,7 @@ describe("React package source structure", () => {
     expect(transcript).toContain('export type AgentTranscriptDisplayDensity = "comfortable"');
     expect(transcript).toContain('export type AgentTranscriptDisplayVisibility = "visible"');
     expect(transcript).toContain("Resolution order is default -> byCategory -> byRole");
-    expect(transcript).toContain("entries cannot be made unreachable by a hidden rule");
+    expect(transcript).toContain("entries remain fully visible");
     expect(headless).toContain("AgentTranscriptCategory");
     expect(headless).toContain("AgentTranscriptDisplayPolicy");
   });

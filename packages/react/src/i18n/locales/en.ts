@@ -330,6 +330,7 @@ export const en = {
   "timeline.to": "To",
   "timeline.tool": "Tool",
   "timeline.toolCall": "Tool call",
+  "timeline.unknown": "Unknown",
   "timeline.unknownTool": "unknown tool",
   "timeline.webSearch": "Web search",
   "timeline.you": "You",

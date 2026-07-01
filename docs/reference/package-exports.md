@@ -204,7 +204,7 @@ root preset external-send path is public on `AgentChatController` as
 `sendMessage(input, { threadOptions, turnOptions })`. Host UI that uses
 `AgentChat` should call that controller instead of directly sequencing
 transport requests. `AgentChatSlots`, raw `components.Item`, private status
-props, and legacy transcript density props are not supported; use
+props, and legacy transcript spacing options are not supported; use
 `transcriptDisplay` on
 `AgentChat`, `AgentThreadView`, `AgentMessageList`, or
 `useAgentTranscriptController()` for semantic transcript display policy.

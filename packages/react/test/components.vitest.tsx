@@ -2032,6 +2032,128 @@ describe("AgentChat", () => {
     ]);
   });
 
+  it("keeps safety-critical entries fully visible when transcript display collapses them", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-display-safety"] = {
+      orderedTurnIds: ["turn-display-safety"],
+      status: "running",
+      thread: { id: "thread-display-safety", name: "Display safety" },
+      turns: {
+        "turn-display-safety": {
+          blocksByItemId: {
+            "approval-command": {
+              command: "bun test",
+              id: "approval-command",
+              kind: "commandExecution",
+            },
+            "failed-command": {
+              command: "bun lint",
+              id: "failed-command",
+              kind: "commandExecution",
+            },
+            "running-command": {
+              command: "bun build",
+              id: "running-command",
+              kind: "commandExecution",
+            },
+          },
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["failed-command", "running-command", "approval-command"],
+          items: {
+            "approval-command": {
+              id: "approval-command",
+              kind: "commandExecution",
+              status: "completed",
+              threadId: "thread-display-safety",
+              turnId: "turn-display-safety",
+            },
+            "failed-command": {
+              id: "failed-command",
+              kind: "commandExecution",
+              status: "failed",
+              threadId: "thread-display-safety",
+              turnId: "turn-display-safety",
+            },
+            "running-command": {
+              id: "running-command",
+              kind: "commandExecution",
+              status: "inProgress",
+              threadId: "thread-display-safety",
+              turnId: "turn-display-safety",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-display-safety", threadId: "thread-display-safety" },
+        },
+      },
+    };
+
+    function SafetyProbe() {
+      const controller = useAgentTranscriptController("thread-display-safety", {
+        approvalAnchors: {
+          renderApprovalAnchor: () => null,
+          requests: [
+            approvalView({
+              command: "bun test",
+              id: "approval-command-request",
+              itemId: "approval-command",
+              kind: "commandApproval",
+              threadId: "thread-display-safety",
+              turnId: "turn-display-safety",
+            }),
+          ],
+        },
+        transcriptDisplay: {
+          byCategory: {
+            command: { visibility: "collapsed" },
+          },
+        },
+      });
+      return (
+        <output aria-label="display safety entries">
+          {JSON.stringify(
+            controller.entries.map((entry) => ({
+              approvals: entry.approvals.map((approval) => approval.id),
+              id: entry.itemId,
+              status: entry.status,
+              visibility: entry.visibility,
+            })),
+          )}
+        </output>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <SafetyProbe />
+      </AgentProvider>,
+    );
+
+    expect(
+      JSON.parse(screen.getByLabelText("display safety entries").textContent ?? "[]"),
+    ).toEqual([
+      {
+        approvals: [],
+        id: "failed-command",
+        status: "failed",
+        visibility: "visible",
+      },
+      {
+        approvals: [],
+        id: "running-command",
+        status: "inProgress",
+        visibility: "visible",
+      },
+      {
+        approvals: ["approval-command-request"],
+        id: "approval-command",
+        status: "completed",
+        visibility: "visible",
+      },
+    ]);
+  });
+
   it("applies the answer-focused transcript display preset", () => {
     const initialState = createInitialAgentState();
     initialState.threads["thread-answer-focused"] = {
@@ -2384,7 +2506,7 @@ describe("AgentChat", () => {
       },
       {
         category: "unknown",
-        displayLabelKey: "timeline.system",
+        displayLabelKey: "timeline.unknown",
         id: "unknown-1",
         role: "system",
       },

@@ -71,6 +71,8 @@ import "@nyosegawa/agent-ui-react/styles.css";
 Use `AgentChat` when the default chat flow should stay intact. Prefer public
 preset composition before dropping to primitives:
 
+- tune transcript visibility, entry spacing, and answer-focused presentation
+  with `transcriptDisplay` before replacing transcript renderers
 - add status/header UI with `statusBarEnd`, `threadHeaderEnd`, or the
   `StatusBar` / `ThreadHeader` component replacements
 - fix first-thread policy with `startOptions.threadOptions` and first-turn

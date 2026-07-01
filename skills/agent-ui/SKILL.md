@@ -21,7 +21,7 @@ generic chatbot kit.
    - thread lifecycle, canonical resume, or history integration
    - server bridge, uploads, or dynamic tools
    - host-owned workflow composition around Agent UI primitives
-   - transcript display density, visibility, or answer-focused presentation
+   - transcript display policy, visibility, spacing, or answer-focused presentation
    - local desktop bridge policy and admission
    - first-message `startThreadWithInput()` options or retry behavior
    - bearer WebSocket subprotocols for short-lived bridge tokens
@@ -97,7 +97,7 @@ generic chatbot kit.
 - Start with `AgentChat` when the host wants a full chat surface. Use the React
   primitives when the host needs custom placement of transcript, composer,
   approvals, usage, apps, skills, hooks, diagnostics, or thread history.
-- Use `transcriptDisplay` for transcript density and visibility policy. Prefer
+- Use `transcriptDisplay` for transcript display policy. Prefer
   `default`, `byCategory`, and `byRole` rules over raw protocol item or block
   kinds; resolution is `default` -> `byCategory` -> `byRole`.
   `transcriptDisplay="answer-focused"` works anywhere a display policy is

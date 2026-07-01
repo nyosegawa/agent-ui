@@ -27,7 +27,7 @@ import "@nyosegawa/agent-ui-react/styles.css";
 | Host-owned controllers | `import { useAgentChatController } from "@nyosegawa/agent-ui-react/headless";` |
 | Bundled stylesheet | `import "@nyosegawa/agent-ui-react/styles.css";` |
 
-Transcript display density and visibility are controlled with
+Transcript display policy is controlled with
 `transcriptDisplay`, not block-kind conditionals. The same semantic policy works
 on `AgentChat`, `AgentThreadView`, `AgentMessageList`, and
 `useAgentTranscriptController()`:
