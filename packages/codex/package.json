@@ -1,6 +1,6 @@
 {
   "name": "@nyosegawa/agent-ui-codex",
-  "version": "3.1.0",
+  "version": "4.0.0",
   "description": "Codex App Server transport and normalizer for Agent UI.",
   "license": "MIT",
   "repository": {
@@ -119,6 +119,6 @@
     "test": "vitest run --config ../../vitest.config.ts test"
   },
   "dependencies": {
-    "@nyosegawa/agent-ui-core": "workspace:^3.1.0"
+    "@nyosegawa/agent-ui-core": "workspace:^4.0.0"
   }
 }

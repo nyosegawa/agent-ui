@@ -1,5 +1,12 @@
 # @nyosegawa/agent-ui-server
 
+## 4.0.0
+
+### Patch Changes
+
+- @nyosegawa/agent-ui-core@4.0.0
+- @nyosegawa/agent-ui-codex@4.0.0
+
 ## 3.1.0
 
 ### Patch Changes

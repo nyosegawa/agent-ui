@@ -1,5 +1,24 @@
 # @nyosegawa/agent-ui-web-components
 
+## 4.0.0
+
+### Major Changes
+
+- a5bf147: Replace transcript `density` options with the semantic `transcriptDisplay` policy.
+
+  React hosts should pass `transcriptDisplay` to `AgentChat`, `AgentThreadView`,
+  `AgentMessageList`, or `useAgentTranscriptController()` and can use the
+  `answer-focused` preset through `transcriptMode` on `AgentChat`.
+
+  Web Component hosts can pass `transcriptDisplay` or `transcriptMode` through
+  element properties or `agentOptions`.
+
+### Patch Changes
+
+- Updated dependencies [a5bf147]
+  - @nyosegawa/agent-ui-react@4.0.0
+  - @nyosegawa/agent-ui-core@4.0.0
+
 ## 3.1.0
 
 ### Patch Changes
