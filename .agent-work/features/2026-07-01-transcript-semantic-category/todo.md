@@ -2,11 +2,11 @@
 
 ## Status Summary
 
-- Overall status: Planning revised for breaking redesign; implementation not started.
-- Current phase: P000 planning package.
+- Overall status: P001 complete; P002 next.
+- Current phase: P002 Migrate transcript view model and rendering identity.
 - Blockers: none for planning; implementation should refresh if watched guidance changes again.
-- Last validation: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-07-01-transcript-semantic-category` passed.
-- Last review: initial 4-lane adoption audit plus second 4-lane breaking-design audit completed.
+- Last validation: P001 `bun run test -- packages/react/test/components.vitest.tsx`, `bun run test:styles`, and `bun run typecheck` passed.
+- Last review: P001 final 4-lane subagent review completed with no findings.
 - PR/CI: no PR yet.
 
 ## Branch And Planning Commit
@@ -19,7 +19,7 @@
 
 ## Phase Checklist
 
-- [ ] P001 Finalize breaking transcript display contract
+- [x] P001 Finalize breaking transcript display contract
   - Goal: Decide the public names, removals, taxonomy, safety semantics, and migration contract before implementation.
   - Scope: Contract/spec work in source types and docs comments only if useful; no broad rendering migration yet.
   - Expected files/areas: `packages/react/src/hooks/transcript.ts`, `docs/reference/hooks.md`, `docs/reference/react-components.md`, this artifact if plan drift is found.
@@ -29,25 +29,25 @@
   - Push: push after commit if remote available.
   - PR/CI: no PR until later phases unless scope expands.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
+    - Implementation: Added source-level transcript display contract types and static source-structure guard.
+    - Validation: `bun run test -- packages/react/test/components.vitest.tsx` passed; `bun run test:styles` passed; `bun run typecheck` passed.
+    - Review: 4-lane final review passed with no findings.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T001 Choose final field names: `category` or `semanticCategory`, plus `displayLabel` or i18n label key.
+    - [x] T001 Choose final field names: `category` or `semanticCategory`, plus `displayLabel` or i18n label key.
       - Expected files/areas: `packages/react/src/hooks/transcript.ts`, docs notes.
       - Validation note: Typecheck and focused tests compile.
-    - [ ] T002 Define `AgentTranscriptCategory` taxonomy: `message`, `reasoning`, `plan`, `command`, `fileChange`, `toolActivity`, `web`, `media`, `system`, `unknown`.
+    - [x] T002 Define `AgentTranscriptCategory` taxonomy: `message`, `reasoning`, `plan`, `command`, `fileChange`, `toolActivity`, `web`, `media`, `system`, `unknown`.
       - Expected files/areas: `packages/react/src/hooks/transcript.ts`.
       - Validation note: Category mapping test covers all categories.
-    - [ ] T003 Decide explicit removals: `dataKind` as public display identity and `AgentTranscriptDensity.byBlockKind` as public policy.
+    - [x] T003 Decide explicit removals: `dataKind` as public display identity and `AgentTranscriptDensity.byBlockKind` as public policy.
       - Expected files/areas: docs and type references.
       - Validation note: Compile errors reveal migration surface.
-    - [ ] T004 Specify mandatory safety overrides for failed, in-progress, and approval-anchored entries.
+    - [x] T004 Specify mandatory safety overrides for failed, in-progress, and approval-anchored entries.
       - Expected files/areas: `packages/react/src/hooks/transcript.ts`, docs notes.
       - Validation note: Tests added in later phases must encode these invariants.
-    - [ ] T005 Run 4 parallel subagent review for P001 and record results.
+    - [x] T005 Run 4 parallel subagent review for P001 and record results.
       - Expected files/areas: `todo.md`.
       - Validation note: No P001 commit until all lanes are clean or remediated.
 
@@ -192,19 +192,19 @@
 
 ### P001 Finalize breaking transcript display contract
 
-- [ ] T001 Choose final field names.
+- [x] T001 Choose final field names.
   - Expected files/areas: `packages/react/src/hooks/transcript.ts`, docs notes.
   - Validation note: typecheck.
-- [ ] T002 Define `AgentTranscriptCategory`.
+- [x] T002 Define `AgentTranscriptCategory`.
   - Expected files/areas: `packages/react/src/hooks/transcript.ts`.
   - Validation note: mapping tests.
-- [ ] T003 Decide explicit removals.
+- [x] T003 Decide explicit removals.
   - Expected files/areas: docs and type references.
   - Validation note: compile migration surface.
-- [ ] T004 Specify safety overrides.
+- [x] T004 Specify safety overrides.
   - Expected files/areas: hook/docs notes.
   - Validation note: invariant tests later.
-- [ ] T005 Run 4 parallel subagent review.
+- [x] T005 Run 4 parallel subagent review.
   - Expected files/areas: `todo.md`.
   - Validation note: record all lanes.
 
@@ -306,6 +306,13 @@
 - Planning artifact validation passed:
   - Command: `node .agents/skills/agent-ui-feature-planning/scripts/validate-artifacts.mjs .agent-work/features/2026-07-01-transcript-semantic-category`
   - Result: passed; required files/sections exist, `goal-prompt.md` is under 4000 characters, `todo.md` is phase-first, and absolute artifact paths/same-branch rule are present.
+- P001 validation passed:
+  - Command: `bun run test -- packages/react/test/components.vitest.tsx`
+  - Result: passed, 217 tests.
+  - Command: `bun run test:styles`
+  - Result: passed, 73 tests.
+  - Command: `bun run typecheck`
+  - Result: passed across workspaces.
 
 ## Review Evidence
 
@@ -315,6 +322,11 @@
   - Docs/skill lane: include getting-started, first-host-app, web-components docs, package READMEs, recipes, skill tests, showcase e2e.
   - Validation lane: require `validate:release`, `validate:e2e`, mandatory Web Components pass-through, manual API snapshot diff review, 4 parallel reviews per phase.
   - Sequencing lane: add dedicated phases for contract, view-model identity, display policy, docs/examples/snapshots, and final validation.
+- P001 final 4-lane review:
+  - API/export/snapshot: no findings; source-level contract is not exported through root/headless/primitives and no API snapshot update is required for P001.
+  - Transcript behavior: no findings; taxonomy, precedence comment, and safety comment are coherent; no runtime behavior changed.
+  - Web/browser/examples: no findings; no browser-visible change; later TODO coverage is adequate.
+  - Release/product-boundary: no findings; P001 can commit as a source-level checkpoint without docs/snapshots/changeset.
 
 ## Commit Log
 

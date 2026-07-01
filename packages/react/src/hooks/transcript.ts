@@ -21,6 +21,43 @@ import {
 } from "../timeline/formatters";
 import { useTranscriptWindowing } from "../timeline/windowing";
 
+export type AgentTranscriptCategory =
+  | "message"
+  | "reasoning"
+  | "plan"
+  | "command"
+  | "fileChange"
+  | "toolActivity"
+  | "web"
+  | "media"
+  | "system"
+  | "unknown";
+
+export type AgentTranscriptDisplayDensity = "comfortable" | "compact" | "expanded";
+
+export type AgentTranscriptDisplayVisibility = "visible" | "collapsed" | "hidden";
+
+export interface AgentTranscriptDisplayRule {
+  density?: AgentTranscriptDisplayDensity;
+  visibility?: AgentTranscriptDisplayVisibility;
+}
+
+/**
+ * Source-level contract for the breaking transcript display policy migration.
+ *
+ * Resolution order is default -> byCategory -> byRole. Safety overrides are
+ * applied after policy resolution, so failed, in-progress, and approval-anchored
+ * entries cannot be made unreachable by a hidden rule.
+ *
+ * This type becomes public when the runtime `transcriptDisplay` option replaces
+ * the legacy `density` option in a later phase.
+ */
+export interface AgentTranscriptDisplayPolicy {
+  byCategory?: Partial<Record<AgentTranscriptCategory, AgentTranscriptDisplayRule>>;
+  byRole?: Partial<Record<AgentTranscriptEntry["role"], AgentTranscriptDisplayRule>>;
+  default?: AgentTranscriptDisplayRule;
+}
+
 export type AgentTranscriptDensityMode = "default" | "compact" | "verbose" | "critical-only";
 
 export interface AgentTranscriptDensityConfig {

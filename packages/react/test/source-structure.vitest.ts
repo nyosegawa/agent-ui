@@ -158,6 +158,32 @@ describe("React package source structure", () => {
     expect(windowing).toContain("visibleTranscriptWindow");
   });
 
+  it("keeps the transcript display redesign contract source-scoped until migration", () => {
+    const transcript = readFileSync(join(reactSrc, "hooks", "transcript.ts"), "utf8");
+    const headless = readFileSync(join(reactSrc, "hooks.ts"), "utf8");
+    expect(transcript).toContain("export type AgentTranscriptCategory =");
+    for (const category of [
+      "message",
+      "reasoning",
+      "plan",
+      "command",
+      "fileChange",
+      "toolActivity",
+      "web",
+      "media",
+      "system",
+      "unknown",
+    ]) {
+      expect(transcript).toContain(`| "${category}"`);
+    }
+    expect(transcript).toContain('export type AgentTranscriptDisplayDensity = "comfortable"');
+    expect(transcript).toContain('export type AgentTranscriptDisplayVisibility = "visible"');
+    expect(transcript).toContain("Resolution order is default -> byCategory -> byRole");
+    expect(transcript).toContain("entries cannot be made unreachable by a hidden rule");
+    expect(headless).not.toContain("AgentTranscriptDisplayPolicy");
+    expect(headless).not.toContain("AgentTranscriptCategory");
+  });
+
   it("keeps Codex generated request params out of the React public API", () => {
     const snapshot = readFileSync(reactApiSnapshot, "utf8");
     expect(snapshot).not.toContain("@nyosegawa/agent-ui-codex/stable-types");
