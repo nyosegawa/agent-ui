@@ -132,7 +132,7 @@
     - Validation: `bun run validate:packages && bun run test:api-snapshots:update` passed; `bun run --cwd examples/recipes typecheck` passed; `bun run --cwd examples/local-react-vite typecheck && bun run --cwd examples/local-react-vite build` passed; `bun run test:skills && bun run test:api-snapshots && bun run test:package-resolution` passed; `bunx vitest run test/public-showcase-catalog.test.ts test/maintainer-gallery-catalog.test.ts test/package-scripts-docs.test.ts packages/react/test/components.vitest.tsx` passed; `bunx playwright test examples/local-react-vite/e2e/transcript-display.e2e.ts --config playwright.fixtures.config.ts` passed; `git diff --check` passed; stale public-term search for `transcript-density`, `Transcript density`, `AgentTranscriptDensity`, `byBlockKind`, `critical-only`, and `verbose` returned no matches.
     - Review: 4-lane review completed. API/export/snapshot found stale package export docs for React display types and Web Component display properties; remediated. Docs/examples found stale local Vite "transcript density" route/catalog/test naming; remediated by renaming public route to `/showcase/transcript-display`. Public skill found missing `default`/`byCategory`/`byRole` resolution and preset prop scoping; remediated in skill guidance and tests. Release/product-boundary found the same showcase naming issue and no host-policy leakage.
     - Commit: `4122e42` Document transcript display policy
-    - Push:
+    - Push: P004 commits pushed to `origin/codex/transcript-semantic-category-plan`.
   - Tasks:
     - [x] T001 Update public reference and guide docs for `category`, `transcriptDisplay`, visibility/density, safety overrides, migration from `dataKind`/`density`.
       - Expected files/areas: docs listed in phase scope.
@@ -395,6 +395,7 @@
 - `8933424` Record transcript display policy phase
 - `dd46e20` Record transcript display policy push
 - `4122e42` Document transcript display policy
+- `4c571c2` Record transcript display docs phase
 
 ## Final Checklist
 
