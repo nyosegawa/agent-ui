@@ -97,7 +97,7 @@
     - Validation: `bun run test -- packages/react/test/components.vitest.tsx packages/web-components/test/web-components.test.tsx` passed; `bun run test:styles` passed; `bun run validate:fast` passed with existing composer hook lint warnings only; `bunx playwright test examples/local-react-vite/e2e/transcript-density.e2e.ts --config playwright.fixtures.config.ts` passed.
     - Review: 4-lane review completed. API/export/snapshot and release lanes identified stale snapshots/docs/changeset as P004 release blockers. Transcript behavior found no blocker and requested explicit `byRole` precedence and in-progress safety tests, both added. Web/browser lane found blank collapsed command/file rows and missing E2E visible-content coverage, remediated with CSS and Playwright assertions. Plan drift for `answer-focused` was reconciled in `plan.md`.
     - Commit: `47be754` Add transcript display policy
-    - Push:
+    - Push: P003 commits pushed to `origin/codex/transcript-semantic-category-plan`.
   - Tasks:
     - [x] T001 Define `AgentTranscriptDisplayPolicy`, `AgentTranscriptDisplayRule`, density, and visibility types.
       - Expected files/areas: `packages/react/src/hooks/transcript.ts`.
