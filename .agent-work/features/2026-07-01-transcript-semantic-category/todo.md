@@ -12,7 +12,7 @@
 ## Branch And Planning Commit
 
 - Branch: `codex/transcript-semantic-category-plan`
-- Planning commit: pending
+- Planning commit: `0fc7e40`
 - Remote: `origin`
 - Push result: pending
 - Blockers: none known
@@ -318,7 +318,7 @@
 
 ## Commit Log
 
-- Pending planning commit.
+- `0fc7e40` Plan transcript display contract redesign
 
 ## Final Checklist
 
