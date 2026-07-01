@@ -2,11 +2,11 @@
 
 ## Status Summary
 
-- Overall status: P003 complete; P004 next.
-- Current phase: P004 Migrate docs, examples, public skill, skill tests, snapshots, and changeset.
+- Overall status: P004 complete; P005 next.
+- Current phase: P005 Final validation, review, PR, and CI follow-through.
 - Blockers: none for planning; implementation should refresh if watched guidance changes again.
-- Last validation: P003 focused React/Web Component tests, `bun run test:styles`, `bun run validate:fast`, and `bunx playwright test examples/local-react-vite/e2e/transcript-density.e2e.ts --config playwright.fixtures.config.ts` passed.
-- Last review: P003 final 4-lane subagent review completed; runtime/browser findings were remediated and docs/snapshots/changeset remain P004 release gates.
+- Last validation: P004 docs/examples/skill/snapshot/package checks passed, including `bun run test:skills`, API snapshots, package resolution, recipe/local Vite type/build, catalog tests, component tests, and `bunx playwright test examples/local-react-vite/e2e/transcript-display.e2e.ts --config playwright.fixtures.config.ts`.
+- Last review: P004 final 4-lane subagent review completed; package export docs, showcase route naming, and public skill contract findings were remediated.
 - PR/CI: no PR yet.
 
 ## Branch And Planning Commit
@@ -118,44 +118,44 @@
       - Expected files/areas: `todo.md`.
       - Validation note: Remediate findings before commit.
 
-- [ ] P004 Migrate docs, examples, public skill, skill tests, snapshots, and changeset
+- [x] P004 Migrate docs, examples, public skill, skill tests, snapshots, and changeset
   - Goal: Make the breaking public surface complete and discoverable across every adopter entry point.
   - Scope: docs, package READMEs, examples, recipes, public skill, tests, API snapshots, changeset.
-  - Expected files/areas: `docs/reference/hooks.md`, `docs/reference/react-components.md`, `docs/reference/package-exports.md`, `docs/guides/react.md`, `docs/guides/host-integration.md`, `docs/guides/theming.md`, `docs/getting-started.md`, `docs/guides/first-host-app.md`, `docs/examples/local-react-vite.md`, `docs/guides/web-components.md`, `docs/examples/recipes.md`, `packages/react/README.md`, `packages/web-components/README.md`, `examples/recipes`, `examples/local-react-vite/src/main.tsx`, `examples/local-react-vite/src/fixtures/public-component-catalog.ts`, `examples/local-react-vite/src/fixtures/visual-qa-manifest.ts`, `examples/local-react-vite/e2e/transcript-density.e2e.ts`, `test/public-showcase-catalog.test.ts`, `skills/agent-ui/SKILL.md`, `skills/agent-ui/references/layout-composition.md`, `test/agent-ui-skill.test.ts`, `.changeset/*.md`, `test/api-snapshots/*.d.ts`.
+  - Expected files/areas: `docs/reference/hooks.md`, `docs/reference/react-components.md`, `docs/reference/package-exports.md`, `docs/guides/react.md`, `docs/guides/host-integration.md`, `docs/guides/theming.md`, `docs/getting-started.md`, `docs/guides/first-host-app.md`, `docs/examples/local-react-vite.md`, `docs/guides/web-components.md`, `docs/examples/recipes.md`, `packages/react/README.md`, `packages/web-components/README.md`, `examples/recipes`, `examples/local-react-vite/src/main.tsx`, `examples/local-react-vite/src/fixtures/public-component-catalog.ts`, `examples/local-react-vite/src/fixtures/visual-qa-manifest.ts`, `examples/local-react-vite/e2e/transcript-display.e2e.ts`, `test/public-showcase-catalog.test.ts`, `skills/agent-ui/SKILL.md`, `skills/agent-ui/references/layout-composition.md`, `test/agent-ui-skill.test.ts`, `.changeset/*.md`, `test/api-snapshots/*.d.ts`.
   - Validation: example typechecks/builds, `bun run test:skills`, snapshot update + manual declaration diff + snapshot check, package resolution.
   - Review: 4 parallel subagent reviews after validation.
   - Commit: one commit after validation and 4-lane review.
   - Push: push after commit.
   - PR/CI: open draft or ready PR after this phase if final validation passes or is queued.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
+    - Implementation: Updated reference docs, getting-started/example docs, React and Web Component READMEs, local Vite showcase route, recipes, public `skills/agent-ui` guidance, skill tests, API snapshots, and a major changeset. Public route/test naming now uses `transcript-display` / "Transcript display policy"; old transcript density API terms are absent outside the `density` rule value.
+    - Validation: `bun run validate:packages && bun run test:api-snapshots:update` passed; `bun run --cwd examples/recipes typecheck` passed; `bun run --cwd examples/local-react-vite typecheck && bun run --cwd examples/local-react-vite build` passed; `bun run test:skills && bun run test:api-snapshots && bun run test:package-resolution` passed; `bunx vitest run test/public-showcase-catalog.test.ts test/maintainer-gallery-catalog.test.ts test/package-scripts-docs.test.ts packages/react/test/components.vitest.tsx` passed; `bunx playwright test examples/local-react-vite/e2e/transcript-display.e2e.ts --config playwright.fixtures.config.ts` passed; `git diff --check` passed; stale public-term search for `transcript-density`, `Transcript density`, `AgentTranscriptDensity`, `byBlockKind`, `critical-only`, and `verbose` returned no matches.
+    - Review: 4-lane review completed. API/export/snapshot found stale package export docs for React display types and Web Component display properties; remediated. Docs/examples found stale local Vite "transcript density" route/catalog/test naming; remediated by renaming public route to `/showcase/transcript-display`. Public skill found missing `default`/`byCategory`/`byRole` resolution and preset prop scoping; remediated in skill guidance and tests. Release/product-boundary found the same showcase naming issue and no host-policy leakage.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T001 Update public reference and guide docs for `category`, `transcriptDisplay`, visibility/density, safety overrides, migration from `dataKind`/`density`.
+    - [x] T001 Update public reference and guide docs for `category`, `transcriptDisplay`, visibility/density, safety overrides, migration from `dataKind`/`density`.
       - Expected files/areas: docs listed in phase scope.
       - Validation note: Prose review plus link consistency; must document `category`, `displayLabelKey`, `data-block-kind`, `data-category`, `data-role`, `transcriptDisplay`, `default`/`byCategory`/`byRole`, `comfortable`/`compact`/`expanded`, `visible`/`collapsed`/`hidden`, optional `answer-focused`, and removal of `dataKind`/transcript `data-kind`/`density`/`byBlockKind`/`critical-only`/`verbose`.
-    - [ ] T002 Update React and Web Components package READMEs.
+    - [x] T002 Update React and Web Components package READMEs.
       - Expected files/areas: `packages/react/README.md`, `packages/web-components/README.md`.
       - Validation note: Public import paths and prop names are correct.
-    - [ ] T003 Add/update examples proving primitive, `AgentThreadView`, `AgentChat`, and Web Component display policy usage.
+    - [x] T003 Add/update examples proving primitive, `AgentThreadView`, `AgentChat`, and Web Component display policy usage.
       - Expected files/areas: `examples/local-react-vite`, `examples/recipes`.
       - Validation note: `bun run --cwd examples/recipes typecheck`; `bun run --cwd examples/local-react-vite typecheck`; `bun run --cwd examples/local-react-vite build`.
-    - [ ] T004 Update Playwright/catalog tests for new category/display selectors and preset pass-through.
-      - Expected files/areas: `examples/local-react-vite/e2e/transcript-density.e2e.ts`, `test/public-showcase-catalog.test.ts`.
+    - [x] T004 Update Playwright/catalog tests for new category/display selectors and preset pass-through.
+      - Expected files/areas: `examples/local-react-vite/e2e/transcript-display.e2e.ts`, `test/public-showcase-catalog.test.ts`.
       - Validation note: Relevant fixture e2e or final `validate:e2e`.
-    - [ ] T005 Update public `skills/agent-ui` guidance and its tests.
+    - [x] T005 Update public `skills/agent-ui` guidance and its tests.
       - Expected files/areas: `skills/agent-ui/SKILL.md`, `skills/agent-ui/references/layout-composition.md`, `test/agent-ui-skill.test.ts`.
       - Validation note: `bun run test:skills` asserts new required/forbidden guidance.
-    - [ ] T006 Add major changeset.
+    - [x] T006 Add major changeset.
       - Expected files/areas: `.changeset/*.md`.
       - Validation note: Scope includes public React and Web Components packages as needed; `bunx changeset status --verbose` must no longer fail due to missing changeset.
-    - [ ] T007 Update API snapshots and manually review declaration diff before checking.
+    - [x] T007 Update API snapshots and manually review declaration diff before checking.
       - Expected files/areas: `test/api-snapshots`.
       - Validation note: `bun run test:api-snapshots:update`; inspect diff for `AgentTranscriptEntry`, `AgentTranscriptCategory`, React/headless/primitives declarations, and raw/internal type leaks; `bun run test:api-snapshots`; `bun run test:package-resolution`.
-    - [ ] T008 Run 4 parallel subagent review for P004 and record results.
+    - [x] T008 Run 4 parallel subagent review for P004 and record results.
       - Expected files/areas: `todo.md`.
       - Validation note: Remediate findings before commit.
 
@@ -249,28 +249,28 @@
 
 ### P004 Migrate docs, examples, public skill, skill tests, snapshots, and changeset
 
-- [ ] T001 Update docs.
+- [x] T001 Update docs.
   - Expected files/areas: docs listed in phase.
   - Validation note: prose/link review.
-- [ ] T002 Update package READMEs.
+- [x] T002 Update package READMEs.
   - Expected files/areas: React/Web Components READMEs.
   - Validation note: public imports correct.
-- [ ] T003 Update examples/recipes.
+- [x] T003 Update examples/recipes.
   - Expected files/areas: examples listed in phase.
   - Validation note: examples typecheck/build.
-- [ ] T004 Update e2e/catalog tests.
+- [x] T004 Update e2e/catalog tests.
   - Expected files/areas: local React Vite e2e/catalog tests.
   - Validation note: fixture or final e2e.
-- [ ] T005 Update public skill and tests.
+- [x] T005 Update public skill and tests.
   - Expected files/areas: `skills/agent-ui`, `test/agent-ui-skill.test.ts`.
   - Validation note: `bun run test:skills`.
-- [ ] T006 Add major changeset.
+- [x] T006 Add major changeset.
   - Expected files/areas: `.changeset`.
   - Validation note: package scope.
-- [ ] T007 Update/review API snapshots.
+- [x] T007 Update/review API snapshots.
   - Expected files/areas: `test/api-snapshots`.
   - Validation note: update, manual diff review, check.
-- [ ] T008 Run 4 parallel subagent review.
+- [x] T008 Run 4 parallel subagent review.
   - Expected files/areas: `todo.md`.
   - Validation note: record all lanes.
 
@@ -331,6 +331,25 @@
   - Result: passed; lint reported existing warnings in `packages/react/src/hooks/composer.ts` only.
   - Command: `bunx playwright test examples/local-react-vite/e2e/transcript-density.e2e.ts --config playwright.fixtures.config.ts`
   - Result: passed, 2 tests.
+- P004 validation passed:
+  - Command: `bun run validate:packages && bun run test:api-snapshots:update`
+  - Result: passed; API snapshots were updated and manually reviewed for transcript display type changes and absence of stale density/byBlockKind/internal leaks.
+  - Command: `bun run --cwd examples/recipes typecheck`
+  - Result: passed.
+  - Command: `bun run --cwd examples/local-react-vite typecheck && bun run --cwd examples/local-react-vite build`
+  - Result: passed; Vite chunk-size warning only.
+  - Command: `bun run test:skills && bun run test:api-snapshots && bun run test:package-resolution`
+  - Result: passed.
+  - Command: `bunx vitest run test/public-showcase-catalog.test.ts test/maintainer-gallery-catalog.test.ts test/package-scripts-docs.test.ts packages/react/test/components.vitest.tsx`
+  - Result: passed, 242 tests.
+  - Command: `bunx playwright test examples/local-react-vite/e2e/transcript-display.e2e.ts --config playwright.fixtures.config.ts`
+  - Result: passed, 2 tests.
+  - Command: `bunx changeset status --verbose`
+  - Result: major bump queued for `@nyosegawa/agent-ui-react`, `@nyosegawa/agent-ui-web-components`, and fixed-version public packages.
+  - Command: `git diff --check`
+  - Result: passed.
+  - Command: `rg -n "transcript-density|Transcript density|AgentTranscriptDensity|byBlockKind|critical-only|verbose" docs packages examples skills test .changeset`
+  - Result: no matches.
 
 ## Review Evidence
 
@@ -355,6 +374,11 @@
   - Transcript behavior: no runtime blocker; requested explicit role precedence and in-progress safety tests, both added.
   - Web/browser/examples: found collapsed command/file rows rendered blank and missing E2E visible-content assertion; remediated by keeping collapsed metadata visible and asserting `Command` / `File change` text in Playwright.
   - Release/product-boundary: no host-policy leakage; `answer-focused` remains an explicit display-only public preset and P004 must document it plus snapshots/changeset.
+- P004 final 4-lane review:
+  - API/export/snapshot: found stale `docs/reference/package-exports.md` lists for root React display type exports and Web Component `transcriptDisplay` / `transcriptMode` properties; remediated.
+  - Docs/examples/recipes: found local Vite showcase still exposed "transcript density" route/title/catalog/test naming; remediated by renaming public route and e2e to `transcript-display` / "Transcript display policy".
+  - Public skill: found missing durable `default`/`byCategory`/`byRole` contract, resolution order, and `transcriptDisplay` versus `transcriptMode` preset scoping; remediated in skill guidance and tests.
+  - Release/product-boundary: found the same showcase naming issue; no P0/P1 findings and no host-specific runtime policy leakage.
 
 ## Commit Log
 
@@ -363,6 +387,13 @@
 - `4c2b49b` Record transcript display planning push
 - `188e448` Define transcript display contract
 - `eb4f508` Record transcript display contract phase
+- `4e64a50` Record transcript display contract push
+- `483d805` Migrate transcript display identity
+- `e85673f` Record transcript display identity phase
+- `ac0b3ff` Record transcript display identity push
+- `47be754` Add transcript display policy
+- `8933424` Record transcript display policy phase
+- `dd46e20` Record transcript display policy push
 
 ## Final Checklist
 

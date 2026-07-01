@@ -5,11 +5,11 @@ for (const viewport of [
   { ...desktopViewport, name: "desktop" },
   { ...mobileViewport, name: "mobile" },
 ] as const) {
-  test(`transcript density route stays readable on ${viewport.name}`, async ({ page }) => {
+  test(`transcript display policy route stays readable on ${viewport.name}`, async ({ page }) => {
     await page.setViewportSize(viewport);
-    await page.goto("/showcase/transcript-density");
+    await page.goto("/showcase/transcript-display");
 
-    await expect(page.getByRole("heading", { name: "Transcript density" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Transcript display policy" })).toBeVisible();
     await expect(page.locator(".aui-message-list")).toHaveAttribute("data-density", "compact");
     await expect(page.locator('[data-category="command"]')).toHaveAttribute(
       "data-density",

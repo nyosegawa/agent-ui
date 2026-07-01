@@ -31,6 +31,12 @@ runtime, sidecar manager, or workflow orchestrator.
   or `Send now` should steer the active turn.
 - Pending approvals belong near the relevant transcript point and must remain
   reachable on desktop and mobile.
+- Hosts should control transcript density and visibility with
+  `transcriptDisplay`. Use `default`, `byCategory`, and `byRole` rules;
+  resolution is `default` -> `byCategory` -> `byRole`. Use
+  `transcriptDisplay="answer-focused"` anywhere a display policy is accepted, or
+  `transcriptMode="answer-focused"` on `AgentChat` and Web Components. Do not
+  branch on raw protocol item kinds or block kinds to decide transcript density.
 - Avoid nested vertical scroll traps. The transcript should own normal reading
   scroll.
 - Thread history should preserve readable titles and metadata.

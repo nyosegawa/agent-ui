@@ -73,7 +73,7 @@ test("visual QA manifest classifies every route with stable metadata", async () 
     "/showcase/composer-retry",
     "/showcase/transcript-content",
     "/showcase/approvals-status",
-    "/showcase/transcript-density",
+    "/showcase/transcript-display",
     "/showcase/resource-resolution",
     "/maintainer/scoped-thread-lists",
     "/showcase/usage-only",

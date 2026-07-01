@@ -1771,12 +1771,12 @@ describe("AgentChat", () => {
 
   it("applies transcript display defaults, hidden filtering, and category overrides", () => {
     const initialState = createInitialAgentState();
-    initialState.threads["thread-density"] = {
-      orderedTurnIds: ["turn-density"],
+    initialState.threads["thread-display"] = {
+      orderedTurnIds: ["turn-display"],
       status: "loaded",
-      thread: { id: "thread-density", name: "Transcript density" },
+      thread: { id: "thread-display", name: "Transcript display" },
       turns: {
-        "turn-density": {
+        "turn-display": {
           blocksByItemId: {
             "cmd-1": {
               command: "bun test",
@@ -1793,33 +1793,33 @@ describe("AgentChat", () => {
               kind: "agentMessage",
               status: "completed",
               text: "All done.",
-              threadId: "thread-density",
-              turnId: "turn-density",
+              threadId: "thread-display",
+              turnId: "turn-display",
             },
             "cmd-1": {
               id: "cmd-1",
               kind: "commandExecution",
               status: "completed",
-              threadId: "thread-density",
-              turnId: "turn-density",
+              threadId: "thread-display",
+              turnId: "turn-display",
             },
             "user-failed": {
               id: "user-failed",
               kind: "userMessage",
               status: "failed",
               text: "Run checks.",
-              threadId: "thread-density",
-              turnId: "turn-density",
+              threadId: "thread-display",
+              turnId: "turn-display",
             },
           },
           streamingTextByItemId: {},
-          turn: { id: "turn-density", threadId: "thread-density" },
+          turn: { id: "turn-display", threadId: "thread-display" },
         },
       },
     };
 
     function DensityProbe() {
-      const controller = useAgentTranscriptController("thread-density", {
+      const controller = useAgentTranscriptController("thread-display", {
         approvalAnchors: {
           renderApprovalAnchor: () => null,
           requests: [
@@ -1829,8 +1829,8 @@ describe("AgentChat", () => {
               itemId: "cmd-1",
               kind: "commandApproval",
               risk: "medium",
-              threadId: "thread-density",
-              turnId: "turn-density",
+              threadId: "thread-display",
+              turnId: "turn-display",
             }),
           ],
         },
@@ -2393,12 +2393,12 @@ describe("AgentChat", () => {
 
   it("renders transcript display attributes for the default message list", () => {
     const initialState = createInitialAgentState();
-    initialState.threads["thread-density-dom"] = {
-      orderedTurnIds: ["turn-density-dom"],
+    initialState.threads["thread-display-dom"] = {
+      orderedTurnIds: ["turn-display-dom"],
       status: "loaded",
-      thread: { id: "thread-density-dom", name: "Transcript density DOM" },
+      thread: { id: "thread-display-dom", name: "Transcript display DOM" },
       turns: {
-        "turn-density-dom": {
+        "turn-display-dom": {
           commandOutputByItemId: {},
           filePatchByItemId: {},
           itemOrder: ["user-1"],
@@ -2408,12 +2408,12 @@ describe("AgentChat", () => {
               kind: "userMessage",
               status: "completed",
               text: "Use compact density.",
-              threadId: "thread-density-dom",
-              turnId: "turn-density-dom",
+              threadId: "thread-display-dom",
+              turnId: "turn-display-dom",
             },
           },
           streamingTextByItemId: {},
-          turn: { id: "turn-density-dom", threadId: "thread-density-dom" },
+          turn: { id: "turn-display-dom", threadId: "thread-display-dom" },
         },
       },
     };
@@ -2421,7 +2421,7 @@ describe("AgentChat", () => {
     const { container } = render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
         <AgentMessageList
-          threadId="thread-density-dom"
+          threadId="thread-display-dom"
           transcriptDisplay={{ default: { density: "compact" } }}
         />
       </AgentProvider>,

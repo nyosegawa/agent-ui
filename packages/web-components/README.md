@@ -31,6 +31,12 @@ Pass transports, opaque `initialState` snapshots, `agentOptions`, and the React
 replacement for the element configuration. Replacing `transport` or
 `initialState` remounts the underlying React provider.
 
+Transcript display policy is also configured as JavaScript properties:
+`element.transcriptDisplay`, `element.transcriptMode`, or the matching
+`agentOptions` fields. Use `transcriptMode = "answer-focused"` for the built-in
+answer-focused preset, or pass the same `transcriptDisplay` policy object used
+by the React package.
+
 The custom element does not import CSS automatically, spawn Codex, create auth,
 persist sessions, or provide hosted service policy. Hosts should import
 `@nyosegawa/agent-ui-react/styles.css` once and pass transports, callbacks, and

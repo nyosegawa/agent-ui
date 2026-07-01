@@ -1,17 +1,21 @@
 import { AgentSessionState, AgentTransport } from '@nyosegawa/agent-ui-core';
-import { AgentComponents } from '@nyosegawa/agent-ui-react';
+import { AgentComponents, AgentTranscriptDisplay } from '@nyosegawa/agent-ui-react';
 
 interface AgentChatElementOptions {
     className?: string;
     components?: AgentComponents;
     initialState?: AgentSessionState;
     transport?: AgentTransport;
+    transcriptDisplay?: AgentTranscriptDisplay;
+    transcriptMode?: Extract<AgentTranscriptDisplay, string>;
 }
 interface AgentChatWebComponentElement extends HTMLElement {
     agentOptions?: AgentChatElementOptions;
     components?: AgentComponents;
     initialState?: AgentSessionState;
     transport?: AgentTransport;
+    transcriptDisplay?: AgentTranscriptDisplay;
+    transcriptMode?: Extract<AgentTranscriptDisplay, string>;
 }
 declare function defineAgentChatElement(tagName?: string): CustomElementConstructor | undefined;
 declare const HTMLElementBase: {
@@ -29,6 +33,10 @@ declare class AgentChatElement extends HTMLElementBase implements AgentChatWebCo
     set initialState(value: AgentSessionState | undefined);
     get transport(): AgentTransport | undefined;
     set transport(value: AgentTransport | undefined);
+    get transcriptDisplay(): AgentTranscriptDisplay | undefined;
+    set transcriptDisplay(value: AgentTranscriptDisplay | undefined);
+    get transcriptMode(): Extract<AgentTranscriptDisplay, string> | undefined;
+    set transcriptMode(value: Extract<AgentTranscriptDisplay, string> | undefined);
     connectedCallback(): void;
     disconnectedCallback(): void;
     attributeChangedCallback(): void;

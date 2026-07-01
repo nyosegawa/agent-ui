@@ -82,8 +82,8 @@ Focused example gates:
 - Deterministic fixture and visual contract behavior: run
   `bun run --cwd examples/local-react-vite typecheck`,
   `bun run --cwd examples/local-react-vite build`, and the relevant
-  `playwright.fixtures.config.ts` spec when fixture routes, close-ups, density,
-  resource resolution, scoped lists, or mobile layout changes.
+  `playwright.fixtures.config.ts` spec when fixture routes, close-ups,
+  transcript display, resource resolution, scoped lists, or mobile layout changes.
 
 Fixture e2e is the broad pull request browser gate; real-local e2e runs for
 local-bridge-sensitive pull requests plus release and local validation.
@@ -270,8 +270,8 @@ The fixture routes are:
   detailed notices, and pending approval actions
 - `/showcase/resource-resolution`: structured local-media resource rendering without
   raw path exposure
-- `/showcase/transcript-density`: compact transcript route with verbose command/file
-  blocks and noncritical chat text filtered out
+- `/showcase/transcript-display`: compact transcript route with expanded
+  collapsed command/file rows and chat text hidden by `transcriptDisplay`
 - `/showcase/usage-only`: standalone usage composition examples
 - `/showcase/thread-navigation`: host-owned thread selection composed from
   `ThreadList` and `AgentThreadView`
@@ -328,8 +328,8 @@ The deterministic fixture Playwright files are split by contract ownership:
   composer controller.
 - `resource-resolution.e2e.ts` owns transcript local-media rendering through
   structured browser-safe metadata on desktop and mobile.
-- `transcript-density.e2e.ts` owns density-mode behavior and overflow checks on
-  desktop and mobile.
+- `transcript-display.e2e.ts` owns transcript display policy behavior,
+  collapsed-row visibility, and overflow checks on desktop and mobile.
 - `scoped-thread-lists.e2e.ts` owns independent scoped history list behavior.
   `smoke.e2e.ts` also verifies the host workflow route composes scoped history
   refresh, pagination, and read-only preview hydration without changing the
