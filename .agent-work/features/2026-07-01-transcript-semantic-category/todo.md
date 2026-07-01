@@ -64,7 +64,7 @@
     - Implementation: Replaced `AgentTranscriptEntry.dataKind` with public `category` and `displayLabelKey`, moved transcript DOM identity to `data-category`/`data-role` with `data-block-kind` for renderer identity, migrated styles and e2e selectors, and kept custom block dispatch by `block.kind`.
     - Validation: `bun run test -- packages/react/test/components.vitest.tsx` passed; `bun run test:styles` passed; `bun run --cwd examples/local-react-vite typecheck` passed; `bun run typecheck` passed.
     - Review: 4-lane review completed. API/export/snapshot found public category/snapshot obligations, remediated by exporting `AgentTranscriptCategory` and updating the source guard, with API snapshots/docs kept as P004 gates. Transcript behavior found `assistantMessage` alias misclassification, remediated with role mapping and test coverage. Web/browser/examples found one stale `examples/codex-local-web` `data-kind` selector, remediated. Release/product-boundary found changeset/docs obligations for P004 and no product-boundary blocker.
-    - Commit:
+    - Commit: `483d805` Migrate transcript display identity
     - Push:
   - Tasks:
     - [x] T001 Replace `AgentTranscriptEntry.dataKind` with category/display-label metadata.
