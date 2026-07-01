@@ -7,7 +7,7 @@
 - Blockers: none for planning; implementation should refresh if watched guidance changes again.
 - Last validation: P005 `bun run validate:release` and `bun run validate:e2e` passed after final review fixes.
 - Last review: P005 final 4-lane subagent review completed; P1/P2 findings were remediated and all four lanes re-verified clean.
-- PR/CI: PR https://github.com/nyosegawa/agent-ui/pull/44 opened; Compatibility and CI both passed on head `8d16c41`.
+- PR/CI: PR https://github.com/nyosegawa/agent-ui/pull/44 opened; Compatibility and CI passed before the final evidence-only todo update.
 
 ## Branch And Planning Commit
 
