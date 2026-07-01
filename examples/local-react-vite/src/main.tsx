@@ -538,7 +538,7 @@ function ComponentPreviewBody({
       preview = <AgentComposer threadId={threadId} />;
       break;
     case "AgentMessageList":
-      preview = <AgentMessageList density="default" threadId={threadId} />;
+      preview = <AgentMessageList threadId={threadId} />;
       break;
     case "AgentApprovalQueue":
       preview = <AgentApprovalQueue threadId={threadId} />;
@@ -1973,12 +1973,12 @@ function TranscriptDensityExample() {
           <AgentThreadSurface>
             <DemoThreadHeader threadId={thread.thread.id} />
             <AgentMessageList
-              density={{
-                default: "compact",
-                byBlockKind: {
-                  commandExecution: "verbose",
-                  fileChange: "verbose",
-                  text: "critical-only",
+              transcriptDisplay={{
+                default: { density: "compact", visibility: "visible" },
+                byCategory: {
+                  command: { density: "expanded", visibility: "collapsed" },
+                  fileChange: { density: "expanded", visibility: "collapsed" },
+                  message: { visibility: "hidden" },
                 },
               }}
               threadId={thread.thread.id}

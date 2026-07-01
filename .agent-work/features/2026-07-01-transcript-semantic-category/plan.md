@@ -91,7 +91,7 @@ interface AgentTranscriptDisplayPolicy {
 - Use a single prop name, `transcriptDisplay`, across the controller, primitives, preset, thread components, and Web Components.
 - Safety overrides are mandatory: failed, in-progress, and approval-anchored entries must remain reachable even when a policy says `hidden`.
 - Add a major changeset.
-- Any `answer-focused` preset is deferred until the category/policy contract is stable; if added later, it must be a named policy helper, not hidden host state.
+- `answer-focused` is an explicit public preset shortcut layered on the same `transcriptDisplay` policy contract, not hidden host state. P004 must document it as an optional display-only library preset with safety overrides.
 
 ## Impacted Areas
 

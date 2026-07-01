@@ -19,6 +19,7 @@ import { useAgentI18n } from "../i18n";
 import { IconMoreVertical } from "../components-internal";
 import { AgentMessageList } from "../timeline";
 import type { AgentLocalMediaUrlResolver } from "../timeline";
+import type { AgentTranscriptDisplay } from "../hooks/transcript";
 import type { AgentComponents, AgentApprovalDefaultProps } from "./chat";
 import { AgentApprovalQueue } from "./approvals";
 import {
@@ -40,6 +41,7 @@ export interface AgentThreadViewProps {
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   threadHeaderEnd?: AgentThreadHeaderEnd;
   threadId?: string;
+  transcriptDisplay?: AgentTranscriptDisplay;
 }
 
 export function AgentThreadView({
@@ -51,6 +53,7 @@ export function AgentThreadView({
   resolveLocalMediaUrl,
   threadHeaderEnd,
   threadId,
+  transcriptDisplay,
 }: AgentThreadViewProps) {
   const { thread, threadId: resolvedThreadId } = useInternalAgentThread(threadId);
   const { state } = useInternalAgentContext();
@@ -90,6 +93,7 @@ export function AgentThreadView({
         renderItem={renderItem}
         resolveLocalMediaUrl={resolveLocalMediaUrl}
         threadId={resolvedThreadId}
+        transcriptDisplay={transcriptDisplay}
       />
       {ComposerPanel ? (
         <ComposerPanel
@@ -173,12 +177,14 @@ export function AgentThreadTimeline({
   renderItem,
   resolveLocalMediaUrl,
   threadId,
+  transcriptDisplay,
 }: {
   components?: AgentComponents;
   renderApproval?: (approval: AgentApprovalRequest) => React.ReactNode;
   renderItem?: React.ComponentProps<typeof AgentMessageList>["renderItem"];
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   threadId?: string;
+  transcriptDisplay?: AgentTranscriptDisplay;
 }) {
   const { state } = useInternalAgentContext();
   const { approvals } = useAgentApprovals(threadId);
@@ -234,6 +240,7 @@ export function AgentThreadTimeline({
       resolveLocalMediaUrl={resolveLocalMediaUrl}
       scrollKey={approvals.length}
       threadId={threadId}
+      transcriptDisplay={transcriptDisplay}
     />
   );
 }

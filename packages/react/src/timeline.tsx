@@ -2,7 +2,7 @@ import type React from "react";
 import { useMemo } from "react";
 import type {
   AgentTranscriptEntry,
-  AgentTranscriptDensity,
+  AgentTranscriptDisplay,
 } from "./hooks/transcript";
 import type {
   AgentBlockDefaultProps,
@@ -41,7 +41,7 @@ export function AgentMessageList({
   approvalAnchors,
   components,
   renderItem,
-  density,
+  transcriptDisplay,
   resolveLocalMediaUrl,
   scrollKey,
   threadId,
@@ -54,7 +54,6 @@ export function AgentMessageList({
   footer?: React.ReactNode;
   approvalAnchors?: TranscriptApprovalAnchors;
   components?: AgentComponents;
-  density?: AgentTranscriptDensity;
   renderItem?: (
     entry: AgentTranscriptEntry,
     Default: React.ComponentType<AgentItemDefaultProps>,
@@ -63,6 +62,7 @@ export function AgentMessageList({
   /** Changing this value scrolls the transcript to its end (e.g. a new approval). */
   scrollKey?: string | number;
   threadId: string;
+  transcriptDisplay?: AgentTranscriptDisplay;
 }) {
   const { t } = useAgentI18n();
   const anchoredApprovalKey = useMemo(
@@ -71,7 +71,7 @@ export function AgentMessageList({
   );
   const transcript = useAgentTranscriptController(threadId, {
     approvalAnchors,
-    density,
+    transcriptDisplay,
   });
   const {
     handleScroll,
@@ -234,6 +234,32 @@ function DefaultTranscriptItem({
 }) {
   const category = entry.category;
   const status = entry.displayStatus;
+  const itemAttributes = {
+    "data-block-kind": block.kind,
+    "data-category": category,
+    "data-density": entry.density,
+    "data-role": entry.role,
+    "data-status": item?.status,
+    "data-visibility": entry.visibility,
+  };
+  if (entry.visibility === "collapsed") {
+    return (
+      <article
+        className={[
+          "aui-message",
+          block.kind !== "text" ? "aui-block-message" : undefined,
+        ]
+          .filter(Boolean)
+          .join(" ")}
+        {...itemAttributes}
+      >
+        <div className="aui-message-meta">
+          <span>{t(entry.displayLabelKey)}</span>
+          <span>{status}</span>
+        </div>
+      </article>
+    );
+  }
   if (block.kind !== "text") {
     const Block = components?.blocks?.[block.kind];
     const blockView = (
@@ -263,11 +289,7 @@ function DefaultTranscriptItem({
     return (
       <article
         className="aui-message aui-block-message"
-        data-block-kind={block.kind}
-        data-category={category}
-        data-role={entry.role}
-        data-status={item?.status}
-        data-density={entry.density}
+        {...itemAttributes}
       >
         <div className="aui-message-meta">
           <span>{t(entry.displayLabelKey)}</span>
@@ -286,11 +308,7 @@ function DefaultTranscriptItem({
     return (
       <article
         className="aui-message"
-        data-block-kind={block.kind}
-        data-category={category}
-        data-role={entry.role}
-        data-status={item?.status}
-        data-density={entry.density}
+        {...itemAttributes}
       >
         <div className="aui-message-meta">
           <span>{t(entry.displayLabelKey)}</span>
@@ -303,11 +321,7 @@ function DefaultTranscriptItem({
   return (
     <article
       className="aui-message"
-      data-block-kind={block.kind}
-      data-category={category}
-      data-role={entry.role}
-      data-status={item?.status}
-      data-density={entry.density}
+      {...itemAttributes}
     >
       <div className="aui-message-meta">
         <span>{t(entry.displayLabelKey)}</span>

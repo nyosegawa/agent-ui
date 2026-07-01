@@ -1,5 +1,10 @@
 import type { AgentSessionState, AgentTransport } from "@nyosegawa/agent-ui-core";
-import { AgentChat, AgentProvider, type AgentComponents } from "@nyosegawa/agent-ui-react";
+import {
+  AgentChat,
+  AgentProvider,
+  type AgentComponents,
+  type AgentTranscriptDisplay,
+} from "@nyosegawa/agent-ui-react";
 import { createRoot, type Root } from "react-dom/client";
 
 export interface AgentChatElementOptions {
@@ -7,6 +12,8 @@ export interface AgentChatElementOptions {
   components?: AgentComponents;
   initialState?: AgentSessionState;
   transport?: AgentTransport;
+  transcriptDisplay?: AgentTranscriptDisplay;
+  transcriptMode?: Extract<AgentTranscriptDisplay, string>;
 }
 
 export interface AgentChatWebComponentElement extends HTMLElement {
@@ -14,6 +21,8 @@ export interface AgentChatWebComponentElement extends HTMLElement {
   components?: AgentComponents;
   initialState?: AgentSessionState;
   transport?: AgentTransport;
+  transcriptDisplay?: AgentTranscriptDisplay;
+  transcriptMode?: Extract<AgentTranscriptDisplay, string>;
 }
 
 const definedAgentChatElements = new Map<string, CustomElementConstructor>();
@@ -43,6 +52,8 @@ export class AgentChatElement extends HTMLElementBase implements AgentChatWebCom
   #providerKey = 0;
   #root?: Root;
   #transport?: AgentTransport;
+  #transcriptDisplay?: AgentTranscriptDisplay;
+  #transcriptMode?: Extract<AgentTranscriptDisplay, string>;
 
   static get observedAttributes() {
     return ["chat-class"];
@@ -54,11 +65,15 @@ export class AgentChatElement extends HTMLElementBase implements AgentChatWebCom
       components: this.#components,
       initialState: this.#initialState,
       transport: this.#transport,
+      transcriptDisplay: this.#transcriptDisplay,
+      transcriptMode: this.#transcriptMode,
     };
   }
 
   set agentOptions(options: AgentChatElementOptions | undefined) {
     this.#components = options?.components;
+    this.#transcriptDisplay = options?.transcriptDisplay;
+    this.#transcriptMode = options?.transcriptMode;
     this.#replaceSessionOptions(options?.transport, options?.initialState);
     this.#setChatClass(options?.className);
     this.#render();
@@ -88,6 +103,24 @@ export class AgentChatElement extends HTMLElementBase implements AgentChatWebCom
 
   set transport(value: AgentTransport | undefined) {
     this.#replaceSessionOptions(value, this.#initialState);
+    this.#render();
+  }
+
+  get transcriptDisplay() {
+    return this.#transcriptDisplay;
+  }
+
+  set transcriptDisplay(value: AgentTranscriptDisplay | undefined) {
+    this.#transcriptDisplay = value;
+    this.#render();
+  }
+
+  get transcriptMode() {
+    return this.#transcriptMode;
+  }
+
+  set transcriptMode(value: Extract<AgentTranscriptDisplay, string> | undefined) {
+    this.#transcriptMode = value;
     this.#render();
   }
 
@@ -137,7 +170,12 @@ export class AgentChatElement extends HTMLElementBase implements AgentChatWebCom
         initialState={this.#initialState}
         transport={this.#transport}
       >
-        <AgentChat className={className} components={this.#components} />
+        <AgentChat
+          className={className}
+          components={this.#components}
+          transcriptDisplay={this.#transcriptDisplay}
+          transcriptMode={this.#transcriptMode}
+        />
       </AgentProvider>,
     );
   }

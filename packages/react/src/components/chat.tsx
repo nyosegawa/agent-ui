@@ -34,6 +34,7 @@ import { useCompactLayout, useContextSheetLayout } from "./shared";
 import type { AgentTheme } from "./theme";
 import type {
   AgentTranscriptBlock,
+  AgentTranscriptDisplay,
   AgentTranscriptEntry,
   AgentTranscriptItem,
 } from "../hooks/transcript";
@@ -154,6 +155,8 @@ export interface AgentChatProps {
   statusBarEnd?: React.ReactNode;
   theme?: AgentTheme;
   threadHeaderEnd?: AgentThreadHeaderEnd;
+  transcriptDisplay?: AgentTranscriptDisplay;
+  transcriptMode?: Extract<AgentTranscriptDisplay, string>;
   locale?: AgentLocale | string;
   messages?: AgentI18nMessages;
   threadUrlRouting?: boolean | AgentThreadUrlRoutingOptions;
@@ -174,6 +177,8 @@ export function AgentChat({
   statusBarEnd,
   theme,
   threadHeaderEnd,
+  transcriptDisplay,
+  transcriptMode,
   locale,
   messages,
   threadUrlRouting = false,
@@ -195,6 +200,7 @@ export function AgentChat({
         statusBarEnd={statusBarEnd}
         theme={theme}
         threadHeaderEnd={threadHeaderEnd}
+        transcriptDisplay={transcriptDisplay ?? transcriptMode}
         threadUrlRouting={threadUrlRouting}
         usage={usage}
       />
@@ -216,6 +222,7 @@ function AgentChatInner({
   statusBarEnd,
   theme,
   threadHeaderEnd,
+  transcriptDisplay,
   threadUrlRouting = false,
   usage = false,
 }: AgentChatProps) {
@@ -476,6 +483,7 @@ function AgentChatInner({
                 resolveLocalMediaUrl={resolveLocalMediaUrl}
                 threadHeaderEnd={threadHeaderEnd}
                 threadId={threadId}
+                transcriptDisplay={transcriptDisplay}
               />
             ) : (
               <div className="aui-empty">

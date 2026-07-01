@@ -376,7 +376,7 @@
   padding: var(--aui-space-350) var(--aui-space-450) var(--aui-space-600);
 }
 
-.aui-message-list[data-density="verbose"] {
+.aui-message-list[data-density="expanded"] {
   gap: var(--aui-space-550);
 }
 
@@ -489,17 +489,23 @@
   line-height: var(--aui-line-prose);
 }
 
-.aui-message[data-density="verbose"] {
+.aui-message[data-density="expanded"] {
   gap: var(--aui-space-250);
 }
 
-.aui-message[data-density="verbose"][data-category="message"][data-role="user"] {
+.aui-message[data-density="expanded"][data-category="message"][data-role="user"] {
   padding: var(--aui-space-300) var(--aui-space-400);
 }
 
-.aui-message[data-density="verbose"] .aui-message-body {
+.aui-message[data-density="expanded"] .aui-message-body {
   font-size: var(--aui-font-size-xl);
   line-height: var(--aui-line-reading);
+}
+
+.aui-message[data-visibility="collapsed"] {
+  border-style: dashed;
+  color: var(--aui-fg-muted);
+  padding: var(--aui-space-150) var(--aui-space-250);
 }
 
 .aui-message-meta {
@@ -538,9 +544,9 @@
   display: none;
 }
 
-.aui-message[data-category="command"] > .aui-message-meta,
-.aui-message[data-category="fileChange"] > .aui-message-meta,
-.aui-message[data-category="toolActivity"] > .aui-message-meta {
+.aui-message[data-category="command"]:not([data-visibility="collapsed"]) > .aui-message-meta,
+.aui-message[data-category="fileChange"]:not([data-visibility="collapsed"]) > .aui-message-meta,
+.aui-message[data-category="toolActivity"]:not([data-visibility="collapsed"]) > .aui-message-meta {
   display: none;
 }
 

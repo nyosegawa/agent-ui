@@ -2,11 +2,11 @@
 
 ## Status Summary
 
-- Overall status: P002 complete; P003 next.
-- Current phase: P003 Replace density with unified `transcriptDisplay` policy.
+- Overall status: P003 complete; P004 next.
+- Current phase: P004 Migrate docs, examples, public skill, skill tests, snapshots, and changeset.
 - Blockers: none for planning; implementation should refresh if watched guidance changes again.
-- Last validation: P002 `bun run test -- packages/react/test/components.vitest.tsx`, `bun run test:styles`, `bun run --cwd examples/local-react-vite typecheck`, and `bun run typecheck` passed.
-- Last review: P002 final 4-lane subagent review completed; findings were remediated or recorded as P004 release gates.
+- Last validation: P003 focused React/Web Component tests, `bun run test:styles`, `bun run validate:fast`, and `bunx playwright test examples/local-react-vite/e2e/transcript-density.e2e.ts --config playwright.fixtures.config.ts` passed.
+- Last review: P003 final 4-lane subagent review completed; runtime/browser findings were remediated and docs/snapshots/changeset remain P004 release gates.
 - PR/CI: no PR yet.
 
 ## Branch And Planning Commit
@@ -83,7 +83,7 @@
       - Expected files/areas: `todo.md`.
       - Validation note: Remediate findings before commit.
 
-- [ ] P003 Replace density with unified `transcriptDisplay` policy
+- [x] P003 Replace density with unified `transcriptDisplay` policy
   - Goal: Ship one coherent display policy API for visibility and density across controller, primitives, preset, thread components, and Web Components.
   - Scope: React hooks/components, Web Components wrapper, tests, and safety invariants.
   - Expected files/areas: `packages/react/src/hooks/transcript.ts`, `packages/react/src/timeline.tsx`, `packages/react/src/components/thread.tsx`, `packages/react/src/components/chat.tsx`, `packages/web-components/src/index.tsx`, `packages/react/test/components.vitest.tsx`, `packages/web-components/test/web-components.test.tsx`.
@@ -93,28 +93,28 @@
   - Push: push after commit.
   - PR/CI: no PR until docs/examples phase unless risk warrants early draft.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
+    - Implementation: Replaced controller/primitive `density` inputs with unified `transcriptDisplay`, added category/role/default display policy resolution, `visible`/`collapsed`/`hidden`, `comfortable`/`compact`/`expanded`, `answer-focused` preset shortcut, React thread/chat pass-through, Web Component pass-through, safety overrides, collapsed DOM rendering, and updated local React Vite example selectors.
+    - Validation: `bun run test -- packages/react/test/components.vitest.tsx packages/web-components/test/web-components.test.tsx` passed; `bun run test:styles` passed; `bun run validate:fast` passed with existing composer hook lint warnings only; `bunx playwright test examples/local-react-vite/e2e/transcript-density.e2e.ts --config playwright.fixtures.config.ts` passed.
+    - Review: 4-lane review completed. API/export/snapshot and release lanes identified stale snapshots/docs/changeset as P004 release blockers. Transcript behavior found no blocker and requested explicit `byRole` precedence and in-progress safety tests, both added. Web/browser lane found blank collapsed command/file rows and missing E2E visible-content coverage, remediated with CSS and Playwright assertions. Plan drift for `answer-focused` was reconciled in `plan.md`.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T001 Define `AgentTranscriptDisplayPolicy`, `AgentTranscriptDisplayRule`, density, and visibility types.
+    - [x] T001 Define `AgentTranscriptDisplayPolicy`, `AgentTranscriptDisplayRule`, density, and visibility types.
       - Expected files/areas: `packages/react/src/hooks/transcript.ts`.
       - Validation note: Public type tests compile.
-    - [ ] T002 Replace primitive `density` prop and controller option with `transcriptDisplay`.
+    - [x] T002 Replace primitive `density` prop and controller option with `transcriptDisplay`.
       - Expected files/areas: hook/timeline components.
       - Validation note: Compile failures from old prop are resolved intentionally.
-    - [ ] T003 Add `transcriptDisplay` to `AgentChat`, `AgentThreadView`, `AgentThreadTimeline`, and `AgentChatElementOptions`.
+    - [x] T003 Add `transcriptDisplay` to `AgentChat`, `AgentThreadView`, `AgentThreadTimeline`, and `AgentChatElementOptions`.
       - Expected files/areas: React components and `packages/web-components/src/index.tsx`.
       - Validation note: React and Web Components tests prove pass-through.
-    - [ ] T004 Implement visibility and density resolution by category and role.
+    - [x] T004 Implement visibility and density resolution by category and role.
       - Expected files/areas: `packages/react/src/hooks/transcript.ts`, timeline render.
       - Validation note: Tests cover hidden/collapsed/visible and density results.
-    - [ ] T005 Preserve approval/failure/running safety overrides as hard tests.
+    - [x] T005 Preserve approval/failure/running safety overrides as hard tests.
       - Expected files/areas: transcript hook/thread tests.
       - Validation note: Anchored and tail approvals remain reachable and jumpable.
-    - [ ] T006 Run 4 parallel subagent review for P003 and record results.
+    - [x] T006 Run 4 parallel subagent review for P003 and record results.
       - Expected files/areas: `todo.md`.
       - Validation note: Remediate findings before commit.
 
@@ -136,7 +136,7 @@
   - Tasks:
     - [ ] T001 Update public reference and guide docs for `category`, `transcriptDisplay`, visibility/density, safety overrides, migration from `dataKind`/`density`.
       - Expected files/areas: docs listed in phase scope.
-      - Validation note: Prose review plus link consistency; must document `category`, `displayLabelKey`, `data-block-kind`, `data-category`, `data-role`, and removal of `dataKind`/transcript `data-kind`.
+      - Validation note: Prose review plus link consistency; must document `category`, `displayLabelKey`, `data-block-kind`, `data-category`, `data-role`, `transcriptDisplay`, `default`/`byCategory`/`byRole`, `comfortable`/`compact`/`expanded`, `visible`/`collapsed`/`hidden`, optional `answer-focused`, and removal of `dataKind`/transcript `data-kind`/`density`/`byBlockKind`/`critical-only`/`verbose`.
     - [ ] T002 Update React and Web Components package READMEs.
       - Expected files/areas: `packages/react/README.md`, `packages/web-components/README.md`.
       - Validation note: Public import paths and prop names are correct.
@@ -228,22 +228,22 @@
 
 ### P003 Replace density with unified `transcriptDisplay` policy
 
-- [ ] T001 Define display policy types.
+- [x] T001 Define display policy types.
   - Expected files/areas: transcript hook/types.
   - Validation note: typecheck.
-- [ ] T002 Replace density prop/options.
+- [x] T002 Replace density prop/options.
   - Expected files/areas: hook/timeline.
   - Validation note: compile/test migration.
-- [ ] T003 Add pass-through to preset/thread/web components.
+- [x] T003 Add pass-through to preset/thread/web components.
   - Expected files/areas: React components and Web Components.
   - Validation note: pass-through tests.
-- [ ] T004 Implement rule resolution.
+- [x] T004 Implement rule resolution.
   - Expected files/areas: transcript hook/timeline.
   - Validation note: hidden/collapsed/visible tests.
-- [ ] T005 Preserve safety overrides.
+- [x] T005 Preserve safety overrides.
   - Expected files/areas: hook/thread tests.
   - Validation note: approval/failure/running tests.
-- [ ] T006 Run 4 parallel subagent review.
+- [x] T006 Run 4 parallel subagent review.
   - Expected files/areas: `todo.md`.
   - Validation note: record all lanes.
 
@@ -322,6 +322,15 @@
   - Result: passed.
   - Command: `bun run typecheck`
   - Result: passed across workspaces.
+- P003 validation passed:
+  - Command: `bun run test -- packages/react/test/components.vitest.tsx packages/web-components/test/web-components.test.tsx`
+  - Result: passed, 227 tests.
+  - Command: `bun run test:styles`
+  - Result: passed, 73 tests.
+  - Command: `bun run validate:fast`
+  - Result: passed; lint reported existing warnings in `packages/react/src/hooks/composer.ts` only.
+  - Command: `bunx playwright test examples/local-react-vite/e2e/transcript-density.e2e.ts --config playwright.fixtures.config.ts`
+  - Result: passed, 2 tests.
 
 ## Review Evidence
 
@@ -341,6 +350,11 @@
   - Transcript behavior: found `assistantMessage` alias misclassification; remediated by mapping it to assistant role and adding test coverage.
   - Web/browser/examples: found stale `examples/codex-local-web` transcript `data-kind` selector; remediated by switching to `data-category="message"` plus `data-role="user"`.
   - Release/product-boundary: no host-policy leakage or block-kind shim blocker; docs and major changeset are mandatory P004 gates.
+- P003 final 4-lane review:
+  - API/export/snapshot: found stale API snapshots and docs for the breaking public `density` -> `transcriptDisplay` migration; recorded as P004 release blockers.
+  - Transcript behavior: no runtime blocker; requested explicit role precedence and in-progress safety tests, both added.
+  - Web/browser/examples: found collapsed command/file rows rendered blank and missing E2E visible-content assertion; remediated by keeping collapsed metadata visible and asserting `Command` / `File change` text in Playwright.
+  - Release/product-boundary: no host-policy leakage; `answer-focused` remains an explicit display-only public preset and P004 must document it plus snapshots/changeset.
 
 ## Commit Log
 

@@ -270,7 +270,7 @@ export const visualQaRoutes: readonly VisualQaRoute[] = [
     audience: "public",
     category: "primitive-composition",
     description:
-      "Transcript primitive with compact defaults, verbose command/file blocks, and critical-only chat text.",
+      "Transcript primitive with compact defaults, expanded collapsed command/file blocks, and hidden chat text.",
     docsScreenshot: false,
     id: "transcript-density",
     kind: "showcase",

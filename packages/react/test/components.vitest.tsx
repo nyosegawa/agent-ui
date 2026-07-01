@@ -1703,6 +1703,7 @@ describe("AgentChat", () => {
               pending: entry.pending?.status,
               role: entry.role,
               status: entry.status,
+              visibility: entry.visibility,
             })),
           )}
         </output>
@@ -1724,7 +1725,7 @@ describe("AgentChat", () => {
         blockKind: "text",
         blockRaw: false,
         category: "message",
-        density: "default",
+        density: "comfortable",
         displayLabelKey: "timeline.you",
         displayStatus: "failed",
         hasOperations: false,
@@ -1733,13 +1734,14 @@ describe("AgentChat", () => {
         pending: "failed",
         role: "user",
         status: "failed",
+        visibility: "visible",
       },
       {
         approvals: ["approval-command"],
         blockKind: "commandExecution",
         blockRaw: false,
         category: "command",
-        density: "default",
+        density: "comfortable",
         displayLabelKey: "timeline.command",
         displayStatus: "completed",
         hasOperations: false,
@@ -1747,13 +1749,14 @@ describe("AgentChat", () => {
         itemRaw: false,
         role: "command",
         status: "completed",
+        visibility: "visible",
       },
       {
         approvals: [],
         blockKind: "text",
         blockRaw: false,
         category: "message",
-        density: "default",
+        density: "comfortable",
         displayLabelKey: "timeline.assistant",
         displayStatus: "completed",
         hasOperations: false,
@@ -1761,11 +1764,12 @@ describe("AgentChat", () => {
         itemRaw: false,
         role: "assistant",
         status: "completed",
+        visibility: "visible",
       },
     ]);
   });
 
-  it("applies transcript density defaults, critical-only filtering, and per-block overrides", () => {
+  it("applies transcript display defaults, hidden filtering, and category overrides", () => {
     const initialState = createInitialAgentState();
     initialState.threads["thread-density"] = {
       orderedTurnIds: ["turn-density"],
@@ -1830,11 +1834,11 @@ describe("AgentChat", () => {
             }),
           ],
         },
-        density: {
-          default: "compact",
-          byBlockKind: {
-            commandExecution: "verbose",
-            text: "critical-only",
+        transcriptDisplay: {
+          default: { density: "compact", visibility: "visible" },
+          byCategory: {
+            command: { density: "expanded" },
+            message: { visibility: "hidden" },
           },
         },
       });
@@ -1846,6 +1850,7 @@ describe("AgentChat", () => {
               approvals: entry.approvals.map((approval) => approval.id),
               density: entry.density,
               id: entry.itemId,
+              visibility: entry.visibility,
             })),
           })}
         </output>
@@ -1864,10 +1869,259 @@ describe("AgentChat", () => {
     expect(output).toEqual({
       density: "compact",
       entries: [
-        { approvals: [], density: "critical-only", id: "user-failed" },
-        { approvals: ["approval-command"], density: "verbose", id: "cmd-1" },
+        { approvals: [], density: "compact", id: "user-failed", visibility: "visible" },
+        {
+          approvals: ["approval-command"],
+          density: "expanded",
+          id: "cmd-1",
+          visibility: "visible",
+        },
       ],
     });
+  });
+
+  it("applies transcript display role overrides after category overrides", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-display-precedence"] = {
+      orderedTurnIds: ["turn-display-precedence"],
+      status: "loaded",
+      thread: { id: "thread-display-precedence", name: "Display precedence" },
+      turns: {
+        "turn-display-precedence": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["user-1", "assistant-1"],
+          items: {
+            "assistant-1": {
+              id: "assistant-1",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Visible by role.",
+              threadId: "thread-display-precedence",
+              turnId: "turn-display-precedence",
+            },
+            "user-1": {
+              id: "user-1",
+              kind: "userMessage",
+              status: "completed",
+              text: "Hidden by category.",
+              threadId: "thread-display-precedence",
+              turnId: "turn-display-precedence",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-display-precedence", threadId: "thread-display-precedence" },
+        },
+      },
+    };
+
+    function PrecedenceProbe() {
+      const controller = useAgentTranscriptController("thread-display-precedence", {
+        transcriptDisplay: {
+          byCategory: {
+            message: { visibility: "hidden" },
+          },
+          byRole: {
+            assistant: { density: "expanded", visibility: "visible" },
+          },
+          default: { density: "compact", visibility: "visible" },
+        },
+      });
+      return (
+        <output aria-label="display precedence entries">
+          {JSON.stringify(
+            controller.entries.map((entry) => ({
+              density: entry.density,
+              id: entry.itemId,
+              role: entry.role,
+              visibility: entry.visibility,
+            })),
+          )}
+        </output>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <PrecedenceProbe />
+      </AgentProvider>,
+    );
+
+    expect(
+      JSON.parse(screen.getByLabelText("display precedence entries").textContent ?? "[]"),
+    ).toEqual([
+      {
+        density: "expanded",
+        id: "assistant-1",
+        role: "assistant",
+        visibility: "visible",
+      },
+    ]);
+  });
+
+  it("keeps in-progress entries visible when transcript display hides their category", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-display-in-progress"] = {
+      orderedTurnIds: ["turn-display-in-progress"],
+      status: "running",
+      thread: { id: "thread-display-in-progress", name: "In progress display" },
+      turns: {
+        "turn-display-in-progress": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["user-1", "assistant-1"],
+          items: {
+            "assistant-1": {
+              id: "assistant-1",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Hidden answer.",
+              threadId: "thread-display-in-progress",
+              turnId: "turn-display-in-progress",
+            },
+            "user-1": {
+              id: "user-1",
+              kind: "userMessage",
+              status: "inProgress",
+              text: "Still sending.",
+              threadId: "thread-display-in-progress",
+              turnId: "turn-display-in-progress",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-display-in-progress", threadId: "thread-display-in-progress" },
+        },
+      },
+    };
+
+    function InProgressProbe() {
+      const controller = useAgentTranscriptController("thread-display-in-progress", {
+        transcriptDisplay: {
+          byCategory: {
+            message: { visibility: "hidden" },
+          },
+        },
+      });
+      return (
+        <output aria-label="display in-progress entries">
+          {JSON.stringify(
+            controller.entries.map((entry) => ({
+              id: entry.itemId,
+              status: entry.status,
+              visibility: entry.visibility,
+            })),
+          )}
+        </output>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <InProgressProbe />
+      </AgentProvider>,
+    );
+
+    expect(
+      JSON.parse(screen.getByLabelText("display in-progress entries").textContent ?? "[]"),
+    ).toEqual([
+      {
+        id: "user-1",
+        status: "inProgress",
+        visibility: "visible",
+      },
+    ]);
+  });
+
+  it("applies the answer-focused transcript display preset", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-answer-focused"] = {
+      orderedTurnIds: ["turn-answer-focused"],
+      status: "loaded",
+      thread: { id: "thread-answer-focused", name: "Answer focused" },
+      turns: {
+        "turn-answer-focused": {
+          blocksByItemId: {
+            "command-1": {
+              command: "bun test",
+              id: "command-1",
+              kind: "commandExecution",
+            },
+            "reasoning-1": {
+              id: "reasoning-1",
+              kind: "thinking",
+              text: "Planning",
+            },
+          },
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["user-1", "reasoning-1", "command-1", "assistant-1"],
+          items: {
+            "assistant-1": {
+              id: "assistant-1",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Done.",
+              threadId: "thread-answer-focused",
+              turnId: "turn-answer-focused",
+            },
+            "command-1": {
+              id: "command-1",
+              kind: "commandExecution",
+              status: "completed",
+              threadId: "thread-answer-focused",
+              turnId: "turn-answer-focused",
+            },
+            "reasoning-1": {
+              id: "reasoning-1",
+              kind: "reasoning",
+              status: "completed",
+              threadId: "thread-answer-focused",
+              turnId: "turn-answer-focused",
+            },
+            "user-1": {
+              id: "user-1",
+              kind: "userMessage",
+              status: "completed",
+              text: "Run checks.",
+              threadId: "thread-answer-focused",
+              turnId: "turn-answer-focused",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-answer-focused", threadId: "thread-answer-focused" },
+        },
+      },
+    };
+
+    function PresetProbe() {
+      const controller = useAgentTranscriptController("thread-answer-focused", {
+        transcriptDisplay: "answer-focused",
+      });
+      return (
+        <output aria-label="answer focused entries">
+          {JSON.stringify(
+            controller.entries.map((entry) => ({
+              id: entry.itemId,
+              visibility: entry.visibility,
+            })),
+          )}
+        </output>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <PresetProbe />
+      </AgentProvider>,
+    );
+
+    expect(
+      JSON.parse(screen.getByLabelText("answer focused entries").textContent ?? "[]"),
+    ).toEqual([
+      { id: "user-1", visibility: "visible" },
+      { id: "command-1", visibility: "collapsed" },
+      { id: "assistant-1", visibility: "visible" },
+    ]);
   });
 
   it("derives transcript categories and display labels from normalized blocks", () => {
@@ -2137,7 +2391,7 @@ describe("AgentChat", () => {
     ]);
   });
 
-  it("renders transcript density attributes for the default message list", () => {
+  it("renders transcript display attributes for the default message list", () => {
     const initialState = createInitialAgentState();
     initialState.threads["thread-density-dom"] = {
       orderedTurnIds: ["turn-density-dom"],
@@ -2166,7 +2420,10 @@ describe("AgentChat", () => {
 
     const { container } = render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList density="compact" threadId="thread-density-dom" />
+        <AgentMessageList
+          threadId="thread-density-dom"
+          transcriptDisplay={{ default: { density: "compact" } }}
+        />
       </AgentProvider>,
     );
 
@@ -2180,7 +2437,7 @@ describe("AgentChat", () => {
     );
   });
 
-  it("keeps turn-level approval anchors visible in critical-only transcript density", () => {
+  it("keeps turn-level approval anchors visible when transcript display hides entries", () => {
     const initialState = createInitialAgentState();
     initialState.threads["thread-critical-approval"] = {
       orderedTurnIds: ["turn-critical-approval"],
@@ -2232,8 +2489,8 @@ describe("AgentChat", () => {
               },
             ],
           }}
-          density="critical-only"
           threadId="thread-critical-approval"
+          transcriptDisplay={{ default: { visibility: "hidden" } }}
         />
       </AgentProvider>,
     );

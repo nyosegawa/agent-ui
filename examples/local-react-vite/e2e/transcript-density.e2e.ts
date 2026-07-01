@@ -13,12 +13,22 @@ for (const viewport of [
     await expect(page.locator(".aui-message-list")).toHaveAttribute("data-density", "compact");
     await expect(page.locator('[data-category="command"]')).toHaveAttribute(
       "data-density",
-      "verbose",
+      "expanded",
     );
+    await expect(page.locator('[data-category="command"]')).toHaveAttribute(
+      "data-visibility",
+      "collapsed",
+    );
+    await expect(page.locator('[data-category="command"]')).toContainText("Command");
     await expect(page.locator('[data-category="fileChange"]')).toHaveAttribute(
       "data-density",
-      "verbose",
+      "expanded",
     );
+    await expect(page.locator('[data-category="fileChange"]')).toHaveAttribute(
+      "data-visibility",
+      "collapsed",
+    );
+    await expect(page.locator('[data-category="fileChange"]')).toContainText("File change");
     await expect(page.locator('[data-category="message"][data-role="assistant"]')).toHaveCount(0);
     await expect(page.locator('[data-category="message"][data-role="user"]')).toHaveCount(0);
     await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);

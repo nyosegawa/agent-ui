@@ -22,4 +22,12 @@ export type {
   AgentThreadHeaderEnd,
   AgentThreadHeaderEndContext,
 } from "./components/thread";
+export type {
+  AgentTranscriptDisplay,
+  AgentTranscriptDisplayDensity,
+  AgentTranscriptDisplayPolicy,
+  AgentTranscriptDisplayPreset,
+  AgentTranscriptDisplayRule,
+  AgentTranscriptDisplayVisibility,
+} from "./hooks/transcript";
 export * from "./i18n";

@@ -588,7 +588,7 @@ function sampleTurnEntries(): AgentTranscriptEntry[] {
         text: "Review the maintainer catalog coverage.",
       },
       category: "message",
-      density: "default",
+      density: "comfortable",
       displayLabelKey: "timeline.you",
       displayStatus: "completed",
       id: "entry-turn-user",
@@ -606,6 +606,7 @@ function sampleTurnEntries(): AgentTranscriptEntry[] {
       status: "completed",
       text: "Review the maintainer catalog coverage.",
       turnId: "turn-closeup",
+      visibility: "visible",
     },
     {
       approvals: [],
@@ -616,7 +617,7 @@ function sampleTurnEntries(): AgentTranscriptEntry[] {
         text: "The catalog now maps visual primitives to live close-ups.",
       },
       category: "message",
-      density: "default",
+      density: "comfortable",
       displayLabelKey: "timeline.assistant",
       displayStatus: "completed",
       id: "entry-turn-agent",
@@ -634,6 +635,7 @@ function sampleTurnEntries(): AgentTranscriptEntry[] {
       status: "completed",
       text: "The catalog now maps visual primitives to live close-ups.",
       turnId: "turn-closeup",
+      visibility: "visible",
     },
   ];
 }
