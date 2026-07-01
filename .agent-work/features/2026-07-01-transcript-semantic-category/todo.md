@@ -172,7 +172,7 @@
     - Implementation: Final review fixes force failed, in-progress, and approval-anchored transcript entries to full `visible` state even when policies collapse them; unknown transcript labels now use `timeline.unknown`; stale public "transcript density" wording was removed from high-level docs/skill guidance; unused `itemLabel` was removed.
     - Validation: `bunx vitest run packages/react/test/components.vitest.tsx -t "transcript|display|answer-focused|category|collapsed|approval"` passed; `bun run test:skills` passed; `bun run test:api-snapshots:update && bun run test:api-snapshots` passed; stale wording search returned no matches; `bun run validate:release` passed after snapshot refresh; `bun run validate:e2e` passed with fixture 231 passed/1 skipped and real-local 20 passed.
     - Review: Final 4-lane review completed. API/export lane was clean after fixes and reran snapshot/package checks. Runtime lane's P1 collapsed-safety finding was remediated and re-verified clean. Docs/skills lane's stale wording/high-level guide findings were remediated and re-verified clean. Release/product-boundary lane's unknown-label finding was remediated and re-verified clean.
-    - Commit:
+    - Commit: `7bc5a0c` Harden transcript display release gates
     - Push:
   - Tasks:
     - [x] T001 Run final release and e2e gates.
@@ -414,6 +414,8 @@
 - `dd46e20` Record transcript display policy push
 - `4122e42` Document transcript display policy
 - `4c571c2` Record transcript display docs phase
+- `343b985` Record transcript display docs push
+- `7bc5a0c` Harden transcript display release gates
 
 ## Final Checklist
 
