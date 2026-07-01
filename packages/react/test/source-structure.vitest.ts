@@ -158,7 +158,7 @@ describe("React package source structure", () => {
     expect(windowing).toContain("visibleTranscriptWindow");
   });
 
-  it("keeps the transcript display redesign contract source-scoped until migration", () => {
+  it("keeps transcript display categories public while policy remains source-scoped", () => {
     const transcript = readFileSync(join(reactSrc, "hooks", "transcript.ts"), "utf8");
     const headless = readFileSync(join(reactSrc, "hooks.ts"), "utf8");
     expect(transcript).toContain("export type AgentTranscriptCategory =");
@@ -180,8 +180,8 @@ describe("React package source structure", () => {
     expect(transcript).toContain('export type AgentTranscriptDisplayVisibility = "visible"');
     expect(transcript).toContain("Resolution order is default -> byCategory -> byRole");
     expect(transcript).toContain("entries cannot be made unreachable by a hidden rule");
+    expect(headless).toContain("AgentTranscriptCategory");
     expect(headless).not.toContain("AgentTranscriptDisplayPolicy");
-    expect(headless).not.toContain("AgentTranscriptCategory");
   });
 
   it("keeps Codex generated request params out of the React public API", () => {

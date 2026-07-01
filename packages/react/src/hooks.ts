@@ -98,6 +98,7 @@ export {
 export {
   useAgentTranscriptController,
   type AgentTranscriptBlock,
+  type AgentTranscriptCategory,
   type AgentTranscriptController,
   type AgentTranscriptControllerOptions,
   type AgentTranscriptDensity,

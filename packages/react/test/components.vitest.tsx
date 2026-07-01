@@ -1693,7 +1693,9 @@ describe("AgentChat", () => {
               approvals: entry.approvals.map((approval) => approval.id),
               blockKind: entry.block.kind,
               blockRaw: "raw" in entry.block,
+              category: entry.category,
               density: entry.density,
+              displayLabelKey: entry.displayLabelKey,
               displayStatus: entry.displayStatus,
               hasOperations: "operations" in entry,
               id: entry.itemId,
@@ -1721,7 +1723,9 @@ describe("AgentChat", () => {
         approvals: [],
         blockKind: "text",
         blockRaw: false,
+        category: "message",
         density: "default",
+        displayLabelKey: "timeline.you",
         displayStatus: "failed",
         hasOperations: false,
         id: "user-pending",
@@ -1734,7 +1738,9 @@ describe("AgentChat", () => {
         approvals: ["approval-command"],
         blockKind: "commandExecution",
         blockRaw: false,
+        category: "command",
         density: "default",
+        displayLabelKey: "timeline.command",
         displayStatus: "completed",
         hasOperations: false,
         id: "cmd-1",
@@ -1746,7 +1752,9 @@ describe("AgentChat", () => {
         approvals: [],
         blockKind: "text",
         blockRaw: false,
+        category: "message",
         density: "default",
+        displayLabelKey: "timeline.assistant",
         displayStatus: "completed",
         hasOperations: false,
         id: "assistant-1",
@@ -1860,6 +1868,273 @@ describe("AgentChat", () => {
         { approvals: ["approval-command"], density: "verbose", id: "cmd-1" },
       ],
     });
+  });
+
+  it("derives transcript categories and display labels from normalized blocks", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-categories"] = {
+      orderedTurnIds: ["turn-categories"],
+      status: "loaded",
+      thread: { id: "thread-categories", name: "Transcript categories" },
+      turns: {
+        "turn-categories": {
+          blocksByItemId: {
+            "command-1": {
+              command: "bun test",
+              id: "command-1",
+              kind: "commandExecution",
+            },
+            "file-1": {
+              changes: [],
+              id: "file-1",
+              kind: "fileChange",
+            },
+            "image-1": {
+              id: "image-1",
+              kind: "image",
+              text: "Rendered image",
+            },
+            "plan-1": {
+              id: "plan-1",
+              kind: "plan",
+              text: "1. Test",
+            },
+            "reasoning-1": {
+              id: "reasoning-1",
+              kind: "thinking",
+              text: "Reviewing",
+            },
+            "system-1": {
+              id: "system-1",
+              kind: "systemInfo",
+              subtype: "compaction",
+            },
+            "tool-1": {
+              id: "tool-1",
+              kind: "toolCall",
+              tool: "search",
+            },
+            "unknown-1": {
+              id: "unknown-1",
+              kind: "unknown",
+              text: "Unknown item",
+            },
+            "web-1": {
+              id: "web-1",
+              kind: "webSearch",
+              query: "Agent UI",
+            },
+          },
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: [
+            "user-1",
+            "assistant-1",
+            "assistant-alias-1",
+            "reasoning-1",
+            "plan-1",
+            "command-1",
+            "file-1",
+            "tool-1",
+            "web-1",
+            "image-1",
+            "system-1",
+            "unknown-1",
+          ],
+          items: {
+            "assistant-1": {
+              id: "assistant-1",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Done.",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "assistant-alias-1": {
+              id: "assistant-alias-1",
+              kind: "assistantMessage",
+              status: "completed",
+              text: "Alias done.",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "command-1": {
+              id: "command-1",
+              kind: "commandExecution",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "file-1": {
+              id: "file-1",
+              kind: "fileChange",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "image-1": {
+              id: "image-1",
+              kind: "image",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "plan-1": {
+              id: "plan-1",
+              kind: "plan",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "reasoning-1": {
+              id: "reasoning-1",
+              kind: "reasoning",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "system-1": {
+              id: "system-1",
+              kind: "contextCompaction",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "tool-1": {
+              id: "tool-1",
+              kind: "toolCall",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "unknown-1": {
+              id: "unknown-1",
+              kind: "unknownThing",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "user-1": {
+              id: "user-1",
+              kind: "userMessage",
+              status: "completed",
+              text: "Run categories.",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "web-1": {
+              id: "web-1",
+              kind: "webSearch",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-categories", threadId: "thread-categories" },
+        },
+      },
+    };
+
+    function CategoryProbe() {
+      const controller = useAgentTranscriptController("thread-categories");
+      return (
+        <output aria-label="category entries">
+          {JSON.stringify(
+            controller.entries.map((entry) => ({
+              category: entry.category,
+              displayLabelKey: entry.displayLabelKey,
+              id: entry.itemId,
+              role: entry.role,
+            })),
+          )}
+        </output>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <CategoryProbe />
+      </AgentProvider>,
+    );
+
+    const entries = JSON.parse(
+      screen.getByLabelText("category entries").textContent ?? "[]",
+    );
+    expect(entries).toEqual([
+      {
+        category: "message",
+        displayLabelKey: "timeline.you",
+        id: "user-1",
+        role: "user",
+      },
+      {
+        category: "message",
+        displayLabelKey: "timeline.assistant",
+        id: "assistant-1",
+        role: "assistant",
+      },
+      {
+        category: "message",
+        displayLabelKey: "timeline.assistant",
+        id: "assistant-alias-1",
+        role: "assistant",
+      },
+      {
+        category: "reasoning",
+        displayLabelKey: "timeline.reasoning",
+        id: "reasoning-1",
+        role: "system",
+      },
+      {
+        category: "plan",
+        displayLabelKey: "timeline.plan",
+        id: "plan-1",
+        role: "system",
+      },
+      {
+        category: "command",
+        displayLabelKey: "timeline.command",
+        id: "command-1",
+        role: "command",
+      },
+      {
+        category: "fileChange",
+        displayLabelKey: "timeline.fileChange",
+        id: "file-1",
+        role: "system",
+      },
+      {
+        category: "toolActivity",
+        displayLabelKey: "timeline.tool",
+        id: "tool-1",
+        role: "tool",
+      },
+      {
+        category: "web",
+        displayLabelKey: "timeline.webSearch",
+        id: "web-1",
+        role: "system",
+      },
+      {
+        category: "media",
+        displayLabelKey: "timeline.image",
+        id: "image-1",
+        role: "system",
+      },
+      {
+        category: "system",
+        displayLabelKey: "timeline.compaction",
+        id: "system-1",
+        role: "system",
+      },
+      {
+        category: "unknown",
+        displayLabelKey: "timeline.system",
+        id: "unknown-1",
+        role: "system",
+      },
+    ]);
   });
 
   it("renders transcript density attributes for the default message list", () => {
@@ -2286,7 +2561,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    const command = container.querySelector('[data-kind="commandExecution"]');
+    const command = container.querySelector('[data-category="command"]');
     const anchored = screen
       .getByText("Custom approval approval-anchored")
       .closest(".aui-transcript-approval-anchor");
@@ -2362,7 +2637,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    const command = container.querySelector('[data-kind="commandExecution"]');
+    const command = container.querySelector('[data-category="command"]');
     const anchored = command?.nextElementSibling;
     expect(anchored).toHaveClass("aui-transcript-approval-anchor");
     expect(anchored).toHaveTextContent("approval-item-only");
@@ -2833,7 +3108,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    const command = container.querySelector('[data-kind="commandExecution"]');
+    const command = container.querySelector('[data-category="command"]');
     const approvalButton = await screen.findByRole("button", {
       name: "Approve command request approval-command",
     });
@@ -5313,7 +5588,7 @@ describe("AgentChat", () => {
     await user.click(screen.getByText("Reviewing renderer taxonomy"));
     expect(reasoning).toHaveAttribute("open");
 
-    const compaction = container.querySelector('[data-kind="contextCompaction"]');
+    const compaction = container.querySelector('[data-category="system"]');
     expect(compaction).toHaveTextContent("Compaction");
     expect(compaction).toHaveTextContent("Earlier transcript context was compacted.");
     expect(compaction?.querySelector("details")).toBeNull();
@@ -7400,9 +7675,9 @@ describe("AgentChat", () => {
 
     expect(screen.getByText("Custom block commandExecution")).toBeInTheDocument();
     expect(screen.getByText("bun test")).toBeInTheDocument();
-    expect(
-      screen.getByText("Custom block commandExecution").closest(".aui-message"),
-    ).toHaveAttribute("data-kind", "commandExecution");
+    const message = screen.getByText("Custom block commandExecution").closest(".aui-message");
+    expect(message).toHaveAttribute("data-category", "command");
+    expect(message).toHaveAttribute("data-block-kind", "commandExecution");
   });
 
   it("starts a thread with first input through the public composer controller", async () => {

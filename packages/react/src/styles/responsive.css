@@ -161,7 +161,7 @@
     max-width: 100%;
   }
 
-  .aui-message[data-kind="userMessage"] {
+  .aui-message[data-category="message"][data-role="user"] {
     max-width: 92%;
   }
 

@@ -2,11 +2,11 @@
 
 ## Status Summary
 
-- Overall status: P001 complete; P002 next.
-- Current phase: P002 Migrate transcript view model and rendering identity.
+- Overall status: P002 complete; P003 next.
+- Current phase: P003 Replace density with unified `transcriptDisplay` policy.
 - Blockers: none for planning; implementation should refresh if watched guidance changes again.
-- Last validation: P001 `bun run test -- packages/react/test/components.vitest.tsx`, `bun run test:styles`, and `bun run typecheck` passed.
-- Last review: P001 final 4-lane subagent review completed with no findings.
+- Last validation: P002 `bun run test -- packages/react/test/components.vitest.tsx`, `bun run test:styles`, `bun run --cwd examples/local-react-vite typecheck`, and `bun run typecheck` passed.
+- Last review: P002 final 4-lane subagent review completed; findings were remediated or recorded as P004 release gates.
 - PR/CI: no PR yet.
 
 ## Branch And Planning Commit
@@ -51,7 +51,7 @@
       - Expected files/areas: `todo.md`.
       - Validation note: No P001 commit until all lanes are clean or remediated.
 
-- [ ] P002 Migrate transcript view model and rendering identity
+- [x] P002 Migrate transcript view model and rendering identity
   - Goal: Replace `dataKind`-based display identity with category/display label while keeping renderer dispatch separate.
   - Scope: React transcript controller, timeline labels, DOM attributes, and focused tests.
   - Expected files/areas: `packages/react/src/hooks/transcript.ts`, `packages/react/src/timeline.tsx`, `packages/react/src/timeline/item-renderers.tsx`, `packages/react/test/components.vitest.tsx`.
@@ -61,25 +61,25 @@
   - Push: push after commit.
   - PR/CI: no PR until public docs/examples are aligned unless risk warrants early draft.
   - Evidence:
-    - Implementation:
-    - Validation:
-    - Review:
+    - Implementation: Replaced `AgentTranscriptEntry.dataKind` with public `category` and `displayLabelKey`, moved transcript DOM identity to `data-category`/`data-role` with `data-block-kind` for renderer identity, migrated styles and e2e selectors, and kept custom block dispatch by `block.kind`.
+    - Validation: `bun run test -- packages/react/test/components.vitest.tsx` passed; `bun run test:styles` passed; `bun run --cwd examples/local-react-vite typecheck` passed; `bun run typecheck` passed.
+    - Review: 4-lane review completed. API/export/snapshot found public category/snapshot obligations, remediated by exporting `AgentTranscriptCategory` and updating the source guard, with API snapshots/docs kept as P004 gates. Transcript behavior found `assistantMessage` alias misclassification, remediated with role mapping and test coverage. Web/browser/examples found one stale `examples/codex-local-web` `data-kind` selector, remediated. Release/product-boundary found changeset/docs obligations for P004 and no product-boundary blocker.
     - Commit:
     - Push:
   - Tasks:
-    - [ ] T001 Replace `AgentTranscriptEntry.dataKind` with category/display-label metadata.
+    - [x] T001 Replace `AgentTranscriptEntry.dataKind` with category/display-label metadata.
       - Expected files/areas: `packages/react/src/hooks/transcript.ts`.
       - Validation note: Existing probe tests updated for new contract.
-    - [ ] T002 Derive categories from normalized block/role state, not raw protocol item kind strings.
+    - [x] T002 Derive categories from normalized block/role state, not raw protocol item kind strings.
       - Expected files/areas: `packages/react/src/hooks/transcript.ts`.
       - Validation note: Tests cover reasoning/thinking, tool variants, web, media, system, unknown.
-    - [ ] T003 Replace timeline labels and DOM display identity with category-based attributes.
+    - [x] T003 Replace timeline labels and DOM display identity with category-based attributes.
       - Expected files/areas: `packages/react/src/timeline.tsx`, item renderers, styles/tests as needed.
       - Validation note: Migrate assertions from `data-kind` to `data-category` or final chosen name.
-    - [ ] T004 Keep `components.blocks` renderer dispatch by `block.kind`.
+    - [x] T004 Keep `components.blocks` renderer dispatch by `block.kind`.
       - Expected files/areas: `packages/react/src/timeline.tsx`, tests.
       - Validation note: Custom block renderer test still proves block renderer selection.
-    - [ ] T005 Run 4 parallel subagent review for P002 and record results.
+    - [x] T005 Run 4 parallel subagent review for P002 and record results.
       - Expected files/areas: `todo.md`.
       - Validation note: Remediate findings before commit.
 
@@ -136,7 +136,7 @@
   - Tasks:
     - [ ] T001 Update public reference and guide docs for `category`, `transcriptDisplay`, visibility/density, safety overrides, migration from `dataKind`/`density`.
       - Expected files/areas: docs listed in phase scope.
-      - Validation note: Prose review plus link consistency.
+      - Validation note: Prose review plus link consistency; must document `category`, `displayLabelKey`, `data-block-kind`, `data-category`, `data-role`, and removal of `dataKind`/transcript `data-kind`.
     - [ ] T002 Update React and Web Components package READMEs.
       - Expected files/areas: `packages/react/README.md`, `packages/web-components/README.md`.
       - Validation note: Public import paths and prop names are correct.
@@ -151,10 +151,10 @@
       - Validation note: `bun run test:skills` asserts new required/forbidden guidance.
     - [ ] T006 Add major changeset.
       - Expected files/areas: `.changeset/*.md`.
-      - Validation note: Scope includes public React and Web Components packages as needed.
+      - Validation note: Scope includes public React and Web Components packages as needed; `bunx changeset status --verbose` must no longer fail due to missing changeset.
     - [ ] T007 Update API snapshots and manually review declaration diff before checking.
       - Expected files/areas: `test/api-snapshots`.
-      - Validation note: `bun run test:api-snapshots:update`; inspect diff for raw/internal type leaks; `bun run test:api-snapshots`; `bun run test:package-resolution`.
+      - Validation note: `bun run test:api-snapshots:update`; inspect diff for `AgentTranscriptEntry`, `AgentTranscriptCategory`, React/headless/primitives declarations, and raw/internal type leaks; `bun run test:api-snapshots`; `bun run test:package-resolution`.
     - [ ] T008 Run 4 parallel subagent review for P004 and record results.
       - Expected files/areas: `todo.md`.
       - Validation note: Remediate findings before commit.
@@ -210,19 +210,19 @@
 
 ### P002 Migrate transcript view model and rendering identity
 
-- [ ] T001 Replace `dataKind`.
+- [x] T001 Replace `dataKind`.
   - Expected files/areas: transcript hook.
   - Validation note: probe tests.
-- [ ] T002 Derive categories from normalized state.
+- [x] T002 Derive categories from normalized state.
   - Expected files/areas: transcript hook.
   - Validation note: all category tests.
-- [ ] T003 Replace labels and DOM identity.
+- [x] T003 Replace labels and DOM identity.
   - Expected files/areas: timeline/renderers/styles/tests.
   - Validation note: selector migration tests.
-- [ ] T004 Preserve renderer dispatch.
+- [x] T004 Preserve renderer dispatch.
   - Expected files/areas: timeline/tests.
   - Validation note: block renderer tests.
-- [ ] T005 Run 4 parallel subagent review.
+- [x] T005 Run 4 parallel subagent review.
   - Expected files/areas: `todo.md`.
   - Validation note: record all lanes.
 
@@ -313,6 +313,15 @@
   - Result: passed, 73 tests.
   - Command: `bun run typecheck`
   - Result: passed across workspaces.
+- P002 validation passed:
+  - Command: `bun run test -- packages/react/test/components.vitest.tsx`
+  - Result: passed, 218 tests.
+  - Command: `bun run test:styles`
+  - Result: passed, 73 tests.
+  - Command: `bun run --cwd examples/local-react-vite typecheck`
+  - Result: passed.
+  - Command: `bun run typecheck`
+  - Result: passed across workspaces.
 
 ## Review Evidence
 
@@ -327,6 +336,11 @@
   - Transcript behavior: no findings; taxonomy, precedence comment, and safety comment are coherent; no runtime behavior changed.
   - Web/browser/examples: no findings; no browser-visible change; later TODO coverage is adequate.
   - Release/product-boundary: no findings; P001 can commit as a source-level checkpoint without docs/snapshots/changeset.
+- P002 final 4-lane review:
+  - API/export/snapshot: found public `AgentTranscriptEntry` and category type obligations; remediated by exporting `AgentTranscriptCategory` and updating the source-structure guard. API snapshots remain a P004 release gate after package declarations are rebuilt.
+  - Transcript behavior: found `assistantMessage` alias misclassification; remediated by mapping it to assistant role and adding test coverage.
+  - Web/browser/examples: found stale `examples/codex-local-web` transcript `data-kind` selector; remediated by switching to `data-category="message"` plus `data-role="user"`.
+  - Release/product-boundary: no host-policy leakage or block-kind shim blocker; docs and major changeset are mandatory P004 gates.
 
 ## Commit Log
 

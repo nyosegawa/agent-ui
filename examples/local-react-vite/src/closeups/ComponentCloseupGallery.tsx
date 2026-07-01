@@ -587,8 +587,9 @@ function sampleTurnEntries(): AgentTranscriptEntry[] {
         status: "completed",
         text: "Review the maintainer catalog coverage.",
       },
-      dataKind: "text",
+      category: "message",
       density: "default",
+      displayLabelKey: "timeline.you",
       displayStatus: "completed",
       id: "entry-turn-user",
       item: {
@@ -614,8 +615,9 @@ function sampleTurnEntries(): AgentTranscriptEntry[] {
         status: "completed",
         text: "The catalog now maps visual primitives to live close-ups.",
       },
-      dataKind: "text",
+      category: "message",
       density: "default",
+      displayLabelKey: "timeline.assistant",
       displayStatus: "completed",
       id: "entry-turn-agent",
       item: {

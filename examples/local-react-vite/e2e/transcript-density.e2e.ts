@@ -11,16 +11,16 @@ for (const viewport of [
 
     await expect(page.getByRole("heading", { name: "Transcript density" })).toBeVisible();
     await expect(page.locator(".aui-message-list")).toHaveAttribute("data-density", "compact");
-    await expect(page.locator('[data-kind="commandExecution"]')).toHaveAttribute(
+    await expect(page.locator('[data-category="command"]')).toHaveAttribute(
       "data-density",
       "verbose",
     );
-    await expect(page.locator('[data-kind="fileChange"]')).toHaveAttribute(
+    await expect(page.locator('[data-category="fileChange"]')).toHaveAttribute(
       "data-density",
       "verbose",
     );
-    await expect(page.locator('[data-kind="agentMessage"]')).toHaveCount(0);
-    await expect(page.locator('[data-kind="userMessage"]')).toHaveCount(0);
+    await expect(page.locator('[data-category="message"][data-role="assistant"]')).toHaveCount(0);
+    await expect(page.locator('[data-category="message"][data-role="user"]')).toHaveCount(0);
     await expect(horizontalOverflowOffenders(page)).resolves.toEqual([]);
   });
 }

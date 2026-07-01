@@ -8,6 +8,7 @@ import type {
 import { selectThread } from "@nyosegawa/agent-ui-core/internal";
 import type { AgentTranscriptBlockView, ThreadId } from "@nyosegawa/agent-ui-core";
 import { useMemo } from "react";
+import type { AgentI18nKey } from "../i18n";
 import { useInternalAgentContext } from "../provider";
 import type { AgentApprovalRequest } from "../approval-types";
 import { transcriptItemIds } from "../transcript-window";
@@ -95,8 +96,9 @@ export interface AgentTranscriptItem {
 export interface AgentTranscriptEntry {
   approvals: AgentApprovalRequest[];
   block: AgentTranscriptBlock;
-  dataKind: string;
+  category: AgentTranscriptCategory;
   density: AgentTranscriptDensityMode;
+  displayLabelKey: AgentI18nKey;
   displayStatus: string;
   id: string;
   item?: AgentTranscriptItem;
@@ -213,18 +215,15 @@ function transcriptEntryForItem({
   });
   const text = displayText(item?.text ?? turn.streamingTextByItemId[itemId]);
   const status = item?.status ?? "streaming";
-  const dataKind =
-    storedBlock && storedBlock.kind !== "text"
-      ? item?.kind ?? block.kind
-      : block.kind !== "text"
-        ? block.kind
-        : item?.kind ?? "stream";
+  const role = transcriptRole(item, block);
   const resolvedDensity = densityForTranscriptBlock(density, block.kind);
+  const category = transcriptCategory(item, block, role);
   return {
     approvals: approvalAnchorsForEntry(turn, itemId, approvalAnchors),
     block,
-    dataKind,
+    category,
     density: resolvedDensity,
+    displayLabelKey: transcriptLabelKey(item, block, role),
     displayStatus: displayItemStatus(status, threadStatus),
     id: `${turn.turn.id}:${itemId}`,
     item: stripItemRaw(item),
@@ -235,7 +234,7 @@ function transcriptEntryForItem({
       status === "failed" || status === "inProgress"
         ? { status }
         : undefined,
-    role: transcriptRole(item, block),
+    role,
     status,
     text,
     turnId: turn.turn.id,
@@ -388,7 +387,7 @@ function transcriptRole(
   block: AgentItemBlock,
 ): AgentTranscriptEntry["role"] {
   if (item?.kind === "userMessage") return "user";
-  if (item?.kind === "agentMessage") return "assistant";
+  if (item?.kind === "agentMessage" || item?.kind === "assistantMessage") return "assistant";
   if (block.kind === "commandExecution" || item?.kind === "commandExecution") return "command";
   if (
     block.kind === "toolCall" ||
@@ -401,6 +400,69 @@ function transcriptRole(
     return "tool";
   }
   return "system";
+}
+
+function transcriptCategory(
+  item: AgentItemState | undefined,
+  block: AgentItemBlock,
+  role: AgentTranscriptEntry["role"],
+): AgentTranscriptCategory {
+  if (block.kind === "text" && (role === "user" || role === "assistant")) return "message";
+  if (block.kind === "unknown") return "unknown";
+  if (block.kind === "thinking" || item?.kind === "reasoning") return "reasoning";
+  if (block.kind === "plan" || item?.kind === "plan") return "plan";
+  if (block.kind === "commandExecution" || item?.kind === "commandExecution") return "command";
+  if (block.kind === "fileChange" || item?.kind === "fileChange") return "fileChange";
+  if (
+    block.kind === "toolCall" ||
+    block.kind === "mcpToolCall" ||
+    block.kind === "collabToolCall" ||
+    item?.kind === "toolCall" ||
+    item?.kind === "mcpToolCall" ||
+    item?.kind === "dynamicTool" ||
+    item?.kind === "dynamicToolCall"
+  ) {
+    return "toolActivity";
+  }
+  if (block.kind === "webSearch" || item?.kind === "webSearch") return "web";
+  if (block.kind === "image" || item?.kind === "image") return "media";
+  if (block.kind === "systemInfo" || role === "system") return "system";
+  return "unknown";
+}
+
+function transcriptLabelKey(
+  item: AgentItemState | undefined,
+  block: AgentItemBlock,
+  role: AgentTranscriptEntry["role"],
+): AgentI18nKey {
+  if (role === "user") return "timeline.you";
+  if (role === "assistant") return "timeline.assistant";
+  if (item?.kind === "contextCompaction" || block.subtype === "compaction") {
+    return "timeline.compaction";
+  }
+  switch (block.kind) {
+    case "thinking":
+      return "timeline.reasoning";
+    case "plan":
+      return "timeline.plan";
+    case "commandExecution":
+      return "timeline.command";
+    case "fileChange":
+      return "timeline.fileChange";
+    case "collabToolCall":
+      return "timeline.collab";
+    case "toolCall":
+    case "mcpToolCall":
+      return "timeline.tool";
+    case "webSearch":
+      return "timeline.webSearch";
+    case "image":
+      return "timeline.image";
+    case "systemInfo":
+      return "timeline.system";
+    default:
+      return "timeline.system";
+  }
 }
 
 function pinnedApprovalItemIdsByTurnId(

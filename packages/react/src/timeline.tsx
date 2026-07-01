@@ -19,7 +19,6 @@ import {
 import {
   AgentContentBlockView,
   AgentMessageItem,
-  localizedItemLabel,
   type AgentLocalMediaUrlResolver,
 } from "./timeline/item-renderers";
 import { useAgentTranscriptScrollController } from "./timeline/scroll-follow";
@@ -233,7 +232,7 @@ function DefaultTranscriptItem({
   resolveLocalMediaUrl?: AgentLocalMediaUrlResolver;
   t: (key: AgentI18nKey) => string;
 }) {
-  const kind = entry.dataKind;
+  const category = entry.category;
   const status = entry.displayStatus;
   if (block.kind !== "text") {
     const Block = components?.blocks?.[block.kind];
@@ -264,12 +263,14 @@ function DefaultTranscriptItem({
     return (
       <article
         className="aui-message aui-block-message"
-        data-kind={kind}
+        data-block-kind={block.kind}
+        data-category={category}
+        data-role={entry.role}
         data-status={item?.status}
         data-density={entry.density}
       >
         <div className="aui-message-meta">
-          <span>{localizedItemLabel(kind, t)}</span>
+          <span>{t(entry.displayLabelKey)}</span>
           <span>{status}</span>
         </div>
         {content}
@@ -285,12 +286,14 @@ function DefaultTranscriptItem({
     return (
       <article
         className="aui-message"
-        data-kind={kind}
+        data-block-kind={block.kind}
+        data-category={category}
+        data-role={entry.role}
         data-status={item?.status}
         data-density={entry.density}
       >
         <div className="aui-message-meta">
-          <span>{localizedItemLabel(kind, t)}</span>
+          <span>{t(entry.displayLabelKey)}</span>
           <span>{status}</span>
         </div>
         <TextBlock Default={DefaultTextBlock} block={block} item={item} />
@@ -300,12 +303,14 @@ function DefaultTranscriptItem({
   return (
     <article
       className="aui-message"
-      data-kind={kind}
+      data-block-kind={block.kind}
+      data-category={category}
+      data-role={entry.role}
       data-status={item?.status}
       data-density={entry.density}
     >
       <div className="aui-message-meta">
-        <span>{localizedItemLabel(kind, t)}</span>
+        <span>{t(entry.displayLabelKey)}</span>
         <span>{status}</span>
       </div>
       <AgentMessageItem text={entry.text} />

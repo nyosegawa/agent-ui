@@ -22,7 +22,7 @@ test("retries a failed first message through the public composer controller", as
   await expect(page.getByLabel("turn start calls")).toHaveText("1 attempt");
   await expect(page.getByRole("heading", { name: "Message was not sent" })).toBeVisible();
   await expect(
-    page.locator(".aui-message[data-kind='userMessage'][data-status='failed']"),
+    page.locator(".aui-message[data-category='message'][data-role='user'][data-status='failed']"),
   ).toContainText("browser retry");
 
   await page.getByRole("button", { name: "Retry message" }).click();
@@ -31,6 +31,8 @@ test("retries a failed first message through the public composer controller", as
   await expect(page.getByLabel("failed pending error")).toHaveText("No failed message");
   await expect(page.getByLabel("turn start calls")).toHaveText("2 attempts");
   await expect(
-    page.locator(".aui-message[data-kind='userMessage'][data-status='inProgress']"),
+    page.locator(
+      ".aui-message[data-category='message'][data-role='user'][data-status='inProgress']",
+    ),
   ).toContainText("browser retry");
 });

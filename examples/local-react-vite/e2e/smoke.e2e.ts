@@ -356,7 +356,9 @@ test("host workflow reference preserves first-message optimistic rendering", asy
   await starter.getByRole("button", { name: "Start thread" }).click();
 
   await expect(
-    page.locator(".aui-message[data-kind='userMessage'][data-status='inProgress']"),
+    page.locator(
+      ".aui-message[data-category='message'][data-role='user'][data-status='inProgress']",
+    ),
   ).toContainText("Host optimistic first message");
   await expect(page.getByLabel("Host first-message counters")).toContainText(
     "thread/start1",
