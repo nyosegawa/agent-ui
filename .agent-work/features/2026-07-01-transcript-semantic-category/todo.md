@@ -7,7 +7,7 @@
 - Blockers: none for planning; implementation should refresh if watched guidance changes again.
 - Last validation: P005 `bun run validate:release` and `bun run validate:e2e` passed after final review fixes.
 - Last review: P005 final 4-lane subagent review completed; P1/P2 findings were remediated and all four lanes re-verified clean.
-- PR/CI: no PR yet.
+- PR/CI: PR https://github.com/nyosegawa/agent-ui/pull/44 opened; CI monitoring in progress.
 
 ## Branch And Planning Commit
 
@@ -181,7 +181,7 @@
     - [x] T002 Run 4 parallel final subagent reviews and remediate findings.
       - Expected files/areas: full diff.
       - Validation note: Rerun focused gates after fixes.
-    - [ ] T003 Push branch and open PR.
+    - [x] T003 Push branch and open PR.
       - Expected files/areas: Git/GitHub.
       - Validation note: PR body includes breaking API migration, validation, review, release, docs, UI, protocol, security impact.
     - [ ] T004 Watch CI.
@@ -417,6 +417,7 @@
 - `343b985` Record transcript display docs push
 - `7bc5a0c` Harden transcript display release gates
 - `a8dbec1` Record transcript display final validation
+- `f951bfa` Record transcript display final push
 
 ## Final Checklist
 
