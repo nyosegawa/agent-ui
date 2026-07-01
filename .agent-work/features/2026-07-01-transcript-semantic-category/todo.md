@@ -14,7 +14,7 @@
 - Branch: `codex/transcript-semantic-category-plan`
 - Planning commit: `0fc7e40`
 - Remote: `origin`
-- Push result: pending
+- Push result: pushed to `origin/codex/transcript-semantic-category-plan`
 - Blockers: none known
 
 ## Phase Checklist
@@ -319,6 +319,7 @@
 ## Commit Log
 
 - `0fc7e40` Plan transcript display contract redesign
+- `77d622f` Record transcript display planning commit
 
 ## Final Checklist
 
