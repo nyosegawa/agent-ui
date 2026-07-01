@@ -21,6 +21,7 @@ generic chatbot kit.
    - thread lifecycle, canonical resume, or history integration
    - server bridge, uploads, or dynamic tools
    - host-owned workflow composition around Agent UI primitives
+   - transcript display policy, visibility, spacing, or answer-focused presentation
    - local desktop bridge policy and admission
    - first-message `startThreadWithInput()` options or retry behavior
    - bearer WebSocket subprotocols for short-lived bridge tokens
@@ -96,6 +97,12 @@ generic chatbot kit.
 - Start with `AgentChat` when the host wants a full chat surface. Use the React
   primitives when the host needs custom placement of transcript, composer,
   approvals, usage, apps, skills, hooks, diagnostics, or thread history.
+- Use `transcriptDisplay` for transcript display policy. Prefer
+  `default`, `byCategory`, and `byRole` rules over raw protocol item or block
+  kinds; resolution is `default` -> `byCategory` -> `byRole`.
+  `transcriptDisplay="answer-focused"` works anywhere a display policy is
+  accepted. `transcriptMode="answer-focused"` is the convenience prop for
+  `AgentChat` and Web Components.
 - Keep uploads and dynamic tools off unless the user asks for them or the app
   already has host-owned policies for storage and execution.
 - For Next.js full chat, use a custom Node server or sidecar that can attach a

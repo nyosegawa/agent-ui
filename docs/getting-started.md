@@ -89,7 +89,7 @@ Useful routes:
   host-owned workflow gate, first-message optimistic mode, and host-owned review
   sheet
 - `/showcase/composer-primitives`: normal composer primitive placement without retry-only state
-- `/showcase/transcript-content`: transcript and content primitive rendering without density overrides
+- `/showcase/transcript-content`: transcript and content primitive rendering without transcript display overrides
 - `/showcase/approvals-status`: review rail for status summaries, detailed
   notices, and pending approvals
 - `/showcase/thread-navigation`: host-owned thread selection composed from `ThreadList`

@@ -164,7 +164,8 @@ The React package has three public JavaScript entrypoints:
 
 - `@nyosegawa/agent-ui-react`: default preset entry. Exports
   `AgentProvider`, `AgentChat`, `defaultAgentComponents`, `AgentComponents`,
-  `AgentChatProps`, and i18n provider/dictionary helpers.
+  `AgentChatProps`, `AgentTranscriptDisplay*` display policy types, and i18n
+  provider/dictionary helpers.
 - `@nyosegawa/agent-ui-react/primitives`: visual composition entry. Exports
   shell, thread, transcript, composer, approval, status, usage, apps, skills,
   i18n, theme, run-settings, diff, local resource, and transcript item
@@ -202,8 +203,15 @@ the raw-free first-message start behavior is public on
 root preset external-send path is public on `AgentChatController` as
 `sendMessage(input, { threadOptions, turnOptions })`. Host UI that uses
 `AgentChat` should call that controller instead of directly sequencing
-transport requests. `AgentChatSlots`, raw `components.Item`, private status or
-header DOM selectors, and direct local media paths are not migration targets;
+transport requests. `AgentChatSlots`, raw `components.Item`, private status
+props, and legacy transcript spacing options are not supported; use
+`transcriptDisplay` on
+`AgentChat`, `AgentThreadView`, `AgentMessageList`, or
+`useAgentTranscriptController()` for semantic transcript display policy.
+`AgentTranscriptEntry` exposes `category`, `displayLabelKey`, resolved
+`density`, and `visibility` for host renderers, while `components.blocks`
+continues to dispatch by normalized `block.kind`. Header DOM selectors and
+direct local media paths are not migration targets;
 use the `AgentChat` `components` prop, `renderItem` /
 `components.blocks`, `statusBarEnd` / `threadHeaderEnd`, and structured media
 resolvers.
@@ -291,10 +299,12 @@ explicit `createMcpDynamicToolHandler()` mapping helper.
 ### `@nyosegawa/agent-ui-web-components`
 
 Keep public: `defineAgentChatElement`, `AgentChatElement`,
-`AgentChatElementOptions`, and `AgentChatWebComponentElement`.
+`AgentChatElementOptions`, `AgentChatWebComponentElement`, and the JavaScript
+property contract for `transcriptDisplay` / `transcriptMode`.
 
 Replace with current API: `AgentChatElementOptions.components` follows the React
-`components` replacement map.
+`components` replacement map. `transcriptDisplay` and `transcriptMode` mirror the
+React `AgentChat` display policy surface.
 
 Move to subpath: none at this gate.
 
@@ -594,12 +604,13 @@ Custom element wrapper for host applications that do not want to mount React dir
 Responsibilities:
 
 - define `<agent-chat>` or a caller-supplied tag name
-- accept `transport`, `initialState`, `components`, and `agentOptions` as JavaScript
-  properties
+- accept `transport`, `initialState`, `components`, `transcriptDisplay`,
+  `transcriptMode`, and `agentOptions` as JavaScript properties
 - keep registration deterministic: no-DOM registration returns `undefined`,
   same-tag registration is idempotent, and foreign tag collisions throw
 - treat `agentOptions` as a complete replacement for transport, initial state,
-  component replacements, and class name
+  component replacements, transcript display policy, transcript mode, and class
+  name
 - pass `agentOptions.className` or the observed `chat-class` attribute through
   to the rendered `AgentChat`
 - remount `AgentProvider` when `transport` or `initialState` changes

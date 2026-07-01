@@ -1693,7 +1693,9 @@ describe("AgentChat", () => {
               approvals: entry.approvals.map((approval) => approval.id),
               blockKind: entry.block.kind,
               blockRaw: "raw" in entry.block,
+              category: entry.category,
               density: entry.density,
+              displayLabelKey: entry.displayLabelKey,
               displayStatus: entry.displayStatus,
               hasOperations: "operations" in entry,
               id: entry.itemId,
@@ -1701,6 +1703,7 @@ describe("AgentChat", () => {
               pending: entry.pending?.status,
               role: entry.role,
               status: entry.status,
+              visibility: entry.visibility,
             })),
           )}
         </output>
@@ -1721,7 +1724,9 @@ describe("AgentChat", () => {
         approvals: [],
         blockKind: "text",
         blockRaw: false,
-        density: "default",
+        category: "message",
+        density: "comfortable",
+        displayLabelKey: "timeline.you",
         displayStatus: "failed",
         hasOperations: false,
         id: "user-pending",
@@ -1729,42 +1734,49 @@ describe("AgentChat", () => {
         pending: "failed",
         role: "user",
         status: "failed",
+        visibility: "visible",
       },
       {
         approvals: ["approval-command"],
         blockKind: "commandExecution",
         blockRaw: false,
-        density: "default",
+        category: "command",
+        density: "comfortable",
+        displayLabelKey: "timeline.command",
         displayStatus: "completed",
         hasOperations: false,
         id: "cmd-1",
         itemRaw: false,
         role: "command",
         status: "completed",
+        visibility: "visible",
       },
       {
         approvals: [],
         blockKind: "text",
         blockRaw: false,
-        density: "default",
+        category: "message",
+        density: "comfortable",
+        displayLabelKey: "timeline.assistant",
         displayStatus: "completed",
         hasOperations: false,
         id: "assistant-1",
         itemRaw: false,
         role: "assistant",
         status: "completed",
+        visibility: "visible",
       },
     ]);
   });
 
-  it("applies transcript density defaults, critical-only filtering, and per-block overrides", () => {
+  it("applies transcript display defaults, hidden filtering, and category overrides", () => {
     const initialState = createInitialAgentState();
-    initialState.threads["thread-density"] = {
-      orderedTurnIds: ["turn-density"],
+    initialState.threads["thread-display"] = {
+      orderedTurnIds: ["turn-display"],
       status: "loaded",
-      thread: { id: "thread-density", name: "Transcript density" },
+      thread: { id: "thread-display", name: "Transcript display" },
       turns: {
-        "turn-density": {
+        "turn-display": {
           blocksByItemId: {
             "cmd-1": {
               command: "bun test",
@@ -1781,33 +1793,33 @@ describe("AgentChat", () => {
               kind: "agentMessage",
               status: "completed",
               text: "All done.",
-              threadId: "thread-density",
-              turnId: "turn-density",
+              threadId: "thread-display",
+              turnId: "turn-display",
             },
             "cmd-1": {
               id: "cmd-1",
               kind: "commandExecution",
               status: "completed",
-              threadId: "thread-density",
-              turnId: "turn-density",
+              threadId: "thread-display",
+              turnId: "turn-display",
             },
             "user-failed": {
               id: "user-failed",
               kind: "userMessage",
               status: "failed",
               text: "Run checks.",
-              threadId: "thread-density",
-              turnId: "turn-density",
+              threadId: "thread-display",
+              turnId: "turn-display",
             },
           },
           streamingTextByItemId: {},
-          turn: { id: "turn-density", threadId: "thread-density" },
+          turn: { id: "turn-display", threadId: "thread-display" },
         },
       },
     };
 
     function DensityProbe() {
-      const controller = useAgentTranscriptController("thread-density", {
+      const controller = useAgentTranscriptController("thread-display", {
         approvalAnchors: {
           renderApprovalAnchor: () => null,
           requests: [
@@ -1817,16 +1829,16 @@ describe("AgentChat", () => {
               itemId: "cmd-1",
               kind: "commandApproval",
               risk: "medium",
-              threadId: "thread-density",
-              turnId: "turn-density",
+              threadId: "thread-display",
+              turnId: "turn-display",
             }),
           ],
         },
-        density: {
-          default: "compact",
-          byBlockKind: {
-            commandExecution: "verbose",
-            text: "critical-only",
+        transcriptDisplay: {
+          default: { density: "compact", visibility: "visible" },
+          byCategory: {
+            command: { density: "expanded" },
+            message: { visibility: "hidden" },
           },
         },
       });
@@ -1838,6 +1850,7 @@ describe("AgentChat", () => {
               approvals: entry.approvals.map((approval) => approval.id),
               density: entry.density,
               id: entry.itemId,
+              visibility: entry.visibility,
             })),
           })}
         </output>
@@ -1856,20 +1869,658 @@ describe("AgentChat", () => {
     expect(output).toEqual({
       density: "compact",
       entries: [
-        { approvals: [], density: "critical-only", id: "user-failed" },
-        { approvals: ["approval-command"], density: "verbose", id: "cmd-1" },
+        { approvals: [], density: "compact", id: "user-failed", visibility: "visible" },
+        {
+          approvals: ["approval-command"],
+          density: "expanded",
+          id: "cmd-1",
+          visibility: "visible",
+        },
       ],
     });
   });
 
-  it("renders transcript density attributes for the default message list", () => {
+  it("applies transcript display role overrides after category overrides", () => {
     const initialState = createInitialAgentState();
-    initialState.threads["thread-density-dom"] = {
-      orderedTurnIds: ["turn-density-dom"],
+    initialState.threads["thread-display-precedence"] = {
+      orderedTurnIds: ["turn-display-precedence"],
       status: "loaded",
-      thread: { id: "thread-density-dom", name: "Transcript density DOM" },
+      thread: { id: "thread-display-precedence", name: "Display precedence" },
       turns: {
-        "turn-density-dom": {
+        "turn-display-precedence": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["user-1", "assistant-1"],
+          items: {
+            "assistant-1": {
+              id: "assistant-1",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Visible by role.",
+              threadId: "thread-display-precedence",
+              turnId: "turn-display-precedence",
+            },
+            "user-1": {
+              id: "user-1",
+              kind: "userMessage",
+              status: "completed",
+              text: "Hidden by category.",
+              threadId: "thread-display-precedence",
+              turnId: "turn-display-precedence",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-display-precedence", threadId: "thread-display-precedence" },
+        },
+      },
+    };
+
+    function PrecedenceProbe() {
+      const controller = useAgentTranscriptController("thread-display-precedence", {
+        transcriptDisplay: {
+          byCategory: {
+            message: { visibility: "hidden" },
+          },
+          byRole: {
+            assistant: { density: "expanded", visibility: "visible" },
+          },
+          default: { density: "compact", visibility: "visible" },
+        },
+      });
+      return (
+        <output aria-label="display precedence entries">
+          {JSON.stringify(
+            controller.entries.map((entry) => ({
+              density: entry.density,
+              id: entry.itemId,
+              role: entry.role,
+              visibility: entry.visibility,
+            })),
+          )}
+        </output>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <PrecedenceProbe />
+      </AgentProvider>,
+    );
+
+    expect(
+      JSON.parse(screen.getByLabelText("display precedence entries").textContent ?? "[]"),
+    ).toEqual([
+      {
+        density: "expanded",
+        id: "assistant-1",
+        role: "assistant",
+        visibility: "visible",
+      },
+    ]);
+  });
+
+  it("keeps in-progress entries visible when transcript display hides their category", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-display-in-progress"] = {
+      orderedTurnIds: ["turn-display-in-progress"],
+      status: "running",
+      thread: { id: "thread-display-in-progress", name: "In progress display" },
+      turns: {
+        "turn-display-in-progress": {
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["user-1", "assistant-1"],
+          items: {
+            "assistant-1": {
+              id: "assistant-1",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Hidden answer.",
+              threadId: "thread-display-in-progress",
+              turnId: "turn-display-in-progress",
+            },
+            "user-1": {
+              id: "user-1",
+              kind: "userMessage",
+              status: "inProgress",
+              text: "Still sending.",
+              threadId: "thread-display-in-progress",
+              turnId: "turn-display-in-progress",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-display-in-progress", threadId: "thread-display-in-progress" },
+        },
+      },
+    };
+
+    function InProgressProbe() {
+      const controller = useAgentTranscriptController("thread-display-in-progress", {
+        transcriptDisplay: {
+          byCategory: {
+            message: { visibility: "hidden" },
+          },
+        },
+      });
+      return (
+        <output aria-label="display in-progress entries">
+          {JSON.stringify(
+            controller.entries.map((entry) => ({
+              id: entry.itemId,
+              status: entry.status,
+              visibility: entry.visibility,
+            })),
+          )}
+        </output>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <InProgressProbe />
+      </AgentProvider>,
+    );
+
+    expect(
+      JSON.parse(screen.getByLabelText("display in-progress entries").textContent ?? "[]"),
+    ).toEqual([
+      {
+        id: "user-1",
+        status: "inProgress",
+        visibility: "visible",
+      },
+    ]);
+  });
+
+  it("keeps safety-critical entries fully visible when transcript display collapses them", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-display-safety"] = {
+      orderedTurnIds: ["turn-display-safety"],
+      status: "running",
+      thread: { id: "thread-display-safety", name: "Display safety" },
+      turns: {
+        "turn-display-safety": {
+          blocksByItemId: {
+            "approval-command": {
+              command: "bun test",
+              id: "approval-command",
+              kind: "commandExecution",
+            },
+            "failed-command": {
+              command: "bun lint",
+              id: "failed-command",
+              kind: "commandExecution",
+            },
+            "running-command": {
+              command: "bun build",
+              id: "running-command",
+              kind: "commandExecution",
+            },
+          },
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["failed-command", "running-command", "approval-command"],
+          items: {
+            "approval-command": {
+              id: "approval-command",
+              kind: "commandExecution",
+              status: "completed",
+              threadId: "thread-display-safety",
+              turnId: "turn-display-safety",
+            },
+            "failed-command": {
+              id: "failed-command",
+              kind: "commandExecution",
+              status: "failed",
+              threadId: "thread-display-safety",
+              turnId: "turn-display-safety",
+            },
+            "running-command": {
+              id: "running-command",
+              kind: "commandExecution",
+              status: "inProgress",
+              threadId: "thread-display-safety",
+              turnId: "turn-display-safety",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-display-safety", threadId: "thread-display-safety" },
+        },
+      },
+    };
+
+    function SafetyProbe() {
+      const controller = useAgentTranscriptController("thread-display-safety", {
+        approvalAnchors: {
+          renderApprovalAnchor: () => null,
+          requests: [
+            approvalView({
+              command: "bun test",
+              id: "approval-command-request",
+              itemId: "approval-command",
+              kind: "commandApproval",
+              threadId: "thread-display-safety",
+              turnId: "turn-display-safety",
+            }),
+          ],
+        },
+        transcriptDisplay: {
+          byCategory: {
+            command: { visibility: "collapsed" },
+          },
+        },
+      });
+      return (
+        <output aria-label="display safety entries">
+          {JSON.stringify(
+            controller.entries.map((entry) => ({
+              approvals: entry.approvals.map((approval) => approval.id),
+              id: entry.itemId,
+              status: entry.status,
+              visibility: entry.visibility,
+            })),
+          )}
+        </output>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <SafetyProbe />
+      </AgentProvider>,
+    );
+
+    expect(
+      JSON.parse(screen.getByLabelText("display safety entries").textContent ?? "[]"),
+    ).toEqual([
+      {
+        approvals: [],
+        id: "failed-command",
+        status: "failed",
+        visibility: "visible",
+      },
+      {
+        approvals: [],
+        id: "running-command",
+        status: "inProgress",
+        visibility: "visible",
+      },
+      {
+        approvals: ["approval-command-request"],
+        id: "approval-command",
+        status: "completed",
+        visibility: "visible",
+      },
+    ]);
+  });
+
+  it("applies the answer-focused transcript display preset", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-answer-focused"] = {
+      orderedTurnIds: ["turn-answer-focused"],
+      status: "loaded",
+      thread: { id: "thread-answer-focused", name: "Answer focused" },
+      turns: {
+        "turn-answer-focused": {
+          blocksByItemId: {
+            "command-1": {
+              command: "bun test",
+              id: "command-1",
+              kind: "commandExecution",
+            },
+            "reasoning-1": {
+              id: "reasoning-1",
+              kind: "thinking",
+              text: "Planning",
+            },
+          },
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: ["user-1", "reasoning-1", "command-1", "assistant-1"],
+          items: {
+            "assistant-1": {
+              id: "assistant-1",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Done.",
+              threadId: "thread-answer-focused",
+              turnId: "turn-answer-focused",
+            },
+            "command-1": {
+              id: "command-1",
+              kind: "commandExecution",
+              status: "completed",
+              threadId: "thread-answer-focused",
+              turnId: "turn-answer-focused",
+            },
+            "reasoning-1": {
+              id: "reasoning-1",
+              kind: "reasoning",
+              status: "completed",
+              threadId: "thread-answer-focused",
+              turnId: "turn-answer-focused",
+            },
+            "user-1": {
+              id: "user-1",
+              kind: "userMessage",
+              status: "completed",
+              text: "Run checks.",
+              threadId: "thread-answer-focused",
+              turnId: "turn-answer-focused",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-answer-focused", threadId: "thread-answer-focused" },
+        },
+      },
+    };
+
+    function PresetProbe() {
+      const controller = useAgentTranscriptController("thread-answer-focused", {
+        transcriptDisplay: "answer-focused",
+      });
+      return (
+        <output aria-label="answer focused entries">
+          {JSON.stringify(
+            controller.entries.map((entry) => ({
+              id: entry.itemId,
+              visibility: entry.visibility,
+            })),
+          )}
+        </output>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <PresetProbe />
+      </AgentProvider>,
+    );
+
+    expect(
+      JSON.parse(screen.getByLabelText("answer focused entries").textContent ?? "[]"),
+    ).toEqual([
+      { id: "user-1", visibility: "visible" },
+      { id: "command-1", visibility: "collapsed" },
+      { id: "assistant-1", visibility: "visible" },
+    ]);
+  });
+
+  it("derives transcript categories and display labels from normalized blocks", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-categories"] = {
+      orderedTurnIds: ["turn-categories"],
+      status: "loaded",
+      thread: { id: "thread-categories", name: "Transcript categories" },
+      turns: {
+        "turn-categories": {
+          blocksByItemId: {
+            "command-1": {
+              command: "bun test",
+              id: "command-1",
+              kind: "commandExecution",
+            },
+            "file-1": {
+              changes: [],
+              id: "file-1",
+              kind: "fileChange",
+            },
+            "image-1": {
+              id: "image-1",
+              kind: "image",
+              text: "Rendered image",
+            },
+            "plan-1": {
+              id: "plan-1",
+              kind: "plan",
+              text: "1. Test",
+            },
+            "reasoning-1": {
+              id: "reasoning-1",
+              kind: "thinking",
+              text: "Reviewing",
+            },
+            "system-1": {
+              id: "system-1",
+              kind: "systemInfo",
+              subtype: "compaction",
+            },
+            "tool-1": {
+              id: "tool-1",
+              kind: "toolCall",
+              tool: "search",
+            },
+            "unknown-1": {
+              id: "unknown-1",
+              kind: "unknown",
+              text: "Unknown item",
+            },
+            "web-1": {
+              id: "web-1",
+              kind: "webSearch",
+              query: "Agent UI",
+            },
+          },
+          commandOutputByItemId: {},
+          filePatchByItemId: {},
+          itemOrder: [
+            "user-1",
+            "assistant-1",
+            "assistant-alias-1",
+            "reasoning-1",
+            "plan-1",
+            "command-1",
+            "file-1",
+            "tool-1",
+            "web-1",
+            "image-1",
+            "system-1",
+            "unknown-1",
+          ],
+          items: {
+            "assistant-1": {
+              id: "assistant-1",
+              kind: "agentMessage",
+              status: "completed",
+              text: "Done.",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "assistant-alias-1": {
+              id: "assistant-alias-1",
+              kind: "assistantMessage",
+              status: "completed",
+              text: "Alias done.",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "command-1": {
+              id: "command-1",
+              kind: "commandExecution",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "file-1": {
+              id: "file-1",
+              kind: "fileChange",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "image-1": {
+              id: "image-1",
+              kind: "image",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "plan-1": {
+              id: "plan-1",
+              kind: "plan",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "reasoning-1": {
+              id: "reasoning-1",
+              kind: "reasoning",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "system-1": {
+              id: "system-1",
+              kind: "contextCompaction",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "tool-1": {
+              id: "tool-1",
+              kind: "toolCall",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "unknown-1": {
+              id: "unknown-1",
+              kind: "unknownThing",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "user-1": {
+              id: "user-1",
+              kind: "userMessage",
+              status: "completed",
+              text: "Run categories.",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+            "web-1": {
+              id: "web-1",
+              kind: "webSearch",
+              status: "completed",
+              threadId: "thread-categories",
+              turnId: "turn-categories",
+            },
+          },
+          streamingTextByItemId: {},
+          turn: { id: "turn-categories", threadId: "thread-categories" },
+        },
+      },
+    };
+
+    function CategoryProbe() {
+      const controller = useAgentTranscriptController("thread-categories");
+      return (
+        <output aria-label="category entries">
+          {JSON.stringify(
+            controller.entries.map((entry) => ({
+              category: entry.category,
+              displayLabelKey: entry.displayLabelKey,
+              id: entry.itemId,
+              role: entry.role,
+            })),
+          )}
+        </output>
+      );
+    }
+
+    render(
+      <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
+        <CategoryProbe />
+      </AgentProvider>,
+    );
+
+    const entries = JSON.parse(
+      screen.getByLabelText("category entries").textContent ?? "[]",
+    );
+    expect(entries).toEqual([
+      {
+        category: "message",
+        displayLabelKey: "timeline.you",
+        id: "user-1",
+        role: "user",
+      },
+      {
+        category: "message",
+        displayLabelKey: "timeline.assistant",
+        id: "assistant-1",
+        role: "assistant",
+      },
+      {
+        category: "message",
+        displayLabelKey: "timeline.assistant",
+        id: "assistant-alias-1",
+        role: "assistant",
+      },
+      {
+        category: "reasoning",
+        displayLabelKey: "timeline.reasoning",
+        id: "reasoning-1",
+        role: "system",
+      },
+      {
+        category: "plan",
+        displayLabelKey: "timeline.plan",
+        id: "plan-1",
+        role: "system",
+      },
+      {
+        category: "command",
+        displayLabelKey: "timeline.command",
+        id: "command-1",
+        role: "command",
+      },
+      {
+        category: "fileChange",
+        displayLabelKey: "timeline.fileChange",
+        id: "file-1",
+        role: "system",
+      },
+      {
+        category: "toolActivity",
+        displayLabelKey: "timeline.tool",
+        id: "tool-1",
+        role: "tool",
+      },
+      {
+        category: "web",
+        displayLabelKey: "timeline.webSearch",
+        id: "web-1",
+        role: "system",
+      },
+      {
+        category: "media",
+        displayLabelKey: "timeline.image",
+        id: "image-1",
+        role: "system",
+      },
+      {
+        category: "system",
+        displayLabelKey: "timeline.compaction",
+        id: "system-1",
+        role: "system",
+      },
+      {
+        category: "unknown",
+        displayLabelKey: "timeline.unknown",
+        id: "unknown-1",
+        role: "system",
+      },
+    ]);
+  });
+
+  it("renders transcript display attributes for the default message list", () => {
+    const initialState = createInitialAgentState();
+    initialState.threads["thread-display-dom"] = {
+      orderedTurnIds: ["turn-display-dom"],
+      status: "loaded",
+      thread: { id: "thread-display-dom", name: "Transcript display DOM" },
+      turns: {
+        "turn-display-dom": {
           commandOutputByItemId: {},
           filePatchByItemId: {},
           itemOrder: ["user-1"],
@@ -1879,19 +2530,22 @@ describe("AgentChat", () => {
               kind: "userMessage",
               status: "completed",
               text: "Use compact density.",
-              threadId: "thread-density-dom",
-              turnId: "turn-density-dom",
+              threadId: "thread-display-dom",
+              turnId: "turn-display-dom",
             },
           },
           streamingTextByItemId: {},
-          turn: { id: "turn-density-dom", threadId: "thread-density-dom" },
+          turn: { id: "turn-display-dom", threadId: "thread-display-dom" },
         },
       },
     };
 
     const { container } = render(
       <AgentProvider initialState={initialState} transport={new FakeAgentTransport()}>
-        <AgentMessageList density="compact" threadId="thread-density-dom" />
+        <AgentMessageList
+          threadId="thread-display-dom"
+          transcriptDisplay={{ default: { density: "compact" } }}
+        />
       </AgentProvider>,
     );
 
@@ -1905,7 +2559,7 @@ describe("AgentChat", () => {
     );
   });
 
-  it("keeps turn-level approval anchors visible in critical-only transcript density", () => {
+  it("keeps turn-level approval anchors visible when transcript display hides entries", () => {
     const initialState = createInitialAgentState();
     initialState.threads["thread-critical-approval"] = {
       orderedTurnIds: ["turn-critical-approval"],
@@ -1957,8 +2611,8 @@ describe("AgentChat", () => {
               },
             ],
           }}
-          density="critical-only"
           threadId="thread-critical-approval"
+          transcriptDisplay={{ default: { visibility: "hidden" } }}
         />
       </AgentProvider>,
     );
@@ -2286,7 +2940,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    const command = container.querySelector('[data-kind="commandExecution"]');
+    const command = container.querySelector('[data-category="command"]');
     const anchored = screen
       .getByText("Custom approval approval-anchored")
       .closest(".aui-transcript-approval-anchor");
@@ -2362,7 +3016,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    const command = container.querySelector('[data-kind="commandExecution"]');
+    const command = container.querySelector('[data-category="command"]');
     const anchored = command?.nextElementSibling;
     expect(anchored).toHaveClass("aui-transcript-approval-anchor");
     expect(anchored).toHaveTextContent("approval-item-only");
@@ -2833,7 +3487,7 @@ describe("AgentChat", () => {
       </AgentProvider>,
     );
 
-    const command = container.querySelector('[data-kind="commandExecution"]');
+    const command = container.querySelector('[data-category="command"]');
     const approvalButton = await screen.findByRole("button", {
       name: "Approve command request approval-command",
     });
@@ -5313,7 +5967,7 @@ describe("AgentChat", () => {
     await user.click(screen.getByText("Reviewing renderer taxonomy"));
     expect(reasoning).toHaveAttribute("open");
 
-    const compaction = container.querySelector('[data-kind="contextCompaction"]');
+    const compaction = container.querySelector('[data-category="system"]');
     expect(compaction).toHaveTextContent("Compaction");
     expect(compaction).toHaveTextContent("Earlier transcript context was compacted.");
     expect(compaction?.querySelector("details")).toBeNull();
@@ -7400,9 +8054,9 @@ describe("AgentChat", () => {
 
     expect(screen.getByText("Custom block commandExecution")).toBeInTheDocument();
     expect(screen.getByText("bun test")).toBeInTheDocument();
-    expect(
-      screen.getByText("Custom block commandExecution").closest(".aui-message"),
-    ).toHaveAttribute("data-kind", "commandExecution");
+    const message = screen.getByText("Custom block commandExecution").closest(".aui-message");
+    expect(message).toHaveAttribute("data-category", "command");
+    expect(message).toHaveAttribute("data-block-kind", "commandExecution");
   });
 
   it("starts a thread with first input through the public composer controller", async () => {

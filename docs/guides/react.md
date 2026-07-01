@@ -32,9 +32,10 @@ approvals, and optional thread sidebar. Usage and diagnostics are opt-in
 secondary chrome because many host apps already have their own shell.
 Customize the preset with `components`, not source imports or private slots.
 `Shell`, `Sidebar`, `EmptyState`, `ComposerPanel`, `Approval`, and `blocks` are
-the replacement points. Use `renderItem` or `blocks` for transcript
-customization; raw item/turn replacement components are not part of the public
-API.
+the replacement points. Use `transcriptDisplay` for transcript visibility,
+entry spacing, and answer-focused presentation. Use `renderItem` or `blocks`
+only when the host needs to replace transcript item or block rendering; raw
+item/turn replacement components are not part of the public API.
 
 ## Choose The React Surface
 

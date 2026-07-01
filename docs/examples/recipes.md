@@ -14,7 +14,7 @@ package entrypoints.
 
 | Need | Recipe | Related docs |
 | --- | --- | --- |
-| Customize `AgentChat` while keeping preset behavior | [custom components](../../examples/recipes/src/custom-components.tsx), [preset composition](../../examples/recipes/src/agent-chat-composition.tsx), [custom transcript blocks](../../examples/recipes/src/custom-transcript-blocks.tsx) | [React](../guides/react.md), [React Components](../reference/react-components.md) |
+| Customize `AgentChat` while keeping preset behavior | [custom components](../../examples/recipes/src/custom-components.tsx), [preset composition](../../examples/recipes/src/agent-chat-composition.tsx), [custom transcript blocks](../../examples/recipes/src/custom-transcript-blocks.tsx), [transcript display policy](../../examples/recipes/src/transcript-display.tsx) | [React](../guides/react.md), [React Components](../reference/react-components.md) |
 | Build a host-owned layout from controllers and primitives | [headless controller](../../examples/recipes/src/headless-chat-controller.tsx), [headless hooks](../../examples/recipes/src/headless-hooks.tsx), [host composer](../../examples/recipes/src/host-owned-composer.tsx), [scoped thread list](../../examples/recipes/src/scoped-thread-list.tsx) | [React](../guides/react.md), [Hooks](../reference/hooks.md) |
 | Gate Codex turns behind host workflow state | [host-gated workflow](../../examples/recipes/src/host-gated-workflow.tsx), [host integration checklist](../../examples/recipes/src/host-integration-checklist.ts) | [Host Integration](../guides/host-integration.md), [Product Boundary](../architecture/product-boundary.md) |
 | Resolve local media and attachments | [local media helper](../../examples/recipes/src/local-media-helper.tsx) | [Attachments](../guides/attachments.md), [Server Bridge](../reference/server-bridge.md) |
@@ -32,6 +32,8 @@ package entrypoints.
   resolution.
 - `src/custom-transcript-blocks.tsx`: custom transcript block renderers while
   preserving default block rendering.
+- `src/transcript-display.tsx`: semantic transcript display policies using
+  category and role rules, plus the `answer-focused` preset.
 - `src/headless-chat-controller.tsx`: chat UI composed from public controllers.
 - `src/headless-hooks.tsx`: custom layout built from public controllers and
   primitives without reading reducer turn internals.

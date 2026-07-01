@@ -31,16 +31,26 @@ The element accepts JavaScript properties for object/function values:
 - `transport`
 - `initialState`
 - `components`
+- `transcriptDisplay`
+- `transcriptMode`
 - `agentOptions`
 - `agentOptions.transport`
 - `agentOptions.initialState`
 - `agentOptions.components`
 - `agentOptions.className`
+- `agentOptions.transcriptDisplay`
+- `agentOptions.transcriptMode`
 
 `agentOptions` is a complete replacement for the same values. Setting
 `element.agentOptions = undefined` clears the transport, initial state,
 component replacements, and `chat-class`. Use individual properties when you
 want to replace only one part of the configuration.
+
+`transcriptDisplay` accepts the same semantic display policy as React
+`AgentChat`: `default`, `byCategory`, and `byRole` rules with
+`comfortable`/`compact`/`expanded` density and
+`visible`/`collapsed`/`hidden` visibility. `transcriptMode` accepts named
+presets such as `"answer-focused"`.
 
 `initialState` accepts the opaque `AgentSessionState` snapshot produced by the
 core public API. Replacing `initialState` or `transport` remounts the underlying

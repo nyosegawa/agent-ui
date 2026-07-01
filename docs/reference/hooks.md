@@ -225,9 +225,15 @@ const { approvals, approve } = useAgentApprovals(threadId);
 
 ```tsx
 const transcript = useAgentTranscriptController(threadId, {
-  density: {
-    default: "compact",
-    byBlockKind: { commandExecution: "verbose" },
+  transcriptDisplay: {
+    default: { density: "compact", visibility: "visible" },
+    byCategory: {
+      command: { density: "expanded", visibility: "collapsed" },
+      reasoning: { visibility: "hidden" },
+    },
+    byRole: {
+      assistant: { visibility: "visible" },
+    },
   },
 });
 
@@ -241,13 +247,16 @@ const scroll = useAgentTranscriptScrollController({
 ```
 
 `useAgentTranscriptController()` returns raw-free transcript entry view models,
-windowing state, and the `showEarlierItems()` action. `density` may be
-`"default"`, `"compact"`, `"verbose"`, `"critical-only"`, or an object with a
-default density plus `byBlockKind` overrides. The resolved entry density is
-presentation metadata for host renderers and the default list. `critical-only`
-filters noncritical entries; entries with failed or in-progress status, or an
-anchored pending approval, stay visible. Density is not persisted and does not
-change Codex App Server lifecycle state.
+windowing state, and the `showEarlierItems()` action. `transcriptDisplay`
+accepts a policy with `default`, `byCategory`, and `byRole` rules, or the
+`"answer-focused"` preset. Resolution order is `default` -> `byCategory` ->
+`byRole`. Density values are `comfortable`, `compact`, and `expanded`;
+visibility values are `visible`, `collapsed`, and `hidden`. The resolved entry
+`category`, `density`, `visibility`, and `displayLabelKey` are presentation
+metadata for host renderers and the default list. Entries with failed or
+in-progress status, or an anchored pending approval, stay reachable even when a
+policy says `hidden`. Transcript display preferences are not persisted and do
+not change Codex App Server lifecycle state.
 
 `useAgentTranscriptScrollController()` owns transcript viewport behavior for
 headless transcript compositions. It accepts either an Agent UI-owned scroll ref

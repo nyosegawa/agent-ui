@@ -27,6 +27,29 @@ import "@nyosegawa/agent-ui-react/styles.css";
 | Host-owned controllers | `import { useAgentChatController } from "@nyosegawa/agent-ui-react/headless";` |
 | Bundled stylesheet | `import "@nyosegawa/agent-ui-react/styles.css";` |
 
+Transcript display policy is controlled with
+`transcriptDisplay`, not block-kind conditionals. The same semantic policy works
+on `AgentChat`, `AgentThreadView`, `AgentMessageList`, and
+`useAgentTranscriptController()`:
+
+```tsx
+<AgentChat transcriptMode="answer-focused" />
+```
+
+Use an explicit policy when the host needs category or role-specific behavior:
+
+```tsx
+<AgentChat
+  transcriptDisplay={{
+    byCategory: {
+      reasoning: { visibility: "hidden" },
+      command: { density: "expanded", visibility: "collapsed" },
+    },
+    default: { density: "comfortable", visibility: "visible" },
+  }}
+/>
+```
+
 ## Package Boundary
 
 This package provides three public entrypoints:

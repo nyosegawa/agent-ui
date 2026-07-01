@@ -1,6 +1,5 @@
 import type {
   AgentItemBlock,
-  AgentItemBlockKind,
   AgentItemState,
   ThreadState,
   TurnState,
@@ -8,6 +7,7 @@ import type {
 import { selectThread } from "@nyosegawa/agent-ui-core/internal";
 import type { AgentTranscriptBlockView, ThreadId } from "@nyosegawa/agent-ui-core";
 import { useMemo } from "react";
+import type { AgentI18nKey } from "../i18n";
 import { useInternalAgentContext } from "../provider";
 import type { AgentApprovalRequest } from "../approval-types";
 import { transcriptItemIds } from "../transcript-window";
@@ -21,16 +21,43 @@ import {
 } from "../timeline/formatters";
 import { useTranscriptWindowing } from "../timeline/windowing";
 
-export type AgentTranscriptDensityMode = "default" | "compact" | "verbose" | "critical-only";
+export type AgentTranscriptCategory =
+  | "message"
+  | "reasoning"
+  | "plan"
+  | "command"
+  | "fileChange"
+  | "toolActivity"
+  | "web"
+  | "media"
+  | "system"
+  | "unknown";
 
-export interface AgentTranscriptDensityConfig {
-  byBlockKind?: Partial<Record<AgentTranscriptBlockView["kind"], AgentTranscriptDensityMode>>;
-  default?: AgentTranscriptDensityMode;
+export type AgentTranscriptDisplayDensity = "comfortable" | "compact" | "expanded";
+
+export type AgentTranscriptDisplayVisibility = "visible" | "collapsed" | "hidden";
+
+export interface AgentTranscriptDisplayRule {
+  density?: AgentTranscriptDisplayDensity;
+  visibility?: AgentTranscriptDisplayVisibility;
 }
 
-export type AgentTranscriptDensity =
-  | AgentTranscriptDensityMode
-  | AgentTranscriptDensityConfig;
+/**
+ * Public transcript display policy. Resolution order is default -> byCategory -> byRole.
+ * Safety overrides are applied after policy resolution, so failed, in-progress,
+ * and approval-anchored entries remain fully visible.
+ */
+export interface AgentTranscriptDisplayPolicy {
+  byCategory?: Partial<Record<AgentTranscriptCategory, AgentTranscriptDisplayRule>>;
+  byRole?: Partial<Record<AgentTranscriptEntry["role"], AgentTranscriptDisplayRule>>;
+  default?: AgentTranscriptDisplayRule;
+}
+
+export type AgentTranscriptDisplayPreset = "answer-focused";
+
+export type AgentTranscriptDisplay =
+  | AgentTranscriptDisplayPreset
+  | AgentTranscriptDisplayPolicy;
 
 export interface AgentTranscriptPendingState {
   status: "failed" | "inProgress";
@@ -58,8 +85,9 @@ export interface AgentTranscriptItem {
 export interface AgentTranscriptEntry {
   approvals: AgentApprovalRequest[];
   block: AgentTranscriptBlock;
-  dataKind: string;
-  density: AgentTranscriptDensityMode;
+  category: AgentTranscriptCategory;
+  density: AgentTranscriptDisplayDensity;
+  displayLabelKey: AgentI18nKey;
   displayStatus: string;
   id: string;
   item?: AgentTranscriptItem;
@@ -71,15 +99,16 @@ export interface AgentTranscriptEntry {
   status: AgentTranscriptItemStatus;
   text?: string;
   turnId: string;
+  visibility: AgentTranscriptDisplayVisibility;
 }
 
 export interface AgentTranscriptControllerOptions {
   approvalAnchors?: TranscriptApprovalAnchors;
-  density?: AgentTranscriptDensity;
+  transcriptDisplay?: AgentTranscriptDisplay;
 }
 
 export interface AgentTranscriptController {
-  density: AgentTranscriptDensityMode;
+  density: AgentTranscriptDisplayDensity;
   entries: AgentTranscriptEntry[];
   entriesByTurnId: Map<string, AgentTranscriptEntry[]>;
   hiddenItemCount: number;
@@ -102,10 +131,14 @@ function useAgentTranscriptControllerForThread(
   thread: ThreadState | undefined,
   {
     approvalAnchors,
-    density = "default",
+    transcriptDisplay,
   }: AgentTranscriptControllerOptions = {},
 ): AgentTranscriptController {
-  const defaultDensity = defaultTranscriptDensity(density);
+  const displayPolicy = useMemo(
+    () => normalizeTranscriptDisplay(transcriptDisplay),
+    [transcriptDisplay],
+  );
+  const defaultRule = resolvedDefaultTranscriptRule(displayPolicy);
   const pinnedItemIdsByTurnId = useMemo(
     () => pinnedApprovalItemIdsByTurnId(thread, approvalAnchors?.requests),
     [approvalAnchors?.requests, thread],
@@ -120,32 +153,33 @@ function useAgentTranscriptControllerForThread(
       const visibleItemIds = windowing.visibleTurnItems.itemIdsByTurnId.get(turnId);
       if (!visibleItemIds || visibleItemIds.length === 0) continue;
       const afterTurnApprovalVisible =
-        afterTurnApprovalsForDensity(turn, approvalAnchors).length > 0;
+        afterTurnApprovalsForDisplay(turn, approvalAnchors).length > 0;
       const turnEntries = visibleItemIds.map((itemId) =>
         transcriptEntryForItem({
           approvalAnchors,
-          density,
           itemId,
+          transcriptDisplay: displayPolicy,
           threadStatus: thread.status,
           turn,
         }),
       );
-      const filteredTurnEntries = turnEntries.filter((entry, index) =>
-        includeTranscriptEntry(entry, {
-          preserveForAfterTurnApproval:
-            afterTurnApprovalVisible && index === turnEntries.length - 1,
-        }),
-      );
+      const filteredTurnEntries = turnEntries
+        .map((entry, index) =>
+          afterTurnApprovalVisible && index === turnEntries.length - 1
+            ? { ...entry, visibility: "visible" as const }
+            : entry,
+        )
+        .filter((entry) => includeTranscriptEntry(entry));
       if (filteredTurnEntries.length > 0) entries.set(turnId, filteredTurnEntries);
     }
     return entries;
-  }, [approvalAnchors, density, thread, windowing.visibleTurnItems.itemIdsByTurnId]);
+  }, [approvalAnchors, displayPolicy, thread, windowing.visibleTurnItems.itemIdsByTurnId]);
   const entries = useMemo(
     () => Array.from(entriesByTurnId.values()).flat(),
     [entriesByTurnId],
   );
   return {
-    density: defaultDensity,
+    density: defaultRule.density,
     entries,
     entriesByTurnId,
     hiddenItemCount: windowing.hiddenItemCount,
@@ -158,14 +192,14 @@ function useAgentTranscriptControllerForThread(
 
 function transcriptEntryForItem({
   approvalAnchors,
-  density,
   itemId,
+  transcriptDisplay,
   threadStatus,
   turn,
 }: {
   approvalAnchors?: TranscriptApprovalAnchors;
-  density: AgentTranscriptDensity;
   itemId: string;
+  transcriptDisplay: AgentTranscriptDisplayPolicy;
   threadStatus: ThreadState["status"];
   turn: TurnState;
 }): AgentTranscriptEntry {
@@ -176,18 +210,21 @@ function transcriptEntryForItem({
   });
   const text = displayText(item?.text ?? turn.streamingTextByItemId[itemId]);
   const status = item?.status ?? "streaming";
-  const dataKind =
-    storedBlock && storedBlock.kind !== "text"
-      ? item?.kind ?? block.kind
-      : block.kind !== "text"
-        ? block.kind
-        : item?.kind ?? "stream";
-  const resolvedDensity = densityForTranscriptBlock(density, block.kind);
+  const role = transcriptRole(item, block);
+  const category = transcriptCategory(item, block, role);
+  const approvals = approvalAnchorsForEntry(turn, itemId, approvalAnchors);
+  const rule = resolvedTranscriptRule(transcriptDisplay, {
+    approvals,
+    category,
+    role,
+    status,
+  });
   return {
-    approvals: approvalAnchorsForEntry(turn, itemId, approvalAnchors),
+    approvals,
     block,
-    dataKind,
-    density: resolvedDensity,
+    category,
+    density: rule.density,
+    displayLabelKey: transcriptLabelKey(item, block, role),
     displayStatus: displayItemStatus(status, threadStatus),
     id: `${turn.turn.id}:${itemId}`,
     item: stripItemRaw(item),
@@ -198,32 +235,73 @@ function transcriptEntryForItem({
       status === "failed" || status === "inProgress"
         ? { status }
         : undefined,
-    role: transcriptRole(item, block),
+    role,
     status,
     text,
     turnId: turn.turn.id,
+    visibility: rule.visibility,
   };
 }
 
 function includeTranscriptEntry(
   entry: AgentTranscriptEntry,
-  { preserveForAfterTurnApproval = false }: { preserveForAfterTurnApproval?: boolean } = {},
 ): boolean {
-  if (entry.density !== "critical-only") return true;
-  if (preserveForAfterTurnApproval) return true;
+  if (entry.visibility !== "hidden") return true;
   return entry.approvals.length > 0 || entry.status === "failed" || entry.status === "inProgress";
 }
 
-function defaultTranscriptDensity(density: AgentTranscriptDensity): AgentTranscriptDensityMode {
-  return typeof density === "string" ? density : density.default ?? "default";
+function normalizeTranscriptDisplay(
+  transcriptDisplay: AgentTranscriptDisplay | undefined,
+): AgentTranscriptDisplayPolicy {
+  if (transcriptDisplay === "answer-focused") {
+    return {
+      byCategory: {
+        command: { visibility: "collapsed" },
+        fileChange: { visibility: "collapsed" },
+        plan: { visibility: "collapsed" },
+        reasoning: { visibility: "hidden" },
+        system: { visibility: "collapsed" },
+        toolActivity: { visibility: "collapsed" },
+        web: { visibility: "collapsed" },
+      },
+      default: { density: "comfortable", visibility: "visible" },
+    };
+  }
+  return transcriptDisplay ?? {};
 }
 
-function densityForTranscriptBlock(
-  density: AgentTranscriptDensity,
-  blockKind: AgentItemBlockKind,
-): AgentTranscriptDensityMode {
-  if (typeof density === "string") return density;
-  return density.byBlockKind?.[blockKind] ?? density.default ?? "default";
+function resolvedDefaultTranscriptRule(
+  policy: AgentTranscriptDisplayPolicy,
+): Required<AgentTranscriptDisplayRule> {
+  return {
+    density: policy.default?.density ?? "comfortable",
+    visibility: policy.default?.visibility ?? "visible",
+  };
+}
+
+function resolvedTranscriptRule(
+  policy: AgentTranscriptDisplayPolicy,
+  {
+    approvals,
+    category,
+    role,
+    status,
+  }: {
+    approvals: AgentApprovalRequest[];
+    category: AgentTranscriptCategory;
+    role: AgentTranscriptEntry["role"];
+    status: AgentTranscriptItemStatus;
+  },
+): Required<AgentTranscriptDisplayRule> {
+  const merged = {
+    ...resolvedDefaultTranscriptRule(policy),
+    ...policy.byCategory?.[category],
+    ...policy.byRole?.[role],
+  };
+  if (approvals.length > 0 || status === "failed" || status === "inProgress") {
+    return { ...merged, visibility: "visible" };
+  }
+  return merged;
 }
 
 function stripItemRaw(item: AgentItemState | undefined): AgentTranscriptItem | undefined {
@@ -334,7 +412,7 @@ function approvalAnchorsForEntry(
   });
 }
 
-function afterTurnApprovalsForDensity(
+function afterTurnApprovalsForDisplay(
   turn: TurnState,
   anchors?: TranscriptApprovalAnchors,
 ): AgentApprovalRequest[] {
@@ -351,7 +429,7 @@ function transcriptRole(
   block: AgentItemBlock,
 ): AgentTranscriptEntry["role"] {
   if (item?.kind === "userMessage") return "user";
-  if (item?.kind === "agentMessage") return "assistant";
+  if (item?.kind === "agentMessage" || item?.kind === "assistantMessage") return "assistant";
   if (block.kind === "commandExecution" || item?.kind === "commandExecution") return "command";
   if (
     block.kind === "toolCall" ||
@@ -364,6 +442,69 @@ function transcriptRole(
     return "tool";
   }
   return "system";
+}
+
+function transcriptCategory(
+  item: AgentItemState | undefined,
+  block: AgentItemBlock,
+  role: AgentTranscriptEntry["role"],
+): AgentTranscriptCategory {
+  if (block.kind === "text" && (role === "user" || role === "assistant")) return "message";
+  if (block.kind === "unknown") return "unknown";
+  if (block.kind === "thinking" || item?.kind === "reasoning") return "reasoning";
+  if (block.kind === "plan" || item?.kind === "plan") return "plan";
+  if (block.kind === "commandExecution" || item?.kind === "commandExecution") return "command";
+  if (block.kind === "fileChange" || item?.kind === "fileChange") return "fileChange";
+  if (
+    block.kind === "toolCall" ||
+    block.kind === "mcpToolCall" ||
+    block.kind === "collabToolCall" ||
+    item?.kind === "toolCall" ||
+    item?.kind === "mcpToolCall" ||
+    item?.kind === "dynamicTool" ||
+    item?.kind === "dynamicToolCall"
+  ) {
+    return "toolActivity";
+  }
+  if (block.kind === "webSearch" || item?.kind === "webSearch") return "web";
+  if (block.kind === "image" || item?.kind === "image") return "media";
+  if (block.kind === "systemInfo" || role === "system") return "system";
+  return "unknown";
+}
+
+function transcriptLabelKey(
+  item: AgentItemState | undefined,
+  block: AgentItemBlock,
+  role: AgentTranscriptEntry["role"],
+): AgentI18nKey {
+  if (role === "user") return "timeline.you";
+  if (role === "assistant") return "timeline.assistant";
+  if (item?.kind === "contextCompaction" || block.subtype === "compaction") {
+    return "timeline.compaction";
+  }
+  switch (block.kind) {
+    case "thinking":
+      return "timeline.reasoning";
+    case "plan":
+      return "timeline.plan";
+    case "commandExecution":
+      return "timeline.command";
+    case "fileChange":
+      return "timeline.fileChange";
+    case "collabToolCall":
+      return "timeline.collab";
+    case "toolCall":
+    case "mcpToolCall":
+      return "timeline.tool";
+    case "webSearch":
+      return "timeline.webSearch";
+    case "image":
+      return "timeline.image";
+    case "systemInfo":
+      return "timeline.system";
+    default:
+      return "timeline.unknown";
+  }
 }
 
 function pinnedApprovalItemIdsByTurnId(

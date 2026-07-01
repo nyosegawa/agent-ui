@@ -8,7 +8,8 @@ Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
 
 - Customize `AgentChat`: [custom components](src/custom-components.tsx),
   [preset composition](src/agent-chat-composition.tsx),
-  [custom transcript blocks](src/custom-transcript-blocks.tsx)
+  [custom transcript blocks](src/custom-transcript-blocks.tsx),
+  [transcript display policy](src/transcript-display.tsx)
 - Host-owned layout: [headless controller](src/headless-chat-controller.tsx),
   [headless hooks](src/headless-hooks.tsx),
   [host composer](src/host-owned-composer.tsx),
@@ -33,6 +34,8 @@ Detailed docs: [docs/examples/recipes.md](../../docs/examples/recipes.md).
   media resolution.
 - `src/custom-transcript-blocks.tsx`: custom transcript block renderers while
   preserving default block rendering.
+- `src/transcript-display.tsx`: semantic transcript display policies using
+  category and role rules, plus the `answer-focused` preset.
 - `src/headless-chat-controller.tsx`: chat UI composed from public controllers.
 - `src/headless-hooks.tsx`: custom layout built from public controllers and
   primitives without reading reducer turn internals.

@@ -224,7 +224,7 @@ scroll, and approval-anchor contracts can be preserved:
   area or own approval placement.
 - `blocks` and `renderItem` are wrapped by the default transcript
   list/turn/message containers. Replacing one block or item does not replace
-  the list, turn ordering, approval anchor nodes, density attributes, or
+  the list, turn ordering, approval anchor nodes, display attributes, or
   scroll-follow behavior.
 
 Rejected replacement points for this gate include the transcript scroll
@@ -245,16 +245,37 @@ diffs into UI-owned buckets.
 `useAgentTranscriptController(threadId, options)` exposes the transcript view
 model that backs the default list. It returns `AgentTranscriptEntry` objects
 with a raw-free normalized item view, a raw-free synthesized block view, role,
-status, display status, density, approval anchors, and public pending metadata.
+status, display status, category, display label key, density, visibility,
+approval anchors, and public pending metadata.
 The public controller does not return `ThreadState`, `TurnState`, internal
 optimistic operation records, or raw generated protocol payload fields.
 
-Transcript density is a render preference, not lifecycle state. Pass
-`density="compact"` or `density="verbose"` to `AgentMessageList`, or pass
-`density` to `useAgentTranscriptController()` as a mode or as `{ default,
-byBlockKind }`. `critical-only` hides entries without a failed/in-progress
-status or an anchored approval; per-block overrides can keep specific block
-kinds expanded or dense while the rest of the transcript stays compact.
+Transcript display policy is a render preference, not lifecycle state. Pass
+`transcriptDisplay` to `AgentMessageList`, `AgentThreadView`, or `AgentChat`, or
+to `useAgentTranscriptController()`. A policy resolves in `default` ->
+`byCategory` -> `byRole` order:
+
+```tsx
+<AgentChat
+  transcriptDisplay={{
+    default: { density: "comfortable", visibility: "visible" },
+    byCategory: {
+      reasoning: { visibility: "hidden" },
+      command: { density: "expanded", visibility: "collapsed" },
+      fileChange: { density: "expanded", visibility: "collapsed" },
+    },
+  }}
+/>
+```
+
+Categories include `message`, `reasoning`, `plan`, `command`, `fileChange`,
+`toolActivity`, `web`, `media`, `system`, and `unknown`. Density values are
+`comfortable`, `compact`, and `expanded`; visibility values are `visible`,
+`collapsed`, and `hidden`. The `answer-focused` preset is also available via
+`transcriptMode="answer-focused"` on `AgentChat` or as
+`transcriptDisplay="answer-focused"` where a transcript display policy is
+accepted. Failed, in-progress, and approval-anchored entries remain reachable
+even when a policy would otherwise hide them.
 
 Large stored threads are rendered incrementally. The initial hydrated history
 mounts only the latest transcript items, keeps order intact, and exposes

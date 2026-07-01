@@ -190,7 +190,7 @@ function topLevelSelectorOccurrences(css: string): Map<string, number[]> {
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index]!;
     if (depth === 0) {
-      const match = /^(\.[a-zA-Z0-9_-]+(?:\[[^\]]*\])?)\s*\{/.exec(line);
+      const match = /^(\.[a-zA-Z0-9_-]+(?:\[[^\]]*\])*)\s*\{/.exec(line);
       if (match) {
         const selector = match[1]!;
         const list = occurrences.get(selector) ?? [];
@@ -421,8 +421,8 @@ describe("packages/react styles.css", () => {
     ".aui-message-list",
     ".aui-turn",
     ".aui-message",
-    '.aui-message[data-kind="userMessage"]',
-    '.aui-message[data-kind="reasoning"]',
+    '.aui-message[data-category="message"][data-role="user"]',
+    '.aui-message[data-category="reasoning"]',
     ".aui-plan-block",
     ".aui-thread-list-item",
     ".aui-chat-rail",

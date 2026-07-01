@@ -250,7 +250,9 @@ test("shows the first user message before assistant output in a real browser", a
   await routeHome(page);
   await startThread(page, "slow smoke");
 
-  const userMessage = page.locator(".aui-message-list article[data-kind='userMessage']");
+  const userMessage = page.locator(
+    ".aui-message-list article[data-category='message'][data-role='user']",
+  );
   await expect(userMessage).toContainText("slow smoke", {
     timeout: FAST_EXPECT_TIMEOUT,
   });

@@ -316,6 +316,7 @@ export interface AgentI18nDictionary {
   "timeline.to": string;
   "timeline.tool": string;
   "timeline.toolCall": string;
+  "timeline.unknown": string;
   "timeline.unknownTool": string;
   "timeline.webSearch": string;
   "timeline.you": string;

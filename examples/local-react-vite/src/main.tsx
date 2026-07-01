@@ -131,7 +131,7 @@ function DemoApp() {
   }
   if (pathname === "/showcase/thread-navigation") return <ThreadNavigationExample />;
   if (pathname === "/showcase/transcript-content") return <TranscriptContentExample />;
-  if (pathname === "/showcase/transcript-density") return <TranscriptDensityExample />;
+  if (pathname === "/showcase/transcript-display") return <TranscriptDisplayExample />;
   if (pathname === "/maintainer/scoped-thread-lists") {
     return <ScopedThreadListsExample />;
   }
@@ -538,7 +538,7 @@ function ComponentPreviewBody({
       preview = <AgentComposer threadId={threadId} />;
       break;
     case "AgentMessageList":
-      preview = <AgentMessageList density="default" threadId={threadId} />;
+      preview = <AgentMessageList threadId={threadId} />;
       break;
     case "AgentApprovalQueue":
       preview = <AgentApprovalQueue threadId={threadId} />;
@@ -1960,7 +1960,7 @@ function ThreadNavigationPreview() {
   );
 }
 
-function TranscriptDensityExample() {
+function TranscriptDisplayExample() {
   const theme = themeFromLocation();
   const initialState = useMemo(() => createRichTranscriptInitialState(), []);
   const transport = useMemo(() => createFixtureTransport("rich-transcript"), []);
@@ -1969,16 +1969,16 @@ function TranscriptDensityExample() {
   return (
     <AgentProvider initialState={initialState} transport={transport}>
       <main className="aui-demo-main" data-aui-theme={theme}>
-        <ExampleFrame title="Transcript density">
+        <ExampleFrame title="Transcript display policy">
           <AgentThreadSurface>
             <DemoThreadHeader threadId={thread.thread.id} />
             <AgentMessageList
-              density={{
-                default: "compact",
-                byBlockKind: {
-                  commandExecution: "verbose",
-                  fileChange: "verbose",
-                  text: "critical-only",
+              transcriptDisplay={{
+                default: { density: "compact", visibility: "visible" },
+                byCategory: {
+                  command: { density: "expanded", visibility: "collapsed" },
+                  fileChange: { density: "expanded", visibility: "collapsed" },
+                  message: { visibility: "hidden" },
                 },
               }}
               threadId={thread.thread.id}

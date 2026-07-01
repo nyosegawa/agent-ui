@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AgentDiffViewer } from "../diff-viewer";
-import { useAgentI18n, type AgentI18nKey } from "../i18n";
+import { useAgentI18n } from "../i18n";
 import { MarkdownMessage } from "../markdown";
 import type { AgentTranscriptBlock, AgentTranscriptItem } from "../hooks/transcript";
 import {
@@ -13,7 +13,6 @@ import {
   displayText,
   formatDuration,
   isVideoPath,
-  itemLabel,
   kindLabel,
   lineCount,
   shortId,
@@ -398,42 +397,4 @@ export const AgentDiffItem = AgentFileChangeItem;
 
 function MessageBody({ text }: { text: string }) {
   return <AgentMessageItem text={text} />;
-}
-
-export function localizedItemLabel(
-  kind: string,
-  t: (key: AgentI18nKey) => string,
-): string {
-  switch (kind) {
-    case "userMessage":
-      return t("timeline.you");
-    case "agentMessage":
-      return t("timeline.assistant");
-    case "reasoning":
-      return t("timeline.reasoning");
-    case "plan":
-      return t("timeline.plan");
-    case "commandExecution":
-      return t("timeline.command");
-    case "fileChange":
-      return t("timeline.fileChange");
-    case "toolCall":
-    case "mcpToolCall":
-      return t("timeline.tool");
-    case "collabToolCall":
-      return t("timeline.collab");
-    case "webSearch":
-      return t("timeline.webSearch");
-    case "image":
-    case "imageView":
-      return t("timeline.image");
-    case "systemInfo":
-      return t("timeline.system");
-    case "contextCompaction":
-      return t("timeline.compaction");
-    case "thinking":
-      return t("timeline.thinking");
-    default:
-      return itemLabel(kind);
-  }
 }

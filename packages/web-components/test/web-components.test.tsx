@@ -1,6 +1,9 @@
 // @vitest-environment jsdom
 import "@testing-library/jest-dom/vitest";
-import { createInitialAgentState, FakeAgentTransport } from "@nyosegawa/agent-ui-core";
+import {
+  createInitialAgentState,
+  FakeAgentTransport,
+} from "@nyosegawa/agent-ui-core";
 import type { AgentComponents } from "@nyosegawa/agent-ui-react";
 import { act, waitFor } from "@testing-library/react";
 import { useState } from "react";
@@ -80,6 +83,29 @@ describe("AgentChatElement", () => {
     });
     await expectText("Agent options empty component");
     expect(document.querySelector(".agent-options-chat")).toBeInTheDocument();
+  });
+
+  it("passes transcript display options through agentOptions", async () => {
+    if (typeof document === "undefined") return;
+    const scopedTagName = nextTagName("agent-chat-transcript-display");
+    defineAgentChatElement(scopedTagName);
+    const element = document.createElement(scopedTagName) as AgentChatWebComponentElement;
+    await act(async () => {
+      document.body.append(element);
+      element.agentOptions = {
+        initialState: transcriptDisplayState(),
+        transcriptMode: "answer-focused",
+        transport: authenticatedTransport(),
+      };
+    });
+
+    await waitFor(() => {
+      expect(document.querySelector('[data-category="command"]')).toHaveAttribute(
+        "data-visibility",
+        "collapsed",
+      );
+    });
+    expect(document.querySelector('[data-category="reasoning"]')).toBeNull();
   });
 
   it("rejects foreign custom-element tag collisions", () => {
@@ -218,4 +244,71 @@ function authenticatedAccount(planType = "pro") {
   return {
     account: { email: "user@example.com", planType, type: "chatgpt" },
   } as const;
+}
+
+function transcriptDisplayState() {
+  const state = createInitialAgentState() as {
+    threadLifecycle: { activeThreadId?: string };
+    threads: Record<string, unknown>;
+  };
+  state.threadLifecycle.activeThreadId = "thread-display";
+  state.threads["thread-display"] = {
+    orderedTurnIds: ["turn-display"],
+    status: "loaded",
+    thread: { id: "thread-display", name: "Transcript display" },
+    turns: {
+      "turn-display": {
+        blocksByItemId: {
+          "command-1": {
+            command: "bun test",
+            id: "command-1",
+            kind: "commandExecution",
+          },
+          "reasoning-1": {
+            id: "reasoning-1",
+            kind: "thinking",
+            text: "Planning",
+          },
+        },
+        commandOutputByItemId: {},
+        filePatchByItemId: {},
+        itemOrder: ["user-1", "reasoning-1", "command-1", "assistant-1"],
+        items: {
+          "assistant-1": {
+            id: "assistant-1",
+            kind: "agentMessage",
+            status: "completed",
+            text: "Done.",
+            threadId: "thread-display",
+            turnId: "turn-display",
+          },
+          "command-1": {
+            id: "command-1",
+            kind: "commandExecution",
+            status: "completed",
+            threadId: "thread-display",
+            turnId: "turn-display",
+          },
+          "reasoning-1": {
+            id: "reasoning-1",
+            kind: "reasoning",
+            status: "completed",
+            threadId: "thread-display",
+            turnId: "turn-display",
+          },
+          "user-1": {
+            id: "user-1",
+            kind: "userMessage",
+            status: "completed",
+            text: "Run checks.",
+            threadId: "thread-display",
+            turnId: "turn-display",
+          },
+        },
+        streamingTextByItemId: {},
+        turn: { id: "turn-display", threadId: "thread-display" },
+      },
+    },
+  };
+  return state;
 }

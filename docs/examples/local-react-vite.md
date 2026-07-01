@@ -65,11 +65,11 @@ Routes:
 - `/showcase/composer-primitives`: normal composer primitive placement for a
   host-owned input slot.
 - `/showcase/transcript-content`: default transcript and content primitive
-  rendering without density overrides.
+  rendering without transcript display overrides.
 - `/showcase/approvals-status`: review rail composition for status summaries,
   detailed notices, and pending approval actions.
-- `/showcase/transcript-density`: compact transcript route with verbose command/file
-  blocks and chat text filtered out.
+- `/showcase/transcript-display`: compact transcript route with expanded
+  collapsed command/file rows and chat text hidden by `transcriptDisplay`.
 - `/showcase/resource-resolution`: local media rendered from structured browser-safe
   resource metadata instead of raw local paths.
 - `/showcase/usage-only`: standalone usage primitive examples.

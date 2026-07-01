@@ -78,9 +78,7 @@ test("component close-up gallery renders direct primitives, not iframes", async 
   await expect(commandBlock.locator(".aui-message-list")).toHaveCount(0);
 
   const customCommand = closeups.getByTestId("closeup:Custom command block");
-  const customCommandMessage = customCommand.locator(
-    '.aui-message[data-kind="commandExecution"]',
-  );
+  const customCommandMessage = customCommand.locator('.aui-message[data-category="command"]');
   await expect(customCommandMessage).toBeVisible();
   await expect(customCommandMessage.getByTestId("custom-command-renderer")).toContainText(
     "Host command renderer",
@@ -88,7 +86,7 @@ test("component close-up gallery renders direct primitives, not iframes", async 
   await expect(customCommandMessage.locator(".aui-command-card")).toBeVisible();
   const anchoredApproval = await customCommand.evaluate(() => {
     const command = document.querySelector(
-      '[data-testid="closeup:Custom command block"] .aui-message[data-kind="commandExecution"]',
+      '[data-testid="closeup:Custom command block"] .aui-message[data-category="command"]',
     );
     const anchor = command?.nextElementSibling;
     const approval = anchor?.querySelector('.aui-approval[data-kind="commandApproval"]');
@@ -199,7 +197,7 @@ test("critical close-ups cover fixture interaction states", async ({ page }) => 
   const pendingMessage = critical.getByTestId("closeup:Optimistic pending message");
   await expect(
     pendingMessage.locator(
-      '.aui-message[data-kind="userMessage"][data-status="inProgress"]',
+      '.aui-message[data-category="message"][data-role="user"][data-status="inProgress"]',
     ),
   ).toContainText("Start the renderer audit");
 });
