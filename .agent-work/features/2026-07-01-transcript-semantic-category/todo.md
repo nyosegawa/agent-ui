@@ -32,7 +32,7 @@
     - Implementation: Added source-level transcript display contract types and static source-structure guard.
     - Validation: `bun run test -- packages/react/test/components.vitest.tsx` passed; `bun run test:styles` passed; `bun run typecheck` passed.
     - Review: 4-lane final review passed with no findings.
-    - Commit:
+    - Commit: `188e448` Define transcript display contract
     - Push:
   - Tasks:
     - [x] T001 Choose final field names: `category` or `semanticCategory`, plus `displayLabel` or i18n label key.
@@ -332,6 +332,8 @@
 
 - `0fc7e40` Plan transcript display contract redesign
 - `77d622f` Record transcript display planning commit
+- `4c2b49b` Record transcript display planning push
+- `188e448` Define transcript display contract
 
 ## Final Checklist
 
