@@ -33,7 +33,7 @@
     - Validation: `bun run test -- packages/react/test/components.vitest.tsx` passed; `bun run test:styles` passed; `bun run typecheck` passed.
     - Review: 4-lane final review passed with no findings.
     - Commit: `188e448` Define transcript display contract
-    - Push:
+    - Push: P001 commits pushed to `origin/codex/transcript-semantic-category-plan`.
   - Tasks:
     - [x] T001 Choose final field names: `category` or `semanticCategory`, plus `displayLabel` or i18n label key.
       - Expected files/areas: `packages/react/src/hooks/transcript.ts`, docs notes.
@@ -334,6 +334,7 @@
 - `77d622f` Record transcript display planning commit
 - `4c2b49b` Record transcript display planning push
 - `188e448` Define transcript display contract
+- `eb4f508` Record transcript display contract phase
 
 ## Final Checklist
 
