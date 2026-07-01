@@ -2,12 +2,12 @@
 
 ## Status Summary
 
-- Overall status: P004 complete; P005 next.
-- Current phase: P005 Final validation, review, PR, and CI follow-through.
+- Overall status: P005 complete; PR ready for review/merge.
+- Current phase: Complete.
 - Blockers: none for planning; implementation should refresh if watched guidance changes again.
 - Last validation: P005 `bun run validate:release` and `bun run validate:e2e` passed after final review fixes.
 - Last review: P005 final 4-lane subagent review completed; P1/P2 findings were remediated and all four lanes re-verified clean.
-- PR/CI: PR https://github.com/nyosegawa/agent-ui/pull/44 opened; CI monitoring in progress.
+- PR/CI: PR https://github.com/nyosegawa/agent-ui/pull/44 opened; Compatibility and CI both passed on head `8d16c41`.
 
 ## Branch And Planning Commit
 
@@ -174,6 +174,7 @@
     - Review: Final 4-lane review completed. API/export lane was clean after fixes and reran snapshot/package checks. Runtime lane's P1 collapsed-safety finding was remediated and re-verified clean. Docs/skills lane's stale wording/high-level guide findings were remediated and re-verified clean. Release/product-boundary lane's unknown-label finding was remediated and re-verified clean.
     - Commit: `7bc5a0c` Harden transcript display release gates
     - Push: P005 commits pushed to `origin/codex/transcript-semantic-category-plan`.
+    - PR/CI: PR https://github.com/nyosegawa/agent-ui/pull/44 opened; Compatibility run `28539971900` passed; CI run `28539972045` passed.
   - Tasks:
     - [x] T001 Run final release and e2e gates.
       - Expected files/areas: command evidence.
@@ -184,7 +185,7 @@
     - [x] T003 Push branch and open PR.
       - Expected files/areas: Git/GitHub.
       - Validation note: PR body includes breaking API migration, validation, review, release, docs, UI, protocol, security impact.
-    - [ ] T004 Watch CI.
+    - [x] T004 Watch CI.
       - Expected files/areas: GitHub Actions.
       - Validation note: success/failure recorded; fix in-scope failures and continue watching.
 
@@ -418,16 +419,17 @@
 - `7bc5a0c` Harden transcript display release gates
 - `a8dbec1` Record transcript display final validation
 - `f951bfa` Record transcript display final push
+- `8d16c41` Record transcript display pull request
 
 ## Final Checklist
 
-- [ ] Every phase is complete or explicitly deferred.
-- [ ] Every task in completed phases is complete or explicitly skipped with a reason.
-- [ ] Every completion criterion in `plan.md` is satisfied.
-- [ ] Required validation passed or an explicit user-approved exception is recorded.
-- [ ] 4-lane review evidence is recorded for every completed phase.
-- [ ] Branch, planning commit, remote, push result, and blockers are recorded.
-- [ ] Commit hashes are recorded for completed phases.
-- [ ] Push evidence is recorded when commits need to be shared or a PR will be created.
-- [ ] PR URL is recorded when applicable.
-- [ ] CI was followed to concrete success or failure when applicable.
+- [x] Every phase is complete or explicitly deferred.
+- [x] Every task in completed phases is complete or explicitly skipped with a reason.
+- [x] Every completion criterion in `plan.md` is satisfied.
+- [x] Required validation passed or an explicit user-approved exception is recorded.
+- [x] 4-lane review evidence is recorded for every completed phase.
+- [x] Branch, planning commit, remote, push result, and blockers are recorded.
+- [x] Commit hashes are recorded for completed phases.
+- [x] Push evidence is recorded when commits need to be shared or a PR will be created.
+- [x] PR URL is recorded when applicable.
+- [x] CI was followed to concrete success or failure when applicable.
